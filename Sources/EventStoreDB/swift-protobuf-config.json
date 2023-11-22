@@ -1,0 +1,45 @@
+{
+    
+    "protocPath": "/usr/local/bin/protoc",
+    "importPaths": ["Sources/EventStoreDB/protos"],
+    "invocations": [
+        {
+          "visibility": "public",
+          "protoFiles": [
+              "protos/ClientMessageDtos.proto",
+          ],
+          "fileNaming": "fullpath"
+        },
+        {
+          "visibility": "public",
+          "protoFiles": [
+              "protos/shared.proto",
+              "protos/status.proto"
+          ],
+          "fileNaming": "fullpath"
+        },
+        {
+          "visibility": "public",
+          "protoFiles": [
+              "protos/code.proto"
+          ],
+          "fileNaming": "fullpath"
+        },
+        {
+        "visibility": "public",
+        "protoFiles": [
+            "protos/cluster.proto",
+            "protos/gossip.proto",
+            "protos/monitoring.proto",
+            "protos/operations.proto",
+            "protos/persistent.proto",
+            "protos/projections.proto",
+            "protos/redaction.proto",
+            "protos/serverfeatures.proto",
+            "protos/streams.proto",
+            "protos/users.proto"
+        ],
+        "fileNaming": "fullpath"
+        }
+    ]
+}
