@@ -10,7 +10,7 @@ import Foundation
 @available(macOS 10.15, *)
 extension Stream.Append {
     public class Options: EventStoreOptions {
-        public typealias UnderlyingMessage = EventStore_Client_Streams_AppendReq.Options
+        public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         
         public var options: UnderlyingMessage
         

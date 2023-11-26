@@ -88,6 +88,7 @@ public protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamRespon
 @available(macOS 10.15, *)
 extension UnaryResponseHandlable{
     
+    @discardableResult
     public func handle(response: Response.UnderlyingMessage) throws -> Response{
         return try .init(from: response)
     }
@@ -98,6 +99,7 @@ extension UnaryResponseHandlable{
 extension StreamResponseHandlable{
     public typealias Responses = AsyncStream<Response>
     
+    @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {
         return .init { continuation in
             Task {

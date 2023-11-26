@@ -10,20 +10,20 @@ import XCTest
 import GRPC
 import NIO
 
+enum TestingError: Error {
+    case exception(String)
+}
+
+
 final class EventStoreDBStreamTests: XCTestCase {
-    var stream: EventStoreDB.Stream?
+    var streamIdentifier: EventStoreDB.Stream.Identifier!
+    
+    var eventId: UUID!
     
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-//        let group = PlatformSupport.makeEventLoopGroup(loopCount: 1)
-//        let channel = try GRPCChannelPool.with(
-//            target: .hostAndPort("localhost", 2113),
-//            transportSecurity: .plaintext,
-//            eventLoopGroup: group
-//        )
-//        
-//        stream = try Stream(identifier: "hello-world")
-        
+        try EventStore.using(settings: .localhost())
+        streamIdentifier = "testing"
+        eventId = .init()
     }
 
     override func tearDownWithError() throws {
@@ -31,28 +31,37 @@ final class EventStoreDBStreamTests: XCTestCase {
     }
     
     func testAppendEvent() async throws{
-//        let response = try await stream?.append(event: .init(type: "test", content: .codable(["other":"test"])))
-//            .expected(revision: .any)
-//            .perform()
-//        switch response {
-//        case .success(let value):
-//            switch value.position {
-//        }
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+        let content: [String: String] = ["id": eventId.uuidString, "name": "Grady Zhuo"]
+        let stream = try Stream.init(identifier: streamIdentifier)
+        let appendResponse = try await stream.append(event: .init(type: "AccountCreated", content: .codable(content))) { options in
+            options.expected(revision: .any)
         }
+        
+        guard let rev = appendResponse.current.revision else {
+            throw TestingError.exception("should not be no stream.")
+        }
+        
+        //Check the event is appended into testing stream.
+        let readResponses = try stream.read(at: rev) { options in
+            options.set(uuidOption: .string)
+                .countBy(limit: 1)
+        }
+
+        let result = try await readResponses.first {
+            switch $0.content {
+            case .event(let event):
+                
+                let decoder = JSONDecoder()
+                let content = try decoder.decode([String: String].self, from: event.event.data)
+                return (content["id"] ?? "") == eventId.uuidString
+            default:
+                throw TestingError.exception("no read event data.")
+            }
+        }
+        
+        XCTAssertNotNil(result)
     }
+    
+    
 
 }

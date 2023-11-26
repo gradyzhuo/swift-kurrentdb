@@ -13,11 +13,11 @@ extension Stream {
     public struct Read: UnaryStream {
         
         public let streamIdentifier: Stream.Identifier
-        public let cursor: Read.Cursor<Read.Revision>
+        public let cursor: Read.Cursor<UInt64>
         public let options: Options
         
         
-        init(streamIdentifier: Stream.Identifier, cursor: Read.Cursor<Read.Revision>, options: Options) {
+        init(streamIdentifier: Stream.Identifier, cursor: Read.Cursor<UInt64>, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options
@@ -169,9 +169,9 @@ extension Stream.Read.Direction {
     }
 }
 
+
 @available(macOS 10.15, *)
-extension Stream.Read.Cursor where Pointer == Stream.Read.Revision{
-    
+extension Stream.Read.Cursor where Pointer == UInt64{
     public func build( options: inout EventStore_Client_Streams_ReadReq.Options){
         switch self {
         case .start:
@@ -181,7 +181,7 @@ extension Stream.Read.Cursor where Pointer == Stream.Read.Revision{
             options.stream.end = .init()
             options.readDirection = .backwards
         case .at(let revision, let readDirection):
-            options.stream.revision = revision.value
+            options.stream.revision = revision
             readDirection.build(options: &options)
         }
     }
@@ -193,20 +193,19 @@ extension Stream.Read.Cursor where Pointer == Stream.Read.Revision{
         case .end:
             options.end = .init()
         case .at(let revision, _):
-            options.revision = revision.value
+            options.revision = revision
         }
     }
 }
 
-
-@available(macOS 10.15, *)
-extension Stream.Read.Revision {
-    
-    public func cursor(direction: Stream.Read.Direction) -> Stream.Read.Cursor<Self>{
-        return .at(self, direction: direction)
-    }
-    
-}
+//@available(macOS 10.15, *)
+//extension Stream.Read.Revision {
+//    
+//    public func cursor(direction: Stream.Read.Direction) -> Stream.Read.Cursor<Self>{
+//        return .at(self, direction: direction)
+//    }
+//    
+//}
 
 @available(macOS 10.15, *)
 extension Stream.Read.UUIDOption{
@@ -334,7 +333,7 @@ extension Stream.Read {
     public struct Response: GRPCResponse {
         
         public enum Content {
-            case event(ReadEvent)
+            case event(readEvent: ReadEvent)
             case confirmation(subscription: String)
             case checkpoint(position: Stream.Position)
             case streamNotFound(streamName: String)
@@ -361,7 +360,7 @@ extension Stream.Read {
         }
         
         init(message: UnderlyingMessage.ReadEvent) throws {
-            self.content = try .event(.init(message: message))
+            self.content = try .event(readEvent: .init(message: message))
         }
         
         init(message: UnderlyingMessage.SubscriptionConfirmation) {
@@ -435,7 +434,7 @@ extension Stream.Read.Response.Content {
     internal init(content: EventStore_Client_Streams_ReadResp.OneOf_Content) throws{
         switch content {
         case .event(let message):
-            self = try .event(.init(message: message))
+            self = try .event(readEvent: .init(message: message))
         case .caughtUp(_):
             self = .caughtUp
         case .checkpoint(let point):

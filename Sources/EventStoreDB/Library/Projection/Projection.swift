@@ -63,8 +63,10 @@ extension Projection {
 @available(macOS 13.0, *)
 extension Projection {
     
-    public static func create(mode: Mode, query: String) async throws -> Self {
-        let channel = try GRPCChannelPool.with(settings: EventStore.shared.settings)
+    //MARK: - Create Actions
+    
+    public static func create(mode: Mode, query: String, settings: ClientSettings = EventStore.shared.settings) async throws -> Self {
+        let channel = try GRPCChannelPool.with(settings: settings)
         let client = UnderlyingClient.init(channel: channel)
         
         
@@ -84,31 +86,95 @@ extension Projection {
             let request = try handler.build()
             let _ = try await handler.handle(response: client.create(request))
             
-            return try await .init(mode: mode, channel: channel).update()
+            return try .init(mode: mode, channel: channel)
         }
         
     }
     
-    public static func create(name: String, query: String, options: ContinuousCreate.Options) async throws -> Self {
-        let channel = try GRPCChannelPool.with(settings: EventStore.shared.settings)
-        let client = UnderlyingClient.init(channel: channel)
+    public static func create(name: String, query: String, options: ContinuousCreate.Options, settings: ClientSettings = EventStore.shared.settings) async throws -> Self {
         
         let mode: Mode = .continuous(name: name, emitEnable: options.emitEnabled, trackEmittedStreams: options.trackEmittedStreams)
-        return try await create(mode: mode, query: query)
+        return try await create(mode: mode, query: query, settings: settings)
     }
     
-    public static func create(name: String, query: String, configure: (_ options: ContinuousCreate.Options)->ContinuousCreate.Options = { $0 }) async throws -> Self {
-        let channel = try GRPCChannelPool.with(settings: EventStore.shared.settings)
-        let client = UnderlyingClient.init(channel: channel)
-        
-        var options = configure(.init())
+    public static func create(name: String, query: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: ContinuousCreate.Options)->ContinuousCreate.Options = { $0 }) async throws -> Self {
+
+        let options = configure(.init())
         
         let mode: Mode = .continuous(name: name, emitEnable: options.emitEnabled, trackEmittedStreams: options.trackEmittedStreams)
-        return try await create(mode: mode, query: query)
+        return try await create(mode: mode, query: query, settings: settings)
     }
     
     
-    public func update() async throws -> Self {
-        return self
+    //MARK: - Update Actions
+    
+    public func update(query: String? = nil, options: Update.Options) async throws {
+        
+        let handler = switch self.mode {
+        case let .continuous(name, _, _):
+            Update(name: name, query: query, options: options)
+        }
+        
+        let request = try handler.build()
+        try await handler.handle(response: client.update(request))
     }
+    
+    public func update(query: String? = nil, configure: (_ options: Update.Options)->Update.Options = { $0 }) async throws {
+        
+        let options =  configure(.init())
+        try await update(query: query, options: options)
+    }
+    
+    //MARK: - Delete Actions
+    public static func delete(name: String, options: Delete.Options, settings: ClientSettings = EventStore.shared.settings) async throws {
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let client = UnderlyingClient.init(channel: channel)
+        
+        let handler = Delete(name: name, options: options)
+        
+        let request = try handler.build()
+        try await handler.handle(response: client.delete(request))
+    }
+    
+    public static func delete(name: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Delete.Options)->Delete.Options = { $0 }) async throws {
+        
+        let options = configure(.init())
+        try await delete(name: name, options: options, settings: settings)
+    }
+    
+    //MARK: - Statistics Actions
+    public func statistics() async throws -> Statistics.Responses {
+        let handler = switch self.mode {
+        case let .continuous(name, _, _):
+            Statistics(name: name, options: .init().set(mode: .continuous))
+        }
+        
+        let request = try handler.build()
+        return try handler.handle(responses: client.statistics(request))
+    }
+    
+    public static func statistics(name: String, options: Statistics.Options, settings: ClientSettings = EventStore.shared.settings) async throws -> Statistics.Responses {
+        
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let client = UnderlyingClient.init(channel: channel)
+        
+        let handler = Statistics(name: name, options: options)
+        
+        let request = try handler.build()
+        return try handler.handle(responses: client.statistics(request))
+    }
+    
+    public static func statistics(name: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Statistics.Options)->Statistics.Options = { $0 }) async throws -> Statistics.Responses {
+        
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let client = UnderlyingClient.init(channel: channel)
+        
+        let handler = Statistics(name: name, options: configure(.init()))
+        
+        let request = try handler.build()
+        return try handler.handle(responses: client.statistics(request))
+    }
+    
+    
+    
 }

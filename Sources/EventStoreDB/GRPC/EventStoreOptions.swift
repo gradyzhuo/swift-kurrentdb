@@ -14,3 +14,4 @@ public protocol EventStoreOptions {
     func build() -> UnderlyingMessage
     
 }
+

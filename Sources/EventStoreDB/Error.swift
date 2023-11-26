@@ -21,7 +21,10 @@ public enum ClientSettingsError: Error {
 public enum ClientError: Error {
     case streamNameError(message: String)
     case readResponseError(message: String)
+    case projectionNameError(message: String)
 }
+
+
 
 public enum ReadEventError : Error {
     case GRPCDecodeException(message: String)

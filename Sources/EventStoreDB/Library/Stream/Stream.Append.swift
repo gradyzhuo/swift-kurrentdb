@@ -56,6 +56,15 @@ extension Stream.Append {
         public enum CurrentRevisionOption {
             case noStream
             case revision(UInt64)
+            
+            public var revision: UInt64? {
+                get {
+                    return switch self {
+                    case .revision(let rev): rev
+                    case .noStream: nil
+                    }
+                }
+            }
         }
         
         public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp

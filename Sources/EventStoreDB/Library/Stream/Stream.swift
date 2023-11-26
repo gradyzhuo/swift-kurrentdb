@@ -87,7 +87,7 @@ extension Stream {
     
     
     //MARK: - Read by a stream methos
-    public func read(cursor: Read.Cursor<Read.Revision>, options: Stream.Read.Options = .init()) throws -> Read.Responses{
+    public func read(cursor: Read.Cursor<UInt64>, options: Stream.Read.Options = .init()) throws -> Read.Responses{
         
         
         let handler = Read(streamIdentifier: self.identifier, cursor: cursor, options: options)
@@ -95,10 +95,24 @@ extension Stream {
         return try handler.handle(responses: underlyingClient.read(request))
     }
     
-    public func read(cursor: Read.Cursor<Read.Revision>, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+    public func read(at revision: UInt64, direction: Read.Direction = .forward, options: Stream.Read.Options = .init()) throws -> Read.Responses{
+        
+        let handler = Read(streamIdentifier: self.identifier, cursor: .at(revision, direction: direction), options: options)
+        let request = try handler.build()
+        return try handler.handle(responses: underlyingClient.read(request))
+    }
+    
+    public func read(cursor: Read.Cursor<UInt64>, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
         
         let options = configure(.init())
         return try self.read(cursor: cursor, options: options)
+        
+    }
+    
+    public func read(at revision: UInt64, direction: Read.Direction = .forward, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+        
+        let options = configure(.init())
+        return try self.read(cursor: .at(revision, direction: direction), options: options)
         
     }
     
