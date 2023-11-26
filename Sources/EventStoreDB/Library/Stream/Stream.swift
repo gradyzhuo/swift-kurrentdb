@@ -64,6 +64,22 @@ extension Stream {
         
     }
     
+    public func append(id: UUID, type: String, data: Data, configure: (_ options: Append.Options)->Append.Options = { $0 }) async throws -> Append.Response.Success {
+        
+        let event: EventData = .init(id: id, type: type, content: .data(data))
+        let options = configure(.init())
+        return try await self.append(event: event, options: options)
+        
+    }
+    
+    public func append(id: UUID, type: String, content: Codable, configure: (_ options: Append.Options)->Append.Options = { $0 }) async throws -> Append.Response.Success {
+        
+        let event: EventData = .init(id: id, type: type, content: .codable(content))
+        let options = configure(.init())
+        return try await self.append(event: event, options: options)
+        
+    }
+    
     //MARK: - Read by all streams methos
     @available(macOS 13.0, *)
     public static func readAll(cursor: Read.Cursor<Read.Position>, options: Stream.Read.Options = .init(), settings: ClientSettings = EventStore.shared.settings ) throws -> Read.Responses{

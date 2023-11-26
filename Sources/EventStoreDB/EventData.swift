@@ -70,7 +70,7 @@ public struct EventData: EventStoreEvent {
         ]
     }
     
-    public init(id: UUID = .init(), type: String, content: Content, customMetadata: [String:Codable]? = nil) {
+    public init(id: UUID, type: String, content: Content, customMetadata: [String:Codable]? = nil) {
         self.id = id
         self.type = type
         self.content = content

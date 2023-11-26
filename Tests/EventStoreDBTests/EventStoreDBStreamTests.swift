@@ -30,13 +30,13 @@ final class EventStoreDBStreamTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
     
+
     func testAppendEvent() async throws{
-        let content: [String: String] = ["id": eventId.uuidString, "name": "Grady Zhuo"]
+        let content: [String: String] = ["name": "Grady Zhuo"]
         let stream = try Stream.init(identifier: streamIdentifier)
-        let appendResponse = try await stream.append(event: .init(type: "AccountCreated", content: .codable(content))) { options in
-            options.expected(revision: .any)
+        let appendResponse = try await stream.append(id: eventId, type: "AccountCreated", content: content){
+            $0.expected(revision: .any)
         }
-        
         guard let rev = appendResponse.current.revision else {
             throw TestingError.exception("should not be no stream.")
         }
@@ -50,10 +50,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         let result = try await readResponses.first {
             switch $0.content {
             case .event(let event):
-                
-                let decoder = JSONDecoder()
-                let content = try decoder.decode([String: String].self, from: event.event.data)
-                return (content["id"] ?? "") == eventId.uuidString
+                return event.event.id == eventId
             default:
                 throw TestingError.exception("no read event data.")
             }
@@ -61,7 +58,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         
         XCTAssertNotNil(result)
     }
-    
+
     
 
 }
