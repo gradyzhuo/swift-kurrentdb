@@ -8,9 +8,9 @@
 import Foundation
 import SwiftProtobuf
 
-protocol EventStoreOptions {
+public protocol EventStoreOptions {
     associatedtype UnderlyingMessage: Message
     
-    var options: UnderlyingMessage { get }
+    func build() -> UnderlyingMessage
     
 }

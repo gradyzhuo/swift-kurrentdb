@@ -54,14 +54,18 @@ public struct Run {
         let stream = try Stream(identifier: "hello++hello")
          
         do{
-            let options = Stream.Append.Options()
-                .expected(revision: .streamExists)
-            let appendResponse = try await stream.append(event: .init(type: "test", content: .codable(["other": "test"])), options: options)
+            let event: EventData = .init(type: "test", content: .codable(["other": "test"]))
+//            let options = Stream.Append.Options()
+//                .expected(revision: .streamExists)
+//            let appendResponse = try await stream.append(event: event, options: options)
+            
+            let appendResponse = try await stream.append(event: event) { options in
+                options.expected(revision: .any)
+            }
             print("???:", appendResponse)
         }catch {
             print("error:", error)
         }
-        
         
         
 //        let responses = try await stream.read(cursor: .start)

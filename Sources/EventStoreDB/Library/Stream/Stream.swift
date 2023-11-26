@@ -8,18 +8,6 @@
 import Foundation
 import GRPC
 
-public protocol ExpectedStreamRevisionProtocol{
-    static func any(_ value: EventStore_Client_Empty)->Self
-    static func noStream(_ value: EventStore_Client_Empty)->Self
-    static func streamExists(_ value: EventStore_Client_Empty)->Self
-    static func revision(_ value: UInt64)->Self
-}
-
-extension EventStore_Client_Streams_AppendReq.Options.OneOf_ExpectedStreamRevision : ExpectedStreamRevisionProtocol {}
-extension EventStore_Client_Streams_DeleteReq.Options.OneOf_ExpectedStreamRevision : ExpectedStreamRevisionProtocol {}
-extension EventStore_Client_Streams_TombstoneReq.Options.OneOf_ExpectedStreamRevision : ExpectedStreamRevisionProtocol {}
-
-
 @available(macOS 10.15, iOS 13, *)
 public struct Stream {
     
@@ -52,112 +40,137 @@ public struct Stream {
 
 @available(macOS 10.15, *)
 extension Stream {
-    public struct Identifier {
-        typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
-        
-        public let name: String
-        public let encoding: String.Encoding = .utf8
-    }
     
-    public struct Position{
-        public let commit: UInt64
-        public let prepare: UInt64?
+    //MARK: - Append methods
+    public func append(event: EventData, options: Append.Options = .init()) async throws -> Append.Response.Success {
         
-        public init(commit: UInt64, prepare: UInt64? = nil) {
-            self.commit = commit
-            self.prepare = prepare
+        let handler: Append = .init(streamIdentifier: self.identifier, event: event, options: options)
+        
+        let requests = try handler.build()
+        let response = try await handler.handle(response: underlyingClient.append(requests))
+        
+        return switch response {
+        case .success(let successResult):
+            successResult
+        case .wrong(let wrongResult):
+            throw wrongResult
         }
     }
     
-    public enum Revision<Message: ExpectedStreamRevisionProtocol> {
-        case any
-        case noStream
-        case streamExists
-        case revision(UInt64)
-    }
-    
-    public struct Duration {
-        public var test: Date.Stride
-    }
-    
-    public struct Metadata {
-        var maxCount: UInt64?
-        var maxAge: Duration?
-        
+    public func append(event: EventData, configure: (_ options: Append.Options)->Append.Options = { $0 }) async throws -> Append.Response.Success {
+       
+        let options = configure(.init())
+        return try await self.append(event: event, options: options)
         
     }
-}
-
-
-
-@available(macOS 10.15, *)
-extension Stream.Identifier: ExpressibleByStringLiteral{
-    public typealias StringLiteralType = String
     
-    public init(stringLiteral value: String) {
-        self.init(name: value)
-    }
-    
-    public init(unicodeScalarLiteral value: String) {
-        self.init(stringLiteral: value)
-    }
-    
-    public init(extendedGraphemeClusterLiteral value: String) {
-        self.init(stringLiteral: value)
-    }
-    
-}
-
-@available(macOS 10.15, *)
-extension Stream.Identifier {
-    
-    internal func build() throws -> UnderlyingMessage {
-        guard let streamName = self.name.data(using: self.encoding) else {
-            throw ClientError.streamNameError(message: "name: \(self.name), encoding: \(self.encoding)")
-        }
+    //MARK: - Read by all streams methos
+    @available(macOS 13.0, *)
+    public static func readAll(cursor: Read.Cursor<Read.Position>, options: Stream.Read.Options = .init(), settings: ClientSettings = EventStore.shared.settings ) throws -> Read.Responses{
         
-        return .with{
-            $0.streamName = streamName
-        }
-    }
-}
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let underlyingClient = UnderlyingClient.init(channel: channel)
 
-@available(macOS 10.15, *)
-extension Stream.Position {
-    public enum Option {
-        case noPosition
-        case position(Stream.Position)
+        let handler = ReadAll(cursor: cursor, options: options)
+        
+        let request = try handler.build()
+        return try handler.handle(responses: underlyingClient.read(request))
+        
     }
     
-//    public enum Commit{
-//        case noPosition
-//        case commit(position: UInt64)
-//
-//        init(message: EventStore_Client_Streams_ReadResp.ReadEvent.OneOf_Position){
-//            switch message {
-//            case .commitPosition(let commit):
-//                self = .commit(position: commit)
-//            case .noPosition(_):
-//                self = .noPosition
-//            }
-//        }
-//    }
-    
-    
-}
-
-@available(macOS 10.15, *)
-extension Stream.Revision {
-    internal func build()->Message{
-        switch self {
-        case .any:
-            return .any(.init())
-        case .noStream:
-            return .noStream(.init())
-        case .streamExists:
-            return .streamExists(.init())
-        case .revision(let rev):
-            return .revision(rev)
-        }
+    @available(macOS 13.0, *)
+    public static func readAll(cursor: Read.Cursor<Read.Position>, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+        
+        let options = configure(.init())
+        return try Stream.readAll(cursor: cursor, options: options, settings: settings)
     }
+    
+    
+    //MARK: - Read by a stream methos
+    public func read(cursor: Read.Cursor<Read.Revision>, options: Stream.Read.Options = .init()) throws -> Read.Responses{
+        
+        
+        let handler = Read(streamIdentifier: self.identifier, cursor: cursor, options: options)
+        let request = try handler.build()
+        return try handler.handle(responses: underlyingClient.read(request))
+    }
+    
+    public func read(cursor: Read.Cursor<Read.Revision>, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+        
+        let options = configure(.init())
+        return try self.read(cursor: cursor, options: options)
+        
+    }
+    
+    //MARK: - (Soft) Delete a stream
+    
+    @available(macOS 13.0, *)
+    @discardableResult
+    public static func delete(identifier: Stream.Identifier, options: Delete.Options, settings: ClientSettings = EventStore.shared.settings) async throws -> Delete.Response {
+        
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let underlyingClient = Stream.UnderlyingClient(channel: channel)
+        
+        
+        let handler = Delete(streamIdentifier: identifier, options: options)
+        
+        let request = try handler.build()
+        return try await handler.handle(response: underlyingClient.delete(request))
+    }
+    
+    
+    @available(macOS 13.0, *)
+    @discardableResult
+    public static func delete(identifier: Stream.Identifier, expected expectedRevision: Stream.Revision<Stream.Delete.Options.UnderlyingMessage.OneOf_ExpectedStreamRevision>, settings: ClientSettings = EventStore.shared.settings) async throws -> Delete.Response {
+        
+        let options = Stream.Delete.Options()
+        options.expected(revision: expectedRevision)
+        
+        return try await Stream.delete(identifier: identifier, options: options, settings: settings)
+    }
+    
+    @available(macOS 13.0, *)
+    @discardableResult
+    public static func delete(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Delete.Options)->Delete.Options = { $0 }) async throws -> Delete.Response {
+        
+        let options = configure(.init())
+        return try await Stream.delete(identifier: identifier, options: options, settings: settings)
+    }
+    
+    //MARK: - (Hard) Delete a stream
+    
+    @available(macOS 13.0, *)
+    @discardableResult
+    public static func tombstone(identifier: Stream.Identifier, options : Tombstone.Options, settings: ClientSettings = EventStore.shared.settings) async throws -> Tombstone.Response {
+        
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let underlyingClient = Stream.UnderlyingClient(channel: channel)
+        
+        
+        let handler = Tombstone(streamIdentifier: identifier, options: options)
+        let request = try handler.build()
+        return try await handler.handle(response: underlyingClient.tombstone(request))
+    
+    }
+    
+    
+    @available(macOS 13.0, *)
+    @discardableResult
+    public static func tombstone(identifier: Stream.Identifier, expected expectedRevision: Stream.Revision<Tombstone.Options.UnderlyingMessage.OneOf_ExpectedStreamRevision>, settings: ClientSettings = EventStore.shared.settings) async throws -> Tombstone.Response {
+        
+        let options = Stream.Tombstone.Options()
+        options.expected(revision: expectedRevision)
+        
+        return try await Stream.tombstone(identifier: identifier, options: options, settings: settings)
+    }
+    
+    @available(macOS 13.0, *)
+    @discardableResult
+    public func tombstone(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Tombstone.Options)->Tombstone.Options = { $0 }) async throws -> Tombstone.Response {
+       
+        let options = configure(.init())
+        return try await Stream.tombstone(identifier: identifier, options: options, settings: settings)
+        
+    }
+    
 }

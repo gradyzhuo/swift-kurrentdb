@@ -18,6 +18,10 @@ extension Stream.Tombstone {
             self.options = .init()
         }
         
+        public func build() -> UnderlyingMessage {
+            return options
+        }
+        
         @discardableResult
         public func expected(revision: Stream.Revision<UnderlyingMessage.OneOf_ExpectedStreamRevision>)->Self{
             switch revision {

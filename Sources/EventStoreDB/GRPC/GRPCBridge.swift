@@ -10,25 +10,36 @@ import GRPC
 import SwiftProtobuf
 
 public protocol GRPCBridge {
-    associatedtype UnderlyingMessage: SwiftProtobuf.Message
+    
     
 }
 
 // delete
 
-public protocol GRPCRequest: GRPCBridge { }
-public protocol GRPCResponse: GRPCBridge { }
-
-
-protocol StreamRequest: GRPCRequest {
-    func build() throws -> [UnderlyingMessage]
-}
-protocol UnaryRequest: GRPCRequest{
-    func build() throws -> UnderlyingMessage
+public protocol GRPCRequest: GRPCBridge { 
+    associatedtype UnderlyingMessage: SwiftProtobuf.Message
+    
 }
 
-protocol UnaryResponse: GRPCResponse{
-    init(from message: UnderlyingMessage)
+public protocol GRPCResponse: GRPCBridge {
+    associatedtype UnderlyingMessage: SwiftProtobuf.Message
+    
+    init(from message: UnderlyingMessage) throws
+}
+
+//@available(macOS 10.15, *)
+//public protocol StreamResponse: AsyncSequence where Self.Element: UnaryResponse{
+//    
+//}
+
+
+public struct DiscardedResponse<R: Message>: GRPCResponse{
+    public typealias UnderlyingMessage = R
+    
+    public init(from message: UnderlyingMessage) throws {
+        
+    }
+    
 }
 
 //protocol StreamResponse: GRPCResponse {

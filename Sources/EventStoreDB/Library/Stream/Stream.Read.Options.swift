@@ -13,7 +13,7 @@ extension Stream.Read {
     public class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_ReadReq.Options
         
-        var options: UnderlyingMessage
+        public var options: UnderlyingMessage
         
         public init() {
             self.options = .init()
@@ -21,6 +21,10 @@ extension Stream.Read {
             self.set(uuidOption: .string)
                 .noFilter()
                 .countBy(limit: .max)
+        }
+        
+        public func build() -> UnderlyingMessage {
+            return options
         }
         
         @discardableResult

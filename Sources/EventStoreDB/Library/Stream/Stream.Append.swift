@@ -2,71 +2,80 @@
 //  File.swift
 //  
 //
-//  Created by Ospark.org on 2023/10/29.
+//  Created by Ospark.org on 2023/10/22.
 //
 
 import Foundation
+import GRPC
 
 @available(macOS 10.15, *)
-extension Stream.Append {
-    public struct Client: StreamUnaryCall, _GRPCClient {
-        internal typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient
+extension Stream {
+    public struct Append: StreamUnary {        
+        public let event: EventData
+        public let options: Options
+        public let streamIdentifier: Stream.Identifier
         
-        public typealias UnderlyingRequest = EventStore_Client_Streams_AppendReq
-        public typealias BingingResponse = Response.Success
-    
         
-        internal var underlyingClient: EventStore_Client_Streams_StreamsAsyncClient
-        
-        internal init(underlyingClient: EventStore_Client_Streams_StreamsAsyncClient) {
-            self.underlyingClient = underlyingClient
+        internal init(streamIdentifier: Stream.Identifier, event: EventData, options: Options){
+            self.event = event
+            self.options = options
+            self.streamIdentifier = streamIdentifier
         }
         
-        public func call(requests: Requests) async throws -> BingingResponse {
-            
-            let response = try await underlyingClient.append(requests)
-    
-            switch response.result! {
-            case .success(let successResult):
-                return .init(from: successResult)
-            case .wrongExpectedVersion(let wrongResult):
-                throw Stream.Append.Response.Wrong.init(from: wrongResult)
-            }
+        public func build() throws -> [Request.UnderlyingMessage] {
+            return [
+                try .with{
+                    $0.options = options.build()
+                    $0.options.streamIdentifier = try self.streamIdentifier.build()
+                },
+                try .with{
+                    $0.proposedMessage = try event.build()
+                }
+            ]
         }
-    }
-    
-    
-}
-
-@available(macOS 10.15, *)
-extension Stream.Append.Client {
-    internal static func buildRequests(streamIdentifier: Stream.Identifier, event: EventData, options: Stream.Append.Options) throws -> Requests {
-        return [
-            try .with{
-                $0.options = options.options
-                $0.options.streamIdentifier = try streamIdentifier.build()
-            },
-            try .with{
-                $0.proposedMessage = try event.build()
-            }
-        ]
+        
     }
 }
 
 @available(macOS 10.15, *)
 extension Stream.Append {
     
-    public struct Response {
-
+    public enum CurrentRevisionOption {
+        case noStream
+        case revision(UInt64)
+    }
+    
+    public struct Request: GRPCRequest {
+        public typealias UnderlyingMessage = EventStore_Client_Streams_AppendReq
+        
+        
+    }
+    
+    public enum Response: GRPCResponse {
+        
         public enum CurrentRevisionOption {
             case noStream
             case revision(UInt64)
         }
         
-        public struct Success: UnaryResponse{
+        public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp
+        
+        case success(Success)
+        case wrong(Wrong)
+
+        public init(from message: UnderlyingMessage) throws {
+            switch message.result! {
+            case .success(let successResult):
+                self = .success(try .init(from: successResult))
+            case .wrongExpectedVersion(let wrongResult):
+                self = .wrong(Stream.Append.Response.Wrong.init(from: wrongResult))
+            }
+        }
+        
+        
+        public struct Success: GRPCResponse{
             public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp.Success
-            
-            
+        
             public internal(set) var current: CurrentRevisionOption
             public internal(set) var position: Stream.Position.Option
             
@@ -75,7 +84,7 @@ extension Stream.Append {
                 self.position = position
             }
             
-            internal init(from message: UnderlyingMessage) {
+            public init(from message: UnderlyingMessage) throws {
                 let currentRevision = message.currentRevisionOption?.represented() ?? .noStream
                 let position = message.positionOption?.represented() ?? .noPosition
                 
@@ -86,7 +95,7 @@ extension Stream.Append {
             
         }
         
-        public struct Wrong: UnaryResponse, Error {
+        public struct Wrong: GRPCResponse, Error {
             public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp.WrongExpectedVersion
             
             public enum ExpectedRevisionOption {
@@ -105,7 +114,7 @@ extension Stream.Append {
                 self.excepted = excepted
             }
             
-            internal init(from message: UnderlyingMessage) {
+            public init(from message: UnderlyingMessage) {
                 self.current = message.currentRevisionOption?.represented() ?? .noStream
                 self.excepted = message.expectedRevisionOption?.represented() ?? .any
             }
@@ -113,6 +122,13 @@ extension Stream.Append {
     }
 }
 
+@available(macOS 10.15, *)
+extension Stream.Identifier {
+    
+    internal func build(options: inout Stream.Append.Request.UnderlyingMessage.Options) throws{
+        options.streamIdentifier = try self.build()
+    }
+}
 
 extension EventData {
     
@@ -138,4 +154,3 @@ extension EventData {
         }
     }
 }
-
