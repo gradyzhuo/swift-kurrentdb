@@ -10,11 +10,14 @@ import SwiftProtobuf
 import GRPC
 
 public protocol GRPCCallable {
-    
     associatedtype Request: GRPCRequest
     associatedtype Response: GRPCResponse
-    
 }
+
+
+
+
+
 
 //public protocol UnaryUnary: GRPCCallable, UnaryRequest, UnaryResponse where Self.UnderlyingResponse == Self.BindingResponse.UnderlyingResponse{
 //    typealias Outcome = BindingResponse

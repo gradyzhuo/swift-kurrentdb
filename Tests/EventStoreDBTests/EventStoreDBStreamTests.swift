@@ -21,7 +21,11 @@ final class EventStoreDBStreamTests: XCTestCase {
     var eventId: UUID!
     
     override func setUpWithError() throws {
-        try EventStore.using(settings: .localhost())
+        let settings: ClientSettings = "esdb://192.168.147.213:2113"
+        
+        let settings2: ClientSettings = .init(clusterMode: .singleNode(at: .init(host: "192.168.147.213", port: 2113)))
+        print("settings:", settings2)
+        try EventStore.using(settings: settings)
         streamIdentifier = "testing"
         eventId = .init()
     }

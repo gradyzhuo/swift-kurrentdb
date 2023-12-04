@@ -45,7 +45,7 @@ extension Projection.Update {
 
 @available(macOS 13.0, *)
 extension Projection.Update {
-    public class Options: EventStoreOptions {
+    public final class Options: EventStoreOptions {
         
         public enum EmitOption {
             case noEmit

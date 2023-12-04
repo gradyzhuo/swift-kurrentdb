@@ -9,7 +9,7 @@ import Foundation
 
 @available(macOS 10.15, *)
 extension Stream.Tombstone {
-    public class Options: EventStoreOptions {
+    public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_TombstoneReq.Options
         
         var options: UnderlyingMessage

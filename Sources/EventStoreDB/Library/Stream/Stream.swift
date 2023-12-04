@@ -8,9 +8,11 @@
 import Foundation
 import GRPC
 
-@available(macOS 10.15, iOS 13, *)
+
+@available(macOS 10.15, *)
 public struct Stream {
     
+    @available(macOS 10.15, iOS 13, *)
     internal typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient
     
     public static var defaultCallOptions: GRPC.CallOptions = .init()
@@ -27,9 +29,11 @@ public struct Stream {
     public internal(set) var identifier: Stream.Identifier
     internal var underlyingClient: UnderlyingClient
     
+
     @available(macOS 13.0, *)
     public init(identifier: Stream.Identifier, channel: GRPCChannel? = nil) throws {
-        let channel = channel ?? EventStore.shared.channel
+        let settings = EventStore.shared.settings
+        let channel = try channel ??  GRPCChannelPool.with(settings: settings)
 
         self.identifier = identifier
         self.underlyingClient = UnderlyingClient.init(channel: channel)
@@ -144,7 +148,9 @@ extension Stream {
         
         let handler = Delete(streamIdentifier: identifier, options: options)
         
+        //build request
         let request = try handler.build()
+        //handle response
         return try await handler.handle(response: underlyingClient.delete(request))
     }
     

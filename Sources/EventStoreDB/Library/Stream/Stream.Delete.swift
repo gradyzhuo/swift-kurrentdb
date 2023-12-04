@@ -40,12 +40,9 @@ extension Stream.Delete {
     }
     
     public struct Response: GRPCResponse {
-        
-        public typealias PositionOption = Stream.Position.Option
-        
         public typealias UnderlyingMessage = EventStore_Client_Streams_DeleteResp
         
-        public internal(set) var position: PositionOption
+        public internal(set) var position: Stream.Position.Option
         
         public init(from message: UnderlyingMessage) throws{
             let position = message.positionOption?.represented() ?? .noPosition

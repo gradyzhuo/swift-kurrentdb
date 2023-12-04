@@ -49,7 +49,7 @@ extension Projection.ContinuousCreate {
 //MARK: - The Options of Continuous Create.
 @available(macOS 13.0, *)
 extension Projection.ContinuousCreate {
-    public class Options: EventStoreOptions {
+    public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_CreateReq.Options
         
         var options: UnderlyingMessage

@@ -9,7 +9,7 @@ import Foundation
 
 @available(macOS 10.15, *)
 extension Stream.Append {
-    public class Options: EventStoreOptions {
+    public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         
         public var options: UnderlyingMessage

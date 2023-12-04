@@ -46,16 +46,6 @@ extension Stream {
         case revision(UInt64)
     }
     
-    public struct Duration {
-        public var test: Date.Stride
-    }
-    
-    public struct Metadata {
-        var maxCount: UInt64?
-        var maxAge: Duration?
-        
-        
-    }
 }
 
 

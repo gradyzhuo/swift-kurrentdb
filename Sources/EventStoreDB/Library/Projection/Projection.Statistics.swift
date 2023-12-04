@@ -127,7 +127,7 @@ extension Projection.Statistics {
 @available(macOS 13.0, *)
 extension Projection.Statistics {
     
-    public class Options: EventStoreOptions {
+    public final class Options: EventStoreOptions {
         
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         

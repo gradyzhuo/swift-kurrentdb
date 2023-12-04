@@ -33,7 +33,7 @@ public struct ClientSettings {
     public var keepAlive: KeepAlive = .default
     public var defaultUserCredentials: UserCredentials?
 
-    init(clusterMode: TopologyClusterMode,
+    public init(clusterMode: TopologyClusterMode,
          transportSecurity: GRPCChannelPool.Configuration.TransportSecurity = .plaintext,
          numberOfThreads: Int = 1) {
         self.clusterMode = clusterMode
@@ -55,13 +55,13 @@ extension GRPCChannelPool{
                 transportSecurity: settings.transportSecurity,
                 eventLoopGroup: group
             )
-            case let .dnsDiscovery(endpoint, interval, maxAttempts):
+        case let .dnsDiscovery(endpoint, _, _):
                 try Self.with(
                 target: endpoint.connectionTarget(),
                 transportSecurity: settings.transportSecurity,
                 eventLoopGroup: group
             )
-            case let .gossipCluster(endpoints, nodePreference, timeout):
+        case let .gossipCluster(endpoints, _, _):
                 try Self.with(
                 target: endpoints.first!.connectionTarget(),
                 transportSecurity: settings.transportSecurity,
@@ -99,7 +99,7 @@ extension ClientSettings {
 
         guard let scheme = url.scheme, scheme.contains(schemeRegex) else {
             
-            throw ClientSettingsError.parseError(message: "Unknown URL scheme: \(url.scheme)")
+            throw ClientSettingsError.parseError(message: "Unknown URL scheme: \(String(describing: url.scheme))")
         }
 
         guard let urlHost = url.host else {
@@ -247,18 +247,21 @@ extension ClientSettings {
     }
 }
 
-//extension EventStoreDBSettings : ExpressibleByStringLiteral {
-//    public typealias StringLiteralType = String
-//    
-//    public init(stringLiteral value: String) {
-//        
-//    }
-//    
-//    public init(unicodeScalarLiteral value: String) {
-//        
-//    }
-//    
-//    public init(extendedGraphemeClusterLiteral value: String) {
-//        
-//    }
-//}
+
+@available(macOS 13.0, *)
+extension ClientSettings : ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    
+    
+    public init(stringLiteral value: String) {
+        self = try! Self.parse(connectionString: value)
+    }
+    
+    public init(unicodeScalarLiteral value: String) {
+        self = try! Self.parse(connectionString: value)
+    }
+    
+    public init(extendedGraphemeClusterLiteral value: String) {
+        self = try! Self.parse(connectionString: value)
+    }
+}
