@@ -7,7 +7,7 @@ import Foundation
 
 // ServiceContext.topLevel
 
-@available(macOS 13.0, *)
+//@available(macOS 13.0, *)
 public struct EventStore {
     public static var shared = Self.init()
     
@@ -20,6 +20,11 @@ public struct EventStore {
     public static func using(settings: ClientSettings) throws {
         shared.settings = settings
         shared.channel = try GRPCChannelPool.with(settings: settings)
+    }
+    
+    
+    public func subscribe(){
+        
     }
     
 }

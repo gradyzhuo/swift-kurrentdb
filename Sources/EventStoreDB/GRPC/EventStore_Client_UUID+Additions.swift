@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  EventStore_Client_UUID+Additions.swift
+//
 //
 //  Created by Ospark.org on 2023/10/24.
 //
@@ -8,19 +8,15 @@
 import Foundation
 import GRPC
 
-extension EventStore_Client_UUID {
-    
-    public func toUUID() -> UUID? {
-        switch self.value {
-        case .string(let stringValue):
+public extension EventStore_Client_UUID {
+    func toUUID() -> UUID? {
+        switch value {
+        case let .string(stringValue):
             return UUID(uuidString: stringValue)
-        case .structured(let structuredValue):
+        case let .structured(structuredValue):
             return UUID.from(integers: (structuredValue.leastSignificantBits, structuredValue.mostSignificantBits))
         case .none:
             return nil
         }
-        
     }
-    
-    
 }

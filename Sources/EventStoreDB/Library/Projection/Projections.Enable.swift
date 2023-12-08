@@ -1,18 +1,18 @@
 //
 //  File.swift
-//  
 //
-//  Created by 卓俊諺 on 2023/11/27.
+//
+//  Created by Ospark.org on 2023/11/27.
 //
 
 import Foundation
 
 @available(macOS 13.0, *)
-extension Projection {
+extension Projections {
     
-    public struct Disable: UnaryUnary {
+    public struct Enable: UnaryUnary {
         
-        public typealias Response = DiscardedResponse<EventStore_Client_Projections_DisableResp>
+        public typealias Response = DiscardedResponse<EventStore_Client_Projections_EnableResp>
         
         public let name: String
         public let options: Options
@@ -34,39 +34,28 @@ extension Projection {
 }
 
 @available(macOS 13.0, *)
-extension Projection.Disable {
+extension Projections.Enable {
     public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_DisableReq
-        
-        
+        public typealias UnderlyingMessage = EventStore_Client_Projections_EnableReq
     }
-
     
 }
 
 @available(macOS 13.0, *)
-extension Projection.Disable{
+extension Projections.Enable{
     public final class Options: EventStoreOptions {
         
-        public typealias UnderlyingMessage = EventStore_Client_Projections_DisableReq.Options
+        public typealias UnderlyingMessage = EventStore_Client_Projections_EnableReq.Options
         
         var options: UnderlyingMessage
         
         public init() {
-            self.options = .with{
-                $0.writeCheckpoint = false
-            }
+            self.options = .init()
         }
         
         
         public func build() -> UnderlyingMessage {
             return options
-        }
-        
-        @discardableResult
-        public func writeCheckpoint(enabled: Bool) -> Self {
-            self.options.writeCheckpoint = enabled
-            return self
         }
         
     }

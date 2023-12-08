@@ -2,14 +2,14 @@
 //  File.swift
 //  
 //
-//  Created by 卓俊諺 on 2023/11/22.
+//  Created by Ospark.org on 2023/11/22.
 //
 
 import Foundation
 import SwiftProtobuf
 
 @available(macOS 13.0, *)
-extension Projection {
+extension Projections {
     public struct ContinuousCreate:  UnaryUnary {
         
         public typealias Response = DiscardedResponse<EventStore_Client_Projections_CreateResp>
@@ -35,7 +35,7 @@ extension Projection {
 }
 
 @available(macOS 13.0, *)
-extension Projection.ContinuousCreate {
+extension Projections.ContinuousCreate {
     
     public struct Request: GRPCRequest {
         public typealias UnderlyingMessage = EventStore_Client_Projections_CreateReq
@@ -48,7 +48,7 @@ extension Projection.ContinuousCreate {
 
 //MARK: - The Options of Continuous Create.
 @available(macOS 13.0, *)
-extension Projection.ContinuousCreate {
+extension Projections.ContinuousCreate {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_CreateReq.Options
         

@@ -72,13 +72,14 @@ extension GRPCChannelPool{
 }
 
 
-@available(macOS 13.0, *)
+//
 extension ClientSettings {
     public static func localhost(port: Int = DEFAULT_PORT_NUMBER, transportSecurity: GRPCChannelPool.Configuration.TransportSecurity = .plaintext) -> Self {
         return .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)))
     }
-
-   public static func parse(connectionString: String) throws -> Self {
+    
+    @available(macOS 13.0, *)
+    public static func parse(connectionString: String) throws -> Self {
         guard let url = URLComponents(string: connectionString) else {
             throw ClientSettingsError.parseError(message: "Unknown connection string: \(connectionString)")
         }

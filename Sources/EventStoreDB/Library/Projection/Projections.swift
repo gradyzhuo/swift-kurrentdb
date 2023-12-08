@@ -6,42 +6,33 @@
 //
 import Foundation
 import GRPC
+import SwiftProtobuf
 
 @available(macOS 13.0, *)
-public struct Projection {
+public struct Projections: _GRPCClient {
     internal typealias UnderlyingClient = EventStore_Client_Projections_ProjectionsAsyncClient
     
     public private(set) var mode: Mode
-    public private(set) var channel: GRPCChannel
+    public private(set) var clientSettings: ClientSettings
     
     public static var defaultCallOptions: GRPC.CallOptions = .init()
     
-    public var callOptions: GRPC.CallOptions{
-        get{
-            underlyingClient.defaultCallOptions
-        }
-        set{
-            underlyingClient.defaultCallOptions = newValue
-        }
-    }
-    
     var underlyingClient: UnderlyingClient
-    
 
-    init(mode: Mode, channel: GRPCChannel? = nil) throws{
-        self.channel = try channel ??  GRPCChannelPool.with(settings: EventStore.shared.settings)
-        self.underlyingClient = .init(channel: self.channel)
+    init(mode: Mode, settings: ClientSettings = EventStore.shared.settings) throws{
+        self.clientSettings = settings
+        let channel = try GRPCChannelPool.with(settings: clientSettings)
+        self.underlyingClient = .init(channel: channel)
         self.mode = mode
     }
 
-    public init(name: String, emitEnable: Bool, trackEmittedStreams: Bool) throws{
-        let channel = try GRPCChannelPool.with(settings: EventStore.shared.settings)
-        try self.init(mode: .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams), channel: channel)
+    public init(name: String, emitEnable: Bool, trackEmittedStreams: Bool, settings: ClientSettings = EventStore.shared.settings) throws{
+        try self.init(mode: .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams), settings: settings)
     }
 }
 
 @available(macOS 13.0, *)
-extension Projection {
+extension Projections {
     
     public enum Mode {
 //        case oneTime
@@ -55,22 +46,18 @@ extension Projection {
             }
         }
     }
-    
-//    public func state<Result>(partation: String)->Result{
-////        EventStore_Client_Projections_StateResp().state
-//    }
-    
+     
 }
 
 
 @available(macOS 13.0, *)
-extension Projection {
+extension Projections {
     
     //MARK: - Create Actions
     
     public static func create(mode: Mode, query: String, settings: ClientSettings = EventStore.shared.settings) async throws -> Self {
         let channel = try GRPCChannelPool.with(settings: settings)
-        let client = UnderlyingClient.init(channel: channel)
+        let client: UnderlyingClient = .init(channel: channel)
         
         
         switch mode {
@@ -89,7 +76,7 @@ extension Projection {
             let request = try handler.build()
             let _ = try await handler.handle(response: client.create(request))
             
-            return try .init(mode: mode, channel: channel)
+            return try .init(mode: mode, settings: settings)
         }
         
     }
@@ -100,7 +87,7 @@ extension Projection {
         return try await create(mode: mode, query: query, settings: settings)
     }
     
-    public static func create(name: String, query: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: ContinuousCreate.Options)->ContinuousCreate.Options = { $0 }) async throws -> Self {
+    public static func create(name: String, query: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: ContinuousCreate.Options)->ContinuousCreate.Options) async throws -> Self {
 
         let options = configure(.init())
         
@@ -122,7 +109,7 @@ extension Projection {
         try await handler.handle(response: underlyingClient.update(request))
     }
     
-    public func update(query: String? = nil, configure: (_ options: Update.Options)->Update.Options = { $0 }) async throws {
+    public func update(query: String? = nil, configure: (_ options: Update.Options)->Update.Options) async throws {
         
         let options =  configure(.init())
         try await update(query: query, options: options)
@@ -139,7 +126,7 @@ extension Projection {
         try await handler.handle(response: client.delete(request))
     }
     
-    public static func delete(name: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Delete.Options)->Delete.Options = { $0 }) async throws {
+    public static func delete(name: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Delete.Options)->Delete.Options) async throws {
         
         let options = configure(.init())
         try await delete(name: name, options: options, settings: settings)
@@ -167,7 +154,7 @@ extension Projection {
         return try handler.handle(responses: client.statistics(request))
     }
     
-    public static func statistics(name: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Statistics.Options)->Statistics.Options = { $0 }) async throws -> Statistics.Responses {
+    public static func statistics(name: String, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Statistics.Options)->Statistics.Options) async throws -> Statistics.Responses {
         
         let channel = try GRPCChannelPool.with(settings: settings)
         let client = UnderlyingClient.init(channel: channel)
@@ -178,42 +165,15 @@ extension Projection {
         return try handler.handle(responses: client.statistics(request))
     }
     
-    
-    //MARK: - Disable Actions
-    
-    public func disable(writeCheckpoint: Bool) async throws {
-        
-        return try await disable { options in
-            options.writeCheckpoint(enabled: writeCheckpoint)
-        }
-    }
-    
-    public func disable(options: Disable.Options) async throws {
-        
-        let handler = switch self.mode {
-        case let .continuous(name, _, _):
-            Disable(name: name, options: options)
-        }
-        
-        let request = try handler.build()
-        try await handler.handle(response: underlyingClient.disable(request))
-    }
-    
-    public func disable(configure: (_ options: Disable.Options)->Disable.Options = { $0 }) async throws {
-        
-        let options =  configure(.init())
-        try await disable(options: options)
-    }
-    
-    
     //MARK: - Enable Actions
     
     public func enable() async throws {
         
-        return try await enable{ $0 }
+        let options = Enable.Options.init()
+        try await enable(options: options)
     }
     
-    public func enable(options: Enable.Options) async throws {
+    internal func enable(options: Enable.Options) async throws {
         
         let handler = switch self.mode {
         case let .continuous(name, _, _):
@@ -224,11 +184,100 @@ extension Projection {
         try await handler.handle(response: underlyingClient.enable(request))
     }
     
-    public func enable(configure: (_ options: Enable.Options)->Enable.Options = { $0 }) async throws {
+    //MARK: - Disable & Abort Actions
+    
+    public func disable() async throws {
+        let options = Disable.Options().writeCheckpoint(enabled: true)
+        return try await disable(options: options)
+    }
+    
+    public func abort() async throws {
+        let options = Disable.Options().writeCheckpoint(enabled: false)
+        return try await disable(options: options)
+    }
+    
+    internal func disable(options: Disable.Options) async throws {
         
-        let options =  configure(.init())
-        try await enable(options: options)
+        let handler = switch self.mode {
+        case let .continuous(name, _, _):
+            Disable(name: name, options: options)
+        }
+        
+        let request = try handler.build()
+        try await handler.handle(response: underlyingClient.disable(request))
+    }
+    
+    //MARK: - Reset Actions
+    
+    public func reset() async throws {
+        
+        let options: Reset.Options = .init().writeCheckpoint(enable: false)
+        try await reset(options: options)
+    }
+    
+    internal func reset(options: Reset.Options) async throws {
+        
+        let handler = switch self.mode {
+        case let .continuous(name, _, _):
+            Reset(name: name, options: options)
+        }
+        
+        let request = try handler.build()
+        try await handler.handle(response: underlyingClient.reset(request))
     }
     
     
+    
+    //MARK: - State Actions
+    
+    public func getState<Value: Decodable>(casting: Value.Type, options: State.Options) async throws -> Value{
+        let handler = switch self.mode {
+        case let .continuous(name, _, _):
+            State(name: name, options: options)
+        }
+        let request = try handler.build()
+        let response = try await handler.handle(response: underlyingClient.state(request))
+        return try response.decode(to: Value.self)
+    }
+    
+    public func getState<Value: Decodable>(casting: Value.Type, configure: (_ options: State.Options) -> State.Options) async throws -> Value{
+        let options = configure(.init())
+        return try await getState(casting: casting, options: options)
+    }
+    
+    public func getState<Value: Decodable>(configure: (_ options: State.Options) -> State.Options) async throws -> Value{
+        let options = configure(.init())
+        return try await getState(casting: Value.self, options: options)
+    }
+    
+    //MARK: - Result Actions
+    
+    public func getResult<Value: Decodable>(casting: Value.Type, options: Result.Options) async throws ->Value{
+        let handler = switch self.mode {
+        case let .continuous(name, _, _):
+            Result(name: name, options: options)
+        }
+        let request = try handler.build()
+        let response = try await handler.handle(response: underlyingClient.result(request))
+        
+        return try response.decode(to: Value.self)
+    }
+    
+    public func getResult<Value: Decodable>(casting: Value.Type, configure: (_ options: Result.Options) -> Result.Options) async throws ->Value{
+        let options = configure(.init())
+        return try await getResult(casting: casting, options: options)
+    }
+    
+    public func getResult<Value: Decodable>(configure: (_ options: Result.Options) -> Result.Options) async throws ->Value{
+        let options = configure(.init())
+        return try await getResult(casting: Value.self, options: options)
+    }
+    
+    //MARK: - RestartSubsystem Actions
+    
+    public func restartSubsystem() async throws{
+        let handler = RestartSubsystem()
+        let request = try handler.build()
+        try await handler.handle(response: underlyingClient.restartSubsystem(request))
+    }
 }

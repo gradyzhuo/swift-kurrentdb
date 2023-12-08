@@ -19,8 +19,8 @@ func test() async throws {
     
     try EventStore.using(settings: .localhost())
     
-    let stream = try Stream(identifier: "account_stream")
-    let response = try await stream.append(id: .init(), type: "AccountUpdated", content: ["x":"y"])
+//    let stream = try Stream(identifier: "account_stream")
+//    let response = try await stream.append(id: .init(), type: "AccountUpdated", content: ["x":"y"])
     
 //    let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
 //    let channel = try GRPCChannelPool.with(target: .hostAndPort("localhost", 2113), transportSecurity: .plaintext, eventLoopGroup: group)

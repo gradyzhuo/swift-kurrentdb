@@ -12,12 +12,14 @@ import GRPC
 extension Stream {
     public struct Read: UnaryStream {
         
+        public typealias CursorPointer = (UInt64, direction: Stream.Read.Direction)
+        
         public let streamIdentifier: Stream.Identifier
-        public let cursor: Read.Cursor<UInt64>
+        public let cursor: Stream.Cursor<CursorPointer>
         public let options: Options
         
         
-        init(streamIdentifier: Stream.Identifier, cursor: Read.Cursor<UInt64>, options: Options) {
+        init(streamIdentifier: Stream.Identifier, cursor: Stream.Cursor<CursorPointer>, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options
@@ -39,11 +41,13 @@ extension Stream {
         public typealias Request = Stream.Read.Request
         public typealias Response = Stream.Read.Response
         
-        public let cursor: Read.Cursor<Read.Position>
+        public typealias CursorPointer = (Stream.Read.Position, direction: Stream.Read.Direction)
+        
+        public let cursor: Stream.Cursor<CursorPointer>
         public let options: Options
         
         
-        init(cursor: Read.Cursor<Read.Position>, options: Options) {
+        init(cursor: Stream.Cursor<CursorPointer>, options: Options) {
             self.cursor = cursor
             self.options = options
             
@@ -71,16 +75,16 @@ extension Stream.Read {
         case backward
     }
     
-    public enum Cursor<Pointer> {
-        case start
-        case end
-        case at(Pointer, direction: Direction)
-    }
+//    public enum Cursor<Pointer> {
+//        case start
+//        case end
+//        case at(Pointer, direction: Direction)
+//    }
     
-    public struct Revision {
-        public internal(set) var value: UInt64
-    }
-    
+//    public struct Revision {
+//        public internal(set) var value: UInt64
+//    }
+//    
     public enum UUIDOption {
         case structured
         case string
@@ -140,16 +144,16 @@ extension Stream.Read {
 }
 
 @available(macOS 10.15, *)
-extension Stream.Read.Cursor {
+extension Stream.Cursor where Pointer == Stream.Read.CursorPointer {
     
-    public var direction: Stream.Read.Direction {
+    internal var direction: Stream.Read.Direction {
         get{
             switch self {
             case .start:
                 return .forward
             case .end:
                 return .backward
-            case let .at(_, direction):
+            case let .at((_, direction)):
                 return direction
             }
         }
@@ -171,7 +175,7 @@ extension Stream.Read.Direction {
 
 
 @available(macOS 10.15, *)
-extension Stream.Read.Cursor where Pointer == UInt64{
+extension Stream.Cursor where Pointer == Stream.Read.CursorPointer{
     public func build( options: inout EventStore_Client_Streams_ReadReq.Options){
         switch self {
         case .start:
@@ -180,7 +184,7 @@ extension Stream.Read.Cursor where Pointer == UInt64{
         case .end:
             options.stream.end = .init()
             options.readDirection = .backwards
-        case .at(let revision, let readDirection):
+        case .at(let (revision, readDirection)):
             options.stream.revision = revision
             readDirection.build(options: &options)
         }
@@ -192,7 +196,7 @@ extension Stream.Read.Cursor where Pointer == UInt64{
             options.start = .init()
         case .end:
             options.end = .init()
-        case .at(let revision, _):
+        case .at(let (revision, _)):
             options.revision = revision
         }
     }
@@ -248,13 +252,13 @@ extension Stream.Read.Position {
         }
     }
     
-    public func cusor(direction:  Stream.Read.Direction) -> Stream.Read.Cursor<Self> {
-        return .at(self, direction: direction)
+    public func cusor(direction:  Stream.Read.Direction) -> Stream.Cursor<Stream.ReadAll.CursorPointer> {
+        return .at((self, direction: direction))
     }
 }
 
 @available(macOS 10.15, *)
-extension Stream.Read.Cursor where Pointer == Stream.Read.Position{
+extension Stream.Cursor where Pointer == Stream.ReadAll.CursorPointer{
     
     public func build() -> EventStore_Client_Streams_ReadReq.Options.AllOptions{
         .with{
@@ -263,7 +267,7 @@ extension Stream.Read.Cursor where Pointer == Stream.Read.Position{
                 $0.start = .init()
             case .end:
                 $0.end = .init()
-            case let .at(position, _):
+            case let .at((position, _)):
                 $0.position = position.build()
             }
         }
@@ -277,7 +281,7 @@ extension Stream.Read.Cursor where Pointer == Stream.Read.Position{
         case .end:
             options.all.end = .init()
             options.readDirection = .backwards
-        case .at(let position, let readDirection):
+        case .at(let (position, readDirection)):
             position.build(options: &options)
             readDirection.build(options: &options)
         }

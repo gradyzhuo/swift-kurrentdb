@@ -1,18 +1,16 @@
 //
 //  File.swift
+//  
 //
-//
-//  Created by 卓俊諺 on 2023/11/27.
+//  Created by Ospark.org on 2023/11/27.
 //
 
 import Foundation
+import SwiftProtobuf
 
 @available(macOS 13.0, *)
-extension Projection {
-    
-    public struct Enable: UnaryUnary {
-        
-        public typealias Response = DiscardedResponse<EventStore_Client_Projections_EnableResp>
+extension Projections {
+    public struct State : UnaryUnary{
         
         public let name: String
         public let options: Options
@@ -30,29 +28,40 @@ extension Projection {
         }
         
     }
-    
 }
 
+
 @available(macOS 13.0, *)
-extension Projection.Enable {
+extension Projections.State {
     public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_EnableReq
+        public typealias UnderlyingMessage = EventStore_Client_Projections_StateReq
+    }
+    
+    
+    public struct Response: GRPCJSONDecodableResponse {
+        public typealias UnderlyingMessage = EventStore_Client_Projections_StateResp
         
+        public private(set) var jsonValue: SwiftProtobuf.Google_Protobuf_Value
+        
+        public init(from message: UnderlyingMessage) throws {
+            self.jsonValue = message.state
+        }
         
     }
     
-}
-
-@available(macOS 13.0, *)
-extension Projection.Enable{
     public final class Options: EventStoreOptions {
         
-        public typealias UnderlyingMessage = EventStore_Client_Projections_EnableReq.Options
+        public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         
         var options: UnderlyingMessage
         
         public init() {
             self.options = .init()
+        }
+        
+        public func partition(_ partition: String) -> Self{
+            self.options.partition = partition
+            return self
         }
         
         
@@ -62,3 +71,5 @@ extension Projection.Enable{
         
     }
 }
+
+

@@ -42,6 +42,21 @@ public struct DiscardedResponse<R: Message>: GRPCResponse{
     
 }
 
+public protocol GRPCJSONDecodableResponse: GRPCResponse {
+    var jsonValue: Google_Protobuf_Value { get }
+    
+}
+
+extension GRPCJSONDecodableResponse {
+    func decode<T: Decodable>(to type: T.Type) throws ->T {
+        let decoder = JSONDecoder()
+        let data = try jsonValue.jsonUTF8Data()
+        return try decoder.decode(type, from: data)
+    }
+}
+
+
+
 //protocol StreamResponse: GRPCResponse {
 //    init(from messages: [UnderlyingMessage])
 //    

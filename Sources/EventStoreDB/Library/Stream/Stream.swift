@@ -10,7 +10,7 @@ import GRPC
 
 
 @available(macOS 10.15, *)
-public struct Stream {
+public struct Stream: _GRPCClient {
     
     @available(macOS 10.15, iOS 13, *)
     internal typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient
@@ -27,17 +27,30 @@ public struct Stream {
     }
     
     public internal(set) var identifier: Stream.Identifier
+    public private(set) var clientSettings: ClientSettings
+    
     internal var underlyingClient: UnderlyingClient
+    
     
 
     @available(macOS 13.0, *)
-    public init(identifier: Stream.Identifier, channel: GRPCChannel? = nil) throws {
-        let settings = EventStore.shared.settings
-        let channel = try channel ??  GRPCChannelPool.with(settings: settings)
-
+    public init(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings) throws {
+        self.clientSettings = settings
+        let channel = try GRPCChannelPool.with(settings: clientSettings)
+        self.underlyingClient = .init(channel: channel)
         self.identifier = identifier
-        self.underlyingClient = UnderlyingClient.init(channel: channel)
-        
+    }
+    
+}
+
+
+@available(macOS 10.15, *)
+extension Stream {
+    
+    public enum Cursor<Pointer> {
+        case start
+        case end
+        case at(Pointer)
     }
     
 }
@@ -61,14 +74,14 @@ extension Stream {
         }
     }
     
-    public func append(event: EventData, configure: (_ options: Append.Options)->Append.Options = { $0 }) async throws -> Append.Response.Success {
+    public func append(event: EventData, configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
        
         let options = configure(.init())
         return try await self.append(event: event, options: options)
         
     }
     
-    public func append(id: UUID, type: String, data: Data, configure: (_ options: Append.Options)->Append.Options = { $0 }) async throws -> Append.Response.Success {
+    public func append(id: UUID, type: String, data: Data, configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
         
         let event: EventData = .init(id: id, type: type, content: .data(data))
         let options = configure(.init())
@@ -76,7 +89,7 @@ extension Stream {
         
     }
     
-    public func append(id: UUID, type: String, content: Codable, configure: (_ options: Append.Options)->Append.Options = { $0 }) async throws -> Append.Response.Success {
+    public func append(id: UUID, type: String, content: Codable, configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
         
         let event: EventData = .init(id: id, type: type, content: .codable(content))
         let options = configure(.init())
@@ -86,10 +99,10 @@ extension Stream {
     
     //MARK: - Read by all streams methos
     @available(macOS 13.0, *)
-    public static func readAll(cursor: Read.Cursor<Read.Position>, options: Stream.Read.Options = .init(), settings: ClientSettings = EventStore.shared.settings ) throws -> Read.Responses{
+    public static func readAll(cursor: Stream.Cursor<ReadAll.CursorPointer>, options: Stream.Read.Options = .init(), settings: ClientSettings = EventStore.shared.settings ) throws -> Read.Responses{
         
         let channel = try GRPCChannelPool.with(settings: settings)
-        let underlyingClient = UnderlyingClient.init(channel: channel)
+        let underlyingClient: UnderlyingClient = .init(channel: channel)
 
         let handler = ReadAll(cursor: cursor, options: options)
         
@@ -99,7 +112,7 @@ extension Stream {
     }
     
     @available(macOS 13.0, *)
-    public static func readAll(cursor: Read.Cursor<Read.Position>, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+    public static func readAll(cursor: Stream.Cursor<ReadAll.CursorPointer>, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options  ) throws -> Read.Responses{
         
         let options = configure(.init())
         return try Stream.readAll(cursor: cursor, options: options, settings: settings)
@@ -107,7 +120,7 @@ extension Stream {
     
     
     //MARK: - Read by a stream methos
-    public func read(cursor: Read.Cursor<UInt64>, options: Stream.Read.Options = .init()) throws -> Read.Responses{
+    public func read(cursor: Stream.Cursor<Read.CursorPointer>, options: Stream.Read.Options = .init()) throws -> Read.Responses{
         
         
         let handler = Read(streamIdentifier: self.identifier, cursor: cursor, options: options)
@@ -117,22 +130,22 @@ extension Stream {
     
     public func read(at revision: UInt64, direction: Read.Direction = .forward, options: Stream.Read.Options = .init()) throws -> Read.Responses{
         
-        let handler = Read(streamIdentifier: self.identifier, cursor: .at(revision, direction: direction), options: options)
+        let handler = Read(streamIdentifier: self.identifier, cursor: .at((revision, direction: direction)), options: options)
         let request = try handler.build()
         return try handler.handle(responses: underlyingClient.read(request))
     }
     
-    public func read(cursor: Read.Cursor<UInt64>, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+    public func read(cursor: Stream.Cursor<Read.CursorPointer>, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options  ) throws -> Read.Responses{
         
         let options = configure(.init())
         return try self.read(cursor: cursor, options: options)
         
     }
     
-    public func read(at revision: UInt64, direction: Read.Direction = .forward, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options = { $0 } ) throws -> Read.Responses{
+    public func read(at revision: UInt64, direction: Read.Direction = .forward, configure: (_ options: Stream.Read.Options) -> Stream.Read.Options  ) throws -> Read.Responses{
         
         let options = configure(.init())
-        return try self.read(cursor: .at(revision, direction: direction), options: options)
+        return try self.read(cursor: .at((revision, direction: direction)), options: options)
         
     }
     
@@ -167,7 +180,7 @@ extension Stream {
     
     @available(macOS 13.0, *)
     @discardableResult
-    public static func delete(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Delete.Options)->Delete.Options = { $0 }) async throws -> Delete.Response {
+    public static func delete(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Delete.Options)->Delete.Options ) async throws -> Delete.Response {
         
         let options = configure(.init())
         return try await Stream.delete(identifier: identifier, options: options, settings: settings)
@@ -202,7 +215,7 @@ extension Stream {
     
     @available(macOS 13.0, *)
     @discardableResult
-    public func tombstone(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Tombstone.Options)->Tombstone.Options = { $0 }) async throws -> Tombstone.Response {
+    public func tombstone(identifier: Stream.Identifier, settings: ClientSettings = EventStore.shared.settings, configure: (_ options: Tombstone.Options)->Tombstone.Options ) async throws -> Tombstone.Response {
        
         let options = configure(.init())
         return try await Stream.tombstone(identifier: identifier, options: options, settings: settings)

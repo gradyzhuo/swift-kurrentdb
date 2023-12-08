@@ -2,13 +2,13 @@
 //  File.swift
 //  
 //
-//  Created by 卓俊諺 on 2023/11/26.
+//  Created by Ospark.org on 2023/11/26.
 //
 
 import Foundation
 
 @available(macOS 13.0, *)
-extension Projection {
+extension Projections {
     public struct Delete: UnaryUnary {
         
         public typealias Response = DiscardedResponse<EventStore_Client_Projections_DeleteResp>
@@ -31,7 +31,7 @@ extension Projection {
 }
 
 @available(macOS 13.0, *)
-extension Projection.Delete {
+extension Projections.Delete {
     public struct Request: GRPCRequest {
         public typealias UnderlyingMessage = EventStore_Client_Projections_DeleteReq
         
@@ -39,7 +39,7 @@ extension Projection.Delete {
 }
 
 @available(macOS 13.0, *)
-extension Projection.Delete {
+extension Projections.Delete {
     public class Options: EventStoreOptions {
         
         public typealias UnderlyingMessage = EventStore_Client_Projections_DeleteReq.Options
