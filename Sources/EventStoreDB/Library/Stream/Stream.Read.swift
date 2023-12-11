@@ -7,10 +7,12 @@
 
 import Foundation
 import GRPC
+import GRPCSupport
 
 @available(macOS 10.15, *)
 extension Stream {
     public struct Read: UnaryStream {
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_ReadReq>
         
         public typealias CursorPointer = (UInt64, direction: Stream.Read.Direction)
         
@@ -327,12 +329,6 @@ extension Stream.Identifier {
 
 @available(macOS 10.15, *)
 extension Stream.Read {
-    
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Streams_ReadReq
-        
-        
-    }
     
     public struct Response: GRPCResponse {
         

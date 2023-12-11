@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 13.0, *)
 extension Projections {
     public struct Update: UnaryUnary {
-        
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_UpdateReq>
         public typealias Response = DiscardedResponse<EventStore_Client_Projections_UpdateResp>
         
         public let name: String
@@ -32,14 +33,6 @@ extension Projections {
                 }
             }
         }
-    }
-}
-
-@available(macOS 13.0, *)
-extension Projections.Update {
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_UpdateReq
-        
     }
 }
 

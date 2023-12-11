@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPCSupport
 
 extension UUID {
     // UUID is 128-bit, we need two 64-bit values to represent it
@@ -87,6 +88,22 @@ extension UUID {
                 return nil
             }
             return NSUUID(uuidBytes: baseAddress) as UUID
+        }
+    }
+}
+
+
+extension UUID {
+    
+    public enum Option {
+        case string
+        case structured
+    }
+    
+    
+    func toEventStoreUUID()->EventStore_Client_UUID {
+        .with{
+            $0.string = self.uuidString
         }
     }
 }

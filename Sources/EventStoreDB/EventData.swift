@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import GRPCSupport
 
 public enum ContentType: String{
     case unknown
@@ -77,6 +77,14 @@ public struct EventData: EventStoreEvent {
         self.customMetadata = customMetadata ?? [:]
     }
     
+    public static func json(id: UUID, type: String, content: Codable)->Self{
+        return .init(id: id, type: type, content: .codable(content))
+    }
+    
+    public static func binary(id: UUID, type: String, data: Data)->Self{
+        return .init(id: id, type: type, content: .data(data))
+    }
+    
 }
 
 
@@ -129,6 +137,26 @@ public struct RecordedEvent: EventStoreEvent {
         
         
     }
+    
+    internal init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent) throws{
+        
+        guard let id = message.id.toUUID() else {
+            throw ReadEventError.GRPCDecodeException(message: "RecordedEvent can't convert an UUID from message.id: \(message.id)")
+        }
+        
+        guard let type = message.metadata["type"] else {
+            throw ReadEventError.GRPCDecodeException(message: "RecordedEvent can't get an event type from message.metadata: \(message.metadata)")
+        }
+        
+        let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
+        let streamIdentifier = message.streamIdentifier.toIdentifier()
+        let revision = message.streamRevision
+        let position = Stream.Position.init(commit: message.commitPosition, prepare: message.preparePosition)
+        
+        self.init(id: id, type: type, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
+        
+        
+    }
 }
 
 @available(macOS 10.15, *)
@@ -151,6 +179,22 @@ public struct ReadEvent {
     }
     
     init(message: EventStore_Client_Streams_ReadResp.ReadEvent) throws{
+        self.event = try .init(message: message.event)
+        self.link = try message.hasLink ? .init(message: message.link) : nil
+        
+        if let position = message.position {
+            switch position {
+            case .noPosition(_):
+                self.commitPosition = nil
+            case .commitPosition(let commitPosition):
+                self.commitPosition = .init(commit: commitPosition)
+            }
+        }else {
+            self.commitPosition = nil
+        }
+    }
+    
+    init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) throws{
         self.event = try .init(message: message.event)
         self.link = try message.hasLink ? .init(message: message.link) : nil
         

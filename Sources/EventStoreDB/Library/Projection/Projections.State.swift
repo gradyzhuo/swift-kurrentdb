@@ -7,10 +7,12 @@
 
 import Foundation
 import SwiftProtobuf
+import GRPCSupport
 
 @available(macOS 13.0, *)
 extension Projections {
     public struct State : UnaryUnary{
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_StateReq>
         
         public let name: String
         public let options: Options
@@ -33,10 +35,6 @@ extension Projections {
 
 @available(macOS 13.0, *)
 extension Projections.State {
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_StateReq
-    }
-    
     
     public struct Response: GRPCJSONDecodableResponse {
         public typealias UnderlyingMessage = EventStore_Client_Projections_StateResp

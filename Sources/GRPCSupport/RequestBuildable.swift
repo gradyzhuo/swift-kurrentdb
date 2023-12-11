@@ -19,3 +19,11 @@ public protocol StreamRequestBuildable: RequestBuildable where Self: GRPCCallabl
 public protocol UnaryRequestBuildable: RequestBuildable where Self: GRPCCallable{
     func build() throws -> Request.UnderlyingMessage
 }
+
+
+extension UnaryRequestBuildable where Request == GenericGRPCRequest<EventStore_Client_Empty> {
+    
+    public func build() throws -> Request.UnderlyingMessage {
+        return .init()
+    }
+}

@@ -7,6 +7,7 @@
 
 import Foundation
 import GRPC
+import GRPCSupport
 
 @available(macOS 10.15, *)
 public struct User {

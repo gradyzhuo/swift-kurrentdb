@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPCSupport
 
 public extension EventStore_Client_StreamIdentifier {
     @available(macOS 10.15, *)

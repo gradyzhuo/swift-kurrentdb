@@ -2,42 +2,20 @@
 //  File.swift
 //  
 //
-//  Created by Ospark.org on 2023/10/29.
+//  Created by 卓俊諺 on 2023/12/7.
 //
 
 import Foundation
-import SwiftProtobuf
 import GRPC
 
-public protocol GRPCCallable {
-    associatedtype Request: GRPCRequest
-    associatedtype Response: GRPCResponse
-}
-
-
-public protocol OptionBuildable {
-    associatedtype Options: EventStoreOptions
-    
-    var options: Options { get }
-}
-
-
-public protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable{
-}
-
-
-@available(macOS 10.15, *)
-public protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponseHandlable{
+public protocol ResponseHandlable{
     
 }
 
-public protocol StreamUnary: GRPCCallable, StreamRequestBuildable, UnaryResponseHandlable{
+public protocol UnaryResponseHandlable: ResponseHandlable where Self: GRPCCallable {
+    func handle(response: Response.UnderlyingMessage) throws -> Response
 }
 
-@available(macOS 10.15, *)
-public protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamResponseHandlable{
-    
-}
 
 @available(macOS 10.15, *)
 extension UnaryResponseHandlable{
@@ -49,9 +27,15 @@ extension UnaryResponseHandlable{
     
 }
 
+
+@available(macOS 10.15, *)
+public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: GRPCCallable {
+    func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> AsyncStream<Response>
+}
+
 @available(macOS 10.15, *)
 extension StreamResponseHandlable{
-    public typealias Responses = AsyncStream<Response>
+    public typealias Responses = AsyncStream<Self.Response>
     
     @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {

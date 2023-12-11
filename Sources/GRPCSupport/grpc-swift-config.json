@@ -1,7 +1,7 @@
 {
     
     "protocPath": "/usr/local/bin/protoc",
-    "importPaths": ["Sources/EventStoreDB/protos"],
+    "importPaths": ["Sources/GRPCSupport/protos"],
     "invocations": [
       {
         "visibility": "public",

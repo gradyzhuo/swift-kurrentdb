@@ -7,6 +7,7 @@
 
 import Foundation
 import GRPC
+import GRPCSupport
 
 
 @available(macOS 10.15, *)
@@ -59,9 +60,9 @@ extension Stream {
 extension Stream {
     
     //MARK: - Append methods
-    public func append(event: EventData, options: Append.Options = .init()) async throws -> Append.Response.Success {
+    public func append(events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success {
         
-        let handler: Append = .init(streamIdentifier: self.identifier, event: event, options: options)
+        let handler: Append = .init(streamIdentifier: self.identifier, events: events, options: options)
         
         let requests = try handler.build()
         let response = try await handler.handle(response: underlyingClient.append(requests))
@@ -74,10 +75,17 @@ extension Stream {
         }
     }
     
-    public func append(event: EventData, configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
+    public func append(events: EventData ..., configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
+        
+        let options = configure(.init())
+        return try await self.append(events: events, options: options)
+        
+    }
+    
+    public func append(events: [EventData], configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
        
         let options = configure(.init())
-        return try await self.append(event: event, options: options)
+        return try await self.append(events: events, options: options)
         
     }
     
@@ -85,7 +93,7 @@ extension Stream {
         
         let event: EventData = .init(id: id, type: type, content: .data(data))
         let options = configure(.init())
-        return try await self.append(event: event, options: options)
+        return try await self.append(events: [event], options: options)
         
     }
     
@@ -93,7 +101,7 @@ extension Stream {
         
         let event: EventData = .init(id: id, type: type, content: .codable(content))
         let options = configure(.init())
-        return try await self.append(event: event, options: options)
+        return try await self.append(events: [event], options: options)
         
     }
     

@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 13.0, *)
 extension Projections {
     
     public struct Statistics: UnaryStream {
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_StatisticsReq>
         
         public enum ModeOptions {
             case all
@@ -42,9 +44,6 @@ extension Projections {
 
 @available(macOS 13.0, *)
 extension Projections.Statistics {
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_StatisticsReq
-    }
     
     public struct Response: GRPCResponse {
         

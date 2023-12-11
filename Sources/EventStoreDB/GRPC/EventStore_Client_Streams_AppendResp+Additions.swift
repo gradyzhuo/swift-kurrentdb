@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 10.15, *)
 extension EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOption {

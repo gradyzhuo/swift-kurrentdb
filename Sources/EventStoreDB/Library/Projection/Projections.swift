@@ -7,6 +7,7 @@
 import Foundation
 import GRPC
 import SwiftProtobuf
+import GRPCSupport
 
 @available(macOS 13.0, *)
 public struct Projections: _GRPCClient {
@@ -14,10 +15,11 @@ public struct Projections: _GRPCClient {
     
     public private(set) var mode: Mode
     public private(set) var clientSettings: ClientSettings
+    var underlyingClient: UnderlyingClient
     
     public static var defaultCallOptions: GRPC.CallOptions = .init()
     
-    var underlyingClient: UnderlyingClient
+    
 
     init(mode: Mode, settings: ClientSettings = EventStore.shared.settings) throws{
         self.clientSettings = settings
@@ -275,9 +277,13 @@ extension Projections {
     
     //MARK: - RestartSubsystem Actions
     
-    public func restartSubsystem() async throws{
+    public static func restartSubsystem(settings: ClientSettings = EventStore.shared.settings) async throws{
+        
+        let channel = try GRPCChannelPool.with(settings: settings)
+        let client = UnderlyingClient(channel: channel)
+        
         let handler = RestartSubsystem()
-        let request = try handler.build()
-        try await handler.handle(response: underlyingClient.restartSubsystem(request))
+        try await handler.handle(response: client.restartSubsystem(handler.build()))
+        
     }
 }

@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 13.0, *)
 extension Projections {
     
     public struct Disable: UnaryUnary {
-        
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_DisableReq>
         public typealias Response = DiscardedResponse<EventStore_Client_Projections_DisableResp>
         
         public let name: String
@@ -30,17 +31,6 @@ extension Projections {
         }
         
     }
-    
-}
-
-@available(macOS 13.0, *)
-extension Projections.Disable {
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_DisableReq
-        
-        
-    }
-
     
 }
 

@@ -6,10 +6,13 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 10.15, *)
 extension Stream {
     public struct Delete: UnaryUnary {
+        
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_DeleteReq>
         
         public let streamIdentifier: Stream.Identifier
         public let options: Options
@@ -33,11 +36,6 @@ extension Stream {
 
 @available(macOS 10.15, *)
 extension Stream.Delete {
-    
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Streams_DeleteReq
-        
-    }
     
     public struct Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_Streams_DeleteResp

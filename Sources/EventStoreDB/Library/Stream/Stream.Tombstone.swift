@@ -6,10 +6,13 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 10.15, *)
 extension Stream {
     public struct Tombstone: UnaryUnary{
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_TombstoneReq>
+        
         public let streamIdentifier: Stream.Identifier
         public let options: Options
         
@@ -31,10 +34,6 @@ extension Stream {
 
 @available(macOS 10.15, *)
 extension Stream.Tombstone {
-    
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Streams_TombstoneReq
-    }
     
     public struct Response: GRPCResponse {
         

@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import GRPCSupport
 
 @available(macOS 13.0, *)
 extension Projections {
     public struct Delete: UnaryUnary {
-        
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_DeleteReq>
         public typealias Response = DiscardedResponse<EventStore_Client_Projections_DeleteResp>
         
         public let name: String
@@ -30,13 +31,6 @@ extension Projections {
     }
 }
 
-@available(macOS 13.0, *)
-extension Projections.Delete {
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_DeleteReq
-        
-    }
-}
 
 @available(macOS 13.0, *)
 extension Projections.Delete {

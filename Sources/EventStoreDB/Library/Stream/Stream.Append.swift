@@ -7,31 +7,38 @@
 
 import Foundation
 import GRPC
+import GRPCSupport
 
 @available(macOS 10.15, *)
 extension Stream {
-    public struct Append: StreamUnary {        
-        public let event: EventData
+    public struct Append: StreamUnary {
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_AppendReq>
+        
+        public let events: [EventData]
         public let options: Options
         public let streamIdentifier: Stream.Identifier
         
         
-        internal init(streamIdentifier: Stream.Identifier, event: EventData, options: Options){
-            self.event = event
+        internal init(streamIdentifier: Stream.Identifier, events: [EventData], options: Options){
+            self.events = events
             self.options = options
             self.streamIdentifier = streamIdentifier
         }
         
         public func build() throws -> [Request.UnderlyingMessage] {
-            return [
+            var payloads:[Request.UnderlyingMessage] = [
                 try .with{
                     $0.options = options.build()
                     $0.options.streamIdentifier = try self.streamIdentifier.build()
-                },
-                try .with{
-                    $0.proposedMessage = try event.build()
                 }
             ]
+            
+            return try payloads + events.map {
+                let eventMessage = try $0.build()
+                return .with{
+                    $0.proposedMessage = eventMessage
+                }
+            }
         }
         
     }
@@ -43,12 +50,6 @@ extension Stream.Append {
     public enum CurrentRevisionOption {
         case noStream
         case revision(UInt64)
-    }
-    
-    public struct Request: GRPCRequest {
-        public typealias UnderlyingMessage = EventStore_Client_Streams_AppendReq
-        
-        
     }
     
     public enum Response: GRPCResponse {
