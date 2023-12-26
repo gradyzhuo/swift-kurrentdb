@@ -17,7 +17,7 @@ public protocol UnaryResponseHandlable: ResponseHandlable where Self: GRPCCallab
 }
 
 
-@available(macOS 10.15, *)
+@available(macOS 13.0, *)
 extension UnaryResponseHandlable{
     
     @discardableResult
@@ -28,12 +28,12 @@ extension UnaryResponseHandlable{
 }
 
 
-@available(macOS 10.15, *)
+@available(macOS 13.0, *)
 public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: GRPCCallable {
     func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> AsyncStream<Response>
 }
 
-@available(macOS 10.15, *)
+@available(macOS 13.0, *)
 extension StreamResponseHandlable{
     public typealias Responses = AsyncStream<Self.Response>
     

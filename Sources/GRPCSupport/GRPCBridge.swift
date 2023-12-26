@@ -50,9 +50,3 @@ extension GRPCJSONDecodableResponse {
     }
 }
 
-
-
-//protocol StreamResponse: GRPCResponse {
-//    init(from messages: [UnderlyingMessage])
-//    
-//}

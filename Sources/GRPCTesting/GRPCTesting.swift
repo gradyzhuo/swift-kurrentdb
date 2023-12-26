@@ -8,26 +8,104 @@
 import Foundation
 import EventStoreDB
 import GRPC
+import NIOSSL
+import GRPCSupport
 
-@available(macOS 10.15, *)
+//enum 花色: Int{
+//    case 梅花
+//    case 方塊
+//    case 愛心
+//    case 黑桃
+//}
+//
+//enum Rank: Int{
+//    case ２ = 2
+//    case ３
+//    case ４
+//    case ５
+//    case ６
+//    case ７
+//    case ８
+//    case ９
+//    case １０
+//    case J
+//    case Q
+//    case K
+//    case A
+//}
+//
+//struct Poker {
+//    let _花色: 花色
+//    let rank: Rank
+//    
+//    static var 🂡: Self = .init(_花色: .黑桃, rank: .A)
+//    static var 🂢: Self = .init(_花色: .黑桃, rank: .２)
+//    static var 🂣: Self = .init(_花色: .黑桃, rank: .３)
+//}
+//
+//let x = Poker(_花色: .愛心, rank: .A)
+
+//enum Poker {
+//    case unit(花色, Int)
+//    
+//    static var A: Self{ .unit(.愛心, 0) }
+//    
+//}
+
+
+@available(macOS 13.0, *)
 @main
 struct GRPCTesting {
     
+    @available(macOS 13.0, *)
     public static func main() async throws{
-        try EventStore.using(settings: .localhost())
         
-        let client = try PersistentSubscriptions(selection: .specified(streamIdentifier: "testing"), groupName: "subscription-group")
+        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
+        
+        settings.configuration.trustRoots = .file("/Users/gradyzhuo/Library/CloudStorage/Dropbox/Work/jw/mendesky/EventStore/samples/server/certs/ca/ca.crt")
+        
+        try EventStoreDB.using(settings: settings)
+                             
+                        
+                             
+//        var configuration = TLSConfiguration.clientDefault
+//        configuration.certificateChain = [
+//            .certificate(try .init(file: "/Users/gradyzhuo/Library/CloudStorage/Dropbox/Work/jw/mendesky/EventStore/samples/server/certs/ca/ca.pem", format: .pem))
+//        ]
+//        configuration.trustRoots = .file("/Users/gradyzhuo/Library/CloudStorage/Dropbox/Work/jw/mendesky/EventStore/samples/server/certs/ca/ca.crt")
+//        configuration.certificateVerification = .noHostnameVerification
+        
+        
+        
+//        if EventStoreDB.shared.settings.tls {
+//            EventStoreDB.shared.settings.transportSecurity = .tls(.makeClientConfigurationBackedByNIOSSL(configuration: configuration))
+//        }
+//
+        
+        let client1 = try UserClient()
+//        let user = try await  client1.create(loginName: "gradyzhuo", password: "1234", fullName: "Grady Zhuo")
+//        
+        for await user in try client1.details(loginName: "gradyzhuo"){
+            print("user:", user)
+        }
+        
+        let members = try await GossipClient.read()
+        
+        
+        let client = try PersistentSubscriptionsClient(selection: .specified(streamIdentifier: "testing"), groupName: "subscription-group")
+
+        
         
         print("info:", try await client.getInfo())
         print("======================")
         
-        let results = try await PersistentSubscriptions.list { options in
+        let results = try await PersistentSubscriptionsClient.list { options in
             options.listAllScriptions()
         }
         print("list:", results)
         print("======================")
         
-        let m = try Monitoring()
+        let m = try MonitoringClient()
         let x = try await m.stats(useMetadata: true, refreshTimePeriodInMs: 60000)
         Task{
             for try await y in x {

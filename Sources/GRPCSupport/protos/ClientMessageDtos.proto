@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package EventStore.Client.Messages;
+package EventStoreDB.Client.Messages;
 
 enum OperationResult
 {

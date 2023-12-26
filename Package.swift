@@ -2,6 +2,7 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "EventStoreDB",
@@ -23,7 +24,7 @@ let package = Package(
             name: "EventStoreDB",
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
-                .target(name: "GRPCSupport")
+                "GRPCSupport"
             ]),
         .target(
             name: "GRPCSupport",

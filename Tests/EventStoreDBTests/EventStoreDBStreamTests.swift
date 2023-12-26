@@ -16,16 +16,16 @@ enum TestingError: Error {
 
 
 final class EventStoreDBStreamTests: XCTestCase {
-    var streamIdentifier: EventStoreDB.Stream.Identifier!
+    var streamIdentifier: EventStoreDB.StreamClient.Identifier!
     
     var eventId: UUID!
     
     override func setUpWithError() throws {
-        let settings: ClientSettings = .localhost()//"esdb://192.168.147.213:2113"
+        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
+        settings.configuration.trustRoots = .file("/Users/gradyzhuo/Library/CloudStorage/Dropbox/Work/jw/mendesky/EventStore/samples/server/certs/ca/ca.crt")
         
-        let settings2: ClientSettings = .init(clusterMode: .singleNode(at: .init(host: "192.168.147.213", port: 2113)))
-        print("settings:", settings2)
-        try EventStore.using(settings: settings)
+        
+        try EventStoreDB.using(settings: settings)
         streamIdentifier = "testing"
         eventId = .init()
     }
@@ -36,8 +36,8 @@ final class EventStoreDBStreamTests: XCTestCase {
     
 
     func testAppendEvent() async throws{
-        let content: [String: String] = ["name": "Grady Zhuo"]
-        let stream = try Stream.init(identifier: streamIdentifier)
+        let content: [String: String] = ["name": "Event1"]
+        let stream = try StreamClient.init(identifier: streamIdentifier)
         let appendResponse = try await stream.append(id: eventId, type: "AccountCreated", content: content){
             $0.expected(revision: .any)
         }
