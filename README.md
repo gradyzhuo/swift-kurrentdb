@@ -29,5 +29,41 @@ dependencies: [
 ```swift
 import EventStoreDB
 
+// Using a client settings for a single node configuration by parsing a connection string.
+try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
+
+// Create the data array of events.
+let events:[EventData] = [
+            .json(id: .init(
+                uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!,
+                type: "ItemAdded",
+                  content: ["Description": "Xbox One S 1TB (Console)"]),
+            .json(id: .init(
+                uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!,
+                type: "ItemAdded",
+                content: "Gears of War 4")
+        ]
+
+
+let stream = try StreamClient.init(identifier: "testing-stream")
+stream.append(events: events){
+    $0.expected(revision: .any)
+}
+
+
+//Check the event is appended into testing stream.
+let readResponses = try stream.read(at: rev) { options in
+    options.set(uuidOption: .string)
+        .countBy(limit: 1)
+}
+
+let result = try await readResponses.first {
+    switch $0.content {
+    case .event(let event):
+        return event.event.id == eventId
+    default:
+        throw TestingError.exception("no read event data.")
+    }
+}
 
 ```
