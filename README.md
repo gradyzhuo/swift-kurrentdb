@@ -6,14 +6,14 @@ Getting the gRPC library
 
 Swift Package Manager
 
-The Swift Package Manager is the preferred way to get gRPC Swift. Simply add the package dependency to your Package.swift:
+The Swift Package Manager is the preferred way to get EventStoreDB. Simply add the package dependency to your Package.swift:
 
 ```
 dependencies: [
   .package(url: "https://github.com/gradyzhuo/eventstoredb-swift.git", branch: "main")
 ]
 ```
-...and depend on "GRPC" in the necessary targets:
+...and depend on "EventStoreDB" in the necessary targets:
 
 ```
 .target(
