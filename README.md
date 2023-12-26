@@ -49,7 +49,16 @@ let stream = try StreamClient.init(identifier: "testing-stream")
 stream.append(events: events){
     $0.expected(revision: .any)
 }
+```
 
+#### Read Event
+
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
+let stream = try StreamClient.init(identifier: "testing-stream")
 
 //Check the event is appended into testing stream.
 let readResponses = try stream.read(at: rev) { options in
@@ -57,13 +66,5 @@ let readResponses = try stream.read(at: rev) { options in
         .countBy(limit: 1)
 }
 
-let result = try await readResponses.first {
-    switch $0.content {
-    case .event(let event):
-        return event.event.id == eventId
-    default:
-        throw TestingError.exception("no read event data.")
-    }
-}
-
+let results = try await readResponses
 ```
