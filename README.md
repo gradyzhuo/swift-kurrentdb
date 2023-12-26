@@ -54,11 +54,8 @@ stream.append(events: events){
 #### Read Event
 
 ```swift
-import EventStoreDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
-let stream = try StreamClient.init(identifier: "testing-stream")
+...continue from upon
+let rev = appendResponse.current.revision
 
 //Check the event is appended into testing stream.
 let readResponses = try stream.read(at: rev) { options in
