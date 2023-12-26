@@ -54,7 +54,8 @@ stream.append(events: events){
 #### Read Event
 
 ```swift
-...continue from upon
+//...continue from upon
+
 let rev = appendResponse.current.revision
 
 //Check the event is appended into testing stream.
