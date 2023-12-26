@@ -54,7 +54,7 @@ stream.append(events: events){
 #### Read Event
 
 ```swift
-//...continue from upon
+//...continue after appending
 
 let rev = appendResponse.current.revision
 
