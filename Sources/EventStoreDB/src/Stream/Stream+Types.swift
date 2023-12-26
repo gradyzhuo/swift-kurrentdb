@@ -40,7 +40,7 @@ extension StreamClient {
         }
     }
     
-    public enum Revision<Message: ExpectedStreamRevisionProtocol> {
+    public enum Revision {
         case any
         case noStream
         case streamExists
@@ -57,14 +57,6 @@ extension StreamClient.Identifier: ExpressibleByStringLiteral{
     
     public init(stringLiteral value: String) {
         self.init(name: value)
-    }
-    
-    public init(unicodeScalarLiteral value: String) {
-        self.init(stringLiteral: value)
-    }
-    
-    public init(extendedGraphemeClusterLiteral value: String) {
-        self.init(stringLiteral: value)
     }
     
 }
@@ -90,35 +82,6 @@ extension StreamClient.Position {
         case position(StreamClient.Position)
     }
     
-//    public enum Commit{
-//        case noPosition
-//        case commit(position: UInt64)
-//
-//        init(message: EventStore_Client_Streams_ReadResp.ReadEvent.OneOf_Position){
-//            switch message {
-//            case .commitPosition(let commit):
-//                self = .commit(position: commit)
-//            case .noPosition(_):
-//                self = .noPosition
-//            }
-//        }
-//    }
-    
-    
 }
 
-@available(macOS 13.0, *)
-extension StreamClient.Revision {
-    internal func build()->Message{
-        switch self {
-        case .any:
-            return .any(.init())
-        case .noStream:
-            return .noStream(.init())
-        case .streamExists:
-            return .streamExists(.init())
-        case .revision(let rev):
-            return .revision(rev)
-        }
-    }
-}
+

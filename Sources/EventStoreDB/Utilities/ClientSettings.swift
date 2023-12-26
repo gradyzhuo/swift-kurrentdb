@@ -387,12 +387,4 @@ extension ClientSettings : ExpressibleByStringLiteral {
         }
         
     }
-    
-    public init(unicodeScalarLiteral value: String) {
-        self = try! Self.parse(connectionString: value)
-    }
-    
-    public init(extendedGraphemeClusterLiteral value: String) {
-        self = try! Self.parse(connectionString: value)
-    }
 }

@@ -165,7 +165,7 @@ extension StreamClient {
     
     
     @discardableResult
-    public static func delete(identifier: StreamClient.Identifier, expected expectedRevision: StreamClient.Revision<StreamClient.Delete.Options.UnderlyingMessage.OneOf_ExpectedStreamRevision>, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Delete.Response {
+    public static func delete(identifier: StreamClient.Identifier, expected expectedRevision: StreamClient.Revision, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Delete.Response {
         
         let options = StreamClient.Delete.Options()
         options.expected(revision: expectedRevision)
@@ -197,7 +197,7 @@ extension StreamClient {
     
 
     @discardableResult
-    public static func tombstone(identifier: StreamClient.Identifier, expected expectedRevision: StreamClient.Revision<Tombstone.Options.UnderlyingMessage.OneOf_ExpectedStreamRevision>, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Tombstone.Response {
+    public static func tombstone(identifier: StreamClient.Identifier, expected expectedRevision: StreamClient.Revision, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Tombstone.Response {
         
         let options = StreamClient.Tombstone.Options()
         options.expected(revision: expectedRevision)

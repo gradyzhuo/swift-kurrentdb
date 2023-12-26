@@ -26,7 +26,7 @@ extension StreamClient.Append {
         }
         
         @discardableResult
-        public func expected(revision: StreamClient.Revision<UnderlyingMessage.OneOf_ExpectedStreamRevision>)->Self{
+        public func expected(revision: StreamClient.Revision)->Self{
             switch revision {
             case .any:
                 options.any = .init()
