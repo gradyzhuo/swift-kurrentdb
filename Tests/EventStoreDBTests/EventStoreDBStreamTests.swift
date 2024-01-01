@@ -22,11 +22,11 @@ final class EventStoreDBStreamTests: XCTestCase {
     var eventId: UUID!
     
     override func setUpWithError() throws {
-        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
-        settings.configuration.trustRoots = .file("/Users/gradyzhuo/Library/CloudStorage/Dropbox/Work/jw/mendesky/EventStore/samples/server/certs/ca/ca.crt")
+//        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
+//        settings.configuration.trustRoots = .crtInBundle("ca", inBundle: .module)
+
+        try EventStoreDB.using(settings: .localhost(port: 2111, userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .crtInBundle("ca", inBundle: .module)))
         
-        
-        try EventStoreDB.using(settings: settings)
         streamIdentifier = "testing"
         eventId = .init()
     }
