@@ -32,6 +32,17 @@ import EventStoreDB
 // Using a client settings for a single node configuration by parsing a connection string.
 try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
 
+//or 
+//try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"))
+
+//or add ssl file by path
+// try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .file("...filePath...")))
+
+//or add ssl file with bundle
+// try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .fileInBundle(forResource: "ca", withExtension: "crt", inBundle: .main)))
+
+
+
 // Create the data array of events.
 let events:[EventData] = [
             .json(id: .init(
