@@ -98,8 +98,11 @@ extension ClientSettings {
         case dnsDiscover = "esdb+discover"
     }
     
-    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, transportSecurity: GRPCChannelPool.Configuration.TransportSecurity = .plaintext) -> Self {
-        return .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)))
+    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, numberOfThreads: Int = 1, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
+        var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)), numberOfThreads: numberOfThreads)
+        settings.configuration.trustRoots = trustRoots
+        settings.defaultUserCredentials = userCredentials
+        return settings
     }
     
     @available(macOS 13.0, *)
@@ -340,32 +343,6 @@ extension ClientSettings {
         }
     }
 
-    public struct UserCredentials {
-        let username: String
-        let password: String
-
-        var basicAuthHeader: String {
-            get throws {
-                let credentialString = "\(username):\(password)"
-                guard let data = credentialString.data(using: .ascii)else {
-                    throw ClientSettingsError.encodingError(message: "\(credentialString) encoding failed.", encoding: .ascii)
-                }
-                return "Basic \(data.base64EncodedString())"
-            }
-        }
-
-        init(username: String, password: String){
-            self.username = username
-            self.password = password
-        }
-    }
-
-    public struct KeepAlive{
-        public static var `default`: Self = .init(interval: 10.0, timeout: 10.0)
-
-        var interval: TimeInterval
-        var timeout: TimeInterval        
-    }
 }
 
 

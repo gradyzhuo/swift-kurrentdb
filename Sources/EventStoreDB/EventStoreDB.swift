@@ -34,40 +34,5 @@ public struct EventStoreDB {
 
     }
     
-//    @available(macOS 13.0, *)
-//    public static func subscribeToAll(groupName: String) async throws{
-//        let client = try PersistentSubscriptions(selection: .all, groupName: groupName)
-//        Task{
-//            
-//        }
-//    }
-    
 }
-
-//@available(macOS 13.0, *)
-//struct EventStoreDBClient{
-//    
-//    let settings: EventStoreDBSettings
-//    let channel: GRPCChannel
-//    
-////    public var version: String {
-////        
-////    }
-//    
-//    public init(settings: EventStoreDBSettings = .standard) throws {
-//        self.settings = settings
-//        self.channel = try settings.makeChannel()
-//    }
-//    
-////    public convenience init(connectionString conn: String){
-////        
-////    }
-//    
-//    public func appendStream(name: String){
-////        let r = Streams.ReadRequest.readAll.build()
-////        
-//    }
-//    
-//    
-//}
 
