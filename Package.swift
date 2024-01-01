@@ -41,6 +41,8 @@ let package = Package(
             ]),
         .testTarget(
             name: "EventStoreDBTests",
-            dependencies: ["EventStoreDB"]),
+            dependencies: ["EventStoreDB"],
+            resources: [.copy("Resources/ca.crt")]
+            ),
     ]
 )
