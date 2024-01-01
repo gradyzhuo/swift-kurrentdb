@@ -18,7 +18,7 @@ dependencies: [
 ```swift
 .target(
   name: ...,
-  dependencies: [.product(name: "EventStoreDB", package: "eventstore-swift")]
+  dependencies: [.product(name: "EventStoreDB", package: "eventstoredb-swift")]
 ]
 ```
 

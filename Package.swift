@@ -5,7 +5,7 @@ import PackageDescription
 import CompilerPluginSupport
 
 let package = Package(
-    name: "eventstore-swift",
+    name: "eventstoredb-swift",
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
