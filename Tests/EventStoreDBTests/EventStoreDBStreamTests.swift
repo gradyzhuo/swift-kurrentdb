@@ -15,8 +15,9 @@ enum TestingError: Error {
 }
 
 
+
 final class EventStoreDBStreamTests: XCTestCase {
-    var streamIdentifier: EventStoreDB.StreamClient.Identifier!
+    var streamIdentifier: StreamClient.Identifier!
     
     var eventId: UUID!
     
@@ -36,10 +37,12 @@ final class EventStoreDBStreamTests: XCTestCase {
     
 
     func testAppendEvent() async throws{
-        let content: [String: String] = ["name": "Event1"]
+        let content: [String: String] = ["Description": "Gears of War 4"]
+        
         let stream = try StreamClient.init(identifier: streamIdentifier)
+        
         let appendResponse = try await stream.append(id: eventId, type: "AccountCreated", content: content){
-            $0.expected(revision: .any)
+            $0.expectedRevision(.any)
         }
         guard let rev = appendResponse.current.revision else {
             throw TestingError.exception("should not be no stream.")

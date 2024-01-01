@@ -47,7 +47,7 @@ extension StreamClient {
 extension StreamClient {
     
     //MARK: - Append methods
-    public func append(events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success {
+    internal func append(events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success {
         
         let handler: Append = .init(streamIdentifier: self.identifier, events: events, options: options)
         
@@ -62,33 +62,33 @@ extension StreamClient {
         }
     }
     
-    public func append(events: EventData ..., configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
+    public func append(events: EventData ..., configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options> ) async throws -> Append.Response.Success {
         
-        let options = configure(.init())
-        return try await self.append(events: events, options: options)
+        let options = configure(.init(subject: .init()))
+        return try await self.append(events: events, options: options.subject)
         
     }
     
-    public func append(events: [EventData], configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
+    public func append(events: [EventData], configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options> ) async throws -> Append.Response.Success {
        
-        let options = configure(.init())
-        return try await self.append(events: events, options: options)
+        let options = configure(.init(subject: .init()))
+        return try await self.append(events: events, options: options.subject)
         
     }
     
-    public func append(id: UUID, type: String, data: Data, configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
+    public func append(id: UUID, type: String, data: Data, configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options> ) async throws -> Append.Response.Success {
         
         let event: EventData = .init(id: id, type: type, content: .data(data))
-        let options = configure(.init())
-        return try await self.append(events: [event], options: options)
+        let options = configure(.init(subject: .init()))
+        return try await self.append(events: [event], options: options.subject)
         
     }
     
-    public func append(id: UUID, type: String, content: Codable, configure: (_ options: Append.Options)->Append.Options ) async throws -> Append.Response.Success {
+    public func append(id: UUID, type: String, content: Codable, configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options>  ) async throws -> Append.Response.Success {
         
         let event: EventData = .init(id: id, type: type, content: .codable(content))
-        let options = configure(.init())
-        return try await self.append(events: [event], options: options)
+        let options = configure(.init(subject: .init()))
+        return try await self.append(events: [event], options: options.subject)
         
     }
     

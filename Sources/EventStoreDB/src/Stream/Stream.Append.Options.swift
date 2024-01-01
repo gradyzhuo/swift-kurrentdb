@@ -13,33 +13,32 @@ extension StreamClient.Append {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         
-        public var options: UnderlyingMessage
+        public var options: UnderlyingMessage = .init()
+        
+        public var expectedRevision: StreamClient.Revision{
+            didSet{
+                switch expectedRevision {
+                case .any:
+                    options.any = .init()
+                case .noStream:
+                    options.noStream = .init()
+                case .streamExists:
+                    options.streamExists = .init()
+                case .revision(let rev):
+                    options.revision = rev
+                }
+            }
+        }
+        
         
         public init() {
-            self.options = .with{
-                $0.any = .init()
-            }
+            expectedRevision = .any
         }
         
         public func build() -> UnderlyingMessage {
             return options
         }
-        
-        @discardableResult
-        public func expected(revision: StreamClient.Revision)->Self{
-            switch revision {
-            case .any:
-                options.any = .init()
-            case .noStream:
-                options.noStream = .init()
-            case .streamExists:
-                options.streamExists = .init()
-            case .revision(let rev):
-                options.revision = rev
-            }
-            return self
-        }
-        
+    
         
     }
 }
