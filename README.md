@@ -30,7 +30,17 @@ dependencies: [
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
-try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
+
+try EventStoreDB.using(settings: .parse(connectionString: "esdb://admin:changeit@localhost:2113"))
+
+// convenience 
+//try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113".parse())
+
+// using string literal 
+//try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
+
+
+
 
 //or 
 //try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"))
