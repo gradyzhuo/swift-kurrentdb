@@ -38,7 +38,7 @@ extension StreamClient.Read {
         
         @discardableResult
         public func filterOnEventType(regex: String, closure: (inout StreamClient.Read.SubscriptionFilter)->())->Self{
-            var filter = StreamClient.Read.SubscriptionFilter.onStreamName(regex: regex)
+            var filter = StreamClient.Read.SubscriptionFilter.onEventType(regex: regex)
             closure(&filter)
             filter.build(options: &options)
             return self

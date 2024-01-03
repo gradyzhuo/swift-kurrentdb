@@ -107,6 +107,16 @@ public struct RecordedEvent: EventStoreEvent {
     public private(set) var customMetadata: Data
     public private(set) var data: Data
     
+    public func decodeContent<T: Decodable>(to decodeType: T.Type) throws -> T?{
+        switch contentType {
+        case.json:
+            let decoder = JSONDecoder()
+            return try decoder.decode(decodeType, from: data)
+        default:
+            return nil
+        }
+    }
+    
     internal init(id: UUID, type: String, contentType: ContentType, streamIdentifier: StreamClient.Identifier, revision: UInt64, position: StreamClient.Position, data: Data, customMetadata: Data) {
         self.id = id
         self.type = type

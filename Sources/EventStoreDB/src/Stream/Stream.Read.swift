@@ -122,12 +122,12 @@ extension StreamClient.Read {
         
         @discardableResult
         public static func onStreamName(regex: String) -> Self {
-            .init(type: .streamName(regex: regex))
+            return .init(type: .streamName(regex: regex))
         }
         
         @discardableResult
         public static func onEventType(regex: String) -> Self {
-            .init(type: .eventType(regex: regex))
+            return .init(type: .eventType(regex: regex))
         }
         
         @discardableResult
