@@ -318,6 +318,8 @@ extension StreamClient.Read.SubscriptionFilter {
                 }
             }
             
+            $0.checkpointIntervalMultiplier = self.checkpointIntervalMultiplier
+            
             
         }
     }
