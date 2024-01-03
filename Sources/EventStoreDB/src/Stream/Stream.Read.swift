@@ -112,12 +112,14 @@ extension StreamClient.Read {
         public internal(set) var type: FilterType
         public internal(set) var window: Window
         public internal(set) var prefixes: [String]
+        public internal(set) var checkpointIntervalMultiplier: UInt32
         
         
         internal required init(type: FilterType, window: Window = .count, prefixes: [String] = []) {
             self.type = type
             self.window = window
             self.prefixes = prefixes
+            self.checkpointIntervalMultiplier = .max
         }
         
         @discardableResult
@@ -133,6 +135,12 @@ extension StreamClient.Read {
         @discardableResult
         public func set(max maxCount: UInt32) -> Self {
             self.window = .max(maxCount)
+            return self
+        }
+        
+        @discardableResult
+        public func set(checkpointIntervalMultiplier multiplier: UInt32) -> Self {
+            self.checkpointIntervalMultiplier = multiplier
             return self
         }
         
