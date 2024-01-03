@@ -317,7 +317,12 @@ extension StreamClient.Read.SubscriptionFilter {
                     $0.prefix = self.prefixes
                 }
             }
-            
+            switch self.window {
+            case .count:
+                $0.count = .init()
+            case let .max(max):
+                $0.max = max
+            }
             $0.checkpointIntervalMultiplier = self.checkpointIntervalMultiplier
             
             
