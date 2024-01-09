@@ -8,8 +8,7 @@
 import Foundation
 import SwiftProtobuf
 
-public protocol EventStoreOptions {
-    associatedtype UnderlyingMessage: Message
+package protocol EventStoreOptions: GRPCBridge {
     
     func build() -> UnderlyingMessage
     

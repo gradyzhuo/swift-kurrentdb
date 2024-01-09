@@ -29,22 +29,6 @@ extension StreamClient.Read {
         }
         
         @discardableResult
-        public func filterOnStream(regex: String, closure: ((inout StreamClient.Read.SubscriptionFilter)->())? = nil)->Self{
-            var filter = StreamClient.Read.SubscriptionFilter.onStreamName(regex: regex)
-            closure?(&filter)
-            filter.build(options: &options)
-            return self
-        }
-        
-        @discardableResult
-        public func filterOnEventType(regex: String, closure: (inout StreamClient.Read.SubscriptionFilter)->())->Self{
-            var filter = StreamClient.Read.SubscriptionFilter.onEventType(regex: regex)
-            closure(&filter)
-            filter.build(options: &options)
-            return self
-        }
-        
-        @discardableResult
         public func noFilter() -> Self {
             options.noFilter = .init()
             return self

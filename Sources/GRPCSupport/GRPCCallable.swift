@@ -14,14 +14,6 @@ public protocol GRPCCallable {
     associatedtype Response: GRPCResponse
 }
 
-
-public protocol OptionBuildable {
-    associatedtype Options: EventStoreOptions
-    
-    var options: Options { get }
-}
-
-
 public protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable{
 }
 
