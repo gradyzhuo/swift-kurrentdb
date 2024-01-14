@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     public struct Delete: UnaryUnary {
         
@@ -34,7 +34,7 @@ extension StreamClient {
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Delete {
     
     public struct Response: GRPCResponse {

@@ -11,53 +11,10 @@ import GRPC
 import NIOSSL
 import GRPCSupport
 
-//enum 花色: Int{
-//    case 梅花
-//    case 方塊
-//    case 愛心
-//    case 黑桃
-//}
-//
-//enum Rank: Int{
-//    case ２ = 2
-//    case ３
-//    case ４
-//    case ５
-//    case ６
-//    case ７
-//    case ８
-//    case ９
-//    case １０
-//    case J
-//    case Q
-//    case K
-//    case A
-//}
-//
-//struct Poker {
-//    let _花色: 花色
-//    let rank: Rank
-//    
-//    static var 🂡: Self = .init(_花色: .黑桃, rank: .A)
-//    static var 🂢: Self = .init(_花色: .黑桃, rank: .２)
-//    static var 🂣: Self = .init(_花色: .黑桃, rank: .３)
-//}
-//
-//let x = Poker(_花色: .愛心, rank: .A)
-
-//enum Poker {
-//    case unit(花色, Int)
-//    
-//    static var A: Self{ .unit(.愛心, 0) }
-//    
-//}
-
-
-@available(macOS 13.0, *)
 @main
 struct GRPCTesting {
     
-    @available(macOS 13.0, *)
+    
     public static func main() async throws{
         
 //        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
@@ -66,7 +23,18 @@ struct GRPCTesting {
         
         try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .file("/Users/gradyzhuo/Library/CloudStorage/Dropbox/Work/jw/mendesky/EventStore/samples/server/certs/ca/ca.crt")))
                              
-                        
+        
+        let client2 = try await ProjectionsClient.create(name: "my_projection3", query: "fromAll().outputState()") { options in
+            options.emit(enabled: false).trackEmittedStreams(false)
+        }
+        
+        print(client2)
+        
+        try await client2.update(query: """
+fromStream("account").outputState()
+"""){
+            $0.emit(option: .noEmit)
+        }
                              
 //        var configuration = TLSConfiguration.clientDefault
 //        configuration.certificateChain = [

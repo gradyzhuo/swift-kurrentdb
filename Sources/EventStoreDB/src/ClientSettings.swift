@@ -105,7 +105,7 @@ extension ClientSettings {
         return settings
     }
     
-    @available(macOS 13.0, *)
+    
     private static func parseScheme(_ connectionString: String) -> ValidScheme?{
         let _scheme = Reference(String.self)
         let schemeRegex = Regex {
@@ -124,7 +124,7 @@ extension ClientSettings {
         }
     }
     
-    @available(macOS 13.0, *)
+    
     private static func parseUserAndPassowrd(_ connectionString: String) -> UserCredentials?{
         let _user = Reference(String.self)
         let _password = Reference(String.self)
@@ -152,7 +152,7 @@ extension ClientSettings {
         return .init(username: userAndPasswordMatch[_user], password: userAndPasswordMatch[_password])
     }
     
-    @available(macOS 13.0, *)
+    
     private static func parseEndpoints(_ connectionString: String) -> [Endpoint]{
         
         var connectionString = connectionString
@@ -199,7 +199,7 @@ extension ClientSettings {
             }
     }
     
-    @available(macOS 13.0, *)
+    
     private static func parseQueryItems(_ connectionString: String) -> [URLQueryItem]{
         let _key = Reference(String.self)
         let _value = Reference(String.self)
@@ -235,7 +235,7 @@ extension ClientSettings {
     }
     
     
-    @available(macOS 13.0, *)
+    
     public static func parse(connectionString: String) throws -> Self {
     
         guard let scheme = parseScheme(connectionString) else {
@@ -346,7 +346,7 @@ extension ClientSettings {
 }
 
 
-@available(macOS 13.0, *)
+
 extension ClientSettings : ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
     

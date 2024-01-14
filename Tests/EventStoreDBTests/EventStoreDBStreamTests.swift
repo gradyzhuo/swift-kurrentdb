@@ -24,7 +24,10 @@ final class EventStoreDBStreamTests: XCTestCase {
     override func setUpWithError() throws {
 //        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
 //        settings.configuration.trustRoots = .crtInBundle("ca", inBundle: .module)
-
+//        EventStoreDB.using(settings: .localhost())
+        
+//        try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
+        
         try EventStoreDB.using(settings: .localhost(port: 2111, userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .crtInBundle("ca", inBundle: .module)))
         
         streamIdentifier = "testing"
@@ -41,7 +44,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         
         let stream = try StreamClient.init(identifier: streamIdentifier)
         
-        let appendResponse = try await stream.append(id: eventId, type: "AccountCreated", content: content){
+        let appendResponse = try await stream.append(id: eventId, eventType: "AccountCreated", content: content){
             $0.expectedRevision(.any)
         }
         guard let rev = appendResponse.current.revision else {

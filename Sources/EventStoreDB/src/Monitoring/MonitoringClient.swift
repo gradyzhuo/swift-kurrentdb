@@ -10,7 +10,7 @@ import GRPCSupport
 import GRPC
 
 
-@available(macOS 13.0, *)
+
 public struct MonitoringClient: EventStoreClient {
     public typealias UnderlyingClient = EventStore_Client_Monitoring_MonitoringAsyncClient
     

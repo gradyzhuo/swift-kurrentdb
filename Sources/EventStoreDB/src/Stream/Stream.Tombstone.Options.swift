@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Tombstone {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_TombstoneReq.Options

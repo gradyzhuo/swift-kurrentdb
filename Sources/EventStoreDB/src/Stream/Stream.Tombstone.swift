@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     public struct Tombstone: UnaryUnary{
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_TombstoneReq>
@@ -32,7 +32,7 @@ extension StreamClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Tombstone {
     
     public struct Response: GRPCResponse {

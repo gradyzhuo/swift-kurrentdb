@@ -7,10 +7,10 @@
 
 import Foundation
 
-@available(macOS 13.0, *)
+
 extension String {
     
-    public func parse<T>() throws -> T where T == ClientSettings{
+    public func parse() throws -> ClientSettings {
         return try ClientSettings.parse(connectionString:self)
     }
     

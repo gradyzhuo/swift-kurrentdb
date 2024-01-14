@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient {
     
     public struct Statistics: UnaryStream {
@@ -42,7 +42,7 @@ extension ProjectionsClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient.Statistics {
     
     public struct Response: GRPCResponse {
@@ -123,7 +123,7 @@ extension ProjectionsClient.Statistics {
     
 }
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient.Statistics {
     
     public final class Options: EventStoreOptions {

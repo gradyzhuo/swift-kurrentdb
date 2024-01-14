@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension OperationsClient {
     public struct StartScavenge: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Operations_StartScavengeReq>

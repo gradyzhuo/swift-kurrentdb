@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension GossipClient {
     
     public struct Read: UnaryUnary {
@@ -19,7 +19,7 @@ extension GossipClient {
 }
 
 
-@available(macOS 13.0, *)
+
 extension GossipClient.Read {
     
     public struct Response: GRPCResponse {
@@ -38,7 +38,7 @@ extension GossipClient.Read {
     
 }
 
-@available(macOS 13.0, *)
+
 extension GossipClient.Read.Response {
     public struct MemberInfo: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_Gossip_MemberInfo

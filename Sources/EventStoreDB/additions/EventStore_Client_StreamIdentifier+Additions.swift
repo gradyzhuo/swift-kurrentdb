@@ -8,7 +8,6 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
 extension EventStore_Client_StreamIdentifier {
     func toIdentifier() -> StreamClient.Identifier {
         let name = String(data: streamName, encoding: .utf8)

@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient {
     public struct Reset: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_ResetReq>
@@ -35,7 +35,7 @@ extension ProjectionsClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient.Reset {
     public final class Options:  EventStoreOptions{
         

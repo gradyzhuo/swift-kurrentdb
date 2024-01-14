@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Append {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options

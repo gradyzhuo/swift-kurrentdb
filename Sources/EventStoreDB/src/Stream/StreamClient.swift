@@ -10,7 +10,7 @@ import GRPC
 import GRPCSupport
 
 
-@available(macOS 13.0, *)
+
 public struct StreamClient: EventStoreClient {
     
     public typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient
@@ -32,7 +32,7 @@ public struct StreamClient: EventStoreClient {
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     
     public enum Cursor<Pointer> {
@@ -43,7 +43,7 @@ extension StreamClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     
     //MARK: - Append methods
@@ -76,24 +76,25 @@ extension StreamClient {
         
     }
     
-    public func append(id: UUID, type: String, data: Data, configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options> ) async throws -> Append.Response.Success {
+    public func append(id: UUID, eventType: String, data: Data, configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options> ) async throws -> Append.Response.Success {
         
-        let event: EventData = .init(id: id, type: type, content: .data(data))
+        let event: EventData = .init(id: id, eventType: eventType, data: data, contentType: .binary)
+        
         let options = configure(.init(subject: .init()))
         return try await self.append(events: [event], options: options.subject)
         
     }
     
-    public func append(id: UUID, type: String, content: Codable, configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options>  ) async throws -> Append.Response.Success {
+    public func append(id: UUID, eventType: String, content: Codable, configure: (_ options: FluentInterface <Append.Options>)->FluentInterface <Append.Options>  ) async throws -> Append.Response.Success {
         
-        let event: EventData = .init(id: id, type: type, content: .codable(content))
+        let event: EventData = try .init(id: id, eventType: eventType, content: content)
         let options = configure(.init(subject: .init()))
         return try await self.append(events: [event], options: options.subject)
         
     }
     
     //MARK: - Read by all streams methos
-    @available(macOS 13.0, *)
+    
     public static func readAll(cursor: StreamClient.Cursor<ReadAll.CursorPointer>, options: StreamClient.Read.Options = .init(), settings: ClientSettings = EventStoreDB.shared.settings ) throws -> Read.Responses{
         
         let channel = try GRPCChannelPool.with(settings: settings)
@@ -108,7 +109,7 @@ extension StreamClient {
         
     }
     
-    @available(macOS 13.0, *)
+    
     public static func readAll(cursor: StreamClient.Cursor<ReadAll.CursorPointer>, settings: ClientSettings = EventStoreDB.shared.settings, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options  ) throws -> Read.Responses{
         
         let options = configure(.init())
@@ -127,7 +128,7 @@ extension StreamClient {
     
     public func read(at revision: UInt64, direction: Read.Direction = .forward, options: StreamClient.Read.Options = .init()) throws -> Read.Responses{
         
-        let handler = Read(streamIdentifier: self.identifier, cursor: .at((revision, direction: direction)), options: options)
+        let handler = Read(streamIdentifier: self.identifier, cursor: .at(.init(revision: revision, direction: direction)), options: options)
         let request = try handler.build()
         return try handler.handle(responses: underlyingClient.read(request))
     }
@@ -142,7 +143,7 @@ extension StreamClient {
     public func read(at revision: UInt64, direction: Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options  ) throws -> Read.Responses{
         
         let options = configure(.init())
-        return try self.read(cursor: .at((revision, direction: direction)), options: options)
+        return try self.read(cursor: .at(.init(revision: revision, direction: direction)), options: options)
         
     }
     

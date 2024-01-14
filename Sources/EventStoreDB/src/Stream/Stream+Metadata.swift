@@ -7,7 +7,7 @@
 
 import Foundation
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     
     

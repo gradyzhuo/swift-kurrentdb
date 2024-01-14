@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     
     public struct Delete: UnaryUnary {
@@ -34,7 +34,7 @@ extension PersistentSubscriptionsClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.Delete{
     
     public struct Request: GRPCRequest {

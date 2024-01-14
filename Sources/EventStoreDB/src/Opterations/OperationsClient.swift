@@ -9,7 +9,7 @@ import Foundation
 import GRPCSupport
 import GRPC
 
-@available(macOS 13.0, *)
+
 public struct OperationsClient: EventStoreClient {
     public typealias UnderlyingClient = EventStore_Client_Operations_OperationsAsyncClient
     
@@ -28,7 +28,7 @@ public struct OperationsClient: EventStoreClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension EventStoreDB {
     public static func startScavenge(threadCount: Int32, startFromChunk: Int32, settings: ClientSettings = Self.shared.settings) async throws -> OperationsClient.ScavengeResponse{
         let client = try OperationsClient(settings: settings).underlyingClient

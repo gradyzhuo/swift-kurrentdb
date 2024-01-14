@@ -9,7 +9,6 @@ import Foundation
 import SwiftProtobuf
 import GRPCSupport
 
-@available(macOS 13.0, *)
 extension ProjectionsClient {
     public struct ContinuousCreate:  UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_CreateReq>
@@ -37,7 +36,7 @@ extension ProjectionsClient {
 
 
 //MARK: - The Options of Continuous Create.
-@available(macOS 13.0, *)
+
 extension ProjectionsClient.ContinuousCreate {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_CreateReq.Options

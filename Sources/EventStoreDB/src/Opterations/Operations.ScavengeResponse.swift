@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension OperationsClient {
     public struct ScavengeResponse: GRPCResponse {
         

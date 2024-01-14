@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     
     public struct Create: UnaryUnary{
@@ -30,7 +30,7 @@ extension PersistentSubscriptionsClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.Create {
     
     public struct Request: GRPCRequest {
@@ -137,7 +137,7 @@ extension PersistentSubscriptionsClient.Create {
 
 // MARK: - PersistentSubscriptions.StreamSelection + Additions
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.Create {
     public struct FilterOption{
         let filter: StreamClient.Read.SubscriptionFilter

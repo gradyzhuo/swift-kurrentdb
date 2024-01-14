@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension MonitoringClient {
     public struct Stats: UnaryStream{
         
@@ -28,7 +28,7 @@ extension MonitoringClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension MonitoringClient.Stats {
     public struct Response: GRPCResponse {
         

@@ -9,12 +9,12 @@ import Foundation
 import GRPC
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     public struct Read: UnaryStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_ReadReq>
         
-        public typealias CursorPointer = (UInt64, direction: StreamClient.Read.Direction)
+//        public typealias CursorPointer = (UInt64, direction: StreamClient.Read.Direction)
         
         public let streamIdentifier: StreamClient.Identifier
         public let cursor: StreamClient.Cursor<CursorPointer>
@@ -25,7 +25,6 @@ extension StreamClient {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options
-            
         }
     
         public func build() throws -> Request.UnderlyingMessage {
@@ -65,8 +64,23 @@ extension StreamClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read {
+    public struct CursorPointer{
+        let revision: UInt64
+        let direction: StreamClient.Read.Direction
+        
+        
+        public static func forward(fromRev revision: UInt64)->Self{
+            return .init(revision: revision, direction: .forward)
+        }
+        
+        public static func backward(fromRev revision: UInt64)->Self{
+            return .init(revision: revision, direction: .backward)
+        }
+    }
+    
+    
     public struct Position{
         public let commit: UInt64
         public let prepare: UInt64
@@ -86,7 +100,7 @@ extension StreamClient.Read {
 //    public struct Revision {
 //        public internal(set) var value: UInt64
 //    }
-//    
+  
     public enum UUIDOption {
         case structured
         case string
@@ -153,7 +167,7 @@ extension StreamClient.Read {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer {
     
     internal var direction: StreamClient.Read.Direction {
@@ -163,15 +177,15 @@ extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer {
                 return .forward
             case .end:
                 return .backward
-            case let .at((_, direction)):
-                return direction
+            case let .at(pointer):
+                return pointer.direction
             }
         }
     }
     
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read.Direction {
     internal func build(options: inout EventStore_Client_Streams_ReadReq.Options){
         switch self {
@@ -184,7 +198,7 @@ extension StreamClient.Read.Direction {
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer{
     public func build( options: inout EventStore_Client_Streams_ReadReq.Options){
         switch self {
@@ -194,9 +208,9 @@ extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer{
         case .end:
             options.stream.end = .init()
             options.readDirection = .backwards
-        case .at(let (revision, readDirection)):
-            options.stream.revision = revision
-            readDirection.build(options: &options)
+        case let .at(pointer):
+            options.stream.revision = pointer.revision
+            pointer.direction.build(options: &options)
         }
     }
     
@@ -206,13 +220,13 @@ extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer{
             options.start = .init()
         case .end:
             options.end = .init()
-        case .at(let (revision, _)):
-            options.revision = revision
+        case let .at(pointer):
+            options.revision = pointer.revision
         }
     }
 }
 
-//@available(macOS 13.0, *)
+//
 //extension Stream.Read.Revision {
 //    
 //    public func cursor(direction: Stream.Read.Direction) -> Stream.Read.Cursor<Self>{
@@ -221,7 +235,7 @@ extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer{
 //    
 //}
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read.UUIDOption{
     internal func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
         switch self {
@@ -234,7 +248,7 @@ extension StreamClient.Read.UUIDOption{
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read.ControlOption{
     internal func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
         switch self {
@@ -245,7 +259,7 @@ extension StreamClient.Read.ControlOption{
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read.Position {
     
     internal func build() -> EventStore_Client_Streams_ReadReq.Options.Position{
@@ -267,7 +281,7 @@ extension StreamClient.Read.Position {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Cursor where Pointer == StreamClient.ReadAll.CursorPointer{
     
     public func build() -> EventStore_Client_Streams_ReadReq.Options.AllOptions{
@@ -298,7 +312,7 @@ extension StreamClient.Cursor where Pointer == StreamClient.ReadAll.CursorPointe
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read.SubscriptionFilter {
     
     internal func build(options: inout EventStore_Client_Streams_ReadReq.Options){
@@ -330,7 +344,7 @@ extension StreamClient.Read.SubscriptionFilter {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Identifier {
     
     internal func build(options: inout StreamClient.Read.Options.UnderlyingMessage) throws{
@@ -342,7 +356,7 @@ extension StreamClient.Identifier {
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read {
     
     public struct Response: GRPCResponse {
@@ -444,7 +458,7 @@ extension StreamClient.Read {
 }
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read.Response.Content {
     internal init(content: EventStore_Client_Streams_ReadResp.OneOf_Content) throws{
         switch content {

@@ -19,10 +19,12 @@ public enum ClientSettingsError: Error {
 }
 
 public enum ClientError: Error {
+    case eventDataError(message: String)
     case streamNameError(message: String)
     case readResponseError(message: String)
     case projectionNameError(message: String)
 }
+
 
 
 

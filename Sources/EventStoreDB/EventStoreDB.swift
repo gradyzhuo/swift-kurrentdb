@@ -14,7 +14,7 @@ public struct EventStoreDB {
         shared.settings = settings
     }
     
-    @available(macOS 13.0, *)
+    
     public static func subscribeToAll(groupName: String, bufferSize: Int32 = 1000, uuidOption: UUID.Option = .string) async throws -> AsyncStream<ReadEvent>{
         let client = try PersistentSubscriptionsClient(selection: .all, groupName: groupName)
         let options: PersistentSubscriptionsClient.Read.Options = 

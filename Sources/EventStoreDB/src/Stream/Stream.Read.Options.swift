@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Read {
     
     public final class Options: EventStoreOptions {

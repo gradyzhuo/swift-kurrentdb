@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     public struct Append: StreamUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_AppendReq>
@@ -44,7 +44,7 @@ extension StreamClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Append {
     
     public enum CurrentRevisionOption {
@@ -132,7 +132,7 @@ extension StreamClient.Append {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Identifier {
     
     internal func build(options: inout StreamClient.Append.Request.UnderlyingMessage.Options) throws{
@@ -143,23 +143,23 @@ extension StreamClient.Identifier {
 extension EventData {
     
     internal func build(request: inout EventStore_Client_Streams_AppendReq) throws {
-        request.proposedMessage = try .with{
+        request.proposedMessage = .with{
             $0.id = .with{
                 $0.value = .string(self.id.uuidString)
             }
             
-            $0.data = try content.data
+            $0.data = data
             $0.metadata = self.metaData
         }
     }
     
     internal func build() throws -> EventStore_Client_Streams_AppendReq.ProposedMessage{
-        return try .with{
+        return .with{
             $0.id = .with{
                 $0.value = .string(id.uuidString)
             }
             
-            $0.data = try content.data
+            $0.data = data
             $0.metadata = metaData
         }
     }

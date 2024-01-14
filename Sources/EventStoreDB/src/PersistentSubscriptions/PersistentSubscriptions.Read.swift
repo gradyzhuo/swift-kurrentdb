@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     
     public struct Read: StreamStream{
@@ -34,7 +34,7 @@ extension PersistentSubscriptionsClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.Read{
     public struct Result{
         public let event: ReadEvent
@@ -47,7 +47,7 @@ extension PersistentSubscriptionsClient.Read{
     }
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.Read {
     
     public struct Response: GRPCResponse {
@@ -89,7 +89,7 @@ extension PersistentSubscriptionsClient.Read {
     
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.Read{
     public final class Options: EventStoreOptions{
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options

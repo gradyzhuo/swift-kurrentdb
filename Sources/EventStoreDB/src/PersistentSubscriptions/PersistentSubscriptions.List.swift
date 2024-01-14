@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     public struct List: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ListReq>
@@ -28,7 +28,7 @@ extension PersistentSubscriptionsClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.List{
     
     public struct Response: GRPCResponse {
@@ -44,7 +44,7 @@ extension PersistentSubscriptionsClient.List{
     
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.List {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options

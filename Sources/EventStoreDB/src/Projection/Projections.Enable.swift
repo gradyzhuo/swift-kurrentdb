@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient {
     
     public struct Enable: UnaryUnary {
@@ -34,7 +34,7 @@ extension ProjectionsClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient.Enable{
     public final class Options: EventStoreOptions {
         

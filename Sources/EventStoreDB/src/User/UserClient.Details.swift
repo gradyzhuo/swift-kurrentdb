@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension UserClient {
     
     public struct Details: UnaryStream {
@@ -32,7 +32,7 @@ extension UserClient {
 }
 
 
-@available(macOS 13.0, *)
+
 extension UserClient.Details {
     
     public struct Response: GRPCResponse {

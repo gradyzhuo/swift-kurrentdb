@@ -10,7 +10,7 @@ import GRPC
 import NIO
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 public struct GossipClient: EventStoreClient {
     public typealias UnderlyingClient = EventStore_Client_Gossip_GossipAsyncClient
     
@@ -29,7 +29,7 @@ public struct GossipClient: EventStoreClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension GossipClient {
     
     public static func read() async throws -> [Read.Response.MemberInfo] {

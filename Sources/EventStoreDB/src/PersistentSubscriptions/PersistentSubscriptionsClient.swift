@@ -10,7 +10,7 @@ import GRPC
 import GRPCSupport
 
 
-@available(macOS 13.0, *)
+
 public struct PersistentSubscriptionsClient: EventStoreClient {
     
     public typealias UnderlyingClient = EventStore_Client_PersistentSubscriptions_PersistentSubscriptionsAsyncClient
@@ -35,7 +35,7 @@ public struct PersistentSubscriptionsClient: EventStoreClient {
 }
 
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient{
     
     //MARK: - Create Action
@@ -271,7 +271,7 @@ extension PersistentSubscriptionsClient{
 
 
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     
     public enum StreamSelection {
@@ -286,7 +286,7 @@ extension PersistentSubscriptionsClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient{
     
     public struct Measurement {

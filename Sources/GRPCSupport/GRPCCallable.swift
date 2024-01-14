@@ -17,7 +17,7 @@ public protocol GRPCCallable {
 public protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable{
 }
 
-@available(macOS 13.0, *)
+
 public protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponseHandlable{
     
 }
@@ -25,7 +25,7 @@ public protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponse
 public protocol StreamUnary: GRPCCallable, StreamRequestBuildable, UnaryResponseHandlable{
 }
 
-@available(macOS 13.0, *)
+
 public protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamResponseHandlable{
     
 }

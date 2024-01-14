@@ -21,7 +21,7 @@ extension EventStore_Client_Streams_DeleteReq.Options.OneOf_ExpectedStreamRevisi
 extension EventStore_Client_Streams_TombstoneReq.Options.OneOf_ExpectedStreamRevision : ExpectedStreamRevisionProtocol {}
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient {
     public struct Identifier {
         typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
@@ -51,7 +51,7 @@ extension StreamClient {
 
 
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Identifier: ExpressibleByStringLiteral{
     public typealias StringLiteralType = String
     
@@ -61,7 +61,7 @@ extension StreamClient.Identifier: ExpressibleByStringLiteral{
     
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Identifier {
     
     internal func build() throws -> UnderlyingMessage {
@@ -75,7 +75,7 @@ extension StreamClient.Identifier {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension StreamClient.Position {
     public enum Option {
         case noPosition

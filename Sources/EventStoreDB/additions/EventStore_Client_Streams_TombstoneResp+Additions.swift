@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension EventStore_Client_Streams_TombstoneResp.OneOf_PositionOption {
     typealias Represented = StreamClient.Position.Option
 

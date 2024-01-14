@@ -9,7 +9,7 @@ import Foundation
 import GRPCSupport
 
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient{
     public struct Ack: StreamStream{
         

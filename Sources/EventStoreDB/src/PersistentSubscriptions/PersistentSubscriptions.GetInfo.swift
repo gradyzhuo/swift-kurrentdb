@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     public struct GetInfo: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>
@@ -32,7 +32,7 @@ extension PersistentSubscriptionsClient {
 
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.GetInfo{
     public struct Response: GRPCResponse{
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_GetInfoResp

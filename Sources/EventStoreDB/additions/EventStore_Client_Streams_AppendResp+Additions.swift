@@ -8,7 +8,6 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
 extension EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOption {
     typealias Represented = StreamClient.Append.Response.CurrentRevisionOption
 
@@ -22,7 +21,6 @@ extension EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOpti
     }
 }
 
-@available(macOS 13.0, *)
 extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_CurrentRevisionOption {
     typealias Represented = StreamClient.Append.Response.CurrentRevisionOption
 
@@ -36,7 +34,7 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_Curren
     }
 }
 
-@available(macOS 13.0, *)
+
 extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_ExpectedRevisionOption {
     typealias Represented = StreamClient.Append.Response.Wrong.ExpectedRevisionOption
 
@@ -54,7 +52,7 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_Expect
     }
 }
 
-@available(macOS 13.0, *)
+
 extension EventStore_Client_Streams_AppendResp.Success.OneOf_PositionOption {
     typealias Represented = StreamClient.Position.Option
 

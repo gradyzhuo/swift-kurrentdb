@@ -9,7 +9,7 @@ import GRPC
 import SwiftProtobuf
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 public struct ProjectionsClient: EventStoreClient {
     public typealias UnderlyingClient = EventStore_Client_Projections_ProjectionsAsyncClient
     
@@ -34,7 +34,7 @@ public struct ProjectionsClient: EventStoreClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient {
     
     public enum Mode {
@@ -53,7 +53,7 @@ extension ProjectionsClient {
 }
 
 
-@available(macOS 13.0, *)
+
 extension ProjectionsClient {
     
     //MARK: - Create Actions

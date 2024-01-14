@@ -40,7 +40,7 @@ public struct User: GRPCResponse {
 }
 
 
-@available(macOS 13.0, *)
+
 public struct UserClient: EventStoreClient {
     public typealias UnderlyingClient = EventStore_Client_Users_UsersAsyncClient
     
@@ -60,7 +60,7 @@ public struct UserClient: EventStoreClient {
     
 }
 
-@available(macOS 13.0, *)
+
 extension UserClient {
     
     // MARK: - Create Actions

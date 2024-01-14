@@ -8,7 +8,7 @@
 import Foundation
 import GRPCSupport
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient {
     public struct ReplayParked: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>
@@ -37,7 +37,7 @@ extension PersistentSubscriptionsClient {
     }
 }
 
-@available(macOS 13.0, *)
+
 extension PersistentSubscriptionsClient.ReplayParked{
     public final class Options: EventStoreOptions {
         public enum StopAtOption {
