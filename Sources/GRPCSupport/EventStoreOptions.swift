@@ -1,16 +1,13 @@
 //
-//  File.swift
-//  
+//  EventStoreOptions.swift
 //
-//  Created by Ospark.org on 2023/10/31.
+//
+//  Created by Grady Zhuo on 2023/10/31.
 //
 
 import Foundation
 import SwiftProtobuf
 
 package protocol EventStoreOptions: GRPCBridge {
-    
     func build() -> UnderlyingMessage
-    
 }
-

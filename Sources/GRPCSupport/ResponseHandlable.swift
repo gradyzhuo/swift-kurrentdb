@@ -1,45 +1,36 @@
 //
-//  File.swift
-//  
+//  ResponseHandlable.swift
 //
-//  Created by 卓俊諺 on 2023/12/7.
+//
+//  Created by Grady Zhuo on 2023/12/7.
 //
 
 import Foundation
 import GRPC
 
-public protocol ResponseHandlable{
-    
-}
+public protocol ResponseHandlable {}
 
 public protocol UnaryResponseHandlable: ResponseHandlable where Self: GRPCCallable {
     func handle(response: Response.UnderlyingMessage) throws -> Response
 }
 
-
-
-extension UnaryResponseHandlable{
-    
+extension UnaryResponseHandlable {
     @discardableResult
-    public func handle(response: Response.UnderlyingMessage) throws -> Response{
-        return try .init(from: response)
+    public func handle(response: Response.UnderlyingMessage) throws -> Response {
+        try .init(from: response)
     }
-    
 }
-
-
 
 public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: GRPCCallable {
     func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> AsyncStream<Response>
 }
 
-
-extension StreamResponseHandlable{
+extension StreamResponseHandlable {
     public typealias Responses = AsyncStream<Self.Response>
-    
+
     @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {
-        return .init { continuation in
+        .init { continuation in
             Task {
                 for try await message in responses {
                     let response = try self.handle(response: message)

@@ -1,8 +1,8 @@
 //
-//  File.swift
-//  
+//  UUID+Additions.swift
 //
-//  Created by Ospark.org on 2023/10/24.
+//
+//  Created by Grady Zhuo on 2023/10/24.
 //
 
 import Foundation
@@ -20,7 +20,7 @@ extension UUID {
         a |= UInt64(self.uuid.5) << (8 * 5)
         a |= UInt64(self.uuid.6) << (8 * 6)
         a |= UInt64(self.uuid.7) << (8 * 7)
-        
+
         var b: UInt64 = 0
         b |= UInt64(self.uuid.8)
         b |= UInt64(self.uuid.9) << 8
@@ -33,7 +33,7 @@ extension UUID {
 
         return (Int64(bitPattern: a), Int64(bitPattern: b))
     }
-    
+
     static func from(integers: (Int64, Int64)) -> UUID {
         let a = UInt64(bitPattern: integers.0)
         let b = UInt64(bitPattern: integers.1)
@@ -56,34 +56,34 @@ extension UUID {
             UInt8((b >> (8 * 7)) & 0xFF)
         ))
     }
-    
+
     var data: Data {
         var data = Data(count: 16)
         // uuid is a tuple type which doesn't have dynamic subscript access...
-        data[0] = self.uuid.0
-        data[1] = self.uuid.1
-        data[2] = self.uuid.2
-        data[3] = self.uuid.3
-        data[4] = self.uuid.4
-        data[5] = self.uuid.5
-        data[6] = self.uuid.6
-        data[7] = self.uuid.7
-        data[8] = self.uuid.8
-        data[9] = self.uuid.9
-        data[10] = self.uuid.10
-        data[11] = self.uuid.11
-        data[12] = self.uuid.12
-        data[13] = self.uuid.13
-        data[14] = self.uuid.14
-        data[15] = self.uuid.15
+        data[0] = uuid.0
+        data[1] = uuid.1
+        data[2] = uuid.2
+        data[3] = uuid.3
+        data[4] = uuid.4
+        data[5] = uuid.5
+        data[6] = uuid.6
+        data[7] = uuid.7
+        data[8] = uuid.8
+        data[9] = uuid.9
+        data[10] = uuid.10
+        data[11] = uuid.11
+        data[12] = uuid.12
+        data[13] = uuid.13
+        data[14] = uuid.14
+        data[15] = uuid.15
         return data
     }
-    
+
     static func from(data: Data?) -> UUID? {
         guard data?.count == MemoryLayout<uuid_t>.size else {
             return nil
         }
-        return data?.withUnsafeBytes{
+        return data?.withUnsafeBytes {
             guard let baseAddress = $0.bindMemory(to: UInt8.self).baseAddress else {
                 return nil
             }
@@ -92,17 +92,14 @@ extension UUID {
     }
 }
 
-
 extension UUID {
-    
     public enum Option {
         case string
         case structured
     }
-    
-    
-    func toEventStoreUUID()->EventStore_Client_UUID {
-        .with{
+
+    func toEventStoreUUID() -> EventStore_Client_UUID {
+        .with {
             $0.string = self.uuidString
         }
     }

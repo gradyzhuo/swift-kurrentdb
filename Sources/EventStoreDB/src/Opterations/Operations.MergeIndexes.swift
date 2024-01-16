@@ -1,16 +1,14 @@
 //
-//  File.swift
-//  
+//  Operations.MergeIndexes.swift
 //
-//  Created by 卓俊諺 on 2023/12/12.
+//
+//  Created by Grady Zhuo on 2023/12/12.
 //
 
 import Foundation
 import GRPCSupport
 
-
 extension OperationsClient {
-    
     public struct MergeIndexes: UnaryUnary {
         public typealias Request = EmptyRequest
         public typealias Response = EmptyResponse

@@ -1,31 +1,31 @@
 //
-//  File.swift
-//  
+//  Projections.Create.swift
 //
-//  Created by Ospark.org on 2023/11/22.
+//
+//  Created by Grady Zhuo on 2023/11/22.
 //
 
 import Foundation
-import SwiftProtobuf
 import GRPCSupport
+import SwiftProtobuf
 
 extension ProjectionsClient {
-    public struct ContinuousCreate:  UnaryUnary {
+    public struct ContinuousCreate: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_CreateReq>
         public typealias Response = DiscardedResponse<EventStore_Client_Projections_CreateResp>
-        
+
         public let name: String
         public let query: String
         public let options: Options
-        
+
         init(name: String, query: String, options: Options) {
             self.name = name
             self.query = query
             self.options = options
         }
-        
+
         public func build() throws -> Request.UnderlyingMessage {
-            return .with{
+            .with {
                 $0.options = options.build()
                 $0.options.continuous.name = name
                 $0.options.query = query
@@ -34,50 +34,48 @@ extension ProjectionsClient {
     }
 }
 
-
-//MARK: - The Options of Continuous Create.
+// MARK: - The Options of Continuous Create.
 
 extension ProjectionsClient.ContinuousCreate {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_CreateReq.Options
-        
+
         var options: UnderlyingMessage
-        
+
         public var emitEnabled: Bool {
-            didSet{
+            didSet {
                 options.continuous.emitEnabled = emitEnabled
             }
         }
-        
+
         public func build() -> UnderlyingMessage {
-            return options
+            options
         }
-        
-        public var trackEmittedStreams: Bool{
-            didSet{
+
+        public var trackEmittedStreams: Bool {
+            didSet {
                 options.continuous.trackEmittedStreams = trackEmittedStreams
             }
         }
-        
+
         public init() {
-            self.options = .with{
+            options = .with {
                 $0.continuous = .init()
             }
-            self.emitEnabled = true
-            self.trackEmittedStreams = true
+            emitEnabled = true
+            trackEmittedStreams = true
         }
-        
+
         @discardableResult
-        public func emit(enabled: Bool)->Self{
-            self.emitEnabled = enabled
+        public func emit(enabled: Bool) -> Self {
+            emitEnabled = enabled
             return self
         }
-        
+
         @discardableResult
-        public func trackEmittedStreams(_ trackEmittedStreams: Bool)->Self{
+        public func trackEmittedStreams(_ trackEmittedStreams: Bool) -> Self {
             self.trackEmittedStreams = trackEmittedStreams
             return self
         }
-        
     }
 }

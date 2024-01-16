@@ -2,7 +2,7 @@
 //  EventStore_Client_StreamIdentifier+Additions.swift
 //
 //
-//  Created by Ospark.org on 2023/10/24.
+//  Created by Grady Zhuo on 2023/10/24.
 //
 
 import Foundation

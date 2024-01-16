@@ -1,12 +1,10 @@
 //
-//  File.swift
-//  
+//  Cluster.swift
 //
-//  Created by Ospark.org on 2023/10/17.
+//
+//  Created by Grady Zhuo on 2023/10/17.
 //
 
 import Foundation
 
-struct ClusterInfo {
-    
-}
+struct ClusterInfo {}

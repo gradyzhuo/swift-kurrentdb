@@ -1,22 +1,21 @@
 //
-//  File.swift
-//  
+//  Stream.Append.Options.swift
 //
-//  Created by Ospark.org on 2023/10/29.
+//
+//  Created by Grady Zhuo on 2023/10/29.
 //
 
 import Foundation
 import GRPCSupport
 
-
 extension StreamClient.Append {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
-        
+
         public var options: UnderlyingMessage = .init()
-        
-        public var expectedRevision: StreamClient.Revision{
-            didSet{
+
+        public var expectedRevision: StreamClient.Revision {
+            didSet {
                 switch expectedRevision {
                 case .any:
                     options.any = .init()
@@ -24,22 +23,18 @@ extension StreamClient.Append {
                     options.noStream = .init()
                 case .streamExists:
                     options.streamExists = .init()
-                case .revision(let rev):
+                case let .revision(rev):
                     options.revision = rev
                 }
             }
         }
-        
-        
+
         public init() {
             expectedRevision = .any
         }
-        
+
         public func build() -> UnderlyingMessage {
-            return options
+            options
         }
-    
-        
     }
 }
-

@@ -1,8 +1,8 @@
 //
-//  File.swift
-//  
+//  Error.swift
 //
-//  Created by Ospark.org on 2023/10/17.
+//
+//  Created by Grady Zhuo on 2023/10/17.
 //
 
 import Foundation
@@ -25,10 +25,6 @@ public enum ClientError: Error {
     case projectionNameError(message: String)
 }
 
-
-
-
-public enum ReadEventError : Error {
+public enum ReadEventError: Error {
     case GRPCDecodeException(message: String)
-    
 }

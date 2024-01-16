@@ -1,32 +1,28 @@
 //
-//  File.swift
-//  
+//  EventStoreClient.swift
 //
-//  Created by 卓俊諺 on 2023/12/7.
+//
+//  Created by Grady Zhuo on 2023/12/7.
 //
 
 import Foundation
-import SwiftProtobuf
 import GRPC
+import SwiftProtobuf
 
 public protocol EventStoreClient {
     associatedtype UnderlyingClient: GRPCClient
-    
+
     var clientSettings: ClientSettings { set get }
     var channel: GRPCChannel { get }
-    
+
     func makeClient(callOptions: CallOptions) throws -> UnderlyingClient
 }
 
-
 extension EventStoreClient {
-    
-    public var underlyingClient: UnderlyingClient{
-        get throws{
+    public var underlyingClient: UnderlyingClient {
+        get throws {
             let options = try clientSettings.makeCallOptions()
             return try makeClient(callOptions: options)
         }
     }
-    
 }
-

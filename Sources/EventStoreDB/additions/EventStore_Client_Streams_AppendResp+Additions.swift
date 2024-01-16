@@ -2,7 +2,7 @@
 //  EventStore_Client_Streams_AppendResp+Additions.swift
 //
 //
-//  Created by Ospark.org on 2023/10/19.
+//  Created by Grady Zhuo on 2023/10/19.
 //
 
 import Foundation
@@ -14,9 +14,9 @@ extension EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOpti
     func represented() -> Represented {
         switch self {
         case let .currentRevision(revision):
-            return .revision(revision)
+            .revision(revision)
         case .noStream:
-            return .noStream
+            .noStream
         }
     }
 }
@@ -27,13 +27,12 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_Curren
     func represented() -> Represented {
         switch self {
         case let .currentRevision(revision):
-            return .revision(revision)
+            .revision(revision)
         case .currentNoStream:
-            return .noStream
+            .noStream
         }
     }
 }
-
 
 extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_ExpectedRevisionOption {
     typealias Represented = StreamClient.Append.Response.Wrong.ExpectedRevisionOption
@@ -41,17 +40,16 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_Expect
     func represented() -> Represented {
         switch self {
         case .expectedAny:
-            return .any
+            .any
         case .expectedNoStream:
-            return .noStream
+            .noStream
         case .expectedStreamExists:
-            return .streamExists
+            .streamExists
         case let .expectedRevision(revision):
-            return .revision(revision)
+            .revision(revision)
         }
     }
 }
-
 
 extension EventStore_Client_Streams_AppendResp.Success.OneOf_PositionOption {
     typealias Represented = StreamClient.Position.Option
@@ -59,9 +57,9 @@ extension EventStore_Client_Streams_AppendResp.Success.OneOf_PositionOption {
     func represented() -> Represented {
         switch self {
         case let .position(position):
-            return .position(.init(commit: position.commitPosition, prepare: position.preparePosition))
+            .position(.init(commit: position.commitPosition, prepare: position.preparePosition))
         case .noPosition:
-            return .noPosition
+            .noPosition
         }
     }
 }

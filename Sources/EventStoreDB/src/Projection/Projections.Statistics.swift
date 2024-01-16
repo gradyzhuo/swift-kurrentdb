@@ -1,54 +1,45 @@
 //
-//  File.swift
-//  
+//  Projections.Statistics.swift
 //
-//  Created by Ospark.org on 2023/11/26.
+//
+//  Created by Grady Zhuo on 2023/11/26.
 //
 
 import Foundation
 import GRPCSupport
 
-
 extension ProjectionsClient {
-    
     public struct Statistics: UnaryStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_StatisticsReq>
-        
+
         public enum ModeOptions {
             case all
             case transient
             case continuous
             case oneTime
         }
-        
+
         public let name: String
         public let options: Options
-        
+
         init(name: String, options: Options) {
             self.name = name
             self.options = options
         }
-        
+
         public func build() throws -> Request.UnderlyingMessage {
-            return .with{
+            .with {
                 $0.options = options.build()
                 $0.options.name = name
             }
         }
-        
-        
     }
-    
-    
 }
 
-
 extension ProjectionsClient.Statistics {
-    
     public struct Response: GRPCResponse {
-        
         public typealias UnderlyingMessage = EventStore_Client_Projections_StatisticsResp
-        
+
         public let coreProcessingTime: Int64
         public let version: Int64
         public let epoch: Int64
@@ -68,8 +59,8 @@ extension ProjectionsClient.Statistics {
         public let bufferedEvents: Int64
         public let writePendingEventsBeforeCheckpoint: Int32
         public let writePendingEventsAfterCheckpoint: Int32
-        
-        internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) {
+
+        init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) {
             self.coreProcessingTime = coreProcessingTime
             self.version = version
             self.epoch = epoch
@@ -90,11 +81,10 @@ extension ProjectionsClient.Statistics {
             self.writePendingEventsBeforeCheckpoint = writePendingEventsBeforeCheckpoint
             self.writePendingEventsAfterCheckpoint = writePendingEventsAfterCheckpoint
         }
-        
+
         public init(from message: EventStore_Client_Projections_StatisticsResp) throws {
-            
             let details = message.details
-            
+
             self.init(
                 coreProcessingTime: details.coreProcessingTime,
                 version: details.version,
@@ -114,54 +104,45 @@ extension ProjectionsClient.Statistics {
                 checkpointStatus: details.checkpointStatus,
                 bufferedEvents: details.bufferedEvents,
                 writePendingEventsBeforeCheckpoint: details.writePendingEventsBeforeCheckpoint,
-                writePendingEventsAfterCheckpoint: details.writePendingEventsAfterCheckpoint)
-            
+                writePendingEventsAfterCheckpoint: details.writePendingEventsAfterCheckpoint
+            )
         }
-        
     }
-    
-    
 }
 
-
 extension ProjectionsClient.Statistics {
-    
     public final class Options: EventStoreOptions {
-        
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
-        
+
         var options: UnderlyingMessage
         var mode: ModeOptions {
-            didSet{
-                switch mode{
+            didSet {
+                switch mode {
                 case .all:
-                    self.options.all = .init()
+                    options.all = .init()
                 case .transient:
-                    self.options.transient = .init()
+                    options.transient = .init()
                 case .continuous:
-                    self.options.continuous = .init()
+                    options.continuous = .init()
                 case .oneTime:
-                    self.options.oneTime = .init()
+                    options.oneTime = .init()
                 }
             }
         }
-        
-        
+
         init(options: UnderlyingMessage = .init()) {
             self.options = options
-            self.mode = .all
+            mode = .all
         }
-        
+
         public func build() -> ProjectionsClient.Statistics.Request.UnderlyingMessage.Options {
-            return options
+            options
         }
-        
+
         @discardableResult
-        public func set(mode: ModeOptions)->Self{
+        public func set(mode: ModeOptions) -> Self {
             self.mode = mode
             return self
         }
-        
     }
-    
 }

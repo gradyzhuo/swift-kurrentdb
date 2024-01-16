@@ -1,13 +1,12 @@
 //
-//  File.swift
-//  
+//  Operations.StartScavenge.swift
 //
-//  Created by 卓俊諺 on 2023/12/12.
+//
+//  Created by Grady Zhuo on 2023/12/12.
 //
 
 import Foundation
 import GRPCSupport
-
 
 extension OperationsClient {
     public struct StartScavenge: UnaryUnary {
@@ -16,10 +15,10 @@ extension OperationsClient {
 
         let threadCount: Int32
         let startFromChunk: Int32
-        
+
         public func build() throws -> Request.UnderlyingMessage {
-            return .with{
-                $0.options = .with{
+            .with {
+                $0.options = .with {
                     $0.threadCount = threadCount
                     $0.startFromChunk = startFromChunk
                 }

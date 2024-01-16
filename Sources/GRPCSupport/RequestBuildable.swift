@@ -1,29 +1,24 @@
 //
-//  File.swift
-//  
+//  RequestBuildable.swift
 //
-//  Created by 卓俊諺 on 2023/12/7.
+//
+//  Created by Grady Zhuo on 2023/12/7.
 //
 
 import Foundation
 
-public protocol RequestBuildable {
-    
-    
-}
+public protocol RequestBuildable {}
 
-public protocol StreamRequestBuildable: RequestBuildable where Self: GRPCCallable{
+public protocol StreamRequestBuildable: RequestBuildable where Self: GRPCCallable {
     func build() throws -> [Request.UnderlyingMessage]
 }
 
-public protocol UnaryRequestBuildable: RequestBuildable where Self: GRPCCallable{
+public protocol UnaryRequestBuildable: RequestBuildable where Self: GRPCCallable {
     func build() throws -> Request.UnderlyingMessage
 }
 
-
 extension UnaryRequestBuildable where Request == GenericGRPCRequest<EventStore_Client_Empty> {
-    
     public func build() throws -> Request.UnderlyingMessage {
-        return .init()
+        .init()
     }
 }

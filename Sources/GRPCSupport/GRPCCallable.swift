@@ -1,31 +1,23 @@
 //
-//  File.swift
-//  
+//  GRPCCallable.swift
 //
-//  Created by Ospark.org on 2023/10/29.
+//
+//  Created by Grady Zhuo on 2023/10/29.
 //
 
 import Foundation
-import SwiftProtobuf
 import GRPC
+import SwiftProtobuf
 
 public protocol GRPCCallable {
     associatedtype Request: GRPCRequest
     associatedtype Response: GRPCResponse
 }
 
-public protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable{
-}
+public protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable {}
 
+public protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponseHandlable {}
 
-public protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponseHandlable{
-    
-}
+public protocol StreamUnary: GRPCCallable, StreamRequestBuildable, UnaryResponseHandlable {}
 
-public protocol StreamUnary: GRPCCallable, StreamRequestBuildable, UnaryResponseHandlable{
-}
-
-
-public protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamResponseHandlable{
-    
-}
+public protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamResponseHandlable {}

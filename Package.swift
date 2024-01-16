@@ -2,27 +2,27 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
-import CompilerPluginSupport
 
 let package = Package(
     name: "eventstoredb-swift",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v13),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "EventStoreDB",
-            targets: ["EventStoreDB", "GRPCSupport"])
+            targets: ["EventStoreDB", "GRPCSupport"]
+        ),
     ],
     dependencies: [
-      .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
-      .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
-      .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-      .package(
-              url: "https://github.com/Flight-School/AnyCodable",
-              from: "0.6.0"
-          )
+        .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(
+            url: "https://github.com/Flight-School/AnyCodable",
+            from: "0.6.0"
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -32,28 +32,27 @@ let package = Package(
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "AnyCodable", package: "AnyCodable"),
-                "GRPCSupport"
-            ]),
+                "GRPCSupport",
+            ]
+        ),
         .target(
             name: "GRPCSupport",
             dependencies: [
                 .product(name: "GRPC", package: "grpc-swift"),
-                .product(name: "SwiftProtobuf", package: "swift-protobuf")
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ],
             plugins: [
                 .plugin(name: "GRPCSwiftPlugin", package: "grpc-swift"),
-                .plugin(name: "SwiftProtobufPlugin", package: "swift-protobuf")
-            ]),
-        .executableTarget(name: "GRPCTesting", dependencies: [
-            .target(name: "EventStoreDB"),
-            ]),
+                .plugin(name: "SwiftProtobufPlugin", package: "swift-protobuf"),
+            ]
+        ),
         .testTarget(
             name: "EventStoreDBTests",
             dependencies: ["EventStoreDB"],
             resources: [
                 .copy("Resources/ca.crt"),
-                .copy("Resources/multiple-events.json")
+                .copy("Resources/multiple-events.json"),
             ]
-            ),
+        ),
     ]
 )

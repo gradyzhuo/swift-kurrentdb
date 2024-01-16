@@ -1,8 +1,8 @@
 //
-//  File.swift
-//  
+//  FluentInterface.swift
 //
-//  Created by 卓俊諺 on 2023/12/27.
+//
+//  Created by Grady Zhuo on 2023/12/27.
 //
 
 import Foundation
@@ -14,9 +14,8 @@ public struct FluentInterface<Subject> {
 
     // 因為要動到 subject 的屬性，所以 keyPath 的型別必須是 WritableKeyPath
     // 回傳值是一個 Setter 方法
-    
-    subscript<Value>(dynamicMember keyPath: WritableKeyPath<Subject, Value>) -> ((Value) -> FluentInterface<Subject>) {
 
+    subscript<Value>(dynamicMember keyPath: WritableKeyPath<Subject, Value>) -> ((Value) -> FluentInterface<Subject>) {
         // 因為在要回傳的 Setter 方法裡不能更改 self，所以要把 subject 從 self 取出來用
         var subject = self.subject
 

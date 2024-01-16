@@ -1,71 +1,66 @@
 //
-//  File.swift
-//  
+//  PersistentSubscriptions.ReplayParked.swift
 //
-//  Created by 卓俊諺 on 2023/12/11.
+//
+//  Created by Grady Zhuo on 2023/12/11.
 //
 
 import Foundation
 import GRPCSupport
 
-
 extension PersistentSubscriptionsClient {
     public struct ReplayParked: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>
         public typealias Response = DiscardedResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>
-        
+
         let streamSelection: StreamSelection
         let groupName: String
         let options: Options
-        
-        
+
         public func build() throws -> EventStore_Client_PersistentSubscriptions_ReplayParkedReq {
-            
-            return try .with{
+            try .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
-                
+
                 switch streamSelection {
                 case .all:
                     $0.options.all = .init()
-                case .specified(let streamIdentifier):
+                case let .specified(streamIdentifier):
                     $0.options.streamIdentifier = try streamIdentifier.build()
                 }
             }
-            
         }
     }
 }
 
-
-extension PersistentSubscriptionsClient.ReplayParked{
+extension PersistentSubscriptionsClient.ReplayParked {
     public final class Options: EventStoreOptions {
         public enum StopAtOption {
             case position(position: Int64)
             case noLimit
         }
-        
+
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         var message: UnderlyingMessage
-        
-        init(){
-            self.message = .init()
-            self.stop(at: .noLimit)
+
+        init() {
+            message = .init()
+            stop(at: .noLimit)
         }
-        
+
         @discardableResult
-        public func stop(at option: StopAtOption) -> Self{
+        public func stop(at option: StopAtOption) -> Self {
             switch option {
-            case .position(let position):
-                self.message.stopAt = position
+            case let .position(position):
+                message.stopAt = position
             case .noLimit:
-                self.message.noLimit = .init()
+                message.noLimit = .init()
             }
             return self
         }
-        
+
         public func build() -> PersistentSubscriptionsClient.ReplayParked.Request.UnderlyingMessage.Options {
-            return self.message
+            message
         }
     }
 }

@@ -1,27 +1,26 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-import GRPC
 import Foundation
+import GRPC
 import NIOSSL
 
 public struct EventStoreDB {
-    public static var shared = Self.init()
-    
+    public static var shared = Self()
+
     public internal(set) var settings: ClientSettings = .localhost()
-    
+
     public static func using(settings: ClientSettings) throws {
         shared.settings = settings
     }
-    
-    
-    public static func subscribeToAll(groupName: String, bufferSize: Int32 = 1000, uuidOption: UUID.Option = .string) async throws -> AsyncStream<ReadEvent>{
+
+    public static func subscribeToAll(groupName: String, bufferSize: Int32 = 1000, uuidOption: UUID.Option = .string) async throws -> AsyncStream<ReadEvent> {
         let client = try PersistentSubscriptionsClient(selection: .all, groupName: groupName)
-        let options: PersistentSubscriptionsClient.Read.Options = 
+        let options: PersistentSubscriptionsClient.Read.Options =
             .init()
-            .set(bufferSize: bufferSize)
-            .set(uuidOption: uuidOption)
-        
+                .set(bufferSize: bufferSize)
+                .set(uuidOption: uuidOption)
+
         let results = try await client.read(options: options)
         return AsyncStream.init { continuation in
             Task {
@@ -31,8 +30,5 @@ public struct EventStoreDB {
                 continuation.finish()
             }
         }
-
     }
-    
 }
-
