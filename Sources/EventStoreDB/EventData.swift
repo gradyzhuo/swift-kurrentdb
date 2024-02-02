@@ -8,8 +8,6 @@
 import AnyCodable
 import Foundation
 import GRPCSupport
-// import GRPCSupportCore
-import GRPCSupportMac
 
 public enum ContentType: String, Codable {
     case unknown
