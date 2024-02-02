@@ -1,5 +1,5 @@
 //
-//  Projections.State.swift
+//  Projections.Result.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/27.
@@ -10,16 +10,11 @@ import GRPCSupport
 import SwiftProtobuf
 
 extension ProjectionsClient {
-    public struct State: UnaryUnary {
-        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_StateReq>
+    public struct Result: UnaryUnary {
+        public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_ResultReq>
 
         public let name: String
         public let options: Options
-
-        init(name: String, options: Options) {
-            self.name = name
-            self.options = options
-        }
 
         public func build() throws -> Request.UnderlyingMessage {
             .with {
@@ -30,14 +25,14 @@ extension ProjectionsClient {
     }
 }
 
-extension ProjectionsClient.State {
+extension ProjectionsClient.Result {
     public struct Response: GRPCJSONDecodableResponse {
-        public typealias UnderlyingMessage = EventStore_Client_Projections_StateResp
+        public typealias UnderlyingMessage = EventStore_Client_Projections_ResultResp
 
-        public private(set) var jsonValue: SwiftProtobuf.Google_Protobuf_Value
+        public private(set) var jsonValue: Google_Protobuf_Value
 
         public init(from message: UnderlyingMessage) throws {
-            jsonValue = message.state
+            jsonValue = message.result
         }
     }
 

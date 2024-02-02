@@ -19,12 +19,6 @@ extension StreamClient {
         public let cursor: StreamClient.Cursor<CursorPointer>
         public let options: Options
 
-        init(streamIdentifier: StreamClient.Identifier, cursor: StreamClient.Cursor<CursorPointer>, options: Options) {
-            self.streamIdentifier = streamIdentifier
-            self.cursor = cursor
-            self.options = options
-        }
-
         public func build() throws -> Request.UnderlyingMessage {
             try .with {
                 $0.options = options.build()
@@ -43,11 +37,6 @@ extension StreamClient {
 
         public let cursor: StreamClient.Cursor<CursorPointer>
         public let options: Options
-
-        init(cursor: StreamClient.Cursor<CursorPointer>, options: Options) {
-            self.cursor = cursor
-            self.options = options
-        }
 
         public func build() throws -> Request.UnderlyingMessage {
             .with {

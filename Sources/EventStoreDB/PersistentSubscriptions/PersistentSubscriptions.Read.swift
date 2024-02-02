@@ -26,7 +26,7 @@ extension PersistentSubscriptionsClient {
                         $0.options.all = .init()
                     }
                     $0.options.groupName = groupName
-                },
+                }
             ]
         } // End of build
     }

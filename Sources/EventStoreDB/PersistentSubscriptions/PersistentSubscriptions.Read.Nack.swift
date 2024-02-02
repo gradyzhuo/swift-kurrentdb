@@ -51,7 +51,7 @@ extension PersistentSubscriptionsClient {
                         $0.action = action.toEventStoreNack()
                         $0.reason = reason
                     }
-                },
+                }
             ]
         }
     }

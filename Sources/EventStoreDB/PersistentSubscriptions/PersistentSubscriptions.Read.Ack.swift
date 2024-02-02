@@ -25,7 +25,7 @@ extension PersistentSubscriptionsClient {
                             $0.toEventStoreUUID()
                         }
                     }
-                },
+                }
             ]
         }
     }

@@ -15,11 +15,6 @@ extension StreamClient {
         public let streamIdentifier: StreamClient.Identifier
         public let options: Options
 
-        init(streamIdentifier: StreamClient.Identifier, options: Options) {
-            self.options = options
-            self.streamIdentifier = streamIdentifier
-        }
-
         public func build() throws -> EventStore_Client_Streams_TombstoneReq {
             try .with {
                 var options = options.build()

@@ -18,12 +18,6 @@ extension ProjectionsClient {
         public let query: String
         public let options: Options
 
-        init(name: String, query: String, options: Options) {
-            self.name = name
-            self.query = query
-            self.options = options
-        }
-
         public func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()

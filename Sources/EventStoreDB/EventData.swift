@@ -8,6 +8,8 @@
 import AnyCodable
 import Foundation
 import GRPCSupport
+// import GRPCSupportCore
+import GRPCSupportMac
 
 public enum ContentType: String, Codable {
     case unknown
@@ -38,7 +40,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
     public var metaData: [String: String] {
         [
             "content-type": contentType.rawValue,
-            "eventType": eventType,
+            "eventType": eventType
         ]
     }
 
@@ -130,7 +132,7 @@ public struct RecordedEvent: EventStoreEvent {
     public var metadata: [String: String] {
         [
             "type": eventType,
-            "content-type": contentType.rawValue,
+            "content-type": contentType.rawValue
         ]
     }
 

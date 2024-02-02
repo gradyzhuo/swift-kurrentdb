@@ -15,11 +15,6 @@ extension StreamClient {
         public let streamIdentifier: StreamClient.Identifier
         public let options: Options
 
-        init(streamIdentifier: StreamClient.Identifier, options: Options) {
-            self.options = options
-            self.streamIdentifier = streamIdentifier
-        }
-
         public func build() throws -> Request.UnderlyingMessage {
             try .with {
                 $0.options = options.build()

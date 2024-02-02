@@ -258,8 +258,7 @@ extension ClientSettings {
         settings.defaultUserCredentials = parseUserAndPassowrd(connectionString)
 
         if let keepAliveInterval: TimeInterval = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
-           let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
-        {
+           let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } }) {
             settings.keepAlive = .init(interval: keepAliveInterval, timeout: keepAliveTimeout)
         }
 

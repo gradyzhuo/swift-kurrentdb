@@ -70,7 +70,7 @@ extension ProjectionsClient {
                     .trackEmittedStreams(trackEmittedStreams)
             let handler = ContinuousCreate(name: name, query: query, options: options)
             let request = try handler.build()
-            let _ = try await handler.handle(response: client.create(request))
+            _ = try await handler.handle(response: client.create(request))
 
             return try .init(mode: mode, settings: settings)
         }

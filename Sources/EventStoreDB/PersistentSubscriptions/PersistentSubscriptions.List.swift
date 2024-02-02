@@ -14,10 +14,6 @@ extension PersistentSubscriptionsClient {
 
         let options: Options
 
-        init(options: Options) {
-            self.options = options
-        }
-
         public func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()

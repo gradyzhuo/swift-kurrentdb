@@ -22,11 +22,6 @@ extension ProjectionsClient {
         public let name: String
         public let options: Options
 
-        init(name: String, options: Options) {
-            self.name = name
-            self.options = options
-        }
-
         public func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()
