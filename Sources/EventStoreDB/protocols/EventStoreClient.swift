@@ -12,7 +12,7 @@ import SwiftProtobuf
 public protocol EventStoreClient {
     associatedtype UnderlyingClient: GRPCClient
 
-    var clientSettings: ClientSettings { set get }
+    var clientSettings: ClientSettings { get set }
     var channel: GRPCChannel { get }
 
     func makeClient(callOptions: CallOptions) throws -> UnderlyingClient
