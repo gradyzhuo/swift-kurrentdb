@@ -66,10 +66,16 @@ let events:[EventData] = [
         ]
 
 
-let stream = try StreamClient.init(identifier: "testing-stream")
-stream.append(events: events){
-    $0.expected(revision: .any)
+let client = try EventStoreDB.Client()
+let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
+    options.set(uuidOption: .string)
+        .countBy(limit: 1)
 }
+
+let appendResponse = try await client.appendTo(streamName: streamName, events: .init(eventType: "AccountCreated", payload: content)) { options in
+    options.expectedRevision(.any)
+}
+
 ```
 
 #### Read Event
