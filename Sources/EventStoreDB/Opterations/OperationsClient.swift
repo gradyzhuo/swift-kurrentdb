@@ -9,28 +9,34 @@ import Foundation
 import GRPC
 import GRPCSupport
 
-public struct OperationsClient: EventStoreClient {
+public struct OperationsClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Operations_OperationsAsyncClient
 
-    public var clientSettings: ClientSettings
-    public var channel: GRPCChannel
+    public private(set) var channel: GRPCChannel
+    public var callOptions: CallOptions
 
-    init(settings: ClientSettings) throws {
-        clientSettings = settings
-        channel = try GRPCChannelPool.with(settings: settings)
+    internal var underlyingClient: UnderlyingClient {
+        return .init(channel: channel, defaultCallOptions: callOptions)
     }
-
-    public func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
-        .init(channel: channel, defaultCallOptions: callOptions)
+    
+    init(channel: GRPCChannel, callOptions: CallOptions) {
+        self.channel = channel
+        self.callOptions = callOptions
     }
 }
 
-extension EventStoreDB {
-    public static func startScavenge(threadCount: Int32, startFromChunk: Int32, settings: ClientSettings = Self.shared.settings) async throws -> OperationsClient.ScavengeResponse {
-        let client = try OperationsClient(settings: settings).underlyingClient
+extension OperationsClient {
+    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
 
         let handler = OperationsClient.StartScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
         let request = try handler.build()
-        return try await handler.handle(response: client.startScavenge(request))
+        
+        return try await handler.handle(response: underlyingClient.startScavenge(request))
+        
     }
+    
+    public func shutdown(){
+        
+    }
+    
 }

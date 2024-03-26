@@ -15,9 +15,9 @@ extension StreamClient {
 
         public let events: [EventData]
         public let options: Options
-        public let streamIdentifier: StreamClient.Identifier
+        public let streamIdentifier: Stream.Identifier
 
-        init(streamIdentifier: StreamClient.Identifier, events: [EventData], options: Options) {
+        init(streamIdentifier: Stream.Identifier, events: [EventData], options: Options) {
             self.events = events
             self.options = options
             self.streamIdentifier = streamIdentifier
@@ -78,9 +78,9 @@ extension StreamClient.Append {
             public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp.Success
 
             public internal(set) var current: CurrentRevisionOption
-            public internal(set) var position: StreamClient.Position.Option
+            public internal(set) var position: Stream.Position.Option
 
-            init(current: CurrentRevisionOption, position: StreamClient.Position.Option) {
+            init(current: CurrentRevisionOption, position: Stream.Position.Option) {
                 self.current = current
                 self.position = position
             }
@@ -121,7 +121,7 @@ extension StreamClient.Append {
     }
 }
 
-extension StreamClient.Identifier {
+extension Stream.Identifier {
     func build(options: inout StreamClient.Append.Request.UnderlyingMessage.Options) throws {
         options.streamIdentifier = try build()
     }
@@ -135,7 +135,7 @@ extension EventData {
             }
 
             $0.data = data
-            $0.metadata = self.metaData
+            $0.metadata = self.metadata
         }
     }
 
@@ -146,7 +146,8 @@ extension EventData {
             }
 
             $0.data = data
-            $0.metadata = metaData
+            $0.metadata = metadata
         }
     }
 }
+

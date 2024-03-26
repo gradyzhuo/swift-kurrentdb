@@ -10,28 +10,24 @@ import GRPC
 import GRPCSupport
 import NIO
 
-public struct GossipClient: EventStoreClient {
+public struct GossipClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Gossip_GossipAsyncClient
 
-    public var clientSettings: ClientSettings
-    public var channel: GRPCChannel
+    public private(set) var channel: GRPCChannel
+    public var callOptions: CallOptions
 
-    public init(settings: ClientSettings = EventStoreDB.shared.settings) throws {
-        clientSettings = settings
-        channel = try GRPCChannelPool.with(settings: settings)
+    public init(channel: GRPCChannel, callOptions: CallOptions) throws {
+        self.channel = channel
+        self.callOptions = callOptions
     }
 
-    public func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
-        .init(channel: channel, defaultCallOptions: callOptions)
-    }
 }
 
 extension GossipClient {
-    public static func read() async throws -> [Read.Response.MemberInfo] {
+    public func read() async throws -> [Read.Response.MemberInfo] {
         let handler = Read()
         let request = try handler.build()
-        let client = try Self()
-        let response = try await client.underlyingClient.read(request)
+        let response = try await underlyingClient.read(request)
         return try response.members.map {
             try .init(from: $0)
         }

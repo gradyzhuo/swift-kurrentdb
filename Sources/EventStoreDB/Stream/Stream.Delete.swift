@@ -12,7 +12,7 @@ extension StreamClient {
     public struct Delete: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_DeleteReq>
 
-        public let streamIdentifier: StreamClient.Identifier
+        public let streamIdentifier: Stream.Identifier
         public let options: Options
 
         public func build() throws -> Request.UnderlyingMessage {
@@ -28,7 +28,7 @@ extension StreamClient.Delete {
     public struct Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_Streams_DeleteResp
 
-        public internal(set) var position: StreamClient.Position.Option
+        public internal(set) var position: Stream.Position.Option
 
         public init(from message: UnderlyingMessage) throws {
             let position = message.positionOption?.represented() ?? .noPosition

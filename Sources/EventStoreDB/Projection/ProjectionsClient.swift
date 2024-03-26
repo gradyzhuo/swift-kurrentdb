@@ -9,28 +9,28 @@ import GRPC
 import GRPCSupport
 import SwiftProtobuf
 
-public struct ProjectionsClient: EventStoreClient {
+public struct ProjectionsClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Projections_ProjectionsAsyncClient
 
-    public private(set) var mode: Mode
-    public var channel: GRPCChannel
-    public var clientSettings: ClientSettings
+//    public private(set) var mode: Mode
+    public private(set) var channel: GRPCChannel
+    public var callOptions: CallOptions
 
-    public static var defaultCallOptions: GRPC.CallOptions = .init()
-
-    init(mode: Mode, settings: ClientSettings = EventStoreDB.shared.settings) throws {
-        clientSettings = settings
-        channel = try GRPCChannelPool.with(settings: clientSettings)
-        self.mode = mode
+//    init(mode: Mode, channel: GRPCChannel, callOptions: CallOptions) {
+//        self.channel = channel
+//        self.callOptions = callOptions
+//        self.mode = mode
+//    }
+    
+    init(channel: GRPCChannel, callOptions: CallOptions) {
+        self.channel = channel
+        self.callOptions = callOptions
     }
 
-    public init(name: String, emitEnable: Bool, trackEmittedStreams: Bool, settings: ClientSettings = EventStoreDB.shared.settings) throws {
-        try self.init(mode: .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams), settings: settings)
-    }
+//    public init(name: String, emitEnable: Bool, trackEmittedStreams: Bool, channel: GRPCChannel, callOptions: CallOptions) throws {
+//        self.init(mode: .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams), channel: channel, callOptions: callOptions)
+//    }
 
-    public func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
-        .init(channel: channel, defaultCallOptions: callOptions)
-    }
 }
 
 extension ProjectionsClient {
@@ -51,11 +51,8 @@ extension ProjectionsClient {
 extension ProjectionsClient {
     // MARK: - Create Actions
 
-    public static func create(mode: Mode, query: String, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Self {
-        let channel = try GRPCChannelPool.with(settings: settings)
-        var client: UnderlyingClient = .init(channel: channel)
-        try client.configure(by: settings)
-
+    func create(mode: Mode, query: String) async throws {
+        
         switch mode {
 //        case .oneTime:
 //            $0.oneTime = .init()
@@ -70,104 +67,86 @@ extension ProjectionsClient {
                     .trackEmittedStreams(trackEmittedStreams)
             let handler = ContinuousCreate(name: name, query: query, options: options)
             let request = try handler.build()
-            _ = try await handler.handle(response: client.create(request))
-
-            return try .init(mode: mode, settings: settings)
+            _ = try await handler.handle(response: underlyingClient.create(request))
         }
     }
-
-    public static func create(name: String, query: String, options: ContinuousCreate.Options, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Self {
-        let mode: Mode = .continuous(name: name, emitEnable: options.emitEnabled, trackEmittedStreams: options.trackEmittedStreams)
-        return try await create(mode: mode, query: query, settings: settings)
+    
+    public func createForContinuous(name: String, emitEnable: Bool, trackEmittedStreams: Bool, query: String) async throws {
+        
+        let mode: Mode = .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams)
+        try await create(mode: mode, query: query)
+        
     }
 
-    public static func create(name: String, query: String, settings: ClientSettings = EventStoreDB.shared.settings, configure: (_ options: ContinuousCreate.Options) -> ContinuousCreate.Options) async throws -> Self {
-        let options = configure(.init())
-
-        let mode: Mode = .continuous(name: name, emitEnable: options.emitEnabled, trackEmittedStreams: options.trackEmittedStreams)
-        return try await create(mode: mode, query: query, settings: settings)
-    }
+//    public static func create(name: String, query: String, channel: GRPCChannel, callOptions: CallOptions, configure: (_ options: ContinuousCreate.Options) -> ContinuousCreate.Options) async throws -> Self {
+//        let options = configure(.init())
+//
+//        let mode: Mode = .continuous(name: name, emitEnable: options.emitEnabled, trackEmittedStreams: options.trackEmittedStreams)
+//        return try await create(mode: mode, query: query, channel: channel, callOptions: callOptions)
+//    }
 
     // MARK: - Update Actions
 
-    public func update(query: String? = nil, options: Update.Options) async throws {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            Update(name: name, query: query, options: options)
-        }
-
+    public func updateForContinuous(name: String, query: String? = nil, options: Update.Options) async throws {
+        
+        let handler = Update(name: name, query: query, options: options)
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.update(request))
     }
 
-    public func update(query: String? = nil, configure: (_ options: Update.Options) -> Update.Options) async throws {
+    public func updateForContinuous(name: String, query: String? = nil, configure: (_ options: Update.Options) -> Update.Options) async throws {
         let options = configure(.init())
-        try await update(query: query, options: options)
+        try await updateForContinuous(name: name, query: query, options: options)
     }
 
     // MARK: - Delete Actions
 
-    public static func delete(name: String, options: Delete.Options, settings: ClientSettings = EventStoreDB.shared.settings) async throws {
-        let channel = try GRPCChannelPool.with(settings: settings)
-        var client = UnderlyingClient(channel: channel)
-        try client.configure(by: settings)
-
+    public func deleteForContinuous(name: String, options: Delete.Options) async throws {
         let handler = Delete(name: name, options: options)
 
         let request = try handler.build()
-        try await handler.handle(response: client.delete(request))
+        try await handler.handle(response: underlyingClient.delete(request))
     }
 
-    public static func delete(name: String, settings: ClientSettings = EventStoreDB.shared.settings, configure: (_ options: Delete.Options) -> Delete.Options) async throws {
+    public func deleteForContinuous(name: String, configure: (_ options: Delete.Options) -> Delete.Options) async throws {
         let options = configure(.init())
-        try await delete(name: name, options: options, settings: settings)
+        try await deleteForContinuous(name: name, options: options)
     }
 
     // MARK: - Statistics Actions
 
-    public func statistics() async throws -> Statistics.Responses {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            Statistics(name: name, options: .init().set(mode: .continuous))
-        }
+    public func statisticsForContinuous(name: String) async throws -> Statistics.Responses {
+        
+        let handler = Statistics(name: name, options: .init().set(mode: .continuous))
+        let request = try handler.build()
+        return try handler.handle(responses: underlyingClient.statistics(request))
+    }
+
+    public func statistics(name: String, options: Statistics.Options) async throws -> Statistics.Responses {
+
+        let handler = Statistics(name: name, options: options)
 
         let request = try handler.build()
         return try handler.handle(responses: underlyingClient.statistics(request))
     }
 
-    public static func statistics(name: String, options: Statistics.Options, settings: ClientSettings = EventStoreDB.shared.settings) async throws -> Statistics.Responses {
-        let channel = try GRPCChannelPool.with(settings: settings)
-        var client = UnderlyingClient(channel: channel)
-        try client.configure(by: settings)
-
-        let handler = Statistics(name: name, options: options)
-
-        let request = try handler.build()
-        return try handler.handle(responses: client.statistics(request))
-    }
-
-    public static func statistics(name: String, settings: ClientSettings = EventStoreDB.shared.settings, configure: (_ options: Statistics.Options) -> Statistics.Options) async throws -> Statistics.Responses {
-        let channel = try GRPCChannelPool.with(settings: settings)
-        let client = UnderlyingClient(channel: channel)
-
+    public func statistics(name: String, configure: (_ options: Statistics.Options) -> Statistics.Options) async throws -> Statistics.Responses {
+        
         let handler = Statistics(name: name, options: configure(.init()))
 
         let request = try handler.build()
-        return try handler.handle(responses: client.statistics(request))
+        return try handler.handle(responses: underlyingClient.statistics(request))
     }
 
     // MARK: - Enable Actions
 
-    public func enable() async throws {
+    public func enable(name: String) async throws {
         let options = Enable.Options()
-        try await enable(options: options)
+        try await enable(name: name, options: options)
     }
 
-    func enable(options: Enable.Options) async throws {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            Enable(name: name, options: options)
-        }
+    func enable(name: String, options: Enable.Options) async throws {
+        let handler = Enable(name: name, options: options)
 
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.enable(request))
@@ -175,21 +154,18 @@ extension ProjectionsClient {
 
     // MARK: - Disable & Abort Actions
 
-    public func disable() async throws {
+    public func disable(name: String) async throws {
         let options = Disable.Options().writeCheckpoint(enabled: true)
-        return try await disable(options: options)
+        return try await disable(name: name, options: options)
     }
 
-    public func abort() async throws {
+    public func abort(name: String) async throws {
         let options = Disable.Options().writeCheckpoint(enabled: false)
-        return try await disable(options: options)
+        return try await disable(name: name, options: options)
     }
 
-    func disable(options: Disable.Options) async throws {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            Disable(name: name, options: options)
-        }
+    func disable(name: String, options: Disable.Options) async throws {
+        let handler = Disable(name: name, options: options)
 
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.disable(request))
@@ -197,16 +173,13 @@ extension ProjectionsClient {
 
     // MARK: - Reset Actions
 
-    public func reset() async throws {
+    public func reset(name: String) async throws {
         let options: Reset.Options = .init().writeCheckpoint(enable: false)
-        try await reset(options: options)
+        try await reset(name: name, options: options)
     }
 
-    func reset(options: Reset.Options) async throws {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            Reset(name: name, options: options)
-        }
+    func reset(name: String, options: Reset.Options) async throws {
+        let handler = Reset(name: name, options: options)
 
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.reset(request))
@@ -214,57 +187,47 @@ extension ProjectionsClient {
 
     // MARK: - State Actions
 
-    public func getState<Value: Decodable>(casting _: Value.Type, options: State.Options) async throws -> Value {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            State(name: name, options: options)
-        }
+    public func getState<Value: Decodable>(name: String, casting _: Value.Type, options: State.Options) async throws -> Value {
+        let handler = State(name: name, options: options)
         let request = try handler.build()
         let response = try await handler.handle(response: underlyingClient.state(request))
         return try response.decode(to: Value.self)
     }
 
-    public func getState<Value: Decodable>(casting: Value.Type, configure: (_ options: State.Options) -> State.Options) async throws -> Value {
+    public func getState<Value: Decodable>(name: String, casting: Value.Type, configure: (_ options: State.Options) -> State.Options) async throws -> Value {
         let options = configure(.init())
-        return try await getState(casting: casting, options: options)
+        return try await getState(name: name, casting: casting, options: options)
     }
 
-    public func getState<Value: Decodable>(configure: (_ options: State.Options) -> State.Options) async throws -> Value {
+    public func getState<Value: Decodable>(name: String, configure: (_ options: State.Options) -> State.Options) async throws -> Value {
         let options = configure(.init())
-        return try await getState(casting: Value.self, options: options)
+        return try await getState(name: name, casting: Value.self, options: options)
     }
 
     // MARK: - Result Actions
 
-    public func getResult<Value: Decodable>(casting _: Value.Type, options: Result.Options) async throws -> Value {
-        let handler = switch mode {
-        case let .continuous(name, _, _):
-            Result(name: name, options: options)
-        }
+    public func getResult<Value: Decodable>(name: String, casting _: Value.Type, options: Result.Options) async throws -> Value {
+        let handler = Result(name: name, options: options)
         let request = try handler.build()
         let response = try await handler.handle(response: underlyingClient.result(request))
 
         return try response.decode(to: Value.self)
     }
 
-    public func getResult<Value: Decodable>(casting: Value.Type, configure: (_ options: Result.Options) -> Result.Options) async throws -> Value {
+    public func getResult<Value: Decodable>(name: String, casting: Value.Type, configure: (_ options: Result.Options) -> Result.Options) async throws -> Value {
         let options = configure(.init())
-        return try await getResult(casting: casting, options: options)
+        return try await getResult(name: name, casting: casting, options: options)
     }
 
-    public func getResult<Value: Decodable>(configure: (_ options: Result.Options) -> Result.Options) async throws -> Value {
+    public func getResult<Value: Decodable>(name: String, configure: (_ options: Result.Options) -> Result.Options) async throws -> Value {
         let options = configure(.init())
-        return try await getResult(casting: Value.self, options: options)
+        return try await getResult(name: name, casting: Value.self, options: options)
     }
 
     // MARK: - RestartSubsystem Actions
 
-    public static func restartSubsystem(settings: ClientSettings = EventStoreDB.shared.settings) async throws {
-        let channel = try GRPCChannelPool.with(settings: settings)
-        var client = UnderlyingClient(channel: channel)
-        try client.configure(by: settings)
-
+    public func restartSubsystem(settings: ClientSettings = EventStoreDB.shared.settings) async throws {
         let handler = RestartSubsystem()
-        try await handler.handle(response: client.restartSubsystem(handler.build()))
+        try await handler.handle(response: underlyingClient.restartSubsystem(handler.build()))
     }
 }

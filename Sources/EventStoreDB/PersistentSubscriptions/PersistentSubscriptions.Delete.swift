@@ -12,7 +12,7 @@ extension PersistentSubscriptionsClient {
     public struct Delete: UnaryUnary {
         public typealias Response = DiscardedResponse<EventStore_Client_PersistentSubscriptions_DeleteResp>
 
-        let streamSelection: StreamSelection
+        let streamSelection: Selector<Stream.Identifier>
         let groupName: String
 
         public func build() throws -> Request.UnderlyingMessage {
@@ -21,7 +21,7 @@ extension PersistentSubscriptionsClient {
                 switch streamSelection {
                 case .all:
                     $0.options.all = .init()
-                case let .specified(streamIdentifier):
+                case .specified(let streamIdentifier):
                     $0.options.streamIdentifier = try streamIdentifier.build()
                 }
             }

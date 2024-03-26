@@ -36,7 +36,7 @@ extension PersistentSubscriptionsClient {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReadReq>
         public typealias Response = DiscardedResponse<EventStore_Client_PersistentSubscriptions_ReadResp>
 
-        let subscriptionId: String
+        let id: Data
         let eventIds: [UUID]
         let action: Nack.Action
         let reason: String
@@ -45,6 +45,7 @@ extension PersistentSubscriptionsClient {
             [
                 .with {
                     $0.nack = .with {
+                        $0.id = id
                         $0.ids = eventIds.map {
                             $0.toEventStoreUUID()
                         }

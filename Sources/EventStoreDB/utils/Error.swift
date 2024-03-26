@@ -28,3 +28,10 @@ public enum ClientError: Error {
 public enum ReadEventError: Error {
     case GRPCDecodeException(message: String)
 }
+
+
+public enum PersistentSubscriptionsError: Error {
+    case ackError(reason: String)
+    case nackError(reason: String)
+    case readError(reason: String)
+}

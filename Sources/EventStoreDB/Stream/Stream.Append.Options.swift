@@ -14,7 +14,7 @@ extension StreamClient.Append {
 
         public var options: UnderlyingMessage = .init()
 
-        public var expectedRevision: StreamClient.Revision {
+        public var expectedRevision: Stream.RevisionRule {
             didSet {
                 switch expectedRevision {
                 case .any:

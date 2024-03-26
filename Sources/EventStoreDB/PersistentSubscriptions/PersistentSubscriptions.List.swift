@@ -9,6 +9,7 @@ import Foundation
 import GRPCSupport
 
 extension PersistentSubscriptionsClient {
+    
     public struct List: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ListReq>
 
@@ -38,32 +39,32 @@ extension PersistentSubscriptionsClient.List {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        var message: UnderlyingMessage
+        var options: UnderlyingMessage
 
-        init() {
-            message = .init()
-            listAllScriptions()
+        init(options: UnderlyingMessage) {
+            self.options = options
+        }
+        
+        public static func listAllScriptions() -> Self {
+            var options = UnderlyingMessage()
+            options.listAllSubscriptions = .init()
+            return .init(options: options)
         }
 
         @discardableResult
-        public func listAllScriptions() -> Self {
-            message.listAllSubscriptions = .init()
-            return self
-        }
-
-        @discardableResult
-        public func listForStream(_ selection: PersistentSubscriptionsClient.StreamSelection) throws -> Self {
+        public static func listForStream(_ selection: Selector<Stream.Identifier>) throws -> Self {
+            var options = UnderlyingMessage()
             switch selection {
             case .all:
-                message.listForStream.all = .init()
-            case let .specified(streamIdentifier: streamIdentifier):
-                message.listForStream.stream = try streamIdentifier.build()
+                options.listForStream.all = .init()
+            case .specified(let streamIdentifier):
+                options.listForStream.stream = try streamIdentifier.build()
             }
-            return self
+            return .init(options: options)
         }
 
         public func build() -> UnderlyingMessage {
-            message
+            return options
         }
     }
 }

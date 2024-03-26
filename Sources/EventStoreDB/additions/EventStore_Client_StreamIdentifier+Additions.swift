@@ -9,7 +9,7 @@ import Foundation
 import GRPCSupport
 
 extension EventStore_Client_StreamIdentifier {
-    func toIdentifier() -> StreamClient.Identifier {
+    func toIdentifier() -> Stream.Identifier {
         let name = String(data: streamName, encoding: .utf8)
         return .init(name: name!)
     }

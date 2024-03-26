@@ -39,20 +39,17 @@ public struct User: GRPCResponse {
     }
 }
 
-public struct UserClient: EventStoreClient {
+public struct UserClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Users_UsersAsyncClient
 
-    public var clientSettings: ClientSettings
-    public var channel: GRPCChannel
+    public private(set) var channel: GRPCChannel
+    public var callOptions: CallOptions
 
-    public init(settings: ClientSettings = EventStoreDB.shared.settings) throws {
-        clientSettings = settings
-        channel = try GRPCChannelPool.with(settings: settings)
+    public init(channel: GRPCChannel, callOptions: CallOptions) {
+        self.channel = channel
+        self.callOptions = callOptions
     }
 
-    public func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
-        .init(channel: channel, defaultCallOptions: callOptions)
-    }
 }
 
 extension UserClient {

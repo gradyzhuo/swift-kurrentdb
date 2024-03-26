@@ -52,7 +52,7 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_Expect
 }
 
 extension EventStore_Client_Streams_AppendResp.Success.OneOf_PositionOption {
-    typealias Represented = StreamClient.Position.Option
+    typealias Represented = Stream.Position.Option
 
     func represented() -> Represented {
         switch self {

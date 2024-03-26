@@ -15,8 +15,8 @@ extension StreamClient {
 
 //        public typealias CursorPointer = (UInt64, direction: StreamClient.Read.Direction)
 
-        public let streamIdentifier: StreamClient.Identifier
-        public let cursor: StreamClient.Cursor<CursorPointer>
+        public let streamIdentifier: Stream.Identifier
+        public let cursor: Cursor<CursorPointer>
         public let options: Options
 
         public func build() throws -> Request.UnderlyingMessage {
@@ -33,9 +33,9 @@ extension StreamClient {
         public typealias Request = StreamClient.Read.Request
         public typealias Response = StreamClient.Read.Response
 
-        public typealias CursorPointer = (StreamClient.Read.Position, direction: StreamClient.Read.Direction)
+//        public typealias CursorPointer = (StreamClient.Read.Position, direction: StreamClient.Read.Direction)
 
-        public let cursor: StreamClient.Cursor<CursorPointer>
+        public let cursor: Cursor<CursorPointer>
         public let options: Options
 
         public func build() throws -> Request.UnderlyingMessage {
@@ -47,16 +47,44 @@ extension StreamClient {
     }
 }
 
+extension StreamClient.ReadAll {
+    
+//    public enum Cursor {
+//        case start
+//        case end
+//        case forwardOn(commitPosition: UInt64, preparePosition: UInt64)
+//        case backwardFrom(commitPosition: UInt64, preparePosition: UInt64)
+//    }
+    
+    public struct CursorPointer{
+        let position: StreamClient.Read.Position
+        let direction: StreamClient.Read.Direction
+        
+        public static func forwardOn(commitPosition: UInt64, preparePosition: UInt64) -> Self{
+            return .init(position: .init(commit: commitPosition, prepare: preparePosition), direction: .forward)
+        }
+        
+        public static func backwardFrom(commitPosition: UInt64, preparePosition: UInt64) -> Self{
+            return .init(position: .init(commit: commitPosition, prepare: preparePosition), direction: .backward)
+        }
+        
+    }
+//    public enum CursorPointer{
+//        case forwardFrom(position: StreamClient.Read.Position)
+//        case backwardFrom(position: StreamClient.Read.Position)
+//    }
+}
+
 extension StreamClient.Read {
     public struct CursorPointer {
         let revision: UInt64
         let direction: StreamClient.Read.Direction
 
-        public static func forward(fromRev revision: UInt64) -> Self {
+        public static func forwardOn(revision: UInt64) -> Self {
             .init(revision: revision, direction: .forward)
         }
 
-        public static func backward(fromRev revision: UInt64) -> Self {
+        public static func backwardFrom(revision: UInt64) -> Self {
             .init(revision: revision, direction: .backward)
         }
     }
@@ -89,68 +117,16 @@ extension StreamClient.Read {
     public enum ControlOption {
         case compatibility(UInt32)
     }
-
-    public class SubscriptionFilter {
-        public enum Window {
-            case count
-            case max(UInt32)
-        }
-
-        public enum FilterType {
-            case streamName(regex: String)
-            case eventType(regex: String)
-        }
-
-        public internal(set) var type: FilterType
-        public internal(set) var window: Window
-        public internal(set) var prefixes: [String]
-        public internal(set) var checkpointIntervalMultiplier: UInt32
-
-        required init(type: FilterType, window: Window = .count, prefixes: [String] = []) {
-            self.type = type
-            self.window = window
-            self.prefixes = prefixes
-            checkpointIntervalMultiplier = .max
-        }
-
-        @discardableResult
-        public static func onStreamName(regex: String) -> Self {
-            .init(type: .streamName(regex: regex))
-        }
-
-        @discardableResult
-        public static func onEventType(regex: String) -> Self {
-            .init(type: .eventType(regex: regex))
-        }
-
-        @discardableResult
-        public func set(max maxCount: UInt32) -> Self {
-            window = .max(maxCount)
-            return self
-        }
-
-        @discardableResult
-        public func set(checkpointIntervalMultiplier multiplier: UInt32) -> Self {
-            checkpointIntervalMultiplier = multiplier
-            return self
-        }
-
-        @discardableResult
-        public func add(prefix: String) -> Self {
-            prefixes.append(prefix)
-            return self
-        }
-    }
 }
 
-extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer {
+extension Cursor where Pointer == StreamClient.Read.CursorPointer {
     var direction: StreamClient.Read.Direction {
         switch self {
         case .start:
             .forward
         case .end:
             .backward
-        case let .at(pointer):
+        case let .specified(pointer):
             pointer.direction
         }
     }
@@ -167,7 +143,7 @@ extension StreamClient.Read.Direction {
     }
 }
 
-extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer {
+extension Cursor where Pointer == StreamClient.Read.CursorPointer {
     public func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
         switch self {
         case .start:
@@ -176,7 +152,7 @@ extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer {
         case .end:
             options.stream.end = .init()
             options.readDirection = .backwards
-        case let .at(pointer):
+        case let .specified(pointer):
             options.stream.revision = pointer.revision
             pointer.direction.build(options: &options)
         }
@@ -188,7 +164,7 @@ extension StreamClient.Cursor where Pointer == StreamClient.Read.CursorPointer {
             options.start = .init()
         case .end:
             options.end = .init()
-        case let .at(pointer):
+        case let .specified(pointer):
             options.revision = pointer.revision
         }
     }
@@ -238,12 +214,17 @@ extension StreamClient.Read.Position {
         }
     }
 
-    public func cusor(direction: StreamClient.Read.Direction) -> StreamClient.Cursor<StreamClient.ReadAll.CursorPointer> {
-        .at((self, direction: direction))
+    public func cusor(direction: StreamClient.Read.Direction) -> Cursor<StreamClient.ReadAll.CursorPointer> {
+        return .specified(
+            .init(
+                position: self,
+                direction: direction
+            )
+        )
     }
 }
 
-extension StreamClient.Cursor where Pointer == StreamClient.ReadAll.CursorPointer {
+extension Cursor where Pointer == StreamClient.ReadAll.CursorPointer {
     public func build() -> EventStore_Client_Streams_ReadReq.Options.AllOptions {
         .with {
             switch self {
@@ -251,8 +232,8 @@ extension StreamClient.Cursor where Pointer == StreamClient.ReadAll.CursorPointe
                 $0.start = .init()
             case .end:
                 $0.end = .init()
-            case let .at((position, _)):
-                $0.position = position.build()
+            case .specified(let pointer):
+                $0.position = pointer.position.build()
             }
         }
     }
@@ -265,14 +246,14 @@ extension StreamClient.Cursor where Pointer == StreamClient.ReadAll.CursorPointe
         case .end:
             options.all.end = .init()
             options.readDirection = .backwards
-        case .at(let (position, readDirection)):
-            position.build(options: &options)
-            readDirection.build(options: &options)
+        case .specified(let pointer):
+            pointer.position.build(options: &options)
+            pointer.direction.build(options: &options)
         }
     }
 }
 
-extension StreamClient.Read.SubscriptionFilter {
+extension StreamClient.FilterOption {
     func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
         options.filter = .with {
             switch self.type {
@@ -299,7 +280,7 @@ extension StreamClient.Read.SubscriptionFilter {
     }
 }
 
-extension StreamClient.Identifier {
+extension Stream.Identifier {
     func build(options: inout StreamClient.Read.Options.UnderlyingMessage) throws {
         options.stream = try .with {
             $0.streamIdentifier = try self.build()
@@ -312,11 +293,11 @@ extension StreamClient.Read {
         public enum Content {
             case event(readEvent: ReadEvent)
             case confirmation(subscription: String)
-            case checkpoint(position: StreamClient.Position)
+            case checkpoint(position: Stream.Position)
             case streamNotFound(streamName: String)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)
-            case position(lastAllStream: StreamClient.Position)
+            case position(lastAllStream: Stream.Position)
             case caughtUp
             case fellBehind
         }
@@ -409,7 +390,7 @@ extension StreamClient.Read.Response.Content {
         case .caughtUp:
             self = .caughtUp
         case let .checkpoint(point):
-            let position: StreamClient.Position = .init(commit: point.commitPosition, prepare: point.preparePosition)
+            let position: Stream.Position = .init(commit: point.commitPosition, prepare: point.preparePosition)
             self = .checkpoint(position: position)
         case let .confirmation(confirmation):
             let subscription = confirmation.subscriptionID
@@ -419,7 +400,7 @@ extension StreamClient.Read.Response.Content {
         case let .lastStreamPosition(position):
             self = .commitPosition(lastStream: position)
         case let .lastAllStreamPosition(p):
-            let position: StreamClient.Position = .init(commit: p.commitPosition, prepare: p.preparePosition)
+            let position: Stream.Position = .init(commit: p.commitPosition, prepare: p.preparePosition)
             self = .position(lastAllStream: position)
         case .fellBehind:
             self = .fellBehind

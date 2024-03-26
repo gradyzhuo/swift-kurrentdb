@@ -12,7 +12,7 @@ extension PersistentSubscriptionsClient {
     public struct Read: StreamStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReadReq>
 
-        let streamSelection: StreamSelection
+        let streamSelection: Selector<Stream.Identifier>
         let groupName: String
         let options: Options
 
@@ -32,16 +32,49 @@ extension PersistentSubscriptionsClient {
     }
 }
 
-extension PersistentSubscriptionsClient.Read {
-    public struct Result {
-        public let event: ReadEvent
-        let sender: PersistentSubscriptionsClient
-        public let subscriptionId: String
+extension ReadEvent {
+    init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) throws {
+        event = try .init(message: message.event)
+        link = try message.hasLink ? .init(message: message.link) : nil
 
-        public func ack() async throws {
-            try await sender.ack(eventIds: [event.event.id], subscriptionId: subscriptionId)
+        if let position = message.position {
+            switch position {
+            case .noPosition:
+                commitPosition = nil
+            case let .commitPosition(commitPosition):
+                self.commitPosition = .init(commit: commitPosition)
+            }
+        } else {
+            commitPosition = nil
         }
     }
+}
+
+extension PersistentSubscriptionsClient.Read {
+    public struct EventResult {
+        let event: RecordedEvent
+        let retryCount: Int32
+    }
+    
+//    public struct Subscription {
+//        public enum Result {
+//            case readEvent(event: ReadEvent, retryCount: Int32)
+//            case confirmation(subscriptionId: String)
+//        }
+//        
+//        let result: Result
+//        let sender: PersistentSubscriptionsClient
+//    }
+    
+//    public struct Result {
+//        public let event: ReadEvent
+//        let sender: PersistentSubscriptionsClient
+//        public let subscriptionId: String
+//
+//        public func ack() async throws{
+//            try await sender.ack(readEvents: event)
+//        }
+//    }
 }
 
 extension PersistentSubscriptionsClient.Read {

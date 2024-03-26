@@ -13,7 +13,7 @@ extension PersistentSubscriptionsClient {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>
         public typealias Response = DiscardedResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>
 
-        let streamSelection: StreamSelection
+        let streamSelection: Selector<Stream.Identifier>
         let groupName: String
         let options: Options
 

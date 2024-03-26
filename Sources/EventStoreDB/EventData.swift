@@ -27,20 +27,16 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         case eventType
         case data
         case contentType
+        case customMetadata
     }
 
     public private(set) var id: UUID
     public private(set) var eventType: String
     public private(set) var data: Data
-    public private(set) var contentType: ContentType = .json
-    public private(set) var customMetadata: [String: Codable]
+    public private(set) var contentType: ContentType
+    public private(set) var customMetadata: Data?
 
-    public var metaData: [String: String] {
-        [
-            "content-type": contentType.rawValue,
-            "eventType": eventType
-        ]
-    }
+    public var metadata: [String: String] = [:]
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -51,38 +47,38 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
 
         let eventType = try container.decode(String.self, forKey: .eventType)
         let content = try container.decode([String: AnyCodable].self, forKey: .data)
+        let customMetadata = try container.decodeIfPresent(Data.self, forKey: .customMetadata)
 
-        try self.init(id: id, eventType: eventType, content: content)
+        try self.init(eventType: eventType, payload: content, customMetadata: customMetadata)
     }
 
-    public init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: [String: Codable] = [:]) {
+    public init(eventType: String, payload: Codable, customMetadata: Data? = nil) throws {
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(payload)
+        self.init(id: .init(), eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
+    }
+    
+    
+    init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: Data?) {
         self.id = id
         self.eventType = eventType
         self.data = data
         self.contentType = contentType
+        self.metadata = [
+            "content-type": ContentType.json.rawValue,
+            "type": eventType
+        ]
         self.customMetadata = customMetadata
     }
 
-    public init(id: UUID, eventType: String, content: Codable, customMetadata: [String: Codable] = [:]) throws {
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(content)
-        self.init(id: id, eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
+    
+    public init(eventType: String, payloadData: Data, customMetadata: Data? = nil) throws {
+        self.init(id: .init(), eventType: eventType, data: payloadData, contentType: .binary, customMetadata: customMetadata)
     }
-
-    public init(id: UUID = .init(), eventType: String, jsonData: Data, customMetadata: [String: Codable] = [:]) {
-        self.init(id: id, eventType: eventType, data: jsonData, contentType: .json, customMetadata: customMetadata)
-    }
-
-    public init(id: UUID = .init(), eventType: String, jsonString: String, customMetadata: [String: Codable] = [:], encoding: String.Encoding = .utf8) throws {
+    
+    public static func events(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: Data? = nil) throws -> [Self] {
         guard let data = jsonString.data(using: encoding) else {
-            throw ClientError.eventDataError(message: "The jsonString can't encode to binary data. \(jsonString)")
-        }
-        self.init(id: id, eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
-    }
-
-    public static func events(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: [String: Codable] = [:]) throws -> [Self] {
-        guard let data = jsonString.data(using: encoding) else {
-            throw ClientError.eventDataError(message: "The jsonString can't encode to binary data. \(jsonString)")
+            throw ClientError.eventDataError(message: "The jsonString can't be encoded into binary data. \(jsonString)")
         }
 
         return try events(fromJSONData: data)
@@ -90,13 +86,13 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
 
     public static func event(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: [String: Codable] = [:]) throws -> Self {
         guard let data = jsonString.data(using: encoding) else {
-            throw ClientError.eventDataError(message: "The jsonString can't encode to binary data. \(jsonString)")
+            throw ClientError.eventDataError(message: "The jsonString can't be encoded into binary data. \(jsonString)")
         }
 
         return try event(fromJSONData: data)
     }
 
-    public static func events(fromJSONData jsonData: Data, encoding _: String.Encoding = .utf8, customMetadata: [String: Codable] = [:]) throws -> [Self] {
+    public static func events(fromJSONData jsonData: Data, encoding _: String.Encoding = .utf8, customMetadata: Data? = nil) throws -> [Self] {
         let decoder = JSONDecoder()
         return try decoder.decode([Self].self, from: jsonData).map {
             var event = $0
@@ -105,7 +101,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         }
     }
 
-    public static func event(fromJSONData jsonData: Data, encoding _: String.Encoding = .utf8, customMetadata: [String: Codable] = [:]) throws -> Self {
+    public static func event(fromJSONData jsonData: Data, encoding _: String.Encoding = .utf8, customMetadata: Data? = nil) throws -> Self {
         let decoder = JSONDecoder()
         var event = try decoder.decode(Self.self, from: jsonData)
         event.customMetadata = customMetadata
@@ -123,9 +119,9 @@ public struct RecordedEvent: EventStoreEvent {
     public private(set) var id: UUID
     public private(set) var eventType: String
     public private(set) var contentType: ContentType
-    public private(set) var streamIdentifier: StreamClient.Identifier
+    public private(set) var streamIdentifier: Stream.Identifier
     public private(set) var revision: UInt64
-    public private(set) var position: StreamClient.Position
+    public private(set) var position: Stream.Position
 
     public var metadata: [String: String] {
         [
@@ -147,7 +143,7 @@ public struct RecordedEvent: EventStoreEvent {
         }
     }
 
-    init(id: UUID, eventType: String, contentType: ContentType, streamIdentifier: StreamClient.Identifier, revision: UInt64, position: StreamClient.Position, data: Data, customMetadata: Data) {
+    init(id: UUID, eventType: String, contentType: ContentType, streamIdentifier: Stream.Identifier, revision: UInt64, position: Stream.Position, data: Data, customMetadata: Data) {
         self.id = id
         self.eventType = eventType
         self.contentType = contentType
@@ -170,7 +166,7 @@ public struct RecordedEvent: EventStoreEvent {
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
         let streamIdentifier = message.streamIdentifier.toIdentifier()
         let revision = message.streamRevision
-        let position = StreamClient.Position(commit: message.commitPosition, prepare: message.preparePosition)
+        let position = Stream.Position(commit: message.commitPosition, prepare: message.preparePosition)
 
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }
@@ -187,44 +183,28 @@ public struct RecordedEvent: EventStoreEvent {
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
         let streamIdentifier = message.streamIdentifier.toIdentifier()
         let revision = message.streamRevision
-        let position = StreamClient.Position(commit: message.commitPosition, prepare: message.preparePosition)
+        let position = Stream.Position(commit: message.commitPosition, prepare: message.preparePosition)
 
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }
 }
 
 public struct ReadEvent {
-    public private(set) var event: RecordedEvent
-    public private(set) var link: RecordedEvent?
-    public private(set) var commitPosition: StreamClient.Position?
+    public internal(set) var event: RecordedEvent
+    public internal(set) var link: RecordedEvent?
+    public internal(set) var commitPosition: Stream.Position?
 
     public var noPosition: Bool {
         commitPosition == nil
     }
 
-    init(event: RecordedEvent, link: RecordedEvent? = nil, commitPosition: StreamClient.Position? = nil) {
+    init(event: RecordedEvent, link: RecordedEvent? = nil, commitPosition: Stream.Position? = nil) {
         self.event = event
         self.link = link
         self.commitPosition = commitPosition
     }
 
     init(message: EventStore_Client_Streams_ReadResp.ReadEvent) throws {
-        event = try .init(message: message.event)
-        link = try message.hasLink ? .init(message: message.link) : nil
-
-        if let position = message.position {
-            switch position {
-            case .noPosition:
-                commitPosition = nil
-            case let .commitPosition(commitPosition):
-                self.commitPosition = .init(commit: commitPosition)
-            }
-        } else {
-            commitPosition = nil
-        }
-    }
-
-    init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) throws {
         event = try .init(message: message.event)
         link = try message.hasLink ? .init(message: message.link) : nil
 

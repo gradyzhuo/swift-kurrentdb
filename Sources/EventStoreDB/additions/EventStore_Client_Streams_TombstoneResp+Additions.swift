@@ -9,7 +9,7 @@ import Foundation
 import GRPCSupport
 
 extension EventStore_Client_Streams_TombstoneResp.OneOf_PositionOption {
-    typealias Represented = StreamClient.Position.Option
+    typealias Represented = Stream.Position.Option
 
     func represented() -> Represented {
         switch self {

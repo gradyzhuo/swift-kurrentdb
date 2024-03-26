@@ -12,7 +12,7 @@ extension PersistentSubscriptionsClient {
     public struct GetInfo: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>
 
-        let streamSelection: StreamSelection
+        let streamSelection: Selector<Stream.Identifier>
         let groupName: String
 
         public func build() throws -> Request.UnderlyingMessage {

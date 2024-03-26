@@ -8,19 +8,21 @@
 import Foundation
 import GRPCSupport
 
+
+
 extension PersistentSubscriptionsClient {
     public struct Ack: StreamStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReadReq>
         public typealias Response = DiscardedResponse<EventStore_Client_PersistentSubscriptions_ReadResp>
 
-        let subscriptionId: String
+        let id: Data
         let eventIds: [UUID]
 
         public func build() throws -> [Request.UnderlyingMessage] {
             [
                 .with {
                     $0.ack = .with {
-                        $0.id = subscriptionId.data(using: .utf8) ?? Data()
+                        $0.id = id
                         $0.ids = eventIds.map {
                             $0.toEventStoreUUID()
                         }
@@ -28,5 +30,11 @@ extension PersistentSubscriptionsClient {
                 }
             ]
         }
+    }
+}
+
+extension PersistentSubscriptionsClient.Ack {
+    public struct SubscriptionConfirmation {
+        let scriptionId: String
     }
 }

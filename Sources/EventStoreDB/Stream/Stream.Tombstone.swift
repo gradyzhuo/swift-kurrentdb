@@ -12,7 +12,7 @@ extension StreamClient {
     public struct Tombstone: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_TombstoneReq>
 
-        public let streamIdentifier: StreamClient.Identifier
+        public let streamIdentifier: Stream.Identifier
         public let options: Options
 
         public func build() throws -> EventStore_Client_Streams_TombstoneReq {
@@ -27,7 +27,7 @@ extension StreamClient {
 
 extension StreamClient.Tombstone {
     public struct Response: GRPCResponse {
-        public typealias PositionOption = StreamClient.Position.Option
+        public typealias PositionOption = Stream.Position.Option
 
         public typealias UnderlyingMessage = EventStore_Client_Streams_TombstoneResp
 

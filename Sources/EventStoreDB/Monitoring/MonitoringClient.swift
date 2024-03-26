@@ -9,15 +9,15 @@ import Foundation
 import GRPC
 import GRPCSupport
 
-public struct MonitoringClient: EventStoreClient {
+public struct MonitoringClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Monitoring_MonitoringAsyncClient
 
-    public var clientSettings: ClientSettings
-    public var channel: GRPCChannel
+    public private(set) var channel: GRPCChannel
+    public var callOptions: CallOptions
 
-    public init(settings: ClientSettings = EventStoreDB.shared.settings) throws {
-        clientSettings = settings
-        channel = try GRPCChannelPool.with(settings: settings)
+    public init(channel: GRPCChannel, callOptions: CallOptions) throws {
+        self.channel = channel
+        self.callOptions = callOptions
     }
 
     public func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
@@ -27,7 +27,7 @@ public struct MonitoringClient: EventStoreClient {
     public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws -> AsyncStream<Stats.Response> {
         let handler = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
         let request = try handler.build()
-        let responses = try underlyingClient.stats(request)
+        let responses = underlyingClient.stats(request)
 
         return .init { continuation in
             Task {

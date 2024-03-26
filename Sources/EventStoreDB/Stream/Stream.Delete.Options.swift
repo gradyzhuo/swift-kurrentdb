@@ -25,7 +25,7 @@ extension StreamClient.Delete {
         }
 
         @discardableResult
-        public func expected(revision: StreamClient.Revision) -> Self {
+        public func expected(revision: Stream.RevisionRule) -> Self {
             switch revision {
             case .any:
                 options.any = .init()
