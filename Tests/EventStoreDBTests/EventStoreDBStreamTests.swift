@@ -46,7 +46,7 @@ final class EventStoreDBStreamTests: XCTestCase {
                 .countBy(limit: 1)
         }
         
-        let lastEvent = await readResponses.first {
+        let lastRevision = await readResponses.first {
             switch $0.content {
             case let .event(event):
                 return true
@@ -56,7 +56,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         }.flatMap{
             switch $0.content{
             case .event(let readEvent):
-                return readEvent
+                return readEvent.event.revision
             default:
                 return nil
             }
@@ -66,6 +66,6 @@ final class EventStoreDBStreamTests: XCTestCase {
             options.expectedRevision(.any)
         }
         
-        XCTAssertEqual(lastEvent.map{ $0.event.revision + 1 }, appendResponse.current.revision)
+        XCTAssertEqual(lastRevision.map{ $0 + 1 }, appendResponse.current.revision)
     }
 }
