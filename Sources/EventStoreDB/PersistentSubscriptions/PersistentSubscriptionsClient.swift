@@ -70,13 +70,13 @@ extension PersistentSubscriptionsClient {
         public var rawValue: String {
             return switch self {
             case .dispatchToSingle:
-                "dispatchToSingle"
+                "DispatchToSingle"
             case .roundRobin:
-                "roundRobin"
+                "RoundRobin"
             case .pinned:
-                "pinned"
+                "Pinned"
             case .pinnedByCorrelation:
-                "pinnedByCorrelation"
+                "PinnedByCorrelation"
             case .custom(let value):
                 value
             }
