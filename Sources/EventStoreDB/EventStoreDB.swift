@@ -14,6 +14,14 @@ public struct EventStoreDB {
         shared.settings = settings
     }
     
+    
+    public static func streamClient() throws -> StreamClient{
+        let channel = try GRPCChannelPool.with(settings: shared.settings)
+        let callOptions = try shared.settings.makeCallOptions()
+        return .init(channel: channel, callOptions: callOptions)
+    }
+    
+    
 }
 
 

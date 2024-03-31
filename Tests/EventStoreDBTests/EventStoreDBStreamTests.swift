@@ -48,7 +48,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         
         let lastRevision = await readResponses.first {
             switch $0.content {
-            case let .event(event):
+            case .event:
                 return true
             default:
                 return false
@@ -56,7 +56,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         }.flatMap{
             switch $0.content{
             case .event(let readEvent):
-                return readEvent.event.revision
+                return readEvent.recordedEvent.revision
             default:
                 return nil
             }

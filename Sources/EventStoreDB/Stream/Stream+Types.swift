@@ -25,7 +25,7 @@ public struct Stream{
     
     
     
-    public struct Identifier {
+    public struct Identifier: Sendable {
         typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
 
         public let name: String
@@ -48,7 +48,7 @@ public struct Stream{
     
     
 
-    public struct Position {
+    public struct Position: Sendable {
         public let commit: UInt64
         public let prepare: UInt64
 

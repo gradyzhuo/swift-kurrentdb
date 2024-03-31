@@ -34,8 +34,8 @@ extension PersistentSubscriptionsClient {
 
 extension ReadEvent {
     init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) throws {
-        event = try .init(message: message.event)
-        link = try message.hasLink ? .init(message: message.link) : nil
+        recordedEvent = try .init(message: message.event)
+        linkedRecordedEvent = try message.hasLink ? .init(message: message.link) : nil
 
         if let position = message.position {
             switch position {
@@ -51,9 +51,14 @@ extension ReadEvent {
 }
 
 extension PersistentSubscriptionsClient.Read {
-    public struct EventResult {
+    public struct EventResult: Sendable {
         let event: RecordedEvent
         let retryCount: Int32
+        
+        init(event: RecordedEvent, retryCount: Int32) {
+            self.event = event
+            self.retryCount = retryCount
+        }
     }
     
 //    public struct Subscription {
@@ -78,38 +83,20 @@ extension PersistentSubscriptionsClient.Read {
 }
 
 extension PersistentSubscriptionsClient.Read {
-    public struct Response: GRPCResponse {
+    public enum Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
-
-        let message: UnderlyingMessage
-//
-//        public let event: ReadEvent
-//        var sender: PersistentSubscriptions?
-//        var subscriptionId: String?
-//
-        public init(from message: UnderlyingMessage) {
-            self.message = message
-//            self.event = try .init(message: message.event)
+        
+        case readEvent(event: ReadEvent, retryCount: Int32)
+        case confirmation(subscriptionId: String)
+        
+        public init(from message: UnderlyingMessage) throws {
+            if message.event.isInitialized {
+               let event = message.event
+                self = try .readEvent(event: .init(message: event), retryCount: event.retryCount)
+            }else{
+                self = .confirmation(subscriptionId: message.subscriptionConfirmation.subscriptionID)
+            }
         }
-
-//        public func ack() async throws {
-//            let ackRequest: Request.UnderlyingMessage = .with{
-//                $0.ack = .with{
-//                    $0.id = subscriptionId?.data(using: .utf8) ?? Data()
-//                    $0.ids = [self.event.event.id.toEventStoreUUID()]
-//                }
-//            }
-//
-//            if let ackResponses = self.sender?.underlyingClient.read([ackRequest]){
-//                for try await i in ackResponses{
-//                    print("ack LLLLL:", i)
-//                }
-//            }
-//
-//
-//        }
-
-        public func nack() {}
     }
 }
 

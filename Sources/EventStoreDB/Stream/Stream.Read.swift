@@ -170,15 +170,6 @@ extension Cursor where Pointer == StreamClient.Read.CursorPointer {
     }
 }
 
-//
-// extension Stream.Read.Revision {
-//
-//    public func cursor(direction: Stream.Read.Direction) -> Stream.Read.Cursor<Self>{
-//        return .at(self, direction: direction)
-//    }
-//
-// }
-
 extension StreamClient.Read.UUIDOption {
     func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
         switch self {
@@ -291,13 +282,14 @@ extension Stream.Identifier {
 extension StreamClient.Read {
     public struct Response: GRPCResponse {
         public enum Content {
-            case event(readEvent: ReadEvent)
-            case confirmation(subscription: String)
-            case checkpoint(position: Stream.Position)
             case streamNotFound(streamName: String)
+            case event(readEvent: ReadEvent)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)
             case position(lastAllStream: Stream.Position)
+            
+            case confirmation(subscription: String)
+            case checkpoint(position: Stream.Position)
             case caughtUp
             case fellBehind
         }

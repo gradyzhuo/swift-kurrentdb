@@ -14,19 +14,23 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
         try EventStoreDB.using(settings: "esdb://localhost:2113?tls=false")
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-    
-//    func testDelete() async throws {
-//        var client = try EventStoreDB.Client()
-//        try await client.persistentSubscriptionsClient.deleteOn(stream: .specified("testing"), groupName: "mytest")
+//    override func setUp() async throws {
+//        let client = try EventStoreDB.Client()
 //        
 //    }
 
+    override func tearDownWithError() throws {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+//        Task{
+//            let client = try EventStoreDB.Client()
+//            try await client.persistentSubscriptionsClient.deleteOn(stream: .specified("testing"), groupName: "mytest")
+//        }
+//        
+    }
+
     func testCreate() async throws {
-        var client = try EventStoreDB.Client()
-        try await client.persistentSubscriptionsClient.createToStream(streamName: "testing", groupName: "mytest", options: .init())
+        let client = try EventStoreDB.Client()
+        try await client.createPersistentSubscription(streamName: "testing", groupName: "mytest", options: .init())
         
     }
     
@@ -37,12 +41,21 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
 //            options.stop(at: .noLimit)
 //        }
         
-        let subscription = try await client.persistentSubscriptionsClient.subscribeTo(.specified("testing"), groupName: "mytest", options: .init())
+        let subscription = try await client.subscribePersistentSubscriptionTo(.specified("testing"), groupName: "mytest") { options in
+            options
+        }
+
+        let response = try await client.appendTo(streamName: "testing", events: .init(eventType: "AccountCreated", payload: ["Description": "Gears of War 4"])) { options in
+            options.expectedRevision(.any)
+        }
         
-//        for try await event in subscription {
-//            print("sub: \(event)")
-//            try await subscription.ack(eventIds: event.event.id)
-//        }
+        var firstEventResult: PersistentSubscriptionsClient.Read.EventResult? = nil
+        for try await event in subscription {
+            firstEventResult = event
+            try await subscription.ack(eventIds: event.event.id)
+            break
+        }
         
+        XCTAssertEqual(response.current.revision, firstEventResult?.event.revision)
     }
 }

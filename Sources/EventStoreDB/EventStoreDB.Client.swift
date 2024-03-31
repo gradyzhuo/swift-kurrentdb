@@ -12,21 +12,27 @@ import GRPCSupport
 extension EventStoreDB {
     public struct Client {
         
-        public private(set) var channel: GRPCChannel
+        internal var channel: GRPCChannel {
+            get throws {
+                return try GRPCChannelPool.with(settings: settings)
+            }
+        }
+        
         public var defaultCallOptions: CallOptions
-        public let persistentSubscriptionsClient: PersistentSubscriptionsClient
+//        public let persistentSubscriptionsClient: PersistentSubscriptionsClient
         
-        public init(settings: ClientSettings = EventStoreDB.shared.settings) throws {
-            let channel = try GRPCChannelPool.with(settings: settings)
-            let callOptions = try settings.makeCallOptions()
-            self.init(channel: channel, defaultCallOptions: callOptions)
+        public private(set) var settings: ClientSettings
+        
+        public init(settings: ClientSettings = EventStoreDB.shared.settings, defaultCallOptions: CallOptions? = nil) throws {
+            self.defaultCallOptions = try defaultCallOptions ?? settings.makeCallOptions()
+            self.settings = settings
         }
         
-        private init(channel: GRPCChannel, defaultCallOptions: CallOptions){
-            self.channel = channel
-            self.defaultCallOptions = defaultCallOptions
-            self.persistentSubscriptionsClient = .init(channel: channel, callOptions: defaultCallOptions)
-        }
+//        private init(channel: GRPCChannel, defaultCallOptions: CallOptions){
+//            self.channel = channel
+//            self.defaultCallOptions = defaultCallOptions
+//            self.persistentSubscriptionsClient = .init(channel: channel, callOptions: defaultCallOptions)
+//        }
         
     }
 }
@@ -51,7 +57,7 @@ extension EventStoreDB.Client{
         let responses = try read(streamName: "$$\(streamName)", cursor: cursor) { $0 }
         return try await responses.first {
             switch $0.content {
-            case .event(let readEvent):
+            case .event(_):
                 true
             default:
                 false
@@ -59,9 +65,9 @@ extension EventStoreDB.Client{
         }.flatMap{
             switch $0.content {
             case .event(let readEvent):
-                switch readEvent.event.contentType {
+                switch readEvent.recordedEvent.contentType {
                 case .json:
-                    try JSONDecoder().decode(Stream.Metadata.self, from: readEvent.event.data)
+                    try JSONDecoder().decode(Stream.Metadata.self, from: readEvent.recordedEvent.data)
                 default:
                     throw ClientError.eventDataError(message: "The data of event could not be parsed. ContentType of Stream Metadata should be encoded in .json format.")
                 }
@@ -76,7 +82,7 @@ extension EventStoreDB.Client{
     // MARK: Append methods -
     public func appendTo(streamName: String, events: [EventData], configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
         
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         let options = configure(.init(subject: .init()))
         
         return try await client.appendTo(stream: .init(name: streamName), events: events, options: options.subject)
@@ -93,7 +99,7 @@ extension EventStoreDB.Client{
 
     public func readAllStreams(cursor: Cursor<StreamClient.ReadAll.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options) throws -> StreamClient.Read.Responses {
         
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
         let options = configure(.init())
         return try client.readAll(cursor: cursor, options: options, channel: channel, callOptions: defaultCallOptions)
@@ -105,7 +111,7 @@ extension EventStoreDB.Client{
 
     public func read(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options) throws -> StreamClient.Read.Responses {
         
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
         let options = configure(.init())
         return try client.read(stream: .init(name: streamName), cursor: cursor, options: options)
@@ -125,7 +131,7 @@ extension EventStoreDB.Client{
     @discardableResult
     public func delete(streamName: String, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
         
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
         let options = configure(.init())
         return try await client.delete(identifier: .init(name: streamName), options: options, channel: channel, callOptions: defaultCallOptions)
@@ -136,7 +142,7 @@ extension EventStoreDB.Client{
     @discardableResult
     public func tombstone(streamName: String, configure: (_ options: StreamClient.Tombstone.Options) -> StreamClient.Tombstone.Options) async throws -> StreamClient.Tombstone.Response {
         
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
         let options = configure(.init())
         return try await client.tombstone(identifier: .init(name: streamName), options: options, channel: channel, callOptions: defaultCallOptions)
@@ -149,7 +155,7 @@ extension EventStoreDB.Client{
 extension EventStoreDB.Client {
     
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
-        let client = OperationsClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try OperationsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
     
@@ -159,7 +165,7 @@ extension EventStoreDB.Client {
 extension EventStoreDB.Client {
     public func createPersistentSubscription(streamName: String, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options) async throws{
         
-        let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
+        let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: .init(name: streamName), groupName: groupName, options: options)
         
         let request = try handler.build()
@@ -168,7 +174,7 @@ extension EventStoreDB.Client {
     }
     
     public func createPersistentSubscriptionToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options) async throws {
-        let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
+        let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
         
         let request = try handler.build()
@@ -180,7 +186,8 @@ extension EventStoreDB.Client {
     // MARK: - Restart Subsystem Action
 
     public func restartPersistentSubscriptionSubsystem(settings: ClientSettings = EventStoreDB.shared.settings) async throws {
-        return try await PersistentSubscriptionsClient.restartSubsystem(channel: channel, callOptions: defaultCallOptions)
+        let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        return try await client.restartSubsystem()
     }
     
     
@@ -189,7 +196,7 @@ extension EventStoreDB.Client {
     public func subscribePersistentSubscriptionTo(_ streamSelection:Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options)->PersistentSubscriptionsClient.Read.Options) async throws -> PersistentSubscriptionsClient.Subscriber {
         
         
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
         
         let options = PersistentSubscriptionsClient.Read.Options().set(bufferSize: 1000)
             .set(uuidOption: .string)

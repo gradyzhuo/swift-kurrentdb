@@ -12,8 +12,8 @@ extension StreamClient.Append {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        public var options: UnderlyingMessage = .init()
-
+        package var options: UnderlyingMessage = .init()
+        
         public var expectedRevision: Stream.RevisionRule {
             didSet {
                 switch expectedRevision {
@@ -33,7 +33,7 @@ extension StreamClient.Append {
             expectedRevision = .any
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             options
         }
     }

@@ -19,20 +19,19 @@ extension PersistentSubscriptionsClient{
         
         var subscriptionId: String?
         let requestStream: GRPCAsyncRequestStreamWriter<Read.Request.UnderlyingMessage>
-        
-        public init(requestStream: GRPCAsyncRequestStreamWriter<Read.Request.UnderlyingMessage>, responseStreamingIterator: GRPCAsyncResponseStream<Read.Response.UnderlyingMessage>.AsyncIterator) async throws {
-            self.requestStream = requestStream
-            self.eventIterator = .init(responseStreamIterator: responseStreamingIterator)
+
+        public init(readCall: GRPCAsyncBidirectionalStreamingCall<Read.Request.UnderlyingMessage, Read.Response.UnderlyingMessage>) async throws{
             
-            var responseStreamingIterator = responseStreamingIterator
+            self.requestStream = readCall.requestStream
             
-            let subscriptionId: String? = if case .subscriptionConfirmation(let confirmation) = try await responseStreamingIterator.next()?.content{
+            var iterator = readCall.responseStream.makeAsyncIterator()
+            self.eventIterator = .init(responseStreamIterator: iterator)
+            
+            self.subscriptionId = if case .subscriptionConfirmation(let confirmation) = try await iterator.next()?.content{
                 confirmation.subscriptionID
             }else{
                 nil
             }
-            
-            self.subscriptionId = subscriptionId
         }
         
         public func makeAsyncIterator() -> AsyncIterator {

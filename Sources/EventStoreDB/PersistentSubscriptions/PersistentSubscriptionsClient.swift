@@ -153,10 +153,9 @@ extension PersistentSubscriptionsClient {
         let requests = try handler.build()
         
         let getSubscriptionCall = underlyingClient.makeReadCall()
-        let iterator = getSubscriptionCall.responseStream.makeAsyncIterator()
         try await getSubscriptionCall.requestStream.send(requests)
 
-        return try await .init(requestStream: getSubscriptionCall.requestStream, responseStreamingIterator: iterator)
+        return try await .init(readCall: getSubscriptionCall)
     }
 
 
@@ -200,11 +199,9 @@ extension PersistentSubscriptionsClient {
 
     // MARK: - Restart Subsystem Action
 
-    public static func restartSubsystem(channel: GRPCChannel, callOptions: CallOptions) async throws {
-        var client = UnderlyingClient(channel: channel)
-
+    public func restartSubsystem() async throws {
         let handler = RestartSubsystem()
-        try await handler.handle(response: client.restartSubsystem(handler.build(), callOptions: callOptions))
+        try await handler.handle(response: underlyingClient.restartSubsystem(handler.build(), callOptions: callOptions))
     }
 }
 
