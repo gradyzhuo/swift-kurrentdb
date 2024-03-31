@@ -9,7 +9,7 @@ import AnyCodable
 import Foundation
 import GRPCSupport
 
-public enum ContentType: String, Codable {
+public enum ContentType: String, Codable, Sendable {
     case unknown
     case json = "application/json"
     case binary = "application/octet-stream"
@@ -115,7 +115,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
     }
 }
 
-public struct RecordedEvent: EventStoreEvent {
+public struct RecordedEvent: EventStoreEvent, Sendable {
     public private(set) var id: UUID
     public private(set) var eventType: String
     public private(set) var contentType: ContentType
@@ -133,7 +133,7 @@ public struct RecordedEvent: EventStoreEvent {
     public private(set) var customMetadata: Data
     public private(set) var data: Data
 
-    public func decodeContent<T: Decodable>(to decodeType: T.Type) throws -> T? {
+    public func decode<T: Decodable>(to decodeType: T.Type) throws -> T? {
         switch contentType {
         case .json:
             let decoder = JSONDecoder()
@@ -190,8 +190,8 @@ public struct RecordedEvent: EventStoreEvent {
 }
 
 public struct ReadEvent {
-    public internal(set) var event: RecordedEvent
-    public internal(set) var link: RecordedEvent?
+    public internal(set) var recordedEvent: RecordedEvent
+    public internal(set) var linkedRecordedEvent: RecordedEvent?
     public internal(set) var commitPosition: Stream.Position?
 
     public var noPosition: Bool {
@@ -199,14 +199,14 @@ public struct ReadEvent {
     }
 
     init(event: RecordedEvent, link: RecordedEvent? = nil, commitPosition: Stream.Position? = nil) {
-        self.event = event
-        self.link = link
+        self.recordedEvent = event
+        self.linkedRecordedEvent = link
         self.commitPosition = commitPosition
     }
 
     init(message: EventStore_Client_Streams_ReadResp.ReadEvent) throws {
-        event = try .init(message: message.event)
-        link = try message.hasLink ? .init(message: message.link) : nil
+        recordedEvent = try .init(message: message.event)
+        linkedRecordedEvent = try message.hasLink ? .init(message: message.link) : nil
 
         if let position = message.position {
             switch position {
