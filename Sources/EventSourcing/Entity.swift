@@ -6,8 +6,13 @@
 //
 
 import Foundation
+import EventStoreDB
 
 public protocol Entity: Identifiable {
     
+    var streamName: String { get }
+    var events: [Event] { get }
+    
+    func add(event: Event) throws
 }
 

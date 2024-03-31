@@ -13,6 +13,7 @@ public protocol Repository{
     func find(id: AggregateRoot.ID) async throws -> AggregateRoot?
     func save(entity: AggregateRoot) async throws
     func delete(id: AggregateRoot.ID) async throws
+    func contains(id: AggregateRoot.ID) async throws -> Bool
 }
 
 extension Repository {
@@ -20,4 +21,5 @@ extension Repository {
     func delete(entity: AggregateRoot) async throws {
         try await delete(id: entity.id)
     }
+    
 }

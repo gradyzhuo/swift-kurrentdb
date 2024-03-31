@@ -35,6 +35,24 @@ final class EventStoreDBStreamTests: XCTestCase {
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
+    
+    func testStreamNoFound() async throws {
+        let client = try EventStoreDB.Client()
+        let responses = try client.read(streamName: "NoStream", cursor: .start) { options in
+            options
+        }
+        let notFound = await responses.first { response in
+            print(response)
+            switch response.content {
+            case .streamNotFound(_):
+                return true
+            default:
+                return false
+            }
+        }
+        
+        XCTAssertNotNil(notFound)
+    }
 
     func testAppendEvent() async throws {
         let content = ["Description": "Gears of War 4"]
