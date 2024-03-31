@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Entity: Identifiable<UUID> {
+public protocol Entity: Identifiable {
     
 }
 
