@@ -13,6 +13,6 @@ public protocol Entity: Identifiable {
     var streamName: String { get }
     var events: [Event] { get }
     
-    func add(event: Event) throws
+    mutating func add(event: Event) throws
 }
 
