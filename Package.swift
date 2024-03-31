@@ -35,6 +35,12 @@ let package = Package(
             ]
         ),
         .target(
+            name: "EventSourcing",
+            dependencies: [
+                "EventStoreDB"
+            ]
+        ),
+        .target(
             name: "GRPCSupport",
             dependencies: [
                 .product(name: "GRPC", package: "grpc-swift"),
