@@ -11,3 +11,9 @@ public protocol Event: Codable, CustomStringConvertible {
     static var eventName: String { get }
     var updated: Date { get }
 }
+
+extension Event {
+    public static var eventName: String {
+        return "\(Self.Type.self)"
+    }
+}
