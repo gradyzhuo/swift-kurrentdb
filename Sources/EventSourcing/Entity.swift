@@ -9,10 +9,12 @@ import Foundation
 import EventStoreDB
 
 public protocol Entity: Identifiable {
+    static func getStreamName(id: ID) -> String
     
-    var streamName: String { get }
     var events: [Event] { get }
     
     mutating func add(event: Event) throws
+    
+    init(id: ID)
 }
 
