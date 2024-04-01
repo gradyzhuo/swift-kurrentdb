@@ -45,10 +45,6 @@ let package = Package(
             dependencies: [
                 .product(name: "GRPC", package: "grpc-swift"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
-            ],
-            plugins: [
-                .plugin(name: "GRPCSwiftPlugin", package: "grpc-swift"),
-                .plugin(name: "SwiftProtobufPlugin", package: "swift-protobuf"),
             ]
         ),
         .testTarget(
