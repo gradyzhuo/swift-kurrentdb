@@ -16,7 +16,7 @@ public protocol Aggregate: Entity {
     
     static var category: String { get }
     
-    var events: [any Event] { set get }
+    var events: [any Event] { get }
     var revision: UInt64? { set get }
     
     func add<E: Event>(event: E) throws
