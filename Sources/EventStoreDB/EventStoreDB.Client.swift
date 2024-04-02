@@ -41,7 +41,7 @@ extension EventStoreDB {
 //MARK: - Streams Operations
 
 extension EventStoreDB.Client{
-    public func setStreamMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success{
+    public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success{
         return try await appendTo(
             streamName: "$$\(streamName)",
             events: .init(
@@ -53,7 +53,7 @@ extension EventStoreDB.Client{
         
     }
     
-    public func getStreamMetadata(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata?{
+    public func getMetadata(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata?{
         let responses = try read(streamName: "$$\(streamName)", cursor: cursor) { $0 }
         return try await responses.first {
             switch $0.content {
@@ -89,7 +89,7 @@ extension EventStoreDB.Client{
 
     }
 
-    public func appendTo(streamName: String, events: EventData ..., configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
+    public func appendTo(streamName: String, events: EventData ..., configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options> = { $0 }) async throws -> StreamClient.Append.Response.Success {
         
         return try await appendTo(streamName: streamName, events: events, configure: configure)
         
@@ -97,7 +97,7 @@ extension EventStoreDB.Client{
 
     // MARK: Read by all streams methods -
 
-    public func readAllStreams(cursor: Cursor<StreamClient.ReadAll.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options) throws -> StreamClient.Read.Responses {
+    public func readAllStreams(cursor: Cursor<StreamClient.ReadAll.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
@@ -109,7 +109,7 @@ extension EventStoreDB.Client{
 
     // MARK: Read by a stream methos -
 
-    public func read(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options) throws -> StreamClient.Read.Responses {
+    public func read(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
@@ -118,11 +118,15 @@ extension EventStoreDB.Client{
         
     }
 
-    public func read(streamName: String, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options) throws -> StreamClient.Read.Responses {
+    public func read(streamName: String, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         
         let cursor:Cursor<StreamClient.Read.CursorPointer> = .specified(.init(revision: revision, direction: direction))
         return try read(streamName: streamName, cursor: cursor, configure: configure)
         
+    }
+    
+    public func subscribeToStream(streamName: String){
+        let options = StreamClient.Read.Options()
     }
     
 

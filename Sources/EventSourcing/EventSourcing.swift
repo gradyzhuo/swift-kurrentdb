@@ -40,7 +40,8 @@ extension EventStoreRepository {
         }
         
         var aggregate = AggregateRoot.init(id: id)
-        if let event = convert(readEvent: readEvent) {
+        
+        if let event = AggregateRoot.EventMapper.init(readEvent: readEvent)?.convert() {
             try aggregate.add(event: event)
         }
         
@@ -53,7 +54,12 @@ extension EventStoreRepository {
         return aggregate
     }
     public func save(entity: AggregateRoot) async throws{
-        
+        let events: [EventData] = try entity.events.map{
+            return try .init(eventType: "\(type(of: $0))", payload: $0)
+        }
+        _ = try await client.appendTo(streamName: "product::\(entity.id)", events: events) { options in
+            options.expectedRevision(.any)
+        }
     }
     public func delete(id: AggregateRoot.ID) async throws{
         

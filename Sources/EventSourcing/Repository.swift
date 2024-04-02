@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol Repository{
-    associatedtype AggregateRoot: Entity
+    associatedtype AggregateRoot: Aggregate
     
     func find(id: AggregateRoot.ID) async throws -> AggregateRoot?
     func save(entity: AggregateRoot) async throws

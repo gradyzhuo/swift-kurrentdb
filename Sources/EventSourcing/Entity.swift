@@ -8,13 +8,31 @@
 import Foundation
 import EventStoreDB
 
-public protocol Entity: Identifiable {
-    static func getStreamName(id: ID) -> String
-    
-    var events: [Event] { get }
-    
-    mutating func add(event: Event) throws
+public protocol Entity: Identifiable, Sendable {
+    var events: [any Event] { set get }
+    var revision: UInt64? { set get }
     
     init(id: ID)
+    
+    mutating func apply<E: Event>(event: E) throws
 }
 
+extension Entity {
+    public mutating func add<E: Event>(event: E) throws {
+        try apply(event: event)
+        self.events.append(event)
+    }
+}
+
+public protocol Aggregate: Entity {
+    associatedtype EventMapper:  EventMappable
+    
+    var category: String { get }
+}
+
+
+extension Aggregate {
+    public static func getStreamName(id: ID) -> String{
+        return "\(Self.Type.self)-\(id)"
+    }
+}

@@ -6,14 +6,30 @@
 //
 
 import Foundation
+import EventStoreDB
 
-public protocol Event: Codable, CustomStringConvertible {
-    static var eventName: String { get }
-    var updated: Date { get }
+
+public protocol EventMappable: RawRepresentable {
+    
+    init?(readEvent: ReadEvent)
+    
+    func convert() -> Event
+}
+
+
+public protocol Event: Codable {
+    
 }
 
 extension Event {
-    public static var eventName: String {
-        return "\(Self.Type.self)"
+    
+    public static func restore(from recordedEvent: RecordedEvent) throws -> Self {
+        let decoder = JSONDecoder()
+        return try decoder.decode(Self.self, from: recordedEvent.data)
+    }
+    
+    public func toEventData(eventType: String = "\(Self.Type.self)") throws -> EventData{
+        let encoder = JSONEncoder()
+        return try .init(eventType: eventType, payload: encoder.encode(self))
     }
 }
