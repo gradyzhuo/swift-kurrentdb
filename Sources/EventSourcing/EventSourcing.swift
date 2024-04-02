@@ -41,12 +41,13 @@ extension EventStoreRepository {
         
         var aggregate = AggregateRoot.init(id: id)
         
-        if let event = try AggregateRoot.EventMapper.init(readEvent: readEvent)?.convert() {
+        if let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent) {
             try aggregate.add(event: event)
         }
         
         for try await response in responses{
-            if let readEvent = handle(response: response),  let event = convert(readEvent: readEvent) {
+            if let readEvent = handle(response: response),
+               let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent){
                 try aggregate.add(event: event)
             }
         }
