@@ -10,8 +10,6 @@ import EventStoreDB
 
 public protocol EventStoreRepository : Repository{
     var client: EventStoreDB.Client { get }
-    
-    func convert(readEvent: ReadEvent) -> Event?
 }
 
 extension EventStoreRepository {
