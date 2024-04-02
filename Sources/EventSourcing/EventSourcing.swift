@@ -56,7 +56,7 @@ extension EventStoreRepository {
         let events: [EventData] = try entity.events.map{
             return try .init(eventType: "\(type(of: $0))", payload: $0)
         }
-        _ = try await client.appendTo(streamName: "product::\(entity.id)", events: events) { options in
+        _ = try await client.appendTo(streamName: AggregateRoot.getStreamName(id: entity.id), events: events) { options in
             options.expectedRevision(.any)
         }
     }

@@ -35,4 +35,8 @@ extension Aggregate {
     public static func getStreamName(id: ID) -> String{
         return "\(Self.category)-\(id)"
     }
+    
+    public var streamName: String {
+        return Self.getStreamName(id: id)
+    }
 }
