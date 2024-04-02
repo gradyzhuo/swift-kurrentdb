@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import EventStoreDB
 
 public protocol Repository{
     associatedtype AggregateRoot: Aggregate
     
-    func find(id: AggregateRoot.ID) async throws -> AggregateRoot?
+    func find(id: AggregateRoot.ID) throws -> AsyncStream<ReadEvent>
+    func get(id: AggregateRoot.ID) async throws -> AggregateRoot
     func save(entity: AggregateRoot) async throws
     func delete(id: AggregateRoot.ID) async throws
 }
