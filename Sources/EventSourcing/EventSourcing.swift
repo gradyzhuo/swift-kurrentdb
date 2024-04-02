@@ -22,42 +22,48 @@ extension EventStoreRepository {
         }
     }
     
-    public func find(id: AggregateRoot.ID) async throws -> AggregateRoot?{
+    public func find(id: AggregateRoot.ID) throws -> AsyncStream<ReadEvent>{
         
         let responses = try client.read(streamName: AggregateRoot.getStreamName(id: id), cursor: .start) { options in
             options
         }
         
-        var iterator = responses.makeAsyncIterator()
-        guard let firstResponse = await iterator.next() else {
-            return nil
-        }
-        
-        guard let readEvent = handle(response: firstResponse) else {
-            return nil
-        }
-        
-        var aggregate = AggregateRoot.init(id: id)
-        
-        if let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent) {
-            try aggregate.add(event: event)
-        }
-        
-        for try await response in responses{
-            if let readEvent = handle(response: response),
-               let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent){
-                try aggregate.add(event: event)
+        return .init { continuation in
+            Task {
+                for await response in responses {
+                    switch response.content {
+                    case .event(readEvent: let event):
+                        continuation.yield(event)
+                    default:
+                        continue
+                    }
+                }
+                continuation.finish()
             }
         }
         
+    }
+    
+    public func get(id: AggregateRoot.ID) async throws -> AggregateRoot {
+        var aggregate = AggregateRoot.init(id: id)
+        for try await readEvent in try find(id: id){
+            if let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent) {
+                try aggregate.add(event: event)
+            }
+            aggregate.revision = readEvent.recordedEvent.revision
+        }
         return aggregate
     }
+    
     public func save(entity: AggregateRoot) async throws{
         let events: [EventData] = try entity.events.map{
             return try .init(eventType: "\(type(of: $0))", payload: $0)
         }
         _ = try await client.appendTo(streamName: entity.streamName, events: events) { options in
-            options.expectedRevision(.any)
+            guard let revision = entity.revision else {
+                return options.expectedRevision(.any)
+            }
+            return options.expectedRevision(.revision(revision))
         }
     }
     public func delete(id: AggregateRoot.ID) async throws{
