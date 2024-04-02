@@ -9,9 +9,9 @@ import Foundation
 import EventStoreDB
 
 
-public protocol EventMappable: RawRepresentable {
+public protocol EventMappable: RawRepresentable where RawValue == String {
     
-    init?(readEvent: ReadEvent)
+    init?(readEvent: ReadEvent) throws
     
     func convert() -> Event
 }
