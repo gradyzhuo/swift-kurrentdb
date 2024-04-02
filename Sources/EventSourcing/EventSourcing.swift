@@ -41,7 +41,7 @@ extension EventStoreRepository {
         
         var aggregate = AggregateRoot.init(id: id)
         
-        if let event = AggregateRoot.EventMapper.init(readEvent: readEvent)?.convert() {
+        if let event = try AggregateRoot.EventMapper.init(readEvent: readEvent)?.convert() {
             try aggregate.add(event: event)
         }
         

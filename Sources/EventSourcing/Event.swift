@@ -10,10 +10,7 @@ import EventStoreDB
 
 
 public protocol EventMappable: RawRepresentable where RawValue == String {
-    
-    init?(readEvent: ReadEvent) throws
-    
-    func convert() -> Event
+    func convert(readEvent: ReadEvent) -> Event
 }
 
 
