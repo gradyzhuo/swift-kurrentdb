@@ -19,7 +19,7 @@ public protocol Aggregate: Entity {
     var events: [any Event] { get }
     var revision: UInt64? { set get }
     
-    func add<E: Event>(event: E) throws
+    mutating func add<E: Event>(event: E) throws
 }
 
 
