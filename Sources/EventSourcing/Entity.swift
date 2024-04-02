@@ -27,12 +27,12 @@ extension Entity {
 public protocol Aggregate: Entity {
     associatedtype EventMapper:  EventMappable
     
-    var category: String { get }
+    static var category: String { get }
 }
 
 
 extension Aggregate {
     public static func getStreamName(id: ID) -> String{
-        return "\(Self.Type.self)-\(id)"
+        return "\(Self.category)-\(id)"
     }
 }
