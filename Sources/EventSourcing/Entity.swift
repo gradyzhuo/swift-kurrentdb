@@ -9,6 +9,7 @@ import Foundation
 import EventStoreDB
 
 public protocol Entity: Identifiable {
+    init(id: ID)
 }
 
 public protocol Aggregate: Entity {
