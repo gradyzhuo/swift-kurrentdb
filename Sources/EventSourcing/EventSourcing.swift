@@ -8,7 +8,7 @@
 import Foundation
 import EventStoreDB
 
-public protocol EventStoreRepository : Repository{
+public protocol EventStoreRepository : Repository where ReadEvents == AsyncStream<ReadEvent>{
     var client: EventStoreDB.Client { get }
 }
 
