@@ -22,13 +22,30 @@ extension EventStoreRepository {
         }
     }
     
-    public func find(id: AggregateRoot.ID) throws -> AsyncStream<ReadEvent>{
+    public func find(id: AggregateRoot.ID) async throws -> AsyncStream<ReadEvent>?{
         
         let responses = try client.read(streamName: AggregateRoot.getStreamName(id: id), cursor: .start) { options in
             options
         }
         
+        var iterator = responses.makeAsyncIterator()
+        guard let response = await iterator.next() else {
+            return nil
+        }
+        
+        let firstReadEvent: ReadEvent
+        switch response.content {
+        case .streamNotFound(let streamName):
+            throw ClientError.streamNotFound(message: "Stream \(streamName) not Found.")
+        case .event(let readEvent):
+            firstReadEvent = readEvent
+        default:
+            return nil
+        }
+        
         return .init { continuation in
+            continuation.yield(firstReadEvent)
+            
             Task {
                 for await response in responses {
                     switch response.content {
@@ -42,17 +59,6 @@ extension EventStoreRepository {
             }
         }
         
-    }
-    
-    public func get(id: AggregateRoot.ID) async throws -> AggregateRoot {
-        var aggregate = AggregateRoot.init(id: id)
-        for try await readEvent in try find(id: id){
-            if let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent) {
-                try aggregate.add(event: event)
-            }
-            aggregate.revision = readEvent.recordedEvent.revision
-        }
-        return aggregate
     }
     
     public func save(entity: AggregateRoot) async throws{

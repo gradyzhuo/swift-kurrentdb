@@ -21,6 +21,7 @@ public enum ClientSettingsError: Error {
 public enum ClientError: Error {
     case eventDataError(message: String)
     case streamNameError(message: String)
+    case streamNotFound(message: String)
     case readResponseError(message: String)
     case projectionNameError(message: String)
 }
@@ -28,7 +29,6 @@ public enum ClientError: Error {
 public enum ReadEventError: Error {
     case GRPCDecodeException(message: String)
 }
-
 
 public enum PersistentSubscriptionsError: Error {
     case ackError(reason: String)
