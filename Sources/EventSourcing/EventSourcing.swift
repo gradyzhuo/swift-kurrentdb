@@ -73,6 +73,8 @@ extension EventStoreRepository {
         }
     }
     public func delete(id: AggregateRoot.ID) async throws{
-        
+        try await client.delete(streamName: AggregateRoot.getStreamName(id: id)) { options in
+            options.expected(revision: .streamExists)
+        }
     }
 }
