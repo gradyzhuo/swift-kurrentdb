@@ -9,12 +9,7 @@ import Foundation
 import EventStoreDB
 
 
-public protocol EventMappable: RawRepresentable where RawValue == String {
-    func convert(readEvent: ReadEvent) throws -> Event?
-}
-
-
-public protocol Event: Codable {
+public protocol Event: Codable, RawRepresentable where RawValue == String {
     init?(readEvent: ReadEvent) throws
 }
 
