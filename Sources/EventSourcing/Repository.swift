@@ -24,7 +24,7 @@ extension Repository {
     }
 }
 
-extension Repository where ReadEvents: Sequence, ReadEvents.Element: Event{
+extension Repository where ReadEvents: Sequence, ReadEvents.Element == AggregateRoot.EventType{
     
     public func get(id: AggregateRoot.ID) async throws -> AggregateRoot{
         
