@@ -9,7 +9,9 @@ import Foundation
 import EventStoreDB
 
 
-public protocol Event: Codable, RawRepresentable where RawValue == String {
+public protocol Event: Codable {
+    var eventType: String { get }
+    
     init?(readEvent: ReadEvent) throws
 }
 
