@@ -51,7 +51,7 @@ extension Repository where ReadEvents == AsyncStream<ReadEvent> {
         }
         
         for try await readEvent in events {
-            if let event = try AggregateRoot.EventMapper.init(rawValue: readEvent.recordedEvent.eventType)?.convert(readEvent: readEvent) {
+            if let event = try AggregateRoot.EventType.init(readEvent: readEvent) {
                 try aggregate.add(event: event)
             }
             aggregate.revision = readEvent.recordedEvent.revision

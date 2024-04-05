@@ -15,7 +15,7 @@ public protocol EventMappable: RawRepresentable where RawValue == String {
 
 
 public protocol Event: Codable {
-    
+    init?(readEvent: ReadEvent) throws
 }
 
 extension Event {

@@ -13,11 +13,11 @@ public protocol Entity: Identifiable {
 }
 
 public protocol Aggregate: Entity {
-    associatedtype EventMapper:  EventMappable
+    associatedtype EventType: Event
     
     static var category: String { get }
     
-    var events: [any Event] { get }
+    var events: [EventType] { get }
     var revision: UInt64? { set get }
     
     mutating func add<E: Event>(event: E) throws
