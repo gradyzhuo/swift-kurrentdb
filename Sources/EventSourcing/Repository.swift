@@ -26,7 +26,7 @@ extension Repository {
 
 extension Repository where ReadEvents: Sequence, ReadEvents.Element: Event{
     
-    func get(id: AggregateRoot.ID) async throws -> AggregateRoot{
+    public func get(id: AggregateRoot.ID) async throws -> AggregateRoot{
         
         var aggregate = AggregateRoot.init(id: id)
         guard let events = try await find(id: id) else {
@@ -43,7 +43,7 @@ extension Repository where ReadEvents: Sequence, ReadEvents.Element: Event{
 
 extension Repository where ReadEvents == AsyncStream<ReadEvent> {
     
-    func get(id: AggregateRoot.ID) async throws -> AggregateRoot{
+    public func get(id: AggregateRoot.ID) async throws -> AggregateRoot{
         var aggregate = AggregateRoot.init(id: id)
         
         guard let events = try await find(id: id) else {
