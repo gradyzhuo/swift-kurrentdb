@@ -63,7 +63,7 @@ extension EventStoreRepository {
     
     public func save(entity: AggregateRoot) async throws{
         let events: [EventData] = try entity.events.map{
-            return try .init(eventType: "\(type(of: $0))", payload: $0)
+            return try .init(eventType: $0.eventType, payload: $0)
         }
         _ = try await client.appendTo(streamName: entity.streamName, events: events) { options in
             guard let revision = entity.revision else {
