@@ -11,16 +11,15 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "EventStoreDB",
-            targets: ["EventStoreDB", "GRPCSupport", "EventSourcing"]
+            name: "EventStoreKit",
+            targets: ["EventStoreDB", "GRPCSupport"]
         ),
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(url: "https://github.com/Flight-School/AnyCodable",from: "0.6.0"),
-        .package(url: "https://github.com/SwiftyLab/MetaCodable.git", from: "1.0.0"),
+        .package(url: "https://github.com/Flight-School/AnyCodable",from: "0.6.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -30,14 +29,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "AnyCodable", package: "AnyCodable"),
-                .product(name: "MetaCodable", package: "MetaCodable"),
                 "GRPCSupport",
-            ]
-        ),
-        .target(
-            name: "EventSourcing",
-            dependencies: [
-                "EventStoreDB"
             ]
         ),
         .target(

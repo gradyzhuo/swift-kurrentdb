@@ -40,16 +40,18 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+
         let uuidString = try container.decode(String.self, forKey: .id)
+        
         guard let id = UUID(uuidString: uuidString) else {
             throw ClientError.eventDataError(message: "Couldn't parsed id from jsonData.")
         }
 
         let eventType = try container.decode(String.self, forKey: .eventType)
-        let content = try container.decode([String: AnyCodable].self, forKey: .data)
+        let payload = try container.decode([String: AnyCodable].self, forKey: .data)
         let customMetadata = try container.decodeIfPresent(Data.self, forKey: .customMetadata)
 
-        try self.init(eventType: eventType, payload: content, customMetadata: customMetadata)
+        try self.init(eventType: eventType, payload: payload, customMetadata: customMetadata)
     }
 
     public init(eventType: String, payload: Codable, customMetadata: Data? = nil) throws {
@@ -59,7 +61,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
     }
     
     
-    init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: Data?) {
+    internal init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: Data?) {
         self.id = id
         self.eventType = eventType
         self.data = data
