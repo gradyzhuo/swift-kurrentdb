@@ -5,7 +5,6 @@
 //  Created by Grady Zhuo on 2023/10/17.
 //
 
-import AnyCodable
 import Foundation
 import GRPCSupport
 
@@ -48,18 +47,11 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         }
 
         let eventType = try container.decode(String.self, forKey: .eventType)
-        let payload = try container.decode([String: AnyCodable].self, forKey: .data)
+        let data = try container.decode(Data.self, forKey: .data)
         let customMetadata = try container.decodeIfPresent(Data.self, forKey: .customMetadata)
 
-        try self.init(eventType: eventType, payload: payload, customMetadata: customMetadata)
+        self.init(id: id, eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
     }
-
-    public init(eventType: String, payload: Codable, customMetadata: Data? = nil) throws {
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(payload)
-        self.init(id: .init(), eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
-    }
-    
     
     internal init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: Data?) {
         self.id = id
@@ -73,6 +65,11 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         self.customMetadata = customMetadata
     }
 
+    public init(eventType: String, payload: Codable, customMetadata: Data? = nil) throws {
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(payload)
+        self.init(id: .init(), eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
+    }
     
     public init(eventType: String, payloadData: Data, customMetadata: Data? = nil) throws {
         self.init(id: .init(), eventType: eventType, data: payloadData, contentType: .binary, customMetadata: customMetadata)

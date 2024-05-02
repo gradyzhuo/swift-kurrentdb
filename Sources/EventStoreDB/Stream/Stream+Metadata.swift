@@ -6,19 +6,6 @@
 //
 
 import Foundation
-import AnyCodable
-
-//extension StreamClient {
-////    public static var metadata: Stream.Metadata {
-////        set {
-////
-////        }
-////
-////        get async throws {
-////
-////        }
-////    }
-//}
 
 extension Stream {
     
@@ -55,18 +42,82 @@ extension Stream {
         // The access control list for the stream.
         let acl: Acl?
 
-    
         // An enumerable of key-value pairs of keys to JSON value for
         // user-provided metadata.
-        let customProperties: [String: AnyCodable]?
+        let customProperties: [String: String]?
+        
+        
+        internal func jsonData() throws -> Data? {
+            guard let customProperties else {
+                return nil
+            }
+            return try JSONSerialization.data(withJSONObject: customProperties)
+        }
     }
 }
 
 extension Stream{
-    public enum Acl: Codable{
+    public enum Acl: Codable, Equatable {
+        public typealias RawValue = Data
+        
+        public var rawValue: Data{
+            
+            get throws {
+                let encoder = JSONEncoder()
+                return switch self {
+                case .userStream:
+                    try encoder.encode("$userStreamAcl")
+                case .systemStream:
+                    try encoder.encode("$systemStreamAcl")
+                case .stream(let acl):
+                    try encoder.encode(acl)
+                }
+            }
+        }
+        
         case userStream
         case systemStream
         case stream(StreamAcl)
+        
+ 
+        public init(from decoder: any Decoder) throws {
+            
+            let container = try decoder.singleValueContainer()
+            
+            if let rawValue = try? container.decode(String.self) {
+                if rawValue == "$userStreamAcl" {
+                    self = .userStream
+                } else if rawValue == "$systemStreamAcl"{
+                    self = .systemStream
+                }else {
+                    throw DecodingError.valueNotFound(String.self, .init(codingPath: [], debugDescription: ""))
+                }
+            } else if let acl = try? container.decode(StreamAcl.self) {
+                self = .stream(acl)
+            } else{
+                throw DecodingError.valueNotFound(String.self, .init(codingPath: [], debugDescription: ""))
+            }
+            
+            
+
+        }
+        
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+            case .userStream:
+                try container.encode("$userStreamAcl")
+            case .systemStream:
+                try container.encode("$systemStreamAcl")
+            case .stream(let acl):
+                try container.encode(acl)
+            }
+        }
+        
+        public static func == (lhs: Stream.Acl, rhs: Stream.Acl) -> Bool {
+            return (try? lhs.rawValue) == (try? rhs.rawValue)
+        }
+
     }
     
     
