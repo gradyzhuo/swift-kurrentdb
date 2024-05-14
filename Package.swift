@@ -11,8 +11,8 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "EventStoreKit",
-            targets: ["EventStoreDB", "GRPCSupport"]
+            name: "EventStoreDB",
+            targets: ["EventStoreDB"]
         ),
     ],
     dependencies: [
@@ -44,6 +44,10 @@ let package = Package(
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
             ]
+        ),
+        .testTarget(
+            name: "GRPCSupportTests",
+            dependencies: ["GRPCSupport"]
         ),
     ]
 )

@@ -11,7 +11,7 @@ import XCTest
 
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     override func setUpWithError() throws {
-        try EventStoreDB.using(settings: "esdb://localhost:2113?tls=false")
+        try EventStore.using(settings: "esdb://localhost:2113?tls=false")
     }
 
 //    override func setUp() async throws {
@@ -45,7 +45,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
             options
         }
 
-        let response = try await client.appendTo(streamName: "testing", events: .init(eventType: "AccountCreated", payload: ["Description": "Gears of War 4"])) { options in
+        let response = try await client.appendTo(streamName: "testing", events: .init(eventType: "AccountCreated", payload: ["Description": "Gears of War 10"])) { options in
             options.expectedRevision(.any)
         }
         
@@ -57,5 +57,6 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
         }
         
         XCTAssertEqual(response.current.revision, firstEventResult?.event.revision)
+        
     }
 }

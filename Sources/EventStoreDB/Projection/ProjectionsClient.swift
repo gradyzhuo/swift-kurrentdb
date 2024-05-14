@@ -226,7 +226,7 @@ extension ProjectionsClient {
 
     // MARK: - RestartSubsystem Actions
 
-    public func restartSubsystem(settings: ClientSettings = EventStoreDB.shared.settings) async throws {
+    public func restartSubsystem(settings: ClientSettings = EventStore.shared.settings) async throws {
         let handler = RestartSubsystem()
         try await handler.handle(response: underlyingClient.restartSubsystem(handler.build()))
     }

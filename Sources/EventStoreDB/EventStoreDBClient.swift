@@ -9,38 +9,29 @@ import Foundation
 import GRPC
 import GRPCSupport
 
-extension EventStoreDB {
-    public struct Client {
-        
-        internal var channel: GRPCChannel {
-            get throws {
-                return try GRPCChannelPool.with(settings: settings)
-            }
+public struct EventStoreDBClient {
+    
+    internal var channel: GRPCChannel {
+        get throws {
+            return try GRPCChannelPool.with(settings: settings)
         }
-        
-        public var defaultCallOptions: CallOptions
-//        public let persistentSubscriptionsClient: PersistentSubscriptionsClient
-        
-        public private(set) var settings: ClientSettings
-        
-        public init(settings: ClientSettings = EventStoreDB.shared.settings, defaultCallOptions: CallOptions? = nil) throws {
-            self.defaultCallOptions = try defaultCallOptions ?? settings.makeCallOptions()
-            self.settings = settings
-        }
-        
-//        private init(channel: GRPCChannel, defaultCallOptions: CallOptions){
-//            self.channel = channel
-//            self.defaultCallOptions = defaultCallOptions
-//            self.persistentSubscriptionsClient = .init(channel: channel, callOptions: defaultCallOptions)
-//        }
-        
     }
+    
+    public var defaultCallOptions: CallOptions
+    
+    public private(set) var settings: ClientSettings
+    
+    public init(settings: ClientSettings = EventStore.shared.settings, defaultCallOptions: CallOptions? = nil) throws {
+        self.defaultCallOptions = try defaultCallOptions ?? settings.makeCallOptions()
+        self.settings = settings
+    }
+    
 }
 
 
 //MARK: - Streams Operations
 
-extension EventStoreDB.Client{
+extension EventStoreDBClient{
     public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success{
         return try await appendTo(
             streamName: "$$\(streamName)",
@@ -125,9 +116,9 @@ extension EventStoreDB.Client{
         
     }
     
-    public func subscribeToStream(streamName: String){
-        let options = StreamClient.Read.Options()
-    }
+//    public func subscribeToStream(streamName: String){
+//        let options = StreamClient.Read.Options()
+//    }
     
 
     // MARK: (Soft) Delete a stream -
@@ -156,7 +147,7 @@ extension EventStoreDB.Client{
 
 
 //MARK: - Operations
-extension EventStoreDB.Client {
+extension EventStoreDBClient {
     
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
         let client = try OperationsClient(channel: channel, callOptions: defaultCallOptions)
@@ -166,7 +157,7 @@ extension EventStoreDB.Client {
 }
 
 
-extension EventStoreDB.Client {
+extension EventStoreDBClient {
     public func createPersistentSubscription(streamName: String, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options) async throws{
         
         let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
@@ -189,7 +180,7 @@ extension EventStoreDB.Client {
     
     // MARK: - Restart Subsystem Action
 
-    public func restartPersistentSubscriptionSubsystem(settings: ClientSettings = EventStoreDB.shared.settings) async throws {
+    public func restartPersistentSubscriptionSubsystem(settings: ClientSettings = EventStore.shared.settings) async throws {
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.restartSubsystem()
     }
