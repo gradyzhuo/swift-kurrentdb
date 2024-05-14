@@ -29,8 +29,8 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     }
 
     func testCreate() async throws {
-//        let client = try EventStoreDB.Client()
-//        try await client.createPersistentSubscription(streamName: "testing", groupName: "mytest", options: .init())
+        let client = try EventStoreDB.Client()
+        try await client.createPersistentSubscription(streamName: "testing", groupName: "mytest", options: .init())
         
     }
     
@@ -51,6 +51,8 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
             try await subscription.ack(readEvents: result.event)
             break
         }
+        
+        
         
         XCTAssertEqual(response.current.revision, firstEventResult?.event.recordedEvent.revision)
         

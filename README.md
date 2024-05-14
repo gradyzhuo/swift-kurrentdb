@@ -24,33 +24,39 @@ dependencies: [
 
 ### Examples
 
-#### Appending Event
+#### ClientSettings
 
 ```swift
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 
-try EventStoreDB.using(settings: .parse(connectionString: "esdb://admin:changeit@localhost:2113"))
+EventStoreDB.using(settings: .parse(connectionString: "esdb://admin:changeit@localhost:2113"))
 
 // convenience 
-//try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113".parse())
+// EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113".parse())
 
 // using string literal 
-//try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
-
-
+// EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
 
 
 //or 
-//try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"))
+// EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"))
 
 //or add ssl file by path
-// try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .file("...filePath...")))
+// EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .file("...filePath...")))
 
 //or add ssl file with bundle
-// try EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .fileInBundle(forResource: "ca", withExtension: "crt", inBundle: .main)))
+// EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .fileInBundle(forResource: "ca", withExtension: "crt", inBundle: .main)))
+```
 
+#### Appending Event
+
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+EventStoreDB.using(settings: .localhost())
 
 
 // Create the data array of events.
@@ -65,10 +71,10 @@ let events:[EventData] = [
                 content: "Gears of War 4")
         ]
 
-
+let streamName = "stream_for_testing"
 let client = try EventStoreDB.Client()
 
-let appendResponse = try await client.appendTo(streamName: streamName, events: .init(eventType: "AccountCreated", payload: content)) { options in
+let appendResponse = try await client.appendTo(streamName: streamName, events: events) { options in
     options.expectedRevision(.any)
 }
 
@@ -77,9 +83,12 @@ let appendResponse = try await client.appendTo(streamName: streamName, events: .
 #### Read Event
 
 ```swift
-//...continue after appending
+import EventStoreDB
 
-let rev = appendResponse.current.revision
+// Using a client settings for a single node configuration by parsing a connection string.
+EventStoreDB.using(settings: .localhost())
+
+let streamName = "stream_for_testing"
 
 //Check the event is appended into testing stream.
 let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
@@ -87,5 +96,45 @@ let readResponses = try client.read(streamName: streamName, cursor: .end) { opti
         .countBy(limit: 1)
 }
 
-let results = try await readResponses
+for await response in readResponses {
+    //handle response
+}
+```
+
+#### PersistentSubscriptions
+##### Create
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+EventStoreDB.using(settings: .localhost())
+
+let streamName = "stream_for_testing"
+
+let client = try EventStoreDB.Client()
+try await client.createPersistentSubscription(streamName: streamName, groupName: "mytest", options: .init())
+
+```
+
+##### Subscribe
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+EventStoreDB.using(settings: .localhost())
+
+let streamName = "stream_for_testing"
+
+let client = try EventStoreDB.Client()
+
+let subscription = try await client.subscribePersistentSubscriptionTo(.specified(streamName), groupName: "mytest")
+
+for try await result in subscription {
+    // handle result
+    
+    // ack the readEvent if succeed 
+    try await subscription.ack(readEvents: result.event)
+    // else nack thr readEvent if not succeed.
+    try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
+}
 ```

@@ -158,7 +158,7 @@ extension EventStoreDBClient {
 
 
 extension EventStoreDBClient {
-    public func createPersistentSubscription(streamName: String, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options) async throws{
+    public func createPersistentSubscription(streamName: String, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws{
         
         let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: .init(name: streamName), groupName: groupName, options: options)
@@ -168,7 +168,7 @@ extension EventStoreDBClient {
         try await handler.handle(response: underlyingClient.create(request))
     }
     
-    public func createPersistentSubscriptionToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options) async throws {
+    public func createPersistentSubscriptionToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options = .init()) async throws {
         let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient.init(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
         
@@ -188,7 +188,7 @@ extension EventStoreDBClient {
     
     // MARK: -
     
-    public func subscribePersistentSubscriptionTo(_ streamSelection:Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options)->PersistentSubscriptionsClient.Read.Options) async throws -> PersistentSubscriptionsClient.Subscriber {
+    public func subscribePersistentSubscriptionTo(_ streamSelection:Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options)->PersistentSubscriptionsClient.Read.Options = { $0 } ) async throws -> PersistentSubscriptionsClient.Subscriber {
         
         
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)

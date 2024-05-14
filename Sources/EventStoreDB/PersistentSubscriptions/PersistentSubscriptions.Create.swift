@@ -76,8 +76,13 @@ extension PersistentSubscriptionsClient.Create.ToStream {
     public final class Options: PersistentSubscriptionsCreateOptions{
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         
-        public var settings: PersistentSubscriptionsClient.Settings = .init()
-        public var revisionCursor: Cursor<Stream.Revision> = .end
+        public var settings: PersistentSubscriptionsClient.Settings
+        public var revisionCursor: Cursor<Stream.Revision>
+        
+        public init(settings: PersistentSubscriptionsClient.Settings = .init(), revisionCursor: Cursor<Stream.Revision> = .end) {
+            self.settings = settings
+            self.revisionCursor = revisionCursor
+        }
         
         @discardableResult
         public func startFrom(revision: Cursor<Stream.Revision>) -> Self{
@@ -108,9 +113,15 @@ extension PersistentSubscriptionsClient.Create.ToAll{
     public final class Options: PersistentSubscriptionsCreateOptions{
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
         
-        public var settings: PersistentSubscriptionsClient.Settings = .init()
-        public var filter: StreamClient.FilterOption? = nil
-        public var positionCursor: Cursor<Stream.Position> = .end
+        public var settings: PersistentSubscriptionsClient.Settings
+        public var filter: StreamClient.FilterOption?
+        public var positionCursor: Cursor<Stream.Position>
+        
+        public init(settings: PersistentSubscriptionsClient.Settings = .init(), filter: StreamClient.FilterOption? = nil, positionCursor: Cursor<Stream.Position> = .end) {
+            self.settings = settings
+            self.filter = filter
+            self.positionCursor = positionCursor
+        }
         
         @discardableResult
         public func startFrom(position: Cursor<Stream.Position>) -> Self{
