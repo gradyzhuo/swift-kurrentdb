@@ -38,30 +38,47 @@ extension PersistentSubscriptionsClient{
             return eventIterator
         }
         
-        public func ack(eventIds: [UUID]) async throws {
+        internal func ack(eventIds: [UUID]) async throws {
             let id = subscriptionId?.data(using: .utf8) ?? .init()
             let handler = Ack.init(id: id, eventIds: eventIds)
             try await requestStream.send(handler.build())
         }
-        
-        public func ack(eventIds: UUID ...) async throws {
+
+        public func ack(readEvents: [ReadEvent]) async throws{
+            let eventIds = readEvents.map{
+                return if let linked = $0.linkedRecordedEvent{
+                    linked.id
+                }else{
+                    $0.recordedEvent.id
+                }
+            }
             try await ack(eventIds: eventIds)
         }
 
-        public func ack(readEvents: [RecordedEvent]) async throws{
-            let eventIds = readEvents.map(\.id)
-            try await ack(eventIds: eventIds)
-        }
-
-        public func ack(readEvents: RecordedEvent ...) async throws {
+        public func ack(readEvents: ReadEvent ...) async throws {
             try await ack(readEvents: readEvents)
         }
         
-        public func nack(eventIds: [UUID], action: Nack.Action, reason: String) async throws {
+        internal func nack(eventIds: [UUID], action: Nack.Action, reason: String) async throws {
             let handler: Nack = .init(id: .init(), eventIds: eventIds, action: action, reason: reason)
             try await requestStream.send(handler.build())
         }
 
+        public func nack(readEvents: [ReadEvent], action: Nack.Action, reason: String) async throws{
+            let eventIds = readEvents.map{
+                return if let linked = $0.linkedRecordedEvent{
+                    linked.id
+                }else{
+                    $0.recordedEvent.id
+                }
+            }
+            try await nack(eventIds: eventIds, action: action, reason: reason)
+        }
+
+        public func nack(readEvents: ReadEvent ..., action: Nack.Action, reason: String) async throws {
+            try await nack(readEvents: readEvents, action: action, reason: reason)
+        }
+        
         deinit {
             requestStream.finish()
         }
@@ -84,8 +101,9 @@ extension PersistentSubscriptionsClient.Subscriber {
             while true {
                 let response = try await responseStreamIterator.next()
                 
-                if case .event(let event) = response?.content{
-                    return try .init(event: .init(message: event.event), retryCount: event.retryCount)
+                if case .event(let message) = response?.content{
+                    let readEvent = try ReadEvent(message: message)
+                    return .init(event: readEvent, retryCount: message.retryCount)
                 }
             }
             

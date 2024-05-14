@@ -188,7 +188,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
     }
 }
 
-public struct ReadEvent {
+public struct ReadEvent: Sendable {
     public internal(set) var recordedEvent: RecordedEvent
     public internal(set) var linkedRecordedEvent: RecordedEvent?
     public internal(set) var commitPosition: Stream.Position?

@@ -52,34 +52,14 @@ extension ReadEvent {
 
 extension PersistentSubscriptionsClient.Read {
     public struct EventResult: Sendable {
-        let event: RecordedEvent
-        let retryCount: Int32
+        public let event: ReadEvent
+        public let retryCount: Int32
         
-        init(event: RecordedEvent, retryCount: Int32) {
+        internal init(event: ReadEvent, retryCount: Int32) {
             self.event = event
             self.retryCount = retryCount
         }
     }
-    
-//    public struct Subscription {
-//        public enum Result {
-//            case readEvent(event: ReadEvent, retryCount: Int32)
-//            case confirmation(subscriptionId: String)
-//        }
-//        
-//        let result: Result
-//        let sender: PersistentSubscriptionsClient
-//    }
-    
-//    public struct Result {
-//        public let event: ReadEvent
-//        let sender: PersistentSubscriptionsClient
-//        public let subscriptionId: String
-//
-//        public func ack() async throws{
-//            try await sender.ack(readEvents: event)
-//        }
-//    }
 }
 
 extension PersistentSubscriptionsClient.Read {
