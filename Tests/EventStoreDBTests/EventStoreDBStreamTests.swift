@@ -5,9 +5,8 @@
 //  Created by Grady Zhuo on 2023/10/28.
 //
 
-
-@testable import struct EventStoreDB.Stream
 @testable import EventStoreDB
+@testable import struct EventStoreDB.Stream
 import GRPC
 import NIO
 import XCTest
@@ -35,52 +34,51 @@ final class EventStoreDBStreamTests: XCTestCase {
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
-    
+
     func testStreamNoFound() async throws {
         let client = try EventStoreDB.Client()
         var anError: Error?
         do {
-            for try await _ in try client.read(streamName: "NoStream", cursor: .start){
-                //no thing
+            for try await _ in try client.read(streamName: "NoStream", cursor: .start) {
+                // no thing
             }
-        }catch{
+        } catch {
             anError = error
         }
-        
-        XCTAssertNotNil(anError)
 
+        XCTAssertNotNil(anError)
     }
 
     func testAppendEvent() async throws {
         let content = ["Description": "Gears of War 4"]
-        
+
         let client = try EventStoreDB.Client()
-        
+
         let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
             options.set(uuidOption: .string)
                 .countBy(limit: 1)
         }
-        
+
         let lastRevision = try await readResponses.first {
             switch $0.content {
             case .event:
-                return true
+                true
             default:
-                return false
+                false
             }
-        }.flatMap{
-            switch $0.content{
-            case .event(let readEvent):
-                return readEvent.recordedEvent.revision
+        }.flatMap {
+            switch $0.content {
+            case let .event(readEvent):
+                readEvent.recordedEvent.revision
             default:
-                return nil
+                nil
             }
         }
-        
+
         let appendResponse = try await client.appendTo(streamName: streamName, events: .init(eventType: "AccountCreated", payload: content)) { options in
             options.expectedRevision(.any)
         }
-        
-        XCTAssertEqual(lastRevision.map{ $0 + 1 }, appendResponse.current.revision)
+
+        XCTAssertEqual(lastRevision.map { $0 + 1 }, appendResponse.current.revision)
     }
 }

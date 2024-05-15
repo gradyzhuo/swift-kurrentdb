@@ -15,10 +15,10 @@ public struct OperationsClient: GRPCConcreteClient {
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
 
-    internal var underlyingClient: UnderlyingClient {
-        return .init(channel: channel, defaultCallOptions: callOptions)
+    var underlyingClient: UnderlyingClient {
+        .init(channel: channel, defaultCallOptions: callOptions)
     }
-    
+
     init(channel: GRPCChannel, callOptions: CallOptions) {
         self.channel = channel
         self.callOptions = callOptions
@@ -27,16 +27,11 @@ public struct OperationsClient: GRPCConcreteClient {
 
 extension OperationsClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
-
         let handler = OperationsClient.StartScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
         let request = try handler.build()
-        
+
         return try await handler.handle(response: underlyingClient.startScavenge(request))
-        
     }
-    
-    public func shutdown(){
-        
-    }
-    
+
+    public func shutdown() {}
 }

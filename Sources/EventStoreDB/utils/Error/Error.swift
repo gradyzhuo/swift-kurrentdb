@@ -6,13 +6,8 @@
 //
 
 import Foundation
-import GRPCEncapsulates
 import GRPC
-
-
-
-
-
+import GRPCEncapsulates
 
 public enum ClientSettingsError: Error {
     case parseError(message: String)
@@ -28,7 +23,7 @@ public enum ClientError: Error {
     case projectionNameError(message: String)
 }
 
-public enum StreamClientError: Error{
+public enum StreamClientError: Error {
     case streamNotFound(message: String)
 }
 

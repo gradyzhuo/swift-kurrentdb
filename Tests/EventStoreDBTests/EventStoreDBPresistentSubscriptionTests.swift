@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  EventStoreDBPresistentSubscriptionTests.swift
+//
 //
 //  Created by 卓俊諺 on 2024/3/25.
 //
@@ -16,7 +16,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
 
 //    override func setUp() async throws {
 //        let client = try EventStoreDB.Client()
-//        
+//
 //    }
 
     override func tearDownWithError() throws {
@@ -25,55 +25,49 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
 //            let client = try EventStoreDB.Client()
 //            try await client.persistentSubscriptionsClient.deleteOn(stream: .specified("testing"), groupName: "mytest")
 //        }
-//        
+//
     }
 
     func testCreate() async throws {
         let client = try EventStoreDB.Client()
         try await client.createPersistentSubscription(streamName: "testing", groupName: "mytest", options: .init())
-        
     }
-    
+
     func testSubscribe() async throws {
         let client = try EventStoreDB.Client()
-        
+
         let subscription = try await client.subscribePersistentSubscriptionTo(.specified("testing"), groupName: "mytest") { options in
             options
         }
 
-        let response = try await client.appendTo(streamName: "testing", 
+        let response = try await client.appendTo(streamName: "testing",
                                                  events: .init(
-                                                    eventType: "AccountCreated", payload: ["Description": "Gears of War 10"])) { options in
+                                                     eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+                                                 )) { options in
             options.expectedRevision(.any)
         }
-        
+
         var lastEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil
         for try await result in subscription {
             lastEventResult = result
             try await subscription.ack(readEvents: result.event)
             break
         }
-        
+
         XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
-        
     }
-    
+
     func testSubscribe2() async throws {
         let client = try EventStoreDB.Client()
-        
+
         let subscription = try await client.subscribePersistentSubscriptionTo(.specified("$ce-WarehouseProduct"), groupName: "WarehouseProduct") { options in
             options
         }
-        
+
         for try await result in subscription {
-            
-            
-            
-            
             try await subscription.ack(readEvents: result.event)
         }
-        
+
 //        XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
-        
     }
 }

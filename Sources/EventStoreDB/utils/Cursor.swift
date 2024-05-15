@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Cursor.swift
+//
 //
 //  Created by 卓俊諺 on 2024/3/21.
 //
@@ -12,4 +12,3 @@ public enum Cursor<Pointer> {
     case end
     case specified(Pointer)
 }
-

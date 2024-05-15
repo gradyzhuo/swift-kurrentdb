@@ -20,7 +20,6 @@ public struct GossipClient: GRPCConcreteClient {
         self.channel = channel
         self.callOptions = callOptions
     }
-
 }
 
 extension GossipClient {

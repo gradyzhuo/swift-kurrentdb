@@ -44,19 +44,17 @@ extension StreamClient {
 }
 
 extension StreamClient.ReadAll {
-    
-    public struct CursorPointer{
+    public struct CursorPointer {
         let position: StreamClient.Read.Position
         let direction: StreamClient.Read.Direction
-        
-        public static func forwardOn(commitPosition: UInt64, preparePosition: UInt64) -> Self{
-            return .init(position: .init(commit: commitPosition, prepare: preparePosition), direction: .forward)
+
+        public static func forwardOn(commitPosition: UInt64, preparePosition: UInt64) -> Self {
+            .init(position: .init(commit: commitPosition, prepare: preparePosition), direction: .forward)
         }
-        
-        public static func backwardFrom(commitPosition: UInt64, preparePosition: UInt64) -> Self{
-            return .init(position: .init(commit: commitPosition, prepare: preparePosition), direction: .backward)
+
+        public static func backwardFrom(commitPosition: UInt64, preparePosition: UInt64) -> Self {
+            .init(position: .init(commit: commitPosition, prepare: preparePosition), direction: .backward)
         }
-        
     }
 }
 
@@ -181,7 +179,7 @@ extension StreamClient.Read.Position {
     }
 
     public func cusor(direction: StreamClient.Read.Direction) -> Cursor<StreamClient.ReadAll.CursorPointer> {
-        return .specified(
+        .specified(
             .init(
                 position: self,
                 direction: direction
@@ -198,7 +196,7 @@ extension Cursor where Pointer == StreamClient.ReadAll.CursorPointer {
                 $0.start = .init()
             case .end:
                 $0.end = .init()
-            case .specified(let pointer):
+            case let .specified(pointer):
                 $0.position = pointer.position.build()
             }
         }
@@ -212,7 +210,7 @@ extension Cursor where Pointer == StreamClient.ReadAll.CursorPointer {
         case .end:
             options.all.end = .init()
             options.readDirection = .backwards
-        case .specified(let pointer):
+        case let .specified(pointer):
             pointer.position.build(options: &options)
             pointer.direction.build(options: &options)
         }
@@ -293,7 +291,6 @@ extension StreamClient.Read {
         init(lastAllStreamPosition commitPosition: UInt64, preparePosition: UInt64) {
             content = .position(lastAllStream: .init(commit: commitPosition, prepare: preparePosition))
         }
-
 
         init(content: UnderlyingMessage.OneOf_Content) throws {
             switch content {

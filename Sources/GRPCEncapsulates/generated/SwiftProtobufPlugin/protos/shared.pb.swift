@@ -15,841 +15,837 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 public struct EventStore_Client_UUID {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  public var value: EventStore_Client_UUID.OneOf_Value? = nil
-
-  public var structured: EventStore_Client_UUID.Structured {
-    get {
-      if case .structured(let v)? = value {return v}
-      return EventStore_Client_UUID.Structured()
-    }
-    set {value = .structured(newValue)}
-  }
-
-  public var string: String {
-    get {
-      if case .string(let v)? = value {return v}
-      return String()
-    }
-    set {value = .string(newValue)}
-  }
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public enum OneOf_Value: Equatable {
-    case structured(EventStore_Client_UUID.Structured)
-    case string(String)
-
-  #if !swift(>=4.1)
-    public static func ==(lhs: EventStore_Client_UUID.OneOf_Value, rhs: EventStore_Client_UUID.OneOf_Value) -> Bool {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch (lhs, rhs) {
-      case (.structured, .structured): return {
-        guard case .structured(let l) = lhs, case .structured(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.string, .string): return {
-        guard case .string(let l) = lhs, case .string(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      default: return false
-      }
-    }
-  #endif
-  }
-
-  public struct Structured {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var mostSignificantBits: Int64 = 0
+    public var value: EventStore_Client_UUID.OneOf_Value?
 
-    public var leastSignificantBits: Int64 = 0
+    public var structured: EventStore_Client_UUID.Structured {
+        get {
+            if case let .structured(v)? = value { return v }
+            return EventStore_Client_UUID.Structured()
+        }
+        set { value = .structured(newValue) }
+    }
+
+    public var string: String {
+        get {
+            if case let .string(v)? = value { return v }
+            return String()
+        }
+        set { value = .string(newValue) }
+    }
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public enum OneOf_Value: Equatable {
+        case structured(EventStore_Client_UUID.Structured)
+        case string(String)
+
+        #if !swift(>=4.1)
+            public static func == (lhs: EventStore_Client_UUID.OneOf_Value, rhs: EventStore_Client_UUID.OneOf_Value) -> Bool {
+                // The use of inline closures is to circumvent an issue where the compiler
+                // allocates stack space for every case branch when no optimizations are
+                // enabled. https://github.com/apple/swift-protobuf/issues/1034
+                switch (lhs, rhs) {
+                case (.structured, .structured): {
+                        guard case let .structured(l) = lhs, case let .structured(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                case (.string, .string): {
+                        guard case let .string(l) = lhs, case let .string(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                default: false
+                }
+            }
+        #endif
+    }
+
+    public struct Structured {
+        // SwiftProtobuf.Message conformance is added in an extension below. See the
+        // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+        // methods supported on all messages.
+
+        public var mostSignificantBits: Int64 = 0
+
+        public var leastSignificantBits: Int64 = 0
+
+        public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+        public init() {}
+    }
+
+    public init() {}
+}
+
+public struct EventStore_Client_Empty {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
-  }
-
-  public init() {}
-}
-
-public struct EventStore_Client_Empty {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
 }
 
 public struct EventStore_Client_StreamIdentifier {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var streamName: Data = Data()
+    public var streamName: Data = .init()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_AllStreamPosition {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var commitPosition: UInt64 = 0
+    public var commitPosition: UInt64 = 0
 
-  public var preparePosition: UInt64 = 0
+    public var preparePosition: UInt64 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_WrongExpectedVersion {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var currentStreamRevisionOption: EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption? = nil
+    public var currentStreamRevisionOption: EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption?
 
-  public var currentStreamRevision: UInt64 {
-    get {
-      if case .currentStreamRevision(let v)? = currentStreamRevisionOption {return v}
-      return 0
+    public var currentStreamRevision: UInt64 {
+        get {
+            if case let .currentStreamRevision(v)? = currentStreamRevisionOption { return v }
+            return 0
+        }
+        set { currentStreamRevisionOption = .currentStreamRevision(newValue) }
     }
-    set {currentStreamRevisionOption = .currentStreamRevision(newValue)}
-  }
 
-  public var currentNoStream: SwiftProtobuf.Google_Protobuf_Empty {
-    get {
-      if case .currentNoStream(let v)? = currentStreamRevisionOption {return v}
-      return SwiftProtobuf.Google_Protobuf_Empty()
+    public var currentNoStream: SwiftProtobuf.Google_Protobuf_Empty {
+        get {
+            if case let .currentNoStream(v)? = currentStreamRevisionOption { return v }
+            return SwiftProtobuf.Google_Protobuf_Empty()
+        }
+        set { currentStreamRevisionOption = .currentNoStream(newValue) }
     }
-    set {currentStreamRevisionOption = .currentNoStream(newValue)}
-  }
 
-  public var expectedStreamPositionOption: EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption? = nil
+    public var expectedStreamPositionOption: EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption?
 
-  public var expectedStreamPosition: UInt64 {
-    get {
-      if case .expectedStreamPosition(let v)? = expectedStreamPositionOption {return v}
-      return 0
+    public var expectedStreamPosition: UInt64 {
+        get {
+            if case let .expectedStreamPosition(v)? = expectedStreamPositionOption { return v }
+            return 0
+        }
+        set { expectedStreamPositionOption = .expectedStreamPosition(newValue) }
     }
-    set {expectedStreamPositionOption = .expectedStreamPosition(newValue)}
-  }
 
-  public var expectedAny: SwiftProtobuf.Google_Protobuf_Empty {
-    get {
-      if case .expectedAny(let v)? = expectedStreamPositionOption {return v}
-      return SwiftProtobuf.Google_Protobuf_Empty()
+    public var expectedAny: SwiftProtobuf.Google_Protobuf_Empty {
+        get {
+            if case let .expectedAny(v)? = expectedStreamPositionOption { return v }
+            return SwiftProtobuf.Google_Protobuf_Empty()
+        }
+        set { expectedStreamPositionOption = .expectedAny(newValue) }
     }
-    set {expectedStreamPositionOption = .expectedAny(newValue)}
-  }
 
-  public var expectedStreamExists: SwiftProtobuf.Google_Protobuf_Empty {
-    get {
-      if case .expectedStreamExists(let v)? = expectedStreamPositionOption {return v}
-      return SwiftProtobuf.Google_Protobuf_Empty()
+    public var expectedStreamExists: SwiftProtobuf.Google_Protobuf_Empty {
+        get {
+            if case let .expectedStreamExists(v)? = expectedStreamPositionOption { return v }
+            return SwiftProtobuf.Google_Protobuf_Empty()
+        }
+        set { expectedStreamPositionOption = .expectedStreamExists(newValue) }
     }
-    set {expectedStreamPositionOption = .expectedStreamExists(newValue)}
-  }
 
-  public var expectedNoStream: SwiftProtobuf.Google_Protobuf_Empty {
-    get {
-      if case .expectedNoStream(let v)? = expectedStreamPositionOption {return v}
-      return SwiftProtobuf.Google_Protobuf_Empty()
+    public var expectedNoStream: SwiftProtobuf.Google_Protobuf_Empty {
+        get {
+            if case let .expectedNoStream(v)? = expectedStreamPositionOption { return v }
+            return SwiftProtobuf.Google_Protobuf_Empty()
+        }
+        set { expectedStreamPositionOption = .expectedNoStream(newValue) }
     }
-    set {expectedStreamPositionOption = .expectedNoStream(newValue)}
-  }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_CurrentStreamRevisionOption: Equatable {
-    case currentStreamRevision(UInt64)
-    case currentNoStream(SwiftProtobuf.Google_Protobuf_Empty)
+    public enum OneOf_CurrentStreamRevisionOption: Equatable {
+        case currentStreamRevision(UInt64)
+        case currentNoStream(SwiftProtobuf.Google_Protobuf_Empty)
 
-  #if !swift(>=4.1)
-    public static func ==(lhs: EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption, rhs: EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption) -> Bool {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch (lhs, rhs) {
-      case (.currentStreamRevision, .currentStreamRevision): return {
-        guard case .currentStreamRevision(let l) = lhs, case .currentStreamRevision(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.currentNoStream, .currentNoStream): return {
-        guard case .currentNoStream(let l) = lhs, case .currentNoStream(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      default: return false
-      }
+        #if !swift(>=4.1)
+            public static func == (lhs: EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption, rhs: EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption) -> Bool {
+                // The use of inline closures is to circumvent an issue where the compiler
+                // allocates stack space for every case branch when no optimizations are
+                // enabled. https://github.com/apple/swift-protobuf/issues/1034
+                switch (lhs, rhs) {
+                case (.currentStreamRevision, .currentStreamRevision): {
+                        guard case let .currentStreamRevision(l) = lhs, case let .currentStreamRevision(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                case (.currentNoStream, .currentNoStream): {
+                        guard case let .currentNoStream(l) = lhs, case let .currentNoStream(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                default: false
+                }
+            }
+        #endif
     }
-  #endif
-  }
 
-  public enum OneOf_ExpectedStreamPositionOption: Equatable {
-    case expectedStreamPosition(UInt64)
-    case expectedAny(SwiftProtobuf.Google_Protobuf_Empty)
-    case expectedStreamExists(SwiftProtobuf.Google_Protobuf_Empty)
-    case expectedNoStream(SwiftProtobuf.Google_Protobuf_Empty)
+    public enum OneOf_ExpectedStreamPositionOption: Equatable {
+        case expectedStreamPosition(UInt64)
+        case expectedAny(SwiftProtobuf.Google_Protobuf_Empty)
+        case expectedStreamExists(SwiftProtobuf.Google_Protobuf_Empty)
+        case expectedNoStream(SwiftProtobuf.Google_Protobuf_Empty)
 
-  #if !swift(>=4.1)
-    public static func ==(lhs: EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption, rhs: EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption) -> Bool {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch (lhs, rhs) {
-      case (.expectedStreamPosition, .expectedStreamPosition): return {
-        guard case .expectedStreamPosition(let l) = lhs, case .expectedStreamPosition(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.expectedAny, .expectedAny): return {
-        guard case .expectedAny(let l) = lhs, case .expectedAny(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.expectedStreamExists, .expectedStreamExists): return {
-        guard case .expectedStreamExists(let l) = lhs, case .expectedStreamExists(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.expectedNoStream, .expectedNoStream): return {
-        guard case .expectedNoStream(let l) = lhs, case .expectedNoStream(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      default: return false
-      }
+        #if !swift(>=4.1)
+            public static func == (lhs: EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption, rhs: EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption) -> Bool {
+                // The use of inline closures is to circumvent an issue where the compiler
+                // allocates stack space for every case branch when no optimizations are
+                // enabled. https://github.com/apple/swift-protobuf/issues/1034
+                switch (lhs, rhs) {
+                case (.expectedStreamPosition, .expectedStreamPosition): {
+                        guard case let .expectedStreamPosition(l) = lhs, case let .expectedStreamPosition(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                case (.expectedAny, .expectedAny): {
+                        guard case let .expectedAny(l) = lhs, case let .expectedAny(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                case (.expectedStreamExists, .expectedStreamExists): {
+                        guard case let .expectedStreamExists(l) = lhs, case let .expectedStreamExists(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                case (.expectedNoStream, .expectedNoStream): {
+                        guard case let .expectedNoStream(l) = lhs, case let .expectedNoStream(r) = rhs else { preconditionFailure() }
+                        return l == r
+                    }()
+                default: false
+                }
+            }
+        #endif
     }
-  #endif
-  }
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_AccessDenied {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_StreamDeleted {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var streamIdentifier: EventStore_Client_StreamIdentifier {
-    get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
-    set {_streamIdentifier = newValue}
-  }
-  /// Returns true if `streamIdentifier` has been explicitly set.
-  public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
-  /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-  public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+        get { _streamIdentifier ?? EventStore_Client_StreamIdentifier() }
+        set { _streamIdentifier = newValue }
+    }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    /// Returns true if `streamIdentifier` has been explicitly set.
+    public var hasStreamIdentifier: Bool { _streamIdentifier != nil }
+    /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
+    public mutating func clearStreamIdentifier() { _streamIdentifier = nil }
 
-  public init() {}
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
+    public init() {}
+
+    private var _streamIdentifier: EventStore_Client_StreamIdentifier?
 }
 
 public struct EventStore_Client_Timeout {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_Unknown {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_InvalidTransaction {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_MaximumAppendSizeExceeded {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var maxAppendSize: UInt32 = 0
+    public var maxAppendSize: UInt32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_BadRequest {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var message: String = String()
+    public var message: String = .init()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension EventStore_Client_UUID: @unchecked Sendable {}
-extension EventStore_Client_UUID.OneOf_Value: @unchecked Sendable {}
-extension EventStore_Client_UUID.Structured: @unchecked Sendable {}
-extension EventStore_Client_Empty: @unchecked Sendable {}
-extension EventStore_Client_StreamIdentifier: @unchecked Sendable {}
-extension EventStore_Client_AllStreamPosition: @unchecked Sendable {}
-extension EventStore_Client_WrongExpectedVersion: @unchecked Sendable {}
-extension EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption: @unchecked Sendable {}
-extension EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption: @unchecked Sendable {}
-extension EventStore_Client_AccessDenied: @unchecked Sendable {}
-extension EventStore_Client_StreamDeleted: @unchecked Sendable {}
-extension EventStore_Client_Timeout: @unchecked Sendable {}
-extension EventStore_Client_Unknown: @unchecked Sendable {}
-extension EventStore_Client_InvalidTransaction: @unchecked Sendable {}
-extension EventStore_Client_MaximumAppendSizeExceeded: @unchecked Sendable {}
-extension EventStore_Client_BadRequest: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension EventStore_Client_UUID: @unchecked Sendable {}
+    extension EventStore_Client_UUID.OneOf_Value: @unchecked Sendable {}
+    extension EventStore_Client_UUID.Structured: @unchecked Sendable {}
+    extension EventStore_Client_Empty: @unchecked Sendable {}
+    extension EventStore_Client_StreamIdentifier: @unchecked Sendable {}
+    extension EventStore_Client_AllStreamPosition: @unchecked Sendable {}
+    extension EventStore_Client_WrongExpectedVersion: @unchecked Sendable {}
+    extension EventStore_Client_WrongExpectedVersion.OneOf_CurrentStreamRevisionOption: @unchecked Sendable {}
+    extension EventStore_Client_WrongExpectedVersion.OneOf_ExpectedStreamPositionOption: @unchecked Sendable {}
+    extension EventStore_Client_AccessDenied: @unchecked Sendable {}
+    extension EventStore_Client_StreamDeleted: @unchecked Sendable {}
+    extension EventStore_Client_Timeout: @unchecked Sendable {}
+    extension EventStore_Client_Unknown: @unchecked Sendable {}
+    extension EventStore_Client_InvalidTransaction: @unchecked Sendable {}
+    extension EventStore_Client_MaximumAppendSizeExceeded: @unchecked Sendable {}
+    extension EventStore_Client_BadRequest: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "event_store.client"
+private let _protobuf_package = "event_store.client"
 
 extension EventStore_Client_UUID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UUID"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "structured"),
-    2: .same(proto: "string"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".UUID"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "structured"),
+        2: .same(proto: "string"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try {
-        var v: EventStore_Client_UUID.Structured?
-        var hadOneofValue = false
-        if let current = self.value {
-          hadOneofValue = true
-          if case .structured(let m) = current {v = m}
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try {
+                    var v: EventStore_Client_UUID.Structured?
+                    var hadOneofValue = false
+                    if let current = self.value {
+                        hadOneofValue = true
+                        if case let .structured(m) = current { v = m }
+                    }
+                    try decoder.decodeSingularMessageField(value: &v)
+                    if let v {
+                        if hadOneofValue { try decoder.handleConflictingOneOf() }
+                        self.value = .structured(v)
+                    }
+                }()
+            case 2: try {
+                    var v: String?
+                    try decoder.decodeSingularStringField(value: &v)
+                    if let v {
+                        if self.value != nil { try decoder.handleConflictingOneOf() }
+                        self.value = .string(v)
+                    }
+                }()
+            default: break
+            }
         }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.value = .structured(v)
-        }
-      }()
-      case 2: try {
-        var v: String?
-        try decoder.decodeSingularStringField(value: &v)
-        if let v = v {
-          if self.value != nil {try decoder.handleConflictingOneOf()}
-          self.value = .string(v)
-        }
-      }()
-      default: break
-      }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.value {
-    case .structured?: try {
-      guard case .structured(let v)? = self.value else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }()
-    case .string?: try {
-      guard case .string(let v)? = self.value else { preconditionFailure() }
-      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-    }()
-    case nil: break
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        switch value {
+        case .structured?: try {
+                guard case let .structured(v)? = self.value else { preconditionFailure() }
+                try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+            }()
+        case .string?: try {
+                guard case let .string(v)? = self.value else { preconditionFailure() }
+                try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+            }()
+        case nil: break
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_UUID, rhs: EventStore_Client_UUID) -> Bool {
-    if lhs.value != rhs.value {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_UUID, rhs: EventStore_Client_UUID) -> Bool {
+        if lhs.value != rhs.value { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_UUID.Structured: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_UUID.protoMessageName + ".Structured"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "most_significant_bits"),
-    2: .standard(proto: "least_significant_bits"),
-  ]
+    public static let protoMessageName: String = EventStore_Client_UUID.protoMessageName + ".Structured"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "most_significant_bits"),
+        2: .standard(proto: "least_significant_bits"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt64Field(value: &self.mostSignificantBits) }()
-      case 2: try { try decoder.decodeSingularInt64Field(value: &self.leastSignificantBits) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularInt64Field(value: &mostSignificantBits)
+            case 2: try decoder.decodeSingularInt64Field(value: &leastSignificantBits)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.mostSignificantBits != 0 {
-      try visitor.visitSingularInt64Field(value: self.mostSignificantBits, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if mostSignificantBits != 0 {
+            try visitor.visitSingularInt64Field(value: mostSignificantBits, fieldNumber: 1)
+        }
+        if leastSignificantBits != 0 {
+            try visitor.visitSingularInt64Field(value: leastSignificantBits, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if self.leastSignificantBits != 0 {
-      try visitor.visitSingularInt64Field(value: self.leastSignificantBits, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_UUID.Structured, rhs: EventStore_Client_UUID.Structured) -> Bool {
-    if lhs.mostSignificantBits != rhs.mostSignificantBits {return false}
-    if lhs.leastSignificantBits != rhs.leastSignificantBits {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_UUID.Structured, rhs: EventStore_Client_UUID.Structured) -> Bool {
+        if lhs.mostSignificantBits != rhs.mostSignificantBits { return false }
+        if lhs.leastSignificantBits != rhs.leastSignificantBits { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Empty: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".Empty"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+    public static let protoMessageName: String = _protobuf_package + ".Empty"
+    public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let _ = try decoder.nextFieldNumber() {
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let _ = try decoder.nextFieldNumber() {}
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_Empty, rhs: EventStore_Client_Empty) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Empty, rhs: EventStore_Client_Empty) -> Bool {
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_StreamIdentifier: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StreamIdentifier"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    3: .standard(proto: "stream_name"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".StreamIdentifier"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        3: .standard(proto: "stream_name"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 3: try { try decoder.decodeSingularBytesField(value: &self.streamName) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 3: try decoder.decodeSingularBytesField(value: &streamName)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.streamName.isEmpty {
-      try visitor.visitSingularBytesField(value: self.streamName, fieldNumber: 3)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !streamName.isEmpty {
+            try visitor.visitSingularBytesField(value: streamName, fieldNumber: 3)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_StreamIdentifier, rhs: EventStore_Client_StreamIdentifier) -> Bool {
-    if lhs.streamName != rhs.streamName {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_StreamIdentifier, rhs: EventStore_Client_StreamIdentifier) -> Bool {
+        if lhs.streamName != rhs.streamName { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_AllStreamPosition: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".AllStreamPosition"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "commit_position"),
-    2: .standard(proto: "prepare_position"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".AllStreamPosition"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "commit_position"),
+        2: .standard(proto: "prepare_position"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.commitPosition) }()
-      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.preparePosition) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularUInt64Field(value: &commitPosition)
+            case 2: try decoder.decodeSingularUInt64Field(value: &preparePosition)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.commitPosition != 0 {
-      try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if commitPosition != 0 {
+            try visitor.visitSingularUInt64Field(value: commitPosition, fieldNumber: 1)
+        }
+        if preparePosition != 0 {
+            try visitor.visitSingularUInt64Field(value: preparePosition, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if self.preparePosition != 0 {
-      try visitor.visitSingularUInt64Field(value: self.preparePosition, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_AllStreamPosition, rhs: EventStore_Client_AllStreamPosition) -> Bool {
-    if lhs.commitPosition != rhs.commitPosition {return false}
-    if lhs.preparePosition != rhs.preparePosition {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_AllStreamPosition, rhs: EventStore_Client_AllStreamPosition) -> Bool {
+        if lhs.commitPosition != rhs.commitPosition { return false }
+        if lhs.preparePosition != rhs.preparePosition { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_WrongExpectedVersion: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".WrongExpectedVersion"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "current_stream_revision"),
-    2: .standard(proto: "current_no_stream"),
-    3: .standard(proto: "expected_stream_position"),
-    4: .standard(proto: "expected_any"),
-    5: .standard(proto: "expected_stream_exists"),
-    6: .standard(proto: "expected_no_stream"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".WrongExpectedVersion"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "current_stream_revision"),
+        2: .standard(proto: "current_no_stream"),
+        3: .standard(proto: "expected_stream_position"),
+        4: .standard(proto: "expected_any"),
+        5: .standard(proto: "expected_stream_exists"),
+        6: .standard(proto: "expected_no_stream"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try {
-        var v: UInt64?
-        try decoder.decodeSingularUInt64Field(value: &v)
-        if let v = v {
-          if self.currentStreamRevisionOption != nil {try decoder.handleConflictingOneOf()}
-          self.currentStreamRevisionOption = .currentStreamRevision(v)
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try {
+                    var v: UInt64?
+                    try decoder.decodeSingularUInt64Field(value: &v)
+                    if let v {
+                        if self.currentStreamRevisionOption != nil { try decoder.handleConflictingOneOf() }
+                        self.currentStreamRevisionOption = .currentStreamRevision(v)
+                    }
+                }()
+            case 2: try {
+                    var v: SwiftProtobuf.Google_Protobuf_Empty?
+                    var hadOneofValue = false
+                    if let current = self.currentStreamRevisionOption {
+                        hadOneofValue = true
+                        if case let .currentNoStream(m) = current { v = m }
+                    }
+                    try decoder.decodeSingularMessageField(value: &v)
+                    if let v {
+                        if hadOneofValue { try decoder.handleConflictingOneOf() }
+                        self.currentStreamRevisionOption = .currentNoStream(v)
+                    }
+                }()
+            case 3: try {
+                    var v: UInt64?
+                    try decoder.decodeSingularUInt64Field(value: &v)
+                    if let v {
+                        if self.expectedStreamPositionOption != nil { try decoder.handleConflictingOneOf() }
+                        self.expectedStreamPositionOption = .expectedStreamPosition(v)
+                    }
+                }()
+            case 4: try {
+                    var v: SwiftProtobuf.Google_Protobuf_Empty?
+                    var hadOneofValue = false
+                    if let current = self.expectedStreamPositionOption {
+                        hadOneofValue = true
+                        if case let .expectedAny(m) = current { v = m }
+                    }
+                    try decoder.decodeSingularMessageField(value: &v)
+                    if let v {
+                        if hadOneofValue { try decoder.handleConflictingOneOf() }
+                        self.expectedStreamPositionOption = .expectedAny(v)
+                    }
+                }()
+            case 5: try {
+                    var v: SwiftProtobuf.Google_Protobuf_Empty?
+                    var hadOneofValue = false
+                    if let current = self.expectedStreamPositionOption {
+                        hadOneofValue = true
+                        if case let .expectedStreamExists(m) = current { v = m }
+                    }
+                    try decoder.decodeSingularMessageField(value: &v)
+                    if let v {
+                        if hadOneofValue { try decoder.handleConflictingOneOf() }
+                        self.expectedStreamPositionOption = .expectedStreamExists(v)
+                    }
+                }()
+            case 6: try {
+                    var v: SwiftProtobuf.Google_Protobuf_Empty?
+                    var hadOneofValue = false
+                    if let current = self.expectedStreamPositionOption {
+                        hadOneofValue = true
+                        if case let .expectedNoStream(m) = current { v = m }
+                    }
+                    try decoder.decodeSingularMessageField(value: &v)
+                    if let v {
+                        if hadOneofValue { try decoder.handleConflictingOneOf() }
+                        self.expectedStreamPositionOption = .expectedNoStream(v)
+                    }
+                }()
+            default: break
+            }
         }
-      }()
-      case 2: try {
-        var v: SwiftProtobuf.Google_Protobuf_Empty?
-        var hadOneofValue = false
-        if let current = self.currentStreamRevisionOption {
-          hadOneofValue = true
-          if case .currentNoStream(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.currentStreamRevisionOption = .currentNoStream(v)
-        }
-      }()
-      case 3: try {
-        var v: UInt64?
-        try decoder.decodeSingularUInt64Field(value: &v)
-        if let v = v {
-          if self.expectedStreamPositionOption != nil {try decoder.handleConflictingOneOf()}
-          self.expectedStreamPositionOption = .expectedStreamPosition(v)
-        }
-      }()
-      case 4: try {
-        var v: SwiftProtobuf.Google_Protobuf_Empty?
-        var hadOneofValue = false
-        if let current = self.expectedStreamPositionOption {
-          hadOneofValue = true
-          if case .expectedAny(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.expectedStreamPositionOption = .expectedAny(v)
-        }
-      }()
-      case 5: try {
-        var v: SwiftProtobuf.Google_Protobuf_Empty?
-        var hadOneofValue = false
-        if let current = self.expectedStreamPositionOption {
-          hadOneofValue = true
-          if case .expectedStreamExists(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.expectedStreamPositionOption = .expectedStreamExists(v)
-        }
-      }()
-      case 6: try {
-        var v: SwiftProtobuf.Google_Protobuf_Empty?
-        var hadOneofValue = false
-        if let current = self.expectedStreamPositionOption {
-          hadOneofValue = true
-          if case .expectedNoStream(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.expectedStreamPositionOption = .expectedNoStream(v)
-        }
-      }()
-      default: break
-      }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.currentStreamRevisionOption {
-    case .currentStreamRevision?: try {
-      guard case .currentStreamRevision(let v)? = self.currentStreamRevisionOption else { preconditionFailure() }
-      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 1)
-    }()
-    case .currentNoStream?: try {
-      guard case .currentNoStream(let v)? = self.currentStreamRevisionOption else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }()
-    case nil: break
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        switch currentStreamRevisionOption {
+        case .currentStreamRevision?: try {
+                guard case let .currentStreamRevision(v)? = self.currentStreamRevisionOption else { preconditionFailure() }
+                try visitor.visitSingularUInt64Field(value: v, fieldNumber: 1)
+            }()
+        case .currentNoStream?: try {
+                guard case let .currentNoStream(v)? = self.currentStreamRevisionOption else { preconditionFailure() }
+                try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+            }()
+        case nil: break
+        }
+        switch expectedStreamPositionOption {
+        case .expectedStreamPosition?: try {
+                guard case let .expectedStreamPosition(v)? = self.expectedStreamPositionOption else { preconditionFailure() }
+                try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
+            }()
+        case .expectedAny?: try {
+                guard case let .expectedAny(v)? = self.expectedStreamPositionOption else { preconditionFailure() }
+                try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+            }()
+        case .expectedStreamExists?: try {
+                guard case let .expectedStreamExists(v)? = self.expectedStreamPositionOption else { preconditionFailure() }
+                try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+            }()
+        case .expectedNoStream?: try {
+                guard case let .expectedNoStream(v)? = self.expectedStreamPositionOption else { preconditionFailure() }
+                try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+            }()
+        case nil: break
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    switch self.expectedStreamPositionOption {
-    case .expectedStreamPosition?: try {
-      guard case .expectedStreamPosition(let v)? = self.expectedStreamPositionOption else { preconditionFailure() }
-      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
-    }()
-    case .expectedAny?: try {
-      guard case .expectedAny(let v)? = self.expectedStreamPositionOption else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }()
-    case .expectedStreamExists?: try {
-      guard case .expectedStreamExists(let v)? = self.expectedStreamPositionOption else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-    }()
-    case .expectedNoStream?: try {
-      guard case .expectedNoStream(let v)? = self.expectedStreamPositionOption else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-    }()
-    case nil: break
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_WrongExpectedVersion, rhs: EventStore_Client_WrongExpectedVersion) -> Bool {
-    if lhs.currentStreamRevisionOption != rhs.currentStreamRevisionOption {return false}
-    if lhs.expectedStreamPositionOption != rhs.expectedStreamPositionOption {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_WrongExpectedVersion, rhs: EventStore_Client_WrongExpectedVersion) -> Bool {
+        if lhs.currentStreamRevisionOption != rhs.currentStreamRevisionOption { return false }
+        if lhs.expectedStreamPositionOption != rhs.expectedStreamPositionOption { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_AccessDenied: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".AccessDenied"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+    public static let protoMessageName: String = _protobuf_package + ".AccessDenied"
+    public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let _ = try decoder.nextFieldNumber() {
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let _ = try decoder.nextFieldNumber() {}
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_AccessDenied, rhs: EventStore_Client_AccessDenied) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_AccessDenied, rhs: EventStore_Client_AccessDenied) -> Bool {
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_StreamDeleted: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StreamDeleted"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "stream_identifier"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".StreamDeleted"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "stream_identifier"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._streamIdentifier) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularMessageField(value: &_streamIdentifier)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._streamIdentifier {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if let v = _streamIdentifier {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_StreamDeleted, rhs: EventStore_Client_StreamDeleted) -> Bool {
-    if lhs._streamIdentifier != rhs._streamIdentifier {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_StreamDeleted, rhs: EventStore_Client_StreamDeleted) -> Bool {
+        if lhs._streamIdentifier != rhs._streamIdentifier { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Timeout: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".Timeout"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+    public static let protoMessageName: String = _protobuf_package + ".Timeout"
+    public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let _ = try decoder.nextFieldNumber() {
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let _ = try decoder.nextFieldNumber() {}
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_Timeout, rhs: EventStore_Client_Timeout) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Timeout, rhs: EventStore_Client_Timeout) -> Bool {
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Unknown: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".Unknown"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+    public static let protoMessageName: String = _protobuf_package + ".Unknown"
+    public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let _ = try decoder.nextFieldNumber() {
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let _ = try decoder.nextFieldNumber() {}
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_Unknown, rhs: EventStore_Client_Unknown) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Unknown, rhs: EventStore_Client_Unknown) -> Bool {
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_InvalidTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".InvalidTransaction"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+    public static let protoMessageName: String = _protobuf_package + ".InvalidTransaction"
+    public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let _ = try decoder.nextFieldNumber() {
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let _ = try decoder.nextFieldNumber() {}
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_InvalidTransaction, rhs: EventStore_Client_InvalidTransaction) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_InvalidTransaction, rhs: EventStore_Client_InvalidTransaction) -> Bool {
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_MaximumAppendSizeExceeded: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".MaximumAppendSizeExceeded"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "maxAppendSize"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".MaximumAppendSizeExceeded"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "maxAppendSize"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.maxAppendSize) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularUInt32Field(value: &maxAppendSize)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.maxAppendSize != 0 {
-      try visitor.visitSingularUInt32Field(value: self.maxAppendSize, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if maxAppendSize != 0 {
+            try visitor.visitSingularUInt32Field(value: maxAppendSize, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_MaximumAppendSizeExceeded, rhs: EventStore_Client_MaximumAppendSizeExceeded) -> Bool {
-    if lhs.maxAppendSize != rhs.maxAppendSize {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_MaximumAppendSizeExceeded, rhs: EventStore_Client_MaximumAppendSizeExceeded) -> Bool {
+        if lhs.maxAppendSize != rhs.maxAppendSize { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_BadRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".BadRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "message"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".BadRequest"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "message"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.message) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &message)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.message.isEmpty {
-      try visitor.visitSingularStringField(value: self.message, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !message.isEmpty {
+            try visitor.visitSingularStringField(value: message, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_BadRequest, rhs: EventStore_Client_BadRequest) -> Bool {
-    if lhs.message != rhs.message {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_BadRequest, rhs: EventStore_Client_BadRequest) -> Bool {
+        if lhs.message != rhs.message { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }

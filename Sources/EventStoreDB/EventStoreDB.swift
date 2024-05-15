@@ -8,4 +8,3 @@ public typealias Client = EventStoreDBClient
 public func using(settings: ClientSettings) {
     EventStore.shared.settings = settings
 }
-

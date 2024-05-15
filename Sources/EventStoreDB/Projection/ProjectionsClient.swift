@@ -21,7 +21,7 @@ public struct ProjectionsClient: GRPCConcreteClient {
 //        self.callOptions = callOptions
 //        self.mode = mode
 //    }
-    
+
     init(channel: GRPCChannel, callOptions: CallOptions) {
         self.channel = channel
         self.callOptions = callOptions
@@ -30,7 +30,6 @@ public struct ProjectionsClient: GRPCConcreteClient {
 //    public init(name: String, emitEnable: Bool, trackEmittedStreams: Bool, channel: GRPCChannel, callOptions: CallOptions) throws {
 //        self.init(mode: .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams), channel: channel, callOptions: callOptions)
 //    }
-
 }
 
 extension ProjectionsClient {
@@ -52,7 +51,6 @@ extension ProjectionsClient {
     // MARK: - Create Actions
 
     func create(mode: Mode, query: String) async throws {
-        
         switch mode {
 //        case .oneTime:
 //            $0.oneTime = .init()
@@ -70,12 +68,10 @@ extension ProjectionsClient {
             _ = try await handler.handle(response: underlyingClient.create(request))
         }
     }
-    
+
     public func createForContinuous(name: String, emitEnable: Bool, trackEmittedStreams: Bool, query: String) async throws {
-        
         let mode: Mode = .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams)
         try await create(mode: mode, query: query)
-        
     }
 
 //    public static func create(name: String, query: String, channel: GRPCChannel, callOptions: CallOptions, configure: (_ options: ContinuousCreate.Options) -> ContinuousCreate.Options) async throws -> Self {
@@ -88,7 +84,6 @@ extension ProjectionsClient {
     // MARK: - Update Actions
 
     public func updateForContinuous(name: String, query: String? = nil, options: Update.Options) async throws {
-        
         let handler = Update(name: name, query: query, options: options)
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.update(request))
@@ -116,14 +111,12 @@ extension ProjectionsClient {
     // MARK: - Statistics Actions
 
     package func statisticsForContinuous(name: String) async throws -> Statistics.Responses {
-        
         let handler = Statistics(name: name, options: .init().set(mode: .continuous))
         let request = try handler.build()
         return try handler.handle(responses: underlyingClient.statistics(request))
     }
 
     package func statistics(name: String, options: Statistics.Options) async throws -> Statistics.Responses {
-
         let handler = Statistics(name: name, options: options)
 
         let request = try handler.build()
@@ -131,7 +124,6 @@ extension ProjectionsClient {
     }
 
     package func statistics(name: String, configure: (_ options: Statistics.Options) -> Statistics.Options) async throws -> Statistics.Responses {
-        
         let handler = Statistics(name: name, options: configure(.init()))
 
         let request = try handler.build()
@@ -226,7 +218,7 @@ extension ProjectionsClient {
 
     // MARK: - RestartSubsystem Actions
 
-    public func restartSubsystem(settings: ClientSettings = EventStore.shared.settings) async throws {
+    public func restartSubsystem(settings _: ClientSettings = EventStore.shared.settings) async throws {
         let handler = RestartSubsystem()
         try await handler.handle(response: underlyingClient.restartSubsystem(handler.build()))
     }

@@ -1,23 +1,20 @@
 //
-//  File.swift
-//  
+//  PersistentSubscriptionsSettings.swift
+//
 //
 //  Created by 卓俊諺 on 2024/3/22.
 //
 
 import Foundation
-import SwiftProtobuf
 import GRPCEncapsulates
+import SwiftProtobuf
 
 public protocol PersistentSubscriptionsGRPCSettings: SwiftProtobuf.Message {
     static func make(settings: PersistentSubscriptionsClient.Settings) -> Self
 }
 
-
 extension PersistentSubscriptionsClient {
-    
-    public struct Settings{
-        
+    public struct Settings {
         public var resolveLink: Bool
 
         /// Whether or not in depth latency statistics should be tracked on this
@@ -31,9 +28,9 @@ extension PersistentSubscriptionsClient {
         /// The maximum number of retries (due to timeout) before a message get
         /// considered to be parked.
         public var maxRetryCount: Int32
-        
+
         public var checkpointCount: ClosedRange<Int32>
-        
+
         public var maxSubscriberCount: Int32
 
         /// The size of the buffer listening to live messages as they happen.
@@ -50,7 +47,7 @@ extension PersistentSubscriptionsClient {
 
         /// The strategy to use for distributing events to client consumers.
         public var consumerStrategy: SystemConsumerStrategy = .roundRobin
-        
+
         public init(
             resolveLink: Bool = false,
             extraStatistics: Bool = false,
@@ -76,6 +73,5 @@ extension PersistentSubscriptionsClient {
             self.checkpointAfter = checkpointAfter
             self.consumerStrategy = consumerStrategy
         }
-    
     }
 }

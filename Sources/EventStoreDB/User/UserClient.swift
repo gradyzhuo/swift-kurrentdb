@@ -49,7 +49,6 @@ public struct UserClient: GRPCConcreteClient {
         self.channel = channel
         self.callOptions = callOptions
     }
-
 }
 
 extension UserClient {

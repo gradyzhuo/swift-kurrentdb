@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  PersistentSubscriptionsCommonOptions.swift
+//
 //
 //  Created by 卓俊諺 on 2024/3/22.
 //
@@ -12,13 +12,13 @@ protocol PersistentSubscriptionsCommonOptions: EventStoreOptions {
     var settings: PersistentSubscriptionsClient.Settings { set get }
 }
 
-extension PersistentSubscriptionsCommonOptions{
+extension PersistentSubscriptionsCommonOptions {
     @discardableResult
     public mutating func set(resolveLinks: Bool) -> Self {
         settings.resolveLink = resolveLinks
         return self
     }
-    
+
     @discardableResult
     public mutating func set(extraStatistics: Bool) -> Self {
         settings.extraStatistics = extraStatistics
@@ -30,7 +30,7 @@ extension PersistentSubscriptionsCommonOptions{
         settings.maxRetryCount = maxRetryCount
         return self
     }
-    
+
     @discardableResult
     public mutating func set(minCheckpointCount: Int32) -> Self {
         settings.checkpointCount = minCheckpointCount ... settings.checkpointCount.upperBound

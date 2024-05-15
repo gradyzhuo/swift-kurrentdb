@@ -9,7 +9,6 @@ import Foundation
 import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient {
-    
     public struct List: UnaryUnary {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ListReq>
 
@@ -44,7 +43,7 @@ extension PersistentSubscriptionsClient.List {
         init(options: UnderlyingMessage) {
             self.options = options
         }
-        
+
         public static func listAllScriptions() -> Self {
             var options = UnderlyingMessage()
             options.listAllSubscriptions = .init()
@@ -57,14 +56,14 @@ extension PersistentSubscriptionsClient.List {
             switch selection {
             case .all:
                 options.listForStream.all = .init()
-            case .specified(let streamIdentifier):
+            case let .specified(streamIdentifier):
                 options.listForStream.stream = try streamIdentifier.build()
             }
             return .init(options: options)
         }
 
         package func build() -> UnderlyingMessage {
-            return options
+            options
         }
     }
 }

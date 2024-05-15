@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  PersistentSubscriptions.GetInfo.SubscriptionInfo.swift
+//
 //
 //  Created by 卓俊諺 on 2024/5/15.
 //
@@ -9,7 +9,6 @@ import Foundation
 import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient.GetInfo {
-
     public struct SubscriptionInfo: GRPCBridge {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_SubscriptionInfo
         public let eventSource: String
@@ -41,7 +40,7 @@ extension PersistentSubscriptionsClient.GetInfo {
         public let maxSubscriberCount: Int32
         public let parkedMessageCount: Int64
 
-        internal init(
+        init(
             eventSource: String,
             groupName: String,
             status: String, connections: [ConnectionInfo],

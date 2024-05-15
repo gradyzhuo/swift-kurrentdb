@@ -93,14 +93,14 @@ extension ClientSettings {
 
     public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, numberOfThreads: Int = 1, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
         var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)), numberOfThreads: numberOfThreads)
-        
-        if let trustRoots{
+
+        if let trustRoots {
             settings.configuration.trustRoots = trustRoots
             settings.tls = true
-        }else{
+        } else {
             settings.tls = false
         }
-        
+
         settings.defaultUserCredentials = userCredentials
         return settings
     }
@@ -265,7 +265,8 @@ extension ClientSettings {
         settings.defaultUserCredentials = parseUserAndPassowrd(connectionString)
 
         if let keepAliveInterval: TimeInterval = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
-           let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } }) {
+           let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
+        {
             settings.keepAlive = .init(interval: keepAliveInterval, timeout: keepAliveTimeout)
         }
 
@@ -344,8 +345,8 @@ extension ClientSettings: ExpressibleByStringLiteral {
     }
 }
 
-extension ClientSettings.Endpoint : CustomStringConvertible{
-    public var description: String{
-        return "\(Self.self)(\(self.host):\(self.port))"
+extension ClientSettings.Endpoint: CustomStringConvertible {
+    public var description: String {
+        "\(Self.self)(\(host):\(port))"
     }
 }

@@ -21,7 +21,7 @@ extension PersistentSubscriptionsClient {
                 switch streamSelection {
                 case .all:
                     $0.options.all = .init()
-                case .specified(let streamIdentifier):
+                case let .specified(streamIdentifier):
                     $0.options.streamIdentifier = try streamIdentifier.build()
                 }
             }

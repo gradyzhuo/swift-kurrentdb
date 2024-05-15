@@ -15,379 +15,380 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 public struct EventStore_Client_Operations_StartScavengeReq {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  public var options: EventStore_Client_Operations_StartScavengeReq.Options {
-    get {return _options ?? EventStore_Client_Operations_StartScavengeReq.Options()}
-    set {_options = newValue}
-  }
-  /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
-  /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public struct Options {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var threadCount: Int32 = 0
+    public var options: EventStore_Client_Operations_StartScavengeReq.Options {
+        get { _options ?? EventStore_Client_Operations_StartScavengeReq.Options() }
+        set { _options = newValue }
+    }
 
-    public var startFromChunk: Int32 = 0
+    /// Returns true if `options` has been explicitly set.
+    public var hasOptions: Bool { _options != nil }
+    /// Clears the value of `options`. Subsequent reads from it will return its default value.
+    public mutating func clearOptions() { _options = nil }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+    public struct Options {
+        // SwiftProtobuf.Message conformance is added in an extension below. See the
+        // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+        // methods supported on all messages.
+
+        public var threadCount: Int32 = 0
+
+        public var startFromChunk: Int32 = 0
+
+        public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+        public init() {}
+    }
+
     public init() {}
-  }
 
-  public init() {}
-
-  fileprivate var _options: EventStore_Client_Operations_StartScavengeReq.Options? = nil
+    fileprivate var _options: EventStore_Client_Operations_StartScavengeReq.Options?
 }
 
 public struct EventStore_Client_Operations_StopScavengeReq {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  public var options: EventStore_Client_Operations_StopScavengeReq.Options {
-    get {return _options ?? EventStore_Client_Operations_StopScavengeReq.Options()}
-    set {_options = newValue}
-  }
-  /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
-  /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public struct Options {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var scavengeID: String = String()
+    public var options: EventStore_Client_Operations_StopScavengeReq.Options {
+        get { _options ?? EventStore_Client_Operations_StopScavengeReq.Options() }
+        set { _options = newValue }
+    }
+
+    /// Returns true if `options` has been explicitly set.
+    public var hasOptions: Bool { _options != nil }
+    /// Clears the value of `options`. Subsequent reads from it will return its default value.
+    public mutating func clearOptions() { _options = nil }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+    public struct Options {
+        // SwiftProtobuf.Message conformance is added in an extension below. See the
+        // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+        // methods supported on all messages.
+
+        public var scavengeID: String = .init()
+
+        public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+        public init() {}
+    }
+
     public init() {}
-  }
 
-  public init() {}
-
-  fileprivate var _options: EventStore_Client_Operations_StopScavengeReq.Options? = nil
+    fileprivate var _options: EventStore_Client_Operations_StopScavengeReq.Options?
 }
 
 public struct EventStore_Client_Operations_ScavengeResp {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var scavengeID: String = String()
+    public var scavengeID: String = .init()
 
-  public var scavengeResult: EventStore_Client_Operations_ScavengeResp.ScavengeResult = .started
+    public var scavengeResult: EventStore_Client_Operations_ScavengeResp.ScavengeResult = .started
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum ScavengeResult: SwiftProtobuf.Enum {
-    public typealias RawValue = Int
-    case started // = 0
-    case inProgress // = 1
-    case stopped // = 2
-    case UNRECOGNIZED(Int)
+    public enum ScavengeResult: SwiftProtobuf.Enum {
+        public typealias RawValue = Int
+        case started // = 0
+        case inProgress // = 1
+        case stopped // = 2
+        case UNRECOGNIZED(Int)
 
-    public init() {
-      self = .started
+        public init() {
+            self = .started
+        }
+
+        public init?(rawValue: Int) {
+            switch rawValue {
+            case 0: self = .started
+            case 1: self = .inProgress
+            case 2: self = .stopped
+            default: self = .UNRECOGNIZED(rawValue)
+            }
+        }
+
+        public var rawValue: Int {
+            switch self {
+            case .started: 0
+            case .inProgress: 1
+            case .stopped: 2
+            case let .UNRECOGNIZED(i): i
+            }
+        }
     }
 
-    public init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .started
-      case 1: self = .inProgress
-      case 2: self = .stopped
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    public var rawValue: Int {
-      switch self {
-      case .started: return 0
-      case .inProgress: return 1
-      case .stopped: return 2
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  public init() {}
+    public init() {}
 }
 
 #if swift(>=4.2)
 
-extension EventStore_Client_Operations_ScavengeResp.ScavengeResult: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [EventStore_Client_Operations_ScavengeResp.ScavengeResult] = [
-    .started,
-    .inProgress,
-    .stopped,
-  ]
-}
+    extension EventStore_Client_Operations_ScavengeResp.ScavengeResult: CaseIterable {
+        // The compiler won't synthesize support with the UNRECOGNIZED case.
+        public static let allCases: [EventStore_Client_Operations_ScavengeResp.ScavengeResult] = [
+            .started,
+            .inProgress,
+            .stopped,
+        ]
+    }
 
-#endif  // swift(>=4.2)
+#endif // swift(>=4.2)
 
 public struct EventStore_Client_Operations_SetNodePriorityReq {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var priority: Int32 = 0
+    public var priority: Int32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension EventStore_Client_Operations_StartScavengeReq: @unchecked Sendable {}
-extension EventStore_Client_Operations_StartScavengeReq.Options: @unchecked Sendable {}
-extension EventStore_Client_Operations_StopScavengeReq: @unchecked Sendable {}
-extension EventStore_Client_Operations_StopScavengeReq.Options: @unchecked Sendable {}
-extension EventStore_Client_Operations_ScavengeResp: @unchecked Sendable {}
-extension EventStore_Client_Operations_ScavengeResp.ScavengeResult: @unchecked Sendable {}
-extension EventStore_Client_Operations_SetNodePriorityReq: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension EventStore_Client_Operations_StartScavengeReq: @unchecked Sendable {}
+    extension EventStore_Client_Operations_StartScavengeReq.Options: @unchecked Sendable {}
+    extension EventStore_Client_Operations_StopScavengeReq: @unchecked Sendable {}
+    extension EventStore_Client_Operations_StopScavengeReq.Options: @unchecked Sendable {}
+    extension EventStore_Client_Operations_ScavengeResp: @unchecked Sendable {}
+    extension EventStore_Client_Operations_ScavengeResp.ScavengeResult: @unchecked Sendable {}
+    extension EventStore_Client_Operations_SetNodePriorityReq: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "event_store.client.operations"
+private let _protobuf_package = "event_store.client.operations"
 
 extension EventStore_Client_Operations_StartScavengeReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StartScavengeReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "options"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".StartScavengeReq"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "options"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._options) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularMessageField(value: &_options)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._options {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if let v = _options {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_Operations_StartScavengeReq, rhs: EventStore_Client_Operations_StartScavengeReq) -> Bool {
-    if lhs._options != rhs._options {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Operations_StartScavengeReq, rhs: EventStore_Client_Operations_StartScavengeReq) -> Bool {
+        if lhs._options != rhs._options { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Operations_StartScavengeReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Operations_StartScavengeReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "thread_count"),
-    2: .standard(proto: "start_from_chunk"),
-  ]
+    public static let protoMessageName: String = EventStore_Client_Operations_StartScavengeReq.protoMessageName + ".Options"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "thread_count"),
+        2: .standard(proto: "start_from_chunk"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt32Field(value: &self.threadCount) }()
-      case 2: try { try decoder.decodeSingularInt32Field(value: &self.startFromChunk) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularInt32Field(value: &threadCount)
+            case 2: try decoder.decodeSingularInt32Field(value: &startFromChunk)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.threadCount != 0 {
-      try visitor.visitSingularInt32Field(value: self.threadCount, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if threadCount != 0 {
+            try visitor.visitSingularInt32Field(value: threadCount, fieldNumber: 1)
+        }
+        if startFromChunk != 0 {
+            try visitor.visitSingularInt32Field(value: startFromChunk, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if self.startFromChunk != 0 {
-      try visitor.visitSingularInt32Field(value: self.startFromChunk, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Operations_StartScavengeReq.Options, rhs: EventStore_Client_Operations_StartScavengeReq.Options) -> Bool {
-    if lhs.threadCount != rhs.threadCount {return false}
-    if lhs.startFromChunk != rhs.startFromChunk {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Operations_StartScavengeReq.Options, rhs: EventStore_Client_Operations_StartScavengeReq.Options) -> Bool {
+        if lhs.threadCount != rhs.threadCount { return false }
+        if lhs.startFromChunk != rhs.startFromChunk { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Operations_StopScavengeReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StopScavengeReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "options"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".StopScavengeReq"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "options"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._options) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularMessageField(value: &_options)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._options {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if let v = _options {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_Operations_StopScavengeReq, rhs: EventStore_Client_Operations_StopScavengeReq) -> Bool {
-    if lhs._options != rhs._options {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Operations_StopScavengeReq, rhs: EventStore_Client_Operations_StopScavengeReq) -> Bool {
+        if lhs._options != rhs._options { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Operations_StopScavengeReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Operations_StopScavengeReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "scavenge_id"),
-  ]
+    public static let protoMessageName: String = EventStore_Client_Operations_StopScavengeReq.protoMessageName + ".Options"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "scavenge_id"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.scavengeID) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &scavengeID)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.scavengeID.isEmpty {
-      try visitor.visitSingularStringField(value: self.scavengeID, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !scavengeID.isEmpty {
+            try visitor.visitSingularStringField(value: scavengeID, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Operations_StopScavengeReq.Options, rhs: EventStore_Client_Operations_StopScavengeReq.Options) -> Bool {
-    if lhs.scavengeID != rhs.scavengeID {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Operations_StopScavengeReq.Options, rhs: EventStore_Client_Operations_StopScavengeReq.Options) -> Bool {
+        if lhs.scavengeID != rhs.scavengeID { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Operations_ScavengeResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ScavengeResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "scavenge_id"),
-    2: .standard(proto: "scavenge_result"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".ScavengeResp"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "scavenge_id"),
+        2: .standard(proto: "scavenge_result"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.scavengeID) }()
-      case 2: try { try decoder.decodeSingularEnumField(value: &self.scavengeResult) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &scavengeID)
+            case 2: try decoder.decodeSingularEnumField(value: &scavengeResult)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.scavengeID.isEmpty {
-      try visitor.visitSingularStringField(value: self.scavengeID, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !scavengeID.isEmpty {
+            try visitor.visitSingularStringField(value: scavengeID, fieldNumber: 1)
+        }
+        if scavengeResult != .started {
+            try visitor.visitSingularEnumField(value: scavengeResult, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if self.scavengeResult != .started {
-      try visitor.visitSingularEnumField(value: self.scavengeResult, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Operations_ScavengeResp, rhs: EventStore_Client_Operations_ScavengeResp) -> Bool {
-    if lhs.scavengeID != rhs.scavengeID {return false}
-    if lhs.scavengeResult != rhs.scavengeResult {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Operations_ScavengeResp, rhs: EventStore_Client_Operations_ScavengeResp) -> Bool {
+        if lhs.scavengeID != rhs.scavengeID { return false }
+        if lhs.scavengeResult != rhs.scavengeResult { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Operations_ScavengeResp.ScavengeResult: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "Started"),
-    1: .same(proto: "InProgress"),
-    2: .same(proto: "Stopped"),
-  ]
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        0: .same(proto: "Started"),
+        1: .same(proto: "InProgress"),
+        2: .same(proto: "Stopped"),
+    ]
 }
 
 extension EventStore_Client_Operations_SetNodePriorityReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SetNodePriorityReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "priority"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".SetNodePriorityReq"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "priority"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt32Field(value: &self.priority) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularInt32Field(value: &priority)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.priority != 0 {
-      try visitor.visitSingularInt32Field(value: self.priority, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if priority != 0 {
+            try visitor.visitSingularInt32Field(value: priority, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Operations_SetNodePriorityReq, rhs: EventStore_Client_Operations_SetNodePriorityReq) -> Bool {
-    if lhs.priority != rhs.priority {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Operations_SetNodePriorityReq, rhs: EventStore_Client_Operations_SetNodePriorityReq) -> Bool {
+        if lhs.priority != rhs.priority { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }

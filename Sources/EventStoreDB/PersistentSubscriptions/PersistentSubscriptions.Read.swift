@@ -26,7 +26,7 @@ extension PersistentSubscriptionsClient {
                         $0.options.all = .init()
                     }
                     $0.options.groupName = groupName
-                }
+                },
             ]
         } // End of build
     }
@@ -53,15 +53,15 @@ extension ReadEvent {
 extension PersistentSubscriptionsClient.Read {
     public enum Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
-        
+
         case readEvent(event: ReadEvent, retryCount: Int32)
         case confirmation(subscriptionId: String)
-        
+
         public init(from message: UnderlyingMessage) throws {
             if message.event.isInitialized {
-               let event = message.event
+                let event = message.event
                 self = try .readEvent(event: .init(message: event), retryCount: event.retryCount)
-            }else{
+            } else {
                 self = .confirmation(subscriptionId: message.subscriptionConfirmation.subscriptionID)
             }
         }

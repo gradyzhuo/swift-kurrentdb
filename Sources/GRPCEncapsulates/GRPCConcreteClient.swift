@@ -1,5 +1,5 @@
 //
-//  EventStoreClient.swift
+//  GRPCConcreteClient.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/7.
@@ -18,6 +18,6 @@ package protocol GRPCConcreteClient {
 
 extension GRPCConcreteClient {
     package var underlyingClient: UnderlyingClient {
-        return .init(channel: channel, defaultCallOptions: callOptions)
+        .init(channel: channel, defaultCallOptions: callOptions)
     }
 }

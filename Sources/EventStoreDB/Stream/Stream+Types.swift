@@ -9,30 +9,27 @@ import Foundation
 import GRPC
 import GRPCEncapsulates
 
-public struct Stream{    
-    
+public enum Stream {
     public struct Identifier: Sendable {
         typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
 
         public let name: String
         public let encoding: String.Encoding = .utf8
     }
-    
-    public struct Revision: ExpressibleByIntegerLiteral{
+
+    public struct Revision: ExpressibleByIntegerLiteral {
         public typealias IntegerLiteralType = UInt64
-        
+
         var value: IntegerLiteralType
-        
+
         public init(_ value: IntegerLiteralType) {
             self.value = value
         }
-        
+
         public init(integerLiteral value: UInt64) {
             self.value = value
         }
     }
-    
-    
 
     public struct Position: Sendable {
         public let commit: UInt64
@@ -50,16 +47,15 @@ public struct Stream{
         case streamExists
         case revision(UInt64)
     }
-    
+
     public enum Selection {
         case all
         case specified(identifier: Stream.Identifier)
-        
-        public static func specified(name: String)->Self{
-            return .specified(identifier: .init(name: name))
+
+        public static func specified(name: String) -> Self {
+            .specified(identifier: .init(name: name))
         }
     }
-    
 }
 
 extension Stream.Identifier: ExpressibleByStringLiteral {
@@ -88,5 +84,3 @@ extension Stream.Position {
         case position(Stream.Position)
     }
 }
-
-

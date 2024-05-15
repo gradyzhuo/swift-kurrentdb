@@ -13,7 +13,7 @@ extension StreamClient.Append {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
         package var options: UnderlyingMessage = .init()
-        
+
         public var expectedRevision: Stream.RevisionRule {
             didSet {
                 switch expectedRevision {

@@ -8,8 +8,6 @@
 import Foundation
 import GRPCEncapsulates
 
-
-
 extension PersistentSubscriptionsClient {
     public struct Ack: StreamStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReadReq>
@@ -27,7 +25,7 @@ extension PersistentSubscriptionsClient {
                             $0.toEventStoreUUID()
                         }
                     }
-                }
+                },
             ]
         }
     }

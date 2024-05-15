@@ -14,24 +14,21 @@ public struct StreamClient: GRPCConcreteClient {
 
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
-    
+
     public init(channel: GRPCChannel, callOptions: CallOptions) {
         self.channel = channel
         self.callOptions = callOptions
     }
-
-
 }
 
 extension StreamClient {
-    
     // MARK: - Append methods
-    
+
     public func appendTo(stream: Stream.Identifier, events: [EventData], options: Append.Options) async throws -> Append.Response.Success {
         let handler: Append = .init(streamIdentifier: stream, events: events, options: options)
 
         let requests = try handler.build()
-        
+
         let response = try await handler.handle(response: underlyingClient.append(requests))
 
         return switch response {
@@ -44,10 +41,9 @@ extension StreamClient {
 
     // MARK: - Read by all streams methos
 
-    package func readAll(cursor: Cursor<ReadAll.CursorPointer>, options: StreamClient.Read.Options = .init(), channel: GRPCChannel, callOptions: CallOptions) throws -> Read.Responses {
-        
+    package func readAll(cursor: Cursor<ReadAll.CursorPointer>, options: StreamClient.Read.Options = .init(), channel _: GRPCChannel, callOptions _: CallOptions) throws -> Read.Responses {
         let handler = ReadAll(cursor: cursor, options: options)
-        
+
         let request = try handler.build()
         return try handler.handle(responses: underlyingClient.read(request))
     }
@@ -55,18 +51,16 @@ extension StreamClient {
     // MARK: - Read by a stream methos
 
     package func read(stream: Stream.Identifier, cursor: Cursor<Read.CursorPointer>, options: StreamClient.Read.Options) throws -> Read.Responses {
-        
         let handler = Read(streamIdentifier: stream, cursor: cursor, options: options)
         let request = try handler.build()
-        
+
         return try handler.handle(responses: underlyingClient.read(request))
     }
 
     // MARK: - (Soft) Delete a stream
 
     @discardableResult
-    public func delete(identifier: Stream.Identifier, options: Delete.Options, channel: GRPCChannel, callOptions: CallOptions) async throws -> Delete.Response {
-        
+    public func delete(identifier: Stream.Identifier, options: Delete.Options, channel _: GRPCChannel, callOptions _: CallOptions) async throws -> Delete.Response {
         let handler = Delete(streamIdentifier: identifier, options: options)
 
         // build request
@@ -78,17 +72,14 @@ extension StreamClient {
     // MARK: - (Hard) Delete a stream
 
     @discardableResult
-    public func tombstone(identifier: Stream.Identifier, options: Tombstone.Options, channel: GRPCChannel, callOptions: CallOptions) async throws -> Tombstone.Response {
-
+    public func tombstone(identifier: Stream.Identifier, options: Tombstone.Options, channel _: GRPCChannel, callOptions _: CallOptions) async throws -> Tombstone.Response {
         let handler = Tombstone(streamIdentifier: identifier, options: options)
         let request = try handler.build()
         return try await handler.handle(response: underlyingClient.tombstone(request))
     }
-
 }
 
-
-extension StreamClient{
+extension StreamClient {
     public class FilterOption {
         public enum Window {
             case count

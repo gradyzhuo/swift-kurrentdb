@@ -29,9 +29,9 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 /// The `Status` type defines a logical error model that is suitable for
@@ -42,88 +42,89 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// You can find out more about this error model and how to work with it in the
 /// [API Design Guide](https://cloud.google.com/apis/design/errors).
 public struct Google_Rpc_Status {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  /// The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
-  public var code: Google_Rpc_Code = .ok
+    /// The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+    public var code: Google_Rpc_Code = .ok
 
-  /// A developer-facing error message, which should be in English. Any
-  /// user-facing error message should be localized and sent in the
-  /// [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
-  public var message: String = String()
+    /// A developer-facing error message, which should be in English. Any
+    /// user-facing error message should be localized and sent in the
+    /// [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+    public var message: String = .init()
 
-  /// A list of messages that carry the error details.  There is a common set of
-  /// message types for APIs to use.
-  public var details: SwiftProtobuf.Google_Protobuf_Any {
-    get {return _details ?? SwiftProtobuf.Google_Protobuf_Any()}
-    set {_details = newValue}
-  }
-  /// Returns true if `details` has been explicitly set.
-  public var hasDetails: Bool {return self._details != nil}
-  /// Clears the value of `details`. Subsequent reads from it will return its default value.
-  public mutating func clearDetails() {self._details = nil}
+    /// A list of messages that carry the error details.  There is a common set of
+    /// message types for APIs to use.
+    public var details: SwiftProtobuf.Google_Protobuf_Any {
+        get { _details ?? SwiftProtobuf.Google_Protobuf_Any() }
+        set { _details = newValue }
+    }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    /// Returns true if `details` has been explicitly set.
+    public var hasDetails: Bool { _details != nil }
+    /// Clears the value of `details`. Subsequent reads from it will return its default value.
+    public mutating func clearDetails() { _details = nil }
 
-  public init() {}
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  fileprivate var _details: SwiftProtobuf.Google_Protobuf_Any? = nil
+    public init() {}
+
+    private var _details: SwiftProtobuf.Google_Protobuf_Any?
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension Google_Rpc_Status: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension Google_Rpc_Status: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "google.rpc"
+private let _protobuf_package = "google.rpc"
 
 extension Google_Rpc_Status: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".Status"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "code"),
-    2: .same(proto: "message"),
-    3: .same(proto: "details"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".Status"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "code"),
+        2: .same(proto: "message"),
+        3: .same(proto: "details"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularEnumField(value: &self.code) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.message) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._details) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularEnumField(value: &code)
+            case 2: try decoder.decodeSingularStringField(value: &message)
+            case 3: try decoder.decodeSingularMessageField(value: &_details)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if self.code != .ok {
-      try visitor.visitSingularEnumField(value: self.code, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if code != .ok {
+            try visitor.visitSingularEnumField(value: code, fieldNumber: 1)
+        }
+        if !message.isEmpty {
+            try visitor.visitSingularStringField(value: message, fieldNumber: 2)
+        }
+        try { if let v = self._details {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+        } }()
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.message.isEmpty {
-      try visitor.visitSingularStringField(value: self.message, fieldNumber: 2)
-    }
-    try { if let v = self._details {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: Google_Rpc_Status, rhs: Google_Rpc_Status) -> Bool {
-    if lhs.code != rhs.code {return false}
-    if lhs.message != rhs.message {return false}
-    if lhs._details != rhs._details {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: Google_Rpc_Status, rhs: Google_Rpc_Status) -> Bool {
+        if lhs.code != rhs.code { return false }
+        if lhs.message != rhs.message { return false }
+        if lhs._details != rhs._details { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }

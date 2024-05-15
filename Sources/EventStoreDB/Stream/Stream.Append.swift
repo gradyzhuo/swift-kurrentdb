@@ -28,7 +28,7 @@ extension StreamClient {
                 .with {
                     $0.options = options.build()
                     $0.options.streamIdentifier = try streamIdentifier.build()
-                }
+                },
             ]
 
             return try payloads + events.map {
@@ -150,4 +150,3 @@ extension EventData {
         }
     }
 }
-

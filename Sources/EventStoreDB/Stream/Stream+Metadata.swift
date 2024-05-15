@@ -8,9 +8,7 @@
 import Foundation
 
 extension Stream {
-    
     public struct Metadata: Codable {
-        
         enum CodingKeys: String, CodingKey {
             case maxCount = "$maxCount"
             case maxAge = "$maxAge"
@@ -19,7 +17,7 @@ extension Stream {
             case acl = "$acl"
             case customProperties
         }
-        
+
         // A sliding window based on the number of items in the stream. When data reaches
         // a certain length it disappears automatically from the stream and is considered
         // eligible for scavenging.
@@ -45,9 +43,8 @@ extension Stream {
         // An enumerable of key-value pairs of keys to JSON value for
         // user-provided metadata.
         let customProperties: [String: String]?
-        
-        
-        internal func jsonData() throws -> Data? {
+
+        func jsonData() throws -> Data? {
             guard let customProperties else {
                 return nil
             }
@@ -56,12 +53,11 @@ extension Stream {
     }
 }
 
-extension Stream{
+extension Stream {
     public enum Acl: Codable, Equatable {
         public typealias RawValue = Data
-        
-        public var rawValue: Data{
-            
+
+        public var rawValue: Data {
             get throws {
                 let encoder = JSONEncoder()
                 return switch self {
@@ -69,39 +65,34 @@ extension Stream{
                     try encoder.encode("$userStreamAcl")
                 case .systemStream:
                     try encoder.encode("$systemStreamAcl")
-                case .stream(let acl):
+                case let .stream(acl):
                     try encoder.encode(acl)
                 }
             }
         }
-        
+
         case userStream
         case systemStream
         case stream(StreamAcl)
-        
- 
+
         public init(from decoder: any Decoder) throws {
-            
             let container = try decoder.singleValueContainer()
-            
+
             if let rawValue = try? container.decode(String.self) {
                 if rawValue == "$userStreamAcl" {
                     self = .userStream
-                } else if rawValue == "$systemStreamAcl"{
+                } else if rawValue == "$systemStreamAcl" {
                     self = .systemStream
-                }else {
+                } else {
                     throw DecodingError.valueNotFound(String.self, .init(codingPath: [], debugDescription: ""))
                 }
             } else if let acl = try? container.decode(StreamAcl.self) {
                 self = .stream(acl)
-            } else{
+            } else {
                 throw DecodingError.valueNotFound(String.self, .init(codingPath: [], debugDescription: ""))
             }
-            
-            
-
         }
-        
+
         public func encode(to encoder: any Encoder) throws {
             var container = encoder.singleValueContainer()
             switch self {
@@ -109,20 +100,17 @@ extension Stream{
                 try container.encode("$userStreamAcl")
             case .systemStream:
                 try container.encode("$systemStreamAcl")
-            case .stream(let acl):
+            case let .stream(acl):
                 try container.encode(acl)
             }
         }
-        
-        public static func == (lhs: Stream.Acl, rhs: Stream.Acl) -> Bool {
-            return (try? lhs.rawValue) == (try? rhs.rawValue)
-        }
 
+        public static func == (lhs: Stream.Acl, rhs: Stream.Acl) -> Bool {
+            (try? lhs.rawValue) == (try? rhs.rawValue)
+        }
     }
-    
-    
-    public struct StreamAcl: Codable{
-        
+
+    public struct StreamAcl: Codable {
         enum CodingKeys: String, CodingKey {
             case readRoles = "$r"
             case writeRoles = "$w"
@@ -130,7 +118,7 @@ extension Stream{
             case metaReadRoles = "$mr"
             case metaWriteRoles = "$mw"
         }
-        
+
         // Roles and users permitted to read the stream.
         let readRoles: [String]?
 
@@ -146,9 +134,7 @@ extension Stream{
         // Roles and users permitted to write stream metadata.
         let metaWriteRoles: [String]?
     }
-    
 }
-
 
 extension Stream.StreamAcl {
     public class Builder {
@@ -157,34 +143,34 @@ extension Stream.StreamAcl {
         private var deleteRoles: [String]?
         private var metaReadRoles: [String]?
         private var metaWriteRoles: [String]?
-        
+
         public func add(readRole role: String) -> Self {
             readRoles = (readRoles ?? []) + [role]
             return self
         }
-        
+
         public func add(writeRole role: String) -> Self {
             writeRoles = (writeRoles ?? []) + [role]
             return self
         }
-        
+
         public func add(deleteRoles role: String) -> Self {
             deleteRoles = (deleteRoles ?? []) + [role]
             return self
         }
-        
+
         public func add(metaReadRoles role: String) -> Self {
             metaReadRoles = (metaReadRoles ?? []) + [role]
             return self
         }
-        
+
         public func add(metaWriteRoles role: String) -> Self {
             metaWriteRoles = (metaWriteRoles ?? []) + [role]
             return self
         }
-        
-        public func build() -> Stream.StreamAcl{
-            return .init(
+
+        public func build() -> Stream.StreamAcl {
+            .init(
                 readRoles: readRoles,
                 writeRoles: writeRoles,
                 deleteRoles: deleteRoles,
@@ -192,6 +178,5 @@ extension Stream.StreamAcl {
                 metaWriteRoles: metaWriteRoles
             )
         }
-        
     }
 }

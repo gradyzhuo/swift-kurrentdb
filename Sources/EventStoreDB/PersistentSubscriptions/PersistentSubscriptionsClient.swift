@@ -14,33 +14,30 @@ public struct PersistentSubscriptionsClient: GRPCConcreteClient {
 
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
-    
+
     public init(channel: GRPCChannel, callOptions: CallOptions) {
         self.channel = channel
         self.callOptions = callOptions
     }
-
 }
 
-
 extension PersistentSubscriptionsClient {
-    
     public enum StreamSelection {
         case all(position: Cursor<StreamClient.Read.Position>, filterOption: StreamClient.FilterOption? = nil)
         case specified(identifier: Stream.Identifier, revision: Cursor<UInt64>)
-        
-        public static func specified(identifier: Stream.Identifier)->Self{
-            return .specified(identifier: identifier, revision: .end)
+
+        public static func specified(identifier: Stream.Identifier) -> Self {
+            .specified(identifier: identifier, revision: .end)
         }
 
-        public static func specified(streamName: String, revision: Cursor<UInt64> = .end)->Self{
-            return .specified(identifier: .init(name: streamName), revision: .end)
+        public static func specified(streamName: String, revision _: Cursor<UInt64> = .end) -> Self {
+            .specified(identifier: .init(name: streamName), revision: .end)
         }
     }
-    
+
     public enum SystemConsumerStrategy: RawRepresentable {
         public typealias RawValue = String
-        
+
         /// Distributes events to a single client until the bufferSize is reached.
         /// After which the next client is selected in a round robin style,
         /// and the process is repeated.
@@ -66,9 +63,9 @@ extension PersistentSubscriptionsClient {
         case pinnedByCorrelation
 
         case custom(String)
-        
+
         public var rawValue: String {
-            return switch self {
+            switch self {
             case .dispatchToSingle:
                 "DispatchToSingle"
             case .roundRobin:
@@ -77,10 +74,11 @@ extension PersistentSubscriptionsClient {
                 "Pinned"
             case .pinnedByCorrelation:
                 "PinnedByCorrelation"
-            case .custom(let value):
+            case let .custom(value):
                 value
             }
         }
+
         public init?(rawValue: String) {
             switch rawValue {
             case Self.dispatchToSingle.rawValue:
@@ -100,34 +98,31 @@ extension PersistentSubscriptionsClient {
 
 extension PersistentSubscriptionsClient {
     // MARK: - Create Action
-    
-    internal func createToStream(streamName: String, groupName: String, options: Create.ToStream.Options) async throws{
-        
+
+    func createToStream(streamName: String, groupName: String, options: Create.ToStream.Options) async throws {
         let handler: Create.ToStream = .init(streamIdentifier: .init(name: streamName), groupName: groupName, options: options)
-        
+
         let request = try handler.build()
 
         try await handler.handle(response: underlyingClient.create(request))
     }
-    
-    internal func createToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options) async throws {
+
+    func createToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options) async throws {
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
-        
+
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.create(request))
-        
     }
-
 
     // MARK: - Update Action
-    
-    internal func updateToStream(identifier: Stream.Identifier, groupName: String, options: Update.ToStream.Options) async throws {
+
+    func updateToStream(identifier: Stream.Identifier, groupName: String, options: Update.ToStream.Options) async throws {
         let handler = Update.ToStream(streamIdentifier: identifier, groupName: groupName, options: options)
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.update(request))
     }
-    
-    internal func updateToAll(identifier: Stream.Identifier, groupName: String, options: Update.ToAll.Options) async throws {
+
+    func updateToAll(identifier _: Stream.Identifier, groupName: String, options: Update.ToAll.Options) async throws {
         let handler = Update.ToAll(groupName: groupName, options: options)
         let request = try handler.build()
         try await handler.handle(response: underlyingClient.update(request))
@@ -135,62 +130,53 @@ extension PersistentSubscriptionsClient {
 
     // MARK: - Delete Actions
 
-    internal func deleteOn(stream: Selector<Stream.Identifier>, groupName: String) async throws {
-
+    func deleteOn(stream: Selector<Stream.Identifier>, groupName: String) async throws {
         let handler = Delete(streamSelection: stream, groupName: groupName)
         let request = try handler.build()
 
         try await handler.handle(response: underlyingClient.delete(request))
-        
     }
 
     // MARK: - Read Actions
-    
-    internal func subscribeTo(_ streamSelection: Selector<Stream.Identifier>, groupName: String, options: Read.Options) async throws -> Subscription {
-        
-        
+
+    func subscribeTo(_ streamSelection: Selector<Stream.Identifier>, groupName: String, options: Read.Options) async throws -> Subscription {
         let handler = Read(streamSelection: streamSelection, groupName: groupName, options: options)
         let requests = try handler.build()
-        
+
         let getSubscriptionCall = underlyingClient.makeReadCall()
         try await getSubscriptionCall.requestStream.send(requests)
 
         return try await .init(readCall: getSubscriptionCall)
     }
 
-
     // MARK: - GetInfo Action
 
-    internal func getInfo(stream streamSelection: Selector<Stream.Identifier>, groupName: String) async throws -> GetInfo.SubscriptionInfo {
-        
+    func getInfo(stream streamSelection: Selector<Stream.Identifier>, groupName: String) async throws -> GetInfo.SubscriptionInfo {
         let handler = GetInfo(streamSelection: streamSelection, groupName: groupName)
         let request = try handler.build()
         let response = try await handler.handle(response: underlyingClient.getInfo(request))
-        
+
         return response.subscriptionInfo
     }
 
     // MARK: - ReplayParked Action
 
-    internal func replayParkedMessages(stream streamSelection: Selector<Stream.Identifier>, groupName: String, options: ReplayParked.Options) async throws {
-        
+    func replayParkedMessages(stream streamSelection: Selector<Stream.Identifier>, groupName: String, options: ReplayParked.Options) async throws {
         let handler = ReplayParked(streamSelection: streamSelection, groupName: groupName, options: options)
         let request = try handler.build()
-        
+
         try await handler.handle(response: underlyingClient.replayParked(request))
-        
     }
 
-    internal func replayParkedMessages(stream streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: ReplayParked.Options) -> ReplayParked.Options) async throws {
-        try await replayParkedMessages(stream: streamSelection, groupName:groupName, options: configure(.init()))
+    func replayParkedMessages(stream streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: ReplayParked.Options) -> ReplayParked.Options) async throws {
+        try await replayParkedMessages(stream: streamSelection, groupName: groupName, options: configure(.init()))
     }
 
     // MARK: - List Action
 
-    internal func list(stream: Selector<Stream.Identifier>) async throws -> [GetInfo.SubscriptionInfo] {
-        
+    func list(stream: Selector<Stream.Identifier>) async throws -> [GetInfo.SubscriptionInfo] {
         let options = try List.Options.listForStream(stream)
-        
+
         let handler = List(options: options)
         let request = try handler.build()
         let response = try await handler.handle(response: underlyingClient.list(request))
@@ -199,7 +185,7 @@ extension PersistentSubscriptionsClient {
 
     // MARK: - Restart Subsystem Action
 
-    internal func restartSubsystem() async throws {
+    func restartSubsystem() async throws {
         let handler = RestartSubsystem()
         try await handler.handle(response: underlyingClient.restartSubsystem(handler.build(), callOptions: callOptions))
     }
