@@ -45,7 +45,6 @@ final class EventStoreDBStreamTests: XCTestCase {
             }
         }catch{
             anError = error
-            print(anError)
         }
         
         XCTAssertNotNil(anError)
