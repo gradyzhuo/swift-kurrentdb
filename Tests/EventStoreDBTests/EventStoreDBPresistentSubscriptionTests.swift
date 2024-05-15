@@ -41,20 +41,23 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
             options
         }
 
-        let response = try await client.appendTo(streamName: "testing", events: .init(eventType: "AccountCreated", payload: ["Description": "Gears of War 10"])) { options in
+        let response = try await client.appendTo(streamName: "testing", 
+                                                 events: .init(
+                                                    eventType: "AccountCreated",
+                                                    payload: ["Description": "Gears of War 10"]
+                                                 )
+        ) { options in
             options.expectedRevision(.any)
         }
         
-        var firstEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil
+        var lastEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil
         for try await result in subscription {
-            firstEventResult = result
+            lastEventResult = result
             try await subscription.ack(readEvents: result.event)
             break
         }
         
-        
-        
-        XCTAssertEqual(response.current.revision, firstEventResult?.event.recordedEvent.revision)
+        XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
         
     }
 }
