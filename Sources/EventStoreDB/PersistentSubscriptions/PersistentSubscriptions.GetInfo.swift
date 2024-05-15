@@ -15,7 +15,7 @@ extension PersistentSubscriptionsClient {
         let streamSelection: Selector<Stream.Identifier>
         let groupName: String
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             try .with {
                 switch streamSelection {
                 case let .specified(streamIdentifier):

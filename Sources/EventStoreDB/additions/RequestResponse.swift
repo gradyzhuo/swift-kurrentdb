@@ -9,5 +9,4 @@ import Foundation
 import GRPCEncapsulates
 
 public typealias EmptyRequest = GenericGRPCRequest<EventStore_Client_Empty>
-
 public typealias EmptyResponse = DiscardedResponse<EventStore_Client_Empty>

@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import GRPCEncapsulates
 
-public struct PersistentSubscriptionsClient: ConcreteClient {
+public struct PersistentSubscriptionsClient: GRPCConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_PersistentSubscriptions_PersistentSubscriptionsAsyncClient
 
     public private(set) var channel: GRPCChannel

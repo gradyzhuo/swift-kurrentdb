@@ -11,7 +11,7 @@ final class EventStoreDBTests: XCTestCase {
 
         let jsonFileURL = Bundle.module.url(forResource: "multiple-events", withExtension: "json")
         let jsonData = try Data(contentsOf: jsonFileURL!)
-        let events = try EventData.events(fromJSONData: jsonData)
+        _ = try EventData.events(fromJSONData: jsonData)
         
         
 //        try XCTAssertEqual(events, [

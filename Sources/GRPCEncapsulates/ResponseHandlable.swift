@@ -26,7 +26,7 @@ public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: GRPC
 }
 
 extension StreamResponseHandlable {
-    public typealias Responses = AsyncThrowingStream<Self.Response, Error>
+    public typealias Responses = AsyncThrowingStream<Response, Error>
 
     @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {

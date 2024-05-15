@@ -17,7 +17,7 @@ extension StreamClient {
         public let cursor: Cursor<CursorPointer>
         public let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             try .with {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
@@ -34,7 +34,7 @@ extension StreamClient {
         public let cursor: Cursor<CursorPointer>
         public let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.options
                 cursor.build(options: &$0.options)

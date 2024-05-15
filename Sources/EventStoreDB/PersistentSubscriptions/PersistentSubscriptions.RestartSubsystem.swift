@@ -13,7 +13,7 @@ extension PersistentSubscriptionsClient {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Empty>
         public typealias Response = DiscardedResponse<EventStore_Client_Empty>
 
-        public func build() throws -> EventStore_Client_Empty {
+        package func build() throws -> EventStore_Client_Empty {
             .init()
         }
     }

@@ -22,7 +22,7 @@ extension ProjectionsClient {
         public let name: String
         public let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()
                 $0.options.name = name
@@ -130,7 +130,7 @@ extension ProjectionsClient.Statistics {
             mode = .all
         }
 
-        public func build() -> ProjectionsClient.Statistics.Request.UnderlyingMessage.Options {
+        package func build() -> ProjectionsClient.Statistics.Request.UnderlyingMessage.Options {
             options
         }
 

@@ -15,7 +15,7 @@ extension PersistentSubscriptionsClient {
 
         let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()
             }
@@ -63,7 +63,7 @@ extension PersistentSubscriptionsClient.List {
             return .init(options: options)
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             return options
         }
     }

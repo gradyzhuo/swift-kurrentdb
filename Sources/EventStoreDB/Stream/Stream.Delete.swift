@@ -15,7 +15,7 @@ extension StreamClient {
         public let streamIdentifier: Stream.Identifier
         public let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             try .with {
                 $0.options = options.build()
                 $0.options.streamIdentifier = try streamIdentifier.build()

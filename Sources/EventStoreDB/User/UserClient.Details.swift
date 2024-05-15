@@ -14,7 +14,7 @@ extension UserClient {
 
         let loginName: String
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options.loginName = loginName
             }

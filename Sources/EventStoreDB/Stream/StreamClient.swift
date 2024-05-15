@@ -9,8 +9,8 @@ import Foundation
 import GRPC
 import GRPCEncapsulates
 
-public struct StreamClient: ConcreteClient {
-    public typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient
+public struct StreamClient: GRPCConcreteClient {
+    package typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient
 
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
@@ -44,7 +44,7 @@ extension StreamClient {
 
     // MARK: - Read by all streams methos
 
-    public func readAll(cursor: Cursor<ReadAll.CursorPointer>, options: StreamClient.Read.Options = .init(), channel: GRPCChannel, callOptions: CallOptions) throws -> Read.Responses {
+    package func readAll(cursor: Cursor<ReadAll.CursorPointer>, options: StreamClient.Read.Options = .init(), channel: GRPCChannel, callOptions: CallOptions) throws -> Read.Responses {
         
         let handler = ReadAll(cursor: cursor, options: options)
         
@@ -54,7 +54,7 @@ extension StreamClient {
 
     // MARK: - Read by a stream methos
 
-    public func read(stream: Stream.Identifier, cursor: Cursor<Read.CursorPointer>, options: StreamClient.Read.Options) throws -> Read.Responses {
+    package func read(stream: Stream.Identifier, cursor: Cursor<Read.CursorPointer>, options: StreamClient.Read.Options) throws -> Read.Responses {
         
         let handler = Read(streamIdentifier: stream, cursor: cursor, options: options)
         let request = try handler.build()

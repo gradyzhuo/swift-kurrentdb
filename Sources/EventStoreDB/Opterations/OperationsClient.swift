@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import GRPCEncapsulates
 
-public struct OperationsClient: ConcreteClient {
+public struct OperationsClient: GRPCConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Operations_OperationsAsyncClient
 
     public private(set) var channel: GRPCChannel

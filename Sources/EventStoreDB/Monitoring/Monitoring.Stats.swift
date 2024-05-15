@@ -15,7 +15,7 @@ extension MonitoringClient {
         let useMetadata: Bool
         let refreshTimePeriodInMs: UInt64
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.useMetadata = useMetadata
                 $0.refreshTimePeriodInMs = refreshTimePeriodInMs

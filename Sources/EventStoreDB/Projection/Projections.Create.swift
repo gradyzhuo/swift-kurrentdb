@@ -18,7 +18,7 @@ extension ProjectionsClient {
         public let query: String
         public let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()
                 $0.options.continuous.name = name

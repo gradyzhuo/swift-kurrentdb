@@ -13,7 +13,7 @@ extension ProjectionsClient {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Empty>
         public typealias Response = DiscardedResponse<EventStore_Client_Empty>
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .init()
         }
     }

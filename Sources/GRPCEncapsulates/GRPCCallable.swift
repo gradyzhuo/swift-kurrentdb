@@ -14,10 +14,10 @@ public protocol GRPCCallable {
     associatedtype Response: GRPCResponse
 }
 
-public protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable {}
+package protocol UnaryUnary: GRPCCallable, UnaryRequestBuildable, UnaryResponseHandlable {}
 
-public protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponseHandlable {}
+package protocol UnaryStream: GRPCCallable, UnaryRequestBuildable, StreamResponseHandlable {}
 
-public protocol StreamUnary: GRPCCallable, StreamRequestBuildable, UnaryResponseHandlable {}
+package protocol StreamUnary: GRPCCallable, StreamRequestBuildable, UnaryResponseHandlable {}
 
-public protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamResponseHandlable {}
+package protocol StreamStream: GRPCCallable, StreamRequestBuildable, StreamResponseHandlable {}

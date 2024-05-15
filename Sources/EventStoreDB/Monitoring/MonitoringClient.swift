@@ -9,8 +9,8 @@ import Foundation
 import GRPC
 import GRPCEncapsulates
 
-public struct MonitoringClient: ConcreteClient {
-    public typealias UnderlyingClient = EventStore_Client_Monitoring_MonitoringAsyncClient
+public struct MonitoringClient: GRPCConcreteClient {
+    package typealias UnderlyingClient = EventStore_Client_Monitoring_MonitoringAsyncClient
 
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
@@ -20,11 +20,11 @@ public struct MonitoringClient: ConcreteClient {
         self.callOptions = callOptions
     }
 
-    public func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
+    package func makeClient(callOptions: CallOptions) throws -> UnderlyingClient {
         .init(channel: channel, defaultCallOptions: callOptions)
     }
 
-    public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws -> AsyncStream<Stats.Response> {
+    package func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws -> AsyncStream<Stats.Response> {
         let handler = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
         let request = try handler.build()
         let responses = underlyingClient.stats(request)

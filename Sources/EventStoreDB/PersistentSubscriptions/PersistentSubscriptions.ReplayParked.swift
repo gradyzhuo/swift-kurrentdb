@@ -17,7 +17,7 @@ extension PersistentSubscriptionsClient {
         let groupName: String
         let options: Options
 
-        public func build() throws -> EventStore_Client_PersistentSubscriptions_ReplayParkedReq {
+        package func build() throws -> EventStore_Client_PersistentSubscriptions_ReplayParkedReq {
             try .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
@@ -59,7 +59,7 @@ extension PersistentSubscriptionsClient.ReplayParked {
             return self
         }
 
-        public func build() -> PersistentSubscriptionsClient.ReplayParked.Request.UnderlyingMessage.Options {
+        package func build() -> PersistentSubscriptionsClient.ReplayParked.Request.UnderlyingMessage.Options {
             message
         }
     }

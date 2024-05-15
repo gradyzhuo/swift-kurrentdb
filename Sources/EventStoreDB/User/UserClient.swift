@@ -39,7 +39,7 @@ public struct User: GRPCResponse {
     }
 }
 
-public struct UserClient: ConcreteClient {
+public struct UserClient: GRPCConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Users_UsersAsyncClient
 
     public private(set) var channel: GRPCChannel

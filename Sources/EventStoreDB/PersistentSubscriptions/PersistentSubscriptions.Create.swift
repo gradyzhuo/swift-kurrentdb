@@ -38,7 +38,7 @@ extension PersistentSubscriptionsClient {
             var options: Options
             
             
-            public func build() throws -> Create.Request.UnderlyingMessage {
+            package func build() throws -> Create.Request.UnderlyingMessage {
                 
                 return try .with {
                     $0.options = options.build()
@@ -58,7 +58,7 @@ extension PersistentSubscriptionsClient {
             var options: Options
             
             
-            public func build() throws -> Create.Request.UnderlyingMessage {
+            package func build() throws -> Create.Request.UnderlyingMessage {
                 
                 return .with {
                     $0.options = options.build()
@@ -90,7 +90,7 @@ extension PersistentSubscriptionsClient.Create.ToStream {
             return self
         }
         
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             return .with{
                 $0.settings = .make(settings: settings)
                 
@@ -129,7 +129,7 @@ extension PersistentSubscriptionsClient.Create.ToAll{
             return self
         }
         
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             
             return .with {
                 $0.settings = .make(settings: settings)

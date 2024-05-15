@@ -20,7 +20,7 @@ extension UserClient {
 
         let groups: [String]
 
-        public func build() throws -> GRPCEncapsulates.EventStore_Client_Users_CreateReq {
+        package func build() throws -> GRPCEncapsulates.EventStore_Client_Users_CreateReq {
             .with {
                 $0.options.loginName = loginName
                 $0.options.password = password

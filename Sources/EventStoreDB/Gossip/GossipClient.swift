@@ -10,7 +10,7 @@ import GRPC
 import GRPCEncapsulates
 import NIO
 
-public struct GossipClient: ConcreteClient {
+public struct GossipClient: GRPCConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Gossip_GossipAsyncClient
 
     public private(set) var channel: GRPCChannel
@@ -24,7 +24,7 @@ public struct GossipClient: ConcreteClient {
 }
 
 extension GossipClient {
-    public func read() async throws -> [Read.Response.MemberInfo] {
+    package func read() async throws -> [Read.Response.MemberInfo] {
         let handler = Read()
         let request = try handler.build()
         let response = try await underlyingClient.read(request)

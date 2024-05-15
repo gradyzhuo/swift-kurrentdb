@@ -15,10 +15,10 @@ extension PersistentSubscriptionsClient {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReadReq>
         public typealias Response = DiscardedResponse<EventStore_Client_PersistentSubscriptions_ReadResp>
 
-        let id: Data
-        let eventIds: [UUID]
+        public let id: Data
+        public let eventIds: [UUID]
 
-        public func build() throws -> [Request.UnderlyingMessage] {
+        package func build() throws -> [Request.UnderlyingMessage] {
             [
                 .with {
                     $0.ack = .with {

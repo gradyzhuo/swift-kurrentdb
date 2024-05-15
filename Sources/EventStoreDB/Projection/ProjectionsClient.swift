@@ -9,7 +9,7 @@ import GRPC
 import GRPCEncapsulates
 import SwiftProtobuf
 
-public struct ProjectionsClient: ConcreteClient {
+public struct ProjectionsClient: GRPCConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Projections_ProjectionsAsyncClient
 
 //    public private(set) var mode: Mode
@@ -115,14 +115,14 @@ extension ProjectionsClient {
 
     // MARK: - Statistics Actions
 
-    public func statisticsForContinuous(name: String) async throws -> Statistics.Responses {
+    package func statisticsForContinuous(name: String) async throws -> Statistics.Responses {
         
         let handler = Statistics(name: name, options: .init().set(mode: .continuous))
         let request = try handler.build()
         return try handler.handle(responses: underlyingClient.statistics(request))
     }
 
-    public func statistics(name: String, options: Statistics.Options) async throws -> Statistics.Responses {
+    package func statistics(name: String, options: Statistics.Options) async throws -> Statistics.Responses {
 
         let handler = Statistics(name: name, options: options)
 
@@ -130,7 +130,7 @@ extension ProjectionsClient {
         return try handler.handle(responses: underlyingClient.statistics(request))
     }
 
-    public func statistics(name: String, configure: (_ options: Statistics.Options) -> Statistics.Options) async throws -> Statistics.Responses {
+    package func statistics(name: String, configure: (_ options: Statistics.Options) -> Statistics.Options) async throws -> Statistics.Responses {
         
         let handler = Statistics(name: name, options: configure(.init()))
 

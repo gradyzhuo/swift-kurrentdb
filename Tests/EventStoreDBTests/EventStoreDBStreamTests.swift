@@ -40,7 +40,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         let client = try EventStoreDB.Client()
         var anError: Error?
         do {
-            for try await response in try client.read(streamName: "NoStream", cursor: .start){
+            for try await _ in try client.read(streamName: "NoStream", cursor: .start){
                 //no thing
             }
         }catch{

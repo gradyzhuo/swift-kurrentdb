@@ -9,15 +9,15 @@ import Foundation
 import GRPC
 import SwiftProtobuf
 
-public protocol ConcreteClient {
-    associatedtype UnderlyingClient: EventStoreGRPCClient
+package protocol GRPCConcreteClient {
+    associatedtype UnderlyingClient: UnderlyGRPCClient
 
     var channel: GRPCChannel { get }
     var callOptions: CallOptions { set get }
 }
 
-extension ConcreteClient {
-    internal var underlyingClient: UnderlyingClient {
+extension GRPCConcreteClient {
+    package var underlyingClient: UnderlyingClient {
         return .init(channel: channel, defaultCallOptions: callOptions)
     }
 }

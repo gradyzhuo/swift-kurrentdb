@@ -23,7 +23,7 @@ extension StreamClient {
             self.streamIdentifier = streamIdentifier
         }
 
-        public func build() throws -> [Request.UnderlyingMessage] {
+        package func build() throws -> [Request.UnderlyingMessage] {
             let payloads: [Request.UnderlyingMessage] = try [
                 .with {
                     $0.options = options.build()

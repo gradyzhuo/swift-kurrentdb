@@ -20,7 +20,7 @@ extension PersistentSubscriptionsClient{
         var subscriptionId: String?
         let requestStream: GRPCAsyncRequestStreamWriter<Read.Request.UnderlyingMessage>
 
-        public init(readCall: GRPCAsyncBidirectionalStreamingCall<Read.Request.UnderlyingMessage, Read.Response.UnderlyingMessage>) async throws{
+        package init(readCall: GRPCAsyncBidirectionalStreamingCall<Read.Request.UnderlyingMessage, Read.Response.UnderlyingMessage>) async throws{
             
             self.requestStream = readCall.requestStream
             

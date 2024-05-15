@@ -12,7 +12,7 @@ extension StreamClient.Read {
     public final class Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_ReadReq.Options
 
-        public var options: UnderlyingMessage
+        package var options: UnderlyingMessage
 
         public init() {
             options = .init()
@@ -22,7 +22,7 @@ extension StreamClient.Read {
                 .countBy(limit: .max)
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             options
         }
 

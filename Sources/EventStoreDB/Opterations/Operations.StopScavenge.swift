@@ -15,7 +15,7 @@ extension OperationsClient {
 
         let scavengeId: String
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = .with {
                     $0.scavengeID = scavengeId

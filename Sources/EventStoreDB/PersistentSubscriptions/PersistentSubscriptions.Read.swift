@@ -16,7 +16,7 @@ extension PersistentSubscriptionsClient {
         let groupName: String
         let options: Options
 
-        public func build() throws -> [Request.UnderlyingMessage] {
+        package func build() throws -> [Request.UnderlyingMessage] {
             try [
                 .with {
                     $0.options = options.build()
@@ -33,7 +33,7 @@ extension PersistentSubscriptionsClient {
 }
 
 extension ReadEvent {
-    init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) throws {
+    package init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) throws {
         recordedEvent = try .init(message: message.event)
         linkedRecordedEvent = try message.hasLink ? .init(message: message.link) : nil
 
@@ -95,7 +95,7 @@ extension PersistentSubscriptionsClient.Read {
             return self
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             message
         }
     }

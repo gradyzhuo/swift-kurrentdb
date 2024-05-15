@@ -9,16 +9,16 @@ import Foundation
 
 public protocol RequestBuildable {}
 
-public protocol StreamRequestBuildable: RequestBuildable where Self: GRPCCallable {
+package protocol StreamRequestBuildable: RequestBuildable where Self: GRPCCallable {
     func build() throws -> [Request.UnderlyingMessage]
 }
 
-public protocol UnaryRequestBuildable: RequestBuildable where Self: GRPCCallable {
+package protocol UnaryRequestBuildable: RequestBuildable where Self: GRPCCallable {
     func build() throws -> Request.UnderlyingMessage
 }
 
 extension UnaryRequestBuildable where Request == GenericGRPCRequest<EventStore_Client_Empty> {
-    public func build() throws -> Request.UnderlyingMessage {
+    package func build() throws -> Request.UnderlyingMessage {
         .init()
     }
 }

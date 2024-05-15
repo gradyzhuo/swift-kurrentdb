@@ -35,7 +35,7 @@ extension PersistentSubscriptionsClient.Update {
         var options: Options
         
         
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             return try .with{
                 $0.options = options.build()
                 $0.options.groupName = groupName
@@ -81,7 +81,7 @@ extension PersistentSubscriptionsClient.Update {
         var groupName: String
         var options: Options
         
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             return .with{
                 $0.options = options.build()
                 $0.options.groupName = groupName

@@ -16,7 +16,7 @@ extension ProjectionsClient {
         let name: String
         let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options = options.build()
                 $0.options.name = name
@@ -42,7 +42,7 @@ extension ProjectionsClient.Reset {
             return self
         }
 
-        public func build() -> ProjectionsClient.Reset.Request.UnderlyingMessage.Options {
+        package func build() -> ProjectionsClient.Reset.Request.UnderlyingMessage.Options {
             options
         }
     }

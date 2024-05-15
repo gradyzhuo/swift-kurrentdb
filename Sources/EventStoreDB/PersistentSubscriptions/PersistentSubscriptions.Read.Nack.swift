@@ -41,7 +41,7 @@ extension PersistentSubscriptionsClient {
         let action: Nack.Action
         let reason: String
 
-        public func build() throws -> [Request.UnderlyingMessage] {
+        package func build() throws -> [Request.UnderlyingMessage] {
             [
                 .with {
                     $0.nack = .with {

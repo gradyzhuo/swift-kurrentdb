@@ -16,7 +16,7 @@ extension ProjectionsClient {
         public let name: String
         public let options: Options
 
-        public func build() throws -> Request.UnderlyingMessage {
+        package func build() throws -> Request.UnderlyingMessage {
             .with {
                 $0.options.name = name
                 $0.options = options.build()

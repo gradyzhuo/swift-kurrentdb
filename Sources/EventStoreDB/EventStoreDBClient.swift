@@ -97,33 +97,38 @@ extension EventStoreDBClient{
 
 
     // MARK: Read by a stream methos -
-
-    public func read(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    /// Read all events from a stream.
+    /// - Parameters:
+    ///   - stream: the name of stream.
+    ///   - cursor: the revision of stream that we want to read from.
+    ///        - start: Read the stream from start revision and forward to the end.
+    ///        - end:  Read the stream from end revision and backward to the start.  (It is a reverse operation to `start`.)
+    ///        - specified:
+    ///            - forwardOn(revision): Read the stream from the assigned revision and forward to the end.
+    ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
+    ///   - configure: A closure of building read options.
+    /// - Returns: AsyncStream to Read.Response
+    public func read(stream streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
-        
         let options = configure(.init())
+
         return try client.read(stream: .init(name: streamName), cursor: cursor, options: options)
         
     }
 
-    public func read(streamName: String, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    public func read(stream streamName: String, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         
         let cursor:Cursor<StreamClient.Read.CursorPointer> = .specified(.init(revision: revision, direction: direction))
-        return try read(streamName: streamName, cursor: cursor, configure: configure)
+        return try read(stream: streamName, cursor: cursor, configure: configure)
         
     }
-    
-//    public func subscribeToStream(streamName: String){
-//        let options = StreamClient.Read.Options()
-//    }
     
 
     // MARK: (Soft) Delete a stream -
 
     @discardableResult
     public func delete(streamName: String, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
-        
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         
         let options = configure(.init())
