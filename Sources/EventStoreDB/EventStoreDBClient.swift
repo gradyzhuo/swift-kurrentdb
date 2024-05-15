@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 public struct EventStoreDBClient {
     

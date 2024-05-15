@@ -27,11 +27,11 @@ let package = Package(
             name: "EventStoreDB",
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
-                "GRPCSupport",
+                "GRPCEncapsulates",
             ]
         ),
         .target(
-            name: "GRPCSupport",
+            name: "GRPCEncapsulates",
             dependencies: [
                 .product(name: "GRPC", package: "grpc-swift"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
@@ -46,8 +46,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "GRPCSupportTests",
-            dependencies: ["GRPCSupport"]
+            name: "GRPCEncapsulatesTests",
+            dependencies: ["GRPCEncapsulates"]
         ),
     ]
 )

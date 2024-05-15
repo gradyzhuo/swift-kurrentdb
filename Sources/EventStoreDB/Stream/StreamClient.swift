@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 public struct StreamClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Streams_StreamsAsyncClient

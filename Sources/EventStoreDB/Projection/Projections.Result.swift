@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 import SwiftProtobuf
 
 extension ProjectionsClient {

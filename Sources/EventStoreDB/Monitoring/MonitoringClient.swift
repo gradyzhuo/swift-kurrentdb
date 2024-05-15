@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 public struct MonitoringClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Monitoring_MonitoringAsyncClient

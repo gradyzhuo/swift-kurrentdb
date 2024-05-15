@@ -7,7 +7,7 @@
 
 import Foundation
 import SwiftProtobuf
-import GRPCSupport
+import GRPCEncapsulates
 
 public protocol PersistentSubscriptionsGRPCSettings: SwiftProtobuf.Message {
     static func make(settings: PersistentSubscriptionsClient.Settings) -> Self

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension EventStore_Client_Streams_DeleteResp.OneOf_PositionOption {
     typealias Represented = Stream.Position.Option

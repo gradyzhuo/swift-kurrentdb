@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension StreamClient.Read {
     public final class Options: EventStoreOptions {

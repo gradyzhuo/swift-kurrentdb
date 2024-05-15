@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient {
     
@@ -27,7 +27,7 @@ extension PersistentSubscriptionsClient.List {
     public struct Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ListResp
 
-        var subscriptions: [PersistentSubscriptionsClient.SubscriptionInfo]
+        var subscriptions: [PersistentSubscriptionsClient.GetInfo.SubscriptionInfo]
 
         public init(from message: UnderlyingMessage) throws {
             subscriptions = message.subscriptions.map { .init(from: $0) }

@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 public struct OperationsClient: ConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Operations_OperationsAsyncClient

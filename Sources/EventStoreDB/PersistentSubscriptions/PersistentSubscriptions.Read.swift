@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient {
     public struct Read: StreamStream {

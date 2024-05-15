@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings: PersistentSubscriptionsGRPCSettings {

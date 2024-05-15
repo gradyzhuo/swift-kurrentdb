@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient{
     public final class Subscription: AsyncSequence {

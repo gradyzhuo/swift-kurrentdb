@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 public typealias EmptyRequest = GenericGRPCRequest<EventStore_Client_Empty>
 

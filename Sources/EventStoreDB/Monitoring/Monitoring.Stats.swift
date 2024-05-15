@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension MonitoringClient {
     public struct Stats: UnaryStream {

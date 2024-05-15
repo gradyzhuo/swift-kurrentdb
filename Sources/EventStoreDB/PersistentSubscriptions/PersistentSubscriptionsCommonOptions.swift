@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 protocol PersistentSubscriptionsCommonOptions: EventStoreOptions {
     var settings: PersistentSubscriptionsClient.Settings { set get }

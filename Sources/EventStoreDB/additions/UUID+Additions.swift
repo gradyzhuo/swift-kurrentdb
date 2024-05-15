@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension UUID {
     // UUID is 128-bit, we need two 64-bit values to represent it

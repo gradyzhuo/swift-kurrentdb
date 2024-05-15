@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 public enum ContentType: String, Codable, Sendable {
     case unknown

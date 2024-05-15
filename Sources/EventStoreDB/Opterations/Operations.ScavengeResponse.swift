@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension OperationsClient {
     public struct ScavengeResponse: GRPCResponse {

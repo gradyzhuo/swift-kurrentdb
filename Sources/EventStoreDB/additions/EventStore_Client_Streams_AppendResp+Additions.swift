@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOption {
     typealias Represented = StreamClient.Append.Response.CurrentRevisionOption

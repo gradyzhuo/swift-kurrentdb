@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 public protocol ExpectedStreamRevisionProtocol {
     static func any(_ value: EventStore_Client_Empty) -> Self

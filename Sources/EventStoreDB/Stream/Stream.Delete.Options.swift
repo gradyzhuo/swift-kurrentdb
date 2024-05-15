@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension StreamClient.Delete {
     public final class Options: EventStoreOptions {

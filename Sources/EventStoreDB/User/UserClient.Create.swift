@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension UserClient {
     public struct Create: UnaryUnary {
@@ -20,7 +20,7 @@ extension UserClient {
 
         let groups: [String]
 
-        public func build() throws -> GRPCSupport.EventStore_Client_Users_CreateReq {
+        public func build() throws -> GRPCEncapsulates.EventStore_Client_Users_CreateReq {
             .with {
                 $0.options.loginName = loginName
                 $0.options.password = password

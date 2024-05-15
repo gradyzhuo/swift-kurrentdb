@@ -45,7 +45,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
             options.expectedRevision(.any)
         }
         
-        var firstEventResult: PersistentSubscriptionsClient.Read.EventResult? = nil
+        var firstEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil
         for try await result in subscription {
             firstEventResult = result
             try await subscription.ack(readEvents: result.event)

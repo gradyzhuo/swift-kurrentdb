@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 import NIO
 
 public struct GossipClient: ConcreteClient {

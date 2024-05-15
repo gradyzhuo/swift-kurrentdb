@@ -7,7 +7,7 @@
 
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 
 extension EventStore_Client_UUID {
     public func toUUID() -> UUID? {

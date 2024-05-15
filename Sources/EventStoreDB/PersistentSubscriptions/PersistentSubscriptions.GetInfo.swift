@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPCSupport
+import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient {
     public struct GetInfo: UnaryUnary {
@@ -33,7 +33,7 @@ extension PersistentSubscriptionsClient.GetInfo {
     public struct Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_GetInfoResp
 
-        public let subscriptionInfo: PersistentSubscriptionsClient.SubscriptionInfo
+        public let subscriptionInfo: SubscriptionInfo
 
         public init(from message: UnderlyingMessage) throws {
             subscriptionInfo = .init(from: message.subscriptionInfo)

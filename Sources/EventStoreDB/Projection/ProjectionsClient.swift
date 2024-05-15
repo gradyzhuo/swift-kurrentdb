@@ -6,7 +6,7 @@
 //
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 import SwiftProtobuf
 
 public struct ProjectionsClient: ConcreteClient {

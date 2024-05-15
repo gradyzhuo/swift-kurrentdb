@@ -8,7 +8,7 @@
 import EventStoreDB
 import Foundation
 import GRPC
-import GRPCSupport
+import GRPCEncapsulates
 import NIOSSL
 
 @main
