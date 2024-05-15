@@ -10,7 +10,7 @@ import GRPC
 import GRPCSupport
 
 extension PersistentSubscriptionsClient{
-    public final class Subscriber: AsyncSequence {
+    public final class Subscription: AsyncSequence {
         
         public typealias AsyncIterator = EventIterator
         public typealias Element = Read.EventResult
@@ -85,10 +85,10 @@ extension PersistentSubscriptionsClient{
     }
 }
 
-extension PersistentSubscriptionsClient.Subscriber {
+extension PersistentSubscriptionsClient.Subscription {
     public struct EventIterator: AsyncIteratorProtocol {
 
-        public typealias Element = PersistentSubscriptionsClient.Subscriber.Element
+        public typealias Element = PersistentSubscriptionsClient.Subscription.Element
         
         var responseStreamIterator: GRPCAsyncResponseStream<PersistentSubscriptionsClient.Read.Response.UnderlyingMessage>.AsyncIterator
         

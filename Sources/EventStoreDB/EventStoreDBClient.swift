@@ -188,7 +188,7 @@ extension EventStoreDBClient {
     
     // MARK: -
     
-    public func subscribePersistentSubscriptionTo(_ streamSelection:Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options)->PersistentSubscriptionsClient.Read.Options = { $0 } ) async throws -> PersistentSubscriptionsClient.Subscriber {
+    public func subscribePersistentSubscriptionTo(_ streamSelection:Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options)->PersistentSubscriptionsClient.Read.Options = { $0 } ) async throws -> PersistentSubscriptionsClient.Subscription {
         
         
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
