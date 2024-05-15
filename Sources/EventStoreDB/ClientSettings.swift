@@ -343,3 +343,9 @@ extension ClientSettings: ExpressibleByStringLiteral {
         }
     }
 }
+
+extension ClientSettings.Endpoint : CustomStringConvertible{
+    public var description: String{
+        return "\(Self.self)(\(self.host):\(self.port))"
+    }
+}

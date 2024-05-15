@@ -13,8 +13,6 @@ extension StreamClient {
     public struct Read: UnaryStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_ReadReq>
 
-//        public typealias CursorPointer = (UInt64, direction: StreamClient.Read.Direction)
-
         public let streamIdentifier: Stream.Identifier
         public let cursor: Cursor<CursorPointer>
         public let options: Options
@@ -33,8 +31,6 @@ extension StreamClient {
         public typealias Request = StreamClient.Read.Request
         public typealias Response = StreamClient.Read.Response
 
-//        public typealias CursorPointer = (StreamClient.Read.Position, direction: StreamClient.Read.Direction)
-
         public let cursor: Cursor<CursorPointer>
         public let options: Options
 
@@ -49,13 +45,6 @@ extension StreamClient {
 
 extension StreamClient.ReadAll {
     
-//    public enum Cursor {
-//        case start
-//        case end
-//        case forwardOn(commitPosition: UInt64, preparePosition: UInt64)
-//        case backwardFrom(commitPosition: UInt64, preparePosition: UInt64)
-//    }
-    
     public struct CursorPointer{
         let position: StreamClient.Read.Position
         let direction: StreamClient.Read.Direction
@@ -69,10 +58,6 @@ extension StreamClient.ReadAll {
         }
         
     }
-//    public enum CursorPointer{
-//        case forwardFrom(position: StreamClient.Read.Position)
-//        case backwardFrom(position: StreamClient.Read.Position)
-//    }
 }
 
 extension StreamClient.Read {
@@ -98,16 +83,6 @@ extension StreamClient.Read {
         case forward
         case backward
     }
-
-//    public enum Cursor<Pointer> {
-//        case start
-//        case end
-//        case at(Pointer, direction: Direction)
-//    }
-
-//    public struct Revision {
-//        public internal(set) var value: UInt64
-//    }
 
     public enum UUIDOption {
         case structured
@@ -282,16 +257,10 @@ extension Stream.Identifier {
 extension StreamClient.Read {
     public struct Response: GRPCResponse {
         public enum Content {
-            case streamNotFound(streamName: String)
             case event(readEvent: ReadEvent)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)
             case position(lastAllStream: Stream.Position)
-            
-            case confirmation(subscription: String)
-            case checkpoint(position: Stream.Position)
-            case caughtUp
-            case fellBehind
         }
 
         public typealias UnderlyingMessage = EventStore_Client_Streams_ReadResp
@@ -313,22 +282,6 @@ extension StreamClient.Read {
             content = try .event(readEvent: .init(message: message))
         }
 
-        init(message: UnderlyingMessage.SubscriptionConfirmation) {
-            content = .confirmation(subscription: message.subscriptionID)
-        }
-
-        init(message: UnderlyingMessage.Checkpoint) {
-            content = .checkpoint(position: .init(commit: message.commitPosition, prepare: message.preparePosition))
-        }
-
-        init(message: UnderlyingMessage.StreamNotFound) throws {
-            guard let streamName = String(data: message.streamIdentifier.streamName, encoding: .utf8) else {
-                throw ClientError.streamNameError(message: "\(message)")
-            }
-
-            content = .streamNotFound(streamName: streamName)
-        }
-
         init(firstStreamPosition commitPosition: UInt64) {
             content = .commitPosition(firstStream: commitPosition)
         }
@@ -337,68 +290,27 @@ extension StreamClient.Read {
             content = .commitPosition(lastStream: commitPosition)
         }
 
-        init(message: EventStore_Client_AllStreamPosition) {
-            content = .position(lastAllStream: .init(commit: message.commitPosition, prepare: message.preparePosition))
+        init(lastAllStreamPosition commitPosition: UInt64, preparePosition: UInt64) {
+            content = .position(lastAllStream: .init(commit: commitPosition, prepare: preparePosition))
         }
 
-        init(message _: UnderlyingMessage.CaughtUp) {
-            content = .caughtUp
-        }
-
-        init(message _: UnderlyingMessage.FellBehind) {
-            content = .fellBehind
-        }
 
         init(content: UnderlyingMessage.OneOf_Content) throws {
             switch content {
             case let .event(value):
-                try self.init(message: value)
-            case let .confirmation(value):
-                self.init(message: value)
-            case let .checkpoint(value):
-                self.init(message: value)
-            case let .streamNotFound(value):
                 try self.init(message: value)
             case let .firstStreamPosition(value):
                 self.init(firstStreamPosition: value)
             case let .lastStreamPosition(value):
                 self.init(lastStreamPosition: value)
             case let .lastAllStreamPosition(value):
-                self.init(message: value)
-            case let .caughtUp(value):
-                self.init(message: value)
-            case let .fellBehind(value):
-                self.init(message: value)
+                self.init(lastAllStreamPosition: value.commitPosition, preparePosition: value.preparePosition)
+            case let .streamNotFound(errorMessage):
+                let streamName = String(data: errorMessage.streamIdentifier.streamName, encoding: .utf8) ?? ""
+                throw EventStoreError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
+            default:
+                throw EventStoreError.unsupportedFeature
             }
-        }
-    }
-}
-
-extension StreamClient.Read.Response.Content {
-    init(content: EventStore_Client_Streams_ReadResp.OneOf_Content) throws {
-        switch content {
-        case let .event(message):
-            self = try .event(readEvent: .init(message: message))
-        case .caughtUp:
-            self = .caughtUp
-        case let .checkpoint(point):
-            let position: Stream.Position = .init(commit: point.commitPosition, prepare: point.preparePosition)
-            self = .checkpoint(position: position)
-        case let .confirmation(confirmation):
-            let subscription = confirmation.subscriptionID
-            self = .confirmation(subscription: subscription)
-        case let .firstStreamPosition(position):
-            self = .commitPosition(firstStream: position)
-        case let .lastStreamPosition(position):
-            self = .commitPosition(lastStream: position)
-        case let .lastAllStreamPosition(p):
-            let position: Stream.Position = .init(commit: p.commitPosition, prepare: p.preparePosition)
-            self = .position(lastAllStream: position)
-        case .fellBehind:
-            self = .fellBehind
-        case let .streamNotFound(notFoundIdentifier):
-            let streamName: String = .init(data: notFoundIdentifier.streamIdentifier.streamName, encoding: .utf8)!
-            self = .streamNotFound(streamName: streamName)
         }
     }
 }

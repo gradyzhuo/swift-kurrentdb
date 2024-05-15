@@ -38,20 +38,18 @@ final class EventStoreDBStreamTests: XCTestCase {
     
     func testStreamNoFound() async throws {
         let client = try EventStoreDB.Client()
-        let responses = try client.read(streamName: "NoStream", cursor: .start) { options in
-            options
-        }
-        let notFound = await responses.first { response in
-            print(response)
-            switch response.content {
-            case .streamNotFound(_):
-                return true
-            default:
-                return false
+        var anError: Error?
+        do {
+            for try await response in try client.read(streamName: "NoStream", cursor: .start){
+                //no thing
             }
+        }catch{
+            anError = error
+            print(anError)
         }
         
-        XCTAssertNotNil(notFound)
+        XCTAssertNotNil(anError)
+
     }
 
     func testAppendEvent() async throws {
@@ -64,7 +62,7 @@ final class EventStoreDBStreamTests: XCTestCase {
                 .countBy(limit: 1)
         }
         
-        let lastRevision = await readResponses.first {
+        let lastRevision = try await readResponses.first {
             switch $0.content {
             case .event:
                 return true

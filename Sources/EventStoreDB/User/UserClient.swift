@@ -76,7 +76,7 @@ extension UserClient {
 
         return .init { continuation in
             Task {
-                for await response in responses {
+                for try await response in responses {
                     continuation.yield(response.userDetails)
                 }
                 continuation.finish()

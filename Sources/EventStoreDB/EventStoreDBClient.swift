@@ -62,8 +62,6 @@ extension EventStoreDBClient{
                 default:
                     throw ClientError.eventDataError(message: "The data of event could not be parsed. ContentType of Stream Metadata should be encoded in .json format.")
                 }
-            case .streamNotFound(let metaStreamName):
-                throw ClientError.streamNameError(message: "The stream name of metadata not found: \(metaStreamName).")
             default:
                 throw ClientError.readResponseError(message: "The metadata event is not exist.")
             }

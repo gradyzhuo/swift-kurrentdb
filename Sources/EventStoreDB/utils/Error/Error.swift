@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import GRPCEncapsulates
+import GRPC
 
-public enum ServerError: Error {
-    case timeout
-    case targetError(host: String, port: Int)
-}
+
+
+
+
 
 public enum ClientSettingsError: Error {
     case parseError(message: String)
@@ -24,6 +26,10 @@ public enum ClientError: Error {
     case streamNotFound(message: String)
     case readResponseError(message: String)
     case projectionNameError(message: String)
+}
+
+public enum StreamClientError: Error{
+    case streamNotFound(message: String)
 }
 
 public enum ReadEventError: Error {
