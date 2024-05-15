@@ -13,7 +13,7 @@ extension PersistentSubscriptionsClient{
     public final class Subscription: AsyncSequence {
         
         public typealias AsyncIterator = EventIterator
-        public typealias Element = Read.EventResult
+        public typealias Element = EventResult
         
         public let eventIterator: EventIterator
         
@@ -96,7 +96,7 @@ extension PersistentSubscriptionsClient.Subscription {
             self.responseStreamIterator = responseStreamIterator
         }
         
-        public mutating func next() async throws -> PersistentSubscriptionsClient.Read.EventResult? {
+        public mutating func next() async throws -> EventResult? {
             
             while true {
                 let response = try await responseStreamIterator.next()
@@ -109,5 +109,17 @@ extension PersistentSubscriptionsClient.Subscription {
             
         }
         
+    }
+}
+
+extension PersistentSubscriptionsClient.Subscription {
+    public struct EventResult: Sendable {
+        public let event: ReadEvent
+        public let retryCount: Int32
+        
+        internal init(event: ReadEvent, retryCount: Int32) {
+            self.event = event
+            self.retryCount = retryCount
+        }
     }
 }

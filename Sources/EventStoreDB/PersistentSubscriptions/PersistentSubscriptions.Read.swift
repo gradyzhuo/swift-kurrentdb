@@ -51,18 +51,6 @@ extension ReadEvent {
 }
 
 extension PersistentSubscriptionsClient.Read {
-    public struct EventResult: Sendable {
-        public let event: ReadEvent
-        public let retryCount: Int32
-        
-        internal init(event: ReadEvent, retryCount: Int32) {
-            self.event = event
-            self.retryCount = retryCount
-        }
-    }
-}
-
-extension PersistentSubscriptionsClient.Read {
     public enum Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
         
