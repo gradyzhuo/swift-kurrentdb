@@ -6,7 +6,7 @@
 //
 
 @testable import EventStoreDB
-@testable import struct EventStoreDB.Stream
+//@testable import struct EventStoreDB.Stream
 import GRPC
 import NIO
 import XCTest
@@ -39,7 +39,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         let client = try EventStoreDB.Client()
         var anError: Error?
         do {
-            for try await _ in try client.read(streamName: "NoStream", cursor: .start) {
+            for try await _ in try client.read(stream: "NoStream", cursor: .start) {
                 // no thing
             }
         } catch {
@@ -54,7 +54,7 @@ final class EventStoreDBStreamTests: XCTestCase {
 
         let client = try EventStoreDB.Client()
 
-        let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
+        let readResponses = try client.read(stream: streamName, cursor: .end) { options in
             options.set(uuidOption: .string)
                 .countBy(limit: 1)
         }

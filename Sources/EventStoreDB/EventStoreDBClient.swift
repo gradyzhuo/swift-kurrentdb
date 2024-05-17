@@ -41,7 +41,7 @@ extension EventStoreDBClient {
     }
 
     public func getMetadata(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata? {
-        let responses = try read(streamName: "$$\(streamName)", cursor: cursor) { $0 }
+        let responses = try read(stream: "$$\(streamName)", cursor: cursor) { $0 }
         return try await responses.first {
             switch $0.content {
             case .event:
