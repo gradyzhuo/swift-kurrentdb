@@ -30,17 +30,17 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
 
     func testCreate() async throws {
         let client = try EventStoreDB.Client()
-        try await client.createPersistentSubscription(streamName: "testing", groupName: "mytest", options: .init())
+        try await client.createPersistentSubscription(to: "testing", groupName: "mytest", options: .init())
     }
 
     func testSubscribe() async throws {
         let client = try EventStoreDB.Client()
 
-        let subscription = try await client.subscribePersistentSubscriptionTo(.specified("testing"), groupName: "mytest") { options in
+        let subscription = try await client.subscribePersistentSubscription(to: .specified("testing"), groupName: "mytest") { options in
             options
         }
 
-        let response = try await client.appendTo(streamName: "testing",
+        let response = try await client.appendStream(to: "testing",
                                                  events: .init(
                                                      eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
                                                  )) { options in
@@ -60,7 +60,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     func testSubscribe2() async throws {
         let client = try EventStoreDB.Client()
 
-        let subscription = try await client.subscribePersistentSubscriptionTo(.specified("$ce-WarehouseProduct"), groupName: "WarehouseProduct") { options in
+        let subscription = try await client.subscribePersistentSubscription(to: .specified("$ce-WarehouseProduct"), groupName: "WarehouseProduct") { options in
             options
         }
 

@@ -114,7 +114,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
     }
 }
 
-public struct RecordedEvent: EventStoreEvent, Sendable {
+public struct RecordedEvent: EventStoreEvent {
     public private(set) var id: UUID
     public private(set) var eventType: String
     public private(set) var contentType: ContentType
@@ -188,7 +188,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
     }
 }
 
-public struct ReadEvent: Sendable {
+public struct ReadEvent {
     public internal(set) var recordedEvent: RecordedEvent
     public internal(set) var linkedRecordedEvent: RecordedEvent?
     public internal(set) var commitPosition: Stream.Position?

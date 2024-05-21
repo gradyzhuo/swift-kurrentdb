@@ -107,7 +107,7 @@ extension PersistentSubscriptionsClient.Subscription {
 }
 
 extension PersistentSubscriptionsClient.Subscription {
-    public struct EventResult: Sendable {
+    public struct EventResult {
         public let event: ReadEvent
         public let retryCount: Int32
 

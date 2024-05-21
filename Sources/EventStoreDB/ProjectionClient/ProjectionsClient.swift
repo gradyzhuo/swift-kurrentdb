@@ -12,24 +12,13 @@ import SwiftProtobuf
 public struct ProjectionsClient: GRPCConcreteClient {
     public typealias UnderlyingClient = EventStore_Client_Projections_ProjectionsAsyncClient
 
-//    public private(set) var mode: Mode
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
-
-//    init(mode: Mode, channel: GRPCChannel, callOptions: CallOptions) {
-//        self.channel = channel
-//        self.callOptions = callOptions
-//        self.mode = mode
-//    }
 
     init(channel: GRPCChannel, callOptions: CallOptions) {
         self.channel = channel
         self.callOptions = callOptions
     }
-
-//    public init(name: String, emitEnable: Bool, trackEmittedStreams: Bool, channel: GRPCChannel, callOptions: CallOptions) throws {
-//        self.init(mode: .continuous(name: name, emitEnable: emitEnable, trackEmittedStreams: trackEmittedStreams), channel: channel, callOptions: callOptions)
-//    }
 }
 
 extension ProjectionsClient {

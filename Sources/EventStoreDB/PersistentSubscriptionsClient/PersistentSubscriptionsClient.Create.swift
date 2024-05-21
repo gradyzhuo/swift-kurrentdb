@@ -20,6 +20,7 @@ extension PersistentSubscriptionsCreateOptions {
 
 extension PersistentSubscriptionsClient {
     public enum Create {
+ 
         public struct Request: GRPCRequest {
             public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_CreateReq
         }

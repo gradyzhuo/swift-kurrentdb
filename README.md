@@ -73,10 +73,10 @@ let events:[EventData] = [
                 content: "Gears of War 4")
         ]
 
-let streamName = "stream_for_testing"
+let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
 let client = try EventStoreDB.Client()
 
-let appendResponse = try await client.appendTo(streamName: streamName, events: events) { options in
+let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
     options.expectedRevision(.any)
 }
 
@@ -90,10 +90,10 @@ import EventStoreDB
 // Using a client settings for a single node configuration by parsing a connection string.
 EventStoreDB.using(settings: .localhost())
 
-let streamName = "stream_for_testing"
+let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
 
 //Check the event is appended into testing stream.
-let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
+let readResponses = try client.readStream(to: streamIdentifier, cursor: .end) { options in
     options.set(uuidOption: .string)
         .countBy(limit: 1)
 }

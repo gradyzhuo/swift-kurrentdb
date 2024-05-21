@@ -12,9 +12,9 @@ extension PersistentSubscriptionsClient {
     public struct Read: StreamStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_PersistentSubscriptions_ReadReq>
 
-        let streamSelection: Selector<Stream.Identifier>
-        let groupName: String
-        let options: Options
+        public let streamSelection: Selector<Stream.Identifier>
+        public let groupName: String
+        public let options: Options
 
         package func build() throws -> [Request.UnderlyingMessage] {
             try [
@@ -69,34 +69,39 @@ extension PersistentSubscriptionsClient.Read {
 }
 
 extension PersistentSubscriptionsClient.Read {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        var message: UnderlyingMessage
-
+        public private(set) var bufferSize: Int32
+        public private(set) var uuidOption: UUID.Option
+        
         public init() {
-            message = .init()
-            message.bufferSize = 1000
-            message.uuidOption.string = .init()
+            self.bufferSize = 1000
+            self.uuidOption = .string
         }
 
         public func set(bufferSize: Int32) -> Self {
-            message.bufferSize = bufferSize
-            return self
+            var copiedSelf = self
+            copiedSelf.bufferSize = bufferSize
+            return copiedSelf
         }
 
         public func set(uuidOption: UUID.Option) -> Self {
-            switch uuidOption {
-            case .string:
-                message.uuidOption.string = .init()
-            case .structured:
-                message.uuidOption.structured = .init()
-            }
-            return self
+            var copiedSelf = self
+            copiedSelf.uuidOption = uuidOption
+            return copiedSelf
         }
 
         package func build() -> UnderlyingMessage {
-            message
+            return .with {
+                $0.bufferSize = bufferSize
+                switch uuidOption {
+                case .string:
+                    $0.uuidOption.string = .init()
+                case .structured:
+                    $0.uuidOption.structured = .init()
+                }
+            }
         }
     }
 }

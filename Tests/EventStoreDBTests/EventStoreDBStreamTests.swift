@@ -39,7 +39,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         let client = try EventStoreDB.Client()
         var anError: Error?
         do {
-            for try await _ in try client.read(stream: "NoStream", cursor: .start) {
+            for try await _ in try client.readStream(to: "NoStream", cursor: .start) {
                 // no thing
             }
         } catch {
@@ -54,7 +54,7 @@ final class EventStoreDBStreamTests: XCTestCase {
 
         let client = try EventStoreDB.Client()
 
-        let readResponses = try client.read(stream: streamName, cursor: .end) { options in
+        let readResponses = try client.readStream(to: .init(name: streamName), cursor: .end) { options in
             options.set(uuidOption: .string)
                 .countBy(limit: 1)
         }
@@ -75,7 +75,7 @@ final class EventStoreDBStreamTests: XCTestCase {
             }
         }
 
-        let appendResponse = try await client.appendTo(streamName: streamName, events: .init(eventType: "AccountCreated", payload: content)) { options in
+        let appendResponse = try await client.appendStream(to: .init(name: streamName), events: .init(eventType: "AccountCreated", payload: content)) { options in
             options.expectedRevision(.any)
         }
 

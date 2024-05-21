@@ -30,8 +30,8 @@ public struct EventStoreDBClient {
 
 extension EventStoreDBClient {
     public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
-        try await appendTo(
-            streamName: "$$\(streamName)",
+        try await appendStream(
+            to: .init(name: "$$\(streamName)"),
             events: .init(
                 eventType: "$metadata",
                 payload: metadata
@@ -40,8 +40,11 @@ extension EventStoreDBClient {
         )
     }
 
-    public func getMetadata(streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata? {
-        let responses = try read(stream: "$$\(streamName)", cursor: cursor) { $0 }
+    public func getStreamMetadata(to identifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata? {
+    
+        let responses = try readStream(to: 
+                .init(name: "$$\(identifier.name)"),
+                cursor: cursor)
         return try await responses.first {
             switch $0.content {
             case .event:
@@ -66,15 +69,15 @@ extension EventStoreDBClient {
 
     // MARK: Append methods -
 
-    public func appendTo(streamName: String, events: [EventData], configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
+    public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         let options = configure(.init(subject: .init()))
 
-        return try await client.appendTo(stream: .init(name: streamName), events: events, options: options.subject)
+        return try await client.appendTo(stream: identifier, events: events, options: options.subject)
     }
 
-    public func appendTo(streamName: String, events: EventData ..., configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options> = { $0 }) async throws -> StreamClient.Append.Response.Success {
-        try await appendTo(streamName: streamName, events: events, configure: configure)
+    public func appendStream(to identifier: Stream.Identifier, events: EventData ..., configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options> = { $0 }) async throws -> StreamClient.Append.Response.Success {
+        try await appendStream(to: identifier, events: events, configure: configure)
     }
 
     // MARK: Read by all streams methods -
@@ -90,7 +93,7 @@ extension EventStoreDBClient {
 
     /// Read all events from a stream.
     /// - Parameters:
-    ///   - stream: the name of stream.
+    ///   - to: the identifier of stream.
     ///   - cursor: the revision of stream that we want to read from.
     ///        - start: Read the stream from start revision and forward to the end.
     ///        - end:  Read the stream from end revision and backward to the start.  (It is a reverse operation to `start`.)
@@ -99,36 +102,36 @@ extension EventStoreDBClient {
     ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
-    public func read(stream streamName: String, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    public func readStream(to streamIdentifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
         let options = configure(.init())
 
-        return try client.read(stream: .init(name: streamName), cursor: cursor, options: options)
+        return try client.read(stream: streamIdentifier, cursor: cursor, options: options)
     }
 
-    public func read(stream streamName: String, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    public func readStream(to streamIdentifier: Stream.Identifier, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         let cursor: Cursor<StreamClient.Read.CursorPointer> = .specified(.init(revision: revision, direction: direction))
-        return try read(stream: streamName, cursor: cursor, configure: configure)
+        return try readStream(to: streamIdentifier, cursor: cursor, configure: configure)
     }
 
+    
     // MARK: (Soft) Delete a stream -
-
     @discardableResult
-    public func delete(streamName: String, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
+    public func deleteStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
-        return try await client.delete(identifier: .init(name: streamName), options: options, channel: channel, callOptions: defaultCallOptions)
+        return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
     }
 
     // MARK: (Hard) Delete a stream -
 
     @discardableResult
-    public func tombstone(streamName: String, configure: (_ options: StreamClient.Tombstone.Options) -> StreamClient.Tombstone.Options) async throws -> StreamClient.Tombstone.Response {
+    public func tombstoneStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Tombstone.Options) -> StreamClient.Tombstone.Options) async throws -> StreamClient.Tombstone.Response {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
-        return try await client.tombstone(identifier: .init(name: streamName), options: options, channel: channel, callOptions: defaultCallOptions)
+        return try await client.tombstone(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
     }
 }
 
@@ -142,9 +145,10 @@ extension EventStoreDBClient {
 }
 
 extension EventStoreDBClient {
-    public func createPersistentSubscription(streamName: String, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws {
+    
+    public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws {
         let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
-        let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: .init(name: streamName), groupName: groupName, options: options)
+        let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: identifier, groupName: groupName, options: options)
 
         let request = try handler.build()
 
@@ -168,11 +172,10 @@ extension EventStoreDBClient {
 
     // MARK: -
 
-    public func subscribePersistentSubscriptionTo(_ streamSelection: Selector<Stream.Identifier>, groupName: String, configure _: (_ options: PersistentSubscriptionsClient.Read.Options) -> PersistentSubscriptionsClient.Read.Options = { $0 }) async throws -> PersistentSubscriptionsClient.Subscription {
+    public func subscribePersistentSubscription(to streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options) -> PersistentSubscriptionsClient.Read.Options = { $0 }) async throws -> PersistentSubscriptionsClient.Subscription {
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
 
-        let options = PersistentSubscriptionsClient.Read.Options().set(bufferSize: 1000)
-            .set(uuidOption: .string)
+        let options = configure(.init())
         return try await client.subscribeTo(streamSelection, groupName: groupName, options: options)
     }
 }
