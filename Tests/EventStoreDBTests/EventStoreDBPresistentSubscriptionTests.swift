@@ -56,18 +56,4 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
 
         XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
     }
-
-    func testSubscribe2() async throws {
-        let client = try EventStoreDB.Client()
-
-        let subscription = try await client.subscribePersistentSubscription(to: .specified("$ce-WarehouseProduct"), groupName: "WarehouseProduct") { options in
-            options
-        }
-
-        for try await result in subscription {
-            try await subscription.ack(readEvents: result.event)
-        }
-
-//        XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
-    }
 }
