@@ -184,7 +184,7 @@ extension PersistentSubscriptionsClient {
     }
 
     // MARK: - Restart Subsystem Action
-
+    @MainActor
     func restartSubsystem() async throws {
         let handler = RestartSubsystem()
         try await handler.handle(response: underlyingClient.restartSubsystem(handler.build(), callOptions: callOptions))

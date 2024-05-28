@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -18,7 +18,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-testing.git", from: "0.8.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,6 +29,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
                 "GRPCEncapsulates",
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .target(
@@ -39,7 +43,10 @@ let package = Package(
         ),
         .testTarget(
             name: "EventStoreDBTests",
-            dependencies: ["EventStoreDB"],
+            dependencies: [
+                "EventStoreDB",
+                .product(name: "Testing", package: "swift-testing")
+            ],
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),

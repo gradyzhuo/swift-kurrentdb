@@ -87,9 +87,10 @@ let appendResponse = try await client.appendStream(to: streamIdentifier, events:
 ```swift
 import EventStoreDB
 
-// Using a client settings for a single node configuration by parsing a connection string.
+// Using a client setting to `EventStoreDBClient` by default.
 EventStoreDB.using(settings: .localhost())
 
+//prepare an identifier for a stream by a name.
 let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
 
 //Check the event is appended into testing stream.

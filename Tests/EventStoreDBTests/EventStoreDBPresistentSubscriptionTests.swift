@@ -10,8 +10,8 @@ import SwiftProtobuf
 import XCTest
 
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
-    override func setUpWithError() throws {
-        try EventStore.using(settings: "esdb://localhost:2113?tls=false")
+    override func setUp() async throws {
+        try await EventStore.using(settings: "esdb://localhost:2113?tls=false")
     }
 
 //    override func setUp() async throws {
@@ -29,12 +29,12 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     }
 
     func testCreate() async throws {
-        let client = try EventStoreDB.Client()
+        let client = try await EventStoreDBClient()
         try await client.createPersistentSubscription(to: "testing", groupName: "mytest", options: .init())
     }
 
     func testSubscribe() async throws {
-        let client = try EventStoreDB.Client()
+        let client = try await EventStoreDBClient()
 
         let subscription = try await client.subscribePersistentSubscription(to: .specified("testing"), groupName: "mytest") { options in
             options

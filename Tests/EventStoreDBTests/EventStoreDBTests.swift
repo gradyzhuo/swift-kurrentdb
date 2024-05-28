@@ -1,7 +1,9 @@
 @testable import EventStoreDB
 import XCTest
+import Testing
 
 final class EventStoreDBTests: XCTestCase {
+    
     func testEventDataFromJSON() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest

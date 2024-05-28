@@ -10,6 +10,7 @@
 import GRPC
 import NIO
 import XCTest
+import Testing
 
 enum TestingError: Error {
     case exception(String)
@@ -17,16 +18,13 @@ enum TestingError: Error {
 
 final class EventStoreDBStreamTests: XCTestCase {
     var streamName: String!
-
-    override func setUpWithError() throws {
-//        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
-//        settings.configuration.trustRoots = .crtInBundle("ca", inBundle: .module)
-//        EventStoreDB.using(settings: .localhost())
-
-//        try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
-
-//        try EventStoreDB.using(settings: .localhost(port: 2111, userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .crtInBundle("ca", inBundle: .module)))
-        try EventStoreDB.using(settings: .parse(connectionString: "esdb://localhost:2113?tls=false"))
+    
+    func testAll() async{
+        await XCTestScaffold.runAllTests(hostedBy: self)
+    }
+    
+    override func setUp() async throws {
+        try await EventStoreDB.using(settings: .parse(connectionString: "esdb://localhost:2113?tls=false"))
 
         streamName = "testing2"
     }
@@ -36,7 +34,7 @@ final class EventStoreDBStreamTests: XCTestCase {
     }
 
     func testStreamNoFound() async throws {
-        let client = try EventStoreDB.Client()
+        let client = try await EventStoreDBClient()
         var anError: Error?
         do {
             for try await _ in try client.readStream(to: "NoStream", cursor: .start) {
@@ -52,7 +50,7 @@ final class EventStoreDBStreamTests: XCTestCase {
     func testAppendEvent() async throws {
         let content = ["Description": "Gears of War 4"]
 
-        let client = try EventStoreDB.Client()
+        let client = try await EventStoreDBClient()
 
         let readResponses = try client.readStream(to: .init(name: streamName), cursor: .end) { options in
             options.set(uuidOption: .string)

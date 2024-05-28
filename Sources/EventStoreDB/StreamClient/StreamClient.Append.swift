@@ -48,7 +48,7 @@ extension StreamClient.Append {
     }
 
     public enum Response: GRPCResponse {
-        public enum CurrentRevisionOption {
+        public enum CurrentRevisionOption : Sendable{
             case noStream
             case revision(UInt64)
 
@@ -98,7 +98,7 @@ extension StreamClient.Append {
         public struct Wrong: GRPCResponse, Error {
             public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp.WrongExpectedVersion
 
-            public enum ExpectedRevisionOption {
+            public enum ExpectedRevisionOption : Sendable{
                 case any
                 case streamExists
                 case noStream

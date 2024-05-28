@@ -6,10 +6,10 @@
 //
 
 import Foundation
-import GRPC
+@preconcurrency import GRPC
 import GRPCEncapsulates
 
-public enum EventStoreError: Error {
+public enum EventStoreError: Error, Sendable {
     case serverError(String)
     case notLeaderException(endpoint: ClientSettings.Endpoint)
     case connectionClosed

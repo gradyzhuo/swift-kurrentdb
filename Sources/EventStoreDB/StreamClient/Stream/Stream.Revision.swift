@@ -9,7 +9,7 @@ import Foundation
 
 extension Stream {
     
-    public struct Revision {
+    public struct Revision: Sendable {
         public private(set) var value: UInt64
         
         public init(_ value: UInt64) {
