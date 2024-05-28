@@ -6,11 +6,11 @@
 //
 
 @testable import EventStoreDB
-//@testable import struct EventStoreDB.Stream
+// @testable import struct EventStoreDB.Stream
 import GRPC
 import NIO
-import XCTest
 import Testing
+import XCTest
 
 enum TestingError: Error {
     case exception(String)
@@ -18,11 +18,11 @@ enum TestingError: Error {
 
 final class EventStoreDBStreamTests: XCTestCase {
     var streamName: String!
-    
-    func testAll() async{
+
+    func testAll() async {
         await XCTestScaffold.runAllTests(hostedBy: self)
     }
-    
+
     override func setUp() async throws {
         try await EventStoreDB.using(settings: .parse(connectionString: "esdb://localhost:2113?tls=false"))
 
@@ -54,7 +54,7 @@ final class EventStoreDBStreamTests: XCTestCase {
 
         let readResponses = try client.readStream(to: .init(name: streamName), cursor: .end) { options in
             options.set(uuidOption: .string)
-                .countBy(limit: 1)
+                .set(limit: 1)
         }
 
         let lastRevision = try await readResponses.first {
@@ -74,7 +74,7 @@ final class EventStoreDBStreamTests: XCTestCase {
         }
 
         let appendResponse = try await client.appendStream(to: .init(name: streamName), events: .init(eventType: "AccountCreated", payload: content)) { options in
-            options.expectedRevision(.any)
+            options.revision(expected: .any)
         }
 
         XCTAssertEqual(lastRevision.map { $0 + 1 }, appendResponse.current.revision)

@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Stream.Identifier.swift
+//
 //
 //  Created by 卓俊諺 on 2024/5/21.
 //
@@ -9,14 +9,12 @@ import Foundation
 import GRPCEncapsulates
 
 extension Stream {
-    
-    public struct Identifier {
+    public struct Identifier: Sendable {
         typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
-        
+
         public let name: String
         public var encoding: String.Encoding = .utf8
     }
-    
 }
 
 extension Stream.Identifier: ExpressibleByStringLiteral {

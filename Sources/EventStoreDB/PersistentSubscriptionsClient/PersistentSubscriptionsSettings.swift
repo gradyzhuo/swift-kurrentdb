@@ -14,7 +14,7 @@ public protocol PersistentSubscriptionsGRPCSettings: SwiftProtobuf.Message {
 }
 
 extension PersistentSubscriptionsClient {
-    public struct Settings {
+    public struct Settings: Sendable {
         public var resolveLink: Bool
 
         /// Whether or not in depth latency statistics should be tracked on this

@@ -1,5 +1,5 @@
 //
-//  Stream.Append.Options.swift
+//  StreamClient.Append.Options.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/29.
@@ -9,32 +9,34 @@ import Foundation
 import GRPCEncapsulates
 
 extension StreamClient.Append {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        package var options: UnderlyingMessage = .init()
-
-        public var expectedRevision: Stream.RevisionRule {
-            didSet {
-                switch expectedRevision {
-                case .any:
-                    options.any = .init()
-                case .noStream:
-                    options.noStream = .init()
-                case .streamExists:
-                    options.streamExists = .init()
-                case let .revision(rev):
-                    options.revision = rev
-                }
-            }
-        }
+        public private(set) var expectedRevision: Stream.RevisionRule
 
         public init() {
             expectedRevision = .any
         }
 
+        public func revision(expected: Stream.RevisionRule) -> Self {
+            withCopy { options in
+                options.expectedRevision = expected
+            }
+        }
+
         package func build() -> UnderlyingMessage {
-            options
+            .with {
+                switch expectedRevision {
+                case .any:
+                    $0.any = .init()
+                case .noStream:
+                    $0.noStream = .init()
+                case .streamExists:
+                    $0.streamExists = .init()
+                case let .revision(rev):
+                    $0.revision = rev
+                }
+            }
         }
     }
 }

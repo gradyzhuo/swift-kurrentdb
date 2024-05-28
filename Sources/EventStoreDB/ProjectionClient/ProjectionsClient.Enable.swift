@@ -1,5 +1,5 @@
 //
-//  Projections.Enable.swift
+//  ProjectionsClient.Enable.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/27.
@@ -26,7 +26,7 @@ extension ProjectionsClient {
 }
 
 extension ProjectionsClient.Enable {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_EnableReq.Options
 
         var options: UnderlyingMessage

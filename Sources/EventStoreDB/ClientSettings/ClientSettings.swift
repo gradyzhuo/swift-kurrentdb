@@ -102,10 +102,7 @@ public struct ClientSettings {
     }
 }
 
-
-
 extension ClientSettings {
-    
     public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, numberOfThreads: Int = 1, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
         var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)), numberOfThreads: numberOfThreads)
 
@@ -125,13 +122,14 @@ extension ClientSettings {
         let endpointParser = EndpointParser()
         let queryItemParser = QueryItemParser()
         let userCredentialParser = UserCredentialsParser()
-        
+
         guard let scheme = try schemeParser.parse(connectionString) else {
             throw ClientSettingsError.parseError(message: "Unknown URL scheme: \(connectionString)")
         }
 
         guard let endpoints = try endpointParser.parse(connectionString),
-              endpoints.count > 0 else {
+              endpoints.count > 0
+        else {
             throw ClientSettingsError.parseError(message: "Connection string doesn't have an host")
         }
 

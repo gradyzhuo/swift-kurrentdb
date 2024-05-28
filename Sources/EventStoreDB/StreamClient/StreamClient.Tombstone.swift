@@ -1,5 +1,5 @@
 //
-//  Stream.Tombstone.swift
+//  StreamClient.Tombstone.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/2.

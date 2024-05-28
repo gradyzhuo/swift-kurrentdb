@@ -80,13 +80,13 @@ extension StreamClient {
 }
 
 extension StreamClient {
-    public class FilterOption {
-        public enum Window {
+    public struct FilterOption: FluentInterfaceOptions {
+        public enum Window: Sendable {
             case count
             case max(UInt32)
         }
 
-        public enum FilterType {
+        public enum FilterType: Sendable {
             case streamName(regex: String)
             case eventType(regex: String)
         }
@@ -96,7 +96,7 @@ extension StreamClient {
         public internal(set) var prefixes: [String]
         public internal(set) var checkpointIntervalMultiplier: UInt32
 
-        required init(type: FilterType, window: Window = .count, prefixes: [String] = []) {
+        init(type: FilterType, window: Window = .count, prefixes: [String] = []) {
             self.type = type
             self.window = window
             self.prefixes = prefixes
@@ -115,20 +115,23 @@ extension StreamClient {
 
         @discardableResult
         public func set(max maxCount: UInt32) -> Self {
-            window = .max(maxCount)
-            return self
+            withCopy { options in
+                options.window = .max(maxCount)
+            }
         }
 
         @discardableResult
         public func set(checkpointIntervalMultiplier multiplier: UInt32) -> Self {
-            checkpointIntervalMultiplier = multiplier
-            return self
+            withCopy { options in
+                options.checkpointIntervalMultiplier = multiplier
+            }
         }
 
         @discardableResult
         public func add(prefix: String) -> Self {
-            prefixes.append(prefix)
-            return self
+            withCopy { options in
+                options.prefixes.append(prefix)
+            }
         }
     }
 }

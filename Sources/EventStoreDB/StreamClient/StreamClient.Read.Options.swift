@@ -1,5 +1,5 @@
 //
-//  Stream.Read.Options.swift
+//  StreamClient.Read.Options.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/29.
@@ -9,58 +9,48 @@ import Foundation
 import GRPCEncapsulates
 
 extension StreamClient.Read {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_ReadReq.Options
 
-        package var options: UnderlyingMessage
-
-        public init() {
-            options = .init()
-
-            set(uuidOption: .string)
-                .noFilter()
-                .countBy(limit: .max)
-        }
+        public private(set) var resolveLinks: Bool = false
+        public private(set) var limit: UInt64 = .max
+        public private(set) var uuidOption: StreamClient.Read.UUIDOption = .string
 
         package func build() -> UnderlyingMessage {
-            options
-        }
+            .with {
+                $0.noFilter = .init()
 
-        @discardableResult
-        public func noFilter() -> Self {
-            options.noFilter = .init()
-            return self
+                switch uuidOption {
+                case .structured:
+                    $0.uuidOption.structured = .init()
+                case .string:
+                    $0.uuidOption.string = .init()
+                }
+
+                $0.resolveLinks = resolveLinks
+                $0.count = limit
+            }
         }
 
         @discardableResult
         public func set(resolveLinks: Bool) -> Self {
-            options.resolveLinks = resolveLinks
-            return self
+            withCopy { options in
+                options.resolveLinks = resolveLinks
+            }
         }
 
         @discardableResult
-        public func countBy(limit: UInt64) -> Self {
-            options.count = limit
-            return self
-        }
-
-        @discardableResult
-        public func countBySubscription() -> Self {
-            options.subscription = .init()
-            return self
+        public func set(limit: UInt64) -> Self {
+            withCopy { options in
+                options.limit = limit
+            }
         }
 
         @discardableResult
         public func set(uuidOption: StreamClient.Read.UUIDOption) -> Self {
-            uuidOption.build(options: &options)
-            return self
-        }
-
-        @discardableResult
-        public func set(compatibility: UInt32) -> Self {
-            StreamClient.Read.ControlOption.compatibility(compatibility)
-                .build(options: &options)
-            return self
+            withCopy { options in
+                options.uuidOption = uuidOption
+            }
         }
     }
 }

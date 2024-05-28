@@ -35,7 +35,7 @@ extension PersistentSubscriptionsClient {
         }
     }
 
-    public enum SystemConsumerStrategy: RawRepresentable {
+    public enum SystemConsumerStrategy: RawRepresentable, Sendable {
         public typealias RawValue = String
 
         /// Distributes events to a single client until the bufferSize is reached.
@@ -184,6 +184,7 @@ extension PersistentSubscriptionsClient {
     }
 
     // MARK: - Restart Subsystem Action
+
     @MainActor
     func restartSubsystem() async throws {
         let handler = RestartSubsystem()

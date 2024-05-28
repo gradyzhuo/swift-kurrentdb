@@ -6,7 +6,7 @@ import Logging
 
 /// Using a client setting to `EventStoreDBClient` by default.
 /// - Parameter settings: <#settings description#>
-@MainActor 
+@MainActor
 public func using(settings: ClientSettings) {
     EventStore.shared.settings = settings
 }

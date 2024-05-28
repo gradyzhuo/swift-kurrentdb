@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.GetInfo.swift
+//  PersistentSubscriptionsClient.GetInfo.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/10.

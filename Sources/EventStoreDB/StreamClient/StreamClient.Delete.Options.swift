@@ -1,5 +1,5 @@
 //
-//  Stream.Delete.Options.swift
+//  StreamClient.Delete.Options.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/31.
@@ -9,34 +9,35 @@ import Foundation
 import GRPCEncapsulates
 
 extension StreamClient.Delete {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_DeleteReq.Options
 
-        var options: UnderlyingMessage
+        public private(set) var expectedRevision: Stream.RevisionRule
 
         public init() {
-            options = .with {
-                $0.noStream = .init()
-            }
+            expectedRevision = .streamExists
         }
 
         public func build() -> UnderlyingMessage {
-            options
+            .with {
+                switch expectedRevision {
+                case .any:
+                    $0.any = .init()
+                case .noStream:
+                    $0.noStream = .init()
+                case .streamExists:
+                    $0.streamExists = .init()
+                case let .revision(rev):
+                    $0.revision = rev
+                }
+            }
         }
 
         @discardableResult
-        public func expected(revision: Stream.RevisionRule) -> Self {
-            switch revision {
-            case .any:
-                options.any = .init()
-            case .noStream:
-                options.noStream = .init()
-            case .streamExists:
-                options.streamExists = .init()
-            case let .revision(rev):
-                options.revision = rev
+        public func revision(expected: Stream.RevisionRule) -> Self {
+            withCopy { options in
+                options.expectedRevision = expected
             }
-            return self
         }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  Projections.State.swift
+//  ProjectionsClient.State.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/27.
@@ -36,22 +36,23 @@ extension ProjectionsClient.State {
         }
     }
 
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        var options: UnderlyingMessage
-
-        public init() {
-            options = .init()
-        }
+        var partition: String?
 
         public func partition(_ partition: String) -> Self {
-            options.partition = partition
-            return self
+            withCopy { options in
+                options.partition = partition
+            }
         }
 
         package func build() -> UnderlyingMessage {
-            options
+            .with {
+                if let partition {
+                    $0.partition = partition
+                }
+            }
         }
     }
 }

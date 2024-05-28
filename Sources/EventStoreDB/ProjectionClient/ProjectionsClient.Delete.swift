@@ -1,5 +1,5 @@
 //
-//  Projections.Delete.swift
+//  ProjectionsClient.Delete.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/26.
@@ -26,38 +26,40 @@ extension ProjectionsClient {
 }
 
 extension ProjectionsClient.Delete {
-    public class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_DeleteReq.Options
 
-        public var options: UnderlyingMessage
-
-        public init() {
-            options = .init()
-            deleteCheckpointStream(enabled: false)
-            deleteEmittedStreams(enabled: false)
-            deleteStateStream(enabled: false)
-        }
+        public private(set) var deleteCheckpointStream: Bool = false
+        public private(set) var deleteEmittedStreams: Bool = false
+        public private(set) var deleteStateStream: Bool = false
 
         public func build() -> UnderlyingMessage {
-            options
+            .with { message in
+                message.deleteStateStream = deleteStateStream
+                message.deleteEmittedStreams = deleteEmittedStreams
+                message.deleteCheckpointStream = deleteCheckpointStream
+            }
         }
 
         @discardableResult
         public func deleteEmittedStreams(enabled: Bool) -> Self {
-            options.deleteEmittedStreams = enabled
-            return self
+            withCopy { options in
+                options.deleteEmittedStreams = enabled
+            }
         }
 
         @discardableResult
         public func deleteStateStream(enabled: Bool) -> Self {
-            options.deleteStateStream = enabled
-            return self
+            withCopy { options in
+                options.deleteStateStream = enabled
+            }
         }
 
         @discardableResult
         public func deleteCheckpointStream(enabled: Bool) -> Self {
-            options.deleteCheckpointStream = enabled
-            return self
+            withCopy { options in
+                options.deleteCheckpointStream = enabled
+            }
         }
     }
 }

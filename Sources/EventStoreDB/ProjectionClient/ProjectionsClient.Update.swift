@@ -1,5 +1,5 @@
 //
-//  Projections.Update.swift
+//  ProjectionsClient.Update.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/26.
@@ -36,34 +36,39 @@ extension ProjectionsClient {
 }
 
 extension ProjectionsClient.Update {
-    public final class Options: EventStoreOptions {
-        public enum EmitOption {
+    public struct Options: EventStoreOptions {
+        public enum EmitOption: Sendable {
             case noEmit
             case enable(Bool)
         }
 
         public typealias UnderlyingMessage = EventStore_Client_Projections_UpdateReq.Options
 
-        public var options: UnderlyingMessage
-
-        public init() {
-            options = .init()
-            emit(option: .noEmit)
-        }
+        public var emitOption: EmitOption = .noEmit
 
         public func build() -> UnderlyingMessage {
-            options
+            .with {
+                switch emitOption {
+                case .noEmit:
+                    $0.noEmitOptions = .init()
+                case let .enable(enabled):
+                    $0.emitEnabled = enabled
+                }
+            }
         }
 
         @discardableResult
-        public func emit(option: EmitOption) -> Self {
-            switch option {
-            case .noEmit:
-                options.noEmitOptions = .init()
-            case let .enable(enabled):
-                options.emitEnabled = enabled
+        public func noEmit() -> Self {
+            withCopy { options in
+                options.emitOption = .noEmit
             }
-            return self
+        }
+
+        @discardableResult
+        public func emit(enabled: Bool) -> Self {
+            withCopy { options in
+                options.emitOption = .enable(enabled)
+            }
         }
     }
 }

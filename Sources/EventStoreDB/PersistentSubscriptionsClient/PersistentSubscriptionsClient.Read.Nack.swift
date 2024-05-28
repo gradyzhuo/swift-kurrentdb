@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Read.Nack.swift
+//  PersistentSubscriptionsClient.Read.Nack.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/10.

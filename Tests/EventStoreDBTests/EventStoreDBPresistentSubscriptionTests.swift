@@ -41,10 +41,10 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
         }
 
         let response = try await client.appendStream(to: "testing",
-                                                 events: .init(
-                                                     eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
-                                                 )) { options in
-            options.expectedRevision(.any)
+                                                     events: .init(
+                                                         eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+                                                     )) { options in
+            options.revision(expected: .any)
         }
 
         var lastEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil

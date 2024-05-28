@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  SchemeParser.swift
+//
 //
 //  Created by 卓俊諺 on 2024/5/25.
 //
@@ -8,25 +8,23 @@
 import Foundation
 import RegexBuilder
 
-internal class SchemeParser: ConnctionStringParser {
+class SchemeParser: ConnctionStringParser {
     typealias SchemeReference = Reference<String>
     typealias RegexType = Regex<(Substring, SchemeReference.RegexOutput)>
     typealias Result = ClientSettings.ValidScheme
-    
+
     let _scheme: SchemeReference = .init()
-    
-    lazy var regex: RegexType = {
-        Regex {
-            Capture(as: _scheme) {
-                OneOrMore(.any)
-            }
-            transform: {
-                String($0)
-            }
-            "://"
+
+    lazy var regex: RegexType = Regex {
+        Capture(as: _scheme) {
+            OneOrMore(.any)
         }
-    }()
-    
+        transform: {
+            String($0)
+        }
+        "://"
+    }
+
     func parse(_ connectionString: String) throws -> ClientSettings.ValidScheme? {
         let match = connectionString.firstMatch(of: regex)
         return match.flatMap {
@@ -34,4 +32,3 @@ internal class SchemeParser: ConnctionStringParser {
         }
     }
 }
-

@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Delete.swift
+//  PersistentSubscriptionsClient.Delete.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/7.

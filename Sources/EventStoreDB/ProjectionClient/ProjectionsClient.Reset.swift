@@ -1,5 +1,5 @@
 //
-//  Projections.Reset.swift
+//  ProjectionsClient.Reset.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/5.
@@ -26,24 +26,21 @@ extension ProjectionsClient {
 }
 
 extension ProjectionsClient.Reset {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        var options: UnderlyingMessage
+        var writeCheckpoint: Bool = false
 
-        public init() {
-            options = .with {
-                $0.writeCheckpoint = false
+        public func writeCheckpoint(enable: Bool) -> Self {
+            withCopy { options in
+                options.writeCheckpoint = enable
             }
         }
 
-        public func writeCheckpoint(enable: Bool) -> Self {
-            options.writeCheckpoint = enable
-            return self
-        }
-
         package func build() -> ProjectionsClient.Reset.Request.UnderlyingMessage.Options {
-            options
+            .with {
+                $0.writeCheckpoint = writeCheckpoint
+            }
         }
     }
 }

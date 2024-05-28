@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension OperationsClient {
     public struct ScavengeResponse: GRPCResponse {
-        public enum ScavengeResult {
+        public enum ScavengeResult: Sendable {
             case started
             case inProgress
             case stopped

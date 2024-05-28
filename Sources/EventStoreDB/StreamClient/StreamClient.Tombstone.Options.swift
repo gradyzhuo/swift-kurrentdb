@@ -1,5 +1,5 @@
 //
-//  Stream.Tombstone.Options.swift
+//  StreamClient.Tombstone.Options.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/2.
@@ -9,32 +9,31 @@ import Foundation
 import GRPCEncapsulates
 
 extension StreamClient.Tombstone {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_TombstoneReq.Options
 
-        var options: UnderlyingMessage
-
-        public init() {
-            options = .init()
-        }
+        public private(set) var expectedRevision: Stream.RevisionRule = .streamExists
 
         public func build() -> UnderlyingMessage {
-            options
+            .with {
+                switch expectedRevision {
+                case .any:
+                    $0.any = .init()
+                case .noStream:
+                    $0.noStream = .init()
+                case .streamExists:
+                    $0.streamExists = .init()
+                case let .revision(rev):
+                    $0.revision = rev
+                }
+            }
         }
 
         @discardableResult
-        public func expected(revision: Stream.RevisionRule) -> Self {
-            switch revision {
-            case .any:
-                options.any = .init()
-            case .noStream:
-                options.noStream = .init()
-            case .streamExists:
-                options.streamExists = .init()
-            case let .revision(rev):
-                options.revision = rev
+        public func revision(expected expectedRevision: Stream.RevisionRule) -> Self {
+            withCopy { options in
+                options.expectedRevision = expectedRevision
             }
-            return self
         }
     }
 }

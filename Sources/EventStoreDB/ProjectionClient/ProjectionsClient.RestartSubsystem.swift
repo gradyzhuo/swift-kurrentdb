@@ -1,5 +1,5 @@
 //
-//  Projections.RestartSubsystem.swift
+//  ProjectionsClient.RestartSubsystem.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/7.

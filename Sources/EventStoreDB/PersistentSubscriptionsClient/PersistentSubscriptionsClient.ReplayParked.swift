@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.ReplayParked.swift
+//  PersistentSubscriptionsClient.ReplayParked.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/11.
@@ -34,7 +34,7 @@ extension PersistentSubscriptionsClient {
 }
 
 extension PersistentSubscriptionsClient.ReplayParked {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public enum StopAtOption {
             case position(position: Int64)
             case noLimit
@@ -50,13 +50,14 @@ extension PersistentSubscriptionsClient.ReplayParked {
 
         @discardableResult
         public func stop(at option: StopAtOption) -> Self {
-            switch option {
-            case let .position(position):
-                message.stopAt = position
-            case .noLimit:
-                message.noLimit = .init()
+            withCopy { options in
+                switch option {
+                case let .position(position):
+                    options.message.stopAt = position
+                case .noLimit:
+                    options.message.noLimit = .init()
+                }
             }
-            return self
         }
 
         package func build() -> PersistentSubscriptionsClient.ReplayParked.Request.UnderlyingMessage.Options {

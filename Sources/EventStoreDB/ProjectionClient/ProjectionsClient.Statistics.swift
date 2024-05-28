@@ -1,5 +1,5 @@
 //
-//  Projections.Statistics.swift
+//  ProjectionsClient.Statistics.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/26.
@@ -12,7 +12,7 @@ extension ProjectionsClient {
     public struct Statistics: UnaryStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Projections_StatisticsReq>
 
-        public enum ModeOptions {
+        public enum ModeOptions: Sendable {
             case all
             case transient
             case continuous
@@ -106,38 +106,31 @@ extension ProjectionsClient.Statistics {
 }
 
 extension ProjectionsClient.Statistics {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        var options: UnderlyingMessage
-        var mode: ModeOptions {
-            didSet {
+        var mode: ModeOptions = .all
+
+        package func build() -> ProjectionsClient.Statistics.Request.UnderlyingMessage.Options {
+            .with {
                 switch mode {
                 case .all:
-                    options.all = .init()
+                    $0.all = .init()
                 case .transient:
-                    options.transient = .init()
+                    $0.transient = .init()
                 case .continuous:
-                    options.continuous = .init()
+                    $0.continuous = .init()
                 case .oneTime:
-                    options.oneTime = .init()
+                    $0.oneTime = .init()
                 }
             }
         }
 
-        init(options: UnderlyingMessage = .init()) {
-            self.options = options
-            mode = .all
-        }
-
-        package func build() -> ProjectionsClient.Statistics.Request.UnderlyingMessage.Options {
-            options
-        }
-
         @discardableResult
         public func set(mode: ModeOptions) -> Self {
-            self.mode = mode
-            return self
+            withCopy { options in
+                options.mode = mode
+            }
         }
     }
 }

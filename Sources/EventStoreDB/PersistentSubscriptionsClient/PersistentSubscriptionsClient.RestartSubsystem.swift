@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.RestartSubsystem.swift
+//  PersistentSubscriptionsClient.RestartSubsystem.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/11.

@@ -1,5 +1,5 @@
 //
-//  Projections.Create.swift
+//  ProjectionsClient.Create.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/22.
@@ -31,7 +31,7 @@ extension ProjectionsClient {
 // MARK: - The Options of Continuous Create.
 
 extension ProjectionsClient.ContinuousCreate {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_CreateReq.Options
 
         var options: UnderlyingMessage
@@ -62,14 +62,16 @@ extension ProjectionsClient.ContinuousCreate {
 
         @discardableResult
         public func emit(enabled: Bool) -> Self {
-            emitEnabled = enabled
-            return self
+            withCopy { options in
+                options.emitEnabled = enabled
+            }
         }
 
         @discardableResult
         public func trackEmittedStreams(_ trackEmittedStreams: Bool) -> Self {
-            self.trackEmittedStreams = trackEmittedStreams
-            return self
+            withCopy { options in
+                options.trackEmittedStreams = trackEmittedStreams
+            }
         }
     }
 }

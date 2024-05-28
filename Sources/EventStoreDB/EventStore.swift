@@ -18,7 +18,7 @@ public struct EventStore {
     public static func using(settings: ClientSettings) throws {
         shared.settings = settings
     }
-    
+
     init(settings: ClientSettings = .localhost()) {
         self.settings = settings
     }

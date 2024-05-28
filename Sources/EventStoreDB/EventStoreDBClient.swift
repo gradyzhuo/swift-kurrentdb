@@ -19,7 +19,7 @@ public struct EventStoreDBClient {
     public var defaultCallOptions: CallOptions
 
     public private(set) var settings: ClientSettings
-    
+
     @MainActor
     public init(settings: ClientSettings = EventStore.shared.settings, defaultCallOptions: CallOptions? = nil) throws {
         self.defaultCallOptions = try defaultCallOptions ?? settings.makeCallOptions()
@@ -30,7 +30,7 @@ public struct EventStoreDBClient {
 // MARK: - Streams Operations
 
 extension EventStoreDBClient {
-    public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
+    public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(
             to: .init(name: "$$\(streamName)"),
             events: .init(
@@ -42,10 +42,9 @@ extension EventStoreDBClient {
     }
 
     public func getStreamMetadata(to identifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata? {
-    
-        let responses = try readStream(to: 
-                .init(name: "$$\(identifier.name)"),
-                cursor: cursor)
+        let responses = try readStream(to:
+            .init(name: "$$\(identifier.name)"),
+            cursor: cursor)
         return try await responses.first {
             switch $0.content {
             case .event:
@@ -70,14 +69,14 @@ extension EventStoreDBClient {
 
     // MARK: Append methods -
 
-    public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options>) async throws -> StreamClient.Append.Response.Success {
+    public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
-        let options = configure(.init(subject: .init()))
+        let options = configure(.init())
 
-        return try await client.appendTo(stream: identifier, events: events, options: options.subject)
+        return try await client.appendTo(stream: identifier, events: events, options: options)
     }
 
-    public func appendStream(to identifier: Stream.Identifier, events: EventData ..., configure: (_ options: FluentInterface<StreamClient.Append.Options>) -> FluentInterface<StreamClient.Append.Options> = { $0 }) async throws -> StreamClient.Append.Response.Success {
+    public func appendStream(to identifier: Stream.Identifier, events: EventData ..., configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options = { $0 }) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
 
@@ -115,8 +114,8 @@ extension EventStoreDBClient {
         return try readStream(to: streamIdentifier, cursor: cursor, configure: configure)
     }
 
-    
     // MARK: (Soft) Delete a stream -
+
     @discardableResult
     public func deleteStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
@@ -146,7 +145,6 @@ extension EventStoreDBClient {
 }
 
 extension EventStoreDBClient {
-    
     public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws {
         let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: identifier, groupName: groupName, options: options)
@@ -165,6 +163,7 @@ extension EventStoreDBClient {
     }
 
     // MARK: - Restart Subsystem Action
+
     @MainActor
     public func restartPersistentSubscriptionSubsystem(settings _: ClientSettings = EventStore.shared.settings) async throws {
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
@@ -180,4 +179,3 @@ extension EventStoreDBClient {
         return try await client.subscribeTo(streamSelection, groupName: groupName, options: options)
     }
 }
-

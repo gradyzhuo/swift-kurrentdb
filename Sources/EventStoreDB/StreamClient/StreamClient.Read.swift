@@ -1,5 +1,5 @@
 //
-//  Stream.Read.swift
+//  StreamClient.Read.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/21.
@@ -21,7 +21,23 @@ extension StreamClient {
             try .with {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
-                cursor.build(options: &$0.options)
+
+                switch cursor {
+                case .start:
+                    $0.options.stream.start = .init()
+                    $0.options.readDirection = .forwards
+                case .end:
+                    $0.options.stream.end = .init()
+                    $0.options.readDirection = .backwards
+                case let .specified(pointer):
+                    $0.options.stream.revision = pointer.revision
+
+                    if case .forward = pointer.direction {
+                        $0.options.readDirection = .forwards
+                    } else {
+                        $0.options.readDirection = .backwards
+                    }
+                }
             }
         }
     }
@@ -36,15 +52,34 @@ extension StreamClient {
 
         package func build() throws -> Request.UnderlyingMessage {
             .with {
-                $0.options = options.options
-                cursor.build(options: &$0.options)
+                $0.options = options.build()
+
+                switch cursor {
+                case .start:
+                    $0.options.all.start = .init()
+                    $0.options.readDirection = .forwards
+                case .end:
+                    $0.options.all.end = .init()
+                    $0.options.readDirection = .backwards
+                case let .specified(pointer):
+                    $0.options.all.position = .with {
+                        $0.commitPosition = pointer.position.commit
+                        $0.preparePosition = pointer.position.prepare
+                    }
+
+                    if case .forward = pointer.direction {
+                        $0.options.readDirection = .forwards
+                    } else {
+                        $0.options.readDirection = .backwards
+                    }
+                }
             }
         }
     }
 }
 
 extension StreamClient.ReadAll {
-    public struct CursorPointer {
+    public struct CursorPointer: Sendable {
         let position: StreamClient.Read.Position
         let direction: StreamClient.Read.Direction
 
@@ -59,7 +94,7 @@ extension StreamClient.ReadAll {
 }
 
 extension StreamClient.Read {
-    public struct CursorPointer {
+    public struct CursorPointer: Sendable {
         let revision: UInt64
         let direction: StreamClient.Read.Direction
 
@@ -72,22 +107,22 @@ extension StreamClient.Read {
         }
     }
 
-    public struct Position {
+    public struct Position: Sendable {
         public let commit: UInt64
         public let prepare: UInt64
     }
 
-    public enum Direction {
+    public enum Direction: Sendable {
         case forward
         case backward
     }
 
-    public enum UUIDOption {
+    public enum UUIDOption: Sendable {
         case structured
         case string
     }
 
-    public enum ControlOption {
+    public enum ControlOption: Sendable {
         case compatibility(UInt32)
     }
 }
@@ -117,20 +152,6 @@ extension StreamClient.Read.Direction {
 }
 
 extension Cursor where Pointer == StreamClient.Read.CursorPointer {
-    public func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
-        switch self {
-        case .start:
-            options.stream.start = .init()
-            options.readDirection = .forwards
-        case .end:
-            options.stream.end = .init()
-            options.readDirection = .backwards
-        case let .specified(pointer):
-            options.stream.revision = pointer.revision
-            pointer.direction.build(options: &options)
-        }
-    }
-
     public func build(options: inout EventStore_Client_Streams_ReadReq.Options.StreamOptions) {
         switch self {
         case .start:
@@ -139,17 +160,6 @@ extension Cursor where Pointer == StreamClient.Read.CursorPointer {
             options.end = .init()
         case let .specified(pointer):
             options.revision = pointer.revision
-        }
-    }
-}
-
-extension StreamClient.Read.UUIDOption {
-    func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
-        switch self {
-        case .structured:
-            options.uuidOption.structured = .init()
-        case .string:
-            options.uuidOption.string = .init()
         }
     }
 }
@@ -201,20 +211,6 @@ extension Cursor where Pointer == StreamClient.ReadAll.CursorPointer {
             }
         }
     }
-
-    public func build(options: inout EventStore_Client_Streams_ReadReq.Options) {
-        switch self {
-        case .start:
-            options.all.start = .init()
-            options.readDirection = .forwards
-        case .end:
-            options.all.end = .init()
-            options.readDirection = .backwards
-        case let .specified(pointer):
-            pointer.position.build(options: &options)
-            pointer.direction.build(options: &options)
-        }
-    }
 }
 
 extension StreamClient.FilterOption {
@@ -254,7 +250,7 @@ extension Stream.Identifier {
 
 extension StreamClient.Read {
     public struct Response: GRPCResponse {
-        public enum Content {
+        public enum Content: Sendable {
             case event(readEvent: ReadEvent)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)

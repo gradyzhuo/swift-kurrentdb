@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Create.swift
+//  PersistentSubscriptionsClient.Create.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/7.
@@ -20,7 +20,6 @@ extension PersistentSubscriptionsCreateOptions {
 
 extension PersistentSubscriptionsClient {
     public enum Create {
- 
         public struct Request: GRPCRequest {
             public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_CreateReq
         }
@@ -62,7 +61,7 @@ extension PersistentSubscriptionsClient {
 }
 
 extension PersistentSubscriptionsClient.Create.ToStream {
-    public final class Options: PersistentSubscriptionsCreateOptions {
+    public struct Options: PersistentSubscriptionsCreateOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
         public var settings: PersistentSubscriptionsClient.Settings
@@ -75,8 +74,9 @@ extension PersistentSubscriptionsClient.Create.ToStream {
 
         @discardableResult
         public func startFrom(revision: Cursor<Stream.Revision>) -> Self {
-            revisionCursor = revision
-            return self
+            withCopy { options in
+                options.revisionCursor = revision
+            }
         }
 
         package func build() -> UnderlyingMessage {
@@ -97,7 +97,7 @@ extension PersistentSubscriptionsClient.Create.ToStream {
 }
 
 extension PersistentSubscriptionsClient.Create.ToAll {
-    public final class Options: PersistentSubscriptionsCreateOptions {
+    public struct Options: PersistentSubscriptionsCreateOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
         public var settings: PersistentSubscriptionsClient.Settings
@@ -112,8 +112,9 @@ extension PersistentSubscriptionsClient.Create.ToAll {
 
         @discardableResult
         public func startFrom(position: Cursor<Stream.Position>) -> Self {
-            positionCursor = position
-            return self
+            withCopy { options in
+                options.positionCursor = position
+            }
         }
 
         package func build() -> UnderlyingMessage {

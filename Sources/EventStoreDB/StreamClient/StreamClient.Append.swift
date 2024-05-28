@@ -1,5 +1,5 @@
 //
-//  Stream.Append.swift
+//  StreamClient.Append.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/22.
@@ -48,7 +48,7 @@ extension StreamClient.Append {
     }
 
     public enum Response: GRPCResponse {
-        public enum CurrentRevisionOption : Sendable{
+        public enum CurrentRevisionOption: Sendable {
             case noStream
             case revision(UInt64)
 
@@ -98,7 +98,7 @@ extension StreamClient.Append {
         public struct Wrong: GRPCResponse, Error {
             public typealias UnderlyingMessage = EventStore_Client_Streams_AppendResp.WrongExpectedVersion
 
-            public enum ExpectedRevisionOption : Sendable{
+            public enum ExpectedRevisionOption: Sendable {
                 case any
                 case streamExists
                 case noStream

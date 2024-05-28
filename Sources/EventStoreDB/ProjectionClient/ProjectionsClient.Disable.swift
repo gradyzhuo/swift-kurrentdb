@@ -1,5 +1,5 @@
 //
-//  Projections.Disable.swift
+//  ProjectionsClient.Disable.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/27.
@@ -26,25 +26,22 @@ extension ProjectionsClient {
 }
 
 extension ProjectionsClient.Disable {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Projections_DisableReq.Options
 
-        var options: UnderlyingMessage
-
-        public init() {
-            options = .with {
-                $0.writeCheckpoint = false
-            }
-        }
+        var writeCheckpoint: Bool = false
 
         public func build() -> UnderlyingMessage {
-            options
+            .with {
+                $0.writeCheckpoint = writeCheckpoint
+            }
         }
 
         @discardableResult
         public func writeCheckpoint(enabled: Bool) -> Self {
-            options.writeCheckpoint = enabled
-            return self
+            withCopy { options in
+                options.writeCheckpoint = enabled
+            }
         }
     }
 }

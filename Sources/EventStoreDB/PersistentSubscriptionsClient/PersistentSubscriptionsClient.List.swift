@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.List.swift
+//  PersistentSubscriptionsClient.List.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/11.
@@ -35,7 +35,7 @@ extension PersistentSubscriptionsClient.List {
 }
 
 extension PersistentSubscriptionsClient.List {
-    public final class Options: EventStoreOptions {
+    public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
         var options: UnderlyingMessage

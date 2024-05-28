@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Update.swift
+//  PersistentSubscriptionsClient.Update.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/7.
@@ -35,7 +35,7 @@ extension PersistentSubscriptionsClient.Update {
             }
         }
 
-        public class Options: PersistentSubscriptionsUpdateOptions {
+        public struct Options: PersistentSubscriptionsUpdateOptions {
             public typealias UnderlyingMessage = PersistentSubscriptionsClient.Update.Request.UnderlyingMessage.Options
 
             public var settings: PersistentSubscriptionsClient.Settings = .init()
@@ -43,8 +43,9 @@ extension PersistentSubscriptionsClient.Update {
 
             @discardableResult
             public func startFrom(cursor: Cursor<Stream.Revision>) -> Self {
-                revisionCursor = cursor
-                return self
+                withCopy { options in
+                    options.revisionCursor = cursor
+                }
             }
 
             package func build() -> UnderlyingMessage {
@@ -78,7 +79,7 @@ extension PersistentSubscriptionsClient.Update {
             }
         }
 
-        public class Options: PersistentSubscriptionsUpdateOptions {
+        public struct Options: PersistentSubscriptionsUpdateOptions {
             public typealias UnderlyingMessage = PersistentSubscriptionsClient.Update.Request.UnderlyingMessage.Options
 
             public var settings: PersistentSubscriptionsClient.Settings = .init()
@@ -86,8 +87,9 @@ extension PersistentSubscriptionsClient.Update {
 
             @discardableResult
             public func startFrom(cursor: Cursor<Stream.Position>) -> Self {
-                positionCursor = cursor
-                return self
+                withCopy { options in
+                    options.positionCursor = cursor
+                }
             }
 
             package func build() -> UnderlyingMessage {

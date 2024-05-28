@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import SwiftProtobuf
 
-public protocol GRPCBridge {
+public protocol GRPCBridge: Sendable {
     associatedtype UnderlyingMessage: SwiftProtobuf.Message
 }
 

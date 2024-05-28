@@ -93,7 +93,7 @@ extension UUID {
 }
 
 extension UUID {
-    public enum Option {
+    public enum Option: Sendable {
         case string
         case structured
     }

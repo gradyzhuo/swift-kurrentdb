@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Read.swift
+//  PersistentSubscriptionsClient.Read.swift
 //
 //
 //  Created by Grady Zhuo on 2023/12/8.
@@ -74,26 +74,26 @@ extension PersistentSubscriptionsClient.Read {
 
         public private(set) var bufferSize: Int32
         public private(set) var uuidOption: UUID.Option
-        
+
         public init() {
-            self.bufferSize = 1000
-            self.uuidOption = .string
+            bufferSize = 1000
+            uuidOption = .string
         }
 
         public func set(bufferSize: Int32) -> Self {
-            var copiedSelf = self
-            copiedSelf.bufferSize = bufferSize
-            return copiedSelf
+            withCopy { options in
+                options.bufferSize = bufferSize
+            }
         }
 
         public func set(uuidOption: UUID.Option) -> Self {
-            var copiedSelf = self
-            copiedSelf.uuidOption = uuidOption
-            return copiedSelf
+            withCopy { options in
+                options.uuidOption = uuidOption
+            }
         }
 
         package func build() -> UnderlyingMessage {
-            return .with {
+            .with {
                 $0.bufferSize = bufferSize
                 switch uuidOption {
                 case .string:

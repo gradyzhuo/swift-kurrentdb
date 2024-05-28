@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum TimeSpan {
+public enum TimeSpan: Sendable {
     case ticks(Int64)
     case ms(Int32)
 }

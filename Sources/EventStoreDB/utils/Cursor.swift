@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Cursor<Pointer> {
+public enum Cursor<Pointer: Sendable>: Sendable {
     case start
     case end
     case specified(Pointer)
