@@ -11,6 +11,7 @@ import NIOCore
 import NIOPosix
 import NIOSSL
 import RegexBuilder
+import Logging
 
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
