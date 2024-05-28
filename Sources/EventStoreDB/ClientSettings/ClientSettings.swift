@@ -7,16 +7,67 @@
 
 import Foundation
 import GRPC
-import Logging
 import NIOCore
 import NIOPosix
 import NIOSSL
 import RegexBuilder
 
-let logger = Logger(label: "ClientSettings")
-
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
+
+/// `ClientSettings` encapsulates various configuration settings for a client.
+///
+/// - Properties:
+///   - `configuration`: TLS configuration.
+///   - `clusterMode`: The cluster topology mode.
+///   - `numberOfThreads`: Number of threads to use (default is 1).
+///   - `tls`: Indicates if TLS is enabled (default is false).
+///   - `tlsVerifyCert`: Indicates if TLS certificate verification is enabled (default is false).
+///   - `defaultDeadline`: Default deadline for operations (default is `.max`).
+///   - `connectionName`: Optional connection name.
+///   - `keepAlive`: Keep-alive settings.
+///   - `defaultUserCredentials`: Optional user credentials.
+///
+/// - Initializers:
+///   - `init(clusterMode:configuration:numberOfThreads)`: Initializes with specified cluster mode, TLS configuration, and number of threads.
+///   - `init(clusterMode:numberOfThreads:configure)`: Initializes with specified cluster mode, number of threads, and TLS configuration using a configuration closure.
+///
+/// - Methods:
+///   - `makeCallOptions()`: Creates call options for making requests, optionally including user credentials.
+///
+/// - Static Methods:
+///   - `localhost(port:numberOfThreads:userCredentials:trustRoots)`: Returns settings configured for localhost with optional port, number of threads, user credentials, and trust roots.
+///   - `parse(connectionString)`: Parses a connection string into `ClientSettings`.
+///
+/// - Nested Types:
+///   - `TopologyClusterMode`: Defines the cluster topology modes.
+///   - `Endpoint`: Represents a network endpoint with a host and port.
+///
+/// - Conformance:
+///   - `ExpressibleByStringLiteral`: Allows initialization from a string literal.
+///
+/// - Example:
+///   - single node mode, initiating gRPC communication on the specified port on localhost and using 2 threads.
+///
+///   ```swift
+///   let clientSettingsSingleNode = ClientSettings(
+///       clusterMode: .singleNode(at: .init(host: "localhost", port: 50051)),
+///       configuration: .clientDefault,
+///       numberOfThreads: 2
+///   )
+///   ```
+///   - Gossip cluster mode, specifying multiple nodes' hosts and ports, as well as node preference and timeout, using 3 threads.
+///   ```swift
+///   let clientSettingsGossipCluster = ClientSettings(
+///       clusterMode: .gossipCluster(
+///           endpoints: [.init(host: "node1.example.com", port: 50051), .init(host: "node2.example.com", port: 50052)],
+///           nodePreference: .leader,
+///           timeout: 5.0
+///       ),
+///       configuration: .clientDefault,
+///       numberOfThreads: 3
+///   )
+///   ```
 
 public struct ClientSettings {
     public var configuration: TLSConfiguration
@@ -51,46 +102,10 @@ public struct ClientSettings {
     }
 }
 
-extension GRPCChannelPool {
-    public static func with(settings: ClientSettings) throws -> GRPCChannel {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: settings.numberOfThreads)
 
-        let transportSecurity = if settings.tls {
-            GRPCChannelPool.Configuration.TransportSecurity.tls(.makeClientConfigurationBackedByNIOSSL(configuration: settings.configuration))
-        } else {
-            GRPCChannelPool.Configuration.TransportSecurity.plaintext
-        }
 
-        return switch settings.clusterMode {
-        case let .singleNode(endpoint):
-            try Self.with(
-                target: endpoint.connectionTarget(),
-                transportSecurity: transportSecurity,
-                eventLoopGroup: group
-            )
-        case let .dnsDiscovery(endpoint, _, _):
-            try Self.with(
-                target: endpoint.connectionTarget(),
-                transportSecurity: transportSecurity,
-                eventLoopGroup: group
-            )
-        case let .gossipCluster(endpoints, _, _):
-            try Self.with(
-                target: endpoints.first!.connectionTarget(),
-                transportSecurity: transportSecurity,
-                eventLoopGroup: group
-            )
-        }
-    }
-}
-
-//
 extension ClientSettings {
-    enum ValidScheme: String {
-        case esdb
-        case dnsDiscover = "esdb+discover"
-    }
-
+    
     public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, numberOfThreads: Int = 1, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
         var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)), numberOfThreads: numberOfThreads)
 
@@ -105,136 +120,22 @@ extension ClientSettings {
         return settings
     }
 
-    private static func parseScheme(_ connectionString: String) -> ValidScheme? {
-        let _scheme = Reference(String.self)
-        let schemeRegex = Regex {
-            Capture(as: _scheme) {
-                OneOrMore(.any)
-            }
-            transform: {
-                String($0)
-            }
-            "://"
-        }
-
-        let schemeMatch = connectionString.firstMatch(of: schemeRegex)
-        return schemeMatch.flatMap {
-            .init(rawValue: $0[_scheme])
-        }
-    }
-
-    private static func parseUserAndPassowrd(_ connectionString: String) -> UserCredentials? {
-        let _user = Reference(String.self)
-        let _password = Reference(String.self)
-        let userAndPasswordRegex = Regex {
-            Capture(as: _user) {
-                OneOrMore(.any.subtracting(.anyOf(":@/")))
-            } transform: {
-                String($0)
-            }
-            ":"
-            Optionally {
-                Capture(as: _password) {
-                    OneOrMore(.any.subtracting(.anyOf(":@")))
-                } transform: {
-                    String($0)
-                }
-            }
-            "@"
-        }
-
-        guard let userAndPasswordMatch = connectionString.firstMatch(of: userAndPasswordRegex) else {
-            return nil
-        }
-
-        return .init(username: userAndPasswordMatch[_user], password: userAndPasswordMatch[_password])
-    }
-
-    private static func parseEndpoints(_ connectionString: String) -> [Endpoint] {
-        var connectionString = connectionString
-        if let atIndex = connectionString.firstIndex(of: "@") {
-            let range = connectionString.startIndex ..< atIndex
-            connectionString.replaceSubrange(range, with: "")
-        }
-
-        let _host = Reference(Substring.self)
-        let _port = Reference(UInt32?.self)
-
-        let hostsRegex = Regex {
-            ChoiceOf {
-                "://"
-                "@"
-                ","
-            }
-            Capture(as: _host) {
-                OneOrMore(
-                    .any
-                        .subtracting(
-                            .anyOf(":?=&")
-                        )
-                )
-            }
-
-            Optionally {
-                ":"
-                TryCapture(OneOrMore(.digit), as: _port) {
-                    UInt32($0, radix: 10)
-                }
-            }
-        }
-
-        let hostMatches = connectionString.matches(of: hostsRegex)
-
-        return hostMatches.map {
-            .init(host: $0[_host].description, port: $0[_port])
-        }
-    }
-
-    private static func parseQueryItems(_ connectionString: String) -> [URLQueryItem] {
-        let _key = Reference(String.self)
-        let _value = Reference(String.self)
-        let queryItemsRegex = Regex {
-            ChoiceOf {
-                "?"
-                "&"
-            }
-            Capture(as: _key) {
-                OneOrMore {
-                    .any.subtracting(.anyOf("?&="))
-                }
-            } transform: {
-                String($0)
-            }
-
-            "="
-            Capture(as: _value) {
-                OneOrMore {
-                    .any.subtracting(.anyOf("?&="))
-                }
-            } transform: {
-                String($0)
-            }
-        }
-
-        let queryItemsMatches = connectionString.matches(of: queryItemsRegex)
-
-        return queryItemsMatches.map {
-            .init(name: $0[_key], value: $0[_value])
-        }
-    }
-
     public static func parse(connectionString: String) throws -> Self {
-        guard let scheme = parseScheme(connectionString) else {
+        let schemeParser = SchemeParser()
+        let endpointParser = EndpointParser()
+        let queryItemParser = QueryItemParser()
+        let userCredentialParser = UserCredentialsParser()
+        
+        guard let scheme = try schemeParser.parse(connectionString) else {
             throw ClientSettingsError.parseError(message: "Unknown URL scheme: \(connectionString)")
         }
 
-        let endpoints = parseEndpoints(connectionString)
-
-        guard endpoints.count > 0 else {
+        guard let endpoints = try endpointParser.parse(connectionString),
+              endpoints.count > 0 else {
             throw ClientSettingsError.parseError(message: "Connection string doesn't have an host")
         }
 
-        let parsedResult = parseQueryItems(connectionString)
+        let parsedResult = try queryItemParser.parse(connectionString) ?? []
 
         let queryItems: [String: URLQueryItem] = .init(uniqueKeysWithValues: parsedResult.map {
             ($0.name.lowercased(), $0)
@@ -262,7 +163,7 @@ extension ClientSettings {
         }
 
         var settings = Self(clusterMode: clusterMode)
-        settings.defaultUserCredentials = parseUserAndPassowrd(connectionString)
+        settings.defaultUserCredentials = try userCredentialParser.parse(connectionString)
 
         if let keepAliveInterval: TimeInterval = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
            let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
@@ -313,7 +214,7 @@ extension ClientSettings {
         }
     }
 
-    public struct Endpoint {
+    public struct Endpoint: Sendable {
         let host: String
         let port: UInt32
 
