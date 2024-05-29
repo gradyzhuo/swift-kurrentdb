@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "eventstoredb-swift",
+    name: "EventStoreDB",
     platforms: [
         .macOS(.v13),
     ],
