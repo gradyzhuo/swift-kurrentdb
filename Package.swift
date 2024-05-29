@@ -29,9 +29,6 @@ let package = Package(
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
                 "GRPCEncapsulates",
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .target(
