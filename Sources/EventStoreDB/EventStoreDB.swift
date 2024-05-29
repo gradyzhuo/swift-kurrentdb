@@ -4,11 +4,4 @@
 import Foundation
 import Logging
 
-/// Using a client setting to `EventStoreDBClient` by default.
-/// - Parameter settings: <#settings description#>
-@MainActor
-public func using(settings: ClientSettings) {
-    EventStore.shared.settings = settings
-}
-
-let logger = Logger(label: "ClientSettings")
+let logger = Logger(label: "EventStoreDB")

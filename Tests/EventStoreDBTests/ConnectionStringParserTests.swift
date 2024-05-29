@@ -7,7 +7,6 @@
 
 @testable import EventStoreDB
 import Foundation
-import Testing
 import XCTest
 
 final class ConnectionStringParserTests: XCTestCase {

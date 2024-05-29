@@ -11,7 +11,7 @@ import XCTest
 
 final class EventStoreDBProjectionTests: XCTestCase {
     override func setUp() async throws {
-        await EventStoreDB.using(settings: .localhost(port: 2111, userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .crtInBundle("ca", inBundle: .module)))
+        // await EventStoreDB.using(settings: .localhost(port: 2111, userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .crtInBundle("ca", inBundle: .module)))
     }
 
     override func tearDownWithError() throws {

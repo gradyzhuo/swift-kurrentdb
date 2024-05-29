@@ -9,7 +9,6 @@
 // @testable import struct EventStoreDB.Stream
 import GRPC
 import NIO
-import Testing
 import XCTest
 
 enum TestingError: Error {
@@ -19,13 +18,7 @@ enum TestingError: Error {
 final class EventStoreDBStreamTests: XCTestCase {
     var streamName: String!
 
-    func testAll() async {
-        await XCTestScaffold.runAllTests(hostedBy: self)
-    }
-
     override func setUp() async throws {
-        try await EventStoreDB.using(settings: .parse(connectionString: "esdb://localhost:2113?tls=false"))
-
         streamName = "testing2"
     }
 
@@ -34,7 +27,8 @@ final class EventStoreDBStreamTests: XCTestCase {
     }
 
     func testStreamNoFound() async throws {
-        let client = try await EventStoreDBClient()
+        let settings = ClientSettings.localhost()
+        let client = try EventStoreDBClient(settings: settings)
         var anError: Error?
         do {
             for try await _ in try client.readStream(to: "NoStream", cursor: .start) {
@@ -49,8 +43,8 @@ final class EventStoreDBStreamTests: XCTestCase {
 
     func testAppendEvent() async throws {
         let content = ["Description": "Gears of War 4"]
-
-        let client = try await EventStoreDBClient()
+        let settings = ClientSettings.localhost()
+        let client = try EventStoreDBClient(settings: settings)
 
         let readResponses = try client.readStream(to: .init(name: streamName), cursor: .end) { options in
             options.set(uuidOption: .string)

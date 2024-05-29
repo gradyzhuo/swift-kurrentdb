@@ -10,31 +10,15 @@ import SwiftProtobuf
 import XCTest
 
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
-    override func setUp() async throws {
-        try await EventStore.using(settings: "esdb://localhost:2113?tls=false")
-    }
-
-//    override func setUp() async throws {
-//        let client = try EventStoreDB.Client()
-//
-//    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-//        Task{
-//            let client = try EventStoreDB.Client()
-//            try await client.persistentSubscriptionsClient.deleteOn(stream: .specified("testing"), groupName: "mytest")
-//        }
-//
-    }
-
     func testCreate() async throws {
-        let client = try await EventStoreDBClient()
+        let settings = ClientSettings.localhost()
+        let client = try await EventStoreDBClient(settings: settings)
         try await client.createPersistentSubscription(to: "testing", groupName: "mytest", options: .init())
     }
 
     func testSubscribe() async throws {
-        let client = try await EventStoreDBClient()
+        let settings = ClientSettings.localhost()
+        let client = try await EventStoreDBClient(settings: settings)
 
         let subscription = try await client.subscribePersistentSubscription(to: .specified("testing"), groupName: "mytest") { options in
             options

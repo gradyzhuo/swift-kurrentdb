@@ -1,5 +1,4 @@
 @testable import EventStoreDB
-import Testing
 import XCTest
 
 final class EventStoreDBTests: XCTestCase {

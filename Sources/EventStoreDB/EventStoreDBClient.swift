@@ -17,19 +17,17 @@ public struct EventStoreDBClient {
     }
 
     public var defaultCallOptions: CallOptions
+    public var settings: ClientSettings
 
-    public private(set) var settings: ClientSettings
-
-    @MainActor
-    public init(settings: ClientSettings = EventStore.shared.settings, defaultCallOptions: CallOptions? = nil) throws {
+    public init(settings: ClientSettings, defaultCallOptions: CallOptions? = nil) throws {
         self.defaultCallOptions = try defaultCallOptions ?? settings.makeCallOptions()
         self.settings = settings
     }
 }
 
 // MARK: - Streams Operations
-
 extension EventStoreDBClient {
+
     public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(
             to: .init(name: "$$\(streamName)"),
@@ -163,9 +161,7 @@ extension EventStoreDBClient {
     }
 
     // MARK: - Restart Subsystem Action
-
-    @MainActor
-    public func restartPersistentSubscriptionSubsystem(settings _: ClientSettings = EventStore.shared.settings) async throws {
+    public func restartPersistentSubscriptionSubsystem() async throws {
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.restartSubsystem()
     }
