@@ -10,205 +10,204 @@ import NIO
 import NIOConcurrencyHelpers
 import SwiftProtobuf
 
-
 /// Usage: instantiate `EventStore_Client_Users_UsersClient`, then call methods of this protocol to make API calls.
 public protocol EventStore_Client_Users_UsersClientProtocol: GRPCClient {
-  var serviceName: String { get }
-  var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? { get }
+    var serviceName: String { get }
+    var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? { get }
 
-  func create(
-    _ request: EventStore_Client_Users_CreateReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>
+    func create(
+        _ request: EventStore_Client_Users_CreateReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>
 
-  func update(
-    _ request: EventStore_Client_Users_UpdateReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>
+    func update(
+        _ request: EventStore_Client_Users_UpdateReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>
 
-  func delete(
-    _ request: EventStore_Client_Users_DeleteReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>
+    func delete(
+        _ request: EventStore_Client_Users_DeleteReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>
 
-  func disable(
-    _ request: EventStore_Client_Users_DisableReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>
+    func disable(
+        _ request: EventStore_Client_Users_DisableReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>
 
-  func enable(
-    _ request: EventStore_Client_Users_EnableReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>
+    func enable(
+        _ request: EventStore_Client_Users_EnableReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>
 
-  func details(
-    _ request: EventStore_Client_Users_DetailsReq,
-    callOptions: CallOptions?,
-    handler: @escaping (EventStore_Client_Users_DetailsResp) -> Void
-  ) -> ServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>
+    func details(
+        _ request: EventStore_Client_Users_DetailsReq,
+        callOptions: CallOptions?,
+        handler: @escaping (EventStore_Client_Users_DetailsResp) -> Void
+    ) -> ServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>
 
-  func changePassword(
-    _ request: EventStore_Client_Users_ChangePasswordReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>
+    func changePassword(
+        _ request: EventStore_Client_Users_ChangePasswordReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>
 
-  func resetPassword(
-    _ request: EventStore_Client_Users_ResetPasswordReq,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>
+    func resetPassword(
+        _ request: EventStore_Client_Users_ResetPasswordReq,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>
 }
 
 extension EventStore_Client_Users_UsersClientProtocol {
-  public var serviceName: String {
-    return "event_store.client.users.Users"
-  }
+    public var serviceName: String {
+        "event_store.client.users.Users"
+    }
 
-  /// Unary call to Create
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to Create.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func create(
-    _ request: EventStore_Client_Users_CreateReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.create.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeCreateInterceptors() ?? []
-    )
-  }
+    /// Unary call to Create
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to Create.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func create(
+        _ request: EventStore_Client_Users_CreateReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.create.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeCreateInterceptors() ?? []
+        )
+    }
 
-  /// Unary call to Update
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to Update.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func update(
-    _ request: EventStore_Client_Users_UpdateReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.update.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeUpdateInterceptors() ?? []
-    )
-  }
+    /// Unary call to Update
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to Update.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func update(
+        _ request: EventStore_Client_Users_UpdateReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.update.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeUpdateInterceptors() ?? []
+        )
+    }
 
-  /// Unary call to Delete
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to Delete.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func delete(
-    _ request: EventStore_Client_Users_DeleteReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.delete.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDeleteInterceptors() ?? []
-    )
-  }
+    /// Unary call to Delete
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to Delete.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func delete(
+        _ request: EventStore_Client_Users_DeleteReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.delete.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDeleteInterceptors() ?? []
+        )
+    }
 
-  /// Unary call to Disable
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to Disable.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func disable(
-    _ request: EventStore_Client_Users_DisableReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.disable.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDisableInterceptors() ?? []
-    )
-  }
+    /// Unary call to Disable
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to Disable.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func disable(
+        _ request: EventStore_Client_Users_DisableReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.disable.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDisableInterceptors() ?? []
+        )
+    }
 
-  /// Unary call to Enable
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to Enable.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func enable(
-    _ request: EventStore_Client_Users_EnableReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.enable.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeEnableInterceptors() ?? []
-    )
-  }
+    /// Unary call to Enable
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to Enable.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func enable(
+        _ request: EventStore_Client_Users_EnableReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.enable.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeEnableInterceptors() ?? []
+        )
+    }
 
-  /// Server streaming call to Details
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to Details.
-  ///   - callOptions: Call options.
-  ///   - handler: A closure called when each response is received from the server.
-  /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
-  public func details(
-    _ request: EventStore_Client_Users_DetailsReq,
-    callOptions: CallOptions? = nil,
-    handler: @escaping (EventStore_Client_Users_DetailsResp) -> Void
-  ) -> ServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp> {
-    return self.makeServerStreamingCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.details.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDetailsInterceptors() ?? [],
-      handler: handler
-    )
-  }
+    /// Server streaming call to Details
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to Details.
+    ///   - callOptions: Call options.
+    ///   - handler: A closure called when each response is received from the server.
+    /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
+    public func details(
+        _ request: EventStore_Client_Users_DetailsReq,
+        callOptions: CallOptions? = nil,
+        handler: @escaping (EventStore_Client_Users_DetailsResp) -> Void
+    ) -> ServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp> {
+        makeServerStreamingCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.details.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDetailsInterceptors() ?? [],
+            handler: handler
+        )
+    }
 
-  /// Unary call to ChangePassword
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to ChangePassword.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func changePassword(
-    _ request: EventStore_Client_Users_ChangePasswordReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.changePassword.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeChangePasswordInterceptors() ?? []
-    )
-  }
+    /// Unary call to ChangePassword
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to ChangePassword.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func changePassword(
+        _ request: EventStore_Client_Users_ChangePasswordReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.changePassword.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeChangePasswordInterceptors() ?? []
+        )
+    }
 
-  /// Unary call to ResetPassword
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to ResetPassword.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func resetPassword(
-    _ request: EventStore_Client_Users_ResetPasswordReq,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeResetPasswordInterceptors() ?? []
-    )
-  }
+    /// Unary call to ResetPassword
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to ResetPassword.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func resetPassword(
+        _ request: EventStore_Client_Users_ResetPasswordReq,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp> {
+        makeUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeResetPasswordInterceptors() ?? []
+        )
+    }
 }
 
 @available(*, deprecated)
@@ -216,775 +215,774 @@ extension EventStore_Client_Users_UsersClient: @unchecked Sendable {}
 
 @available(*, deprecated, renamed: "EventStore_Client_Users_UsersNIOClient")
 public final class EventStore_Client_Users_UsersClient: EventStore_Client_Users_UsersClientProtocol {
-  private let lock = Lock()
-  private var _defaultCallOptions: CallOptions
-  private var _interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol?
-  public let channel: GRPCChannel
-  public var defaultCallOptions: CallOptions {
-    get { self.lock.withLock { return self._defaultCallOptions } }
-    set { self.lock.withLockVoid { self._defaultCallOptions = newValue } }
-  }
-  public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? {
-    get { self.lock.withLock { return self._interceptors } }
-    set { self.lock.withLockVoid { self._interceptors = newValue } }
-  }
+    private let lock = Lock()
+    private var _defaultCallOptions: CallOptions
+    private var _interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol?
+    public let channel: GRPCChannel
+    public var defaultCallOptions: CallOptions {
+        get { lock.withLock { self._defaultCallOptions } }
+        set { lock.withLockVoid { self._defaultCallOptions = newValue } }
+    }
 
-  /// Creates a client for the event_store.client.users.Users service.
-  ///
-  /// - Parameters:
-  ///   - channel: `GRPCChannel` to the service host.
-  ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
-  ///   - interceptors: A factory providing interceptors for each RPC.
-  public init(
-    channel: GRPCChannel,
-    defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? = nil
-  ) {
-    self.channel = channel
-    self._defaultCallOptions = defaultCallOptions
-    self._interceptors = interceptors
-  }
+    public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? {
+        get { lock.withLock { self._interceptors } }
+        set { lock.withLockVoid { self._interceptors = newValue } }
+    }
+
+    /// Creates a client for the event_store.client.users.Users service.
+    ///
+    /// - Parameters:
+    ///   - channel: `GRPCChannel` to the service host.
+    ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
+    ///   - interceptors: A factory providing interceptors for each RPC.
+    public init(
+        channel: GRPCChannel,
+        defaultCallOptions: CallOptions = CallOptions(),
+        interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? = nil
+    ) {
+        self.channel = channel
+        _defaultCallOptions = defaultCallOptions
+        _interceptors = interceptors
+    }
 }
 
 public struct EventStore_Client_Users_UsersNIOClient: EventStore_Client_Users_UsersClientProtocol {
-  public var channel: GRPCChannel
-  public var defaultCallOptions: CallOptions
-  public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol?
+    public var channel: GRPCChannel
+    public var defaultCallOptions: CallOptions
+    public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol?
 
-  /// Creates a client for the event_store.client.users.Users service.
-  ///
-  /// - Parameters:
-  ///   - channel: `GRPCChannel` to the service host.
-  ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
-  ///   - interceptors: A factory providing interceptors for each RPC.
-  public init(
-    channel: GRPCChannel,
-    defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? = nil
-  ) {
-    self.channel = channel
-    self.defaultCallOptions = defaultCallOptions
-    self.interceptors = interceptors
-  }
+    /// Creates a client for the event_store.client.users.Users service.
+    ///
+    /// - Parameters:
+    ///   - channel: `GRPCChannel` to the service host.
+    ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
+    ///   - interceptors: A factory providing interceptors for each RPC.
+    public init(
+        channel: GRPCChannel,
+        defaultCallOptions: CallOptions = CallOptions(),
+        interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? = nil
+    ) {
+        self.channel = channel
+        self.defaultCallOptions = defaultCallOptions
+        self.interceptors = interceptors
+    }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol EventStore_Client_Users_UsersAsyncClientProtocol: GRPCClient {
-  static var serviceDescriptor: GRPCServiceDescriptor { get }
-  var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? { get }
+    static var serviceDescriptor: GRPCServiceDescriptor { get }
+    var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? { get }
 
-  func makeCreateCall(
-    _ request: EventStore_Client_Users_CreateReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>
+    func makeCreateCall(
+        _ request: EventStore_Client_Users_CreateReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>
 
-  func makeUpdateCall(
-    _ request: EventStore_Client_Users_UpdateReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>
+    func makeUpdateCall(
+        _ request: EventStore_Client_Users_UpdateReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>
 
-  func makeDeleteCall(
-    _ request: EventStore_Client_Users_DeleteReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>
+    func makeDeleteCall(
+        _ request: EventStore_Client_Users_DeleteReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>
 
-  func makeDisableCall(
-    _ request: EventStore_Client_Users_DisableReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>
+    func makeDisableCall(
+        _ request: EventStore_Client_Users_DisableReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>
 
-  func makeEnableCall(
-    _ request: EventStore_Client_Users_EnableReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>
+    func makeEnableCall(
+        _ request: EventStore_Client_Users_EnableReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>
 
-  func makeDetailsCall(
-    _ request: EventStore_Client_Users_DetailsReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>
+    func makeDetailsCall(
+        _ request: EventStore_Client_Users_DetailsReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>
 
-  func makeChangePasswordCall(
-    _ request: EventStore_Client_Users_ChangePasswordReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>
+    func makeChangePasswordCall(
+        _ request: EventStore_Client_Users_ChangePasswordReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>
 
-  func makeResetPasswordCall(
-    _ request: EventStore_Client_Users_ResetPasswordReq,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>
+    func makeResetPasswordCall(
+        _ request: EventStore_Client_Users_ResetPasswordReq,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension EventStore_Client_Users_UsersAsyncClientProtocol {
-  public static var serviceDescriptor: GRPCServiceDescriptor {
-    return EventStore_Client_Users_UsersClientMetadata.serviceDescriptor
-  }
+    public static var serviceDescriptor: GRPCServiceDescriptor {
+        EventStore_Client_Users_UsersClientMetadata.serviceDescriptor
+    }
 
-  public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? {
-    return nil
-  }
+    public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? {
+        nil
+    }
 
-  public func makeCreateCall(
-    _ request: EventStore_Client_Users_CreateReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.create.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeCreateInterceptors() ?? []
-    )
-  }
+    public func makeCreateCall(
+        _ request: EventStore_Client_Users_CreateReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.create.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeCreateInterceptors() ?? []
+        )
+    }
 
-  public func makeUpdateCall(
-    _ request: EventStore_Client_Users_UpdateReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.update.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeUpdateInterceptors() ?? []
-    )
-  }
+    public func makeUpdateCall(
+        _ request: EventStore_Client_Users_UpdateReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.update.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeUpdateInterceptors() ?? []
+        )
+    }
 
-  public func makeDeleteCall(
-    _ request: EventStore_Client_Users_DeleteReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.delete.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDeleteInterceptors() ?? []
-    )
-  }
+    public func makeDeleteCall(
+        _ request: EventStore_Client_Users_DeleteReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.delete.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDeleteInterceptors() ?? []
+        )
+    }
 
-  public func makeDisableCall(
-    _ request: EventStore_Client_Users_DisableReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.disable.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDisableInterceptors() ?? []
-    )
-  }
+    public func makeDisableCall(
+        _ request: EventStore_Client_Users_DisableReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.disable.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDisableInterceptors() ?? []
+        )
+    }
 
-  public func makeEnableCall(
-    _ request: EventStore_Client_Users_EnableReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.enable.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeEnableInterceptors() ?? []
-    )
-  }
+    public func makeEnableCall(
+        _ request: EventStore_Client_Users_EnableReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.enable.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeEnableInterceptors() ?? []
+        )
+    }
 
-  public func makeDetailsCall(
-    _ request: EventStore_Client_Users_DetailsReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp> {
-    return self.makeAsyncServerStreamingCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.details.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDetailsInterceptors() ?? []
-    )
-  }
+    public func makeDetailsCall(
+        _ request: EventStore_Client_Users_DetailsReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncServerStreamingCall<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp> {
+        makeAsyncServerStreamingCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.details.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDetailsInterceptors() ?? []
+        )
+    }
 
-  public func makeChangePasswordCall(
-    _ request: EventStore_Client_Users_ChangePasswordReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.changePassword.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeChangePasswordInterceptors() ?? []
-    )
-  }
+    public func makeChangePasswordCall(
+        _ request: EventStore_Client_Users_ChangePasswordReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.changePassword.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeChangePasswordInterceptors() ?? []
+        )
+    }
 
-  public func makeResetPasswordCall(
-    _ request: EventStore_Client_Users_ResetPasswordReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeResetPasswordInterceptors() ?? []
-    )
-  }
+    public func makeResetPasswordCall(
+        _ request: EventStore_Client_Users_ResetPasswordReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeResetPasswordInterceptors() ?? []
+        )
+    }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension EventStore_Client_Users_UsersAsyncClientProtocol {
-  public func create(
-    _ request: EventStore_Client_Users_CreateReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_CreateResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.create.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeCreateInterceptors() ?? []
-    )
-  }
+    public func create(
+        _ request: EventStore_Client_Users_CreateReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_CreateResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.create.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeCreateInterceptors() ?? []
+        )
+    }
 
-  public func update(
-    _ request: EventStore_Client_Users_UpdateReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_UpdateResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.update.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeUpdateInterceptors() ?? []
-    )
-  }
+    public func update(
+        _ request: EventStore_Client_Users_UpdateReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_UpdateResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.update.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeUpdateInterceptors() ?? []
+        )
+    }
 
-  public func delete(
-    _ request: EventStore_Client_Users_DeleteReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_DeleteResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.delete.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDeleteInterceptors() ?? []
-    )
-  }
+    public func delete(
+        _ request: EventStore_Client_Users_DeleteReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_DeleteResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.delete.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDeleteInterceptors() ?? []
+        )
+    }
 
-  public func disable(
-    _ request: EventStore_Client_Users_DisableReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_DisableResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.disable.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDisableInterceptors() ?? []
-    )
-  }
+    public func disable(
+        _ request: EventStore_Client_Users_DisableReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_DisableResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.disable.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDisableInterceptors() ?? []
+        )
+    }
 
-  public func enable(
-    _ request: EventStore_Client_Users_EnableReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_EnableResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.enable.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeEnableInterceptors() ?? []
-    )
-  }
+    public func enable(
+        _ request: EventStore_Client_Users_EnableReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_EnableResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.enable.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeEnableInterceptors() ?? []
+        )
+    }
 
-  public func details(
-    _ request: EventStore_Client_Users_DetailsReq,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncResponseStream<EventStore_Client_Users_DetailsResp> {
-    return self.performAsyncServerStreamingCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.details.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeDetailsInterceptors() ?? []
-    )
-  }
+    public func details(
+        _ request: EventStore_Client_Users_DetailsReq,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncResponseStream<EventStore_Client_Users_DetailsResp> {
+        performAsyncServerStreamingCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.details.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeDetailsInterceptors() ?? []
+        )
+    }
 
-  public func changePassword(
-    _ request: EventStore_Client_Users_ChangePasswordReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_ChangePasswordResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.changePassword.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeChangePasswordInterceptors() ?? []
-    )
-  }
+    public func changePassword(
+        _ request: EventStore_Client_Users_ChangePasswordReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_ChangePasswordResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.changePassword.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeChangePasswordInterceptors() ?? []
+        )
+    }
 
-  public func resetPassword(
-    _ request: EventStore_Client_Users_ResetPasswordReq,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_Users_ResetPasswordResp {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeResetPasswordInterceptors() ?? []
-    )
-  }
+    public func resetPassword(
+        _ request: EventStore_Client_Users_ResetPasswordReq,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_Users_ResetPasswordResp {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeResetPasswordInterceptors() ?? []
+        )
+    }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public struct EventStore_Client_Users_UsersAsyncClient: EventStore_Client_Users_UsersAsyncClientProtocol {
-  public var channel: GRPCChannel
-  public var defaultCallOptions: CallOptions
-  public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol?
+    public var channel: GRPCChannel
+    public var defaultCallOptions: CallOptions
+    public var interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol?
 
-  public init(
-    channel: GRPCChannel,
-    defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? = nil
-  ) {
-    self.channel = channel
-    self.defaultCallOptions = defaultCallOptions
-    self.interceptors = interceptors
-  }
+    public init(
+        channel: GRPCChannel,
+        defaultCallOptions: CallOptions = CallOptions(),
+        interceptors: EventStore_Client_Users_UsersClientInterceptorFactoryProtocol? = nil
+    ) {
+        self.channel = channel
+        self.defaultCallOptions = defaultCallOptions
+        self.interceptors = interceptors
+    }
 }
 
 public protocol EventStore_Client_Users_UsersClientInterceptorFactoryProtocol: Sendable {
+    /// - Returns: Interceptors to use when invoking 'create'.
+    func makeCreateInterceptors() -> [ClientInterceptor<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>]
 
-  /// - Returns: Interceptors to use when invoking 'create'.
-  func makeCreateInterceptors() -> [ClientInterceptor<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>]
+    /// - Returns: Interceptors to use when invoking 'update'.
+    func makeUpdateInterceptors() -> [ClientInterceptor<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>]
 
-  /// - Returns: Interceptors to use when invoking 'update'.
-  func makeUpdateInterceptors() -> [ClientInterceptor<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>]
+    /// - Returns: Interceptors to use when invoking 'delete'.
+    func makeDeleteInterceptors() -> [ClientInterceptor<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>]
 
-  /// - Returns: Interceptors to use when invoking 'delete'.
-  func makeDeleteInterceptors() -> [ClientInterceptor<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>]
+    /// - Returns: Interceptors to use when invoking 'disable'.
+    func makeDisableInterceptors() -> [ClientInterceptor<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>]
 
-  /// - Returns: Interceptors to use when invoking 'disable'.
-  func makeDisableInterceptors() -> [ClientInterceptor<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>]
+    /// - Returns: Interceptors to use when invoking 'enable'.
+    func makeEnableInterceptors() -> [ClientInterceptor<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>]
 
-  /// - Returns: Interceptors to use when invoking 'enable'.
-  func makeEnableInterceptors() -> [ClientInterceptor<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>]
+    /// - Returns: Interceptors to use when invoking 'details'.
+    func makeDetailsInterceptors() -> [ClientInterceptor<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>]
 
-  /// - Returns: Interceptors to use when invoking 'details'.
-  func makeDetailsInterceptors() -> [ClientInterceptor<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>]
+    /// - Returns: Interceptors to use when invoking 'changePassword'.
+    func makeChangePasswordInterceptors() -> [ClientInterceptor<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>]
 
-  /// - Returns: Interceptors to use when invoking 'changePassword'.
-  func makeChangePasswordInterceptors() -> [ClientInterceptor<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>]
-
-  /// - Returns: Interceptors to use when invoking 'resetPassword'.
-  func makeResetPasswordInterceptors() -> [ClientInterceptor<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>]
+    /// - Returns: Interceptors to use when invoking 'resetPassword'.
+    func makeResetPasswordInterceptors() -> [ClientInterceptor<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>]
 }
 
 public enum EventStore_Client_Users_UsersClientMetadata {
-  public static let serviceDescriptor = GRPCServiceDescriptor(
-    name: "Users",
-    fullName: "event_store.client.users.Users",
-    methods: [
-      EventStore_Client_Users_UsersClientMetadata.Methods.create,
-      EventStore_Client_Users_UsersClientMetadata.Methods.update,
-      EventStore_Client_Users_UsersClientMetadata.Methods.delete,
-      EventStore_Client_Users_UsersClientMetadata.Methods.disable,
-      EventStore_Client_Users_UsersClientMetadata.Methods.enable,
-      EventStore_Client_Users_UsersClientMetadata.Methods.details,
-      EventStore_Client_Users_UsersClientMetadata.Methods.changePassword,
-      EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword,
-    ]
-  )
-
-  public enum Methods {
-    public static let create = GRPCMethodDescriptor(
-      name: "Create",
-      path: "/event_store.client.users.Users/Create",
-      type: GRPCCallType.unary
+    public static let serviceDescriptor = GRPCServiceDescriptor(
+        name: "Users",
+        fullName: "event_store.client.users.Users",
+        methods: [
+            EventStore_Client_Users_UsersClientMetadata.Methods.create,
+            EventStore_Client_Users_UsersClientMetadata.Methods.update,
+            EventStore_Client_Users_UsersClientMetadata.Methods.delete,
+            EventStore_Client_Users_UsersClientMetadata.Methods.disable,
+            EventStore_Client_Users_UsersClientMetadata.Methods.enable,
+            EventStore_Client_Users_UsersClientMetadata.Methods.details,
+            EventStore_Client_Users_UsersClientMetadata.Methods.changePassword,
+            EventStore_Client_Users_UsersClientMetadata.Methods.resetPassword,
+        ]
     )
 
-    public static let update = GRPCMethodDescriptor(
-      name: "Update",
-      path: "/event_store.client.users.Users/Update",
-      type: GRPCCallType.unary
-    )
+    public enum Methods {
+        public static let create = GRPCMethodDescriptor(
+            name: "Create",
+            path: "/event_store.client.users.Users/Create",
+            type: GRPCCallType.unary
+        )
 
-    public static let delete = GRPCMethodDescriptor(
-      name: "Delete",
-      path: "/event_store.client.users.Users/Delete",
-      type: GRPCCallType.unary
-    )
+        public static let update = GRPCMethodDescriptor(
+            name: "Update",
+            path: "/event_store.client.users.Users/Update",
+            type: GRPCCallType.unary
+        )
 
-    public static let disable = GRPCMethodDescriptor(
-      name: "Disable",
-      path: "/event_store.client.users.Users/Disable",
-      type: GRPCCallType.unary
-    )
+        public static let delete = GRPCMethodDescriptor(
+            name: "Delete",
+            path: "/event_store.client.users.Users/Delete",
+            type: GRPCCallType.unary
+        )
 
-    public static let enable = GRPCMethodDescriptor(
-      name: "Enable",
-      path: "/event_store.client.users.Users/Enable",
-      type: GRPCCallType.unary
-    )
+        public static let disable = GRPCMethodDescriptor(
+            name: "Disable",
+            path: "/event_store.client.users.Users/Disable",
+            type: GRPCCallType.unary
+        )
 
-    public static let details = GRPCMethodDescriptor(
-      name: "Details",
-      path: "/event_store.client.users.Users/Details",
-      type: GRPCCallType.serverStreaming
-    )
+        public static let enable = GRPCMethodDescriptor(
+            name: "Enable",
+            path: "/event_store.client.users.Users/Enable",
+            type: GRPCCallType.unary
+        )
 
-    public static let changePassword = GRPCMethodDescriptor(
-      name: "ChangePassword",
-      path: "/event_store.client.users.Users/ChangePassword",
-      type: GRPCCallType.unary
-    )
+        public static let details = GRPCMethodDescriptor(
+            name: "Details",
+            path: "/event_store.client.users.Users/Details",
+            type: GRPCCallType.serverStreaming
+        )
 
-    public static let resetPassword = GRPCMethodDescriptor(
-      name: "ResetPassword",
-      path: "/event_store.client.users.Users/ResetPassword",
-      type: GRPCCallType.unary
-    )
-  }
+        public static let changePassword = GRPCMethodDescriptor(
+            name: "ChangePassword",
+            path: "/event_store.client.users.Users/ChangePassword",
+            type: GRPCCallType.unary
+        )
+
+        public static let resetPassword = GRPCMethodDescriptor(
+            name: "ResetPassword",
+            path: "/event_store.client.users.Users/ResetPassword",
+            type: GRPCCallType.unary
+        )
+    }
 }
 
 /// To build a server, implement a class that conforms to this protocol.
 public protocol EventStore_Client_Users_UsersProvider: CallHandlerProvider {
-  var interceptors: EventStore_Client_Users_UsersServerInterceptorFactoryProtocol? { get }
+    var interceptors: EventStore_Client_Users_UsersServerInterceptorFactoryProtocol? { get }
 
-  func create(request: EventStore_Client_Users_CreateReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_CreateResp>
+    func create(request: EventStore_Client_Users_CreateReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_CreateResp>
 
-  func update(request: EventStore_Client_Users_UpdateReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_UpdateResp>
+    func update(request: EventStore_Client_Users_UpdateReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_UpdateResp>
 
-  func delete(request: EventStore_Client_Users_DeleteReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_DeleteResp>
+    func delete(request: EventStore_Client_Users_DeleteReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_DeleteResp>
 
-  func disable(request: EventStore_Client_Users_DisableReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_DisableResp>
+    func disable(request: EventStore_Client_Users_DisableReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_DisableResp>
 
-  func enable(request: EventStore_Client_Users_EnableReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_EnableResp>
+    func enable(request: EventStore_Client_Users_EnableReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_EnableResp>
 
-  func details(request: EventStore_Client_Users_DetailsReq, context: StreamingResponseCallContext<EventStore_Client_Users_DetailsResp>) -> EventLoopFuture<GRPCStatus>
+    func details(request: EventStore_Client_Users_DetailsReq, context: StreamingResponseCallContext<EventStore_Client_Users_DetailsResp>) -> EventLoopFuture<GRPCStatus>
 
-  func changePassword(request: EventStore_Client_Users_ChangePasswordReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_ChangePasswordResp>
+    func changePassword(request: EventStore_Client_Users_ChangePasswordReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_ChangePasswordResp>
 
-  func resetPassword(request: EventStore_Client_Users_ResetPasswordReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_ResetPasswordResp>
+    func resetPassword(request: EventStore_Client_Users_ResetPasswordReq, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_Users_ResetPasswordResp>
 }
 
 extension EventStore_Client_Users_UsersProvider {
-  public var serviceName: Substring {
-    return EventStore_Client_Users_UsersServerMetadata.serviceDescriptor.fullName[...]
-  }
-
-  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
-  /// Returns nil for methods not handled by this service.
-  public func handle(
-    method name: Substring,
-    context: CallHandlerContext
-  ) -> GRPCServerHandlerProtocol? {
-    switch name {
-    case "Create":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_CreateReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_CreateResp>(),
-        interceptors: self.interceptors?.makeCreateInterceptors() ?? [],
-        userFunction: self.create(request:context:)
-      )
-
-    case "Update":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_UpdateReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_UpdateResp>(),
-        interceptors: self.interceptors?.makeUpdateInterceptors() ?? [],
-        userFunction: self.update(request:context:)
-      )
-
-    case "Delete":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DeleteReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_DeleteResp>(),
-        interceptors: self.interceptors?.makeDeleteInterceptors() ?? [],
-        userFunction: self.delete(request:context:)
-      )
-
-    case "Disable":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DisableReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_DisableResp>(),
-        interceptors: self.interceptors?.makeDisableInterceptors() ?? [],
-        userFunction: self.disable(request:context:)
-      )
-
-    case "Enable":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_EnableReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_EnableResp>(),
-        interceptors: self.interceptors?.makeEnableInterceptors() ?? [],
-        userFunction: self.enable(request:context:)
-      )
-
-    case "Details":
-      return ServerStreamingServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DetailsReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_DetailsResp>(),
-        interceptors: self.interceptors?.makeDetailsInterceptors() ?? [],
-        userFunction: self.details(request:context:)
-      )
-
-    case "ChangePassword":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ChangePasswordReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_ChangePasswordResp>(),
-        interceptors: self.interceptors?.makeChangePasswordInterceptors() ?? [],
-        userFunction: self.changePassword(request:context:)
-      )
-
-    case "ResetPassword":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ResetPasswordReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_ResetPasswordResp>(),
-        interceptors: self.interceptors?.makeResetPasswordInterceptors() ?? [],
-        userFunction: self.resetPassword(request:context:)
-      )
-
-    default:
-      return nil
+    public var serviceName: Substring {
+        EventStore_Client_Users_UsersServerMetadata.serviceDescriptor.fullName[...]
     }
-  }
+
+    /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+    /// Returns nil for methods not handled by this service.
+    public func handle(
+        method name: Substring,
+        context: CallHandlerContext
+    ) -> GRPCServerHandlerProtocol? {
+        switch name {
+        case "Create":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_CreateReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_CreateResp>(),
+                interceptors: interceptors?.makeCreateInterceptors() ?? [],
+                userFunction: create(request:context:)
+            )
+
+        case "Update":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_UpdateReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_UpdateResp>(),
+                interceptors: interceptors?.makeUpdateInterceptors() ?? [],
+                userFunction: update(request:context:)
+            )
+
+        case "Delete":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DeleteReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_DeleteResp>(),
+                interceptors: interceptors?.makeDeleteInterceptors() ?? [],
+                userFunction: delete(request:context:)
+            )
+
+        case "Disable":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DisableReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_DisableResp>(),
+                interceptors: interceptors?.makeDisableInterceptors() ?? [],
+                userFunction: disable(request:context:)
+            )
+
+        case "Enable":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_EnableReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_EnableResp>(),
+                interceptors: interceptors?.makeEnableInterceptors() ?? [],
+                userFunction: enable(request:context:)
+            )
+
+        case "Details":
+            ServerStreamingServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DetailsReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_DetailsResp>(),
+                interceptors: interceptors?.makeDetailsInterceptors() ?? [],
+                userFunction: details(request:context:)
+            )
+
+        case "ChangePassword":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ChangePasswordReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_ChangePasswordResp>(),
+                interceptors: interceptors?.makeChangePasswordInterceptors() ?? [],
+                userFunction: changePassword(request:context:)
+            )
+
+        case "ResetPassword":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ResetPasswordReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_ResetPasswordResp>(),
+                interceptors: interceptors?.makeResetPasswordInterceptors() ?? [],
+                userFunction: resetPassword(request:context:)
+            )
+
+        default:
+            nil
+        }
+    }
 }
 
 /// To implement a server, implement an object which conforms to this protocol.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol EventStore_Client_Users_UsersAsyncProvider: CallHandlerProvider, Sendable {
-  static var serviceDescriptor: GRPCServiceDescriptor { get }
-  var interceptors: EventStore_Client_Users_UsersServerInterceptorFactoryProtocol? { get }
+    static var serviceDescriptor: GRPCServiceDescriptor { get }
+    var interceptors: EventStore_Client_Users_UsersServerInterceptorFactoryProtocol? { get }
 
-  func create(
-    request: EventStore_Client_Users_CreateReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_CreateResp
+    func create(
+        request: EventStore_Client_Users_CreateReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_CreateResp
 
-  func update(
-    request: EventStore_Client_Users_UpdateReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_UpdateResp
+    func update(
+        request: EventStore_Client_Users_UpdateReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_UpdateResp
 
-  func delete(
-    request: EventStore_Client_Users_DeleteReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_DeleteResp
+    func delete(
+        request: EventStore_Client_Users_DeleteReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_DeleteResp
 
-  func disable(
-    request: EventStore_Client_Users_DisableReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_DisableResp
+    func disable(
+        request: EventStore_Client_Users_DisableReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_DisableResp
 
-  func enable(
-    request: EventStore_Client_Users_EnableReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_EnableResp
+    func enable(
+        request: EventStore_Client_Users_EnableReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_EnableResp
 
-  func details(
-    request: EventStore_Client_Users_DetailsReq,
-    responseStream: GRPCAsyncResponseStreamWriter<EventStore_Client_Users_DetailsResp>,
-    context: GRPCAsyncServerCallContext
-  ) async throws
+    func details(
+        request: EventStore_Client_Users_DetailsReq,
+        responseStream: GRPCAsyncResponseStreamWriter<EventStore_Client_Users_DetailsResp>,
+        context: GRPCAsyncServerCallContext
+    ) async throws
 
-  func changePassword(
-    request: EventStore_Client_Users_ChangePasswordReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_ChangePasswordResp
+    func changePassword(
+        request: EventStore_Client_Users_ChangePasswordReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_ChangePasswordResp
 
-  func resetPassword(
-    request: EventStore_Client_Users_ResetPasswordReq,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_Users_ResetPasswordResp
+    func resetPassword(
+        request: EventStore_Client_Users_ResetPasswordReq,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_Users_ResetPasswordResp
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension EventStore_Client_Users_UsersAsyncProvider {
-  public static var serviceDescriptor: GRPCServiceDescriptor {
-    return EventStore_Client_Users_UsersServerMetadata.serviceDescriptor
-  }
-
-  public var serviceName: Substring {
-    return EventStore_Client_Users_UsersServerMetadata.serviceDescriptor.fullName[...]
-  }
-
-  public var interceptors: EventStore_Client_Users_UsersServerInterceptorFactoryProtocol? {
-    return nil
-  }
-
-  public func handle(
-    method name: Substring,
-    context: CallHandlerContext
-  ) -> GRPCServerHandlerProtocol? {
-    switch name {
-    case "Create":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_CreateReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_CreateResp>(),
-        interceptors: self.interceptors?.makeCreateInterceptors() ?? [],
-        wrapping: { try await self.create(request: $0, context: $1) }
-      )
-
-    case "Update":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_UpdateReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_UpdateResp>(),
-        interceptors: self.interceptors?.makeUpdateInterceptors() ?? [],
-        wrapping: { try await self.update(request: $0, context: $1) }
-      )
-
-    case "Delete":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DeleteReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_DeleteResp>(),
-        interceptors: self.interceptors?.makeDeleteInterceptors() ?? [],
-        wrapping: { try await self.delete(request: $0, context: $1) }
-      )
-
-    case "Disable":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DisableReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_DisableResp>(),
-        interceptors: self.interceptors?.makeDisableInterceptors() ?? [],
-        wrapping: { try await self.disable(request: $0, context: $1) }
-      )
-
-    case "Enable":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_EnableReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_EnableResp>(),
-        interceptors: self.interceptors?.makeEnableInterceptors() ?? [],
-        wrapping: { try await self.enable(request: $0, context: $1) }
-      )
-
-    case "Details":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DetailsReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_DetailsResp>(),
-        interceptors: self.interceptors?.makeDetailsInterceptors() ?? [],
-        wrapping: { try await self.details(request: $0, responseStream: $1, context: $2) }
-      )
-
-    case "ChangePassword":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ChangePasswordReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_ChangePasswordResp>(),
-        interceptors: self.interceptors?.makeChangePasswordInterceptors() ?? [],
-        wrapping: { try await self.changePassword(request: $0, context: $1) }
-      )
-
-    case "ResetPassword":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ResetPasswordReq>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_Users_ResetPasswordResp>(),
-        interceptors: self.interceptors?.makeResetPasswordInterceptors() ?? [],
-        wrapping: { try await self.resetPassword(request: $0, context: $1) }
-      )
-
-    default:
-      return nil
+    public static var serviceDescriptor: GRPCServiceDescriptor {
+        EventStore_Client_Users_UsersServerMetadata.serviceDescriptor
     }
-  }
+
+    public var serviceName: Substring {
+        EventStore_Client_Users_UsersServerMetadata.serviceDescriptor.fullName[...]
+    }
+
+    public var interceptors: EventStore_Client_Users_UsersServerInterceptorFactoryProtocol? {
+        nil
+    }
+
+    public func handle(
+        method name: Substring,
+        context: CallHandlerContext
+    ) -> GRPCServerHandlerProtocol? {
+        switch name {
+        case "Create":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_CreateReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_CreateResp>(),
+                interceptors: interceptors?.makeCreateInterceptors() ?? [],
+                wrapping: { try await self.create(request: $0, context: $1) }
+            )
+
+        case "Update":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_UpdateReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_UpdateResp>(),
+                interceptors: interceptors?.makeUpdateInterceptors() ?? [],
+                wrapping: { try await self.update(request: $0, context: $1) }
+            )
+
+        case "Delete":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DeleteReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_DeleteResp>(),
+                interceptors: interceptors?.makeDeleteInterceptors() ?? [],
+                wrapping: { try await self.delete(request: $0, context: $1) }
+            )
+
+        case "Disable":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DisableReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_DisableResp>(),
+                interceptors: interceptors?.makeDisableInterceptors() ?? [],
+                wrapping: { try await self.disable(request: $0, context: $1) }
+            )
+
+        case "Enable":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_EnableReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_EnableResp>(),
+                interceptors: interceptors?.makeEnableInterceptors() ?? [],
+                wrapping: { try await self.enable(request: $0, context: $1) }
+            )
+
+        case "Details":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_DetailsReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_DetailsResp>(),
+                interceptors: interceptors?.makeDetailsInterceptors() ?? [],
+                wrapping: { try await self.details(request: $0, responseStream: $1, context: $2) }
+            )
+
+        case "ChangePassword":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ChangePasswordReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_ChangePasswordResp>(),
+                interceptors: interceptors?.makeChangePasswordInterceptors() ?? [],
+                wrapping: { try await self.changePassword(request: $0, context: $1) }
+            )
+
+        case "ResetPassword":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Users_ResetPasswordReq>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_Users_ResetPasswordResp>(),
+                interceptors: interceptors?.makeResetPasswordInterceptors() ?? [],
+                wrapping: { try await self.resetPassword(request: $0, context: $1) }
+            )
+
+        default:
+            nil
+        }
+    }
 }
 
 public protocol EventStore_Client_Users_UsersServerInterceptorFactoryProtocol: Sendable {
+    /// - Returns: Interceptors to use when handling 'create'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeCreateInterceptors() -> [ServerInterceptor<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>]
 
-  /// - Returns: Interceptors to use when handling 'create'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeCreateInterceptors() -> [ServerInterceptor<EventStore_Client_Users_CreateReq, EventStore_Client_Users_CreateResp>]
+    /// - Returns: Interceptors to use when handling 'update'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeUpdateInterceptors() -> [ServerInterceptor<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>]
 
-  /// - Returns: Interceptors to use when handling 'update'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeUpdateInterceptors() -> [ServerInterceptor<EventStore_Client_Users_UpdateReq, EventStore_Client_Users_UpdateResp>]
+    /// - Returns: Interceptors to use when handling 'delete'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeDeleteInterceptors() -> [ServerInterceptor<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>]
 
-  /// - Returns: Interceptors to use when handling 'delete'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeDeleteInterceptors() -> [ServerInterceptor<EventStore_Client_Users_DeleteReq, EventStore_Client_Users_DeleteResp>]
+    /// - Returns: Interceptors to use when handling 'disable'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeDisableInterceptors() -> [ServerInterceptor<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>]
 
-  /// - Returns: Interceptors to use when handling 'disable'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeDisableInterceptors() -> [ServerInterceptor<EventStore_Client_Users_DisableReq, EventStore_Client_Users_DisableResp>]
+    /// - Returns: Interceptors to use when handling 'enable'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeEnableInterceptors() -> [ServerInterceptor<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>]
 
-  /// - Returns: Interceptors to use when handling 'enable'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeEnableInterceptors() -> [ServerInterceptor<EventStore_Client_Users_EnableReq, EventStore_Client_Users_EnableResp>]
+    /// - Returns: Interceptors to use when handling 'details'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeDetailsInterceptors() -> [ServerInterceptor<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>]
 
-  /// - Returns: Interceptors to use when handling 'details'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeDetailsInterceptors() -> [ServerInterceptor<EventStore_Client_Users_DetailsReq, EventStore_Client_Users_DetailsResp>]
+    /// - Returns: Interceptors to use when handling 'changePassword'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeChangePasswordInterceptors() -> [ServerInterceptor<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>]
 
-  /// - Returns: Interceptors to use when handling 'changePassword'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeChangePasswordInterceptors() -> [ServerInterceptor<EventStore_Client_Users_ChangePasswordReq, EventStore_Client_Users_ChangePasswordResp>]
-
-  /// - Returns: Interceptors to use when handling 'resetPassword'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeResetPasswordInterceptors() -> [ServerInterceptor<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>]
+    /// - Returns: Interceptors to use when handling 'resetPassword'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeResetPasswordInterceptors() -> [ServerInterceptor<EventStore_Client_Users_ResetPasswordReq, EventStore_Client_Users_ResetPasswordResp>]
 }
 
 public enum EventStore_Client_Users_UsersServerMetadata {
-  public static let serviceDescriptor = GRPCServiceDescriptor(
-    name: "Users",
-    fullName: "event_store.client.users.Users",
-    methods: [
-      EventStore_Client_Users_UsersServerMetadata.Methods.create,
-      EventStore_Client_Users_UsersServerMetadata.Methods.update,
-      EventStore_Client_Users_UsersServerMetadata.Methods.delete,
-      EventStore_Client_Users_UsersServerMetadata.Methods.disable,
-      EventStore_Client_Users_UsersServerMetadata.Methods.enable,
-      EventStore_Client_Users_UsersServerMetadata.Methods.details,
-      EventStore_Client_Users_UsersServerMetadata.Methods.changePassword,
-      EventStore_Client_Users_UsersServerMetadata.Methods.resetPassword,
-    ]
-  )
-
-  public enum Methods {
-    public static let create = GRPCMethodDescriptor(
-      name: "Create",
-      path: "/event_store.client.users.Users/Create",
-      type: GRPCCallType.unary
+    public static let serviceDescriptor = GRPCServiceDescriptor(
+        name: "Users",
+        fullName: "event_store.client.users.Users",
+        methods: [
+            EventStore_Client_Users_UsersServerMetadata.Methods.create,
+            EventStore_Client_Users_UsersServerMetadata.Methods.update,
+            EventStore_Client_Users_UsersServerMetadata.Methods.delete,
+            EventStore_Client_Users_UsersServerMetadata.Methods.disable,
+            EventStore_Client_Users_UsersServerMetadata.Methods.enable,
+            EventStore_Client_Users_UsersServerMetadata.Methods.details,
+            EventStore_Client_Users_UsersServerMetadata.Methods.changePassword,
+            EventStore_Client_Users_UsersServerMetadata.Methods.resetPassword,
+        ]
     )
 
-    public static let update = GRPCMethodDescriptor(
-      name: "Update",
-      path: "/event_store.client.users.Users/Update",
-      type: GRPCCallType.unary
-    )
+    public enum Methods {
+        public static let create = GRPCMethodDescriptor(
+            name: "Create",
+            path: "/event_store.client.users.Users/Create",
+            type: GRPCCallType.unary
+        )
 
-    public static let delete = GRPCMethodDescriptor(
-      name: "Delete",
-      path: "/event_store.client.users.Users/Delete",
-      type: GRPCCallType.unary
-    )
+        public static let update = GRPCMethodDescriptor(
+            name: "Update",
+            path: "/event_store.client.users.Users/Update",
+            type: GRPCCallType.unary
+        )
 
-    public static let disable = GRPCMethodDescriptor(
-      name: "Disable",
-      path: "/event_store.client.users.Users/Disable",
-      type: GRPCCallType.unary
-    )
+        public static let delete = GRPCMethodDescriptor(
+            name: "Delete",
+            path: "/event_store.client.users.Users/Delete",
+            type: GRPCCallType.unary
+        )
 
-    public static let enable = GRPCMethodDescriptor(
-      name: "Enable",
-      path: "/event_store.client.users.Users/Enable",
-      type: GRPCCallType.unary
-    )
+        public static let disable = GRPCMethodDescriptor(
+            name: "Disable",
+            path: "/event_store.client.users.Users/Disable",
+            type: GRPCCallType.unary
+        )
 
-    public static let details = GRPCMethodDescriptor(
-      name: "Details",
-      path: "/event_store.client.users.Users/Details",
-      type: GRPCCallType.serverStreaming
-    )
+        public static let enable = GRPCMethodDescriptor(
+            name: "Enable",
+            path: "/event_store.client.users.Users/Enable",
+            type: GRPCCallType.unary
+        )
 
-    public static let changePassword = GRPCMethodDescriptor(
-      name: "ChangePassword",
-      path: "/event_store.client.users.Users/ChangePassword",
-      type: GRPCCallType.unary
-    )
+        public static let details = GRPCMethodDescriptor(
+            name: "Details",
+            path: "/event_store.client.users.Users/Details",
+            type: GRPCCallType.serverStreaming
+        )
 
-    public static let resetPassword = GRPCMethodDescriptor(
-      name: "ResetPassword",
-      path: "/event_store.client.users.Users/ResetPassword",
-      type: GRPCCallType.unary
-    )
-  }
+        public static let changePassword = GRPCMethodDescriptor(
+            name: "ChangePassword",
+            path: "/event_store.client.users.Users/ChangePassword",
+            type: GRPCCallType.unary
+        )
+
+        public static let resetPassword = GRPCMethodDescriptor(
+            name: "ResetPassword",
+            path: "/event_store.client.users.Users/ResetPassword",
+            type: GRPCCallType.unary
+        )
+    }
 }

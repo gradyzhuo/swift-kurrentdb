@@ -15,343 +15,344 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 public struct EventStore_Client_Redaction_GetEventPositionReq {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var streamIdentifier: EventStore_Client_StreamIdentifier {
-    get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
-    set {_streamIdentifier = newValue}
-  }
-  /// Returns true if `streamIdentifier` has been explicitly set.
-  public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
-  /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-  public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+        get { _streamIdentifier ?? EventStore_Client_StreamIdentifier() }
+        set { _streamIdentifier = newValue }
+    }
 
-  public var streamRevision: UInt64 = 0
+    /// Returns true if `streamIdentifier` has been explicitly set.
+    public var hasStreamIdentifier: Bool { _streamIdentifier != nil }
+    /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
+    public mutating func clearStreamIdentifier() { _streamIdentifier = nil }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var streamRevision: UInt64 = 0
 
-  public init() {}
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
+    public init() {}
+
+    private var _streamIdentifier: EventStore_Client_StreamIdentifier?
 }
 
 public struct EventStore_Client_Redaction_GetEventPositionResp {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var eventPositions: [EventStore_Client_Redaction_EventPosition] = []
+    public var eventPositions: [EventStore_Client_Redaction_EventPosition] = []
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_Redaction_EventPosition {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var logPosition: UInt64 = 0
+    public var logPosition: UInt64 = 0
 
-  public var chunkInfo: EventStore_Client_Redaction_ChunkInfo {
-    get {return _chunkInfo ?? EventStore_Client_Redaction_ChunkInfo()}
-    set {_chunkInfo = newValue}
-  }
-  /// Returns true if `chunkInfo` has been explicitly set.
-  public var hasChunkInfo: Bool {return self._chunkInfo != nil}
-  /// Clears the value of `chunkInfo`. Subsequent reads from it will return its default value.
-  public mutating func clearChunkInfo() {self._chunkInfo = nil}
+    public var chunkInfo: EventStore_Client_Redaction_ChunkInfo {
+        get { _chunkInfo ?? EventStore_Client_Redaction_ChunkInfo() }
+        set { _chunkInfo = newValue }
+    }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    /// Returns true if `chunkInfo` has been explicitly set.
+    public var hasChunkInfo: Bool { _chunkInfo != nil }
+    /// Clears the value of `chunkInfo`. Subsequent reads from it will return its default value.
+    public mutating func clearChunkInfo() { _chunkInfo = nil }
 
-  public init() {}
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  fileprivate var _chunkInfo: EventStore_Client_Redaction_ChunkInfo? = nil
+    public init() {}
+
+    private var _chunkInfo: EventStore_Client_Redaction_ChunkInfo?
 }
 
 public struct EventStore_Client_Redaction_ChunkInfo {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var fileName: String = String()
+    public var fileName: String = .init()
 
-  public var version: UInt32 = 0
+    public var version: UInt32 = 0
 
-  public var isComplete: Bool = false
+    public var isComplete: Bool = false
 
-  public var eventOffset: UInt32 = 0
+    public var eventOffset: UInt32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_Redaction_SwitchChunkReq {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var targetChunkFile: String = String()
+    public var targetChunkFile: String = .init()
 
-  public var newChunkFile: String = String()
+    public var newChunkFile: String = .init()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 public struct EventStore_Client_Redaction_SwitchChunkResp {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+    public init() {}
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension EventStore_Client_Redaction_GetEventPositionReq: @unchecked Sendable {}
-extension EventStore_Client_Redaction_GetEventPositionResp: @unchecked Sendable {}
-extension EventStore_Client_Redaction_EventPosition: @unchecked Sendable {}
-extension EventStore_Client_Redaction_ChunkInfo: @unchecked Sendable {}
-extension EventStore_Client_Redaction_SwitchChunkReq: @unchecked Sendable {}
-extension EventStore_Client_Redaction_SwitchChunkResp: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension EventStore_Client_Redaction_GetEventPositionReq: @unchecked Sendable {}
+    extension EventStore_Client_Redaction_GetEventPositionResp: @unchecked Sendable {}
+    extension EventStore_Client_Redaction_EventPosition: @unchecked Sendable {}
+    extension EventStore_Client_Redaction_ChunkInfo: @unchecked Sendable {}
+    extension EventStore_Client_Redaction_SwitchChunkReq: @unchecked Sendable {}
+    extension EventStore_Client_Redaction_SwitchChunkResp: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "event_store.client.redaction"
+private let _protobuf_package = "event_store.client.redaction"
 
 extension EventStore_Client_Redaction_GetEventPositionReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GetEventPositionReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "stream_identifier"),
-    2: .standard(proto: "stream_revision"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".GetEventPositionReq"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "stream_identifier"),
+        2: .standard(proto: "stream_revision"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._streamIdentifier) }()
-      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.streamRevision) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularMessageField(value: &_streamIdentifier)
+            case 2: try decoder.decodeSingularUInt64Field(value: &streamRevision)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._streamIdentifier {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    if self.streamRevision != 0 {
-      try visitor.visitSingularUInt64Field(value: self.streamRevision, fieldNumber: 2)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if let v = _streamIdentifier {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+        }
+        if streamRevision != 0 {
+            try visitor.visitSingularUInt64Field(value: streamRevision, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Redaction_GetEventPositionReq, rhs: EventStore_Client_Redaction_GetEventPositionReq) -> Bool {
-    if lhs._streamIdentifier != rhs._streamIdentifier {return false}
-    if lhs.streamRevision != rhs.streamRevision {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Redaction_GetEventPositionReq, rhs: EventStore_Client_Redaction_GetEventPositionReq) -> Bool {
+        if lhs._streamIdentifier != rhs._streamIdentifier { return false }
+        if lhs.streamRevision != rhs.streamRevision { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Redaction_GetEventPositionResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GetEventPositionResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "event_positions"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".GetEventPositionResp"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "event_positions"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.eventPositions) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeRepeatedMessageField(value: &eventPositions)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.eventPositions.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.eventPositions, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !eventPositions.isEmpty {
+            try visitor.visitRepeatedMessageField(value: eventPositions, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Redaction_GetEventPositionResp, rhs: EventStore_Client_Redaction_GetEventPositionResp) -> Bool {
-    if lhs.eventPositions != rhs.eventPositions {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Redaction_GetEventPositionResp, rhs: EventStore_Client_Redaction_GetEventPositionResp) -> Bool {
+        if lhs.eventPositions != rhs.eventPositions { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Redaction_EventPosition: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EventPosition"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "log_position"),
-    2: .standard(proto: "chunk_info"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".EventPosition"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "log_position"),
+        2: .standard(proto: "chunk_info"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.logPosition) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._chunkInfo) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularUInt64Field(value: &logPosition)
+            case 2: try decoder.decodeSingularMessageField(value: &_chunkInfo)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if self.logPosition != 0 {
-      try visitor.visitSingularUInt64Field(value: self.logPosition, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if logPosition != 0 {
+            try visitor.visitSingularUInt64Field(value: logPosition, fieldNumber: 1)
+        }
+        try { if let v = self._chunkInfo {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+        } }()
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try { if let v = self._chunkInfo {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Redaction_EventPosition, rhs: EventStore_Client_Redaction_EventPosition) -> Bool {
-    if lhs.logPosition != rhs.logPosition {return false}
-    if lhs._chunkInfo != rhs._chunkInfo {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Redaction_EventPosition, rhs: EventStore_Client_Redaction_EventPosition) -> Bool {
+        if lhs.logPosition != rhs.logPosition { return false }
+        if lhs._chunkInfo != rhs._chunkInfo { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Redaction_ChunkInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ChunkInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "file_name"),
-    2: .same(proto: "version"),
-    3: .standard(proto: "is_complete"),
-    4: .standard(proto: "event_offset"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".ChunkInfo"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "file_name"),
+        2: .same(proto: "version"),
+        3: .standard(proto: "is_complete"),
+        4: .standard(proto: "event_offset"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.fileName) }()
-      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.version) }()
-      case 3: try { try decoder.decodeSingularBoolField(value: &self.isComplete) }()
-      case 4: try { try decoder.decodeSingularUInt32Field(value: &self.eventOffset) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &fileName)
+            case 2: try decoder.decodeSingularUInt32Field(value: &version)
+            case 3: try decoder.decodeSingularBoolField(value: &isComplete)
+            case 4: try decoder.decodeSingularUInt32Field(value: &eventOffset)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.fileName.isEmpty {
-      try visitor.visitSingularStringField(value: self.fileName, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !fileName.isEmpty {
+            try visitor.visitSingularStringField(value: fileName, fieldNumber: 1)
+        }
+        if version != 0 {
+            try visitor.visitSingularUInt32Field(value: version, fieldNumber: 2)
+        }
+        if isComplete != false {
+            try visitor.visitSingularBoolField(value: isComplete, fieldNumber: 3)
+        }
+        if eventOffset != 0 {
+            try visitor.visitSingularUInt32Field(value: eventOffset, fieldNumber: 4)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if self.version != 0 {
-      try visitor.visitSingularUInt32Field(value: self.version, fieldNumber: 2)
-    }
-    if self.isComplete != false {
-      try visitor.visitSingularBoolField(value: self.isComplete, fieldNumber: 3)
-    }
-    if self.eventOffset != 0 {
-      try visitor.visitSingularUInt32Field(value: self.eventOffset, fieldNumber: 4)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Redaction_ChunkInfo, rhs: EventStore_Client_Redaction_ChunkInfo) -> Bool {
-    if lhs.fileName != rhs.fileName {return false}
-    if lhs.version != rhs.version {return false}
-    if lhs.isComplete != rhs.isComplete {return false}
-    if lhs.eventOffset != rhs.eventOffset {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Redaction_ChunkInfo, rhs: EventStore_Client_Redaction_ChunkInfo) -> Bool {
+        if lhs.fileName != rhs.fileName { return false }
+        if lhs.version != rhs.version { return false }
+        if lhs.isComplete != rhs.isComplete { return false }
+        if lhs.eventOffset != rhs.eventOffset { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Redaction_SwitchChunkReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SwitchChunkReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "target_chunk_file"),
-    2: .standard(proto: "new_chunk_file"),
-  ]
+    public static let protoMessageName: String = _protobuf_package + ".SwitchChunkReq"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "target_chunk_file"),
+        2: .standard(proto: "new_chunk_file"),
+    ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.targetChunkFile) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.newChunkFile) }()
-      default: break
-      }
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &targetChunkFile)
+            case 2: try decoder.decodeSingularStringField(value: &newChunkFile)
+            default: break
+            }
+        }
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.targetChunkFile.isEmpty {
-      try visitor.visitSingularStringField(value: self.targetChunkFile, fieldNumber: 1)
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !targetChunkFile.isEmpty {
+            try visitor.visitSingularStringField(value: targetChunkFile, fieldNumber: 1)
+        }
+        if !newChunkFile.isEmpty {
+            try visitor.visitSingularStringField(value: newChunkFile, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.newChunkFile.isEmpty {
-      try visitor.visitSingularStringField(value: self.newChunkFile, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  public static func ==(lhs: EventStore_Client_Redaction_SwitchChunkReq, rhs: EventStore_Client_Redaction_SwitchChunkReq) -> Bool {
-    if lhs.targetChunkFile != rhs.targetChunkFile {return false}
-    if lhs.newChunkFile != rhs.newChunkFile {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Redaction_SwitchChunkReq, rhs: EventStore_Client_Redaction_SwitchChunkReq) -> Bool {
+        if lhs.targetChunkFile != rhs.targetChunkFile { return false }
+        if lhs.newChunkFile != rhs.newChunkFile { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension EventStore_Client_Redaction_SwitchChunkResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SwitchChunkResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+    public static let protoMessageName: String = _protobuf_package + ".SwitchChunkResp"
+    public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let _ = try decoder.nextFieldNumber() {
+    public mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let _ = try decoder.nextFieldNumber() {}
     }
-  }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
+    public func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        try unknownFields.traverse(visitor: &visitor)
+    }
 
-  public static func ==(lhs: EventStore_Client_Redaction_SwitchChunkResp, rhs: EventStore_Client_Redaction_SwitchChunkResp) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    public static func == (lhs: EventStore_Client_Redaction_SwitchChunkResp, rhs: EventStore_Client_Redaction_SwitchChunkResp) -> Bool {
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }

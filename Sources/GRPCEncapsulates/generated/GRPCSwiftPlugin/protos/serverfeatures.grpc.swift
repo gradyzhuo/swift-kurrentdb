@@ -10,40 +10,39 @@ import NIO
 import NIOConcurrencyHelpers
 import SwiftProtobuf
 
-
 /// Usage: instantiate `EventStore_Client_ServerFeatures_ServerFeaturesClient`, then call methods of this protocol to make API calls.
 public protocol EventStore_Client_ServerFeatures_ServerFeaturesClientProtocol: GRPCClient {
-  var serviceName: String { get }
-  var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? { get }
+    var serviceName: String { get }
+    var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? { get }
 
-  func getSupportedMethods(
-    _ request: EventStore_Client_Empty,
-    callOptions: CallOptions?
-  ) -> UnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>
+    func getSupportedMethods(
+        _ request: EventStore_Client_Empty,
+        callOptions: CallOptions?
+    ) -> UnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>
 }
 
 extension EventStore_Client_ServerFeatures_ServerFeaturesClientProtocol {
-  public var serviceName: String {
-    return "event_store.client.server_features.ServerFeatures"
-  }
+    public var serviceName: String {
+        "event_store.client.server_features.ServerFeatures"
+    }
 
-  /// Unary call to GetSupportedMethods
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to GetSupportedMethods.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func getSupportedMethods(
-    _ request: EventStore_Client_Empty,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods> {
-    return self.makeUnaryCall(
-      path: EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeGetSupportedMethodsInterceptors() ?? []
-    )
-  }
+    /// Unary call to GetSupportedMethods
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to GetSupportedMethods.
+    ///   - callOptions: Call options.
+    /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+    public func getSupportedMethods(
+        _ request: EventStore_Client_Empty,
+        callOptions: CallOptions? = nil
+    ) -> UnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods> {
+        makeUnaryCall(
+            path: EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeGetSupportedMethodsInterceptors() ?? []
+        )
+    }
 }
 
 @available(*, deprecated)
@@ -51,249 +50,248 @@ extension EventStore_Client_ServerFeatures_ServerFeaturesClient: @unchecked Send
 
 @available(*, deprecated, renamed: "EventStore_Client_ServerFeatures_ServerFeaturesNIOClient")
 public final class EventStore_Client_ServerFeatures_ServerFeaturesClient: EventStore_Client_ServerFeatures_ServerFeaturesClientProtocol {
-  private let lock = Lock()
-  private var _defaultCallOptions: CallOptions
-  private var _interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol?
-  public let channel: GRPCChannel
-  public var defaultCallOptions: CallOptions {
-    get { self.lock.withLock { return self._defaultCallOptions } }
-    set { self.lock.withLockVoid { self._defaultCallOptions = newValue } }
-  }
-  public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? {
-    get { self.lock.withLock { return self._interceptors } }
-    set { self.lock.withLockVoid { self._interceptors = newValue } }
-  }
+    private let lock = Lock()
+    private var _defaultCallOptions: CallOptions
+    private var _interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol?
+    public let channel: GRPCChannel
+    public var defaultCallOptions: CallOptions {
+        get { lock.withLock { self._defaultCallOptions } }
+        set { lock.withLockVoid { self._defaultCallOptions = newValue } }
+    }
 
-  /// Creates a client for the event_store.client.server_features.ServerFeatures service.
-  ///
-  /// - Parameters:
-  ///   - channel: `GRPCChannel` to the service host.
-  ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
-  ///   - interceptors: A factory providing interceptors for each RPC.
-  public init(
-    channel: GRPCChannel,
-    defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? = nil
-  ) {
-    self.channel = channel
-    self._defaultCallOptions = defaultCallOptions
-    self._interceptors = interceptors
-  }
+    public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? {
+        get { lock.withLock { self._interceptors } }
+        set { lock.withLockVoid { self._interceptors = newValue } }
+    }
+
+    /// Creates a client for the event_store.client.server_features.ServerFeatures service.
+    ///
+    /// - Parameters:
+    ///   - channel: `GRPCChannel` to the service host.
+    ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
+    ///   - interceptors: A factory providing interceptors for each RPC.
+    public init(
+        channel: GRPCChannel,
+        defaultCallOptions: CallOptions = CallOptions(),
+        interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? = nil
+    ) {
+        self.channel = channel
+        _defaultCallOptions = defaultCallOptions
+        _interceptors = interceptors
+    }
 }
 
 public struct EventStore_Client_ServerFeatures_ServerFeaturesNIOClient: EventStore_Client_ServerFeatures_ServerFeaturesClientProtocol {
-  public var channel: GRPCChannel
-  public var defaultCallOptions: CallOptions
-  public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol?
+    public var channel: GRPCChannel
+    public var defaultCallOptions: CallOptions
+    public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol?
 
-  /// Creates a client for the event_store.client.server_features.ServerFeatures service.
-  ///
-  /// - Parameters:
-  ///   - channel: `GRPCChannel` to the service host.
-  ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
-  ///   - interceptors: A factory providing interceptors for each RPC.
-  public init(
-    channel: GRPCChannel,
-    defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? = nil
-  ) {
-    self.channel = channel
-    self.defaultCallOptions = defaultCallOptions
-    self.interceptors = interceptors
-  }
+    /// Creates a client for the event_store.client.server_features.ServerFeatures service.
+    ///
+    /// - Parameters:
+    ///   - channel: `GRPCChannel` to the service host.
+    ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
+    ///   - interceptors: A factory providing interceptors for each RPC.
+    public init(
+        channel: GRPCChannel,
+        defaultCallOptions: CallOptions = CallOptions(),
+        interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? = nil
+    ) {
+        self.channel = channel
+        self.defaultCallOptions = defaultCallOptions
+        self.interceptors = interceptors
+    }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol EventStore_Client_ServerFeatures_ServerFeaturesAsyncClientProtocol: GRPCClient {
-  static var serviceDescriptor: GRPCServiceDescriptor { get }
-  var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? { get }
+    static var serviceDescriptor: GRPCServiceDescriptor { get }
+    var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? { get }
 
-  func makeGetSupportedMethodsCall(
-    _ request: EventStore_Client_Empty,
-    callOptions: CallOptions?
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>
+    func makeGetSupportedMethodsCall(
+        _ request: EventStore_Client_Empty,
+        callOptions: CallOptions?
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension EventStore_Client_ServerFeatures_ServerFeaturesAsyncClientProtocol {
-  public static var serviceDescriptor: GRPCServiceDescriptor {
-    return EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.serviceDescriptor
-  }
+    public static var serviceDescriptor: GRPCServiceDescriptor {
+        EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.serviceDescriptor
+    }
 
-  public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? {
-    return nil
-  }
+    public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? {
+        nil
+    }
 
-  public func makeGetSupportedMethodsCall(
-    _ request: EventStore_Client_Empty,
-    callOptions: CallOptions? = nil
-  ) -> GRPCAsyncUnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods> {
-    return self.makeAsyncUnaryCall(
-      path: EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeGetSupportedMethodsInterceptors() ?? []
-    )
-  }
+    public func makeGetSupportedMethodsCall(
+        _ request: EventStore_Client_Empty,
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncUnaryCall<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods> {
+        makeAsyncUnaryCall(
+            path: EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeGetSupportedMethodsInterceptors() ?? []
+        )
+    }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension EventStore_Client_ServerFeatures_ServerFeaturesAsyncClientProtocol {
-  public func getSupportedMethods(
-    _ request: EventStore_Client_Empty,
-    callOptions: CallOptions? = nil
-  ) async throws -> EventStore_Client_ServerFeatures_SupportedMethods {
-    return try await self.performAsyncUnaryCall(
-      path: EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods.path,
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makeGetSupportedMethodsInterceptors() ?? []
-    )
-  }
+    public func getSupportedMethods(
+        _ request: EventStore_Client_Empty,
+        callOptions: CallOptions? = nil
+    ) async throws -> EventStore_Client_ServerFeatures_SupportedMethods {
+        try await performAsyncUnaryCall(
+            path: EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods.path,
+            request: request,
+            callOptions: callOptions ?? defaultCallOptions,
+            interceptors: interceptors?.makeGetSupportedMethodsInterceptors() ?? []
+        )
+    }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public struct EventStore_Client_ServerFeatures_ServerFeaturesAsyncClient: EventStore_Client_ServerFeatures_ServerFeaturesAsyncClientProtocol {
-  public var channel: GRPCChannel
-  public var defaultCallOptions: CallOptions
-  public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol?
+    public var channel: GRPCChannel
+    public var defaultCallOptions: CallOptions
+    public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol?
 
-  public init(
-    channel: GRPCChannel,
-    defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? = nil
-  ) {
-    self.channel = channel
-    self.defaultCallOptions = defaultCallOptions
-    self.interceptors = interceptors
-  }
+    public init(
+        channel: GRPCChannel,
+        defaultCallOptions: CallOptions = CallOptions(),
+        interceptors: EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol? = nil
+    ) {
+        self.channel = channel
+        self.defaultCallOptions = defaultCallOptions
+        self.interceptors = interceptors
+    }
 }
 
 public protocol EventStore_Client_ServerFeatures_ServerFeaturesClientInterceptorFactoryProtocol: Sendable {
-
-  /// - Returns: Interceptors to use when invoking 'getSupportedMethods'.
-  func makeGetSupportedMethodsInterceptors() -> [ClientInterceptor<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>]
+    /// - Returns: Interceptors to use when invoking 'getSupportedMethods'.
+    func makeGetSupportedMethodsInterceptors() -> [ClientInterceptor<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>]
 }
 
 public enum EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata {
-  public static let serviceDescriptor = GRPCServiceDescriptor(
-    name: "ServerFeatures",
-    fullName: "event_store.client.server_features.ServerFeatures",
-    methods: [
-      EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods,
-    ]
-  )
-
-  public enum Methods {
-    public static let getSupportedMethods = GRPCMethodDescriptor(
-      name: "GetSupportedMethods",
-      path: "/event_store.client.server_features.ServerFeatures/GetSupportedMethods",
-      type: GRPCCallType.unary
+    public static let serviceDescriptor = GRPCServiceDescriptor(
+        name: "ServerFeatures",
+        fullName: "event_store.client.server_features.ServerFeatures",
+        methods: [
+            EventStore_Client_ServerFeatures_ServerFeaturesClientMetadata.Methods.getSupportedMethods,
+        ]
     )
-  }
+
+    public enum Methods {
+        public static let getSupportedMethods = GRPCMethodDescriptor(
+            name: "GetSupportedMethods",
+            path: "/event_store.client.server_features.ServerFeatures/GetSupportedMethods",
+            type: GRPCCallType.unary
+        )
+    }
 }
 
 /// To build a server, implement a class that conforms to this protocol.
 public protocol EventStore_Client_ServerFeatures_ServerFeaturesProvider: CallHandlerProvider {
-  var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol? { get }
+    var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol? { get }
 
-  func getSupportedMethods(request: EventStore_Client_Empty, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_ServerFeatures_SupportedMethods>
+    func getSupportedMethods(request: EventStore_Client_Empty, context: StatusOnlyCallContext) -> EventLoopFuture<EventStore_Client_ServerFeatures_SupportedMethods>
 }
 
 extension EventStore_Client_ServerFeatures_ServerFeaturesProvider {
-  public var serviceName: Substring {
-    return EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.serviceDescriptor.fullName[...]
-  }
-
-  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
-  /// Returns nil for methods not handled by this service.
-  public func handle(
-    method name: Substring,
-    context: CallHandlerContext
-  ) -> GRPCServerHandlerProtocol? {
-    switch name {
-    case "GetSupportedMethods":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Empty>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_ServerFeatures_SupportedMethods>(),
-        interceptors: self.interceptors?.makeGetSupportedMethodsInterceptors() ?? [],
-        userFunction: self.getSupportedMethods(request:context:)
-      )
-
-    default:
-      return nil
+    public var serviceName: Substring {
+        EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.serviceDescriptor.fullName[...]
     }
-  }
+
+    /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+    /// Returns nil for methods not handled by this service.
+    public func handle(
+        method name: Substring,
+        context: CallHandlerContext
+    ) -> GRPCServerHandlerProtocol? {
+        switch name {
+        case "GetSupportedMethods":
+            UnaryServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Empty>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_ServerFeatures_SupportedMethods>(),
+                interceptors: interceptors?.makeGetSupportedMethodsInterceptors() ?? [],
+                userFunction: getSupportedMethods(request:context:)
+            )
+
+        default:
+            nil
+        }
+    }
 }
 
 /// To implement a server, implement an object which conforms to this protocol.
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol EventStore_Client_ServerFeatures_ServerFeaturesAsyncProvider: CallHandlerProvider, Sendable {
-  static var serviceDescriptor: GRPCServiceDescriptor { get }
-  var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol? { get }
+    static var serviceDescriptor: GRPCServiceDescriptor { get }
+    var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol? { get }
 
-  func getSupportedMethods(
-    request: EventStore_Client_Empty,
-    context: GRPCAsyncServerCallContext
-  ) async throws -> EventStore_Client_ServerFeatures_SupportedMethods
+    func getSupportedMethods(
+        request: EventStore_Client_Empty,
+        context: GRPCAsyncServerCallContext
+    ) async throws -> EventStore_Client_ServerFeatures_SupportedMethods
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension EventStore_Client_ServerFeatures_ServerFeaturesAsyncProvider {
-  public static var serviceDescriptor: GRPCServiceDescriptor {
-    return EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.serviceDescriptor
-  }
-
-  public var serviceName: Substring {
-    return EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.serviceDescriptor.fullName[...]
-  }
-
-  public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol? {
-    return nil
-  }
-
-  public func handle(
-    method name: Substring,
-    context: CallHandlerContext
-  ) -> GRPCServerHandlerProtocol? {
-    switch name {
-    case "GetSupportedMethods":
-      return GRPCAsyncServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<EventStore_Client_Empty>(),
-        responseSerializer: ProtobufSerializer<EventStore_Client_ServerFeatures_SupportedMethods>(),
-        interceptors: self.interceptors?.makeGetSupportedMethodsInterceptors() ?? [],
-        wrapping: { try await self.getSupportedMethods(request: $0, context: $1) }
-      )
-
-    default:
-      return nil
+    public static var serviceDescriptor: GRPCServiceDescriptor {
+        EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.serviceDescriptor
     }
-  }
+
+    public var serviceName: Substring {
+        EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.serviceDescriptor.fullName[...]
+    }
+
+    public var interceptors: EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol? {
+        nil
+    }
+
+    public func handle(
+        method name: Substring,
+        context: CallHandlerContext
+    ) -> GRPCServerHandlerProtocol? {
+        switch name {
+        case "GetSupportedMethods":
+            GRPCAsyncServerHandler(
+                context: context,
+                requestDeserializer: ProtobufDeserializer<EventStore_Client_Empty>(),
+                responseSerializer: ProtobufSerializer<EventStore_Client_ServerFeatures_SupportedMethods>(),
+                interceptors: interceptors?.makeGetSupportedMethodsInterceptors() ?? [],
+                wrapping: { try await self.getSupportedMethods(request: $0, context: $1) }
+            )
+
+        default:
+            nil
+        }
+    }
 }
 
 public protocol EventStore_Client_ServerFeatures_ServerFeaturesServerInterceptorFactoryProtocol: Sendable {
-
-  /// - Returns: Interceptors to use when handling 'getSupportedMethods'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makeGetSupportedMethodsInterceptors() -> [ServerInterceptor<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>]
+    /// - Returns: Interceptors to use when handling 'getSupportedMethods'.
+    ///   Defaults to calling `self.makeInterceptors()`.
+    func makeGetSupportedMethodsInterceptors() -> [ServerInterceptor<EventStore_Client_Empty, EventStore_Client_ServerFeatures_SupportedMethods>]
 }
 
 public enum EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata {
-  public static let serviceDescriptor = GRPCServiceDescriptor(
-    name: "ServerFeatures",
-    fullName: "event_store.client.server_features.ServerFeatures",
-    methods: [
-      EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.Methods.getSupportedMethods,
-    ]
-  )
-
-  public enum Methods {
-    public static let getSupportedMethods = GRPCMethodDescriptor(
-      name: "GetSupportedMethods",
-      path: "/event_store.client.server_features.ServerFeatures/GetSupportedMethods",
-      type: GRPCCallType.unary
+    public static let serviceDescriptor = GRPCServiceDescriptor(
+        name: "ServerFeatures",
+        fullName: "event_store.client.server_features.ServerFeatures",
+        methods: [
+            EventStore_Client_ServerFeatures_ServerFeaturesServerMetadata.Methods.getSupportedMethods,
+        ]
     )
-  }
+
+    public enum Methods {
+        public static let getSupportedMethods = GRPCMethodDescriptor(
+            name: "GetSupportedMethods",
+            path: "/event_store.client.server_features.ServerFeatures/GetSupportedMethods",
+            type: GRPCCallType.unary
+        )
+    }
 }

@@ -41,7 +41,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         let uuidString = try container.decode(String.self, forKey: .id)
-        
+
         guard let id = UUID(uuidString: uuidString) else {
             throw ClientError.eventDataError(message: "Couldn't parsed id from jsonData.")
         }
@@ -52,15 +52,15 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
 
         self.init(id: id, eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
     }
-    
-    internal init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: Data?) {
+
+    init(id: UUID, eventType: String, data: Data, contentType: ContentType, customMetadata: Data?) {
         self.id = id
         self.eventType = eventType
         self.data = data
         self.contentType = contentType
-        self.metadata = [
+        metadata = [
             "content-type": ContentType.json.rawValue,
-            "type": eventType
+            "type": eventType,
         ]
         self.customMetadata = customMetadata
     }
@@ -70,11 +70,11 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         let data = try encoder.encode(payload)
         self.init(id: .init(), eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)
     }
-    
+
     public init(eventType: String, payloadData: Data, customMetadata: Data? = nil) throws {
         self.init(id: .init(), eventType: eventType, data: payloadData, contentType: .binary, customMetadata: customMetadata)
     }
-    
+
     public static func events(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: Data? = nil) throws -> [Self] {
         guard let data = jsonString.data(using: encoding) else {
             throw ClientError.eventDataError(message: "The jsonString can't be encoded into binary data. \(jsonString)")
@@ -125,7 +125,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
     public var metadata: [String: String] {
         [
             "type": eventType,
-            "content-type": contentType.rawValue
+            "content-type": contentType.rawValue,
         ]
     }
 
@@ -198,8 +198,8 @@ public struct ReadEvent: Sendable {
     }
 
     init(event: RecordedEvent, link: RecordedEvent? = nil, commitPosition: Stream.Position? = nil) {
-        self.recordedEvent = event
-        self.linkedRecordedEvent = link
+        recordedEvent = event
+        linkedRecordedEvent = link
         self.commitPosition = commitPosition
     }
 

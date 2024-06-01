@@ -5,9 +5,8 @@
 //  Created by Grady Zhuo on 2023/10/28.
 //
 
-
-@testable import struct EventStoreDB.Stream
 @testable import EventStoreDB
+// @testable import struct EventStoreDB.Stream
 import GRPC
 import NIO
 import XCTest
@@ -19,71 +18,59 @@ enum TestingError: Error {
 final class EventStoreDBStreamTests: XCTestCase {
     var streamName: String!
 
-    override func setUpWithError() throws {
-//        var settings: ClientSettings = "esdb://admin:changeit@localhost:2111,localhost:2112,localhost:2113?keepAliveTimeout=10000&keepAliveInterval=10000"
-//        settings.configuration.trustRoots = .crtInBundle("ca", inBundle: .module)
-//        EventStoreDB.using(settings: .localhost())
-
-//        try EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
-
-//        try EventStoreDB.using(settings: .localhost(port: 2111, userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .crtInBundle("ca", inBundle: .module)))
-        try EventStoreDB.using(settings: .parse(connectionString: "esdb://localhost:2113?tls=false"))
-
+    override func setUp() async throws {
         streamName = "testing2"
     }
 
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
-    
+
     func testStreamNoFound() async throws {
-        let client = try EventStoreDB.Client()
-        let responses = try client.read(streamName: "NoStream", cursor: .start) { options in
-            options
-        }
-        let notFound = await responses.first { response in
-            print(response)
-            switch response.content {
-            case .streamNotFound(_):
-                return true
-            default:
-                return false
+        let settings = ClientSettings.localhost()
+        let client = try EventStoreDBClient(settings: settings)
+        var anError: Error?
+        do {
+            for try await _ in try client.readStream(to: "NoStream", cursor: .start) {
+                // no thing
             }
+        } catch {
+            anError = error
         }
-        
-        XCTAssertNotNil(notFound)
+
+        XCTAssertNotNil(anError)
     }
 
     func testAppendEvent() async throws {
         let content = ["Description": "Gears of War 4"]
-        
-        let client = try EventStoreDB.Client()
-        
-        let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
+        let settings = ClientSettings.localhost()
+        let client = try EventStoreDBClient(settings: settings)
+
+        let readResponses = try client.readStream(to: .init(name: streamName), cursor: .end) { options in
             options.set(uuidOption: .string)
-                .countBy(limit: 1)
+                .set(limit: 1)
         }
-        
-        let lastRevision = await readResponses.first {
+
+        let lastRevision = try await readResponses.first {
             switch $0.content {
             case .event:
-                return true
+                true
             default:
-                return false
+                false
             }
-        }.flatMap{
-            switch $0.content{
-            case .event(let readEvent):
-                return readEvent.recordedEvent.revision
+        }.flatMap {
+            switch $0.content {
+            case let .event(readEvent):
+                readEvent.recordedEvent.revision
             default:
-                return nil
+                nil
             }
         }
-        
-        let appendResponse = try await client.appendTo(streamName: streamName, events: .init(eventType: "AccountCreated", payload: content)) { options in
-            options.expectedRevision(.any)
+
+        let appendResponse = try await client.appendStream(to: .init(name: streamName), events: .init(eventType: "AccountCreated", payload: content)) { options in
+            options.revision(expected: .any)
         }
-        
-        XCTAssertEqual(lastRevision.map{ $0 + 1 }, appendResponse.current.revision)
+
+        XCTAssertEqual(lastRevision.map { $0 + 1 }, appendResponse.current.revision)
     }
 }

@@ -32,24 +32,33 @@ dependencies: [
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
-
-EventStoreDB.using(settings: .parse(connectionString: "esdb://admin:changeit@localhost:2113"))
+let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
 
 // convenience 
-// EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113".parse())
+let settings: ClientSettings = "esdb://admin:changeit@localhost:2113".parse()
 
 // using string literal 
-// EventStoreDB.using(settings: "esdb://admin:changeit@localhost:2113")
+let settings: ClientSettings = "esdb://admin:changeit@localhost:2113"
+
+//using constructor
+let settings: ClientSettings = .localhost()
 
 
-//or 
-// EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"))
+// settings with credentials
+let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
+                                                                   password: "changeit")
 
-//or add ssl file by path
-// EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .file("...filePath...")))
+//settings with credentials with adding ssl file by path
+let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
+                                                                            password: "changeit"), 
+                                                                 trustRoots: .file("...filePath..."))
 
 //or add ssl file with bundle
-// EventStoreDB.using(settings: .localhost(userCredentials: .init(username: "admin", password: "changeit"), trustRoots: .fileInBundle(forResource: "ca", withExtension: "crt", inBundle: .main)))
+let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
+                                                                 password: "changeit"), 
+                                                                 trustRoots: .fileInBundle(forResource: "ca", 
+                                                                                           withExtension: "crt", 
+                                                                                           inBundle: .main))
 ```
 
 #### Appending Event
@@ -58,7 +67,7 @@ EventStoreDB.using(settings: .parse(connectionString: "esdb://admin:changeit@loc
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
-EventStoreDB.using(settings: .localhost())
+let settings: ClientSettings = .localhost()
 
 
 // Create the data array of events.
@@ -73,10 +82,10 @@ let events:[EventData] = [
                 content: "Gears of War 4")
         ]
 
-let streamName = "stream_for_testing"
-let client = try EventStoreDB.Client()
+let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
+let client = try EventStoreDB.Client(settings: settings)
 
-let appendResponse = try await client.appendTo(streamName: streamName, events: events) { options in
+let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
     options.expectedRevision(.any)
 }
 
@@ -87,13 +96,15 @@ let appendResponse = try await client.appendTo(streamName: streamName, events: e
 ```swift
 import EventStoreDB
 
-// Using a client settings for a single node configuration by parsing a connection string.
-EventStoreDB.using(settings: .localhost())
+// Using a client setting to `EventStoreDBClient` by default.
+let settings: ClientSettings = .localhost()
 
-let streamName = "stream_for_testing"
+//prepare an identifier for a stream by a name.
+let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
 
 //Check the event is appended into testing stream.
-let readResponses = try client.read(streamName: streamName, cursor: .end) { options in
+let client = try EventStoreDB.Client(settings: settings)
+let readResponses = try client.readStream(to: streamIdentifier, cursor: .end) { options in
     options.set(uuidOption: .string)
         .countBy(limit: 1)
 }
@@ -109,11 +120,11 @@ for await response in readResponses {
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
-EventStoreDB.using(settings: .localhost())
+let settings: ClientSettings = .localhost()
 
 let streamName = "stream_for_testing"
 
-let client = try EventStoreDB.Client()
+let client = try EventStoreDB.Client(settings: settings)
 try await client.createPersistentSubscription(streamName: streamName, groupName: "mytest", options: .init())
 
 ```
@@ -123,11 +134,11 @@ try await client.createPersistentSubscription(streamName: streamName, groupName:
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
-EventStoreDB.using(settings: .localhost())
+let settings: ClientSettings = .localhost()
 
 let streamName = "stream_for_testing"
 
-let client = try EventStoreDB.Client()
+let client = try EventStoreDB.Client(settings: settings)
 
 let subscription = try await client.subscribePersistentSubscriptionTo(.specified(streamName), groupName: "mytest")
 

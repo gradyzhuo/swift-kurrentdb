@@ -22,22 +22,19 @@ extension UnaryResponseHandlable {
 }
 
 public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: GRPCCallable {
-    func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> AsyncStream<Response>
+    func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses
 }
 
 extension StreamResponseHandlable {
-    public typealias Responses = AsyncStream<Self.Response>
+    public typealias Responses = AsyncThrowingStream<Response, Error>
 
     @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {
-        .init { continuation in
-            Task {
-                for try await message in responses {
-                    let response = try self.handle(response: message)
-                    continuation.yield(response)
-                }
-                continuation.finish()
+        .init {
+            for try await message in responses {
+                return try self.handle(response: message)
             }
+            return nil
         }
     }
 }

@@ -2,10 +2,6 @@
 // https://docs.swift.org/swift-book
 
 import Foundation
+import Logging
 
-public typealias Client = EventStoreDBClient
-
-public func using(settings: ClientSettings) {
-    EventStore.shared.settings = settings
-}
-
+let logger = Logger(label: "EventStoreDB")

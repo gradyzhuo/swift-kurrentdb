@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Selector.swift
+//
 //
 //  Created by 卓俊諺 on 2024/3/23.
 //
@@ -13,7 +13,7 @@ public enum Selector<T> {
 }
 
 extension Selector where T == Stream.Identifier {
-    public static func specified(streamName: String) -> Self{
-        return .specified(.init(name: streamName))
+    public static func specified(streamName: String) -> Self {
+        .specified(.init(name: streamName))
     }
 }
