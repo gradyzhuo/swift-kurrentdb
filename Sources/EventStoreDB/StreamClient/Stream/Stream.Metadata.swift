@@ -1,5 +1,5 @@
 //
-//  Stream+Metadata.swift
+//  Stream.Metadata.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/7.

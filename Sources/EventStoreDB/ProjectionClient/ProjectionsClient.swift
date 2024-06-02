@@ -206,6 +206,7 @@ extension ProjectionsClient {
     }
 
     // MARK: - RestartSubsystem Actions
+
     public func restartSubsystem() async throws {
         let handler = RestartSubsystem()
         try await handler.handle(response: underlyingClient.restartSubsystem(handler.build()))

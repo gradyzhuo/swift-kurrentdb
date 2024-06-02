@@ -7,7 +7,7 @@ let package = Package(
     name: "EventStoreDB",
     platforms: [
         .macOS(.v13),
-        .iOS(.v16)
+        .iOS(.v16),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -18,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -39,7 +39,7 @@ let package = Package(
         .testTarget(
             name: "EventStoreDBTests",
             dependencies: [
-                "EventStoreDB"
+                "EventStoreDB",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
