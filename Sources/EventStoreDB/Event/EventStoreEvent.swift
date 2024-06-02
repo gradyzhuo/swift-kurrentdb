@@ -2,7 +2,7 @@
 //  EventStoreEvent.swift
 //
 //
-//  Created by 卓俊諺 on 2024/6/2.
+//  Created by Grady Zhuo on 2024/6/2.
 //
 
 import Foundation

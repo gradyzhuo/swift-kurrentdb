@@ -2,7 +2,7 @@
 //  PersistentSubscriptionsSettings.swift
 //
 //
-//  Created by 卓俊諺 on 2024/3/22.
+//  Created by Grady Zhuo on 2024/3/22.
 //
 
 import Foundation

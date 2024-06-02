@@ -2,7 +2,7 @@
 //  StreamAclTests.swift
 //
 //
-//  Created by 卓俊諺 on 2024/5/3.
+//  Created by Grady Zhuo on 2024/5/3.
 //
 
 @testable import EventStoreDB

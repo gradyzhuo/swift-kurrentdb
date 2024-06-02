@@ -2,7 +2,7 @@
 //  EventStoreDBClient.swift
 //
 //
-//  Created by 卓俊諺 on 2024/3/18.
+//  Created by Grady Zhuo on 2024/3/18.
 //
 
 import Foundation
