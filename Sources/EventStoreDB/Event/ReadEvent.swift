@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPCEncapsulates
 
 public struct ReadEvent: Sendable {
     public internal(set) var recordedEvent: RecordedEvent

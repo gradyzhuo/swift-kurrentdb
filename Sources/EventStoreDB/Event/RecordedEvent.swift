@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPCEncapsulates
 
 public struct RecordedEvent: EventStoreEvent, Sendable {
     public private(set) var id: UUID

@@ -60,7 +60,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
     }
 
     public init(eventType: String, data: Data, customMetadata: Data? = nil) throws {
-        self.init(id: .init(), eventType: eventType, data: payloadData, contentType: .binary, customMetadata: customMetadata)
+        self.init(id: .init(), eventType: eventType, data: data, contentType: .binary, customMetadata: customMetadata)
     }
     
 }
