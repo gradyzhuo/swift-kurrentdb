@@ -32,10 +32,10 @@ extension StreamResponseHandlable {
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {
         var iterator = responses.makeAsyncIterator()
         return .init {
-            while let message = try await iterator.next() {
-                return try self.handle(response: message)
+            guard let message = try await iterator.next() else {
+                return nil
             }
-            return nil
+            return try self.handle(response: message)
         }
     }
 }
