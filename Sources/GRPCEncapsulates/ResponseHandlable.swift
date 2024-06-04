@@ -30,11 +30,12 @@ extension StreamResponseHandlable {
 
     @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {
-        .init {
-            for try await message in responses {
-                return try self.handle(response: message)
+        var iterator = responses.makeAsyncIterator()
+        return .init {
+            guard let message = try await iterator.next() else {
+                return nil
             }
-            return nil
+            return try self.handle(response: message)
         }
     }
 }

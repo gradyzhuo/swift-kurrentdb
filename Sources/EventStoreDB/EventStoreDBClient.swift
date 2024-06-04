@@ -2,7 +2,7 @@
 //  EventStoreDBClient.swift
 //
 //
-//  Created by 卓俊諺 on 2024/3/18.
+//  Created by Grady Zhuo on 2024/3/18.
 //
 
 import Foundation
@@ -26,8 +26,8 @@ public struct EventStoreDBClient {
 }
 
 // MARK: - Streams Operations
-extension EventStoreDBClient {
 
+extension EventStoreDBClient {
     public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(
             to: .init(name: "$$\(streamName)"),
@@ -161,6 +161,7 @@ extension EventStoreDBClient {
     }
 
     // MARK: - Restart Subsystem Action
+
     public func restartPersistentSubscriptionSubsystem() async throws {
         let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.restartSubsystem()
