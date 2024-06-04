@@ -62,10 +62,10 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
     public init(eventType: String, data: Data, customMetadata: Data? = nil) throws {
         self.init(id: .init(), eventType: eventType, data: data, contentType: .binary, customMetadata: customMetadata)
     }
-    
 }
 
 // MARK: - construction methods
+
 extension EventData {
     public static func events(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: Data? = nil) throws -> [Self] {
         guard let data = jsonString.data(using: encoding) else {
