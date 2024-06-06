@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptionsClient {
     public struct Nack: StreamStream {
-        public enum Action: Int {
+        public enum Action: Int, Sendable {
             case unknown = 0
             case park = 1
             case retry = 2

@@ -10,7 +10,7 @@ import GRPC
 import SwiftProtobuf
 
 public protocol GRPCBridge: Sendable {
-    associatedtype UnderlyingMessage: SwiftProtobuf.Message
+    associatedtype UnderlyingMessage: SwiftProtobuf.Message, Sendable
 }
 
 public protocol GRPCRequest: GRPCBridge {}
@@ -19,12 +19,12 @@ public protocol GRPCResponse: GRPCBridge {
     init(from message: UnderlyingMessage) throws
 }
 
-public struct GenericGRPCRequest<Message: SwiftProtobuf.Message>: GRPCRequest {
-    public typealias UnderlyingMessage = Message
+public struct GenericGRPCRequest<M>: GRPCRequest where M: Message, M: Sendable  {
+    public typealias UnderlyingMessage = M
 }
 
-public struct DiscardedResponse<R: Message>: GRPCResponse {
-    public typealias UnderlyingMessage = R
+public struct DiscardedResponse<M>: GRPCResponse where M: Message, M: Sendable {
+    public typealias UnderlyingMessage = M
 
     public init(from _: UnderlyingMessage) throws {}
 }
