@@ -18,13 +18,11 @@ public struct UserCredentials {
 }
 
 extension UserCredentials {
-    var basicAuthHeader: String {
-        get throws {
-            let credentialString = "\(username):\(password)"
-            guard let data = credentialString.data(using: .ascii) else {
-                throw ClientSettingsError.encodingError(message: "\(credentialString) encoding failed.", encoding: .ascii)
-            }
-            return "Basic \(data.base64EncodedString())"
+    func  makeBasicAuthHeader() throws-> String {
+        let credentialString = "\(username):\(password)"
+        guard let data = credentialString.data(using: .ascii) else {
+            throw ClientSettingsError.encodingError(message: "\(credentialString) encoding failed.", encoding: .ascii)
         }
+        return "Basic \(data.base64EncodedString())"
     }
 }

@@ -97,7 +97,7 @@ public struct ClientSettings {
     public func makeCallOptions() throws -> CallOptions {
         var options = CallOptions()
         if let user = defaultUserCredentials {
-            try options.customMetadata.replaceOrAdd(name: "Authorization", value: user.basicAuthHeader)
+            try options.customMetadata.replaceOrAdd(name: "Authorization", value: user.makeBasicAuthHeader())
         }
         return options
     }

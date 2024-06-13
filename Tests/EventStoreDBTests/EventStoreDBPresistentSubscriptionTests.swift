@@ -12,13 +12,13 @@ import XCTest
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     func testCreate() async throws {
         let settings = ClientSettings.localhost()
-        let client = try EventStoreDBClient(settings: settings)
+        let client = EventStoreDBClient(settings: settings)
         try await client.createPersistentSubscription(to: "testing", groupName: "mytest", options: .init())
     }
 
     func testSubscribe() async throws {
         let settings = ClientSettings.localhost()
-        let client = try EventStoreDBClient(settings: settings)
+        let client = EventStoreDBClient(settings: settings)
 
         let subscription = try await client.subscribePersistentSubscription(to: .specified("testing"), groupName: "mytest") { options in
             options

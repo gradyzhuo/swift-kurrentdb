@@ -19,8 +19,16 @@ public struct EventStoreDBClient {
     public var defaultCallOptions: CallOptions
     public var settings: ClientSettings
 
-    public init(settings: ClientSettings, defaultCallOptions: CallOptions? = nil) throws {
-        self.defaultCallOptions = try defaultCallOptions ?? settings.makeCallOptions()
+    public init(settings: ClientSettings) {
+        var defaultCallOptions = CallOptions()
+        if let credentials = settings.defaultUserCredentials {
+            do{
+                try defaultCallOptions.customMetadata.replaceOrAdd(name: "Authorization", value: credentials.makeBasicAuthHeader())
+            }catch{
+                logger.error("Could not setting Authorization with credentials: \(credentials).\n Original error:\(error).")
+            }
+        }
+        self.defaultCallOptions = defaultCallOptions
         self.settings = settings
     }
 }
