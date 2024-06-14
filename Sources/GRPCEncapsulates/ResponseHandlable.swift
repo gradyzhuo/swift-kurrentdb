@@ -6,9 +6,9 @@
 //
 
 import Foundation
-import GRPC
+@preconcurrency import GRPC
 
-public protocol ResponseHandlable {}
+public protocol ResponseHandlable: Sendable {}
 
 public protocol UnaryResponseHandlable: ResponseHandlable where Self: GRPCCallable {
     func handle(response: Response.UnderlyingMessage) throws -> Response
@@ -30,8 +30,10 @@ extension StreamResponseHandlable {
 
     @discardableResult
     public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>) throws -> Responses {
-        var iterator = responses.makeAsyncIterator()
+        let iterator = responses.makeAsyncIterator()
+
         return .init {
+            var iterator = iterator
             guard let message = try await iterator.next() else {
                 return nil
             }
