@@ -3,7 +3,7 @@
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)
 
 # EventStoreDB-Swift
-[EventStore](https://www.eventstore.com) [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
+[EventStore](https://www.eventstore.com) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
 
 ### Implementation Status
 - Client Settings
