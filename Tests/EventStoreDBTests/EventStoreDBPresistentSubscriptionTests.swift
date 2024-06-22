@@ -11,8 +11,8 @@ import XCTest
 import GRPC
 
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
-    let streamName = "testing"
-    let groupName = "mytest"
+    let streamName = UUID().uuidString
+    let groupName = UUID().uuidString
     let settings = ClientSettings.localhost()
     lazy var streamSelector: EventStoreDB.Selector<EventStoreDB.Stream.Identifier> = {
         .specified(streamName: streamName)
@@ -23,8 +23,12 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     
     override func setUp() async throws {
         let subscriptionClient = try PersistentSubscriptionsClient(channel: GRPCChannelPool.with(settings: settings), callOptions: settings.makeCallOptions())
+        do{
+            try await subscriptionClient.deleteOn(stream: streamSelector, groupName: groupName)
+        }catch{
+            print("subscription does not exists.")
+        }
         
-        try await subscriptionClient.deleteOn(stream: streamSelector, groupName: groupName)
     }
     
     func testCreate() async throws {
@@ -41,11 +45,11 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
         let settings = ClientSettings.localhost()
         let client = EventStoreDBClient(settings: settings)
 
-        let subscription = try await client.subscribePersistentSubscription(to: .specified("testing"), groupName: "mytest") { options in
+        let subscription = try await client.subscribePersistentSubscription(to: streamSelector, groupName: groupName) { options in
             options
         }
 
-        let response = try await client.appendStream(to: "testing",
+        let response = try await client.appendStream(to: .init(name: streamName),
                                                      events: .init(
                                                          eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
                                                      )) { options in
