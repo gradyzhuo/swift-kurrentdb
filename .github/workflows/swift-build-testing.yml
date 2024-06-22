@@ -1,0 +1,48 @@
+# This workflow will build a Swift project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
+
+name: Swift-build-testing
+
+on:
+  push: 
+    branches: ["*"]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        swift: ["5"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: swift-actions/setup-swift@v2
+        with:
+           swift-version: ${{ matrix.swift }}
+      - uses: actions/checkout@v4
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+            ssh-private-key: ${{ secrets.ACCESS_TOKEN }}
+      - name: Build
+        run: swift build -v
+      - name: Run tests
+        run: swift test -v 
+    services:
+    # Label used to access the service container
+      eventstoredb:
+      # Docker Hub image
+        image: eventstore/eventstore
+        ports:
+          - "1113:1113"
+          - "2113:2113"
+        env:
+          EVENTSTORE_CLUSTER_SIZE: 1
+          EVENTSTORE_RUN_PROJECTIONS: All
+          EVENTSTORE_START_STANDARD_PROJECTIONS: true
+          EVENTSTORE_INT_TCP_PORT: 1113
+          EVENTSTORE_HTTP_PORT: 2113
+          EVENTSTORE_INSECURE: true
+          EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP: true
+        
