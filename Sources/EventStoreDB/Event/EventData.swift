@@ -67,41 +67,10 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
 // MARK: - construction methods
 
 extension EventData {
-    public static func events(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: Data? = nil) throws -> [Self] {
-        guard let data = jsonString.data(using: encoding) else {
-            throw ClientError.eventDataError(message: "The jsonString can't be encoded into binary data. \(jsonString)")
-        }
-
-        return try events(fromJSONData: data)
-    }
-
-    public static func event(fromJSONString jsonString: String, encoding: String.Encoding = .utf8, customMetadata _: [String: Codable] = [:]) throws -> Self {
-        guard let data = jsonString.data(using: encoding) else {
-            throw ClientError.eventDataError(message: "The jsonString can't be encoded into binary data. \(jsonString)")
-        }
-
-        return try event(fromJSONData: data)
-    }
-
-    public static func events(fromJSONData jsonData: Data, encoding _: String.Encoding = .utf8, customMetadata: Data? = nil) throws -> [Self] {
-        let decoder = JSONDecoder()
-        return try decoder.decode([Self].self, from: jsonData).map {
-            var event = $0
-            event.customMetadata = customMetadata
-            return event
-        }
-    }
-
-    public static func event(fromJSONData jsonData: Data, encoding _: String.Encoding = .utf8, customMetadata: Data? = nil) throws -> Self {
-        let decoder = JSONDecoder()
-        var event = try decoder.decode(Self.self, from: jsonData)
-        event.customMetadata = customMetadata
-        return event
-    }
-
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
             && lhs.contentType == rhs.contentType
             && lhs.eventType == rhs.eventType
+            && lhs.data == rhs.data
     }
 }
