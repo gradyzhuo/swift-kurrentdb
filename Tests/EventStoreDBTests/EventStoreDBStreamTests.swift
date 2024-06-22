@@ -42,35 +42,19 @@ final class EventStoreDBStreamTests: XCTestCase {
     }
 
     func testAppendEvent() async throws {
+        let streamIdentifier = Stream.Identifier(name: UUID().uuidString)
         let content = ["Description": "Gears of War 4"]
         let settings = ClientSettings.localhost()
         let client = EventStoreDBClient(settings: settings)
-
-        let readResponses = try client.readStream(to: .init(name: streamName), cursor: .end) { options in
-            options.set(uuidOption: .string)
-                .set(limit: 1)
-        }
-
-        let lastRevision = try await readResponses.first {
-            switch $0.content {
-            case .event:
-                true
-            default:
-                false
-            }
-        }.flatMap {
-            switch $0.content {
-            case let .event(readEvent):
-                readEvent.recordedEvent.revision
-            default:
-                nil
-            }
-        }
-
-        let appendResponse = try await client.appendStream(to: .init(name: streamName), events: .init(eventType: "AccountCreated", payload: content)) { options in
+        
+        let appendResponse = try await client.appendStream(to: streamIdentifier, events: .init(eventType: "AccountCreated", payload: content)) { options in
             options.revision(expected: .any)
         }
-
-        XCTAssertEqual(lastRevision.map { $0 + 1 }, appendResponse.current.revision)
+        
+        try await client.deleteStream(to: streamIdentifier) { options in
+            options.revision(expected: .streamExists)
+        }
+        
+        XCTAssertEqual(appendResponse.current.revision, 0)
     }
 }
