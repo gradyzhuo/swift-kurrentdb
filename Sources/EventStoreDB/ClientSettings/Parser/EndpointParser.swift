@@ -13,6 +13,88 @@ class EndpointParser: ConnctionStringParser {
     typealias Result = [ClientSettings.Endpoint]
     typealias HostReference = Reference<String>
     typealias PortReference = Reference<UInt32>
+    
+    let ipv4Regex = Regex {
+        Anchor.wordBoundary
+        Regex{
+            Repeat(count: 3) {
+                Regex{
+                    ChoiceOf{
+                        Regex{
+                            One("25")
+                            One("0"..."5")
+                        }
+                        Regex{
+                            One("2")
+                            One("0"..."4")
+                            One(.digit)
+                        }
+                        Regex{
+                            One("1")
+                            One(.digit)
+                            One(.digit)
+                        }
+                        Regex{
+                            Optionally{
+                                One("1"..."9")
+                            }
+                            One(.digit)
+                        }
+                    }
+                    One(".")
+                }
+            }
+        }
+        
+        Regex {
+            ChoiceOf{
+                Regex {
+                    One("25")
+                    One("0"..."5")
+                }
+                
+                Regex{
+                    One("2")
+                    One("0"..."4")
+                    One(.digit)
+                }
+                
+                Regex{
+                    One("1")
+                    One(.digit)
+                    One(.digit)
+                }
+                
+                Regex{
+                    Optionally{
+                        One("1"..."9")
+                    }
+                    One(.digit)
+                    
+                }
+            }
+        }
+        Anchor.wordBoundary
+        
+    }
+    
+    let hostRegex = Regex {
+        Anchor.wordBoundary
+        OneOrMore{
+            ChoiceOf{
+                "A"..."Z"
+                "a"..."z"
+            }
+            ZeroOrMore{
+                One(.word.subtracting(.anyOf(":?=&")))
+            }
+            Optionally{
+                One(".")
+            }
+        }
+        Anchor.wordBoundary
+    }
+    
 
     lazy var regex: RegexType = Regex {
         ChoiceOf {
@@ -21,12 +103,10 @@ class EndpointParser: ConnctionStringParser {
             ","
         }
         Capture(as: _host) {
-            OneOrMore(
-                .any
-                    .subtracting(
-                        .anyOf(":?=&")
-                    )
-            )
+            ChoiceOf{
+                ipv4Regex
+                hostRegex
+            }
         }
         transform: {
             String($0)
