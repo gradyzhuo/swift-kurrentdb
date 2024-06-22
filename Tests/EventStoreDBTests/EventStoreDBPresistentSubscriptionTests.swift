@@ -8,12 +8,24 @@
 @testable import EventStoreDB
 import SwiftProtobuf
 import XCTest
+import GRPC
 
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
+    let streamName = "testing"
+    let groupName = "mytest"
+
     func testCreate() async throws {
         let settings = ClientSettings.localhost()
+        let subscriptionClient = try PersistentSubscriptionsClient(channel: GRPCChannelPool.with(settings: settings), callOptions: settings.makeCallOptions())
+        let streamSelector: EventStoreDB.Selector<EventStoreDB.Stream.Identifier> = .specified(streamName: streamName)
+        try await subscriptionClient.deleteOn(stream: streamSelector, groupName: groupName)
+        
+        
         let client = EventStoreDBClient(settings: settings)
-        try await client.createPersistentSubscription(to: "testing", groupName: "mytest", options: .init())
+        try await client.createPersistentSubscription(to: "testing", groupName: "mytest")
+        
+        let subscriptions = try await subscriptionClient.list(stream: streamSelector)
+        XCTAssertEqual(subscriptions.count, 1)
     }
 
     func testSubscribe() async throws {
