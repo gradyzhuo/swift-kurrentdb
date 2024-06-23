@@ -14,7 +14,7 @@ extension Stream {
 
         public let name: String
         public var encoding: String.Encoding
-        
+
         public init(name: String, encoding: String.Encoding = .utf8) {
             self.name = name
             self.encoding = encoding

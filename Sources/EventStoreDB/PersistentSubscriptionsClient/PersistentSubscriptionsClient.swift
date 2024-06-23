@@ -142,7 +142,7 @@ extension PersistentSubscriptionsClient {
     func subscribeTo(_ streamSelection: Selector<Stream.Identifier>, groupName: String, options: Read.Options) async throws -> Subscription {
         let handler = Read(streamSelection: streamSelection, groupName: groupName, options: options)
         let requests = try handler.build()
-        
+
         let getSubscriptionCall = underlyingClient.makeReadCall()
         try await getSubscriptionCall.requestStream.send(requests)
 

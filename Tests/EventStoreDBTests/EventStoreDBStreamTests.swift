@@ -46,39 +46,38 @@ final class EventStoreDBStreamTests: XCTestCase {
         let content = ["Description": "Gears of War 4"]
         let settings = ClientSettings.localhost()
         let client = EventStoreDBClient(settings: settings)
-        
+
         let appendResponse = try await client.appendStream(to: streamIdentifier, events: .init(eventType: "AccountCreated", payload: content)) { options in
             options.revision(expected: .any)
         }
-        
+
         try await client.deleteStream(to: streamIdentifier) { options in
             options.revision(expected: .streamExists)
         }
-        
+
         XCTAssertEqual(appendResponse.current.revision, 0)
     }
-    
+
     func testMetadata() async throws {
         let settings = ClientSettings.localhost()
         let client = EventStoreDBClient(settings: settings)
-        
+
         let metadata = Stream.Metadata()
             .cacheControl(.seconds(3))
             .maxAge(.seconds(30))
             .acl(.userStream)
-        
+
         try await client.setMetadata(to: .init(name: streamName), metadata: metadata) { options in
             options
         }
-        
+
         guard let responseMetadata = try await client.getStreamMetadata(to: .init(name: streamName)) else {
             throw TestingError.exception("metadata not found.")
         }
-        
+
         XCTAssertEqual(metadata, responseMetadata)
     }
-    
-    
+
     func testSubscribe() async throws {
         let settings = ClientSettings.localhost()
         let client = EventStoreDBClient(settings: settings)
@@ -91,7 +90,7 @@ final class EventStoreDBStreamTests: XCTestCase {
                                                      )) { options in
             options.revision(expected: .any)
         }
-        
+
         var lastEventResult: StreamClient.Subscription.EventAppeared? = nil
         for try await result in subscription {
             lastEventResult = result

@@ -49,27 +49,30 @@ extension StreamClient {
     }
 
     // MARK: - Read by a stream methos
+
     package func read(stream: Stream.Identifier, cursor: Cursor<Read.CursorPointer>, options: StreamClient.Read.Options) throws -> Read.Responses {
         let handler = Read(streamIdentifier: stream, cursor: cursor, options: options)
         let request = try handler.build()
 
         return try handler.handle(responses: underlyingClient.read(request))
     }
-    
+
     // MARK: - Read by a stream methos
+
     package func subscribe(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, options: StreamClient.Subscribe.Options) async throws -> Subscription {
         let handler = Subscribe(streamIdentifier: stream, cursor: cursor, options: options)
         var request = try handler.build()
-        
+
         let getSubscriptionCall = underlyingClient.makeReadCall(request)
         return try await .init(readCall: getSubscriptionCall)
     }
 
     // MARK: - Read by a stream methos
+
     package func subscribeToAll(from cursor: Cursor<Stream.Position>, options: StreamClient.SubscribeToAll.Options) async throws -> Subscription {
         let handler = SubscribeToAll(cursor: cursor, options: options)
         var request = try handler.build()
-        
+
         let getSubscriptionCall = underlyingClient.makeReadCall(request)
         return try await .init(readCall: getSubscriptionCall)
     }

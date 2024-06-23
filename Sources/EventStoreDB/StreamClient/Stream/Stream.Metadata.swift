@@ -46,50 +46,50 @@ extension Stream {
         var customProperties: [String: String]?
 
         public init() {
-            self.maxCount = nil
-            self.maxAge = nil
-            self.truncateBefore = nil
-            self.cacheControl = nil
-            self.acl = nil
-            self.customProperties = nil
+            maxCount = nil
+            maxAge = nil
+            truncateBefore = nil
+            cacheControl = nil
+            acl = nil
+            customProperties = nil
         }
-        
+
         public func maxCount(_ maxCount: UInt64) -> Self {
             withCopy { copied in
                 copied.maxCount = maxCount
             }
         }
-        
+
         public func maxAge(_ maxAge: Duration) -> Self {
             withCopy { copied in
                 copied.maxAge = maxAge
             }
         }
-        
+
         public func truncateBefore(_ truncateBefore: UInt64) -> Self {
             withCopy { copied in
                 copied.truncateBefore = truncateBefore
             }
         }
-        
+
         public func cacheControl(_ cacheControl: Duration) -> Self {
             withCopy { copied in
                 copied.cacheControl = cacheControl
             }
         }
-        
+
         public func acl(_ acl: Acl) -> Self {
             withCopy { copied in
                 copied.acl = acl
             }
         }
-        
+
         public func customProperties(_ customProperties: [String: String]) -> Self {
             withCopy { copied in
                 copied.customProperties = customProperties
             }
         }
-        
+
         func jsonData() throws -> Data? {
             guard let customProperties else {
                 return nil
@@ -175,55 +175,54 @@ extension Stream.Metadata {
 
         // Roles and users permitted to write stream metadata.
         public private(set) var metaWriteRoles: [String]?
-        
     }
 }
 
 extension Stream.Metadata.StreamAcl: Buildable {
-    public func readRoles(_ roles: [String]) -> Self{
+    public func readRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.readRoles = roles
         }
     }
-    
-    public func writeRoles(_ roles: [String]) -> Self{
+
+    public func writeRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.writeRoles = roles
         }
     }
-    
-    public func deleteRoles(_ roles: [String]) -> Self{
+
+    public func deleteRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.deleteRoles = roles
         }
     }
-    
-    public func metaReadRoles(_ roles: [String]) -> Self{
+
+    public func metaReadRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.metaReadRoles = roles
         }
     }
-    
-    public func metaWriteRoles(_ roles: [String]) -> Self{
+
+    public func metaWriteRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.metaWriteRoles = roles
         }
     }
 }
 
-extension Stream.Metadata : Equatable {
-    public static func ==(lhs: Self, rhs: Self) -> Bool{
-        return lhs.cacheControl == rhs.cacheControl
-        && lhs.customProperties == rhs.customProperties
-        && lhs.maxAge == rhs.maxAge
-        && lhs.truncateBefore == rhs.truncateBefore
-        && lhs.acl == rhs.acl
+extension Stream.Metadata: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.cacheControl == rhs.cacheControl
+            && lhs.customProperties == rhs.customProperties
+            && lhs.maxAge == rhs.maxAge
+            && lhs.truncateBefore == rhs.truncateBefore
+            && lhs.acl == rhs.acl
     }
 }
 
-extension Stream.Metadata.Acl : Equatable {
+extension Stream.Metadata.Acl: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        do{
+        do {
             return try lhs.rawValue == rhs.rawValue
         } catch {
             logger.warning("It's failed when getting acl rawvalue of stream metadata. error: \(error)")
@@ -234,10 +233,10 @@ extension Stream.Metadata.Acl : Equatable {
 
 extension Stream.Metadata.StreamAcl: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.deleteRoles == rhs.deleteRoles
-        && lhs.metaReadRoles == rhs.metaReadRoles
-        && lhs.metaWriteRoles == rhs.metaWriteRoles
-        && lhs.readRoles == rhs.readRoles
-        && lhs.writeRoles == rhs.writeRoles
+        lhs.deleteRoles == rhs.deleteRoles
+            && lhs.metaReadRoles == rhs.metaReadRoles
+            && lhs.metaWriteRoles == rhs.metaWriteRoles
+            && lhs.readRoles == rhs.readRoles
+            && lhs.writeRoles == rhs.writeRoles
     }
 }

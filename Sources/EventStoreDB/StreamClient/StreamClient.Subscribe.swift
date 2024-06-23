@@ -1,5 +1,5 @@
 //
-//  StreamClient.Read.swift
+//  StreamClient.Subscribe.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/21.
@@ -22,7 +22,7 @@ extension StreamClient {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
                 $0.options.subscription = .init()
-                
+
                 $0.options.readDirection = .forwards
                 switch cursor {
                 case .start:
@@ -35,7 +35,6 @@ extension StreamClient {
             }
         }
     }
-
 }
 
 extension StreamClient.Subscribe {
@@ -97,7 +96,6 @@ extension StreamClient.Subscribe {
         }
     }
 }
-
 
 extension StreamClient.Subscribe {
     public struct Options: EventStoreOptions {

@@ -22,9 +22,9 @@ public struct EventStoreDBClient {
     public init(settings: ClientSettings) {
         var defaultCallOptions = CallOptions()
         if let credentials = settings.defaultUserCredentials {
-            do{
+            do {
                 try defaultCallOptions.customMetadata.replaceOrAdd(name: "Authorization", value: credentials.makeBasicAuthHeader())
-            }catch{
+            } catch {
                 logger.error("Could not setting Authorization with credentials: \(credentials).\n Original error:\(error).")
             }
         }
@@ -123,14 +123,14 @@ extension EventStoreDBClient {
 
     // MARK: Subscribe by all streams methods -
 
-    public func subscribeToAll(from cursor: Cursor<Stream.Position>, configure: (_ options: StreamClient.SubscribeToAll.Options) -> StreamClient.SubscribeToAll.Options = { $0 }) async throws -> StreamClient.Subscription{
+    public func subscribeToAll(from cursor: Cursor<Stream.Position>, configure: (_ options: StreamClient.SubscribeToAll.Options) -> StreamClient.SubscribeToAll.Options = { $0 }) async throws -> StreamClient.Subscription {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try await client.subscribeToAll(from: cursor, options: options)
     }
 
-    public func subscribeTo(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, configure: (_ options: StreamClient.Subscribe.Options) -> StreamClient.Subscribe.Options = { $0 }) async throws -> StreamClient.Subscription{
+    public func subscribeTo(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, configure: (_ options: StreamClient.Subscribe.Options) -> StreamClient.Subscribe.Options = { $0 }) async throws -> StreamClient.Subscription {
         let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())

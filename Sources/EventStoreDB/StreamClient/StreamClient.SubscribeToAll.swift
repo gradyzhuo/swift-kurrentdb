@@ -1,5 +1,5 @@
 //
-//  StreamClient.Read.swift
+//  StreamClient.SubscribeToAll.swift
 //
 //
 //  Created by Grady Zhuo on 2023/10/21.
@@ -12,16 +12,15 @@ import GRPCEncapsulates
 extension StreamClient {
     public struct SubscribeToAll: UnaryStream {
         public typealias Request = GenericGRPCRequest<EventStore_Client_Streams_ReadReq>
-        
+
         public let cursor: Cursor<Stream.Position>
         public let options: Options
 
         package func build() throws -> Request.UnderlyingMessage {
-            
             .with {
                 $0.options = options.build()
                 $0.options.readDirection = .forwards
-                
+
                 switch cursor {
                 case .start:
                     $0.options.all.start = .init()
@@ -98,7 +97,6 @@ extension StreamClient.SubscribeToAll {
     }
 }
 
-
 extension StreamClient.SubscribeToAll {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = EventStore_Client_Streams_ReadReq.Options
@@ -110,16 +108,16 @@ extension StreamClient.SubscribeToAll {
         package func build() -> UnderlyingMessage {
             .with {
                 if let filter {
-                    $0.filter = .with{
+                    $0.filter = .with {
                         // filter
-                        switch filter.type{
+                        switch filter.type {
                         case let .streamName(regex):
-                            $0.streamIdentifier = .with{
+                            $0.streamIdentifier = .with {
                                 $0.regex = regex
                                 $0.prefix = filter.prefixes
                             }
                         case let .eventType(regex):
-                            $0.eventType = .with{
+                            $0.eventType = .with {
                                 $0.regex = regex
                                 $0.prefix = filter.prefixes
                             }
@@ -128,14 +126,14 @@ extension StreamClient.SubscribeToAll {
                         switch filter.window {
                         case .count:
                             $0.count = .init()
-                        case .max(let value):
+                        case let .max(value):
                             $0.max = value
                         }
-                        
-                        //checkpointIntervalMultiplier
+
+                        // checkpointIntervalMultiplier
                         $0.checkpointIntervalMultiplier = filter.checkpointIntervalMultiplier
                     }
-                }else{
+                } else {
                     $0.noFilter = .init()
                 }
 
@@ -156,7 +154,7 @@ extension StreamClient.SubscribeToAll {
                 options.resolveLinks = resolveLinks
             }
         }
-        
+
         @discardableResult
         public func set(filter: Stream.SubscriptionFilter) -> Self {
             withCopy { options in

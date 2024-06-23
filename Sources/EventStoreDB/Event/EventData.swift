@@ -53,7 +53,7 @@ public struct EventData: EventStoreEvent, Codable, Equatable {
         self.customMetadata = customMetadata
     }
 
-    public init(id: UUID = .init() ,eventType: String, payload: Codable, customMetadata: Data? = nil) throws {
+    public init(id: UUID = .init(), eventType: String, payload: Codable, customMetadata: Data? = nil) throws {
         let encoder = JSONEncoder()
         let data = try encoder.encode(payload)
         self.init(id: id, eventType: eventType, data: data, contentType: .json, customMetadata: customMetadata)

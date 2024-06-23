@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptionsClient.Subscription.swift
+//  StreamClient.Subscription.swift
 //
 //
 //  Created by Grady Zhuo on 2024/3/23.
@@ -7,35 +7,34 @@
 
 import Foundation
 import GRPC
-import SwiftProtobuf
 import GRPCEncapsulates
+import SwiftProtobuf
 
 extension StreamClient {
     public final class Subscription: AsyncSequence {
-    package typealias Read = StreamClient.Read
-    public typealias AsyncIterator = EventIterator
-    public typealias Element = EventAppeared
+        package typealias Read = StreamClient.Read
+        public typealias AsyncIterator = EventIterator
+        public typealias Element = EventAppeared
 
-    public let eventIterator: EventIterator
+        public let eventIterator: EventIterator
 
-    var subscriptionId: String?
+        var subscriptionId: String?
 
-    package init(readCall: GRPCAsyncServerStreamingCall<Read.Request.UnderlyingMessage, Read.Response.UnderlyingMessage>) async throws {
+        package init(readCall: GRPCAsyncServerStreamingCall<Read.Request.UnderlyingMessage, Read.Response.UnderlyingMessage>) async throws {
+            var iterator = readCall.responseStream.makeAsyncIterator()
+            eventIterator = .init(responseStreamIterator: iterator)
 
-        var iterator = readCall.responseStream.makeAsyncIterator()
-        eventIterator = .init(responseStreamIterator: iterator)
-        
-        subscriptionId = if case let .confirmation(confirmation) = try await iterator.next()?.content {
-            confirmation.subscriptionID
-        } else {
-            nil
+            subscriptionId = if case let .confirmation(confirmation) = try await iterator.next()?.content {
+                confirmation.subscriptionID
+            } else {
+                nil
+            }
+        }
+
+        public func makeAsyncIterator() -> AsyncIterator {
+            eventIterator
         }
     }
-
-    public func makeAsyncIterator() -> AsyncIterator {
-        eventIterator
-    }
-}
 }
 
 extension StreamClient.Subscription {
@@ -70,5 +69,3 @@ extension StreamClient.Subscription {
         }
     }
 }
-
-

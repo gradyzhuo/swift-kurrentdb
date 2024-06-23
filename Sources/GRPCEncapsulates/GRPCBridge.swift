@@ -19,7 +19,7 @@ public protocol GRPCResponse: GRPCBridge {
     init(from message: UnderlyingMessage) throws
 }
 
-public struct GenericGRPCRequest<M>: GRPCRequest where M: Message, M: Sendable  {
+public struct GenericGRPCRequest<M>: GRPCRequest where M: Message, M: Sendable {
     public typealias UnderlyingMessage = M
 }
 
