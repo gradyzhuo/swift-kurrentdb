@@ -58,7 +58,7 @@ extension PersistentSubscriptionsClient.Update {
                     case .end:
                         $0.stream.end = .init()
                     case let .specified(revision):
-                        $0.stream.revision = revision.value
+                        $0.stream.revision = revision
                     }
                 }
             }

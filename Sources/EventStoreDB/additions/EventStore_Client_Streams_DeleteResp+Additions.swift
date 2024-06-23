@@ -14,7 +14,7 @@ extension EventStore_Client_Streams_DeleteResp.OneOf_PositionOption {
     func represented() -> Represented {
         switch self {
         case let .position(position):
-            .position(.init(commit: position.commitPosition, prepare: position.preparePosition))
+            .position(.at(commitPosition: position.commitPosition, preparePosition: position.preparePosition))
         case .noPosition:
             .noPosition
         }

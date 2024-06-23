@@ -57,4 +57,27 @@ final class EventStoreDBStreamTests: XCTestCase {
         
         XCTAssertEqual(appendResponse.current.revision, 0)
     }
+    
+    
+    func testSubscribe() async throws {
+        let settings = ClientSettings.localhost()
+        let client = EventStoreDBClient(settings: settings)
+
+        let subscription = try await client.subscribeTo(stream: .init(name: streamName), from: .end)
+
+        let response = try await client.appendStream(to: .init(name: streamName),
+                                                     events: .init(
+                                                         eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+                                                     )) { options in
+            options.revision(expected: .any)
+        }
+        
+        var lastEventResult: StreamClient.Subscription.EventAppeared? = nil
+        for try await result in subscription {
+            lastEventResult = result
+            break
+        }
+
+        XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
+    }
 }

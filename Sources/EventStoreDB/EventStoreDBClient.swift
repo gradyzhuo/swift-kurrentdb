@@ -115,9 +115,25 @@ extension EventStoreDBClient {
         return try client.read(stream: streamIdentifier, cursor: cursor, options: options)
     }
 
-    public func readStream(to streamIdentifier: Stream.Identifier, at revision: UInt64, direction: StreamClient.Read.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    public func readStream(to streamIdentifier: Stream.Identifier, at revision: UInt64, direction: Stream.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         let cursor: Cursor<StreamClient.Read.CursorPointer> = .specified(.init(revision: revision, direction: direction))
         return try readStream(to: streamIdentifier, cursor: cursor, configure: configure)
+    }
+
+    // MARK: Subscribe by all streams methods -
+
+    public func subscribeToAll(from cursor: Cursor<Stream.Position>, configure: (_ options: StreamClient.SubscribeToAll.Options) -> StreamClient.SubscribeToAll.Options = { $0 }) async throws -> StreamClient.Subscription{
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+
+        let options = configure(.init())
+        return try await client.subscribeToAll(from: cursor, options: options)
+    }
+
+    public func subscribeTo(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, configure: (_ options: StreamClient.Subscribe.Options) -> StreamClient.Subscribe.Options = { $0 }) async throws -> StreamClient.Subscription{
+        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+
+        let options = configure(.init())
+        return try await client.subscribe(stream: stream, from: cursor, options: options)
     }
 
     // MARK: (Soft) Delete a stream -
@@ -160,8 +176,9 @@ extension EventStoreDBClient {
         try await handler.handle(response: underlyingClient.create(request))
     }
 
-    public func createPersistentSubscriptionToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options = .init()) async throws {
+    public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToAll.Options) -> PersistentSubscriptionsClient.Create.ToAll.Options = { $0 }) async throws {
         let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
+        let options = configure(.init())
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
 
         let request = try handler.build()

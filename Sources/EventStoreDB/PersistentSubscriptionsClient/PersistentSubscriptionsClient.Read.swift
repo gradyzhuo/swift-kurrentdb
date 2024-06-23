@@ -42,7 +42,7 @@ extension ReadEvent {
             case .noPosition:
                 commitPosition = nil
             case let .commitPosition(commitPosition):
-                self.commitPosition = .init(commit: commitPosition)
+                self.commitPosition = .at(commitPosition: commitPosition)
             }
         } else {
             commitPosition = nil

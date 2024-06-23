@@ -89,7 +89,7 @@ extension PersistentSubscriptionsClient.Create.ToStream {
                 case .end:
                     $0.stream.end = .init()
                 case let .specified(revision):
-                    $0.stream.revision = revision.value
+                    $0.stream.revision = revision
                 }
             }
         }
@@ -101,10 +101,10 @@ extension PersistentSubscriptionsClient.Create.ToAll {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
         public var settings: PersistentSubscriptionsClient.Settings
-        public var filter: StreamClient.FilterOption?
+        public var filter: Stream.SubscriptionFilter?
         public var positionCursor: Cursor<Stream.Position>
 
-        public init(settings: PersistentSubscriptionsClient.Settings = .init(), filter: StreamClient.FilterOption? = nil, positionCursor: Cursor<Stream.Position> = .end) {
+        public init(settings: PersistentSubscriptionsClient.Settings = .init(), filter: Stream.SubscriptionFilter? = nil, positionCursor: Cursor<Stream.Position> = .end) {
             self.settings = settings
             self.filter = filter
             self.positionCursor = positionCursor

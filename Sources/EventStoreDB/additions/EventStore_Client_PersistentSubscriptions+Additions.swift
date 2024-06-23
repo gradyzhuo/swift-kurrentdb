@@ -70,7 +70,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings: Persiste
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions {
-    public static func make(with filter: StreamClient.FilterOption) -> Self {
+    public static func make(with filter: Stream.SubscriptionFilter) -> Self {
         .with {
             switch filter.window {
             case .count:

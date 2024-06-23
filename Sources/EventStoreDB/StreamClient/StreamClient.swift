@@ -49,12 +49,29 @@ extension StreamClient {
     }
 
     // MARK: - Read by a stream methos
-
     package func read(stream: Stream.Identifier, cursor: Cursor<Read.CursorPointer>, options: StreamClient.Read.Options) throws -> Read.Responses {
         let handler = Read(streamIdentifier: stream, cursor: cursor, options: options)
         let request = try handler.build()
 
         return try handler.handle(responses: underlyingClient.read(request))
+    }
+    
+    // MARK: - Read by a stream methos
+    package func subscribe(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, options: StreamClient.Subscribe.Options) async throws -> Subscription {
+        let handler = Subscribe(streamIdentifier: stream, cursor: cursor, options: options)
+        var request = try handler.build()
+        
+        let getSubscriptionCall = underlyingClient.makeReadCall(request)
+        return try await .init(readCall: getSubscriptionCall)
+    }
+
+    // MARK: - Read by a stream methos
+    package func subscribeToAll(from cursor: Cursor<Stream.Position>, options: StreamClient.SubscribeToAll.Options) async throws -> Subscription {
+        let handler = SubscribeToAll(cursor: cursor, options: options)
+        var request = try handler.build()
+        
+        let getSubscriptionCall = underlyingClient.makeReadCall(request)
+        return try await .init(readCall: getSubscriptionCall)
     }
 
     // MARK: - (Soft) Delete a stream
@@ -76,62 +93,5 @@ extension StreamClient {
         let handler = Tombstone(streamIdentifier: identifier, options: options)
         let request = try handler.build()
         return try await handler.handle(response: underlyingClient.tombstone(request))
-    }
-}
-
-extension StreamClient {
-    public struct FilterOption: FluentInterfaceOptions {
-        public enum Window: Sendable {
-            case count
-            case max(UInt32)
-        }
-
-        public enum FilterType: Sendable {
-            case streamName(regex: String)
-            case eventType(regex: String)
-        }
-
-        public internal(set) var type: FilterType
-        public internal(set) var window: Window
-        public internal(set) var prefixes: [String]
-        public internal(set) var checkpointIntervalMultiplier: UInt32
-
-        init(type: FilterType, window: Window = .count, prefixes: [String] = []) {
-            self.type = type
-            self.window = window
-            self.prefixes = prefixes
-            checkpointIntervalMultiplier = .max
-        }
-
-        @discardableResult
-        public static func onStreamName(regex: String) -> Self {
-            .init(type: .streamName(regex: regex))
-        }
-
-        @discardableResult
-        public static func onEventType(regex: String) -> Self {
-            .init(type: .eventType(regex: regex))
-        }
-
-        @discardableResult
-        public func set(max maxCount: UInt32) -> Self {
-            withCopy { options in
-                options.window = .max(maxCount)
-            }
-        }
-
-        @discardableResult
-        public func set(checkpointIntervalMultiplier multiplier: UInt32) -> Self {
-            withCopy { options in
-                options.checkpointIntervalMultiplier = multiplier
-            }
-        }
-
-        @discardableResult
-        public func add(prefix: String) -> Self {
-            withCopy { options in
-                options.prefixes.append(prefix)
-            }
-        }
     }
 }

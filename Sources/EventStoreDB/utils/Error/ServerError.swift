@@ -66,7 +66,7 @@ extension EventStoreError: CustomStringConvertible, CustomDebugStringConvertible
         case let .illegalStateError(reason):
             "Illegal state error: \(reason)"
         case let .WrongExpectedVersion(expected, current):
-            "Wrong expected version: expected '\(expected.value)' but got '\(current.value)'"
+            "Wrong expected version: expected '\(expected)' but got '\(current)'"
         }
     }
 }

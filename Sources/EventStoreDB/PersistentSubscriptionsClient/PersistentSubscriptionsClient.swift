@@ -23,7 +23,7 @@ public struct PersistentSubscriptionsClient: GRPCConcreteClient {
 
 extension PersistentSubscriptionsClient {
     public enum StreamSelection {
-        case all(position: Cursor<StreamClient.Read.Position>, filterOption: StreamClient.FilterOption? = nil)
+        case all(position: Cursor<Stream.Position>, filterOption: Stream.SubscriptionFilter? = nil)
         case specified(identifier: Stream.Identifier, revision: Cursor<UInt64>)
 
         public static func specified(identifier: Stream.Identifier) -> Self {
@@ -142,7 +142,7 @@ extension PersistentSubscriptionsClient {
     func subscribeTo(_ streamSelection: Selector<Stream.Identifier>, groupName: String, options: Read.Options) async throws -> Subscription {
         let handler = Read(streamSelection: streamSelection, groupName: groupName, options: options)
         let requests = try handler.build()
-
+        
         let getSubscriptionCall = underlyingClient.makeReadCall()
         try await getSubscriptionCall.requestStream.send(requests)
 

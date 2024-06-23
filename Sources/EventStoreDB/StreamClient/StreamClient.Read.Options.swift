@@ -14,7 +14,7 @@ extension StreamClient.Read {
 
         public private(set) var resolveLinks: Bool = false
         public private(set) var limit: UInt64 = .max
-        public private(set) var uuidOption: StreamClient.Read.UUIDOption = .string
+        public private(set) var uuidOption: Stream.UUIDOption = .string
 
         package func build() -> UnderlyingMessage {
             .with {
@@ -47,7 +47,7 @@ extension StreamClient.Read {
         }
 
         @discardableResult
-        public func set(uuidOption: StreamClient.Read.UUIDOption) -> Self {
+        public func set(uuidOption: Stream.UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
             }
