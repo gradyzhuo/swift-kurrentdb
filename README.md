@@ -21,7 +21,8 @@
     ☑️ Append
     ☑️ Read
     ☑️ Metadata { set , get }
-    🔲 Subscribe
+    ☑️ Subscribe Specified Stream
+    ☑️ Subscribe All Stream
 
 - Projection
     ☑️ Create
