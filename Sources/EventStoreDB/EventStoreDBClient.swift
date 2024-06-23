@@ -36,9 +36,10 @@ public struct EventStoreDBClient {
 // MARK: - Streams Operations
 
 extension EventStoreDBClient {
-    public func setMetadata(streamName: String, metadata: Stream.Metadata, configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
+    @discardableResult
+    public func setMetadata(to identifier: Stream.Identifier, metadata: Stream.Metadata, configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(
-            to: .init(name: "$$\(streamName)"),
+            to: .init(name: "$$\(identifier.name)"),
             events: .init(
                 eventType: "$metadata",
                 payload: metadata

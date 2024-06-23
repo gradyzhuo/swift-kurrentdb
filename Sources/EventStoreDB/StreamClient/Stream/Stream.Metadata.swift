@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import GRPCEncapsulates
 
 extension Stream {
-    public struct Metadata: Codable {
+    public struct Metadata: Builderable, Codable {
         enum CodingKeys: String, CodingKey {
             case maxCount = "$maxCount"
             case maxAge = "$maxAge"
@@ -21,29 +22,74 @@ extension Stream {
         // A sliding window based on the number of items in the stream. When data reaches
         // a certain length it disappears automatically from the stream and is considered
         // eligible for scavenging.
-        let maxCount: UInt64?
+        var maxCount: UInt64?
 
         // A sliding window based on dates. When data reaches a certain age it disappears
         // automatically from the stream and is considered eligible for scavenging.
-        let maxAge: Duration?
+        var maxAge: Duration?
 
         // The event number from which previous events can be scavenged. This is
         // used to implement soft-deletion of streams.
-        let truncateBefore: UInt64?
+        var truncateBefore: UInt64?
 
         // Controls the cache of the head of a stream. Most URIs in a stream are infinitely
         // cacheable but the head by default will not cache. It may be preferable
         // in some situations to set a small amount of caching on the head to allow
         // intermediaries to handle polls (say 10 seconds).
-        let cacheControl: Duration?
+        var cacheControl: Duration?
 
         // The access control list for the stream.
-        let acl: Acl?
+        var acl: Acl?
 
         // An enumerable of key-value pairs of keys to JSON value for
         // user-provided metadata.
-        let customProperties: [String: String]?
+        var customProperties: [String: String]?
 
+        public init() {
+            self.maxCount = nil
+            self.maxAge = nil
+            self.truncateBefore = nil
+            self.cacheControl = nil
+            self.acl = nil
+            self.customProperties = nil
+        }
+        
+        public func maxCount(_ maxCount: UInt64) -> Self {
+            withCopy { copied in
+                copied.maxCount = maxCount
+            }
+        }
+        
+        public func maxAge(_ maxAge: Duration) -> Self {
+            withCopy { copied in
+                copied.maxAge = maxAge
+            }
+        }
+        
+        public func truncateBefore(_ truncateBefore: UInt64) -> Self {
+            withCopy { copied in
+                copied.truncateBefore = truncateBefore
+            }
+        }
+        
+        public func cacheControl(_ cacheControl: Duration) -> Self {
+            withCopy { copied in
+                copied.cacheControl = cacheControl
+            }
+        }
+        
+        public func acl(_ acl: Acl) -> Self {
+            withCopy { copied in
+                copied.acl = acl
+            }
+        }
+        
+        public func customProperties(_ customProperties: [String: String]) -> Self {
+            withCopy { copied in
+                copied.customProperties = customProperties
+            }
+        }
+        
         func jsonData() throws -> Data? {
             guard let customProperties else {
                 return nil
@@ -53,8 +99,8 @@ extension Stream {
     }
 }
 
-extension Stream {
-    public enum Acl: Codable, Equatable {
+extension Stream.Metadata {
+    public enum Acl: Codable, Sendable {
         public typealias RawValue = Data
 
         public var rawValue: Data {
@@ -104,13 +150,9 @@ extension Stream {
                 try container.encode(acl)
             }
         }
-
-        public static func == (lhs: Stream.Acl, rhs: Stream.Acl) -> Bool {
-            (try? lhs.rawValue) == (try? rhs.rawValue)
-        }
     }
 
-    public struct StreamAcl: Codable {
+    public struct StreamAcl: Codable, Sendable {
         enum CodingKeys: String, CodingKey {
             case readRoles = "$r"
             case writeRoles = "$w"
@@ -120,23 +162,23 @@ extension Stream {
         }
 
         // Roles and users permitted to read the stream.
-        let readRoles: [String]?
+        public let readRoles: [String]?
 
         // Roles and users permitted to write to the stream.
-        let writeRoles: [String]?
+        public let writeRoles: [String]?
 
         // Roles and users permitted to delete to the stream.
-        let deleteRoles: [String]?
+        public let deleteRoles: [String]?
 
         // Roles and users permitted to read stream metadata.
-        let metaReadRoles: [String]?
+        public let metaReadRoles: [String]?
 
         // Roles and users permitted to write stream metadata.
-        let metaWriteRoles: [String]?
+        public let metaWriteRoles: [String]?
     }
 }
 
-extension Stream.StreamAcl {
+extension Stream.Metadata.StreamAcl: Builderable {
     public class Builder {
         private var readRoles: [String]?
         private var writeRoles: [String]?
@@ -169,7 +211,7 @@ extension Stream.StreamAcl {
             return self
         }
 
-        public func build() -> Stream.StreamAcl {
+        public func build() -> Stream.Metadata.StreamAcl {
             .init(
                 readRoles: readRoles,
                 writeRoles: writeRoles,
@@ -178,5 +220,36 @@ extension Stream.StreamAcl {
                 metaWriteRoles: metaWriteRoles
             )
         }
+    }
+}
+
+extension Stream.Metadata : Equatable {
+    public static func ==(lhs: Self, rhs: Self) -> Bool{
+        return lhs.cacheControl == rhs.cacheControl
+        && lhs.customProperties == rhs.customProperties
+        && lhs.maxAge == rhs.maxAge
+        && lhs.truncateBefore == rhs.truncateBefore
+        && lhs.acl == rhs.acl
+    }
+}
+
+extension Stream.Metadata.Acl : Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        do{
+            return try lhs.rawValue == rhs.rawValue
+        } catch {
+            logger.warning("It's failed when getting acl rawvalue of stream metadata. error: \(error)")
+            return false
+        }
+    }
+}
+
+extension Stream.Metadata.StreamAcl: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.deleteRoles == rhs.deleteRoles
+        && lhs.metaReadRoles == rhs.metaReadRoles
+        && lhs.metaWriteRoles == rhs.metaWriteRoles
+        && lhs.readRoles == rhs.readRoles
+        && lhs.writeRoles == rhs.writeRoles
     }
 }
