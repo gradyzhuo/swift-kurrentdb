@@ -162,63 +162,51 @@ extension Stream.Metadata {
         }
 
         // Roles and users permitted to read the stream.
-        public let readRoles: [String]?
+        public private(set) var readRoles: [String]?
 
         // Roles and users permitted to write to the stream.
-        public let writeRoles: [String]?
+        public private(set) var writeRoles: [String]?
 
         // Roles and users permitted to delete to the stream.
-        public let deleteRoles: [String]?
+        public private(set) var deleteRoles: [String]?
 
         // Roles and users permitted to read stream metadata.
-        public let metaReadRoles: [String]?
+        public private(set) var metaReadRoles: [String]?
 
         // Roles and users permitted to write stream metadata.
-        public let metaWriteRoles: [String]?
+        public private(set) var metaWriteRoles: [String]?
+        
     }
 }
 
 extension Stream.Metadata.StreamAcl: Builderable {
-    public class Builder {
-        private var readRoles: [String]?
-        private var writeRoles: [String]?
-        private var deleteRoles: [String]?
-        private var metaReadRoles: [String]?
-        private var metaWriteRoles: [String]?
-
-        public func add(readRole role: String) -> Self {
-            readRoles = (readRoles ?? []) + [role]
-            return self
+    public func readRoles(_ roles: [String]) -> Self{
+        withCopy { copied in
+            copied.readRoles = roles
         }
-
-        public func add(writeRole role: String) -> Self {
-            writeRoles = (writeRoles ?? []) + [role]
-            return self
+    }
+    
+    public func writeRoles(_ roles: [String]) -> Self{
+        withCopy { copied in
+            copied.writeRoles = roles
         }
-
-        public func add(deleteRoles role: String) -> Self {
-            deleteRoles = (deleteRoles ?? []) + [role]
-            return self
+    }
+    
+    public func deleteRoles(_ roles: [String]) -> Self{
+        withCopy { copied in
+            copied.deleteRoles = roles
         }
-
-        public func add(metaReadRoles role: String) -> Self {
-            metaReadRoles = (metaReadRoles ?? []) + [role]
-            return self
+    }
+    
+    public func metaReadRoles(_ roles: [String]) -> Self{
+        withCopy { copied in
+            copied.metaReadRoles = roles
         }
-
-        public func add(metaWriteRoles role: String) -> Self {
-            metaWriteRoles = (metaWriteRoles ?? []) + [role]
-            return self
-        }
-
-        public func build() -> Stream.Metadata.StreamAcl {
-            .init(
-                readRoles: readRoles,
-                writeRoles: writeRoles,
-                deleteRoles: deleteRoles,
-                metaReadRoles: metaReadRoles,
-                metaWriteRoles: metaWriteRoles
-            )
+    }
+    
+    public func metaWriteRoles(_ roles: [String]) -> Self{
+        withCopy { copied in
+            copied.metaWriteRoles = roles
         }
     }
 }
