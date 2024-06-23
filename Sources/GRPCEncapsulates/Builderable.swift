@@ -8,16 +8,16 @@
 import Foundation
 import SwiftProtobuf
 
-package protocol FluentInterfaceOptions: Sendable {}
+package protocol Builderable: Sendable {}
 
-extension FluentInterfaceOptions {
-    package func withCopy(handler: (_ options: inout Self) -> Void) -> Self {
+extension Builderable {
+    package func withCopy(handler: (_ copied: inout Self) -> Void) -> Self {
         var copiedSelf = self
         handler(&copiedSelf)
         return copiedSelf
     }
 }
 
-package protocol EventStoreOptions: GRPCBridge, FluentInterfaceOptions {
+package protocol EventStoreOptions: GRPCBridge, Builderable {
     func build() -> UnderlyingMessage
 }
