@@ -8,7 +8,7 @@
 import GRPCEncapsulates
 
 extension Stream {
-    public struct SubscriptionFilter: Builderable {
+    public struct SubscriptionFilter: Buildable {
         public enum Window: Sendable {
             case count
             case max(UInt32)

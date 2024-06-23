@@ -8,9 +8,9 @@
 import Foundation
 import SwiftProtobuf
 
-package protocol Builderable: Sendable {}
+package protocol Buildable: Sendable {}
 
-extension Builderable {
+extension Buildable {
     package func withCopy(handler: (_ copied: inout Self) -> Void) -> Self {
         var copiedSelf = self
         handler(&copiedSelf)
@@ -18,6 +18,6 @@ extension Builderable {
     }
 }
 
-package protocol EventStoreOptions: GRPCBridge, Builderable {
+package protocol EventStoreOptions: GRPCBridge, Buildable {
     func build() -> UnderlyingMessage
 }

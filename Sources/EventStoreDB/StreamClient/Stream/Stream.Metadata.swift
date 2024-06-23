@@ -9,7 +9,7 @@ import Foundation
 import GRPCEncapsulates
 
 extension Stream {
-    public struct Metadata: Builderable, Codable {
+    public struct Metadata: Buildable, Codable {
         enum CodingKeys: String, CodingKey {
             case maxCount = "$maxCount"
             case maxAge = "$maxAge"
@@ -179,7 +179,7 @@ extension Stream.Metadata {
     }
 }
 
-extension Stream.Metadata.StreamAcl: Builderable {
+extension Stream.Metadata.StreamAcl: Buildable {
     public func readRoles(_ roles: [String]) -> Self{
         withCopy { copied in
             copied.readRoles = roles
