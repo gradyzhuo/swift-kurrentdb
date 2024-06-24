@@ -23,9 +23,17 @@ jobs:
            swift-version: ${{ matrix.swift }}
       - uses: actions/checkout@v4
       - name: Build
-        run: swift build -v
+        run: swift build -v --build-tests
       - name: Run tests
-        run: swift test -v 
+        run: swift test -v --skip-build --enable-code-coverage
+      - name: Create Coverage Report
+        uses: sersoft-gmbh/swift-coverage-action@v4
+        id: coverage-files
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
     services:
     # Label used to access the service container
       eventstoredb:
