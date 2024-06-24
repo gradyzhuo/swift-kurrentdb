@@ -2,8 +2,7 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2FEventStoreDB-Swift%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/EventStoreDB-Swift)
 
 [![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml)
-
-![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)
+[![codecov](https://codecov.io/github/gradyzhuo/EventStoreDB-Swift/graph/badge.svg?token=1NDTE6YT73)](https://codecov.io/github/gradyzhuo/EventStoreDB-Swift)
 
 
 
