@@ -22,10 +22,8 @@ jobs:
         with:
            swift-version: ${{ matrix.swift }}
       - uses: actions/checkout@v4
-      - name: Build
-        run: swift build -v --build-tests
       - name: Run tests
-        run: swift test -v --skip-build --enable-code-coverage
+        run: swift test -v --enable-code-coverage
       - name: Create Coverage Report
         uses: sersoft-gmbh/swift-coverage-action@v4
         id: coverage-files
