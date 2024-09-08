@@ -12,9 +12,7 @@ import NIOPosix
 import NIOSSL
 
 extension GRPCChannelPool {
-    public static func with(settings: ClientSettings) throws -> GRPCChannel {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: settings.numberOfThreads)
-
+    public static func with(settings: ClientSettings, group: EventLoopGroup) throws -> GRPCChannel {
         let transportSecurity = if settings.tls {
             GRPCChannelPool.Configuration.TransportSecurity.tls(.makeClientConfigurationBackedByNIOSSL(configuration: settings.configuration))
         } else {

@@ -8,18 +8,15 @@
 import Foundation
 import GRPC
 import GRPCEncapsulates
+import NIOCore
+import NIOPosix
 
-public struct EventStoreDBClient {
-    var channel: GRPCChannel {
-        get throws {
-            try GRPCChannelPool.with(settings: settings)
-        }
-    }
-
+public final class EventStoreDBClient {
     public var defaultCallOptions: CallOptions
     public var settings: ClientSettings
-
-    public init(settings: ClientSettings) {
+    private let group: EventLoopGroup
+    
+    public init(settings: ClientSettings, numberOfThreads: Int = 1) {
         var defaultCallOptions = CallOptions()
         if let credentials = settings.defaultUserCredentials {
             do {
@@ -30,7 +27,16 @@ public struct EventStoreDBClient {
         }
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
+        self.group = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
     }
+    
+    deinit{
+        print("EventStoreDBClient[\(ObjectIdentifier(self).hashValue)] shuting down...")
+        self.group.shutdownGracefully { error in
+            print("EventStoreDBClient shutdown error: \(String(describing: error))")
+        }
+    }
+    
 }
 
 // MARK: - Streams Operations
@@ -77,9 +83,10 @@ extension EventStoreDBClient {
     // MARK: Append methods -
 
     public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
         let options = configure(.init())
-
+        
         return try await client.appendTo(stream: identifier, events: events, options: options)
     }
 
@@ -90,7 +97,8 @@ extension EventStoreDBClient {
     // MARK: Read by all streams methods -
 
     public func readAllStreams(cursor: Cursor<StreamClient.ReadAll.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try client.readAll(cursor: cursor, options: options, channel: channel, callOptions: defaultCallOptions)
@@ -110,7 +118,12 @@ extension EventStoreDBClient {
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
     public func readStream(to streamIdentifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+//        defer{
+//            let promise = group.any().makePromise(of: Void.self)
+//            channel.closeGracefully(deadline: .distantFuture, promise: promise)
+//        }
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
         let options = configure(.init())
 
         return try client.read(stream: streamIdentifier, cursor: cursor, options: options)
@@ -124,14 +137,16 @@ extension EventStoreDBClient {
     // MARK: Subscribe by all streams methods -
 
     public func subscribeToAll(from cursor: Cursor<Stream.Position>, configure: (_ options: StreamClient.SubscribeToAll.Options) -> StreamClient.SubscribeToAll.Options = { $0 }) async throws -> StreamClient.Subscription {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try await client.subscribeToAll(from: cursor, options: options)
     }
 
     public func subscribeTo(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, configure: (_ options: StreamClient.Subscribe.Options) -> StreamClient.Subscribe.Options = { $0 }) async throws -> StreamClient.Subscription {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try await client.subscribe(stream: stream, from: cursor, options: options)
@@ -141,7 +156,8 @@ extension EventStoreDBClient {
 
     @discardableResult
     public func deleteStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
@@ -151,7 +167,8 @@ extension EventStoreDBClient {
 
     @discardableResult
     public func tombstoneStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Tombstone.Options) -> StreamClient.Tombstone.Options) async throws -> StreamClient.Tombstone.Response {
-        let client = try StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try await client.tombstone(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
@@ -162,14 +179,24 @@ extension EventStoreDBClient {
 
 extension EventStoreDBClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
-        let client = try OperationsClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let client = OperationsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
 }
 
 extension EventStoreDBClient {
     public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws {
-        let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: identifier, groupName: groupName, options: options)
 
         let request = try handler.build()
@@ -178,7 +205,12 @@ extension EventStoreDBClient {
     }
 
     public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToAll.Options) -> PersistentSubscriptionsClient.Create.ToAll.Options = { $0 }) async throws {
-        let underlyingClient = try PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
         let options = configure(.init())
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
 
@@ -189,14 +221,24 @@ extension EventStoreDBClient {
     // MARK: - Restart Subsystem Action
 
     public func restartPersistentSubscriptionSubsystem() async throws {
-        let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.restartSubsystem()
     }
 
     // MARK: -
 
     public func subscribePersistentSubscription(to streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options) -> PersistentSubscriptionsClient.Read.Options = { $0 }) async throws -> PersistentSubscriptionsClient.Subscription {
-        let client = try PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())
         return try await client.subscribeTo(streamSelection, groupName: groupName, options: options)

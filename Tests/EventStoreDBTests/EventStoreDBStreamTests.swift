@@ -50,7 +50,12 @@ final class EventStoreDBStreamTests: XCTestCase {
         let appendResponse = try await client.appendStream(to: streamIdentifier, events: .init(eventType: "AccountCreated", payload: content)) { options in
             options.revision(expected: .any)
         }
-
+        
+        let responses = try client.readStream(to: streamIdentifier, cursor: .start)
+        for try await response in responses{
+            print("xxxx:", response)
+        }
+        
         try await client.deleteStream(to: streamIdentifier) { options in
             options.revision(expected: .streamExists)
         }

@@ -73,7 +73,6 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
 public struct ClientSettings {
     public var configuration: TLSConfiguration
     public private(set) var clusterMode: TopologyClusterMode
-    public private(set) var numberOfThreads: Int = 1
 
     public private(set) var tls: Bool = false
     public private(set) var tlsVerifyCert: Bool = false
@@ -84,14 +83,13 @@ public struct ClientSettings {
     public var keepAlive: KeepAlive = .default
     public var defaultUserCredentials: UserCredentials?
 
-    public init(clusterMode: TopologyClusterMode, configuration: TLSConfiguration, numberOfThreads: Int) {
+    public init(clusterMode: TopologyClusterMode, configuration: TLSConfiguration) {
         self.clusterMode = clusterMode
         self.configuration = configuration
-        self.numberOfThreads = numberOfThreads
     }
 
-    public init(clusterMode: TopologyClusterMode, numberOfThreads: Int = 1, configure: () -> TLSConfiguration = { .clientDefault }) {
-        self.init(clusterMode: clusterMode, configuration: configure(), numberOfThreads: numberOfThreads)
+    public init(clusterMode: TopologyClusterMode, configure: () -> TLSConfiguration = { .clientDefault }) {
+        self.init(clusterMode: clusterMode, configuration: configure())
     }
 
     public func makeCallOptions() throws -> CallOptions {
@@ -104,8 +102,8 @@ public struct ClientSettings {
 }
 
 extension ClientSettings {
-    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, numberOfThreads: Int = 1, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
-        var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)), numberOfThreads: numberOfThreads)
+    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
+        var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)))
 
         if let trustRoots {
             settings.configuration.trustRoots = trustRoots

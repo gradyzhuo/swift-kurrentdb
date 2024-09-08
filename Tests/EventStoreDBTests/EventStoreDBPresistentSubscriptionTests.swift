@@ -9,6 +9,7 @@
 import GRPC
 import SwiftProtobuf
 import XCTest
+import NIOPosix
 
 final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     let streamName = UUID().uuidString
@@ -16,10 +17,16 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     let settings = ClientSettings.localhost()
     lazy var streamSelector: EventStoreDB.Selector<EventStoreDB.Stream.Identifier> = .specified(streamName: streamName)
 
-    lazy var subscriptionClient: PersistentSubscriptionsClient = try! PersistentSubscriptionsClient(channel: GRPCChannelPool.with(settings: settings), callOptions: settings.makeCallOptions())
+//    lazy var subscriptionClient: PersistentSubscriptionsClient = try! PersistentSubscriptionsClient(channel: GRPCChannelPool.with(settings: settings), callOptions: settings.makeCallOptions())
 
     override func setUp() async throws {
-        let subscriptionClient = try PersistentSubscriptionsClient(channel: GRPCChannelPool.with(settings: settings), callOptions: settings.makeCallOptions())
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let subscriptionClient = try PersistentSubscriptionsClient(channel: channel, callOptions: settings.makeCallOptions())
         do {
             try await subscriptionClient.deleteOn(stream: streamSelector, groupName: groupName)
         } catch {
@@ -28,6 +35,14 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     }
 
     func testCreate() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        defer{
+            let promise = group.any().makePromise(of: Void.self)
+            channel.closeGracefully(deadline: .now(), promise: promise)
+        }
+        let subscriptionClient = try PersistentSubscriptionsClient(channel: channel, callOptions: settings.makeCallOptions())
+        
         let client = EventStoreDBClient(settings: settings)
         try await client.createPersistentSubscription(to: .init(name: streamName), groupName: groupName)
 
