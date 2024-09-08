@@ -118,10 +118,6 @@ extension EventStoreDBClient {
     /// - Returns: AsyncStream to Read.Response
     public func readStream(to streamIdentifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-//        defer{
-//            let promise = group.any().makePromise(of: Void.self)
-//            channel.closeGracefully(deadline: .distantFuture, promise: promise)
-//        }
         let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
         let options = configure(.init())
 
@@ -179,10 +175,6 @@ extension EventStoreDBClient {
 extension EventStoreDBClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let client = OperationsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
@@ -191,10 +183,6 @@ extension EventStoreDBClient {
 extension EventStoreDBClient {
     public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
         let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: identifier, groupName: groupName, options: options)
 
@@ -205,10 +193,6 @@ extension EventStoreDBClient {
 
     public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToAll.Options) -> PersistentSubscriptionsClient.Create.ToAll.Options = { $0 }) async throws {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
         let options = configure(.init())
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
@@ -221,10 +205,6 @@ extension EventStoreDBClient {
 
     public func restartPersistentSubscriptionSubsystem() async throws {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
         return try await client.restartSubsystem()
     }
@@ -233,10 +213,6 @@ extension EventStoreDBClient {
 
     public func subscribePersistentSubscription(to streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options) -> PersistentSubscriptionsClient.Read.Options = { $0 }) async throws -> PersistentSubscriptionsClient.Subscription {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
 
         let options = configure(.init())

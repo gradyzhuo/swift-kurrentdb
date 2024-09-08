@@ -22,10 +22,6 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     override func setUp() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let subscriptionClient = try PersistentSubscriptionsClient(channel: channel, callOptions: settings.makeCallOptions())
         do {
             try await subscriptionClient.deleteOn(stream: streamSelector, groupName: groupName)
@@ -37,10 +33,6 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
     func testCreate() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        defer{
-            let promise = group.any().makePromise(of: Void.self)
-            channel.closeGracefully(deadline: .now(), promise: promise)
-        }
         let subscriptionClient = try PersistentSubscriptionsClient(channel: channel, callOptions: settings.makeCallOptions())
         
         let client = EventStoreDBClient(settings: settings)
@@ -52,6 +44,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
 
     func testSubscribe() async throws {
         try await testCreate()
+        
 
         let settings = ClientSettings.localhost()
         let client = EventStoreDBClient(settings: settings)
@@ -66,7 +59,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
                                                      )) { options in
             options.revision(expected: .any)
         }
-
+        
         var lastEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil
         for try await result in subscription {
             lastEventResult = result
