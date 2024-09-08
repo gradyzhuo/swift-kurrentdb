@@ -36,13 +36,6 @@ public final class EventStoreDBClient {
         self.group = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
     }
     
-    deinit{
-        print("EventStoreDBClient[\(ObjectIdentifier(self).hashValue)] shuting down...")
-        self.group.shutdownGracefully { error in
-            print("EventStoreDBClient shutdown error: \(String(describing: error))")
-        }
-    }
-    
 }
 
 // MARK: - Streams Operations
