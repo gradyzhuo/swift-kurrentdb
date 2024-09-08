@@ -21,7 +21,6 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
 /// - Properties:
 ///   - `configuration`: TLS configuration.
 ///   - `clusterMode`: The cluster topology mode.
-///   - `numberOfThreads`: Number of threads to use (default is 1).
 ///   - `tls`: Indicates if TLS is enabled (default is false).
 ///   - `tlsVerifyCert`: Indicates if TLS certificate verification is enabled (default is false).
 ///   - `defaultDeadline`: Default deadline for operations (default is `.max`).
