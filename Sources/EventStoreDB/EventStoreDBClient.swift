@@ -11,11 +11,17 @@ import GRPCEncapsulates
 import NIOCore
 import NIOPosix
 
+/// `EventStoreDBClient`
+/// A client to encapsulates GRPC Call in EventStoreDB.
 public final class EventStoreDBClient {
     public var defaultCallOptions: CallOptions
     public var settings: ClientSettings
     private let group: EventLoopGroup
     
+    /// construct `EventStoreDBClient`  with `ClientSettings` and `numberOfThreads`.
+    /// - Parameters:
+    ///   - settings: encapsulates various configuration settings for a client.
+    ///   - numberOfThreads: the number of threads of `EventLoopGroup` in `NIOChannel`.
     public init(settings: ClientSettings, numberOfThreads: Int = 1) {
         var defaultCallOptions = CallOptions()
         if let credentials = settings.defaultUserCredentials {
