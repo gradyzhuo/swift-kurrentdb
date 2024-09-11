@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2024/5/21.
 //
 
-@preconcurrency import Foundation
+import Foundation
 import GRPCEncapsulates
 
 extension Stream {

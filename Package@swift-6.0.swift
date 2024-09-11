@@ -16,8 +16,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
+        .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.23.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
@@ -33,8 +32,7 @@ let package = Package(
         .target(
             name: "GRPCEncapsulates",
             dependencies: [
-                .product(name: "GRPC", package: "grpc-swift"),
-                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+                .product(name: "GRPC", package: "grpc-swift")
             ]
         ),
         .testTarget(
@@ -52,5 +50,7 @@ let package = Package(
             dependencies: ["GRPCEncapsulates"]
         ),
     ],
-    swiftLanguageVersions: [.version("6")]
+    swiftLanguageModes: [
+        .v6
+    ]
 )

@@ -14,7 +14,7 @@ public struct StreamClient: GRPCConcreteClient {
 
     public private(set) var channel: GRPCChannel
     public var callOptions: CallOptions
-
+    
     public init(channel: GRPCChannel, callOptions: CallOptions) {
         self.channel = channel
         self.callOptions = callOptions
@@ -61,7 +61,7 @@ extension StreamClient {
 
     package func subscribe(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, options: StreamClient.Subscribe.Options) async throws -> Subscription {
         let handler = Subscribe(streamIdentifier: stream, cursor: cursor, options: options)
-        var request = try handler.build()
+        let request = try handler.build()
 
         let getSubscriptionCall = underlyingClient.makeReadCall(request)
         return try await .init(readCall: getSubscriptionCall)
@@ -71,7 +71,7 @@ extension StreamClient {
 
     package func subscribeToAll(from cursor: Cursor<Stream.Position>, options: StreamClient.SubscribeToAll.Options) async throws -> Subscription {
         let handler = SubscribeToAll(cursor: cursor, options: options)
-        var request = try handler.build()
+        let request = try handler.build()
 
         let getSubscriptionCall = underlyingClient.makeReadCall(request)
         return try await .init(readCall: getSubscriptionCall)

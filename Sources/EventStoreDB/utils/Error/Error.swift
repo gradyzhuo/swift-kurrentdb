@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2023/10/17.
 //
 
-@preconcurrency import Foundation
+import Foundation
 import GRPC
 import GRPCEncapsulates
 
