@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct KeepAlive: @unchecked Sendable {
+public struct KeepAlive: Sendable {
     public static let `default`: Self = .init(interval: 10.0, timeout: 10.0)
 
     var interval: TimeInterval
