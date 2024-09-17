@@ -13,9 +13,9 @@ import NIOPosix
 
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.
-public final class EventStoreDBClient {
-    public var defaultCallOptions: CallOptions
-    public var settings: ClientSettings
+public final class EventStoreDBClient: Sendable {
+    public let defaultCallOptions: CallOptions
+    public let settings: ClientSettings
     private let group: EventLoopGroup
     
     /// construct `EventStoreDBClient`  with `ClientSettings` and `numberOfThreads`.

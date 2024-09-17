@@ -69,7 +69,7 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
 ///   )
 ///   ```
 
-public struct ClientSettings {
+public struct ClientSettings: Sendable {
     public var configuration: TLSConfiguration
     public private(set) var clusterMode: TopologyClusterMode
 
@@ -193,8 +193,8 @@ extension ClientSettings {
 }
 
 extension ClientSettings {
-    public enum TopologyClusterMode {
-        public enum NodePreference: String {
+    public enum TopologyClusterMode: Sendable {
+        public enum NodePreference: String, Sendable {
             case leader
             case follower
             case random
