@@ -99,8 +99,8 @@ extension PersistentSubscriptionsClient {
 extension PersistentSubscriptionsClient {
     // MARK: - Create Action
 
-    func createToStream(streamName: String, groupName: String, options: Create.ToStream.Options) async throws {
-        let handler: Create.ToStream = .init(streamIdentifier: .init(name: streamName), groupName: groupName, options: options)
+    func createToStream(streamIdentifier: Stream.Identifier, groupName: String, options: Create.ToStream.Options) async throws {
+        let handler: Create.ToStream = .init(streamIdentifier: streamIdentifier, groupName: groupName, options: options)
 
         let request = try handler.build()
 
@@ -174,8 +174,11 @@ extension PersistentSubscriptionsClient {
 
     // MARK: - List Action
 
-    func list(stream: Selector<Stream.Identifier>) async throws -> [GetInfo.SubscriptionInfo] {
-        let options = try List.Options.listForStream(stream)
+    func list(streamSelector: Selector<Stream.Identifier>) async throws -> [GetInfo.SubscriptionInfo] {
+        let options: PersistentSubscriptionsClient.List.Options = switch streamSelector {
+        case .all: .listAllScriptions()
+        case .specified(let streamIdentifier): try .listForStream(streamIdentifier)
+        }
 
         let handler = List(options: options)
         let request = try handler.build()

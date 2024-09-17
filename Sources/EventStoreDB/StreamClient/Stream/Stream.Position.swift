@@ -30,3 +30,9 @@ extension Stream.Position {
         case position(Stream.Position)
     }
 }
+
+extension Stream.Position: Equatable{
+    public static func == (lhs: Stream.Position, rhs: Stream.Position) -> Bool {
+        return lhs.commit == rhs.commit && lhs.prepare == rhs.prepare
+    }
+}

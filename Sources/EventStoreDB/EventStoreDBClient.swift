@@ -89,7 +89,7 @@ extension EventStoreDBClient {
         return try await client.appendTo(stream: identifier, events: events, options: options)
     }
 
-    public func appendStream(to identifier: Stream.Identifier, events: EventData ..., configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options = { $0 }) async throws -> StreamClient.Append.Response.Success {
+    public func appendStream(to identifier: Stream.Identifier, events: EventData..., configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options = { $0 }) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
 
@@ -181,24 +181,36 @@ extension EventStoreDBClient {
 }
 
 extension EventStoreDBClient {
-    public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, options: PersistentSubscriptionsClient.Create.ToStream.Options = .init()) async throws {
+    public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToStream.Options) -> PersistentSubscriptionsClient.Create.ToStream.Options = { $0 }) async throws {
+        
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
-        let handler: PersistentSubscriptionsClient.Create.ToStream = .init(streamIdentifier: identifier, groupName: groupName, options: options)
-
-        let request = try handler.build()
-
-        try await handler.handle(response: underlyingClient.create(request))
+        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        
+        let options = configure(.init())
+        try await client.createToStream(streamIdentifier: identifier, groupName: groupName, options: options)
+        
     }
 
     public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToAll.Options) -> PersistentSubscriptionsClient.Create.ToAll.Options = { $0 }) async throws {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let underlyingClient = PersistentSubscriptionsClient.UnderlyingClient(channel: channel, defaultCallOptions: defaultCallOptions)
+        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        
         let options = configure(.init())
-        let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
-
-        let request = try handler.build()
-        try await handler.handle(response: underlyingClient.create(request))
+        try await client.createToAll(groupName: groupName, options: options)
+    }
+    
+    // MARK: Delete PersistentSubscriptions
+    public func deletePersistentSubscription(streamSelector: Selector<Stream.Identifier>, groupName: String) async throws {
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        try await client.deleteOn(stream: streamSelector, groupName: groupName)
+    }
+    
+    // MARK: List PersistentSubscriptions
+    public func listPersistentSubscription(streamSelector: Selector<Stream.Identifier>) async throws -> [PersistentSubscriptionsClient.GetInfo.SubscriptionInfo]{
+        let channel = try GRPCChannelPool.with(settings: settings, group: group)
+        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+        return try await client.list(streamSelector: streamSelector)
     }
 
     // MARK: - Restart Subsystem Action

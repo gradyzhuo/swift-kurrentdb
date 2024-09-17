@@ -26,9 +26,7 @@ extension StreamClient {
 
     public func appendTo(stream: Stream.Identifier, events: [EventData], options: Append.Options) async throws -> Append.Response.Success {
         let handler: Append = .init(streamIdentifier: stream, events: events, options: options)
-
         let requests = try handler.build()
-
         let response = try await handler.handle(response: underlyingClient.append(requests))
 
         return switch response {

@@ -38,9 +38,10 @@ extension PersistentSubscriptionsClient.List {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = Request.UnderlyingMessage.Options
 
-        var options: UnderlyingMessage
+        private var options: UnderlyingMessage
+        
 
-        init(options: UnderlyingMessage) {
+        private init(options: UnderlyingMessage) {
             self.options = options
         }
 
@@ -51,14 +52,9 @@ extension PersistentSubscriptionsClient.List {
         }
 
         @discardableResult
-        public static func listForStream(_ selection: Selector<Stream.Identifier>) throws -> Self {
+        public static func listForStream(_ streamIdentifier: Stream.Identifier) throws -> Self {
             var options = UnderlyingMessage()
-            switch selection {
-            case .all:
-                options.listForStream.all = .init()
-            case let .specified(streamIdentifier):
-                options.listForStream.stream = try streamIdentifier.build()
-            }
+            options.listForStream.stream = try streamIdentifier.build()
             return .init(options: options)
         }
 

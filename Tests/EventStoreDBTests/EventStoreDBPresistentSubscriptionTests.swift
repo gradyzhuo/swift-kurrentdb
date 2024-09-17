@@ -10,50 +10,51 @@ import GRPC
 import SwiftProtobuf
 import XCTest
 import NIOPosix
+import Testing
 
-final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
-    let streamName = UUID().uuidString
-    let groupName = UUID().uuidString
-    let settings = ClientSettings.localhost()
-    lazy var streamSelector: EventStoreDB.Selector<EventStoreDB.Stream.Identifier> = .specified(streamName: streamName)
 
-//    lazy var subscriptionClient: PersistentSubscriptionsClient = try! PersistentSubscriptionsClient(channel: GRPCChannelPool.with(settings: settings), callOptions: settings.makeCallOptions())
-
-    override func setUp() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let subscriptionClient = try PersistentSubscriptionsClient(channel: channel, callOptions: settings.makeCallOptions())
-        do {
-            try await subscriptionClient.deleteOn(stream: streamSelector, groupName: groupName)
-        } catch {
-            print("subscription does not exists.")
+@Suite("EventStoreDB Persistent Subscription Tests")
+final class EventStoreDBPersistentSubscriptionTests: Sendable {
+    
+    let client: EventStoreDBClient
+    let groupName: String
+    let streamSelector: EventStoreDB.Selector<EventStoreDB.Stream.Identifier>
+    let streamIdentifier: EventStoreDB.Stream.Identifier
+    
+    init() async throws {
+        self.client = .init(settings: ClientSettings.localhost())
+        self.streamIdentifier = Stream.Identifier.init(name: UUID().uuidString)
+        self.groupName = streamIdentifier.name
+        self.streamSelector = .specified(streamIdentifier)
+    }
+    
+    deinit {
+        let client = client
+        let streamSelector = streamSelector
+        let groupName = groupName
+        Task.detached {
+            try await client.deletePersistentSubscription(streamSelector: streamSelector, groupName: groupName)
         }
     }
-
-    func testCreate() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let subscriptionClient = try PersistentSubscriptionsClient(channel: channel, callOptions: settings.makeCallOptions())
+    
+    @Test("Create PersistentSubscription for Stream")
+    func testCreateToStream() async throws{
         
-        let client = EventStoreDBClient(settings: settings)
-        try await client.createPersistentSubscription(to: .init(name: streamName), groupName: groupName)
-
-        let subscriptions = try await subscriptionClient.list(stream: streamSelector)
-        XCTAssertEqual(subscriptions.count, 1)
+        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
+        let subscriptions = try await client.listPersistentSubscription(streamSelector: .specified(streamIdentifier))
+        
+        #expect(subscriptions.count == 1)
     }
-
-    func testSubscribe() async throws {
-        try await testCreate()
-        
-
-        let settings = ClientSettings.localhost()
-        let client = EventStoreDBClient(settings: settings)
+    
+    @Test("Subscribe PersistentSubscription for Stream")
+    func testSubscribeToStream() async throws {
+        try await testCreateToStream()
 
         let subscription = try await client.subscribePersistentSubscription(to: streamSelector, groupName: groupName) { options in
             options
         }
 
-        let response = try await client.appendStream(to: .init(name: streamName),
+        let response = try await client.appendStream(to: streamIdentifier,
                                                      events: .init(
                                                          eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
                                                      )) { options in
@@ -66,7 +67,7 @@ final class EventStoreDBPersistentSubscriptionTests: XCTestCase {
             try await subscription.ack(readEvents: result.event)
             break
         }
-
-        XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
+        
+        #expect(response.current.revision == lastEventResult?.event.recordedEvent.revision)
     }
 }

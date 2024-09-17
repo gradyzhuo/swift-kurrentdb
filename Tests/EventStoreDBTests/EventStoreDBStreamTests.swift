@@ -5,103 +5,119 @@
 //  Created by Grady Zhuo on 2023/10/28.
 //
 
+import Foundation
 @testable import EventStoreDB
-// @testable import struct EventStoreDB.Stream
-import GRPC
-import NIO
-import XCTest
+import Testing
+
 
 enum TestingError: Error {
     case exception(String)
 }
 
-final class EventStoreDBStreamTests: XCTestCase {
-    var streamName: String!
-
-    override func setUp() async throws {
-        streamName = "testing2"
+@Suite("EventStoreDB Stream Tests")
+final class EventStoreDBStreamTests: Sendable{
+    
+    let streamIdentifier: EventStoreDB.Stream.Identifier
+    let client: EventStoreDBClient
+    
+    init () async throws {
+        self.streamIdentifier = .init(name: UUID().uuidString)
+        self.client = .init(settings: ClientSettings.localhost())
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testStreamNoFound() async throws {
-        let settings = ClientSettings.localhost()
-        let client = EventStoreDBClient(settings: settings)
-        var anError: Error?
-        do {
-            for try await _ in try client.readStream(to: "NoStream", cursor: .start) {
-                // no thing
+    
+    deinit {
+        let client = client
+        let streamIdentifier = streamIdentifier
+        Task.detached {
+            try await client.deleteStream(to: streamIdentifier) { options in
+                options.revision(expected: .streamExists)
             }
-        } catch {
-            anError = error
         }
-
-        XCTAssertNotNil(anError)
     }
-
-    func testAppendEvent() async throws {
-        let streamIdentifier = Stream.Identifier(name: UUID().uuidString)
-        let content = ["Description": "Gears of War 4"]
-        let settings = ClientSettings.localhost()
-        let client = EventStoreDBClient(settings: settings)
-
-        let appendResponse = try await client.appendStream(to: streamIdentifier, events: .init(eventType: "AccountCreated", payload: content)) { options in
+    
+    @Test("Stream should be not found and throw an error.")
+    func testStreamNoFound() async throws {
+        await #expect(throws: EventStoreError.self){
+            var responsesIterator = try client.readStream(to: streamIdentifier, cursor: .start).makeAsyncIterator()
+            _ = try await responsesIterator.next()
+        }
+    }
+    
+    @Test("It should be succeed when append event to stream.", arguments: [
+        [
+            EventData(eventType: "AccountCreated", payload: ["Description": "Gears of War 4"]),
+            EventData(eventType: "AccountDeleted", payload: ["Description": "Gears of War 4"])
+        ]
+    ])
+    func testAppendEvent(events: [EventData]) async throws {
+        let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
             options.revision(expected: .any)
         }
         
-        let responses = try client.readStream(to: streamIdentifier, cursor: .start)
-        for try await response in responses{
-            print("xxxx:", response)
+        var responsesIterator = try client.readStream(to: streamIdentifier, cursor: .end).makeAsyncIterator()
+        let readResponse = try await responsesIterator.next()
+        
+        guard case .event(let readEvent) = readResponse?.content,
+              let readPosition = readEvent.commitPosition,
+              case .position(let position) = appendResponse.position else{
+            throw TestingError.exception("readResponse.content or appendResponse.position is not Event or Position")
         }
         
-        try await client.deleteStream(to: streamIdentifier) { options in
-            options.revision(expected: .streamExists)
-        }
-
-        XCTAssertEqual(appendResponse.current.revision, 0)
+        #expect(readPosition == position)
+        
     }
-
+    
+    @Test("It should be succeed when set metadata to stream.")
     func testMetadata() async throws {
-        let settings = ClientSettings.localhost()
-        let client = EventStoreDBClient(settings: settings)
-
         let metadata = Stream.Metadata()
             .cacheControl(.seconds(3))
             .maxAge(.seconds(30))
             .acl(.userStream)
-
-        try await client.setMetadata(to: .init(name: streamName), metadata: metadata) { options in
+        
+        try await client.setMetadata(to: streamIdentifier, metadata: metadata) { options in
             options
         }
-
-        guard let responseMetadata = try await client.getStreamMetadata(to: .init(name: streamName)) else {
-            throw TestingError.exception("metadata not found.")
-        }
-
-        XCTAssertEqual(metadata, responseMetadata)
+        
+        let responseMetadata = try #require(try await client.getStreamMetadata(to: streamIdentifier))
+        #expect(metadata == responseMetadata)
     }
-
+    
+    @Test("It should be succeed when subscribe to stream.")
     func testSubscribe() async throws {
-        let settings = ClientSettings.localhost()
-        let client = EventStoreDBClient(settings: settings)
-
-        let subscription = try await client.subscribeTo(stream: .init(name: streamName), from: .end)
-
-        let response = try await client.appendStream(to: .init(name: streamName),
+        let subscription = try await client.subscribeTo(stream: streamIdentifier, from: .end)
+        
+        let response = try await client.appendStream(to: streamIdentifier,
                                                      events: .init(
-                                                         eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+                                                        eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
                                                      )) { options in
-            options.revision(expected: .any)
-        }
-
+                                                         options.revision(expected: .any)
+                                                     }
+        
         var lastEventResult: StreamClient.Subscription.EventAppeared? = nil
         for try await result in subscription {
             lastEventResult = result
             break
         }
-
-        XCTAssertEqual(response.current.revision, lastEventResult?.event.recordedEvent.revision)
+        
+        let lastEventRevision = try #require(lastEventResult?.event.recordedEvent.revision)
+        
+        #expect(response.current.revision == lastEventRevision)
     }
+    
+    @Test("Testing streamAcl encoding and decoding should be succeed.", arguments: [
+        (Stream.Metadata.Acl.systemStream, "$systemStreamAcl"),
+        (Stream.Metadata.Acl.userStream, "$userStreamAcl")
+    ])
+    func testSystemStreamAclEncodeAndDecode(acl: EventStoreDB.Stream.Metadata.Acl, value: String) throws {
+        let encoder = JSONEncoder()
+        let encodedData = try #require(try encoder.encode(value))
+        #expect(try acl.rawValue == encodedData)
+
+        let decoder = JSONDecoder()
+        #expect(try decoder.decode(Stream.Metadata.Acl, from: encodedData) == acl)
+    }
+
+
+    
 }
+

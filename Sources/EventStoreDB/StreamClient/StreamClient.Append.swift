@@ -31,10 +31,19 @@ extension StreamClient {
                 },
             ]
 
-            return try payloads + events.map {
-                let eventMessage = try $0.build()
-                return .with {
-                    $0.proposedMessage = eventMessage
+            return try payloads + events.map { event in
+                return try .with {
+                    $0.proposedMessage = try .with{
+                        $0.id = .with {
+                            $0.value = .string(event.id.uuidString)
+                        }
+                        $0.metadata = event.metadata
+                        $0.data = try  event.payload.data
+                        
+                        if let customMetaData = event.customMetadata {
+                            $0.customMetadata = customMetaData
+                        }
+                    }
                 }
             }
         }
@@ -127,26 +136,26 @@ extension Stream.Identifier {
     }
 }
 
-extension EventData {
-    func build(request: inout EventStore_Client_Streams_AppendReq) throws {
-        request.proposedMessage = .with {
-            $0.id = .with {
-                $0.value = .string(self.id.uuidString)
-            }
-
-            $0.data = data
-            $0.metadata = self.metadata
-        }
-    }
-
-    func build() throws -> EventStore_Client_Streams_AppendReq.ProposedMessage {
-        .with {
-            $0.id = .with {
-                $0.value = .string(id.uuidString)
-            }
-
-            $0.data = data
-            $0.metadata = metadata
-        }
-    }
-}
+//extension EventData where Content == Data{
+//    func build(request: inout EventStore_Client_Streams_AppendReq) throws {
+//        request.proposedMessage = .with {
+//            $0.id = .with {
+//                $0.value = .string(self.id.uuidString)
+//            }
+//
+//            $0.data = content
+//            $0.metadata = self.metadata
+//        }
+//    }
+//
+//    func build() throws -> EventStore_Client_Streams_AppendReq.ProposedMessage {
+//        .with {
+//            $0.id = .with {
+//                $0.value = .string(id.uuidString)
+//            }
+//
+//            $0.data = content
+//            $0.metadata = metadata
+//        }
+//    }
+//}
