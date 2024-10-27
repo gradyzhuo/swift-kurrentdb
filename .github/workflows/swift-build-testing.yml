@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        swift: ["5"]
+        swift: ["6"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: swift-actions/setup-swift@v2
