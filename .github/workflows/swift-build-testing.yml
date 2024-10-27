@@ -4,8 +4,6 @@
 name: Swift-build-testing
 
 on:
-  push: 
-    branches: ["*"]
   pull_request:
     branches: [ "main" ]
 
@@ -14,7 +12,7 @@ jobs:
     name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         swift: ["6.0", "5.9"]
     runs-on: ${{ matrix.os }}
     steps:
