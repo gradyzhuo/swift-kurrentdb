@@ -50,8 +50,5 @@ let package = Package(
             name: "GRPCEncapsulatesTests",
             dependencies: ["GRPCEncapsulates"]
         ),
-    ],
-    swiftLanguageModes: [
-        .v6
     ]
 )
