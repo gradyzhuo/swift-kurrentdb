@@ -54,7 +54,7 @@ extension EventStoreDBClient {
     }
 
     public func getStreamMetadata(to identifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata? {
-        let responses = try readStream(to:
+        let responses = try await readStream(to:
             .init(name: "$$\(identifier.name)"),
             cursor: cursor)
         return try await responses.first {
@@ -118,17 +118,21 @@ extension EventStoreDBClient {
     ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
-    public func readStream(to streamIdentifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    public func readStream(to streamIdentifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) async throws -> StreamClient.Read.Responses {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-        let options = configure(.init())
-
-        return try client.read(stream: streamIdentifier, cursor: cursor, options: options)
+        
+        return try await channel.openAndClose { channel in
+            let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+            let options = configure(.init())
+            
+            return try client.read(stream: streamIdentifier, cursor: cursor, options: options)
+        }
+        
     }
 
-    public func readStream(to streamIdentifier: Stream.Identifier, at revision: UInt64, direction: Stream.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
+    public func readStream(to streamIdentifier: Stream.Identifier, at revision: UInt64, direction: Stream.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) async throws -> StreamClient.Read.Responses {
         let cursor: Cursor<StreamClient.Read.CursorPointer> = .specified(.init(revision: revision, direction: direction))
-        return try readStream(to: streamIdentifier, cursor: cursor, configure: configure)
+        return try await readStream(to: streamIdentifier, cursor: cursor, configure: configure)
     }
 
     // MARK: Subscribe by all streams methods -

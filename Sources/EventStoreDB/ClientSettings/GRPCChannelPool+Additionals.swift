@@ -50,4 +50,10 @@ extension GRPCChannel{
         return output
     }
     
+    func openAndClose<Output>(task: (_ channel: Self) throws ->Output) async throws -> Output{
+        let output = try task(self)
+        try await self.close().get()
+        return output
+    }
+    
 }
