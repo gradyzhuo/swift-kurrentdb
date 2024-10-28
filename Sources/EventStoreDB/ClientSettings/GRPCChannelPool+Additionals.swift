@@ -18,7 +18,7 @@ extension GRPCChannelPool {
         } else {
             GRPCChannelPool.Configuration.TransportSecurity.plaintext
         }
-
+        
         return switch settings.clusterMode {
         case let .singleNode(endpoint):
             try Self.with(
@@ -26,6 +26,7 @@ extension GRPCChannelPool {
                 transportSecurity: transportSecurity,
                 eventLoopGroup: group
             )
+            
         case let .dnsDiscovery(endpoint, _, _):
             try Self.with(
                 target: endpoint.connectionTarget(),
@@ -40,4 +41,13 @@ extension GRPCChannelPool {
             )
         }
     }
+}
+
+extension GRPCChannel{
+    func openAndClose<Output>(task: (_ channel: Self) async throws ->Output) async throws -> Output{
+        let output = try await task(self)
+        try await self.close().get()
+        return output
+    }
+    
 }

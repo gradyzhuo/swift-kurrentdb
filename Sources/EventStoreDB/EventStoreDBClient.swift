@@ -83,11 +83,13 @@ extension EventStoreDBClient {
 
     public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-        let options = configure(.init())
-        
-        return try await client.appendTo(stream: identifier, events: events, options: options)
+        return try await channel.openAndClose{ channel in
+            let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+            let options = configure(.init())
+            return try await client.appendTo(stream: identifier, events: events, options: options)
+        }
     }
+        
 
     public func appendStream(to identifier: Stream.Identifier, events: EventData..., configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options = { $0 }) async throws -> StreamClient.Append.Response.Success {
         try await appendStream(to: identifier, events: events, configure: configure)
