@@ -102,21 +102,21 @@ extension ProjectionsClient {
     package func statisticsForContinuous(name: String) async throws -> Statistics.Responses {
         let handler = Statistics(name: name, options: .init().set(mode: .continuous))
         let request = try handler.build()
-        return try handler.handle(responses: underlyingClient.statistics(request))
+        return try handler.handle(responses: underlyingClient.statistics(request), channel: channel)
     }
 
     package func statistics(name: String, options: Statistics.Options) async throws -> Statistics.Responses {
         let handler = Statistics(name: name, options: options)
 
         let request = try handler.build()
-        return try handler.handle(responses: underlyingClient.statistics(request))
+        return try handler.handle(responses: underlyingClient.statistics(request), channel: channel)
     }
 
     package func statistics(name: String, configure: (_ options: Statistics.Options) -> Statistics.Options) async throws -> Statistics.Responses {
         let handler = Statistics(name: name, options: configure(.init()))
 
         let request = try handler.build()
-        return try handler.handle(responses: underlyingClient.statistics(request))
+        return try handler.handle(responses: underlyingClient.statistics(request), channel: channel)
     }
 
     // MARK: - Enable Actions

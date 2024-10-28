@@ -43,7 +43,7 @@ extension StreamClient {
         let handler = ReadAll(cursor: cursor, options: options)
 
         let request = try handler.build()
-        return try handler.handle(responses: underlyingClient.read(request))
+        return try handler.handle(responses: underlyingClient.read(request), channel: channel)
     }
 
     // MARK: - Read by a stream methos
@@ -52,7 +52,7 @@ extension StreamClient {
         let handler = Read(streamIdentifier: stream, cursor: cursor, options: options)
         let request = try handler.build()
 
-        return try handler.handle(responses: underlyingClient.read(request))
+        return try handler.handle(responses: underlyingClient.read(request), channel: channel)
     }
 
     // MARK: - Read by a stream methos

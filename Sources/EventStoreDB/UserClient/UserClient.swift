@@ -71,7 +71,7 @@ extension UserClient {
         let handler = Details(loginName: loginName)
         let request = try handler.build()
 
-        let responses = try handler.handle(responses: underlyingClient.details(request))
+        let responses = try handler.handle(responses: underlyingClient.details(request), channel: self.channel)
 
         return .init { continuation in
             Task {
