@@ -154,10 +154,12 @@ extension EventStoreDBClient {
     @discardableResult
     public func deleteStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        return try await channel.openAndClose { channel in
+            let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
-        let options = configure(.init())
-        return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
+            let options = configure(.init())
+            return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
+        }
     }
 
     // MARK: (Hard) Delete a stream -
