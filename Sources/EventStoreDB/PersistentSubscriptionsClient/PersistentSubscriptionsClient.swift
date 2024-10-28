@@ -104,14 +104,14 @@ extension PersistentSubscriptionsClient {
 
         let request = try handler.build()
 
-        try await handler.handle(response: underlyingClient.create(request))
+        try await handler.handle(response: underlyingClient.create(request), channel: channel)
     }
 
     func createToAll(groupName: String, options: PersistentSubscriptionsClient.Create.ToAll.Options) async throws {
         let handler: PersistentSubscriptionsClient.Create.ToAll = .init(groupName: groupName, options: options)
 
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.create(request))
+        try await handler.handle(response: underlyingClient.create(request), channel: channel)
     }
 
     // MARK: - Update Action
@@ -119,13 +119,13 @@ extension PersistentSubscriptionsClient {
     func updateToStream(identifier: Stream.Identifier, groupName: String, options: Update.ToStream.Options) async throws {
         let handler = Update.ToStream(streamIdentifier: identifier, groupName: groupName, options: options)
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.update(request))
+        try await handler.handle(response: underlyingClient.update(request), channel: channel)
     }
 
     func updateToAll(identifier _: Stream.Identifier, groupName: String, options: Update.ToAll.Options) async throws {
         let handler = Update.ToAll(groupName: groupName, options: options)
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.update(request))
+        try await handler.handle(response: underlyingClient.update(request), channel: channel)
     }
 
     // MARK: - Delete Actions
@@ -134,7 +134,7 @@ extension PersistentSubscriptionsClient {
         let handler = Delete(streamSelection: stream, groupName: groupName)
         let request = try handler.build()
 
-        try await handler.handle(response: underlyingClient.delete(request))
+        try await handler.handle(response: underlyingClient.delete(request), channel: channel)
     }
 
     // MARK: - Read Actions
@@ -154,7 +154,7 @@ extension PersistentSubscriptionsClient {
     func getInfo(stream streamSelection: Selector<Stream.Identifier>, groupName: String) async throws -> GetInfo.SubscriptionInfo {
         let handler = GetInfo(streamSelection: streamSelection, groupName: groupName)
         let request = try handler.build()
-        let response = try await handler.handle(response: underlyingClient.getInfo(request))
+        let response = try await handler.handle(response: underlyingClient.getInfo(request), channel: channel)
 
         return response.subscriptionInfo
     }
@@ -165,7 +165,7 @@ extension PersistentSubscriptionsClient {
         let handler = ReplayParked(streamSelection: streamSelection, groupName: groupName, options: options)
         let request = try handler.build()
 
-        try await handler.handle(response: underlyingClient.replayParked(request))
+        try await handler.handle(response: underlyingClient.replayParked(request), channel: channel)
     }
 
     func replayParkedMessages(stream streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: ReplayParked.Options) -> ReplayParked.Options) async throws {
@@ -182,7 +182,7 @@ extension PersistentSubscriptionsClient {
 
         let handler = List(options: options)
         let request = try handler.build()
-        let response = try await handler.handle(response: underlyingClient.list(request))
+        let response = try await handler.handle(response: underlyingClient.list(request), channel: channel)
         return response.subscriptions
     }
 
@@ -191,6 +191,6 @@ extension PersistentSubscriptionsClient {
     @MainActor
     func restartSubsystem() async throws {
         let handler = RestartSubsystem()
-        try await handler.handle(response: underlyingClient.restartSubsystem(handler.build(), callOptions: callOptions))
+        try await handler.handle(response: underlyingClient.restartSubsystem(handler.build(), callOptions: callOptions), channel: channel)
     }
 }

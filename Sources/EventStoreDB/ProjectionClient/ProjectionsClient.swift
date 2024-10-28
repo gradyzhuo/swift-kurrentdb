@@ -54,7 +54,7 @@ extension ProjectionsClient {
                     .trackEmittedStreams(trackEmittedStreams)
             let handler = ContinuousCreate(name: name, query: query, options: options)
             let request = try handler.build()
-            _ = try await handler.handle(response: underlyingClient.create(request))
+            _ = try await handler.handle(response: underlyingClient.create(request), channel: channel)
         }
     }
 
@@ -75,7 +75,7 @@ extension ProjectionsClient {
     public func updateForContinuous(name: String, query: String? = nil, options: Update.Options) async throws {
         let handler = Update(name: name, query: query, options: options)
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.update(request))
+        try await handler.handle(response: underlyingClient.update(request), channel: channel)
     }
 
     public func updateForContinuous(name: String, query: String? = nil, configure: (_ options: Update.Options) -> Update.Options) async throws {
@@ -89,7 +89,7 @@ extension ProjectionsClient {
         let handler = Delete(name: name, options: options)
 
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.delete(request))
+        try await handler.handle(response: underlyingClient.delete(request), channel: channel)
     }
 
     public func deleteForContinuous(name: String, configure: (_ options: Delete.Options) -> Delete.Options) async throws {
@@ -130,7 +130,7 @@ extension ProjectionsClient {
         let handler = Enable(name: name, options: options)
 
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.enable(request))
+        try await handler.handle(response: underlyingClient.enable(request), channel: channel)
     }
 
     // MARK: - Disable & Abort Actions
@@ -149,7 +149,7 @@ extension ProjectionsClient {
         let handler = Disable(name: name, options: options)
 
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.disable(request))
+        try await handler.handle(response: underlyingClient.disable(request), channel: channel)
     }
 
     // MARK: - Reset Actions
@@ -163,7 +163,7 @@ extension ProjectionsClient {
         let handler = Reset(name: name, options: options)
 
         let request = try handler.build()
-        try await handler.handle(response: underlyingClient.reset(request))
+        try await handler.handle(response: underlyingClient.reset(request), channel: channel)
     }
 
     // MARK: - State Actions
@@ -171,7 +171,7 @@ extension ProjectionsClient {
     public func getState<Value: Decodable>(name: String, casting _: Value.Type, options: State.Options) async throws -> Value {
         let handler = State(name: name, options: options)
         let request = try handler.build()
-        let response = try await handler.handle(response: underlyingClient.state(request))
+        let response = try await handler.handle(response: underlyingClient.state(request), channel: channel)
         return try response.decode(to: Value.self)
     }
 
@@ -190,7 +190,7 @@ extension ProjectionsClient {
     public func getResult<Value: Decodable>(name: String, casting _: Value.Type, options: Result.Options) async throws -> Value {
         let handler = Result(name: name, options: options)
         let request = try handler.build()
-        let response = try await handler.handle(response: underlyingClient.result(request))
+        let response = try await handler.handle(response: underlyingClient.result(request), channel: channel)
 
         return try response.decode(to: Value.self)
     }
@@ -209,6 +209,6 @@ extension ProjectionsClient {
 
     public func restartSubsystem() async throws {
         let handler = RestartSubsystem()
-        try await handler.handle(response: underlyingClient.restartSubsystem(handler.build()))
+        try await handler.handle(response: underlyingClient.restartSubsystem(handler.build()), channel: channel)
     }
 }

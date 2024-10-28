@@ -11,13 +11,15 @@ import Foundation
 public protocol ResponseHandlable: Sendable {}
 
 public protocol UnaryResponseHandlable: ResponseHandlable where Self: GRPCCallable {
-    func handle(response: Response.UnderlyingMessage) throws -> Response
+    func handle(response: Response.UnderlyingMessage, channel: GRPCChannel) async throws -> Response
 }
 
 extension UnaryResponseHandlable {
     @discardableResult
-    public func handle(response: Response.UnderlyingMessage) throws -> Response {
-        try .init(from: response)
+    public func handle(response: Response.UnderlyingMessage, channel: GRPCChannel) async throws -> Response {
+        let output = try Response.init(from: response)
+        try await channel.close().get()
+        return output
     }
 }
 
@@ -37,7 +39,7 @@ extension StreamResponseHandlable {
                 try await channel.close().get()
                 return nil
             }
-            return try self.handle(response: message)
+            return try .init(from: message)
         }
     }
 }

@@ -83,11 +83,9 @@ extension EventStoreDBClient {
 
     public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        return try await channel.openAndClose{ channel in
-            let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-            let options = configure(.init())
-            return try await client.appendTo(stream: identifier, events: events, options: options)
-        }
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let options = configure(.init())
+        return try await client.appendTo(stream: identifier, events: events, options: options)
     }
         
 
@@ -154,12 +152,11 @@ extension EventStoreDBClient {
     @discardableResult
     public func deleteStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
         let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        return try await channel.openAndClose { channel in
-            let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
 
-            let options = configure(.init())
-            return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
-        }
+        let options = configure(.init())
+        return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
+
     }
 
     // MARK: (Hard) Delete a stream -

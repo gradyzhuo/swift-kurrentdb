@@ -27,7 +27,7 @@ extension StreamClient {
     public func appendTo(stream: Stream.Identifier, events: [EventData], options: Append.Options) async throws -> Append.Response.Success {
         let handler: Append = .init(streamIdentifier: stream, events: events, options: options)
         let requests = try handler.build()
-        let response = try await handler.handle(response: underlyingClient.append(requests))
+        let response = try await handler.handle(response: underlyingClient.append(requests), channel: channel)
 
         return switch response {
         case let .success(successResult):
@@ -51,7 +51,6 @@ extension StreamClient {
     package func read(stream: Stream.Identifier, cursor: Cursor<Read.CursorPointer>, options: StreamClient.Read.Options) throws -> Read.Responses {
         let handler = Read(streamIdentifier: stream, cursor: cursor, options: options)
         let request = try handler.build()
-
         return try handler.handle(responses: underlyingClient.read(request), channel: channel)
     }
 
@@ -84,7 +83,7 @@ extension StreamClient {
         // build request
         let request = try handler.build()
         // handle response
-        return try await handler.handle(response: underlyingClient.delete(request))
+        return try await handler.handle(response: underlyingClient.delete(request), channel: channel)
     }
 
     // MARK: - (Hard) Delete a stream
@@ -93,6 +92,6 @@ extension StreamClient {
     public func tombstone(identifier: Stream.Identifier, options: Tombstone.Options, channel _: GRPCChannel, callOptions _: CallOptions) async throws -> Tombstone.Response {
         let handler = Tombstone(streamIdentifier: identifier, options: options)
         let request = try handler.build()
-        return try await handler.handle(response: underlyingClient.tombstone(request))
+        return try await handler.handle(response: underlyingClient.tombstone(request), channel: channel)
     }
 }

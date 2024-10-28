@@ -30,7 +30,7 @@ extension OperationsClient {
         let handler = OperationsClient.StartScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
         let request = try handler.build()
 
-        return try await handler.handle(response: underlyingClient.startScavenge(request))
+        return try await handler.handle(response: underlyingClient.startScavenge(request), channel: channel)
     }
 
     public func shutdown() {}
