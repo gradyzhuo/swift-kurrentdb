@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "EventStoreDB",
+    name: "KurrentDB",
     platforms: [
         .macOS(.v13),
         .iOS(.v16),
