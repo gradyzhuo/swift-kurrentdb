@@ -9,6 +9,58 @@
 # KurrentDB(original: EventStoreDB)
 [Kurrent](https://www.eventstore.com) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
 
+### Implementation Status
+#### Client Settings
+|Feature|Implemented|
+|----|----|
+|ConnectionString parsed|✅|
+|Endpoint (ip, port)|✅|
+|UserCredentials ( username, password )|✅|
+|Gossip ClusterMode ||
+
+#### Stream
+|Feature|Implemented|
+|----|----|
+|Append|✅|
+|Read|✅|
+|Metadata|✅|
+|Subscribe Specified Stream|✅|
+|Subscribe All Stream|✅|
+
+#### Projection
+|Feature|Implemented|
+|----|----|
+|Create|✅|
+|Update|✅|
+|Result|✅|
+|Delete|✅|
+|Enable|✅|
+|Disable|✅|
+|State|✅|
+|Statistics|✅|
+|Reset|✅|
+|RestartSubsystem|✅|
+
+#### PersistentSubscriptions
+|Feature|Implemented|
+|----|----|
+|Create|✅|
+|Delete|✅|
+|GetInfo|✅|
+|List|✅|
+|Read|✅|
+|ReplayParked|✅|
+|RestartSubsystem|✅|
+|Subscribe|✅|
+|Update|✅|
+
+
+#### User
+|Feature|Implemented|
+|----|----|
+|Create|✅|
+|Details|✅|
+
 ### Getting the gRPC library
 
 #### Swift Package Manager
