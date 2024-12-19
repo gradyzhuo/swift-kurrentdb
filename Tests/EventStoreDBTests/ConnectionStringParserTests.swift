@@ -44,6 +44,16 @@ final class ConnectionStringParserTests: XCTestCase {
         XCTAssertEqual(endpoints?.count, 1)
         XCTAssertEqual(endpoints?[0].host, "localhost")
     }
+    
+    func test_host_should_be_parsed_host_contains_dash_succeed() throws {
+        let connectionString = "esdb://eventstore-service:2113?tls=false"
+
+        let parser = EndpointParser()
+        let endpoints = try parser.parse(connectionString)
+
+        XCTAssertEqual(endpoints?.count, 1)
+        XCTAssertEqual(endpoints?[0].host, "eventstore-service")
+    }
 
     func test_host_should_be_parsed_ip_succeed() throws {
         let connectionString = "esdb://192.168.41.32:2113?tls=false"

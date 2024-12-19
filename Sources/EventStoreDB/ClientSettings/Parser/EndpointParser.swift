@@ -87,7 +87,7 @@ class EndpointParser: ConnctionStringParser {
                 One(.word.subtracting(.anyOf(":?=&")))
             }
             Optionally {
-                One(".")
+                One(.anyOf(".-_"))
             }
         }
         Anchor.wordBoundary
