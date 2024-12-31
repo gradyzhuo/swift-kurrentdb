@@ -11,14 +11,14 @@ import GRPCEncapsulates
 import SwiftProtobuf
 
 extension StreamClient {
-    public final class Subscription: AsyncSequence {
+    public final class Subscription: AsyncSequence, Sendable {
         package typealias Read = StreamClient.Read
         public typealias AsyncIterator = EventIterator
         public typealias Element = EventAppeared
 
         public let eventIterator: EventIterator
 
-        var subscriptionId: String?
+        let subscriptionId: String?
 
         package init(readCall: GRPCAsyncServerStreamingCall<Read.Request.UnderlyingMessage, Read.Response.UnderlyingMessage>) async throws {
             var iterator = readCall.responseStream.makeAsyncIterator()
@@ -38,16 +38,18 @@ extension StreamClient {
 }
 
 extension StreamClient.Subscription {
-    public struct EventIterator: AsyncIteratorProtocol {
+    
+    public struct EventIterator: AsyncIteratorProtocol, Sendable {
         public typealias Element = EventAppeared
-
-        var responseStreamIterator: GRPCAsyncResponseStream<Read.Response.UnderlyingMessage>.AsyncIterator
+        
+        let responseStreamIterator:  GRPCAsyncResponseStream<Read.Response.UnderlyingMessage>.AsyncIterator
 
         init(responseStreamIterator: GRPCAsyncResponseStream<Read.Response.UnderlyingMessage>.Iterator) {
             self.responseStreamIterator = responseStreamIterator
         }
 
         public mutating func next() async throws -> EventAppeared? {
+            var responseStreamIterator = self.responseStreamIterator
             while true {
                 let response = try await responseStreamIterator.next()
 
