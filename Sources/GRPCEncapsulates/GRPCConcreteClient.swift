@@ -9,7 +9,7 @@ import Foundation
 import GRPC
 import SwiftProtobuf
 
-package protocol GRPCConcreteClient {
+package protocol GRPCConcreteClient: Sendable {
     associatedtype UnderlyingClient: UnderlyGRPCClient
 
     var channel: GRPCChannel { get }

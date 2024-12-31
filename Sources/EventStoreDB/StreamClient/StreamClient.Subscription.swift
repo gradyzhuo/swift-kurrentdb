@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPC
+@preconcurrency import GRPC
 import GRPCEncapsulates
 import SwiftProtobuf
 
