@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "KurrentDB",
     platforms: [
-        .macOS(.v13),
+        .macOS(.v15),
         .iOS(.v16),
     ],
     products: [
@@ -17,7 +17,9 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.15.0"),
+        .package(url: "https://github.com/grpc/grpc-swift.git", from: "2.0.0-beta.2"),
+        .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "1.0.0-beta.2"),
+        .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "1.0.0-beta.2"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
@@ -33,7 +35,9 @@ let package = Package(
         .target(
             name: "GRPCEncapsulates",
             dependencies: [
-                .product(name: "GRPC", package: "grpc-swift"),
+                .product(name: "GRPCCore", package: "grpc-swift"),
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
             ]
         ),
         .testTarget(
