@@ -21,7 +21,6 @@ enum TestingError: Error {
 final class EventStoreDBStreamTests: Sendable{
     
     let streamIdentifier: KurrentCore.Stream.Identifier
-//    let client: StreamClient
     let settings: ClientSettings
     
     init () async throws {
@@ -135,64 +134,20 @@ final class EventStoreDBStreamTests: Sendable{
    }
         
         
-//        print("ooooooo")
-//        let subscription = try await streams.subscribe(self.streamIdentifier, cursor: .end, options: .init())
-//        print("subscription:", subscription)
+    @Test("Testing streamAcl encoding and decoding should be succeed.", arguments: [
+        (Stream.Metadata.Acl.systemStream, "$systemStreamAcl"),
+        (Stream.Metadata.Acl.userStream, "$userStreamAcl")
+    ])
+    func testSystemStreamAclEncodeAndDecode(acl: KurrentCore.Stream.Metadata.Acl, value: String) throws {
+        let encoder = JSONEncoder()
+        let encodedData = try #require(try encoder.encode(value))
         
-//        try await withThrowingDiscardingTaskGroup { group in
-//            group.addTask {
-//                
-//                var lastEvent: ReadEvent? = nil
-//                for try await result in subscription.events {
-//                    lastEvent = result
-//                    break
-//                }
-////                let lastEventRevision = try #require(lastEvent?.recordedEvent.revision)
-////                #expect(response.current.revision == lastEventRevision)
-//            }
-//            
-//            let response = try await streams.append(to: self.streamIdentifier,
-//                                                         events: [
-//                                                            .init(
-//                                                               eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
-//                                                            )
-//                                                         ], options: .init().revision(expected: .any))
-//        }
-        
-        
-        
-        
-        
-        
-        
-        
-//        try await withEventStoreService(of: Streams.Service.self, settings: settings, metadata: .init(), callOptions: .defaults) {
-//            print("lllllll")
-//            let subscription = try await $0.subscribe(streamIdentifier, cursor: .end, options: .init())
-//            print("jjjjjjjjjjj")
-//            
-//            
-//            print("test:")
-//            
-//        }
-        
-        
-        
-//    }
-//    
-//    @Test("Testing streamAcl encoding and decoding should be succeed.", arguments: [
-//        (Stream.Metadata.Acl.systemStream, "$systemStreamAcl"),
-//        (Stream.Metadata.Acl.userStream, "$userStreamAcl")
-//    ])
-//    func testSystemStreamAclEncodeAndDecode(acl: EventStoreDB.Stream.Metadata.Acl, value: String) throws {
-//        let encoder = JSONEncoder()
-//        let encodedData = try #require(try encoder.encode(value))
-//        #expect(try acl.rawValue == encodedData)
-//
-//        let decoder = JSONDecoder()
-//        #expect(try decoder.decode(Stream.Metadata.Acl, from: encodedData) == acl)
-//    }
-//
+        #expect(try acl.rawValue == encodedData)
+
+        let decoder = JSONDecoder()
+        #expect(try decoder.decode(Stream.Metadata.Acl, from: encodedData) == acl)
+    }
+
 
     
 }
