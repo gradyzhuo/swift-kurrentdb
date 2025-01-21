@@ -41,21 +41,14 @@ public struct Read: StreamStream {
     }
     
     
-//    public func perform(client: Client.UnderlyingClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-//        return try await client.read(request: request, options: callOptions) {
-//            return try handle(response: $0)
-//        }
-//    }
-    
     package func send(client: Client.UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
-        let requests = AsyncStream.makeStream(of: UnderlyingRequest.self)
         let responses = AsyncThrowingStream.makeStream(of: Response.self)
         
         let writer = Subscription.Writer()
+        let requestMessages = try requestMessages()
+        writer.write(messages: requestMessages)
         Task{
             try await client.read(metadata: metadata, options: callOptions) {
-                let requestMessage = try requestMessages()
-                try await $0.write(contentsOf: requestMessage)
                 try await $0.write(contentsOf: writer.sender)
             } onResponse: {
                 for try await message in $0.messages {
@@ -97,11 +90,14 @@ extension Read {
         case confirmation(subscriptionId: String)
 
         public init(from message: UnderlyingMessage) throws {
-            if message.event.isInitialized {
-                let event = message.event
-                self = try .readEvent(event: .init(message: event), retryCount: event.retryCount)
-            } else {
-                self = .confirmation(subscriptionId: message.subscriptionConfirmation.subscriptionID)
+            guard let content = message.content else {
+                throw EventStoreError.resourceNotFound(reason: "The content of PersistentSubscriptions Read Response is missing.")
+            }
+            switch content {
+            case let .event(eventMessage):
+                self = try .readEvent(event: .init(message: eventMessage), retryCount: eventMessage.retryCount)
+            case let .subscriptionConfirmation(subscriptionConfirmation):
+                self = .confirmation(subscriptionId: subscriptionConfirmation.subscriptionID)
             }
         }
     }
