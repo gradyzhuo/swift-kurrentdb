@@ -11,8 +11,8 @@ import GRPCEncapsulates
 import SwiftProtobuf
 
 public final class Subscription {
-    let events: AsyncThrowingStream<ReadEvent, Error>
-    let subscriptionId: String?
+    public let events: AsyncThrowingStream<ReadEvent, Error>
+    public let subscriptionId: String?
     
     package init(messages: AsyncThrowingStream<Subscribe.UnderlyingResponse, any Error>) async throws {
         
