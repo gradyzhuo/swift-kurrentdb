@@ -6,7 +6,7 @@
 
 
 
-# KurrentDB(original: EventStoreDB)
+# KurrentDB(formerly: EventStoreDB)
 [Kurrent](https://www.eventstore.com) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
 
 ### Implementation Status
