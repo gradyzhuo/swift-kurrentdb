@@ -6,8 +6,8 @@ curl -i "http://localhost:2113/streams/%24settings" \
         "eventType": "update-default-acl",
         "data": {
             "$userStreamAcl" : {
-                "$r"  : ["$admin", "$ops", "service-a", "service-b"],
-                "$w"  : ["$admin", "$ops", "service-a", "service-b"],
+                "$r"  : ["$admin", "$ops", "usecase-a", "usecase-b"],
+                "$w"  : ["$admin", "$ops", "usecase-a", "usecase-b"],
                 "$d"  : ["$admin", "$ops"],
                 "$mr" : ["$admin", "$ops"],
                 "$mw" : ["$admin", "$ops"]
