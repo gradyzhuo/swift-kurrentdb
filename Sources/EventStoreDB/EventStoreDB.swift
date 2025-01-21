@@ -3,5 +3,7 @@
 
 import Foundation
 import Logging
+import GRPCCore
+import GRPCEncapsulates
 
 let logger = Logger(label: "EventStoreDB")

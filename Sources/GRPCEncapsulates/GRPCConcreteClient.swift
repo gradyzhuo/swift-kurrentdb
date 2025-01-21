@@ -6,18 +6,16 @@
 //
 
 import Foundation
-import GRPC
-import SwiftProtobuf
+import GRPCCore
+import GRPCNIOTransportCore
 
-package protocol GRPCConcreteClient: Sendable {
-    associatedtype UnderlyingClient: UnderlyGRPCClient
+public protocol GRPCConcreteClient: Sendable {
+    associatedtype Transport: ClientTransport
+    associatedtype UnderlyingClient: UnderlyGRPCClient where UnderlyingClient.Transport == Transport
 
-    var channel: GRPCChannel { get }
-    var callOptions: CallOptions { set get }
-}
-
-extension GRPCConcreteClient {
-    package var underlyingClient: UnderlyingClient {
-        .init(channel: channel, defaultCallOptions: callOptions)
-    }
+//    var underlying: UnderlyingClient { get }
+//    var metadata: Metadata { get }
+//    var callOptions: CallOptions { set get }
+    
+//    init(wrapping client: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions)
 }

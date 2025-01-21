@@ -6,44 +6,18 @@
 //
 
 import Foundation
-import GRPC
+import GRPCCore
+import GRPCNIOTransportHTTP2
 
-package protocol UnderlyGRPCClient: GRPCClient {
-    associatedtype InterceptorsFactoryProtocol
-
-    init(channel: GRPCChannel, defaultCallOptions: CallOptions, interceptors: InterceptorsFactoryProtocol?)
+public protocol UnderlyGRPCClient {
+    associatedtype Transport: ClientTransport
+    init(wrapping: GRPCClient<Transport>)
 }
 
-extension UnderlyGRPCClient {
-    public init(channel: GRPCChannel, defaultCallOptions: CallOptions) {
-        self.init(channel: channel, defaultCallOptions: defaultCallOptions, interceptors: nil)
-    }
-}
-
-extension EventStore_Client_Streams_StreamsAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_Streams_StreamsClientInterceptorFactoryProtocol
-}
-
-extension EventStore_Client_Users_UsersAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_Users_UsersClientInterceptorFactoryProtocol
-}
-
-extension EventStore_Client_Projections_ProjectionsAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_Projections_ProjectionsClientInterceptorFactoryProtocol
-}
-
-extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptionsAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_PersistentSubscriptions_PersistentSubscriptionsClientInterceptorFactoryProtocol
-}
-
-extension EventStore_Client_Operations_OperationsAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_Operations_OperationsClientInterceptorFactoryProtocol
-}
-
-extension EventStore_Client_Monitoring_MonitoringAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_Monitoring_MonitoringClientInterceptorFactoryProtocol
-}
-
-extension EventStore_Client_Gossip_GossipAsyncClient: UnderlyGRPCClient {
-    package typealias InterceptorsFactoryProtocol = EventStore_Client_Gossip_GossipClientInterceptorFactoryProtocol
-}
+extension EventStore_Client_Streams_Streams.Client: UnderlyGRPCClient {}
+extension EventStore_Client_Users_Users.Client: UnderlyGRPCClient {}
+extension EventStore_Client_Projections_Projections.Client: UnderlyGRPCClient {}
+extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Client: UnderlyGRPCClient{}
+extension EventStore_Client_Operations_Operations.Client: UnderlyGRPCClient {}
+extension EventStore_Client_Monitoring_Monitoring.Client: UnderlyGRPCClient {}
+extension EventStore_Client_Gossip_Gossip.Client: UnderlyGRPCClient {}

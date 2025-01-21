@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GRPC
+import GRPCCore
 import SwiftProtobuf
 
 public protocol GRPCBridge: Sendable {
@@ -15,7 +15,7 @@ public protocol GRPCBridge: Sendable {
 
 public protocol GRPCRequest: GRPCBridge {}
 
-public protocol GRPCResponse: GRPCBridge {
+public protocol GRPCResponse<UnderlyingMessage>: GRPCBridge {
     init(from message: UnderlyingMessage) throws
 }
 

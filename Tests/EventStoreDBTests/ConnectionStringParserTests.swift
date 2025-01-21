@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2024/5/25.
 //
 
-@testable import EventStoreDB
+@testable import KurrentCore
 import Foundation
 import XCTest
 

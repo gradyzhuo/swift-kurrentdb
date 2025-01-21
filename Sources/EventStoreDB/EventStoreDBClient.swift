@@ -6,14 +6,20 @@
 //
 
 import Foundation
-import GRPC
-import GRPCEncapsulates
+import KurrentCore
 import NIOCore
 import NIOPosix
+import GRPCCore
+import GRPCNIOTransportHTTP2
+import GRPCEncapsulates
+import Streams
+import Operations
+import PersistentSubscriptions
+
 
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.
-public final class EventStoreDBClient: Sendable {
+public final class EventStoreDBClient {
     public let defaultCallOptions: CallOptions
     public let settings: ClientSettings
     private let group: EventLoopGroup
@@ -22,27 +28,18 @@ public final class EventStoreDBClient: Sendable {
     /// - Parameters:
     ///   - settings: encapsulates various configuration settings for a client.
     ///   - numberOfThreads: the number of threads of `EventLoopGroup` in `NIOChannel`.
-    public init(settings: ClientSettings, numberOfThreads: Int = 1) {
-        var defaultCallOptions = CallOptions()
-        if let credentials = settings.defaultUserCredentials {
-            do {
-                try defaultCallOptions.customMetadata.replaceOrAdd(name: "Authorization", value: credentials.makeBasicAuthHeader())
-            } catch {
-                logger.error("Could not setting Authorization with credentials: \(credentials).\n Original error:\(error).")
-            }
-        }
+    public init(settings: ClientSettings, numberOfThreads: Int = 1, defaultCallOptions: CallOptions = .defaults) {
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
         self.group = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
     }
     
 }
-
+//
 // MARK: - Streams Operations
-
 extension EventStoreDBClient {
     @discardableResult
-    public func setMetadata(to identifier: Stream.Identifier, metadata: Stream.Metadata, configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
+    public func setMetadata(to identifier: KurrentCore.Stream.Identifier, metadata: KurrentCore.Stream.Metadata, configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response.Success {
         try await appendStream(
             to: .init(name: "$$\(identifier.name)"),
             events: .init(
@@ -53,8 +50,8 @@ extension EventStoreDBClient {
         )
     }
 
-    public func getStreamMetadata(to identifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer> = .end) async throws -> Stream.Metadata? {
-        let responses = try readStream(to:
+    public func getStreamMetadata(to identifier: KurrentCore.Stream.Identifier, cursor: Cursor<Streams.ReadCursorPointer> = .end) async throws -> KurrentCore.Stream.Metadata? {
+        let responses = try await readStream(to:
             .init(name: "$$\(identifier.name)"),
             cursor: cursor)
         return try await responses.first {
@@ -80,27 +77,22 @@ extension EventStoreDBClient {
     }
 
     // MARK: Append methods -
-
-    public func appendStream(to identifier: Stream.Identifier, events: [EventData], configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options) async throws -> StreamClient.Append.Response.Success {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+    public func appendStream(to identifier: KurrentCore.Stream.Identifier, events: [EventData], configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response.Success {
         let options = configure(.init())
-        return try await client.appendTo(stream: identifier, events: events, options: options)
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.append(to: identifier, events: events, options: options)
     }
-        
-
-    public func appendStream(to identifier: Stream.Identifier, events: EventData..., configure: (_ options: StreamClient.Append.Options) -> StreamClient.Append.Options = { $0 }) async throws -> StreamClient.Append.Response.Success {
+    
+    public func appendStream(to identifier: KurrentCore.Stream.Identifier, events: EventData..., configure: (_ options: Streams.Append.Options) -> Streams.Append.Options = { $0 }) async throws -> Streams.Append.Response.Success {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
 
     // MARK: Read by all streams methods -
 
-    public func readAllStreams(cursor: Cursor<StreamClient.ReadAll.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-
+    public func readAllStreams(cursor: Cursor<Streams.ReadAll.CursorPointer>, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
         let options = configure(.init())
-        return try client.readAll(cursor: cursor, options: options, channel: channel, callOptions: defaultCallOptions)
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.readAll(cursor: cursor, options: options)
     }
 
     // MARK: Read by a stream methos -
@@ -116,119 +108,103 @@ extension EventStoreDBClient {
     ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
-    public func readStream(to streamIdentifier: Stream.Identifier, cursor: Cursor<StreamClient.Read.CursorPointer>, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
+    public func readStream(to streamIdentifier: KurrentCore.Stream.Identifier, cursor: Cursor<Streams.ReadCursorPointer>, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
         let options = configure(.init())
-        
-        return try client.read(stream: streamIdentifier, cursor: cursor, options: options)
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.read(streamIdentifier, cursor: cursor, options: options)
     }
 
-    public func readStream(to streamIdentifier: Stream.Identifier, at revision: UInt64, direction: Stream.Direction = .forward, configure: (_ options: StreamClient.Read.Options) -> StreamClient.Read.Options = { $0 }) throws -> StreamClient.Read.Responses {
-        let cursor: Cursor<StreamClient.Read.CursorPointer> = .specified(.init(revision: revision, direction: direction))
-        return try readStream(to: streamIdentifier, cursor: cursor, configure: configure)
+    public func readStream(to streamIdentifier: KurrentCore.Stream.Identifier, at revision: UInt64, direction: KurrentCore.Stream.Direction = .forward, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
+        let cursor: Cursor<Streams.ReadCursorPointer> = .specified(.init(revision: revision, direction: direction))
+        return try await readStream(to: streamIdentifier, cursor: cursor, configure: configure)
     }
 
     // MARK: Subscribe by all streams methods -
 
-    public func subscribeToAll(from cursor: Cursor<Stream.Position>, configure: (_ options: StreamClient.SubscribeToAll.Options) -> StreamClient.SubscribeToAll.Options = { $0 }) async throws -> StreamClient.Subscription {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-
+    public func subscribeToAll(from cursor: KurrentCore.Cursor<KurrentCore.Stream.Position>, configure: (_ options: Streams.SubscribeToAll.Options) -> Streams.SubscribeToAll.Options = { $0 }) async throws -> Streams.Subscription {
         let options = configure(.init())
-        return try await client.subscribeToAll(from: cursor, options: options)
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.subscribeToAll(cursor: cursor, options: options)
     }
 
-    public func subscribeTo(stream: Stream.Identifier, from cursor: Cursor<Stream.Revision>, configure: (_ options: StreamClient.Subscribe.Options) -> StreamClient.Subscribe.Options = { $0 }) async throws -> StreamClient.Subscription {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-
+    public func subscribeTo(stream: KurrentCore.Stream.Identifier, from cursor: KurrentCore.Cursor<KurrentCore.Stream.Revision>, configure: (_ options: Streams.Subscribe.Options) -> Streams.Subscribe.Options = { $0 }) async throws -> Streams.Subscription {
         let options = configure(.init())
-        return try await client.subscribe(stream: stream, from: cursor, options: options)
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.subscribe(stream, cursor: cursor, options: options)
     }
 
     // MARK: (Soft) Delete a stream -
 
     @discardableResult
-    public func deleteStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Delete.Options) -> StreamClient.Delete.Options) async throws -> StreamClient.Delete.Response {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-
+    public func deleteStream(to identifier: KurrentCore.Stream.Identifier, configure: (_ options: Streams.Delete.Options) -> Streams.Delete.Options) async throws -> Streams.Delete.Response {
         let options = configure(.init())
-        return try await client.delete(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
-
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.delete(identifier, options: options)
     }
 
     // MARK: (Hard) Delete a stream -
 
     @discardableResult
-    public func tombstoneStream(to identifier: Stream.Identifier, configure: (_ options: StreamClient.Tombstone.Options) -> StreamClient.Tombstone.Options) async throws -> StreamClient.Tombstone.Response {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = StreamClient(channel: channel, callOptions: defaultCallOptions)
-
+    public func tombstoneStream(to identifier: KurrentCore.Stream.Identifier, configure: (_ options: Streams.Tombstone.Options) -> Streams.Tombstone.Options) async throws -> Streams.Tombstone.Response {
         let options = configure(.init())
-        return try await client.tombstone(identifier: identifier, options: options, channel: channel, callOptions: defaultCallOptions)
+        let streams = Streams.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await streams.tombstone(identifier, options: options)
     }
 }
 
 // MARK: - Operations
 
 extension EventStoreDBClient {
-    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> OperationsClient.ScavengeResponse {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = OperationsClient(channel: channel, callOptions: defaultCallOptions)
-        return try await client.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
+    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
+        let operations = Operations.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
+    }
+    
+    public func stopScavenge(scavengeId: String) async throws -> Operations.ScavengeResponse {
+        let operations = Operations.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await operations.stopScavenge(scavengeId: scavengeId)
     }
 }
 
+//MARK: - PersistentSubscriptions
 extension EventStoreDBClient {
-    public func createPersistentSubscription(to identifier: Stream.Identifier, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToStream.Options) -> PersistentSubscriptionsClient.Create.ToStream.Options = { $0 }) async throws {
-        
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
-        
+    public func createPersistentSubscription(to identifier: KurrentCore.Stream.Identifier, groupName: String, configure: (_ options: PersistentSubscriptions.CreateToStream.Options) -> PersistentSubscriptions.CreateToStream.Options = { $0 }) async throws {
         let options = configure(.init())
-        try await client.createToStream(streamIdentifier: identifier, groupName: groupName, options: options)
-        
+        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await persistentSubscriptions.createToStream(streamIdentifier: identifier, groupName: groupName, options: options)
     }
 
-    public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptionsClient.Create.ToAll.Options) -> PersistentSubscriptionsClient.Create.ToAll.Options = { $0 }) async throws {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
+    public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptions.CreateToAll.Options) -> PersistentSubscriptions.CreateToAll.Options = { $0 }) async throws {
         
         let options = configure(.init())
-        try await client.createToAll(groupName: groupName, options: options)
+        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await persistentSubscriptions.createToAll(groupName: groupName, options: options)
     }
     
     // MARK: Delete PersistentSubscriptions
-    public func deletePersistentSubscription(streamSelector: Selector<Stream.Identifier>, groupName: String) async throws {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
-        try await client.deleteOn(stream: streamSelector, groupName: groupName)
+    public func deletePersistentSubscription(streamSelector: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String) async throws {
+        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await persistentSubscriptions.delete(stream: streamSelector, groupName: groupName)
     }
     
     // MARK: List PersistentSubscriptions
-    public func listPersistentSubscription(streamSelector: Selector<Stream.Identifier>) async throws -> [PersistentSubscriptionsClient.GetInfo.SubscriptionInfo]{
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
-        return try await client.list(streamSelector: streamSelector)
+    public func listPersistentSubscription(streamSelector: KurrentCore.Selector<KurrentCore.Stream.Identifier>) async throws -> [PersistentSubscription.SubscriptionInfo]{
+        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await persistentSubscriptions.list(streamSelector: streamSelector)
     }
 
     // MARK: - Restart Subsystem Action
 
     public func restartPersistentSubscriptionSubsystem() async throws {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
-        return try await client.restartSubsystem()
+        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        try await persistentSubscriptions.restartSubsystem()
     }
 
     // MARK: -
 
-    public func subscribePersistentSubscription(to streamSelection: Selector<Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptionsClient.Read.Options) -> PersistentSubscriptionsClient.Read.Options = { $0 }) async throws -> PersistentSubscriptionsClient.Subscription {
-        let channel = try GRPCChannelPool.with(settings: settings, group: group)
-        let client = PersistentSubscriptionsClient(channel: channel, callOptions: defaultCallOptions)
-
+    public func subscribePersistentSubscription(to streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String, configure: (_ options: PersistentSubscriptions.Read.Options) -> PersistentSubscriptions.Read.Options = { $0 }) async throws -> PersistentSubscriptions.Subscription {
         let options = configure(.init())
-        return try await client.subscribeTo(streamSelection, groupName: groupName, options: options)
+        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        return try await persistentSubscriptions.subscribe(streamSelection, groupName: groupName, options: options)
     }
 }

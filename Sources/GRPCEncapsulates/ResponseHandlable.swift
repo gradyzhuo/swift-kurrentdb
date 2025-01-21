@@ -6,40 +6,62 @@
 //
 
 import Foundation
-@preconcurrency import GRPC
+import SwiftProtobuf
+import GRPCCore
 
-public protocol ResponseHandlable: Sendable {}
-
-public protocol UnaryResponseHandlable: ResponseHandlable where Self: GRPCCallable {
-    func handle(response: Response.UnderlyingMessage, channel: GRPCChannel) async throws -> Response
+public protocol ResponseHandlable: Sendable {
+    associatedtype UnderlyingResponse: Message
+    associatedtype Response
 }
 
-extension UnaryResponseHandlable {
+public protocol UnaryResponseHandlable: ResponseHandlable where Self: Usecase{
+}
+
+extension UnaryResponseHandlable where Response: GRPCResponse<UnderlyingResponse> {
     @discardableResult
-    public func handle(response: Response.UnderlyingMessage, channel: GRPCChannel) async throws -> Response {
-        let output = try Response.init(from: response)
-        try await channel.close().get()
-        return output
+    public func handle(message: Response.UnderlyingMessage) throws -> Response {
+        return try Response.init(from: message)
+    }
+    
+    @discardableResult
+    public func handle(response: ClientResponse<Response.UnderlyingMessage>) throws -> Response {
+        return try handle(message: response.message)
     }
 }
 
-public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: GRPCCallable {
-    func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>, channel: GRPCChannel) throws -> Responses
+public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Usecase {
+    associatedtype Responses//: AsyncSequence, Sendable
+//    func handle(messages: RPCAsyncSequence<Response.UnderlyingMessage, Error>) async throws -> Responses
 }
 
-extension StreamResponseHandlable {
-    public typealias Responses = AsyncThrowingStream<Response, Error>
-
-    @discardableResult
-    public func handle(responses: GRPCAsyncResponseStream<Response.UnderlyingMessage>, channel: GRPCChannel) throws -> Responses {
-        let iterator = responses.makeAsyncIterator()
-        return .init {
-            var iterator = iterator
-            guard let message = try await iterator.next() else {
-                try await channel.close().get()
-                return nil
-            }
-            return try .init(from: message)
-        }
-    }
+extension StreamResponseHandlable where Responses == RPCAsyncSequence<Response, Error>{
+//    @discardableResult
+//    public func handle(messages: RPCAsyncSequence<Response.UnderlyingMessage, Error>) throws -> Responses {
+////        let responses = messages.compactMap { message -> Responses.Element in
+////            return try self.handle(message: message)
+////        }
+//        
+//        let stream = AsyncThrowingStream<Response, Error>.init {
+//            var iterator = messages.makeAsyncIterator()
+//            guard let message = try await iterator.next() else {
+//                return nil
+//            }
+//            return try handle(message: message)
+//        }
+//        
+////        let stream =  AsyncThrowingStream<Response, Error>.init { continuation in
+////            Task.detached{
+////                for try await message in messages {
+////                    continuation.yield(try handle(message: message))
+////                }
+////                continuation.finish()
+////            }
+////        }
+//        return .init(wrapping: stream)
+//    }
+    
+//    @discardableResult
+//    public func handle(response: StreamingClientResponse<Response.UnderlyingMessage>) async throws -> Responses {
+//        return try await handle(messages: response.messages)
+//    }
 }

@@ -6,20 +6,21 @@
 //
 
 @testable import EventStoreDB
-import GRPC
+import KurrentCore
+import GRPCCore
 import SwiftProtobuf
 import XCTest
 import NIOPosix
 import Testing
-
+import Streams
 
 @Suite("EventStoreDB Persistent Subscription Tests")
-final class EventStoreDBPersistentSubscriptionTests: Sendable {
+final class EventStoreDBPersistentSubscriptionTests {
     
     let client: EventStoreDBClient
     let groupName: String
-    let streamSelector: EventStoreDB.Selector<EventStoreDB.Stream.Identifier>
-    let streamIdentifier: EventStoreDB.Stream.Identifier
+    let streamSelector: KurrentCore.Selector<KurrentCore.Stream.Identifier>
+    let streamIdentifier: KurrentCore.Stream.Identifier
     
     init() async throws {
         self.client = .init(settings: ClientSettings.localhost())
@@ -32,9 +33,9 @@ final class EventStoreDBPersistentSubscriptionTests: Sendable {
         let client = client
         let streamSelector = streamSelector
         let groupName = groupName
-        Task.detached {
-            try await client.deletePersistentSubscription(streamSelector: streamSelector, groupName: groupName)
-        }
+//        Task {
+//            try await client.deletePersistentSubscription(streamSelector: streamSelector, groupName: groupName)
+//        }
     }
     
     @Test("Create PersistentSubscription for Stream")
@@ -44,6 +45,8 @@ final class EventStoreDBPersistentSubscriptionTests: Sendable {
         let subscriptions = try await client.listPersistentSubscription(streamSelector: .specified(streamIdentifier))
         
         #expect(subscriptions.count == 1)
+        
+//        try await client.deletePersistentSubscription(streamSelector: streamSelector, groupName: groupName)
     }
     
     @Test("Subscribe PersistentSubscription for Stream")
@@ -61,8 +64,8 @@ final class EventStoreDBPersistentSubscriptionTests: Sendable {
             options.revision(expected: .any)
         }
         
-        var lastEventResult: PersistentSubscriptionsClient.Subscription.EventResult? = nil
-        for try await result in subscription {
+        var lastEventResult: PersistentSubscription.EventResult? = nil
+        for try await result in subscription.events {
             lastEventResult = result
             try await subscription.ack(readEvents: result.event)
             break
