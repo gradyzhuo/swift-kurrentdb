@@ -44,9 +44,14 @@ extension UpdateToStream {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public var settings: PersistentSubscription.Settings = .init()
-        public var revisionCursor: KurrentCore.Cursor<KurrentCore.Stream.Revision> = .end
+        public private(set) var settings: PersistentSubscription.Settings
+        public private(set) var revisionCursor: KurrentCore.Cursor<KurrentCore.Stream.Revision>
 
+        public init(settings: PersistentSubscription.Settings = .init(), revisionCursor: KurrentCore.Cursor<KurrentCore.Stream.Revision> = .end) {
+            self.settings = settings
+            self.revisionCursor = revisionCursor
+        }
+        
         @discardableResult
         public func startFrom(cursor: KurrentCore.Cursor<KurrentCore.Stream.Revision>) -> Self {
             withCopy { options in

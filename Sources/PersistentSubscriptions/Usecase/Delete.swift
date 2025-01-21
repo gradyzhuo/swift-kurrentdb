@@ -18,7 +18,7 @@ public struct Delete: UnaryUnary {
     let streamSelection: Selector<Stream.Identifier>
     let groupName: String
 
-    internal init(streamSelection: Selector<Stream.Identifier>, groupName: String) {
+    public init(streamSelection: Selector<Stream.Identifier>, groupName: String) {
         self.streamSelection = streamSelection
         self.groupName = groupName
     }

@@ -42,9 +42,14 @@ extension UpdateToAll {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public var settings: PersistentSubscription.Settings = .init()
-        public var positionCursor: KurrentCore.Cursor<KurrentCore.Stream.Position> = .end
+        public var settings: PersistentSubscription.Settings
+        public var positionCursor: KurrentCore.Cursor<KurrentCore.Stream.Position>
 
+        public init(settings: PersistentSubscription.Settings = .init(), positionCursor: KurrentCore.Cursor<KurrentCore.Stream.Position> = .end) {
+            self.settings = settings
+            self.positionCursor = positionCursor
+        }
+        
         @discardableResult
         public func startFrom(cursor: KurrentCore.Cursor<KurrentCore.Stream.Position>) -> Self {
             withCopy { options in

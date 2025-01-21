@@ -29,24 +29,24 @@ public struct Service: GRPCConcreteClient {
 extension Service {
     // MARK: - Create Action
 
-    public func createToStream(streamIdentifier: KurrentCore.Stream.Identifier, groupName: String, options: CreateToStream.Options) async throws {
+    public func createToStream(streamIdentifier: KurrentCore.Stream.Identifier, groupName: String, options: CreateToStream.Options = .init()) async throws {
         let usecase: CreateToStream = .init(streamIdentifier: streamIdentifier, groupName: groupName, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    public func createToAll(groupName: String, options: PersistentSubscriptions.CreateToAll.Options) async throws {
+    public func createToAll(groupName: String, options: PersistentSubscriptions.CreateToAll.Options = .init()) async throws {
         let usecase: PersistentSubscriptions.CreateToAll = .init(groupName: groupName, options: options)
         _ =  try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
     // MARK: - Update Action
 
-    public func updateToStream(identifier: KurrentCore.Stream.Identifier, groupName: String, options: UpdateToStream.Options) async throws {
+    public func updateToStream(identifier: KurrentCore.Stream.Identifier, groupName: String, options: UpdateToStream.Options = .init()) async throws {
         let usecase = UpdateToStream(streamIdentifier: identifier, groupName: groupName, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    public func updateToAll(identifier _: KurrentCore.Stream.Identifier, groupName: String, options: UpdateToAll.Options) async throws {
+    public func updateToAll(identifier _: KurrentCore.Stream.Identifier, groupName: String, options: UpdateToAll.Options = .init()) async throws {
         let usecase = UpdateToAll(groupName: groupName, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -74,13 +74,9 @@ extension Service {
 
     // MARK: - ReplayParked Action
 
-    public func replayParkedMessages(stream streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String, options: ReplayParked.Options) async throws {
+    public func replayParkedMessages(stream streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String, options: ReplayParked.Options = .init()) async throws {
         let usecase = ReplayParked(streamSelection: streamSelection, groupName: groupName, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-
-    public func replayParkedMessages(stream streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String, configure: (_ options: ReplayParked.Options) -> ReplayParked.Options) async throws {
-        try await replayParkedMessages(stream: streamSelection, groupName: groupName, options: configure(.init()))
     }
 
     // MARK: - List Action

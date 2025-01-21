@@ -36,7 +36,11 @@ extension Disable {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        var writeCheckpoint: Bool = false
+        var writeCheckpoint: Bool
+        
+        public init(writeCheckpoint: Bool = false) {
+            self.writeCheckpoint = writeCheckpoint
+        }
 
         public func build() -> UnderlyingMessage {
             return .with {

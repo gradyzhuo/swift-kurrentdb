@@ -50,7 +50,7 @@ extension ReplayParked {
         
         var message: UnderlyingMessage
 
-        init() {
+        public init() {
             message = .init()
             stop(at: .noLimit)
         }

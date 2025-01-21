@@ -7,18 +7,11 @@
 
 import Foundation
 @testable import Streams
-import GRPCCore
-import GRPCEncapsulates
 import KurrentCore
 import Testing
 
-
-enum TestingError: Error {
-    case exception(String)
-}
-
 @Suite("EventStoreDB Stream Tests", .serialized)
-final class EventStoreDBStreamTests: Sendable{
+final class StreamTests: Sendable{
     
     let streamIdentifier: KurrentCore.Stream.Identifier
     let settings: ClientSettings
@@ -26,18 +19,7 @@ final class EventStoreDBStreamTests: Sendable{
     init () async throws {
         self.streamIdentifier = .init(name: UUID().uuidString)
         self.settings = .localhost()
-//        self.client = .init(wrapping: <#T##GRPCClient#>, metadata: <#T##Metadata#>, callOptions: <#T##CallOptions#>)//.init(settings: ClientSettings.localhost())
     }
-    
-//    deinit {
-//        let client = client
-//        let streamIdentifier = streamIdentifier
-//        Task.detached {
-//            try await client.deleteStream(to: streamIdentifier) { options in
-//                options.revision(expected: .streamExists)
-//            }
-//        }
-//    }
     
     @Test("Stream should be not found and throw an error.")
     func testStreamNoFound() async throws {
@@ -73,22 +55,21 @@ final class EventStoreDBStreamTests: Sendable{
         
         #expect(readPosition == position)
     }
-//    
-//    @Test("It should be succeed when set metadata to stream.")
-//    func testMetadata() async throws {
-//        let metadata = Stream.Metadata()
-//            .cacheControl(.seconds(3))
-//            .maxAge(.seconds(30))
-//            .acl(.userStream)
-//        
-//        try await client.setMetadata(to: streamIdentifier, metadata: metadata) { options in
-//            options
-//        }
-//        
-//        let responseMetadata = try #require(try await client.getStreamMetadata(to: streamIdentifier))
-//        #expect(metadata == responseMetadata)
-//    }
-//    
+    
+    @Test("It should be succeed when set metadata to stream.")
+    func testMetadata() async throws {
+        let metadata = Stream.Metadata()
+            .cacheControl(.seconds(3))
+            .maxAge(.seconds(30))
+            .acl(.userStream)
+
+        let streams = Streams.Service(settings: settings)
+        try await streams.setMetadata(to: streamIdentifier, metadata: metadata, options: .init())
+        
+        let responseMetadata = try #require(try await streams.getMetadata(on: streamIdentifier))
+        #expect(metadata == responseMetadata)
+    }
+    
     @Test("It should be succeed when subscribe to stream.")
     func testSubscribe() async throws {
         let streams = Streams.Service(settings: .localhost())

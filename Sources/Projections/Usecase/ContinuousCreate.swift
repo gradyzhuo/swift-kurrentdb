@@ -44,6 +44,11 @@ extension ContinuousCreate {
         public private(set) var emitEnabled: Bool
         public private(set) var trackEmittedStreams: Bool
 
+        public init(emitEnabled: Bool = true, trackEmittedStreams: Bool = true) {
+            self.emitEnabled = emitEnabled
+            self.trackEmittedStreams = trackEmittedStreams
+        }
+        
         public func build() -> UnderlyingMessage {
             return .with{
                 $0.continuous = .with{
@@ -51,11 +56,6 @@ extension ContinuousCreate {
                     $0.trackEmittedStreams = trackEmittedStreams
                 }
             }
-        }
-
-        internal init() {
-            emitEnabled = true
-            trackEmittedStreams = true
         }
 
         @discardableResult

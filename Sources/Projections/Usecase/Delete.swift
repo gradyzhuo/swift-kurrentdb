@@ -37,9 +37,15 @@ extension Delete {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var deleteCheckpointStream: Bool = false
-        public private(set) var deleteEmittedStreams: Bool = false
-        public private(set) var deleteStateStream: Bool = false
+        public private(set) var deleteCheckpointStream: Bool
+        public private(set) var deleteEmittedStreams: Bool
+        public private(set) var deleteStateStream: Bool
+        
+        public init(deleteCheckpointStream: Bool = false, deleteEmittedStreams: Bool = false, deleteStateStream: Bool = false) {
+            self.deleteCheckpointStream = deleteCheckpointStream
+            self.deleteEmittedStreams = deleteEmittedStreams
+            self.deleteStateStream = deleteStateStream
+        }
 
         public func build() -> UnderlyingMessage {
             return .with { message in

@@ -36,3 +36,7 @@ public enum PersistentSubscriptionsError: Error {
     case nackError(reason: String)
     case readError(reason: String)
 }
+
+package enum TestingError: Error {
+    case exception(String)
+}

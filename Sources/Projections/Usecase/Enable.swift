@@ -36,14 +36,12 @@ extension Enable {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        var options: UnderlyingMessage
-
         public init() {
-            options = .init()
+            
         }
 
         public func build() -> UnderlyingMessage {
-            options
+            .init()
         }
     }
 }

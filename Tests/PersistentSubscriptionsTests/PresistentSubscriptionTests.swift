@@ -6,13 +6,13 @@
 //
 
 @testable import PersistentSubscriptions
-import KurrentCore
 import Foundation
+import KurrentCore
 import Testing
 import Streams
 
 @Suite("EventStoreDB Persistent Subscription Tests")
-final class EventStoreDBPersistentSubscriptionsTests {
+final class PersistentSubscriptionsTests {
     
     let groupName: String
     let streamIdentifier: KurrentCore.Stream.Identifier

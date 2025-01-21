@@ -15,8 +15,8 @@ public struct GetInfo: UnaryUnary {
     public typealias UnderlyingResponse = UnderlyingService.Method.GetInfo.Output
     public typealias Response = PersistentSubscription.SubscriptionInfo
 
-    let streamSelection: Selector<Stream.Identifier>
-    let groupName: String
+    public let streamSelection: Selector<Stream.Identifier>
+    public let groupName: String
     
     public init(streamSelection: Selector<Stream.Identifier>, groupName: String) {
         self.streamSelection = streamSelection

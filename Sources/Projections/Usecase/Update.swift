@@ -45,16 +45,20 @@ public struct Update: UnaryUnary {
 
 }
 extension Update {
+    public enum EmitOption: Sendable {
+        case noEmit
+        case enable(Bool)
+    }
+    
     public struct Options: EventStoreOptions {
-        public enum EmitOption: Sendable {
-            case noEmit
-            case enable(Bool)
-        }
-
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public var emitOption: EmitOption = .noEmit
+        public var emitOption: EmitOption
 
+        public init(emitOption: EmitOption = .noEmit) {
+            self.emitOption = emitOption
+        }
+        
         public func build() -> UnderlyingMessage {
             .with {
                 switch emitOption {

@@ -15,9 +15,9 @@ public struct List: UnaryUnary {
     public typealias UnderlyingResponse = UnderlyingService.Method.List.Output
     public typealias Response = [PersistentSubscription.SubscriptionInfo]
     
-    let options: Options
+    public let options: Options
     
-    internal init(options: Options) {
+    public init(options: Options) {
         self.options = options
     }
     
@@ -42,7 +42,6 @@ extension List {
 
         private var options: UnderlyingMessage
         
-
         private init(options: UnderlyingMessage) {
             self.options = options
         }

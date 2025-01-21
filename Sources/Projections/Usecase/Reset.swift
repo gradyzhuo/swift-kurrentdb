@@ -41,7 +41,11 @@ extension Reset {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        var writeCheckpoint: Bool = false
+        public private(set) var writeCheckpoint: Bool
+        
+        public init(writeCheckpoint: Bool = false) {
+            self.writeCheckpoint = writeCheckpoint
+        }
 
         public func writeCheckpoint(enable: Bool) -> Self {
             withCopy { options in
