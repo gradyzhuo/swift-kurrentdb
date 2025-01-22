@@ -14,47 +14,11 @@ let package = Package(
         .library(
             name: "EventStoreDB",
             targets: [
-                "EventStoreDB",
-                "Streams"
-            ]),
-        .library(
-            name: "Streams",
-            targets: [
-                "Streams"
-            ]),
-        .library(
-            name: "PersistentSubscriptions",
-            targets: [
-                "PersistentSubscriptions"
-            ]),
-        .library(
-            name: "Projections",
-            targets: [
-                "Projections"
-            ]),
-        .library(
-            name: "Users",
-            targets: [
-                "Users"
-            ]),
-        .library(
-            name: "Operations",
-            targets: [
-                "Operations"
-            ]),
-        .library(
-            name: "Monitoring",
-            targets: [
-                "Monitoring"
-            ]),
-        .library(
-            name: "Gossip",
-            targets: [
-                "Gossip"
+                "EventStoreDB"
             ])
     ],
     dependencies: [
-        .package(url: "https://github.com/grpc/grpc-swift.git", from: "2.0.0-beta.2"),
+        .package(url: "https://github.com/grpc/grpc-swift.git", from: "2.0.0-beta.3"),
         .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "1.0.0-beta.2"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "1.0.0-beta.2"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
@@ -66,14 +30,13 @@ let package = Package(
             name: "EventStoreDB",
             dependencies: [
                 "KurrentCore",
-                "GRPCEncapsulates",
-                "Streams",
-                "PersistentSubscriptions",
-                "Users",
-                "Projections",
-                "Operations",
-                "Monitoring",
-                "Gossip",
+                "KurrentStreams",
+                "KurrentPersistentSubscriptions",
+                "KurrentUsers",
+                "KurrentProjections",
+                "KurrentOperations",
+                "KurrentMonitoring",
+                "KurrentGossip",
                 .product(name: "Logging", package: "swift-log")
             ]
         ),
@@ -85,7 +48,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Streams",
+            name: "KurrentStreams",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -93,7 +56,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "PersistentSubscriptions",
+            name: "KurrentPersistentSubscriptions",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -101,7 +64,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Users",
+            name: "KurrentUsers",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -109,7 +72,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Projections",
+            name: "KurrentProjections",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -117,7 +80,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Operations",
+            name: "KurrentOperations",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -125,7 +88,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Monitoring",
+            name: "KurrentMonitoring",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -133,7 +96,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Gossip",
+            name: "KurrentGossip",
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
@@ -161,7 +124,7 @@ let package = Package(
         .testTarget(
             name: "StreamsTests",
             dependencies: [
-                "Streams",
+                "KurrentStreams",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -171,8 +134,8 @@ let package = Package(
         .testTarget(
             name: "PersistentSubscriptionsTests",
             dependencies: [
-                "PersistentSubscriptions",
-                "Streams"
+                "KurrentPersistentSubscriptions",
+                "KurrentStreams"
             ],
             resources: [
                 .copy("Resources/ca.crt"),

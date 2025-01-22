@@ -99,7 +99,7 @@ extension GRPCClient where Transport == HTTP2ClientTransport.Posix {
 //}
 
 
-//package func withEventStoreService<Result: Sendable, UnderlyingClient: GRPCConcreteClient>(
+//package func withEventStoreService<Result: Sendable, UnderlyingClient: GRPCConcreteService>(
 //    of: UnderlyingClient.Type,
 //    settings: ClientSettings,
 //    metadata: Metadata,

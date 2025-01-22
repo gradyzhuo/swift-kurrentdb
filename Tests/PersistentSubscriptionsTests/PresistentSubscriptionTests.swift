@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2024/3/25.
 //
 
-@testable import PersistentSubscriptions
+@testable import KurrentPersistentSubscriptions
 import Foundation
 import KurrentCore
 import Testing

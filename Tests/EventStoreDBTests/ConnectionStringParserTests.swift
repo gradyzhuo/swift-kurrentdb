@@ -8,6 +8,7 @@
 @testable import KurrentCore
 import Foundation
 import XCTest
+import EventStoreDB
 
 final class ConnectionStringParserTests: XCTestCase {
     func test_scheme_should_be_esdb_explicitly() throws {

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@testable import Streams
+@testable import KurrentStreams
 import KurrentCore
 import Testing
 

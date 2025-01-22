@@ -9,7 +9,6 @@ import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
 
-
 extension StreamStream where Transport == HTTP2ClientTransport.Posix{
     
     package func perform(settings: ClientSettings, callOptions: CallOptions) async throws -> Responses{
