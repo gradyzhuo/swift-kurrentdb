@@ -9,7 +9,7 @@
 import Foundation
 import KurrentCore
 import Testing
-import Streams
+import KurrentStreams
 
 @Suite("EventStoreDB Persistent Subscription Tests")
 final class PersistentSubscriptionsTests {
@@ -36,7 +36,7 @@ final class PersistentSubscriptionsTests {
     
     @Test("Create PersistentSubscription for Stream")
     func testCreateToStream() async throws{
-        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings)
+        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings)
         try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: groupName, options: .init())
         
         let subscriptions = try await persistentSubscriptions.list(streamSelector: .specified(streamIdentifier))
@@ -47,13 +47,13 @@ final class PersistentSubscriptionsTests {
     
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToStream() async throws {
-        let persistentSubscriptions = PersistentSubscriptions.Service(settings: settings)
+        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings)
         try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: groupName, options: .init())
         
         let subscription = try await persistentSubscriptions.subscribe(.specified(streamIdentifier), groupName: groupName, options: .init())
         
         
-        let streams = Streams.Service(settings: settings)
+        let streams = KurrentStreams.Service(settings: settings)
         let response = try await streams.append(to: streamIdentifier, events: [
             .init(
                 eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
