@@ -9,98 +9,69 @@ import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
 
-public struct ReadCursorPointer: Sendable {
-    public let revision: UInt64
-    public let direction: Stream.Direction
+extension Streams {
+    public struct Read: UnaryStream {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
+        public typealias Responses = AsyncThrowingStream<Response, Error>
 
-    package init(revision: UInt64, direction: Stream.Direction) {
-        self.revision = revision
-        self.direction = direction
-    }
+        public let streamIdentifier: StreamIdentifier
+        public let cursor: Cursor<CursorPointer>
+        public let options: Options
+        
+        internal init(streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Options) {
+            self.streamIdentifier = streamIdentifier
+            self.cursor = cursor
+            self.options = options
+        }
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return try .with {
+                $0.options = options.build()
+                $0.options.stream.streamIdentifier = try streamIdentifier.build()
 
-    public static func forwardOn(revision: UInt64) -> Self {
-        .init(revision: revision, direction: .forward)
-    }
-
-    public static func backwardFrom(revision: UInt64) -> Self {
-        .init(revision: revision, direction: .backward)
-    }
-}
-
-public struct Read: UnaryStream {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
-    public typealias Responses = AsyncThrowingStream<Response, Error>
-
-    public let streamIdentifier: Stream.Identifier
-    public let cursor: Cursor<ReadCursorPointer>
-    public let options: Options
-    
-    internal init(streamIdentifier: Stream.Identifier, cursor: Cursor<ReadCursorPointer>, options: Options) {
-        self.streamIdentifier = streamIdentifier
-        self.cursor = cursor
-        self.options = options
-    }
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return try .with {
-            $0.options = options.build()
-            $0.options.stream.streamIdentifier = try streamIdentifier.build()
-
-            switch cursor {
-            case .start:
-                $0.options.stream.start = .init()
-                $0.options.readDirection = .forwards
-            case .end:
-                $0.options.stream.end = .init()
-                $0.options.readDirection = .backwards
-            case let .specified(pointer):
-                $0.options.stream.revision = pointer.revision
-
-                if case .forward = pointer.direction {
+                switch cursor {
+                case .start:
+                    $0.options.stream.start = .init()
                     $0.options.readDirection = .forwards
-                } else {
+                case .end:
+                    $0.options.stream.end = .init()
                     $0.options.readDirection = .backwards
+                case let .specified(pointer):
+                    $0.options.stream.revision = pointer.revision
+
+                    if case .forward = pointer.direction {
+                        $0.options.readDirection = .forwards
+                    } else {
+                        $0.options.readDirection = .backwards
+                    }
                 }
             }
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-        return try await withThrowingDiscardingTaskGroup { group in
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-            try await client.read(request: request, options: callOptions) {
-                for try await message in $0.messages {
-                    try continuation.yield(handle(message: message))
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+            return try await withThrowingDiscardingTaskGroup { group in
+                let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
+                try await client.read(request: request, options: callOptions) {
+                    for try await message in $0.messages {
+                        try continuation.yield(handle(message: message))
+                    }
                 }
+                continuation.finish()
+                return stream
             }
-            continuation.finish()
-            return stream
         }
     }
 }
 
-extension Cursor where Pointer == ReadCursorPointer {
-    var direction: Stream.Direction {
-        switch self {
-        case .start:
-            .forward
-        case .end:
-            .backward
-        case let .specified(pointer):
-            pointer.direction
-        }
-    }
-}
-
-extension Read {
+extension Streams.Read {
     public struct Response: GRPCResponse {
         public enum Content: Sendable {
             case event(readEvent: ReadEvent)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)
-            case position(lastAllStream: Stream.Position)
+            case position(lastAllStream: StreamPosition)
         }
 
         public typealias UnderlyingMessage = UnderlyingResponse
@@ -154,18 +125,20 @@ extension Read {
     }
 }
 
-extension Read {
+extension Streams.Read {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
-
+        
         public private(set) var resolveLinks: Bool
         public private(set) var limit: UInt64
-        public private(set) var uuidOption: Stream.UUIDOption
+        public private(set) var uuidOption: UUIDOption
+        public private(set) var compatibility: UInt32
 
-        package init(resolveLinks: Bool = false, limit: UInt64 = .max, uuidOption: Stream.UUIDOption = .string) {
+        package init(resolveLinks: Bool = false, limit: UInt64 = .max, uuidOption: UUIDOption = .string, compatibility: UInt32 = 0) {
             self.resolveLinks = resolveLinks
             self.limit = limit
             self.uuidOption = uuidOption
+            self.compatibility = compatibility
         }
         
         package func build() -> UnderlyingMessage {
@@ -178,7 +151,10 @@ extension Read {
                 case .string:
                     $0.uuidOption.string = .init()
                 }
-
+                
+                $0.controlOption = .with{
+                    $0.compatibility = compatibility
+                }
                 $0.resolveLinks = resolveLinks
                 $0.count = limit
             }
@@ -199,9 +175,16 @@ extension Read {
         }
 
         @discardableResult
-        public func set(uuidOption: Stream.UUIDOption) -> Self {
+        public func set(uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
+            }
+        }
+        
+        @discardableResult
+        public func set(compatibility: UInt32) -> Self {
+            withCopy { options in
+                options.compatibility = compatibility
             }
         }
     }

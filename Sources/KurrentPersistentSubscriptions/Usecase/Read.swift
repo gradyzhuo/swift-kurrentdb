@@ -10,79 +10,60 @@ import GRPCCore
 import GRPCEncapsulates
 import Foundation
 
-public struct Read: StreamStream {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
-    public typealias Responses = Subscription
+extension PersistentSubscriptions {
+    public struct Read: StreamStream {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
+        public typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
+        public typealias Responses = Subscription
 
-    public let streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>
-    public let groupName: String
-    public let options: Options
-    
-    internal init(streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String, options: Options) {
-        self.streamSelection = streamSelection
-        self.groupName = groupName
-        self.options = options
-    }
-
-    package func requestMessages() throws -> [UnderlyingRequest] {
-        return try [
-            .with {
-                $0.options = options.build()
-                if case let .specified(streamIdentifier) = streamSelection {
-                    $0.options.streamIdentifier = try streamIdentifier.build()
-                } else {
-                    $0.options.all = .init()
-                }
-                $0.options.groupName = groupName
-            },
-        ]
-    }
-    
-    
-    package func send(client: Client.UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
-        let responses = AsyncThrowingStream.makeStream(of: Response.self)
+        public let streamSelection: StreamSelector<StreamIdentifier>
+        public let groupName: String
+        public let options: Options
         
-        let writer = Subscription.Writer()
-        let requestMessages = try requestMessages()
-        writer.write(messages: requestMessages)
-        Task{
-            try await client.read(metadata: metadata, options: callOptions) {
-                try await $0.write(contentsOf: writer.sender)
-            } onResponse: {
-                for try await message in $0.messages {
-                    let response = try handle(message: message)
-                    responses.continuation.yield(response)
+        internal init(streamSelection: StreamSelector<StreamIdentifier>, groupName: String, options: Options) {
+            self.streamSelection = streamSelection
+            self.groupName = groupName
+            self.options = options
+        }
+
+        package func requestMessages() throws -> [UnderlyingRequest] {
+            return try [
+                .with {
+                    $0.options = options.build()
+                    if case let .specified(streamIdentifier) = streamSelection {
+                        $0.options.streamIdentifier = try streamIdentifier.build()
+                    } else {
+                        $0.options.all = .init()
+                    }
+                    $0.options.groupName = groupName
+                },
+            ]
+        }
+        
+        
+        package func send(client: Client, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
+            let responses = AsyncThrowingStream.makeStream(of: Response.self)
+            
+            let writer = Subscription.Writer()
+            let requestMessages = try requestMessages()
+            writer.write(messages: requestMessages)
+            Task{
+                try await client.read(metadata: metadata, options: callOptions) {
+                    try await $0.write(contentsOf: writer.sender)
+                } onResponse: {
+                    for try await message in $0.messages {
+                        let response = try handle(message: message)
+                        responses.continuation.yield(response)
+                    }
                 }
             }
+            return try await .init(requests: writer, responses: responses.stream)
         }
-        return try await .init(requests: writer, responses: responses.stream)
     }
 }
 
-extension ReadEvent {
-    package init(message: Read.Response.UnderlyingMessage.ReadEvent) throws {
-        let recordedEvent: RecordedEvent = try .init(message: message.event)
-        let linkedRecordedEvent: RecordedEvent? = try message.hasLink ? .init(message: message.link) : nil
-
-        let commitPosition: KurrentCore.Stream.Position?
-        if let position = message.position {
-            switch position {
-            case .noPosition:
-                commitPosition = nil
-            case let .commitPosition(position):
-                commitPosition = .at(commitPosition: position)
-            }
-        } else {
-            commitPosition = nil
-        }
-        
-        self.init(event: recordedEvent, link: linkedRecordedEvent, commitPosition: commitPosition)
-    }
-}
-
-extension Read {
+extension PersistentSubscriptions.Read {
     public enum Response: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
 
@@ -103,7 +84,7 @@ extension Read {
     }
 }
 
-extension Read {
+extension PersistentSubscriptions.Read {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 

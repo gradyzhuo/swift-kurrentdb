@@ -4,19 +4,19 @@
 //
 //  Created by Grady Zhuo on 2023/10/17.
 //
+
+@_exported
+import KurrentCore
+
 import Foundation
 import NIO
 import Logging
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
-import KurrentCore
 
-public typealias UnderlyingService = EventStore_Client_Projections_Projections
-
-public struct Service: GRPCConcreteService {
-    public typealias Transport = HTTP2ClientTransport.Posix
-    public typealias UnderlyingClient = UnderlyingService.Client<Transport>
+public struct Projections: GRPCConcreteService {
+    public typealias Client = EventStore_Client_Projections_Projections.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
@@ -29,7 +29,7 @@ public struct Service: GRPCConcreteService {
     }
 }
 
-extension Service {
+extension Projections {
     public func create(name: String, query: String, options: ContinuousCreate.Options = .init()) async throws -> ContinuousCreate.Response {
         let usecase = ContinuousCreate(name: name, query: query, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)

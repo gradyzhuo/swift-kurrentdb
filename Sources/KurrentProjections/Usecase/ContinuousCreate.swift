@@ -9,35 +9,37 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 
-public struct ContinuousCreate: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
-    public typealias Response = DiscardedResponse<UnderlyingResponse>
+extension Projections {
+    public struct ContinuousCreate: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
+        public typealias Response = DiscardedResponse<UnderlyingResponse>
 
-    public let name: String
-    public let query: String
-    public let options: Options
+        public let name: String
+        public let query: String
+        public let options: Options
 
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.continuous.name = name
-            $0.options.query = query
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.continuous.name = name
+                $0.options.query = query
+            }
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.create(request: request, options: callOptions){
-            try handle(response: $0)
+        
+        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.create(request: request, options: callOptions){
+                try handle(response: $0)
+            }
         }
+        
     }
-    
 }
 
 // MARK: - The Options of Continuous Create.
 
-extension ContinuousCreate {
+extension Projections.ContinuousCreate {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 

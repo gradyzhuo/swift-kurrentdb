@@ -9,50 +9,52 @@ import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
 
-public struct CreateToAll: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
-    public typealias Response = DiscardedResponse<UnderlyingResponse>
-    
-    let groupName: String
-    let options: Options
-    
-    public init(groupName: String, options: Options) {
-        self.groupName = groupName
-        self.options = options
-    }
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.groupName = groupName
+extension PersistentSubscriptions {
+    public struct CreateToAll: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
+        public typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
+        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        
+        let groupName: String
+        let options: Options
+        
+        public init(groupName: String, options: Options) {
+            self.groupName = groupName
+            self.options = options
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.create(request: request, options: callOptions){
-            try handle(response: $0)
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.groupName = groupName
+            }
+        }
+        
+        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.create(request: request, options: callOptions){
+                try handle(response: $0)
+            }
         }
     }
 }
 
-extension CreateToAll{
+extension PersistentSubscriptions.CreateToAll{
     public struct Options: PersistentSubscriptionsCommonOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.Settings
-        public var filter: Stream.SubscriptionFilter?
-        public var positionCursor: Cursor<Stream.Position>
+        public var filter: SubscriptionFilter?
+        public var positionCursor: Cursor<StreamPosition>
 
-        public init(settings: PersistentSubscription.Settings = .init(), filter: Stream.SubscriptionFilter? = nil, positionCursor: Cursor<Stream.Position> = .end) {
+        public init(settings: PersistentSubscription.Settings = .init(), filter: SubscriptionFilter? = nil, positionCursor: Cursor<StreamPosition> = .end) {
             self.settings = settings
             self.filter = filter
             self.positionCursor = positionCursor
         }
 
         @discardableResult
-        public func startFrom(position: Cursor<Stream.Position>) -> Self {
+        public func startFrom(position: Cursor<StreamPosition>) -> Self {
             withCopy { options in
                 options.positionCursor = position
             }

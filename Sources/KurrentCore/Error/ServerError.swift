@@ -26,7 +26,7 @@ public enum EventStoreError: Error, Sendable {
     case deadlineExceeded
     case initializationError(reason: String)
     case illegalStateError(reason: String)
-    case WrongExpectedVersion(expected: Stream.Revision, current: Stream.Revision)
+    case WrongExpectedVersion(expected: StreamRevision, current: StreamRevision)
 }
 
 extension EventStoreError: CustomStringConvertible, CustomDebugStringConvertible {

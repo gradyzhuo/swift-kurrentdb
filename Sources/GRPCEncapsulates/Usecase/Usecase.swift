@@ -10,6 +10,6 @@ import GRPCCore
 import SwiftProtobuf
 
 public protocol Usecase {
-    associatedtype Transport: ClientTransport
-    associatedtype Client: GRPCConcreteService where Client.Transport == Transport
+    associatedtype ServiceClient: GRPCServiceClient where ServiceClient.Transport == Transport
+    associatedtype Transport: ClientTransport where Transport == ServiceClient.Transport
 }

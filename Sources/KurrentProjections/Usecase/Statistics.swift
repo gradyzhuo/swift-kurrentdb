@@ -9,49 +9,51 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 
-public struct Statistics: UnaryStream {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Statistics.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Statistics.Output
-    public typealias Responses = AsyncThrowingStream<Response, Error>
-    
-    public enum ModeOptions: Sendable {
-        case all
-        case transient
-        case continuous
-        case oneTime
-    }
-
-    public let name: String
-    public let options: Options
-    
-    public init(name: String, options: Options) {
-        self.name = name
-        self.options = options
-    }
-
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.name = name
+extension Projections {
+    public struct Statistics: UnaryStream {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
+        public typealias Responses = AsyncThrowingStream<Response, Error>
+        
+        public enum ModeOptions: Sendable {
+            case all
+            case transient
+            case continuous
+            case oneTime
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-        return try await withThrowingDiscardingTaskGroup { group in
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-            try await client.statistics(request: request, options: callOptions) {
-                for try await message in $0.messages {
-                    try continuation.yield(handle(message: message))
-                }
+
+        public let name: String
+        public let options: Options
+        
+        public init(name: String, options: Options) {
+            self.name = name
+            self.options = options
+        }
+
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.name = name
             }
-            continuation.finish()
-            return stream
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+            return try await withThrowingDiscardingTaskGroup { group in
+                let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
+                try await client.statistics(request: request, options: callOptions) {
+                    for try await message in $0.messages {
+                        try continuation.yield(handle(message: message))
+                    }
+                }
+                continuation.finish()
+                return stream
+            }
         }
     }
 }
 
-extension Statistics {
+extension Projections.Statistics {
     public struct Response: GRPCResponse {
         public typealias UnderlyingMessage = UnderlyingResponse
 
@@ -125,13 +127,13 @@ extension Statistics {
     }
 }
 
-extension Statistics {
+extension Projections.Statistics {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
         var mode: ModeOptions = .all
 
-        package func build() -> Statistics.UnderlyingRequest.Options {
+        package func build() -> UnderlyingRequest.Options {
             return .with {
                 switch mode {
                 case .all:

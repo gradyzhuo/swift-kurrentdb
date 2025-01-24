@@ -10,7 +10,7 @@ import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
 
 extension StreamUnary where Transport == HTTP2ClientTransport.Posix{
-    package func send(client: Client.UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Response{
+    package func send(client: ServiceClient, metadata: Metadata, callOptions: CallOptions) async throws -> Response{
         return try await send(client: client, request: request(metadata: metadata), callOptions: callOptions)
     }
     
@@ -21,7 +21,7 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix{
             group.addTask {
                 try await client.runConnections()
             }
-            let underlying = Client.UnderlyingClient(wrapping: client)
+            let underlying = ServiceClient(wrapping: client)
             let response = try await send(client: underlying, metadata: metadata, callOptions: callOptions)
             client.beginGracefulShutdown()
             return response

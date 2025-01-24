@@ -20,7 +20,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses =
         let metadata = Metadata(from: settings)
         let request = try request(metadata: metadata)
         
-        let underlying = Client.UnderlyingClient(wrapping: client)
+        let underlying = ServiceClient(wrapping: client)
         return try await send(client: underlying, request: request, callOptions: callOptions)
     }
 }
@@ -37,7 +37,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix{
         let metadata = Metadata(from: settings)
         let request = try request(metadata: metadata)
         
-        let underlying = Client.UnderlyingClient(wrapping: client)
+        let underlying = ServiceClient(wrapping: client)
         return try await send(client: underlying, request: request, callOptions: callOptions)
     }
 }

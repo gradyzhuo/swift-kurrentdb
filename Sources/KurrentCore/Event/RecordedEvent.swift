@@ -12,9 +12,9 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
     public private(set) var id: UUID
     public private(set) var eventType: String
     public private(set) var contentType: ContentType
-    public private(set) var streamIdentifier: Stream.Identifier
+    public private(set) var streamIdentifier: StreamIdentifier
     public private(set) var revision: UInt64
-    public private(set) var position: Stream.Position
+    public private(set) var position: StreamPosition
 
     public var metadata: [String: String] {
         [
@@ -36,7 +36,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         }
     }
 
-    package init(id: UUID, eventType: String, contentType: ContentType, streamIdentifier: Stream.Identifier, revision: UInt64, position: Stream.Position, data: Data, customMetadata: Data) {
+    package init(id: UUID, eventType: String, contentType: ContentType, streamIdentifier: StreamIdentifier, revision: UInt64, position: StreamPosition, data: Data, customMetadata: Data) {
         self.id = id
         self.eventType = eventType
         self.contentType = contentType
@@ -59,7 +59,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
         let streamIdentifier = message.streamIdentifier.toIdentifier()
         let revision = message.streamRevision
-        let position = Stream.Position.at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
+        let position = StreamPosition.at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
 
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }
@@ -76,7 +76,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
         let streamIdentifier = message.streamIdentifier.toIdentifier()
         let revision = message.streamRevision
-        let position = Stream.Position.at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
+        let position = StreamPosition.at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
 
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }

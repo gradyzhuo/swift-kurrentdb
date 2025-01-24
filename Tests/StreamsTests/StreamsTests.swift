@@ -7,14 +7,14 @@
 
 import Foundation
 @testable import KurrentStreams
-import KurrentCore
+import EventStoreDB
 import Testing
 
 
 @Suite("EventStoreDB Stream Tests", .serialized)
 final class StreamTests: Sendable{
     
-    let streamIdentifier: KurrentCore.Stream.Identifier
+    let streamIdentifier: StreamIdentifier
     let settings: ClientSettings
     
     init () async throws {
@@ -61,7 +61,7 @@ final class StreamTests: Sendable{
     
     @Test("It should be succeed when set metadata to stream.")
     func testMetadata() async throws {
-        let metadata = Stream.Metadata()
+        let metadata = StreamMetadata()
             .cacheControl(.seconds(3))
             .maxAge(.seconds(30))
             .acl(.userStream)
@@ -71,6 +71,7 @@ final class StreamTests: Sendable{
         
         let responseMetadata = try #require(try await streams.getMetadata(on: streamIdentifier))
         #expect(metadata == responseMetadata)
+        try await streams.delete(streamIdentifier)
     }
     
     @Test("It should be succeed when subscribe to stream.")
@@ -121,17 +122,17 @@ final class StreamTests: Sendable{
         
         
     @Test("Testing streamAcl encoding and decoding should be succeed.", arguments: [
-        (Stream.Metadata.Acl.systemStream, "$systemStreamAcl"),
-        (Stream.Metadata.Acl.userStream, "$userStreamAcl")
+        (StreamMetadata.Acl.systemStream, "$systemStreamAcl"),
+        (StreamMetadata.Acl.userStream, "$userStreamAcl")
     ])
-    func testSystemStreamAclEncodeAndDecode(acl: KurrentCore.Stream.Metadata.Acl, value: String) throws {
+    func testSystemStreamAclEncodeAndDecode(acl: StreamMetadata.Acl, value: String) throws {
         let encoder = JSONEncoder()
         let encodedData = try #require(try encoder.encode(value))
         
         #expect(try acl.rawValue == encodedData)
 
         let decoder = JSONDecoder()
-        #expect(try decoder.decode(Stream.Metadata.Acl, from: encodedData) == acl)
+        #expect(try decoder.decode(StreamMetadata.Acl.self, from: encodedData) == acl)
     }
 
 

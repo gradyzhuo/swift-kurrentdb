@@ -5,19 +5,19 @@
 //  Created by Grady Zhuo on 2023/12/12.
 //
 
+@_exported
+import KurrentCore
+
 import Foundation
 import NIO
 import Logging
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
-import KurrentCore
 
-public typealias UnderlyingService = EventStore_Client_Operations_Operations
 
-public struct Service: GRPCConcreteService {
-    public typealias Transport = HTTP2ClientTransport.Posix
-    public typealias UnderlyingClient = UnderlyingService.Client<Transport>
+public struct Operations: GRPCConcreteService {
+    public typealias Client = EventStore_Client_Operations_Operations.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
@@ -30,7 +30,7 @@ public struct Service: GRPCConcreteService {
     }
 }
 
-extension Service {
+extension Operations {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> StartScavenge.Response {
         let usecase = StartScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
         return try await usecase.perform(settings: settings, callOptions: callOptions)

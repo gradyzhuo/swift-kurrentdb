@@ -10,35 +10,37 @@ import GRPCCore
 import GRPCEncapsulates
 import SwiftProtobuf
 
-public struct State: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.State.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.State.Output
+extension Projections {
+    public struct State: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.State.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.State.Output
 
-    public let name: String
-    public let options: Options
-    
-    public init(name: String, options: Options) {
-        self.name = name
-        self.options = options
-    }
-
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.name = name
+        public let name: String
+        public let options: Options
+        
+        public init(name: String, options: Options) {
+            self.name = name
+            self.options = options
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.state(request: request, options: callOptions){
-            try handle(response: $0)
-        }
-    }
 
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.name = name
+            }
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.state(request: request, options: callOptions){
+                try handle(response: $0)
+            }
+        }
+
+    }
 }
 
-extension State {
+extension Projections.State {
     public struct Response: GRPCJSONDecodableResponse {
         public typealias UnderlyingMessage = UnderlyingResponse
 

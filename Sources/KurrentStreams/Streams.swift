@@ -5,19 +5,18 @@
 //  Created by Grady Zhuo on 2023/10/17.
 //
 
+@_exported
+import KurrentCore
+
 import Foundation
 import NIO
 import Logging
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
-import KurrentCore
 
-public typealias UnderlyingService = EventStore_Client_Streams_Streams
-
-public struct Service: GRPCConcreteService {
-    public typealias Transport = HTTP2ClientTransport.Posix
-    public typealias UnderlyingClient = UnderlyingService.Client<Transport>
+public struct Streams: GRPCConcreteService {
+    public typealias Client = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
@@ -30,10 +29,10 @@ public struct Service: GRPCConcreteService {
     }
 }
 
-extension Service {
+extension Streams {
     
     @discardableResult
-    public func setMetadata(to identifier: KurrentCore.Stream.Identifier, metadata: KurrentCore.Stream.Metadata, options: Append.Options = .init()) async throws -> Append.Response.Success {
+    public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, options: Append.Options = .init()) async throws -> Append.Response.Success {
         
         try await append(
             to: .init(name: "$$\(identifier.name)"),
@@ -47,7 +46,7 @@ extension Service {
     }
     
     @discardableResult
-    public func getMetadata(on identifier: KurrentCore.Stream.Identifier, cursor: Cursor<ReadCursorPointer> = .end) async throws -> KurrentCore.Stream.Metadata? {
+    public func getMetadata(on identifier: StreamIdentifier, cursor: Cursor<CursorPointer> = .end) async throws -> StreamMetadata? {
         
         let responses = try await read(
             .init(name: "$$\(identifier.name)"),
@@ -64,7 +63,7 @@ extension Service {
             case let .event(readEvent):
                 switch readEvent.recordedEvent.contentType {
                 case .json:
-                    try JSONDecoder().decode(Stream.Metadata.self, from: readEvent.recordedEvent.data)
+                    try JSONDecoder().decode(StreamMetadata.self, from: readEvent.recordedEvent.data)
                 default:
                     throw ClientError.eventDataError(message: "The data of event could not be parsed. ContentType of Stream Metadata should be encoded in .json format.")
                 }
@@ -74,7 +73,7 @@ extension Service {
         }
     }
     
-    package func append(to streamIdentifier: KurrentCore.Stream.Identifier, events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success{
+    package func append(to streamIdentifier: StreamIdentifier, events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success{
         let usecase = Append(to: streamIdentifier, events: events, options: options)
         let response = try await usecase.perform(settings: settings, callOptions: callOptions)
         return switch response {
@@ -85,7 +84,7 @@ extension Service {
         }
     }
     
-    package func read(_ streamIdentifier: KurrentCore.Stream.Identifier, cursor: Cursor<ReadCursorPointer>, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
+    package func read(_ streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
         let usecase = Read(streamIdentifier: streamIdentifier, cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -95,33 +94,32 @@ extension Service {
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    package func subscribe(_ streamIdentifier: KurrentCore.Stream.Identifier, cursor: Cursor<KurrentCore.Stream.Revision>, options: Subscribe.Options = .init()) async throws -> Subscription {
+    package func subscribe(_ streamIdentifier: StreamIdentifier, cursor: Cursor<StreamRevision>, options: Subscribe.Options = .init()) async throws -> Subscription {
         let usecase = Subscribe(streamIdentifier: streamIdentifier, cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    package func subscribeToAll(cursor: Cursor<KurrentCore.Stream.Position>, options: SubscribeToAll.Options = .init()) async throws -> Subscription {
+    package func subscribeToAll(cursor: Cursor<StreamPosition>, options: SubscribeToAll.Options = .init()) async throws -> Subscription {
         let usecase = SubscribeToAll(cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
     @discardableResult
-    package func delete(_ streamIdentifier: KurrentCore.Stream.Identifier, options: Delete.Options = .init()) async throws -> Delete.Response {
+    package func delete(_ streamIdentifier: StreamIdentifier, options: Delete.Options = .init()) async throws -> Delete.Response {
         let usecase = Delete(streamIdentifier: streamIdentifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
     @discardableResult
-    package func tombstone(_ streamIdentifier: KurrentCore.Stream.Identifier, options: Tombstone.Options = .init()) async throws -> Tombstone.Response {
+    package func tombstone(_ streamIdentifier: StreamIdentifier, options: Tombstone.Options = .init()) async throws -> Tombstone.Response {
         let usecase = Tombstone(streamIdentifier: streamIdentifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 }
 
 //MARK: - Convenience Method
-extension Service {
-    
-    package func readAll(from position: KurrentCore.Stream.Position, directTo direction: KurrentCore.Stream.Direction, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
+extension Streams {
+    package func readAll(from position: StreamPosition, directTo direction: Direction, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
         return try await readAll(cursor: .specified(.init(position: position, direction: direction)), options: options)
     }
     

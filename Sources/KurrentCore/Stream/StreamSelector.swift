@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Selector<T: Sendable>: Sendable {
+public enum StreamSelector<T: Sendable>: Sendable {
     case all
     case specified(T)
 }

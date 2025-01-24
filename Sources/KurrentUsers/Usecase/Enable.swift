@@ -8,27 +8,29 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 
-public struct Enable: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Enable.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Enable.Output
-    public typealias Response = DiscardedResponse<UnderlyingResponse>
+extension Users {
+    public struct Enable: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Enable.Output
+        public typealias Response = DiscardedResponse<UnderlyingResponse>
 
-    public let loginName: String
-    
-    public init(loginName: String) {
-        self.loginName = loginName
-    }
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options.loginName = loginName
+        public let loginName: String
+        
+        public init(loginName: String) {
+            self.loginName = loginName
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.enable(request: request, options: callOptions){
-            try handle(response: $0)
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options.loginName = loginName
+            }
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.enable(request: request, options: callOptions){
+                try handle(response: $0)
+            }
         }
     }
 }

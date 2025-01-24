@@ -9,30 +9,32 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 
-public struct Enable: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Enable.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Enable.Output
-    public typealias Response = DiscardedResponse<UnderlyingResponse>
+extension Projections {
+    public struct Enable: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Enable.Output
+        public typealias Response = DiscardedResponse<UnderlyingResponse>
 
-    public let name: String
-    public let options: Options
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.name = name
+        public let name: String
+        public let options: Options
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.name = name
+            }
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
-        return try await client.enable(request: request, options: callOptions){
-            try handle(response: $0)
+        
+        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
+            return try await client.enable(request: request, options: callOptions){
+                try handle(response: $0)
+            }
         }
     }
 }
 
-extension Enable {
+extension Projections.Enable {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 

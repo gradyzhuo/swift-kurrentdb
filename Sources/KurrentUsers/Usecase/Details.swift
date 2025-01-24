@@ -10,43 +10,42 @@ import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
 
-public struct Details: UnaryStream {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Details.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Details.Output
-    public typealias Responses = AsyncThrowingStream<UserDetails, any Error>
+extension Users {
+    public struct Details: UnaryStream {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Details.Output
+        public typealias Responses = AsyncThrowingStream<UserDetails, any Error>
 
-    public let loginName: String
+        public let loginName: String
 
-    public init(loginName: String) {
-        self.loginName = loginName
-    }
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options.loginName = loginName
+        public init(loginName: String) {
+            self.loginName = loginName
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-        return try await withThrowingDiscardingTaskGroup { group in
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
-            try await client.details(request: request, options: callOptions) {
-                for try await message in $0.messages {
-                    let response = try handle(message: message)
-                    continuation.yield(response.userDetails)
-                }
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options.loginName = loginName
             }
-            continuation.finish()
-            return stream
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+            return try await withThrowingDiscardingTaskGroup { group in
+                let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
+                try await client.details(request: request, options: callOptions) {
+                    for try await message in $0.messages {
+                        let response = try handle(message: message)
+                        continuation.yield(response.userDetails)
+                    }
+                }
+                continuation.finish()
+                return stream
+            }
         }
     }
-    
-    
-    
 }
 
-extension Details {
+extension Users.Details {
     public struct Response: GRPCResponse {
         public typealias UnderlyingMessage = UnderlyingResponse
 

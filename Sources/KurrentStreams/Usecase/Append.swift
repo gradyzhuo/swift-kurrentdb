@@ -9,56 +9,59 @@ import GRPCCore
 import SwiftProtobuf
 import GRPCEncapsulates
 
-public struct Append: StreamUnary, Buildable {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Append.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Append.Output
+extension Streams {
+    
+    public struct Append: StreamUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
 
-    public let events: [EventData]
-    public let identifier: Stream.Identifier
-    public private(set) var options: Options
-    
-    internal init(to identifier: Stream.Identifier, events: [EventData], options: Options = .init()) {
-        self.events = events
-        self.options = options
-        self.identifier = identifier
-    }
-    
-    package func requestMessages() throws -> [UnderlyingRequest] {
-        var messages: [UnderlyingRequest] = []
-        let optionMessage = try UnderlyingRequest.with {
-            $0.options = options.build()
-            $0.options.streamIdentifier = try identifier.build()
-        }
-        messages.append(optionMessage)
+        public let events: [EventData]
+        public let identifier: StreamIdentifier
+        public private(set) var options: Options
         
-        try messages.append(contentsOf: events.map{ event in
-            try UnderlyingRequest.with {
-                $0.proposedMessage = try .with{
-                    $0.id = .with {
-                        $0.value = .string(event.id.uuidString)
-                    }
-                    $0.metadata = event.metadata
-                    $0.data = try  event.payload.data
-                    
-                    if let customMetaData = event.customMetadata {
-                        $0.customMetadata = customMetaData
+        internal init(to identifier: StreamIdentifier, events: [EventData], options: Options = .init()) {
+            self.events = events
+            self.options = options
+            self.identifier = identifier
+        }
+        
+        package func requestMessages() throws -> [UnderlyingRequest] {
+            var messages: [UnderlyingRequest] = []
+            let optionMessage = try UnderlyingRequest.with {
+                $0.options = options.build()
+                $0.options.streamIdentifier = try identifier.build()
+            }
+            messages.append(optionMessage)
+            
+            try messages.append(contentsOf: events.map{ event in
+                try UnderlyingRequest.with {
+                    $0.proposedMessage = try .with{
+                        $0.id = .with {
+                            $0.value = .string(event.id.uuidString)
+                        }
+                        $0.metadata = event.metadata
+                        $0.data = try  event.payload.data
+                        
+                        if let customMetaData = event.customMetadata {
+                            $0.customMetadata = customMetaData
+                        }
                     }
                 }
-            }
-        })
-        
-        return messages
-    }
+            })
+            
+            return messages
+        }
 
-    public func send(client: Client.UnderlyingClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.append(request: request, options: callOptions) {
-            try handle(response: $0)
+        public func send(client: ServiceClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.append(request: request, options: callOptions) {
+                try handle(response: $0)
+            }
         }
     }
 }
 
-extension Append {
+extension Streams.Append {
     public enum CurrentRevisionOption {
         case noStream
         case revision(UInt64)
@@ -87,7 +90,7 @@ extension Append {
             case let .success(successResult):
                 self = try .success(.init(from: successResult))
             case let .wrongExpectedVersion(wrongResult):
-                self = .wrong(Append.Response.Wrong(from: wrongResult))
+                self = .wrong(Response.Wrong(from: wrongResult))
             }
         }
 
@@ -95,9 +98,9 @@ extension Append {
             public typealias UnderlyingMessage = UnderlyingResponse.Success
 
             public internal(set) var current: CurrentRevisionOption
-            public internal(set) var position: Stream.Position.Option
+            public internal(set) var position: StreamPosition.Option
 
-            init(current: CurrentRevisionOption, position: Stream.Position.Option) {
+            init(current: CurrentRevisionOption, position: StreamPosition.Option) {
                 self.current = current
                 self.position = position
             }
@@ -112,7 +115,7 @@ extension Append {
                         .noStream
                     }
                 }
-                let position: Stream.Position.Option? = message.positionOption.map{
+                let position: StreamPosition.Option? = message.positionOption.map{
                     return switch $0 {
                     case let .position(position):
                         .position(.at(commitPosition: position.commitPosition, preparePosition: position.preparePosition))
@@ -176,23 +179,17 @@ extension Append {
     }
 }
 
-extension Stream.Identifier {
-    func build(options: inout Append.UnderlyingRequest.Options) throws {
-        options.streamIdentifier = try build()
-    }
-}
-
-extension Append {
+extension Streams.Append {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public fileprivate(set) var expectedRevision: Stream.RevisionRule
+        public fileprivate(set) var expectedRevision: StreamRevisionRule
 
         public init() {
             expectedRevision = .any
         }
 
-        public func revision(expected: Stream.RevisionRule) -> Self {
+        public func revision(expected: StreamRevisionRule) -> Self {
             withCopy { options in
                 options.expectedRevision = expected
             }
@@ -215,10 +212,3 @@ extension Append {
     }
 }
 
-extension Append {
-    public func revision(expected revision: Stream.RevisionRule) -> Self {
-        withCopy { usecase in
-            usecase.options.expectedRevision = revision
-        }
-    }
-}

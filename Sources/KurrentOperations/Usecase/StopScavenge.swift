@@ -8,30 +8,33 @@
 import GRPCCore
 import GRPCEncapsulates
 
-public struct StopScavenge: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.StopScavenge.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.StopScavenge.Output
-    public typealias Response = ScavengeResponse
+extension Operations {
+    public struct StopScavenge: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StopScavenge.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StopScavenge.Output
+        public typealias Response = ScavengeResponse
 
-    let scavengeId: String
-    
-    public init(scavengeId: String) {
-        self.scavengeId = scavengeId
-    }
+        let scavengeId: String
+        
+        public init(scavengeId: String) {
+            self.scavengeId = scavengeId
+        }
 
-    
-    package func requestMessage() throws -> UnderlyingService.Method.StopScavenge.Input {
-        return .with {
-            $0.options = .with {
-                $0.scavengeID = scavengeId
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = .with {
+                    $0.scavengeID = scavengeId
+                }
+            }
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.stopScavenge(request: request, options: callOptions){
+                try handle(response: $0)
             }
         }
     }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.stopScavenge(request: request, options: callOptions){
-            try handle(response: $0)
-        }
-    }
+
 }

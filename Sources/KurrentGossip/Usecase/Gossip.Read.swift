@@ -10,22 +10,24 @@ import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
 
-public struct Read: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
-    public typealias Response = [Read.MemberInfo]
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.read(request: request, options: callOptions){
-            try $0.message.members.map {
-                try .init(from: $0)
+extension Gossip {
+    public struct Read: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
+        public typealias Response = [Read.MemberInfo]
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.read(request: request, options: callOptions){
+                try $0.message.members.map {
+                    try .init(from: $0)
+                }
             }
         }
     }
 }
 
-extension Read {
+extension Gossip.Read {
     public struct MemberInfo: GRPCResponse {
         public typealias UnderlyingMessage = EventStore_Client_Gossip_MemberInfo
 

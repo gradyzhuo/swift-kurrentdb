@@ -11,13 +11,13 @@ import GRPCEncapsulates
 public struct ReadEvent: Sendable {
     public internal(set) var recordedEvent: RecordedEvent
     public internal(set) var linkedRecordedEvent: RecordedEvent?
-    public internal(set) var commitPosition: Stream.Position?
+    public internal(set) var commitPosition: StreamPosition?
 
     public var noPosition: Bool {
         commitPosition == nil
     }
 
-    package init(event: RecordedEvent, link: RecordedEvent? = nil, commitPosition: Stream.Position? = nil) {
+    package init(event: RecordedEvent, link: RecordedEvent? = nil, commitPosition: StreamPosition? = nil) {
         recordedEvent = event
         linkedRecordedEvent = link
         self.commitPosition = commitPosition

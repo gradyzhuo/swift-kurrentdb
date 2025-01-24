@@ -1,5 +1,5 @@
 //
-//  Stream.Metadata.swift
+//  StreamMetadata.swift
 //
 //
 //  Created by Grady Zhuo on 2023/11/7.
@@ -8,98 +8,96 @@
 import Foundation
 import GRPCEncapsulates
 
-extension Stream {
-    public struct Metadata: Buildable, Codable {
-        enum CodingKeys: String, CodingKey {
-            case maxCount = "$maxCount"
-            case maxAge = "$maxAge"
-            case truncateBefore = "$tb"
-            case cacheControl = "$cacheControl"
-            case acl = "$acl"
-            case customProperties
+public struct StreamMetadata: Buildable, Codable {
+    enum CodingKeys: String, CodingKey {
+        case maxCount = "$maxCount"
+        case maxAge = "$maxAge"
+        case truncateBefore = "$tb"
+        case cacheControl = "$cacheControl"
+        case acl = "$acl"
+        case customProperties
+    }
+
+    // A sliding window based on the number of items in the stream. When data reaches
+    // a certain length it disappears automatically from the stream and is considered
+    // eligible for scavenging.
+    var maxCount: UInt64?
+
+    // A sliding window based on dates. When data reaches a certain age it disappears
+    // automatically from the stream and is considered eligible for scavenging.
+    var maxAge: Duration?
+
+    // The event number from which previous events can be scavenged. This is
+    // used to implement soft-deletion of streams.
+    var truncateBefore: UInt64?
+
+    // Controls the cache of the head of a stream. Most URIs in a stream are infinitely
+    // cacheable but the head by default will not cache. It may be preferable
+    // in some situations to set a small amount of caching on the head to allow
+    // intermediaries to handle polls (say 10 seconds).
+    var cacheControl: Duration?
+
+    // The access control list for the stream.
+    var acl: Acl?
+
+    // An enumerable of key-value pairs of keys to JSON value for
+    // user-provided metadata.
+    var customProperties: [String: String]?
+
+    public init() {
+        maxCount = nil
+        maxAge = nil
+        truncateBefore = nil
+        cacheControl = nil
+        acl = nil
+        customProperties = nil
+    }
+
+    public func maxCount(_ maxCount: UInt64) -> Self {
+        withCopy { copied in
+            copied.maxCount = maxCount
         }
+    }
 
-        // A sliding window based on the number of items in the stream. When data reaches
-        // a certain length it disappears automatically from the stream and is considered
-        // eligible for scavenging.
-        var maxCount: UInt64?
-
-        // A sliding window based on dates. When data reaches a certain age it disappears
-        // automatically from the stream and is considered eligible for scavenging.
-        var maxAge: Duration?
-
-        // The event number from which previous events can be scavenged. This is
-        // used to implement soft-deletion of streams.
-        var truncateBefore: UInt64?
-
-        // Controls the cache of the head of a stream. Most URIs in a stream are infinitely
-        // cacheable but the head by default will not cache. It may be preferable
-        // in some situations to set a small amount of caching on the head to allow
-        // intermediaries to handle polls (say 10 seconds).
-        var cacheControl: Duration?
-
-        // The access control list for the stream.
-        var acl: Acl?
-
-        // An enumerable of key-value pairs of keys to JSON value for
-        // user-provided metadata.
-        var customProperties: [String: String]?
-
-        public init() {
-            maxCount = nil
-            maxAge = nil
-            truncateBefore = nil
-            cacheControl = nil
-            acl = nil
-            customProperties = nil
+    public func maxAge(_ maxAge: Duration) -> Self {
+        withCopy { copied in
+            copied.maxAge = maxAge
         }
+    }
 
-        public func maxCount(_ maxCount: UInt64) -> Self {
-            withCopy { copied in
-                copied.maxCount = maxCount
-            }
+    public func truncateBefore(_ truncateBefore: UInt64) -> Self {
+        withCopy { copied in
+            copied.truncateBefore = truncateBefore
         }
+    }
 
-        public func maxAge(_ maxAge: Duration) -> Self {
-            withCopy { copied in
-                copied.maxAge = maxAge
-            }
+    public func cacheControl(_ cacheControl: Duration) -> Self {
+        withCopy { copied in
+            copied.cacheControl = cacheControl
         }
+    }
 
-        public func truncateBefore(_ truncateBefore: UInt64) -> Self {
-            withCopy { copied in
-                copied.truncateBefore = truncateBefore
-            }
+    public func acl(_ acl: Acl) -> Self {
+        withCopy { copied in
+            copied.acl = acl
         }
+    }
 
-        public func cacheControl(_ cacheControl: Duration) -> Self {
-            withCopy { copied in
-                copied.cacheControl = cacheControl
-            }
+    public func customProperties(_ customProperties: [String: String]) -> Self {
+        withCopy { copied in
+            copied.customProperties = customProperties
         }
+    }
 
-        public func acl(_ acl: Acl) -> Self {
-            withCopy { copied in
-                copied.acl = acl
-            }
+    func jsonData() throws -> Data? {
+        guard let customProperties else {
+            return nil
         }
-
-        public func customProperties(_ customProperties: [String: String]) -> Self {
-            withCopy { copied in
-                copied.customProperties = customProperties
-            }
-        }
-
-        func jsonData() throws -> Data? {
-            guard let customProperties else {
-                return nil
-            }
-            return try JSONSerialization.data(withJSONObject: customProperties)
-        }
+        return try JSONSerialization.data(withJSONObject: customProperties)
     }
 }
 
-extension Stream.Metadata {
+extension StreamMetadata {
     public enum Acl: Codable, Sendable {
         public typealias RawValue = Data
 
@@ -178,7 +176,7 @@ extension Stream.Metadata {
     }
 }
 
-extension Stream.Metadata.StreamAcl: Buildable {
+extension StreamMetadata.StreamAcl: Buildable {
     public func readRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.readRoles = roles
@@ -210,7 +208,7 @@ extension Stream.Metadata.StreamAcl: Buildable {
     }
 }
 
-extension Stream.Metadata: Equatable {
+extension StreamMetadata: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.cacheControl == rhs.cacheControl
             && lhs.customProperties == rhs.customProperties
@@ -220,7 +218,7 @@ extension Stream.Metadata: Equatable {
     }
 }
 
-extension Stream.Metadata.Acl: Equatable {
+extension StreamMetadata.Acl: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         do {
             return try lhs.rawValue == rhs.rawValue
@@ -231,7 +229,7 @@ extension Stream.Metadata.Acl: Equatable {
     }
 }
 
-extension Stream.Metadata.StreamAcl: Equatable {
+extension StreamMetadata.StreamAcl: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.deleteRoles == rhs.deleteRoles
             && lhs.metaReadRoles == rhs.metaReadRoles

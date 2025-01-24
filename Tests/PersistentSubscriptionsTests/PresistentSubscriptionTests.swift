@@ -5,6 +5,7 @@
 //  Created by Grady Zhuo on 2024/3/25.
 //
 
+import EventStoreDB
 @testable import KurrentPersistentSubscriptions
 import Foundation
 import KurrentCore
@@ -15,12 +16,12 @@ import KurrentStreams
 final class PersistentSubscriptionsTests {
     
     let groupName: String
-    let streamIdentifier: KurrentCore.Stream.Identifier
+    let streamIdentifier: StreamIdentifier
     let settings: ClientSettings
     
     init() async throws {
         self.settings = .localhost()
-        self.streamIdentifier = Stream.Identifier.init(name: UUID().uuidString)
+        self.streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         self.groupName = streamIdentifier.name
 //        self.streamSelector = .specified(streamIdentifier)
     }

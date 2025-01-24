@@ -4,6 +4,8 @@
 //
 //  Created by Grady Zhuo on 2023/10/17.
 //
+@_exported
+import KurrentCore
 
 import Foundation
 import NIO
@@ -11,13 +13,10 @@ import Logging
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
-import KurrentCore
 
-public typealias UnderlyingService = EventStore_Client_Gossip_Gossip
 
-public struct Service: GRPCConcreteService {
-    public typealias Transport = HTTP2ClientTransport.Posix
-    public typealias UnderlyingClient = UnderlyingService.Client<Transport>
+public struct Gossip: GRPCConcreteService {
+    public typealias Client = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
@@ -31,7 +30,7 @@ public struct Service: GRPCConcreteService {
 }
 
 
-extension Service {
+extension Gossip {
     public func read() async throws -> Read.Response {
         let usecase = Read()
         return try await usecase.perform(settings: settings, callOptions: callOptions)

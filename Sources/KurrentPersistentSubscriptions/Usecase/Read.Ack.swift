@@ -10,32 +10,34 @@ import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
 
-public struct Ack: StreamRequestBuildable {
-    public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
+extension PersistentSubscriptions {
+    public struct Ack: StreamRequestBuildable {
+        public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
 
-    public let id: Data
-    public let eventIds: [UUID]
-    
-    internal init(id: Data, eventIds: [UUID]) {
-        self.id = id
-        self.eventIds = eventIds
-    }
-    
-    package func requestMessages() throws -> [UnderlyingRequest] {
-        return [
-            .with {
-                $0.ack = .with {
-                    $0.id = id
-                    $0.ids = eventIds.map {
-                        $0.toEventStoreUUID()
+        public let id: Data
+        public let eventIds: [UUID]
+        
+        internal init(id: Data, eventIds: [UUID]) {
+            self.id = id
+            self.eventIds = eventIds
+        }
+        
+        package func requestMessages() throws -> [UnderlyingRequest] {
+            return [
+                .with {
+                    $0.ack = .with {
+                        $0.id = id
+                        $0.ids = eventIds.map {
+                            $0.toEventStoreUUID()
+                        }
                     }
-                }
-            },
-        ]
+                },
+            ]
+        }
     }
 }
 
-extension Ack {
+extension PersistentSubscriptions.Ack {
     public struct SubscriptionConfirmation {
         let scriptionId: String
     }

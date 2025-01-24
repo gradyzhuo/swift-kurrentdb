@@ -7,10 +7,10 @@
 
 extension PersistentSubscription {
     public enum StreamSelection {
-        case all(position: Cursor<Stream.Position>, filterOption: Stream.SubscriptionFilter? = nil)
-        case specified(identifier: Stream.Identifier, revision: Cursor<UInt64>)
+        case all(position: Cursor<StreamPosition>, filterOption: SubscriptionFilter? = nil)
+        case specified(identifier: StreamIdentifier, revision: Cursor<UInt64>)
 
-        public static func specified(identifier: Stream.Identifier) -> Self {
+        public static func specified(identifier: StreamIdentifier) -> Self {
             .specified(identifier: identifier, revision: .end)
         }
 

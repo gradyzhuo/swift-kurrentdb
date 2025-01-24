@@ -8,5 +8,5 @@
 import GRPCCore
 
 package protocol StreamStream: Usecase, StreamRequestBuildable, StreamResponseHandlable {
-    func send(client: Client.UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses
+    func send(client: ServiceClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses
 }

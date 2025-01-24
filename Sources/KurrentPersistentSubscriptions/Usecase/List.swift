@@ -9,34 +9,36 @@ import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
 
-public struct List: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.List.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.List.Output
-    public typealias Response = [PersistentSubscription.SubscriptionInfo]
-    
-    public let options: Options
-    
-    public init(options: Options) {
-        self.options = options
-    }
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
+extension PersistentSubscriptions {
+    public struct List: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = UnderlyingService.Method.List.Input
+        public typealias UnderlyingResponse = UnderlyingService.Method.List.Output
+        public typealias Response = [PersistentSubscription.SubscriptionInfo]
+        
+        public let options: Options
+        
+        public init(options: Options) {
+            self.options = options
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.list(request: request, options: callOptions){
-            try $0.message.subscriptions.map { .init(from: $0) }
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+            }
         }
-    }
-    
+        
+        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.list(request: request, options: callOptions){
+                try $0.message.subscriptions.map { .init(from: $0) }
+            }
+        }
+        
 
+    }
 }
 
-extension List {
+extension PersistentSubscriptions.List {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
@@ -53,7 +55,7 @@ extension List {
         }
 
         @discardableResult
-        public static func listForStream(_ streamIdentifier: Stream.Identifier) throws -> Self {
+        public static func listForStream(_ streamIdentifier: StreamIdentifier) throws -> Self {
             var options = UnderlyingMessage()
             options.listForStream.stream = try streamIdentifier.build()
             return .init(options: options)

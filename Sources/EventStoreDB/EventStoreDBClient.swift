@@ -16,7 +16,6 @@ import KurrentStreams
 import KurrentOperations
 import KurrentPersistentSubscriptions
 
-
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.
 
@@ -41,7 +40,7 @@ public final class EventStoreDBClient {
 // MARK: - Streams Operations
 extension EventStoreDBClient {
     @discardableResult
-    public func setMetadata(to identifier: KurrentCore.Stream.Identifier, metadata: KurrentCore.Stream.Metadata, configure: (_ options: KurrentStreams.Append.Options) -> KurrentStreams.Append.Options) async throws -> KurrentStreams.Append.Response.Success {
+    public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response.Success {
         try await appendStream(
             to: .init(name: "$$\(identifier.name)"),
             events: .init(
@@ -52,7 +51,7 @@ extension EventStoreDBClient {
         )
     }
 
-    public func getStreamMetadata(to identifier: KurrentCore.Stream.Identifier, cursor: Cursor<KurrentStreams.ReadCursorPointer> = .end) async throws -> KurrentCore.Stream.Metadata? {
+    public func getStreamMetadata(to identifier: StreamIdentifier, cursor: Cursor<CursorPointer> = .end) async throws -> StreamMetadata? {
         let responses = try await readStream(to:
             .init(name: "$$\(identifier.name)"),
             cursor: cursor)
@@ -68,7 +67,7 @@ extension EventStoreDBClient {
             case let .event(readEvent):
                 switch readEvent.recordedEvent.contentType {
                 case .json:
-                    try JSONDecoder().decode(Stream.Metadata.self, from: readEvent.recordedEvent.data)
+                    try JSONDecoder().decode(StreamMetadata.self, from: readEvent.recordedEvent.data)
                 default:
                     throw ClientError.eventDataError(message: "The data of event could not be parsed. ContentType of Stream Metadata should be encoded in .json format.")
                 }
@@ -79,21 +78,21 @@ extension EventStoreDBClient {
     }
 
     // MARK: Append methods -
-    public func appendStream(to identifier: KurrentCore.Stream.Identifier, events: [EventData], configure: (_ options: KurrentStreams.Append.Options) -> KurrentStreams.Append.Options) async throws -> KurrentStreams.Append.Response.Success {
+    public func appendStream(to identifier: StreamIdentifier, events: [EventData], configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response.Success {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.append(to: identifier, events: events, options: options)
     }
     
-    public func appendStream(to identifier: KurrentCore.Stream.Identifier, events: EventData..., configure: (_ options: KurrentStreams.Append.Options) -> KurrentStreams.Append.Options = { $0 }) async throws -> KurrentStreams.Append.Response.Success {
+    public func appendStream(to identifier: StreamIdentifier, events: EventData..., configure: (_ options: Streams.Append.Options) -> Streams.Append.Options = { $0 }) async throws -> Streams.Append.Response.Success {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
 
     // MARK: Read by all streams methods -
 
-    public func readAllStreams(cursor: Cursor<KurrentStreams.ReadAll.CursorPointer>, configure: (_ options: KurrentStreams.Read.Options) -> KurrentStreams.Read.Options = { $0 }) async throws -> KurrentStreams.Read.Responses {
+    public func readAllStreams(cursor: Cursor<Streams.ReadAll.CursorPointer>, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.readAll(cursor: cursor, options: options)
     }
 
@@ -110,13 +109,13 @@ extension EventStoreDBClient {
     ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
-    public func readStream(to streamIdentifier: KurrentCore.Stream.Identifier, cursor: Cursor<KurrentStreams.ReadCursorPointer>, configure: (_ options: KurrentStreams.Read.Options) -> KurrentStreams.Read.Options = { $0 }) async throws -> KurrentStreams.Read.Responses {
+    public func readStream(to streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.read(streamIdentifier, cursor: cursor, options: options)
     }
 
-    public func readStream(to streamIdentifier: KurrentCore.Stream.Identifier, at revision: UInt64, direction: KurrentCore.Stream.Direction = .forward, configure: (_ options: KurrentStreams.Read.Options) -> KurrentStreams.Read.Options = { $0 }) async throws -> KurrentStreams.Read.Responses {
+    public func readStream(to streamIdentifier: StreamIdentifier, at revision: UInt64, direction: Direction = .forward, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
         return try await readStream(
             to: streamIdentifier,
             cursor: .specified(.init(revision: revision, direction: direction)),
@@ -125,33 +124,33 @@ extension EventStoreDBClient {
 
     // MARK: Subscribe by all streams methods -
 
-    public func subscribeToAll(from cursor: KurrentCore.Cursor<KurrentCore.Stream.Position>, configure: (_ options: KurrentStreams.SubscribeToAll.Options) -> KurrentStreams.SubscribeToAll.Options = { $0 }) async throws -> KurrentStreams.Subscription {
+    public func subscribeToAll(from cursor: Cursor<StreamPosition>, configure: (_ options: Streams.SubscribeToAll.Options) -> Streams.SubscribeToAll.Options = { $0 }) async throws -> Streams.Subscription {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.subscribeToAll(cursor: cursor, options: options)
     }
 
-    public func subscribeTo(stream: KurrentCore.Stream.Identifier, from cursor: KurrentCore.Cursor<KurrentCore.Stream.Revision>, configure: (_ options: KurrentStreams.Subscribe.Options) -> KurrentStreams.Subscribe.Options = { $0 }) async throws -> KurrentStreams.Subscription {
+    public func subscribeTo(stream: StreamIdentifier, from cursor: Cursor<StreamRevision>, configure: (_ options: Streams.Subscribe.Options) -> Streams.Subscribe.Options = { $0 }) async throws -> Streams.Subscription {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.subscribe(stream, cursor: cursor, options: options)
     }
 
     // MARK: (Soft) Delete a stream -
 
     @discardableResult
-    public func deleteStream(to identifier: KurrentCore.Stream.Identifier, configure: (_ options: KurrentStreams.Delete.Options) -> KurrentStreams.Delete.Options) async throws -> KurrentStreams.Delete.Response {
+    public func deleteStream(to identifier: StreamIdentifier, configure: (_ options: Streams.Delete.Options) -> Streams.Delete.Options) async throws -> Streams.Delete.Response {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.delete(identifier, options: options)
     }
 
     // MARK: (Hard) Delete a stream -
 
     @discardableResult
-    public func tombstoneStream(to identifier: KurrentCore.Stream.Identifier, configure: (_ options: KurrentStreams.Tombstone.Options) -> KurrentStreams.Tombstone.Options) async throws -> KurrentStreams.Tombstone.Response {
+    public func tombstoneStream(to identifier: StreamIdentifier, configure: (_ options: Streams.Tombstone.Options) -> Streams.Tombstone.Options) async throws -> Streams.Tombstone.Response {
         let options = configure(.init())
-        let streams = KurrentStreams.Service(settings: settings, callOptions: defaultCallOptions)
+        let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.tombstone(identifier, options: options)
     }
 }
@@ -159,56 +158,56 @@ extension EventStoreDBClient {
 // MARK: - Operations
 
 extension EventStoreDBClient {
-    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> KurrentOperations.ScavengeResponse {
-        let operations = KurrentOperations.Service(settings: settings, callOptions: defaultCallOptions)
+    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
+        let operations = Operations(settings: settings, callOptions: defaultCallOptions)
         return try await operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
     
-    public func stopScavenge(scavengeId: String) async throws -> KurrentOperations.ScavengeResponse {
-        let operations = KurrentOperations.Service(settings: settings, callOptions: defaultCallOptions)
+    public func stopScavenge(scavengeId: String) async throws -> Operations.ScavengeResponse {
+        let operations = Operations(settings: settings, callOptions: defaultCallOptions)
         return try await operations.stopScavenge(scavengeId: scavengeId)
     }
 }
 
 //MARK: - PersistentSubscriptions
 extension EventStoreDBClient {
-    public func createPersistentSubscription(to identifier: KurrentCore.Stream.Identifier, groupName: String, configure: (_ options: KurrentPersistentSubscriptions.CreateToStream.Options) -> KurrentPersistentSubscriptions.CreateToStream.Options = { $0 }) async throws {
+    public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, configure: (_ options: PersistentSubscriptions.CreateToStream.Options) -> PersistentSubscriptions.CreateToStream.Options = { $0 }) async throws {
         let options = configure(.init())
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.createToStream(streamIdentifier: identifier, groupName: groupName, options: options)
     }
 
-    public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: KurrentPersistentSubscriptions.CreateToAll.Options) -> KurrentPersistentSubscriptions.CreateToAll.Options = { $0 }) async throws {
+    public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptions.CreateToAll.Options) -> PersistentSubscriptions.CreateToAll.Options = { $0 }) async throws {
         
         let options = configure(.init())
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.createToAll(groupName: groupName, options: options)
     }
     
     // MARK: Delete PersistentSubscriptions
-    public func deletePersistentSubscription(streamSelector: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String) async throws {
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+    public func deletePersistentSubscription(streamSelector: StreamSelector<StreamIdentifier>, groupName: String) async throws {
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.delete(stream: streamSelector, groupName: groupName)
     }
     
     // MARK: List PersistentSubscriptions
-    public func listPersistentSubscription(streamSelector: KurrentCore.Selector<KurrentCore.Stream.Identifier>) async throws -> [PersistentSubscription.SubscriptionInfo]{
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+    public func listPersistentSubscription(streamSelector: StreamSelector<StreamIdentifier>) async throws -> [PersistentSubscription.SubscriptionInfo]{
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.list(streamSelector: streamSelector)
     }
 
     // MARK: - Restart Subsystem Action
 
     public func restartPersistentSubscriptionSubsystem() async throws {
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         try await persistentSubscriptions.restartSubsystem()
     }
 
     // MARK: -
 
-    public func subscribePersistentSubscription(to streamSelection: KurrentCore.Selector<KurrentCore.Stream.Identifier>, groupName: String, configure: (_ options: KurrentPersistentSubscriptions.Read.Options) -> KurrentPersistentSubscriptions.Read.Options = { $0 }) async throws -> KurrentPersistentSubscriptions.Subscription {
+    public func subscribePersistentSubscription(to streamSelection: StreamSelector<StreamIdentifier>, groupName: String, configure: (_ options: PersistentSubscriptions.Read.Options) -> PersistentSubscriptions.Read.Options = { $0 }) async throws -> PersistentSubscriptions.Subscription {
         let options = configure(.init())
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings, callOptions: defaultCallOptions)
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.subscribe(streamSelection, groupName: groupName, options: options)
     }
 }

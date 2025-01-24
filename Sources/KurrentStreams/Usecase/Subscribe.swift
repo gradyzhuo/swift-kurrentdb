@@ -10,62 +10,64 @@ import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
 
-public struct Subscribe: UnaryStream {
-    public typealias Transport = HTTP2ClientTransport.Posix
-    public typealias Client = Service
-    public typealias UnderlyingRequest = Read.UnderlyingRequest
-    public typealias UnderlyingResponse = Read.UnderlyingResponse
-    public typealias Responses = Subscription
+extension Streams {
+    public struct Subscribe: UnaryStream {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = Read.UnderlyingRequest
+        public typealias UnderlyingResponse = Read.UnderlyingResponse
+        public typealias Responses = Subscription
 
-    public let streamIdentifier: Stream.Identifier
-    public let cursor: Cursor<Stream.Revision>
-    public let options: Options
-    
-    public init(streamIdentifier: Stream.Identifier, cursor: Cursor<Stream.Revision>, options: Options) {
-        self.streamIdentifier = streamIdentifier
-        self.cursor = cursor
-        self.options = options
-    }
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return try .with {
-            $0.options = options.build()
-            $0.options.stream.streamIdentifier = try streamIdentifier.build()
-            $0.options.subscription = .init()
-
-            $0.options.readDirection = .forwards
-            switch cursor {
-            case .start:
-                $0.options.stream.start = .init()
-            case .end:
-                $0.options.stream.end = .init()
-            case let .specified(revision):
-                $0.options.stream.revision = revision
-            }
+        public let streamIdentifier: StreamIdentifier
+        public let cursor: Cursor<StreamRevision>
+        public let options: Options
+        
+        public init(streamIdentifier: StreamIdentifier, cursor: Cursor<StreamRevision>, options: Options) {
+            self.streamIdentifier = streamIdentifier
+            self.cursor = cursor
+            self.options = options
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws ->Responses {
-        let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
-        Task{
-            try await client.read(request: request, options: callOptions) {
-                for try await message in $0.messages {
-                    continuation.yield(message)
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return try .with {
+                $0.options = options.build()
+                $0.options.stream.streamIdentifier = try streamIdentifier.build()
+                $0.options.subscription = .init()
+
+                $0.options.readDirection = .forwards
+                switch cursor {
+                case .start:
+                    $0.options.stream.start = .init()
+                case .end:
+                    $0.options.stream.end = .init()
+                case let .specified(revision):
+                    $0.options.stream.revision = revision
                 }
             }
         }
-        return try await .init(messages: stream)
-    }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws ->Responses {
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
+            Task{
+                try await client.read(request: request, options: callOptions) {
+                    for try await message in $0.messages {
+                        continuation.yield(message)
+                    }
+                }
+            }
+            return try await .init(messages: stream)
+        }
 
+    }
 }
-extension Subscribe {
+
+extension Streams.Subscribe {
     public struct Response: GRPCResponse {
         public enum Content: Sendable {
             case event(readEvent: ReadEvent)
             case confirmation(subscriptionId: String)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)
-            case position(lastAllStream: Stream.Position)
+            case position(lastAllStream: StreamPosition)
         }
 
         public typealias UnderlyingMessage = UnderlyingResponse
@@ -126,14 +128,14 @@ extension Subscribe {
     }
 }
 
-extension Subscribe {
+extension Streams.Subscribe {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var resolveLinks: Bool
-        public private(set) var uuidOption: Stream.UUIDOption
+        public private(set) var uuidOption: UUIDOption
 
-        public init(resolveLinks: Bool = false, uuidOption: Stream.UUIDOption = .string) {
+        public init(resolveLinks: Bool = false, uuidOption: UUIDOption = .string) {
             self.resolveLinks = resolveLinks
             self.uuidOption = uuidOption
         }
@@ -161,7 +163,7 @@ extension Subscribe {
         }
 
         @discardableResult
-        public func set(uuidOption: Stream.UUIDOption) -> Self {
+        public func set(uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
             }

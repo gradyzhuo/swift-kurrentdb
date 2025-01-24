@@ -71,7 +71,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions {
-    public static func make(with filter: KurrentCore.Stream.SubscriptionFilter) -> Self {
+    public static func make(with filter: SubscriptionFilter) -> Self {
         .with {
             switch filter.window {
             case .count:

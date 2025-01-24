@@ -9,32 +9,34 @@ import GRPCCore
 import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
 
-public struct Tombstone: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Tombstone.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Tombstone.Output
+extension Streams {
+    public struct Tombstone: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Tombstone.Output
 
-    public let streamIdentifier: Stream.Identifier
-    public let options: Options
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return try .with {
-            var options = options.build()
-            options.streamIdentifier = try streamIdentifier.build()
-            $0.options = options
+        public let streamIdentifier: StreamIdentifier
+        public let options: Options
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return try .with {
+                var options = options.build()
+                options.streamIdentifier = try streamIdentifier.build()
+                $0.options = options
+            }
         }
-    }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.tombstone(request: request, options: callOptions){
-            try handle(response: $0)
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.tombstone(request: request, options: callOptions){
+                try handle(response: $0)
+            }
         }
     }
 }
 
-extension Tombstone {
+extension Streams.Tombstone {
     public struct Response: GRPCResponse {
-        public typealias PositionOption = Stream.Position.Option
+        public typealias PositionOption = StreamPosition.Option
 
         public typealias UnderlyingMessage = UnderlyingResponse
 
@@ -54,13 +56,13 @@ extension Tombstone {
     }
 }
 
-extension Tombstone {
+extension Streams.Tombstone {
     public struct Options: EventStoreOptions {
         public typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var expectedRevision: Stream.RevisionRule
+        public private(set) var expectedRevision: StreamRevisionRule
 
-        public init(expectedRevision: Stream.RevisionRule = .streamExists) {
+        public init(expectedRevision: StreamRevisionRule = .streamExists) {
             self.expectedRevision = expectedRevision
         }
         
@@ -80,7 +82,7 @@ extension Tombstone {
         }
 
         @discardableResult
-        public func revision(expected expectedRevision: Stream.RevisionRule) -> Self {
+        public func revision(expected expectedRevision: StreamRevisionRule) -> Self {
             withCopy { options in
                 options.expectedRevision = expectedRevision
             }

@@ -13,83 +13,85 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 import DequeModule
 
-public final class Subscription: @unchecked Sendable {
-    public typealias Request = Read.UnderlyingRequest
-    public typealias Element = PersistentSubscription.EventResult
+extension PersistentSubscriptions {
+    public final class Subscription: @unchecked Sendable {
+        public typealias Request = PersistentSubscriptions.Read.UnderlyingRequest
+        public typealias Element = PersistentSubscription.EventResult
 
-    let writer: Writer
-    
-    public let subscriptionId: String?
-    public let events: AsyncThrowingStream<Element, Error>
-    
-    package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<Read.Response, any Error>) async throws {
-        self.writer = writer
+        let writer: Writer
         
-        var iterator = reader.makeAsyncIterator()
-        subscriptionId = if case let .confirmation(subscriptionId) = try await iterator.next(){
-            subscriptionId
-        }else{
-            nil
-        }
+        public let subscriptionId: String?
+        public let events: AsyncThrowingStream<Element, Error>
         
-        let (stream, continuation) = AsyncThrowingStream.makeStream(of: Element.self)
-        Task{
-            while let response = try await iterator.next() {
-                if case let .readEvent(event, retryCount) = response {
-                    continuation.yield(.init(event: event, retryCount: retryCount))
+        package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.Read.Response, any Error>) async throws {
+            self.writer = writer
+            
+            var iterator = reader.makeAsyncIterator()
+            subscriptionId = if case let .confirmation(subscriptionId) = try await iterator.next(){
+                subscriptionId
+            }else{
+                nil
+            }
+            
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Element.self)
+            Task{
+                while let response = try await iterator.next() {
+                    if case let .readEvent(event, retryCount) = response {
+                        continuation.yield(.init(event: event, retryCount: retryCount))
+                    }
                 }
             }
+            events = stream
         }
-        events = stream
-    }
 
-    func ack(eventIds: [UUID]) async throws {
-        let id = subscriptionId?.data(using: .utf8) ?? .init()
-        let usecase = Ack(id: id, eventIds: eventIds)
-        
-        let messages = try usecase.requestMessages()
-        writer.write(messages: messages)
-    }
+        func ack(eventIds: [UUID]) async throws {
+            let id = subscriptionId?.data(using: .utf8) ?? .init()
+            let usecase = PersistentSubscriptions.Ack(id: id, eventIds: eventIds)
+            
+            let messages = try usecase.requestMessages()
+            writer.write(messages: messages)
+        }
 
-    public func ack(readEvents: [ReadEvent]) async throws {
-        let eventIds = readEvents.map {
-            if let linked = $0.linkedRecordedEvent {
-                linked.id
-            } else {
-                $0.recordedEvent.id
+        public func ack(readEvents: [ReadEvent]) async throws {
+            let eventIds = readEvents.map {
+                if let linked = $0.linkedRecordedEvent {
+                    linked.id
+                } else {
+                    $0.recordedEvent.id
+                }
             }
+            try await ack(eventIds: eventIds)
         }
-        try await ack(eventIds: eventIds)
-    }
 
-    public func ack(readEvents: ReadEvent ...) async throws {
-        try await ack(readEvents: readEvents)
-    }
+        public func ack(readEvents: ReadEvent ...) async throws {
+            try await ack(readEvents: readEvents)
+        }
 
-    func nack(eventIds: [UUID], action: Nack.Action, reason: String) async throws {
-        let usecase: Nack = .init(id: .init(), eventIds: eventIds, action: action, reason: reason)
-        try writer.write(messages: usecase.requestMessages())
-    }
+        func nack(eventIds: [UUID], action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
+            let usecase = PersistentSubscriptions.Nack(id: .init(), eventIds: eventIds, action: action, reason: reason)
+            try writer.write(messages: usecase.requestMessages())
+        }
 
-    public func nack(readEvents: [ReadEvent], action: Nack.Action, reason: String) async throws {
-        let eventIds = readEvents.map {
-            if let linked = $0.linkedRecordedEvent {
-                linked.id
-            } else {
-                $0.recordedEvent.id
+        public func nack(readEvents: [ReadEvent], action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
+            let eventIds = readEvents.map {
+                if let linked = $0.linkedRecordedEvent {
+                    linked.id
+                } else {
+                    $0.recordedEvent.id
+                }
             }
+            try await nack(eventIds: eventIds, action: action, reason: reason)
         }
-        try await nack(eventIds: eventIds, action: action, reason: reason)
-    }
 
-    public func nack(readEvents: ReadEvent ..., action: Nack.Action, reason: String) async throws {
-        try await nack(readEvents: readEvents, action: action, reason: reason)
-    }
+        public func nack(readEvents: ReadEvent ..., action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
+            try await nack(readEvents: readEvents, action: action, reason: reason)
+        }
 
+    }
 }
 
 
-extension Subscription {
+extension PersistentSubscriptions.Subscription {
     package struct Writer{
         package typealias MessageType = Request
         

@@ -9,42 +9,42 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 
-public struct Update: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Update.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Update.Output
-    public typealias Response = DiscardedResponse<UnderlyingResponse>
+extension Projections {
+    public struct Update: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Update.Output
+        public typealias Response = DiscardedResponse<UnderlyingResponse>
 
-    public let name: String
-    public let query: String?
-    public let options: Options
-    
-    public init(name: String, query: String? = nil, options: Options) {
-        self.name = name
-        self.query = query
-        self.options = options
-    }
+        public let name: String
+        public let query: String?
+        public let options: Options
+        
+        public init(name: String, query: String? = nil, options: Options) {
+            self.name = name
+            self.query = query
+            self.options = options
+        }
 
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.name = name
-            if let query {
-                $0.options.query = query
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.name = name
+                if let query {
+                    $0.options.query = query
+                }
+            }
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.update(request: request, options: callOptions){
+                try handle(response: $0)
             }
         }
     }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.update(request: request, options: callOptions){
-            try handle(response: $0)
-        }
-    }
-    
-    
-
 }
-extension Update {
+
+extension Projections.Update {
     public enum EmitOption: Sendable {
         case noEmit
         case enable(Bool)

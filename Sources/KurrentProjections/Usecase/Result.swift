@@ -10,29 +10,32 @@ import GRPCCore
 import GRPCEncapsulates
 import SwiftProtobuf
 
-public struct Result: UnaryUnary {
-    public typealias Client = Service
-    public typealias UnderlyingRequest = UnderlyingService.Method.Result.Input
-    public typealias UnderlyingResponse = UnderlyingService.Method.Result.Output
+extension Projections {
+    public struct Result: UnaryUnary {
+        public typealias ServiceClient = Client
+        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Result.Input
+        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Result.Output
 
-    public let name: String
-    public let options: Options
-    
-    package func requestMessage() throws -> UnderlyingRequest {
-        return .with {
-            $0.options = options.build()
-            $0.options.name = name
+        public let name: String
+        public let options: Options
+        
+        package func requestMessage() throws -> UnderlyingRequest {
+            return .with {
+                $0.options = options.build()
+                $0.options.name = name
+            }
+        }
+        
+        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            return try await client.result(request: request, options: callOptions){
+                try handle(response: $0)
+            }
         }
     }
-    
-    public func send(client: Client.UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-        return try await client.result(request: request, options: callOptions){
-            try handle(response: $0)
-        }
-    }
+
 }
 
-extension Result {
+extension Projections.Result {
     public struct Response: GRPCJSONDecodableResponse {
         public typealias UnderlyingMessage = UnderlyingResponse
 
