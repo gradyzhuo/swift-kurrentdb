@@ -24,7 +24,7 @@ final class StreamTests: Sendable{
     
     @Test("Stream should be not found and throw an error.")
     func testStreamNoFound() async throws {
-        let streams = KurrentStreams.Service(settings: .localhost())
+        let streams = Streams(settings: .localhost())
         
         await #expect(throws: EventStoreError.self){
             let responses = try await streams.read(streamIdentifier, cursor: .start, options: .init())
@@ -42,7 +42,7 @@ final class StreamTests: Sendable{
         ]
     ])
     func testAppendEvent(events: [EventData]) async throws {
-        let streams = KurrentStreams.Service(settings: .localhost())
+        let streams = Streams(settings: .localhost())
         let appendResponse = try await streams.append(to: streamIdentifier, events: events, options: .init().revision(expected: .any))
 
         let appendedRevision = try #require(appendResponse.current.revision)
@@ -66,7 +66,7 @@ final class StreamTests: Sendable{
             .maxAge(.seconds(30))
             .acl(.userStream)
 
-        let streams = KurrentStreams.Service(settings: settings)
+        let streams = Streams(settings: settings)
         try await streams.setMetadata(to: streamIdentifier, metadata: metadata, options: .init())
         
         let responseMetadata = try #require(try await streams.getMetadata(on: streamIdentifier))
@@ -76,7 +76,7 @@ final class StreamTests: Sendable{
     
     @Test("It should be succeed when subscribe to stream.")
     func testSubscribe() async throws {
-        let streams = KurrentStreams.Service(settings: .localhost())
+        let streams = Streams(settings: .localhost())
         
         let subscription = try await streams.subscribe(self.streamIdentifier, cursor: .end, options: .init())
         let response = try await streams.append(to: self.streamIdentifier,
@@ -99,7 +99,7 @@ final class StreamTests: Sendable{
     
     @Test("It should be succeed when subscribe to all streams.")
     func testSubscribeAll() async throws {
-        let streams = KurrentStreams.Service(settings: .localhost())
+        let streams = Streams(settings: .localhost())
         
         let subscription = try await streams.subscribeToAll(cursor: .end, options: .init())
         let response = try await streams.append(to: self.streamIdentifier,

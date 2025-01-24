@@ -37,7 +37,7 @@ final class PersistentSubscriptionsTests {
     
     @Test("Create PersistentSubscription for Stream")
     func testCreateToStream() async throws{
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings)
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings)
         try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: groupName, options: .init())
         
         let subscriptions = try await persistentSubscriptions.list(streamSelector: .specified(streamIdentifier))
@@ -48,13 +48,13 @@ final class PersistentSubscriptionsTests {
     
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToStream() async throws {
-        let persistentSubscriptions = KurrentPersistentSubscriptions.Service(settings: settings)
+        let persistentSubscriptions = PersistentSubscriptions(settings: settings)
         try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: groupName, options: .init())
         
         let subscription = try await persistentSubscriptions.subscribe(.specified(streamIdentifier), groupName: groupName, options: .init())
         
         
-        let streams = KurrentStreams.Service(settings: settings)
+        let streams = Streams(settings: settings)
         let response = try await streams.append(to: streamIdentifier, events: [
             .init(
                 eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
