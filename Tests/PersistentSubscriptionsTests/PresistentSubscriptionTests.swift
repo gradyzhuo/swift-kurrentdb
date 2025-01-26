@@ -68,7 +68,7 @@ final class PersistentSubscriptionsTests {
             break
         }
         
-        #expect(response.current.revision == lastEventResult?.event.recordedEvent.revision)
+        #expect(response.currentRevision == lastEventResult?.event.recordedEvent.revision)
         
         try await persistentSubscriptions.delete(stream: .specified(streamIdentifier), groupName: groupName)
     }

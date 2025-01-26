@@ -45,12 +45,12 @@ final class StreamTests: Sendable{
         let streams = Streams(settings: .localhost())
         let appendResponse = try await streams.append(to: streamIdentifier, events: events, options: .init().revision(expected: .any))
 
-        let appendedRevision = try #require(appendResponse.current.revision)
+        let appendedRevision = try #require(appendResponse.currentRevision)
         let readResponses = try await streams.read(streamIdentifier, cursor: .specified(.forwardOn(revision: appendedRevision)), options: .init())
         let firstResponse = try await readResponses.first{ _ in true}
         guard case .event(let readEvent) = firstResponse?.content,
               let readPosition = readEvent.commitPosition,
-              case .position(let position) = appendResponse.position else{
+              let position = appendResponse.position else{
             throw TestingError.exception("readResponse.content or appendResponse.position is not Event or Position")
         }
         
@@ -93,7 +93,7 @@ final class StreamTests: Sendable{
         }
 
         let lastEventRevision = try #require(lastEventResult?.recordedEvent.revision)
-        #expect(response.current.revision == lastEventRevision)
+        #expect(response.currentRevision == lastEventRevision)
         try await streams.delete(streamIdentifier)
    }
     
@@ -116,7 +116,7 @@ final class StreamTests: Sendable{
         }
 
         let lastEventPosition = try #require(lastEventResult?.recordedEvent.position)
-        #expect(response.position.value?.commit == lastEventPosition.commit)
+        #expect(response.position?.commit == lastEventPosition.commit)
         try await streams.delete(streamIdentifier)
    }
         
