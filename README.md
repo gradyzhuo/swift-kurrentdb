@@ -121,52 +121,49 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 #### Appending Event
 
 ```swift
-import EventStoreDB
+// Import packages of KurrentDB.
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
-
 // Create the data array of events.
 let events:[EventData] = [
-            .json(id: .init(
-                uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!,
-                type: "ItemAdded",
-                  content: ["Description": "Xbox One S 1TB (Console)"]),
-            .json(id: .init(
-                uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!,
-                type: "ItemAdded",
-                content: "Gears of War 4")
+    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!, eventType: "ItemAdded", payload: ["Description": "Xbox One S 1TB (Console)"]),
+    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", payload: "Gears of War 4")
         ]
 
-let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
-let client = try EventStoreDB.Client(settings: settings)
+// Create an identifier of stream
+let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
-let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
-    options.expectedRevision(.any)
-}
+// Build a streams client.
+let streams = Streams(settings: settings)
 
+// Append two events with one response
+let appendResponse = try await streams.append(to: streamIdentifier, events: events)
+print("The latest revision of events appended:", appendResponse.currentRevision!)
 ```
 
 #### Read Event
 
 ```swift
-import EventStoreDB
+// Import packages of KurrentDB.
+import KurrentDB
 
-// Using a client setting to `EventStoreDBClient` by default.
+// Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
-//prepare an identifier for a stream by a name.
-let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
+// Create an identifier of stream.
+let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
-//Check the event is appended into testing stream.
-let client = try EventStoreDB.Client(settings: settings)
-let readResponses = try client.readStream(to: streamIdentifier, cursor: .end) { options in
-    options.set(uuidOption: .string)
-        .countBy(limit: 1)
-}
+// Build a streams client.
+let streams = Streams(settings: settings)
 
-for await response in readResponses {
+// Read events from stream.
+let readResponses = try await streams.read(streamIdentifier, cursor: .start)
+
+// loop it.
+for try await response in readResponses {
     //handle response
 }
 ```
@@ -174,37 +171,43 @@ for await response in readResponses {
 #### PersistentSubscriptions
 ##### Create
 ```swift
-import EventStoreDB
+// Import packages of KurrentDB.
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
-let streamName = "stream_for_testing"
+// Build a persistentSubscriptions client.
+let persistentSubscriptions = PersistentSubscriptions(settings: settings)
 
-let client = try EventStoreDB.Client(settings: settings)
-try await client.createPersistentSubscription(streamName: streamName, groupName: "mytest", options: .init())
+// Create it to specified identifier of streams. 
+try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: "mytest")
 
 ```
 
 ##### Subscribe
 ```swift
-import EventStoreDB
+// Import packages of KurrentDB.
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
-let streamName = "stream_for_testing"
+// Build a persistentSubscriptions client.
+let persistentSubscriptions = PersistentSubscriptions(settings: settings)
 
-let client = try EventStoreDB.Client(settings: settings)
+// Subscribe to stream or all, and get a subscription.
+let subscription = try await persistentSubscriptions.subscribe(.specified(streamIdentifier), groupName: "mytest")
 
-let subscription = try await client.subscribePersistentSubscriptionTo(.specified(streamName), groupName: "mytest")
-
-for try await result in subscription {
-    // handle result
+// Loop all results by subscription.events
+for try await result in subscription.events {
+    //handle result
+    // ...
     
-    // ack the readEvent if succeed 
+    // ack the readEvent if succeed
     try await subscription.ack(readEvents: result.event)
     // else nack thr readEvent if not succeed.
-    try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
+    // try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
 }
+
 ```
