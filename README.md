@@ -21,6 +21,7 @@
 #### Stream
 |Feature|Implemented|
 |----|----|
+|BatchAppend||
 |Append|✅|
 |Read|✅|
 |Metadata|✅|
