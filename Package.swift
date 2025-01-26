@@ -15,6 +15,11 @@ let package = Package(
             name: "EventStoreDB",
             targets: [
                 "EventStoreDB"
+            ]),
+        .library(
+            name: "KurrentDB",
+            targets: [
+                "KurrentDB"
             ])
     ],
     dependencies: [
@@ -28,6 +33,12 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "EventStoreDB",
+            dependencies: [
+                "KurrentDB"
+            ]
+        ),
+        .target(
+            name: "KurrentDB",
             dependencies: [
                 "KurrentCore",
                 "KurrentStreams",

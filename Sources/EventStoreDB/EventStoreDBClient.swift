@@ -6,20 +6,20 @@
 //
 
 import Foundation
-import KurrentCore
 import NIOCore
 import NIOPosix
 import GRPCCore
 import GRPCNIOTransportHTTP2
 import GRPCEncapsulates
-import KurrentStreams
-import KurrentOperations
-import KurrentPersistentSubscriptions
+@_exported import KurrentCore
+@_exported import KurrentStreams
+@_exported import KurrentOperations
+@_exported import KurrentPersistentSubscriptions
 
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.
 
-@available(*, deprecated, message: "Use Several Service instead. e.g. Streams.Service")
+@available(*, deprecated, message: "Use Several Service instead. e.g. Streams()")
 public final class EventStoreDBClient {
     public let defaultCallOptions: CallOptions
     public let settings: ClientSettings

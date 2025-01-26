@@ -65,7 +65,7 @@ extension PersistentSubscriptions {
 
     // MARK: - Read Actions
 
-    public func subscribe(_ streamSelection: StreamSelector<StreamIdentifier>, groupName: String, options: Read.Options) async throws -> Subscription {
+    public func subscribe(_ streamSelection: StreamSelector<StreamIdentifier>, groupName: String, options: Read.Options = .init()) async throws -> Subscription {
         let usecase = Read(streamSelection: streamSelection, groupName: groupName, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
