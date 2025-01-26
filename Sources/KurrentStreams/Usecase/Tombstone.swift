@@ -36,22 +36,19 @@ extension Streams {
 
 extension Streams.Tombstone {
     public struct Response: GRPCResponse {
-        public typealias PositionOption = StreamPosition.Option
-
         package typealias UnderlyingMessage = UnderlyingResponse
 
-        public internal(set) var position: PositionOption
+        public internal(set) var position: StreamPosition?
 
         package init(from message: UnderlyingMessage) throws {
-            let position: PositionOption?  = message.positionOption.map{
+            self.position  = message.positionOption.flatMap{
                 switch $0 {
                 case let .position(position):
-                    .position(.at(commitPosition: position.commitPosition, preparePosition: position.preparePosition))
+                        .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
                 case .noPosition:
-                    .noPosition
+                    nil
                 }
             }
-            self.position = position ?? .noPosition
         }
     }
 }

@@ -43,18 +43,17 @@ extension Streams.Delete {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
-        public internal(set) var position: StreamPosition.Option
+        public internal(set) var position: StreamPosition?
 
         package init(from message: UnderlyingMessage) throws {
-            let position: StreamPosition.Option? = message.positionOption.map{
+            self.position = message.positionOption.flatMap{
                 return switch $0 {
                 case let .position(position):
-                    .position(.at(commitPosition: position.commitPosition, preparePosition: position.preparePosition))
+                        .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
                 case .noPosition:
-                    .noPosition
+                    nil
                 }
             }
-            self.position = position ?? .noPosition
         }
     }
 }

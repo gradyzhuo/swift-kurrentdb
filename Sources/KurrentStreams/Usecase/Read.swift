@@ -134,7 +134,7 @@ extension Streams.Read {
         public private(set) var uuidOption: UUIDOption
         public private(set) var compatibility: UInt32
 
-        package init(resolveLinks: Bool = false, limit: UInt64 = .max, uuidOption: UUIDOption = .string, compatibility: UInt32 = 0) {
+        public init(resolveLinks: Bool = false, limit: UInt64 = .max, uuidOption: UUIDOption = .string, compatibility: UInt32 = 0) {
             self.resolveLinks = resolveLinks
             self.limit = limit
             self.uuidOption = uuidOption

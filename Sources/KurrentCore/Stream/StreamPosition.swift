@@ -22,23 +22,6 @@ public struct StreamPosition: Sendable {
     }
 }
 
-
-extension StreamPosition {
-    public enum Option: Sendable {
-        case noPosition
-        case position(StreamPosition)
-        
-        public var value: StreamPosition?{
-            return switch self {
-            case .noPosition:
-               nil
-            case let .position(value):
-                value
-            }
-        }
-    }
-}
-
 extension StreamPosition: Equatable{
     public static func == (lhs: StreamPosition, rhs: StreamPosition) -> Bool {
         return lhs.commit == rhs.commit && lhs.prepare == rhs.prepare

@@ -15,7 +15,7 @@ extension Streams {
         public typealias Options = Read.Options
         package typealias UnderlyingRequest = Read.UnderlyingRequest
         package typealias UnderlyingResponse = Read.UnderlyingResponse
-        package typealias Response = Read.Response
+        public typealias Response = Read.Response
         package typealias Responses = AsyncThrowingStream<Response, Error>
         
         public let cursor: Cursor<CursorPointer>

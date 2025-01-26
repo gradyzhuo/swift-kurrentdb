@@ -73,7 +73,7 @@ extension Streams {
         }
     }
     
-    package func append(to streamIdentifier: StreamIdentifier, events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success{
+    public func append(to streamIdentifier: StreamIdentifier, events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success{
         let usecase = Append(to: streamIdentifier, events: events, options: options)
         let response = try await usecase.perform(settings: settings, callOptions: callOptions)
         return switch response {
@@ -84,34 +84,34 @@ extension Streams {
         }
     }
     
-    package func read(_ streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
+    public func read(_ streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
         let usecase = Read(streamIdentifier: streamIdentifier, cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    package func readAll(cursor: Cursor<ReadAll.CursorPointer>, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
+    public func readAll(cursor: Cursor<ReadAll.CursorPointer>, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
         let usecase = ReadAll(cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    package func subscribe(_ streamIdentifier: StreamIdentifier, cursor: Cursor<StreamRevision>, options: Subscribe.Options = .init()) async throws -> Subscription {
+    public func subscribe(_ streamIdentifier: StreamIdentifier, cursor: Cursor<StreamRevision>, options: Subscribe.Options = .init()) async throws -> Subscription {
         let usecase = Subscribe(streamIdentifier: streamIdentifier, cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    package func subscribeToAll(cursor: Cursor<StreamPosition>, options: SubscribeToAll.Options = .init()) async throws -> Subscription {
+    public func subscribeToAll(cursor: Cursor<StreamPosition>, options: SubscribeToAll.Options = .init()) async throws -> Subscription {
         let usecase = SubscribeToAll(cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
     @discardableResult
-    package func delete(_ streamIdentifier: StreamIdentifier, options: Delete.Options = .init()) async throws -> Delete.Response {
+    public func delete(_ streamIdentifier: StreamIdentifier, options: Delete.Options = .init()) async throws -> Delete.Response {
         let usecase = Delete(streamIdentifier: streamIdentifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
     @discardableResult
-    package func tombstone(_ streamIdentifier: StreamIdentifier, options: Tombstone.Options = .init()) async throws -> Tombstone.Response {
+    public func tombstone(_ streamIdentifier: StreamIdentifier, options: Tombstone.Options = .init()) async throws -> Tombstone.Response {
         let usecase = Tombstone(streamIdentifier: streamIdentifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -119,7 +119,7 @@ extension Streams {
 
 //MARK: - Convenience Method
 extension Streams {
-    package func readAll(from position: StreamPosition, directTo direction: Direction, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
+    public func readAll(from position: StreamPosition, directTo direction: Direction, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
         return try await readAll(cursor: .specified(.init(position: position, direction: direction)), options: options)
     }
     

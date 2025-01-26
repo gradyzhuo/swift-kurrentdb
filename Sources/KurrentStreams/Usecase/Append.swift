@@ -62,24 +62,7 @@ extension Streams {
 }
 
 extension Streams.Append {
-    public enum CurrentRevisionOption {
-        case noStream
-        case revision(UInt64)
-    }
-
     public enum Response: GRPCResponse {
-        public enum CurrentRevisionOption: Sendable {
-            case noStream
-            case revision(UInt64)
-
-            public var revision: UInt64? {
-                switch self {
-                case let .revision(rev): rev
-                case .noStream: nil
-                }
-            }
-        }
-
         package typealias UnderlyingMessage = UnderlyingResponse
 
         case success(Success)
@@ -97,36 +80,37 @@ extension Streams.Append {
         public struct Success: GRPCResponse {
             package typealias UnderlyingMessage = UnderlyingResponse.Success
 
-            public internal(set) var current: CurrentRevisionOption
-            public internal(set) var position: StreamPosition.Option
+            public internal(set) var currentRevision: UInt64?
+            public internal(set) var position: StreamPosition?
 
-            init(current: CurrentRevisionOption, position: StreamPosition.Option) {
-                self.current = current
+            init(currentRevision: UInt64?, position: StreamPosition?) {
+                self.currentRevision = currentRevision
                 self.position = position
             }
 
             package init(from message: UnderlyingMessage) throws {
                 
-                let currentRevision: CurrentRevisionOption? = message.currentRevisionOption.map {
+                let currentRevision: UInt64? = message.currentRevisionOption.flatMap{
                     return switch $0 {
                     case let .currentRevision(revision):
-                        .revision(revision)
+                        revision
                     case .noStream:
-                        .noStream
+                        nil
                     }
                 }
-                let position: StreamPosition.Option? = message.positionOption.map{
+                let position: StreamPosition? = message.positionOption.flatMap{
                     return switch $0 {
                     case let .position(position):
-                        .position(.at(commitPosition: position.commitPosition, preparePosition: position.preparePosition))
+                            .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
                     case .noPosition:
-                        .noPosition
+                        nil
                     }
                 }
+                
 
                 self.init(
-                    current: currentRevision ?? .noStream,
-                    position: position ?? .noPosition)
+                    currentRevision: currentRevision,
+                    position: position)
             }
         }
 
@@ -140,21 +124,22 @@ extension Streams.Append {
                 case revision(UInt64)
             }
 
-            public internal(set) var current: CurrentRevisionOption
+            public internal(set) var currentRevision: UInt64?
             public internal(set) var excepted: ExpectedRevisionOption
 
-            init(current: CurrentRevisionOption, excepted: ExpectedRevisionOption) {
-                self.current = current
+            init(currentRevision: UInt64?, excepted: ExpectedRevisionOption) {
+                self.currentRevision = currentRevision
                 self.excepted = excepted
             }
 
             package init(from message: UnderlyingMessage) {
-                let currentRevision: CurrentRevisionOption? = message.currentRevisionOption.map {
+                
+                let currentRevision: UInt64? = message.currentRevisionOption2060.flatMap {
                     return switch $0 {
-                    case let .currentRevision(revision):
-                        .revision(revision)
-                    case .currentNoStream:
-                        .noStream
+                    case let .currentRevision2060(revision):
+                        revision
+                    case .noStream2060(_):
+                        nil
                     }
                 }
                 
@@ -172,7 +157,7 @@ extension Streams.Append {
                 }
 
                 self.init(
-                    current: currentRevision ?? .noStream,
+                    currentRevision: currentRevision,
                     excepted: expectedRevision ?? .any)
             }
         }
