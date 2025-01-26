@@ -21,12 +21,12 @@
 #### Stream
 |Feature|Implemented|
 |----|----|
-|BatchAppend||
 |Append|✅|
 |Read|✅|
 |Metadata|✅|
 |Subscribe Specified Stream|✅|
 |Subscribe All Stream|✅|
+|BatchAppend||
 
 #### Projection
 |Feature|Implemented|
@@ -87,7 +87,7 @@ dependencies: [
 #### ClientSettings
 
 ```swift
-import EventStoreDB
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
