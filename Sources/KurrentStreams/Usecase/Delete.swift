@@ -11,9 +11,9 @@ import GRPCEncapsulates
 
 extension Streams {
     public struct Delete: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
@@ -30,7 +30,7 @@ extension Streams {
             }
         }
         
-        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
             return try await client.delete(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -41,11 +41,11 @@ extension Streams {
 
 extension Streams.Delete {
     public struct Response: GRPCResponse {
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         public internal(set) var position: StreamPosition.Option
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             let position: StreamPosition.Option? = message.positionOption.map{
                 return switch $0 {
                 case let .position(position):
@@ -61,7 +61,7 @@ extension Streams.Delete {
 
 extension Streams.Delete {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var expectedRevision: StreamRevisionRule
 
@@ -69,7 +69,7 @@ extension Streams.Delete {
             expectedRevision = .streamExists
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             .with {
                 switch expectedRevision {
                 case .any:

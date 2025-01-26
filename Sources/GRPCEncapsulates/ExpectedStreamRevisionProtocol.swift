@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol ExpectedStreamRevisionProtocol {
+package protocol ExpectedStreamRevisionProtocol {
     static func any(_ value: EventStore_Client_Empty) -> Self
     static func noStream(_ value: EventStore_Client_Empty) -> Self
     static func streamExists(_ value: EventStore_Client_Empty) -> Self

@@ -14,7 +14,7 @@ import GRPCNIOTransportHTTP2Posix
 import KurrentCore
 
 public struct Monitoring: GRPCConcreteService {
-    public typealias Client = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
+    package typealias Client = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions

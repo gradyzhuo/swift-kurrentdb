@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct UpdateToStream: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = UnderlyingService.Method.Update.Input
-        public typealias UnderlyingResponse = UnderlyingService.Method.Update.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = UnderlyingService.Method.Update.Input
+        package typealias UnderlyingResponse = UnderlyingService.Method.Update.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         var streamIdentifier: StreamIdentifier
         var groupName: String
@@ -34,7 +34,7 @@ extension PersistentSubscriptions {
             }
         }
         
-        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.update(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -44,7 +44,7 @@ extension PersistentSubscriptions {
 
 extension PersistentSubscriptions.UpdateToStream {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var settings: PersistentSubscription.Settings
         public private(set) var revisionCursor: Cursor<StreamRevision>

@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Delete: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let name: String
         public let options: Options
@@ -26,7 +26,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.delete(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -38,7 +38,7 @@ extension Projections {
 
 extension Projections.Delete {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var deleteCheckpointStream: Bool
         public private(set) var deleteEmittedStreams: Bool
@@ -50,7 +50,7 @@ extension Projections.Delete {
             self.deleteStateStream = deleteStateStream
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             return .with { message in
                 message.deleteStateStream = deleteStateStream
                 message.deleteEmittedStreams = deleteEmittedStreams

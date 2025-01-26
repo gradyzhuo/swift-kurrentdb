@@ -12,9 +12,9 @@ import GRPCEncapsulates
 extension Streams {
     
     public struct Append: StreamUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
 
         public let events: [EventData]
         public let identifier: StreamIdentifier
@@ -53,7 +53,7 @@ extension Streams {
             return messages
         }
 
-        public func send(client: ServiceClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.append(request: request, options: callOptions) {
                 try handle(response: $0)
             }
@@ -80,12 +80,12 @@ extension Streams.Append {
             }
         }
 
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         case success(Success)
         case wrong(Wrong)
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             switch message.result! {
             case let .success(successResult):
                 self = try .success(.init(from: successResult))
@@ -95,7 +95,7 @@ extension Streams.Append {
         }
 
         public struct Success: GRPCResponse {
-            public typealias UnderlyingMessage = UnderlyingResponse.Success
+            package typealias UnderlyingMessage = UnderlyingResponse.Success
 
             public internal(set) var current: CurrentRevisionOption
             public internal(set) var position: StreamPosition.Option
@@ -105,7 +105,7 @@ extension Streams.Append {
                 self.position = position
             }
 
-            public init(from message: UnderlyingMessage) throws {
+            package init(from message: UnderlyingMessage) throws {
                 
                 let currentRevision: CurrentRevisionOption? = message.currentRevisionOption.map {
                     return switch $0 {
@@ -131,7 +131,7 @@ extension Streams.Append {
         }
 
         public struct Wrong: GRPCResponse, Error {
-            public typealias UnderlyingMessage = UnderlyingResponse.WrongExpectedVersion
+            package typealias UnderlyingMessage = UnderlyingResponse.WrongExpectedVersion
 
             public enum ExpectedRevisionOption: Sendable {
                 case any
@@ -148,7 +148,7 @@ extension Streams.Append {
                 self.excepted = excepted
             }
 
-            public init(from message: UnderlyingMessage) {
+            package init(from message: UnderlyingMessage) {
                 let currentRevision: CurrentRevisionOption? = message.currentRevisionOption.map {
                     return switch $0 {
                     case let .currentRevision(revision):
@@ -181,7 +181,7 @@ extension Streams.Append {
 
 extension Streams.Append {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public fileprivate(set) var expectedRevision: StreamRevisionRule
 

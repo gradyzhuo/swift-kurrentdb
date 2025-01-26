@@ -11,12 +11,12 @@ import GRPCEncapsulates
 
 extension Streams {
     public struct ReadAll: UnaryStream {
-        public typealias ServiceClient = Client
+        package typealias ServiceClient = Client
         public typealias Options = Read.Options
-        public typealias UnderlyingRequest = Read.UnderlyingRequest
-        public typealias UnderlyingResponse = Read.UnderlyingResponse
-        public typealias Response = Read.Response
-        public typealias Responses = AsyncThrowingStream<Response, Error>
+        package typealias UnderlyingRequest = Read.UnderlyingRequest
+        package typealias UnderlyingResponse = Read.UnderlyingResponse
+        package typealias Response = Read.Response
+        package typealias Responses = AsyncThrowingStream<Response, Error>
         
         public let cursor: Cursor<CursorPointer>
         public let options: Options
@@ -52,7 +52,7 @@ extension Streams {
             }
         }
 
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             return try await withThrowingDiscardingTaskGroup { group in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.read(request: request, options: callOptions) {

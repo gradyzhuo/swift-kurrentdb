@@ -13,97 +13,97 @@ import GRPCProtobuf
 // MARK: - event_store.client.operations.Operations
 
 /// Namespace containing generated types for the "event_store.client.operations.Operations" service.
-public enum EventStore_Client_Operations_Operations {
+package enum EventStore_Client_Operations_Operations {
     /// Service descriptor for the "event_store.client.operations.Operations" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "StartScavenge" metadata.
-        public enum StartScavenge {
+        package enum StartScavenge {
             /// Request type for "StartScavenge".
-            public typealias Input = EventStore_Client_Operations_StartScavengeReq
+            package typealias Input = EventStore_Client_Operations_StartScavengeReq
             /// Response type for "StartScavenge".
-            public typealias Output = EventStore_Client_Operations_ScavengeResp
+            package typealias Output = EventStore_Client_Operations_ScavengeResp
             /// Descriptor for "StartScavenge".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "StartScavenge"
             )
         }
         /// Namespace for "StopScavenge" metadata.
-        public enum StopScavenge {
+        package enum StopScavenge {
             /// Request type for "StopScavenge".
-            public typealias Input = EventStore_Client_Operations_StopScavengeReq
+            package typealias Input = EventStore_Client_Operations_StopScavengeReq
             /// Response type for "StopScavenge".
-            public typealias Output = EventStore_Client_Operations_ScavengeResp
+            package typealias Output = EventStore_Client_Operations_ScavengeResp
             /// Descriptor for "StopScavenge".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "StopScavenge"
             )
         }
         /// Namespace for "Shutdown" metadata.
-        public enum Shutdown {
+        package enum Shutdown {
             /// Request type for "Shutdown".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "Shutdown".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "Shutdown".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "Shutdown"
             )
         }
         /// Namespace for "MergeIndexes" metadata.
-        public enum MergeIndexes {
+        package enum MergeIndexes {
             /// Request type for "MergeIndexes".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "MergeIndexes".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "MergeIndexes".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "MergeIndexes"
             )
         }
         /// Namespace for "ResignNode" metadata.
-        public enum ResignNode {
+        package enum ResignNode {
             /// Request type for "ResignNode".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "ResignNode".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "ResignNode".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "ResignNode"
             )
         }
         /// Namespace for "SetNodePriority" metadata.
-        public enum SetNodePriority {
+        package enum SetNodePriority {
             /// Request type for "SetNodePriority".
-            public typealias Input = EventStore_Client_Operations_SetNodePriorityReq
+            package typealias Input = EventStore_Client_Operations_SetNodePriorityReq
             /// Response type for "SetNodePriority".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "SetNodePriority".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "SetNodePriority"
             )
         }
         /// Namespace for "RestartPersistentSubscriptions" metadata.
-        public enum RestartPersistentSubscriptions {
+        package enum RestartPersistentSubscriptions {
             /// Request type for "RestartPersistentSubscriptions".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "RestartPersistentSubscriptions".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "RestartPersistentSubscriptions".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations"),
                 method: "RestartPersistentSubscriptions"
             )
         }
         /// Descriptors for all methods in the "event_store.client.operations.Operations" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             StartScavenge.descriptor,
             StopScavenge.descriptor,
             Shutdown.descriptor,
@@ -117,7 +117,7 @@ public enum EventStore_Client_Operations_Operations {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.operations.Operations" service.
-    public static let event_store_client_operations_Operations = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations")
+    package static let eventStore_client_operations_Operations = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.operations.Operations")
 }
 
 // MARK: event_store.client.operations.Operations (server)
@@ -133,7 +133,7 @@ extension EventStore_Client_Operations_Operations {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "StartScavenge" method.
         ///
         /// - Parameters:
@@ -240,7 +240,7 @@ extension EventStore_Client_Operations_Operations {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Operations_Operations.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Operations_Operations.StreamingServiceProtocol {
         /// Handle the "StartScavenge" method.
         ///
         /// - Parameters:
@@ -345,7 +345,7 @@ extension EventStore_Client_Operations_Operations {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Operations_Operations.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Operations_Operations.ServiceProtocol {
         /// Handle the "StartScavenge" method.
         ///
         /// - Parameters:
@@ -448,7 +448,7 @@ extension EventStore_Client_Operations_Operations {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Operations_Operations.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Operations_Operations.Method.StartScavenge.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Operations_StartScavengeReq>(),
@@ -531,7 +531,7 @@ extension EventStore_Client_Operations_Operations.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_Operations_Operations.ServiceProtocol {
-    public func startScavenge(
+    package func startScavenge(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Operations_StartScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Operations_ScavengeResp> {
@@ -542,7 +542,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func stopScavenge(
+    package func stopScavenge(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Operations_StopScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Operations_ScavengeResp> {
@@ -553,7 +553,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func shutdown(
+    package func shutdown(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -564,7 +564,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func mergeIndexes(
+    package func mergeIndexes(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -575,7 +575,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func resignNode(
+    package func resignNode(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -586,7 +586,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func setNodePriority(
+    package func setNodePriority(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Operations_SetNodePriorityReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -597,7 +597,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func restartPersistentSubscriptions(
+    package func restartPersistentSubscriptions(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -611,7 +611,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
-    public func startScavenge(
+    package func startScavenge(
         request: GRPCCore.ServerRequest<EventStore_Client_Operations_StartScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp> {
@@ -624,7 +624,7 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         )
     }
 
-    public func stopScavenge(
+    package func stopScavenge(
         request: GRPCCore.ServerRequest<EventStore_Client_Operations_StopScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp> {
@@ -637,7 +637,7 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         )
     }
 
-    public func shutdown(
+    package func shutdown(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -650,7 +650,7 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         )
     }
 
-    public func mergeIndexes(
+    package func mergeIndexes(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -663,7 +663,7 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         )
     }
 
-    public func resignNode(
+    package func resignNode(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -676,7 +676,7 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         )
     }
 
-    public func setNodePriority(
+    package func setNodePriority(
         request: GRPCCore.ServerRequest<EventStore_Client_Operations_SetNodePriorityReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -689,7 +689,7 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         )
     }
 
-    public func restartPersistentSubscriptions(
+    package func restartPersistentSubscriptions(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -710,7 +710,7 @@ extension EventStore_Client_Operations_Operations {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "StartScavenge" method.
         ///
         /// - Parameters:
@@ -850,14 +850,14 @@ extension EventStore_Client_Operations_Operations {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -872,7 +872,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func startScavenge<Result>(
+        package func startScavenge<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Operations_StartScavengeReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Operations_StartScavengeReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Operations_ScavengeResp>,
@@ -902,7 +902,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func stopScavenge<Result>(
+        package func stopScavenge<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Operations_StopScavengeReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Operations_StopScavengeReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Operations_ScavengeResp>,
@@ -932,7 +932,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func shutdown<Result>(
+        package func shutdown<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -962,7 +962,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func mergeIndexes<Result>(
+        package func mergeIndexes<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -992,7 +992,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func resignNode<Result>(
+        package func resignNode<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1022,7 +1022,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func setNodePriority<Result>(
+        package func setNodePriority<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Operations_SetNodePriorityReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Operations_SetNodePriorityReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1052,7 +1052,7 @@ extension EventStore_Client_Operations_Operations {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func restartPersistentSubscriptions<Result>(
+        package func restartPersistentSubscriptions<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1084,7 +1084,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func startScavenge<Result>(
+    package func startScavenge<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Operations_StartScavengeReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Operations_ScavengeResp>) async throws -> Result = { response in
@@ -1109,7 +1109,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func stopScavenge<Result>(
+    package func stopScavenge<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Operations_StopScavengeReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Operations_ScavengeResp>) async throws -> Result = { response in
@@ -1134,7 +1134,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func shutdown<Result>(
+    package func shutdown<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1159,7 +1159,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func mergeIndexes<Result>(
+    package func mergeIndexes<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1184,7 +1184,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func resignNode<Result>(
+    package func resignNode<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1209,7 +1209,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func setNodePriority<Result>(
+    package func setNodePriority<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Operations_SetNodePriorityReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1234,7 +1234,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func restartPersistentSubscriptions<Result>(
+    package func restartPersistentSubscriptions<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1263,7 +1263,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func startScavenge<Result>(
+    package func startScavenge<Result>(
         _ message: EventStore_Client_Operations_StartScavengeReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1292,7 +1292,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func stopScavenge<Result>(
+    package func stopScavenge<Result>(
         _ message: EventStore_Client_Operations_StopScavengeReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1321,7 +1321,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func shutdown<Result>(
+    package func shutdown<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1350,7 +1350,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func mergeIndexes<Result>(
+    package func mergeIndexes<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1379,7 +1379,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func resignNode<Result>(
+    package func resignNode<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1408,7 +1408,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func setNodePriority<Result>(
+    package func setNodePriority<Result>(
         _ message: EventStore_Client_Operations_SetNodePriorityReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1437,7 +1437,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func restartPersistentSubscriptions<Result>(
+    package func restartPersistentSubscriptions<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,

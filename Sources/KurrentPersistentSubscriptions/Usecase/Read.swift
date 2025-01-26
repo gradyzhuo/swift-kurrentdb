@@ -12,10 +12,10 @@ import Foundation
 
 extension PersistentSubscriptions {
     public struct Read: StreamStream {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
-        public typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
-        public typealias Responses = Subscription
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
+        package typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
+        package typealias Responses = Subscription
 
         public let streamSelection: StreamSelector<StreamIdentifier>
         public let groupName: String
@@ -65,12 +65,12 @@ extension PersistentSubscriptions {
 
 extension PersistentSubscriptions.Read {
     public enum Response: GRPCResponse {
-        public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
+        package typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
 
         case readEvent(event: ReadEvent, retryCount: Int32)
         case confirmation(subscriptionId: String)
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             guard let content = message.content else {
                 throw EventStoreError.resourceNotFound(reason: "The content of PersistentSubscriptions Read Response is missing.")
             }
@@ -86,7 +86,7 @@ extension PersistentSubscriptions.Read {
 
 extension PersistentSubscriptions.Read {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var bufferSize: Int32
         public private(set) var uuidOption: UUID.Option

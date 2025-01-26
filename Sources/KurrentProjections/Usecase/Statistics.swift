@@ -11,9 +11,9 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Statistics: UnaryStream {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
         public typealias Responses = AsyncThrowingStream<Response, Error>
         
         public enum ModeOptions: Sendable {
@@ -38,7 +38,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             return try await withThrowingDiscardingTaskGroup { group in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.statistics(request: request, options: callOptions) {
@@ -55,7 +55,7 @@ extension Projections {
 
 extension Projections.Statistics {
     public struct Response: GRPCResponse {
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         public let coreProcessingTime: Int64
         public let version: Int64
@@ -99,7 +99,7 @@ extension Projections.Statistics {
             self.writePendingEventsAfterCheckpoint = writePendingEventsAfterCheckpoint
         }
 
-        public init(from message: EventStore_Client_Projections_StatisticsResp) throws {
+        package init(from message: UnderlyingResponse) throws {
             let details = message.details
 
             self.init(
@@ -129,7 +129,7 @@ extension Projections.Statistics {
 
 extension Projections.Statistics {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         var mode: ModeOptions = .all
 

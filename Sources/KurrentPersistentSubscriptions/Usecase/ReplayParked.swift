@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct ReplayParked: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = UnderlyingService.Method.ReplayParked.Input
-        public typealias UnderlyingResponse = UnderlyingService.Method.ReplayParked.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = UnderlyingService.Method.ReplayParked.Input
+        package typealias UnderlyingResponse = UnderlyingService.Method.ReplayParked.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         let streamSelection: StreamSelector<StreamIdentifier>
         let groupName: String
@@ -34,7 +34,7 @@ extension PersistentSubscriptions {
             }
         }
         
-        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.replayParked(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -48,7 +48,7 @@ extension PersistentSubscriptions.ReplayParked {
             case position(position: Int64)
             case noLimit
         }
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
         
         var message: UnderlyingMessage
 

@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Reset: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Reset.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Reset.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Reset.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Reset.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         let name: String
         let options: Options
@@ -31,7 +31,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.reset(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -41,7 +41,7 @@ extension Projections {
 
 extension Projections.Reset {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var writeCheckpoint: Bool
         

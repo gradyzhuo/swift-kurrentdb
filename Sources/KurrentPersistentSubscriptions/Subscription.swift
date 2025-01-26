@@ -15,7 +15,7 @@ import DequeModule
 
 extension PersistentSubscriptions {
     public final class Subscription: @unchecked Sendable {
-        public typealias Request = PersistentSubscriptions.Read.UnderlyingRequest
+        package typealias Request = PersistentSubscriptions.Read.UnderlyingRequest
         public typealias Element = PersistentSubscription.EventResult
 
         let writer: Writer

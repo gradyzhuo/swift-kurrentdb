@@ -13,25 +13,25 @@ import GRPCProtobuf
 // MARK: - event_store.client.gossip.Gossip
 
 /// Namespace containing generated types for the "event_store.client.gossip.Gossip" service.
-public enum EventStore_Client_Gossip_Gossip {
+package enum EventStore_Client_Gossip_Gossip {
     /// Service descriptor for the "event_store.client.gossip.Gossip" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.gossip.Gossip")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.gossip.Gossip")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Read" metadata.
-        public enum Read {
+        package enum Read {
             /// Request type for "Read".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "Read".
-            public typealias Output = EventStore_Client_Gossip_ClusterInfo
+            package typealias Output = EventStore_Client_Gossip_ClusterInfo
             /// Descriptor for "Read".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.gossip.Gossip"),
                 method: "Read"
             )
         }
         /// Descriptors for all methods in the "event_store.client.gossip.Gossip" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Read.descriptor
         ]
     }
@@ -39,7 +39,7 @@ public enum EventStore_Client_Gossip_Gossip {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.gossip.Gossip" service.
-    public static let event_store_client_gossip_Gossip = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.gossip.Gossip")
+    package static let eventStore_client_gossip_Gossip = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.gossip.Gossip")
 }
 
 // MARK: event_store.client.gossip.Gossip (server)
@@ -55,7 +55,7 @@ extension EventStore_Client_Gossip_Gossip {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Read" method.
         ///
         /// - Parameters:
@@ -78,7 +78,7 @@ extension EventStore_Client_Gossip_Gossip {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Gossip_Gossip.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Gossip_Gossip.StreamingServiceProtocol {
         /// Handle the "Read" method.
         ///
         /// - Parameters:
@@ -99,7 +99,7 @@ extension EventStore_Client_Gossip_Gossip {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Gossip_Gossip.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Gossip_Gossip.ServiceProtocol {
         /// Handle the "Read" method.
         ///
         /// - Parameters:
@@ -118,7 +118,7 @@ extension EventStore_Client_Gossip_Gossip {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Gossip_Gossip.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Gossip_Gossip.Method.Read.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -135,7 +135,7 @@ extension EventStore_Client_Gossip_Gossip.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_Gossip_Gossip.ServiceProtocol {
-    public func read(
+    package func read(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Gossip_ClusterInfo> {
@@ -149,7 +149,7 @@ extension EventStore_Client_Gossip_Gossip.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Gossip_Gossip.SimpleServiceProtocol {
-    public func read(
+    package func read(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Gossip_ClusterInfo> {
@@ -170,7 +170,7 @@ extension EventStore_Client_Gossip_Gossip {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Read" method.
         ///
         /// - Parameters:
@@ -196,14 +196,14 @@ extension EventStore_Client_Gossip_Gossip {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -218,7 +218,7 @@ extension EventStore_Client_Gossip_Gossip {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func read<Result>(
+        package func read<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Gossip_ClusterInfo>,
@@ -250,7 +250,7 @@ extension EventStore_Client_Gossip_Gossip.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Gossip_ClusterInfo>) async throws -> Result = { response in
@@ -279,7 +279,7 @@ extension EventStore_Client_Gossip_Gossip.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,

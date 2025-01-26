@@ -9,7 +9,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscription{
     public struct SubscriptionInfo: GRPCBridge {
-        public typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_SubscriptionInfo
+        package typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_SubscriptionInfo
         public let eventSource: String
         public let groupName: String
         public let status: String

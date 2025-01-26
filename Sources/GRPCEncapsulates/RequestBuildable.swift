@@ -9,7 +9,7 @@ import Foundation
 import GRPCCore
 import SwiftProtobuf
 
-public protocol RequestBuildable {
+package protocol RequestBuildable {
     associatedtype UnderlyingRequest: Message
 }
 

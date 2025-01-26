@@ -11,9 +11,9 @@ import GRPCEncapsulates
 
 extension Streams {
     public struct Tombstone: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Tombstone.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Tombstone.Output
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
@@ -26,7 +26,7 @@ extension Streams {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.tombstone(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -38,11 +38,11 @@ extension Streams.Tombstone {
     public struct Response: GRPCResponse {
         public typealias PositionOption = StreamPosition.Option
 
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         public internal(set) var position: PositionOption
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             let position: PositionOption?  = message.positionOption.map{
                 switch $0 {
                 case let .position(position):
@@ -58,7 +58,7 @@ extension Streams.Tombstone {
 
 extension Streams.Tombstone {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var expectedRevision: StreamRevisionRule
 
@@ -66,7 +66,7 @@ extension Streams.Tombstone {
             self.expectedRevision = expectedRevision
         }
         
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             .with {
                 switch expectedRevision {
                 case .any:

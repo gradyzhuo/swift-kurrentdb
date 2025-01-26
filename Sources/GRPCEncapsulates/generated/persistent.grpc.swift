@@ -13,109 +13,109 @@ import GRPCProtobuf
 // MARK: - event_store.client.persistent_subscriptions.PersistentSubscriptions
 
 /// Namespace containing generated types for the "event_store.client.persistent_subscriptions.PersistentSubscriptions" service.
-public enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
+package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
     /// Service descriptor for the "event_store.client.persistent_subscriptions.PersistentSubscriptions" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Create" metadata.
-        public enum Create {
+        package enum Create {
             /// Request type for "Create".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_CreateReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_CreateReq
             /// Response type for "Create".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_CreateResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_CreateResp
             /// Descriptor for "Create".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "Create"
             )
         }
         /// Namespace for "Update" metadata.
-        public enum Update {
+        package enum Update {
             /// Request type for "Update".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_UpdateReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_UpdateReq
             /// Response type for "Update".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_UpdateResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_UpdateResp
             /// Descriptor for "Update".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "Update"
             )
         }
         /// Namespace for "Delete" metadata.
-        public enum Delete {
+        package enum Delete {
             /// Request type for "Delete".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_DeleteReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_DeleteReq
             /// Response type for "Delete".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_DeleteResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_DeleteResp
             /// Descriptor for "Delete".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "Delete"
             )
         }
         /// Namespace for "Read" metadata.
-        public enum Read {
+        package enum Read {
             /// Request type for "Read".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_ReadReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_ReadReq
             /// Response type for "Read".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_ReadResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_ReadResp
             /// Descriptor for "Read".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "Read"
             )
         }
         /// Namespace for "GetInfo" metadata.
-        public enum GetInfo {
+        package enum GetInfo {
             /// Request type for "GetInfo".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_GetInfoReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_GetInfoReq
             /// Response type for "GetInfo".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_GetInfoResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_GetInfoResp
             /// Descriptor for "GetInfo".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "GetInfo"
             )
         }
         /// Namespace for "ReplayParked" metadata.
-        public enum ReplayParked {
+        package enum ReplayParked {
             /// Request type for "ReplayParked".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_ReplayParkedReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_ReplayParkedReq
             /// Response type for "ReplayParked".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_ReplayParkedResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_ReplayParkedResp
             /// Descriptor for "ReplayParked".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "ReplayParked"
             )
         }
         /// Namespace for "List" metadata.
-        public enum List {
+        package enum List {
             /// Request type for "List".
-            public typealias Input = EventStore_Client_PersistentSubscriptions_ListReq
+            package typealias Input = EventStore_Client_PersistentSubscriptions_ListReq
             /// Response type for "List".
-            public typealias Output = EventStore_Client_PersistentSubscriptions_ListResp
+            package typealias Output = EventStore_Client_PersistentSubscriptions_ListResp
             /// Descriptor for "List".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "List"
             )
         }
         /// Namespace for "RestartSubsystem" metadata.
-        public enum RestartSubsystem {
+        package enum RestartSubsystem {
             /// Request type for "RestartSubsystem".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "RestartSubsystem".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "RestartSubsystem".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions"),
                 method: "RestartSubsystem"
             )
         }
         /// Descriptors for all methods in the "event_store.client.persistent_subscriptions.PersistentSubscriptions" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Create.descriptor,
             Update.descriptor,
             Delete.descriptor,
@@ -130,7 +130,7 @@ public enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.persistent_subscriptions.PersistentSubscriptions" service.
-    public static let event_store_client_persistent_subscriptions_PersistentSubscriptions = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions")
+    package static let eventStore_client_persistentSubscriptions_PersistentSubscriptions = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.persistent_subscriptions.PersistentSubscriptions")
 }
 
 // MARK: event_store.client.persistent_subscriptions.PersistentSubscriptions (server)
@@ -146,7 +146,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -267,7 +267,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.StreamingServiceProtocol {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -386,7 +386,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.ServiceProtocol {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -504,7 +504,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.Create.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_CreateReq>(),
@@ -598,7 +598,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Stre
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.ServiceProtocol {
-    public func create(
+    package func create(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_CreateResp> {
@@ -609,7 +609,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func update(
+    package func update(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_UpdateResp> {
@@ -620,7 +620,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_DeleteResp> {
@@ -631,7 +631,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func getInfo(
+    package func getInfo(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp> {
@@ -642,7 +642,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func replayParked(
+    package func replayParked(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp> {
@@ -653,7 +653,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func list(
+    package func list(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_ListReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ListResp> {
@@ -664,7 +664,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func restartSubsystem(
+    package func restartSubsystem(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -678,7 +678,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.SimpleServiceProtocol {
-    public func create(
+    package func create(
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_CreateResp> {
@@ -691,7 +691,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func update(
+    package func update(
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_UpdateResp> {
@@ -704,7 +704,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_DeleteResp> {
@@ -717,7 +717,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func read(
+    package func read(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_ReadReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ReadResp> {
@@ -734,7 +734,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func getInfo(
+    package func getInfo(
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp> {
@@ -747,7 +747,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func replayParked(
+    package func replayParked(
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp> {
@@ -760,7 +760,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func list(
+    package func list(
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_ListReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ListResp> {
@@ -773,7 +773,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         )
     }
 
-    public func restartSubsystem(
+    package func restartSubsystem(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -794,7 +794,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Create" method.
         ///
         /// - Parameters:
@@ -953,14 +953,14 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -975,7 +975,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func create<Result>(
+        package func create<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_CreateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_CreateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_CreateResp>,
@@ -1005,7 +1005,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func update<Result>(
+        package func update<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_UpdateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_UpdateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_UpdateResp>,
@@ -1035,7 +1035,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func delete<Result>(
+        package func delete<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_DeleteReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_DeleteReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_DeleteResp>,
@@ -1065,7 +1065,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func read<Result>(
+        package func read<Result>(
             request: GRPCCore.StreamingClientRequest<EventStore_Client_PersistentSubscriptions_ReadReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_ReadReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_ReadResp>,
@@ -1093,7 +1093,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func getInfo<Result>(
+        package func getInfo<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_GetInfoResp>,
@@ -1123,7 +1123,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func replayParked<Result>(
+        package func replayParked<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>,
@@ -1153,7 +1153,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func list<Result>(
+        package func list<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_ListReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_PersistentSubscriptions_ListReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_PersistentSubscriptions_ListResp>,
@@ -1183,7 +1183,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func restartSubsystem<Result>(
+        package func restartSubsystem<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1215,7 +1215,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func create<Result>(
+    package func create<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_CreateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_PersistentSubscriptions_CreateResp>) async throws -> Result = { response in
@@ -1240,7 +1240,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_UpdateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_PersistentSubscriptions_UpdateResp>) async throws -> Result = { response in
@@ -1265,7 +1265,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_DeleteReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_PersistentSubscriptions_DeleteResp>) async throws -> Result = { response in
@@ -1290,7 +1290,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         request: GRPCCore.StreamingClientRequest<EventStore_Client_PersistentSubscriptions_ReadReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_PersistentSubscriptions_ReadResp>) async throws -> Result
@@ -1313,7 +1313,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func getInfo<Result>(
+    package func getInfo<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp>) async throws -> Result = { response in
@@ -1338,7 +1338,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func replayParked<Result>(
+    package func replayParked<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>) async throws -> Result = { response in
@@ -1363,7 +1363,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func list<Result>(
+    package func list<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_PersistentSubscriptions_ListReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_PersistentSubscriptions_ListResp>) async throws -> Result = { response in
@@ -1388,7 +1388,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func restartSubsystem<Result>(
+    package func restartSubsystem<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1417,7 +1417,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func create<Result>(
+    package func create<Result>(
         _ message: EventStore_Client_PersistentSubscriptions_CreateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1446,7 +1446,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         _ message: EventStore_Client_PersistentSubscriptions_UpdateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1475,7 +1475,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         _ message: EventStore_Client_PersistentSubscriptions_DeleteReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1505,7 +1505,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         requestProducer producer: @Sendable @escaping (GRPCCore.RPCWriter<EventStore_Client_PersistentSubscriptions_ReadReq>) async throws -> Void,
@@ -1532,7 +1532,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func getInfo<Result>(
+    package func getInfo<Result>(
         _ message: EventStore_Client_PersistentSubscriptions_GetInfoReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1561,7 +1561,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func replayParked<Result>(
+    package func replayParked<Result>(
         _ message: EventStore_Client_PersistentSubscriptions_ReplayParkedReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1590,7 +1590,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func list<Result>(
+    package func list<Result>(
         _ message: EventStore_Client_PersistentSubscriptions_ListReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1619,7 +1619,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func restartSubsystem<Result>(
+    package func restartSubsystem<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,

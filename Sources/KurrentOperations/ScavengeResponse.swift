@@ -17,12 +17,12 @@ extension Operations {
             case unrecognized(Int)
         }
 
-        public typealias UnderlyingMessage = EventStore_Client_Operations_ScavengeResp
+        package typealias UnderlyingMessage = EventStore_Client_Operations_ScavengeResp
 
         let scavengeId: String
         let scavengeResult: ScavengeResult
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             scavengeId = message.scavengeID
             scavengeResult = switch message.scavengeResult {
             case .started:

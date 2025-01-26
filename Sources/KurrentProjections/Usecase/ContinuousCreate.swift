@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct ContinuousCreate: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let name: String
         public let query: String
@@ -28,7 +28,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.create(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -41,7 +41,7 @@ extension Projections {
 
 extension Projections.ContinuousCreate {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var emitEnabled: Bool
         public private(set) var trackEmittedStreams: Bool
@@ -51,7 +51,7 @@ extension Projections.ContinuousCreate {
             self.trackEmittedStreams = trackEmittedStreams
         }
         
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             return .with{
                 $0.continuous = .with{
                     $0.emitEnabled = emitEnabled

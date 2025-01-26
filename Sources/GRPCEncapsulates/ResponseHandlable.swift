@@ -9,27 +9,28 @@ import Foundation
 import SwiftProtobuf
 import GRPCCore
 
-public protocol ResponseHandlable: Sendable {
+package protocol ResponseHandlable: Sendable {
     associatedtype UnderlyingResponse: Message
     associatedtype Response
 }
 
-public protocol UnaryResponseHandlable: ResponseHandlable where Self: Usecase{
+package protocol UnaryResponseHandlable: ResponseHandlable where Self: Usecase{
 }
+
 
 extension UnaryResponseHandlable where Response: GRPCResponse<UnderlyingResponse> {
     @discardableResult
-    public func handle(message: Response.UnderlyingMessage) throws -> Response {
+    package func handle(message: Response.UnderlyingMessage) throws -> Response {
         return try Response.init(from: message)
     }
     
     @discardableResult
-    public func handle(response: ClientResponse<Response.UnderlyingMessage>) throws -> Response {
+    package func handle(response: ClientResponse<Response.UnderlyingMessage>) throws -> Response {
         return try handle(message: response.message)
     }
 }
 
-public protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Usecase {
+package protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Usecase {
     associatedtype Responses//: AsyncSequence, Sendable
 //    func handle(messages: RPCAsyncSequence<Response.UnderlyingMessage, Error>) async throws -> Responses
 }

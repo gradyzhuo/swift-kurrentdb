@@ -10,10 +10,10 @@ import GRPCEncapsulates
 
 extension Monitoring {
     public struct Stats: UnaryStream {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Stats.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Stats.Output
-        public typealias Responses = AsyncThrowingStream<Response, any Error>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Stats.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Stats.Output
+        package typealias Responses = AsyncThrowingStream<Response, any Error>
 
         public let useMetadata: Bool
         public let refreshTimePeriodInMs: UInt64
@@ -30,7 +30,7 @@ extension Monitoring {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
             Task{
                 try await client.stats(request: request, options: callOptions) {
@@ -46,11 +46,11 @@ extension Monitoring {
 
 extension Monitoring.Stats {
     public struct Response: GRPCResponse {
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         var stats: [String: String]
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             stats = message.stats
         }
     }

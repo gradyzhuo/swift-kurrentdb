@@ -10,9 +10,9 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct StartScavenge: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StartScavenge.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StartScavenge.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StartScavenge.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StartScavenge.Output
         public typealias Response = ScavengeResponse
 
         public let threadCount: Int32
@@ -32,7 +32,7 @@ extension Operations {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.startScavenge(request: request, options: callOptions){
                 try handle(response: $0)
             }

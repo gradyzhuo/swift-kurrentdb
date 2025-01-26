@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Enable: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Enable.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Enable.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let name: String
         public let options: Options
@@ -26,7 +26,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
             return try await client.enable(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -36,13 +36,13 @@ extension Projections {
 
 extension Projections.Enable {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public init() {
             
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             .init()
         }
     }

@@ -20,65 +20,65 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_Gossip_ClusterInfo: Sendable {
+package struct EventStore_Client_Gossip_ClusterInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var members: [EventStore_Client_Gossip_MemberInfo] = []
+  package var members: [EventStore_Client_Gossip_MemberInfo] = []
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Gossip_EndPoint: Sendable {
+package struct EventStore_Client_Gossip_EndPoint: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var address: String = String()
+  package var address: String = String()
 
-  public var port: UInt32 = 0
+  package var port: UInt32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Gossip_MemberInfo: Sendable {
+package struct EventStore_Client_Gossip_MemberInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var instanceID: EventStore_Client_UUID {
+  package var instanceID: EventStore_Client_UUID {
     get {return _instanceID ?? EventStore_Client_UUID()}
     set {_instanceID = newValue}
   }
   /// Returns true if `instanceID` has been explicitly set.
-  public var hasInstanceID: Bool {return self._instanceID != nil}
+  package var hasInstanceID: Bool {return self._instanceID != nil}
   /// Clears the value of `instanceID`. Subsequent reads from it will return its default value.
-  public mutating func clearInstanceID() {self._instanceID = nil}
+  package mutating func clearInstanceID() {self._instanceID = nil}
 
-  public var timeStamp: Int64 = 0
+  package var timeStamp: Int64 = 0
 
-  public var state: EventStore_Client_Gossip_MemberInfo.VNodeState = .initializing
+  package var state: EventStore_Client_Gossip_MemberInfo.VNodeState = .initializing
 
-  public var isAlive: Bool = false
+  package var isAlive: Bool = false
 
-  public var httpEndPoint: EventStore_Client_Gossip_EndPoint {
+  package var httpEndPoint: EventStore_Client_Gossip_EndPoint {
     get {return _httpEndPoint ?? EventStore_Client_Gossip_EndPoint()}
     set {_httpEndPoint = newValue}
   }
   /// Returns true if `httpEndPoint` has been explicitly set.
-  public var hasHTTPEndPoint: Bool {return self._httpEndPoint != nil}
+  package var hasHTTPEndPoint: Bool {return self._httpEndPoint != nil}
   /// Clears the value of `httpEndPoint`. Subsequent reads from it will return its default value.
-  public mutating func clearHTTPEndPoint() {self._httpEndPoint = nil}
+  package mutating func clearHTTPEndPoint() {self._httpEndPoint = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum VNodeState: SwiftProtobuf.Enum, Swift.CaseIterable {
-    public typealias RawValue = Int
+  package enum VNodeState: SwiftProtobuf.Enum, Swift.CaseIterable {
+    package typealias RawValue = Int
     case initializing // = 0
     case discoverLeader // = 1
     case unknown // = 2
@@ -97,11 +97,11 @@ public struct EventStore_Client_Gossip_MemberInfo: Sendable {
     case resigningLeader // = 15
     case UNRECOGNIZED(Int)
 
-    public init() {
+    package init() {
       self = .initializing
     }
 
-    public init?(rawValue: Int) {
+    package init?(rawValue: Int) {
       switch rawValue {
       case 0: self = .initializing
       case 1: self = .discoverLeader
@@ -123,7 +123,7 @@ public struct EventStore_Client_Gossip_MemberInfo: Sendable {
       }
     }
 
-    public var rawValue: Int {
+    package var rawValue: Int {
       switch self {
       case .initializing: return 0
       case .discoverLeader: return 1
@@ -146,7 +146,7 @@ public struct EventStore_Client_Gossip_MemberInfo: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [EventStore_Client_Gossip_MemberInfo.VNodeState] = [
+    package static let allCases: [EventStore_Client_Gossip_MemberInfo.VNodeState] = [
       .initializing,
       .discoverLeader,
       .unknown,
@@ -167,7 +167,7 @@ public struct EventStore_Client_Gossip_MemberInfo: Sendable {
 
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _instanceID: EventStore_Client_UUID? = nil
   fileprivate var _httpEndPoint: EventStore_Client_Gossip_EndPoint? = nil
@@ -178,12 +178,12 @@ public struct EventStore_Client_Gossip_MemberInfo: Sendable {
 fileprivate let _protobuf_package = "event_store.client.gossip"
 
 extension EventStore_Client_Gossip_ClusterInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ClusterInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ClusterInfo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "members"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -195,14 +195,14 @@ extension EventStore_Client_Gossip_ClusterInfo: SwiftProtobuf.Message, SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.members.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.members, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Gossip_ClusterInfo, rhs: EventStore_Client_Gossip_ClusterInfo) -> Bool {
+  package static func ==(lhs: EventStore_Client_Gossip_ClusterInfo, rhs: EventStore_Client_Gossip_ClusterInfo) -> Bool {
     if lhs.members != rhs.members {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -210,13 +210,13 @@ extension EventStore_Client_Gossip_ClusterInfo: SwiftProtobuf.Message, SwiftProt
 }
 
 extension EventStore_Client_Gossip_EndPoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EndPoint"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".EndPoint"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "address"),
     2: .same(proto: "port"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -229,7 +229,7 @@ extension EventStore_Client_Gossip_EndPoint: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.address.isEmpty {
       try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
     }
@@ -239,7 +239,7 @@ extension EventStore_Client_Gossip_EndPoint: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Gossip_EndPoint, rhs: EventStore_Client_Gossip_EndPoint) -> Bool {
+  package static func ==(lhs: EventStore_Client_Gossip_EndPoint, rhs: EventStore_Client_Gossip_EndPoint) -> Bool {
     if lhs.address != rhs.address {return false}
     if lhs.port != rhs.port {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -248,8 +248,8 @@ extension EventStore_Client_Gossip_EndPoint: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Client_Gossip_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".MemberInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".MemberInfo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "instance_id"),
     2: .standard(proto: "time_stamp"),
     3: .same(proto: "state"),
@@ -257,7 +257,7 @@ extension EventStore_Client_Gossip_MemberInfo: SwiftProtobuf.Message, SwiftProto
     5: .standard(proto: "http_end_point"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -273,7 +273,7 @@ extension EventStore_Client_Gossip_MemberInfo: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -296,7 +296,7 @@ extension EventStore_Client_Gossip_MemberInfo: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Gossip_MemberInfo, rhs: EventStore_Client_Gossip_MemberInfo) -> Bool {
+  package static func ==(lhs: EventStore_Client_Gossip_MemberInfo, rhs: EventStore_Client_Gossip_MemberInfo) -> Bool {
     if lhs._instanceID != rhs._instanceID {return false}
     if lhs.timeStamp != rhs.timeStamp {return false}
     if lhs.state != rhs.state {return false}
@@ -308,7 +308,7 @@ extension EventStore_Client_Gossip_MemberInfo: SwiftProtobuf.Message, SwiftProto
 }
 
 extension EventStore_Client_Gossip_MemberInfo.VNodeState: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "Initializing"),
     1: .same(proto: "DiscoverLeader"),
     2: .same(proto: "Unknown"),

@@ -20,34 +20,34 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_ServerFeatures_SupportedMethods: Sendable {
+package struct EventStore_Client_ServerFeatures_SupportedMethods: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var methods: [EventStore_Client_ServerFeatures_SupportedMethod] = []
+  package var methods: [EventStore_Client_ServerFeatures_SupportedMethod] = []
 
-  public var eventStoreServerVersion: String = String()
+  package var eventStoreServerVersion: String = String()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_ServerFeatures_SupportedMethod: Sendable {
+package struct EventStore_Client_ServerFeatures_SupportedMethod: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var methodName: String = String()
+  package var methodName: String = String()
 
-  public var serviceName: String = String()
+  package var serviceName: String = String()
 
-  public var features: [String] = []
+  package var features: [String] = []
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -55,13 +55,13 @@ public struct EventStore_Client_ServerFeatures_SupportedMethod: Sendable {
 fileprivate let _protobuf_package = "event_store.client.server_features"
 
 extension EventStore_Client_ServerFeatures_SupportedMethods: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SupportedMethods"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".SupportedMethods"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "methods"),
     2: .standard(proto: "event_store_server_version"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -74,7 +74,7 @@ extension EventStore_Client_ServerFeatures_SupportedMethods: SwiftProtobuf.Messa
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.methods.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.methods, fieldNumber: 1)
     }
@@ -84,7 +84,7 @@ extension EventStore_Client_ServerFeatures_SupportedMethods: SwiftProtobuf.Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_ServerFeatures_SupportedMethods, rhs: EventStore_Client_ServerFeatures_SupportedMethods) -> Bool {
+  package static func ==(lhs: EventStore_Client_ServerFeatures_SupportedMethods, rhs: EventStore_Client_ServerFeatures_SupportedMethods) -> Bool {
     if lhs.methods != rhs.methods {return false}
     if lhs.eventStoreServerVersion != rhs.eventStoreServerVersion {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -93,14 +93,14 @@ extension EventStore_Client_ServerFeatures_SupportedMethods: SwiftProtobuf.Messa
 }
 
 extension EventStore_Client_ServerFeatures_SupportedMethod: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SupportedMethod"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".SupportedMethod"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "method_name"),
     2: .standard(proto: "service_name"),
     3: .same(proto: "features"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -114,7 +114,7 @@ extension EventStore_Client_ServerFeatures_SupportedMethod: SwiftProtobuf.Messag
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.methodName.isEmpty {
       try visitor.visitSingularStringField(value: self.methodName, fieldNumber: 1)
     }
@@ -127,7 +127,7 @@ extension EventStore_Client_ServerFeatures_SupportedMethod: SwiftProtobuf.Messag
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_ServerFeatures_SupportedMethod, rhs: EventStore_Client_ServerFeatures_SupportedMethod) -> Bool {
+  package static func ==(lhs: EventStore_Client_ServerFeatures_SupportedMethod, rhs: EventStore_Client_ServerFeatures_SupportedMethod) -> Bool {
     if lhs.methodName != rhs.methodName {return false}
     if lhs.serviceName != rhs.serviceName {return false}
     if lhs.features != rhs.features {return false}

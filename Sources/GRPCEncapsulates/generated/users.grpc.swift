@@ -13,109 +13,109 @@ import GRPCProtobuf
 // MARK: - event_store.client.users.Users
 
 /// Namespace containing generated types for the "event_store.client.users.Users" service.
-public enum EventStore_Client_Users_Users {
+package enum EventStore_Client_Users_Users {
     /// Service descriptor for the "event_store.client.users.Users" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Create" metadata.
-        public enum Create {
+        package enum Create {
             /// Request type for "Create".
-            public typealias Input = EventStore_Client_Users_CreateReq
+            package typealias Input = EventStore_Client_Users_CreateReq
             /// Response type for "Create".
-            public typealias Output = EventStore_Client_Users_CreateResp
+            package typealias Output = EventStore_Client_Users_CreateResp
             /// Descriptor for "Create".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "Create"
             )
         }
         /// Namespace for "Update" metadata.
-        public enum Update {
+        package enum Update {
             /// Request type for "Update".
-            public typealias Input = EventStore_Client_Users_UpdateReq
+            package typealias Input = EventStore_Client_Users_UpdateReq
             /// Response type for "Update".
-            public typealias Output = EventStore_Client_Users_UpdateResp
+            package typealias Output = EventStore_Client_Users_UpdateResp
             /// Descriptor for "Update".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "Update"
             )
         }
         /// Namespace for "Delete" metadata.
-        public enum Delete {
+        package enum Delete {
             /// Request type for "Delete".
-            public typealias Input = EventStore_Client_Users_DeleteReq
+            package typealias Input = EventStore_Client_Users_DeleteReq
             /// Response type for "Delete".
-            public typealias Output = EventStore_Client_Users_DeleteResp
+            package typealias Output = EventStore_Client_Users_DeleteResp
             /// Descriptor for "Delete".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "Delete"
             )
         }
         /// Namespace for "Disable" metadata.
-        public enum Disable {
+        package enum Disable {
             /// Request type for "Disable".
-            public typealias Input = EventStore_Client_Users_DisableReq
+            package typealias Input = EventStore_Client_Users_DisableReq
             /// Response type for "Disable".
-            public typealias Output = EventStore_Client_Users_DisableResp
+            package typealias Output = EventStore_Client_Users_DisableResp
             /// Descriptor for "Disable".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "Disable"
             )
         }
         /// Namespace for "Enable" metadata.
-        public enum Enable {
+        package enum Enable {
             /// Request type for "Enable".
-            public typealias Input = EventStore_Client_Users_EnableReq
+            package typealias Input = EventStore_Client_Users_EnableReq
             /// Response type for "Enable".
-            public typealias Output = EventStore_Client_Users_EnableResp
+            package typealias Output = EventStore_Client_Users_EnableResp
             /// Descriptor for "Enable".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "Enable"
             )
         }
         /// Namespace for "Details" metadata.
-        public enum Details {
+        package enum Details {
             /// Request type for "Details".
-            public typealias Input = EventStore_Client_Users_DetailsReq
+            package typealias Input = EventStore_Client_Users_DetailsReq
             /// Response type for "Details".
-            public typealias Output = EventStore_Client_Users_DetailsResp
+            package typealias Output = EventStore_Client_Users_DetailsResp
             /// Descriptor for "Details".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "Details"
             )
         }
         /// Namespace for "ChangePassword" metadata.
-        public enum ChangePassword {
+        package enum ChangePassword {
             /// Request type for "ChangePassword".
-            public typealias Input = EventStore_Client_Users_ChangePasswordReq
+            package typealias Input = EventStore_Client_Users_ChangePasswordReq
             /// Response type for "ChangePassword".
-            public typealias Output = EventStore_Client_Users_ChangePasswordResp
+            package typealias Output = EventStore_Client_Users_ChangePasswordResp
             /// Descriptor for "ChangePassword".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "ChangePassword"
             )
         }
         /// Namespace for "ResetPassword" metadata.
-        public enum ResetPassword {
+        package enum ResetPassword {
             /// Request type for "ResetPassword".
-            public typealias Input = EventStore_Client_Users_ResetPasswordReq
+            package typealias Input = EventStore_Client_Users_ResetPasswordReq
             /// Response type for "ResetPassword".
-            public typealias Output = EventStore_Client_Users_ResetPasswordResp
+            package typealias Output = EventStore_Client_Users_ResetPasswordResp
             /// Descriptor for "ResetPassword".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users"),
                 method: "ResetPassword"
             )
         }
         /// Descriptors for all methods in the "event_store.client.users.Users" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Create.descriptor,
             Update.descriptor,
             Delete.descriptor,
@@ -130,7 +130,7 @@ public enum EventStore_Client_Users_Users {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.users.Users" service.
-    public static let event_store_client_users_Users = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users")
+    package static let eventStore_client_users_Users = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.users.Users")
 }
 
 // MARK: event_store.client.users.Users (server)
@@ -146,7 +146,7 @@ extension EventStore_Client_Users_Users {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -267,7 +267,7 @@ extension EventStore_Client_Users_Users {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Users_Users.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Users_Users.StreamingServiceProtocol {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -386,7 +386,7 @@ extension EventStore_Client_Users_Users {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Users_Users.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Users_Users.ServiceProtocol {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -504,7 +504,7 @@ extension EventStore_Client_Users_Users {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Users_Users.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Users_Users.Method.Create.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_CreateReq>(),
@@ -598,7 +598,7 @@ extension EventStore_Client_Users_Users.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_Users_Users.ServiceProtocol {
-    public func create(
+    package func create(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_CreateResp> {
@@ -609,7 +609,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func update(
+    package func update(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_UpdateResp> {
@@ -620,7 +620,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DeleteResp> {
@@ -631,7 +631,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func disable(
+    package func disable(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DisableResp> {
@@ -642,7 +642,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func enable(
+    package func enable(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_EnableResp> {
@@ -653,7 +653,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func details(
+    package func details(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_DetailsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DetailsResp> {
@@ -664,7 +664,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return response
     }
 
-    public func changePassword(
+    package func changePassword(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_ChangePasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_ChangePasswordResp> {
@@ -675,7 +675,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func resetPassword(
+    package func resetPassword(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_ResetPasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_ResetPasswordResp> {
@@ -689,7 +689,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Users_Users.SimpleServiceProtocol {
-    public func create(
+    package func create(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_CreateResp> {
@@ -702,7 +702,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func update(
+    package func update(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_UpdateResp> {
@@ -715,7 +715,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_DeleteResp> {
@@ -728,7 +728,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func disable(
+    package func disable(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_DisableResp> {
@@ -741,7 +741,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func enable(
+    package func enable(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_EnableResp> {
@@ -754,7 +754,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func details(
+    package func details(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_DetailsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DetailsResp> {
@@ -771,7 +771,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func changePassword(
+    package func changePassword(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_ChangePasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_ChangePasswordResp> {
@@ -784,7 +784,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         )
     }
 
-    public func resetPassword(
+    package func resetPassword(
         request: GRPCCore.ServerRequest<EventStore_Client_Users_ResetPasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_ResetPasswordResp> {
@@ -805,7 +805,7 @@ extension EventStore_Client_Users_Users {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Create" method.
         ///
         /// - Parameters:
@@ -964,14 +964,14 @@ extension EventStore_Client_Users_Users {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -986,7 +986,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func create<Result>(
+        package func create<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_CreateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_CreateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_CreateResp>,
@@ -1016,7 +1016,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func update<Result>(
+        package func update<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_UpdateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_UpdateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_UpdateResp>,
@@ -1046,7 +1046,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func delete<Result>(
+        package func delete<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_DeleteReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_DeleteReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_DeleteResp>,
@@ -1076,7 +1076,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func disable<Result>(
+        package func disable<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_DisableReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_DisableReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_DisableResp>,
@@ -1106,7 +1106,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func enable<Result>(
+        package func enable<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_EnableReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_EnableReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_EnableResp>,
@@ -1136,7 +1136,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func details<Result>(
+        package func details<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_DetailsReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_DetailsReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_DetailsResp>,
@@ -1164,7 +1164,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func changePassword<Result>(
+        package func changePassword<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_ChangePasswordReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_ChangePasswordReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_ChangePasswordResp>,
@@ -1194,7 +1194,7 @@ extension EventStore_Client_Users_Users {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func resetPassword<Result>(
+        package func resetPassword<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Users_ResetPasswordReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Users_ResetPasswordReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Users_ResetPasswordResp>,
@@ -1226,7 +1226,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func create<Result>(
+    package func create<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_CreateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_CreateResp>) async throws -> Result = { response in
@@ -1251,7 +1251,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_UpdateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_UpdateResp>) async throws -> Result = { response in
@@ -1276,7 +1276,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_DeleteReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_DeleteResp>) async throws -> Result = { response in
@@ -1301,7 +1301,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func disable<Result>(
+    package func disable<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_DisableReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_DisableResp>) async throws -> Result = { response in
@@ -1326,7 +1326,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func enable<Result>(
+    package func enable<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_EnableReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_EnableResp>) async throws -> Result = { response in
@@ -1351,7 +1351,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func details<Result>(
+    package func details<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_DetailsReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Users_DetailsResp>) async throws -> Result
@@ -1374,7 +1374,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func changePassword<Result>(
+    package func changePassword<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_ChangePasswordReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_ChangePasswordResp>) async throws -> Result = { response in
@@ -1399,7 +1399,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func resetPassword<Result>(
+    package func resetPassword<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Users_ResetPasswordReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Users_ResetPasswordResp>) async throws -> Result = { response in
@@ -1428,7 +1428,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func create<Result>(
+    package func create<Result>(
         _ message: EventStore_Client_Users_CreateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1457,7 +1457,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         _ message: EventStore_Client_Users_UpdateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1486,7 +1486,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         _ message: EventStore_Client_Users_DeleteReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1515,7 +1515,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func disable<Result>(
+    package func disable<Result>(
         _ message: EventStore_Client_Users_DisableReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1544,7 +1544,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func enable<Result>(
+    package func enable<Result>(
         _ message: EventStore_Client_Users_EnableReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1573,7 +1573,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func details<Result>(
+    package func details<Result>(
         _ message: EventStore_Client_Users_DetailsReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1600,7 +1600,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func changePassword<Result>(
+    package func changePassword<Result>(
         _ message: EventStore_Client_Users_ChangePasswordReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1629,7 +1629,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func resetPassword<Result>(
+    package func resetPassword<Result>(
         _ message: EventStore_Client_Users_ResetPasswordReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,

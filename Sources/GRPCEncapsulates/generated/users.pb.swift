@@ -20,418 +20,418 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_Users_CreateReq: Sendable {
+package struct EventStore_Client_Users_CreateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_CreateReq.Options {
+  package var options: EventStore_Client_Users_CreateReq.Options {
     get {return _options ?? EventStore_Client_Users_CreateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var password: String = String()
+    package var password: String = String()
 
-    public var fullName: String = String()
+    package var fullName: String = String()
 
-    public var groups: [String] = []
+    package var groups: [String] = []
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_CreateReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_CreateResp: Sendable {
+package struct EventStore_Client_Users_CreateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Users_UpdateReq: Sendable {
+package struct EventStore_Client_Users_UpdateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_UpdateReq.Options {
+  package var options: EventStore_Client_Users_UpdateReq.Options {
     get {return _options ?? EventStore_Client_Users_UpdateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var password: String = String()
+    package var password: String = String()
 
-    public var fullName: String = String()
+    package var fullName: String = String()
 
-    public var groups: [String] = []
+    package var groups: [String] = []
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_UpdateReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_UpdateResp: Sendable {
+package struct EventStore_Client_Users_UpdateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Users_DeleteReq: Sendable {
+package struct EventStore_Client_Users_DeleteReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_DeleteReq.Options {
+  package var options: EventStore_Client_Users_DeleteReq.Options {
     get {return _options ?? EventStore_Client_Users_DeleteReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_DeleteReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_DeleteResp: Sendable {
+package struct EventStore_Client_Users_DeleteResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Users_EnableReq: Sendable {
+package struct EventStore_Client_Users_EnableReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_EnableReq.Options {
+  package var options: EventStore_Client_Users_EnableReq.Options {
     get {return _options ?? EventStore_Client_Users_EnableReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_EnableReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_EnableResp: Sendable {
+package struct EventStore_Client_Users_EnableResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Users_DisableReq: Sendable {
+package struct EventStore_Client_Users_DisableReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_DisableReq.Options {
+  package var options: EventStore_Client_Users_DisableReq.Options {
     get {return _options ?? EventStore_Client_Users_DisableReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_DisableReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_DisableResp: Sendable {
+package struct EventStore_Client_Users_DisableResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Users_DetailsReq: Sendable {
+package struct EventStore_Client_Users_DetailsReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_DetailsReq.Options {
+  package var options: EventStore_Client_Users_DetailsReq.Options {
     get {return _options ?? EventStore_Client_Users_DetailsReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_DetailsReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_DetailsResp: Sendable {
+package struct EventStore_Client_Users_DetailsResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var userDetails: EventStore_Client_Users_DetailsResp.UserDetails {
+  package var userDetails: EventStore_Client_Users_DetailsResp.UserDetails {
     get {return _userDetails ?? EventStore_Client_Users_DetailsResp.UserDetails()}
     set {_userDetails = newValue}
   }
   /// Returns true if `userDetails` has been explicitly set.
-  public var hasUserDetails: Bool {return self._userDetails != nil}
+  package var hasUserDetails: Bool {return self._userDetails != nil}
   /// Clears the value of `userDetails`. Subsequent reads from it will return its default value.
-  public mutating func clearUserDetails() {self._userDetails = nil}
+  package mutating func clearUserDetails() {self._userDetails = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct UserDetails: Sendable {
+  package struct UserDetails: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var fullName: String = String()
+    package var fullName: String = String()
 
-    public var groups: [String] = []
+    package var groups: [String] = []
 
-    public var lastUpdated: EventStore_Client_Users_DetailsResp.UserDetails.DateTime {
+    package var lastUpdated: EventStore_Client_Users_DetailsResp.UserDetails.DateTime {
       get {return _lastUpdated ?? EventStore_Client_Users_DetailsResp.UserDetails.DateTime()}
       set {_lastUpdated = newValue}
     }
     /// Returns true if `lastUpdated` has been explicitly set.
-    public var hasLastUpdated: Bool {return self._lastUpdated != nil}
+    package var hasLastUpdated: Bool {return self._lastUpdated != nil}
     /// Clears the value of `lastUpdated`. Subsequent reads from it will return its default value.
-    public mutating func clearLastUpdated() {self._lastUpdated = nil}
+    package mutating func clearLastUpdated() {self._lastUpdated = nil}
 
-    public var disabled: Bool = false
+    package var disabled: Bool = false
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public struct DateTime: Sendable {
+    package struct DateTime: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var ticksSinceEpoch: Int64 = 0
+      package var ticksSinceEpoch: Int64 = 0
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _lastUpdated: EventStore_Client_Users_DetailsResp.UserDetails.DateTime? = nil
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _userDetails: EventStore_Client_Users_DetailsResp.UserDetails? = nil
 }
 
-public struct EventStore_Client_Users_ChangePasswordReq: Sendable {
+package struct EventStore_Client_Users_ChangePasswordReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_ChangePasswordReq.Options {
+  package var options: EventStore_Client_Users_ChangePasswordReq.Options {
     get {return _options ?? EventStore_Client_Users_ChangePasswordReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var currentPassword: String = String()
+    package var currentPassword: String = String()
 
-    public var newPassword: String = String()
+    package var newPassword: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_ChangePasswordReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_ChangePasswordResp: Sendable {
+package struct EventStore_Client_Users_ChangePasswordResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Users_ResetPasswordReq: Sendable {
+package struct EventStore_Client_Users_ResetPasswordReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Users_ResetPasswordReq.Options {
+  package var options: EventStore_Client_Users_ResetPasswordReq.Options {
     get {return _options ?? EventStore_Client_Users_ResetPasswordReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var loginName: String = String()
+    package var loginName: String = String()
 
-    public var newPassword: String = String()
+    package var newPassword: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Users_ResetPasswordReq.Options? = nil
 }
 
-public struct EventStore_Client_Users_ResetPasswordResp: Sendable {
+package struct EventStore_Client_Users_ResetPasswordResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -439,12 +439,12 @@ public struct EventStore_Client_Users_ResetPasswordResp: Sendable {
 fileprivate let _protobuf_package = "event_store.client.users"
 
 extension EventStore_Client_Users_CreateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".CreateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -456,7 +456,7 @@ extension EventStore_Client_Users_CreateReq: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -467,7 +467,7 @@ extension EventStore_Client_Users_CreateReq: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_CreateReq, rhs: EventStore_Client_Users_CreateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_CreateReq, rhs: EventStore_Client_Users_CreateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -475,15 +475,15 @@ extension EventStore_Client_Users_CreateReq: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Client_Users_CreateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_CreateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_CreateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
     2: .same(proto: "password"),
     3: .standard(proto: "full_name"),
     4: .same(proto: "groups"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -498,7 +498,7 @@ extension EventStore_Client_Users_CreateReq.Options: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
@@ -514,7 +514,7 @@ extension EventStore_Client_Users_CreateReq.Options: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_CreateReq.Options, rhs: EventStore_Client_Users_CreateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_CreateReq.Options, rhs: EventStore_Client_Users_CreateReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.password != rhs.password {return false}
     if lhs.fullName != rhs.fullName {return false}
@@ -525,31 +525,31 @@ extension EventStore_Client_Users_CreateReq.Options: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Users_CreateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".CreateResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_CreateResp, rhs: EventStore_Client_Users_CreateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_CreateResp, rhs: EventStore_Client_Users_CreateResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Users_UpdateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".UpdateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -561,7 +561,7 @@ extension EventStore_Client_Users_UpdateReq: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -572,7 +572,7 @@ extension EventStore_Client_Users_UpdateReq: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_UpdateReq, rhs: EventStore_Client_Users_UpdateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_UpdateReq, rhs: EventStore_Client_Users_UpdateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -580,15 +580,15 @@ extension EventStore_Client_Users_UpdateReq: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Client_Users_UpdateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_UpdateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_UpdateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
     2: .same(proto: "password"),
     3: .standard(proto: "full_name"),
     4: .same(proto: "groups"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -603,7 +603,7 @@ extension EventStore_Client_Users_UpdateReq.Options: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
@@ -619,7 +619,7 @@ extension EventStore_Client_Users_UpdateReq.Options: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_UpdateReq.Options, rhs: EventStore_Client_Users_UpdateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_UpdateReq.Options, rhs: EventStore_Client_Users_UpdateReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.password != rhs.password {return false}
     if lhs.fullName != rhs.fullName {return false}
@@ -630,31 +630,31 @@ extension EventStore_Client_Users_UpdateReq.Options: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Users_UpdateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".UpdateResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_UpdateResp, rhs: EventStore_Client_Users_UpdateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_UpdateResp, rhs: EventStore_Client_Users_UpdateResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Users_DeleteReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DeleteReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -666,7 +666,7 @@ extension EventStore_Client_Users_DeleteReq: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -677,7 +677,7 @@ extension EventStore_Client_Users_DeleteReq: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DeleteReq, rhs: EventStore_Client_Users_DeleteReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DeleteReq, rhs: EventStore_Client_Users_DeleteReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -685,12 +685,12 @@ extension EventStore_Client_Users_DeleteReq: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Client_Users_DeleteReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_DeleteReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_DeleteReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -702,14 +702,14 @@ extension EventStore_Client_Users_DeleteReq.Options: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DeleteReq.Options, rhs: EventStore_Client_Users_DeleteReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DeleteReq.Options, rhs: EventStore_Client_Users_DeleteReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -717,31 +717,31 @@ extension EventStore_Client_Users_DeleteReq.Options: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Users_DeleteResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".DeleteResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DeleteResp, rhs: EventStore_Client_Users_DeleteResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DeleteResp, rhs: EventStore_Client_Users_DeleteResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Users_EnableReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EnableReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".EnableReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -753,7 +753,7 @@ extension EventStore_Client_Users_EnableReq: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -764,7 +764,7 @@ extension EventStore_Client_Users_EnableReq: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_EnableReq, rhs: EventStore_Client_Users_EnableReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_EnableReq, rhs: EventStore_Client_Users_EnableReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -772,12 +772,12 @@ extension EventStore_Client_Users_EnableReq: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Client_Users_EnableReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_EnableReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_EnableReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -789,14 +789,14 @@ extension EventStore_Client_Users_EnableReq.Options: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_EnableReq.Options, rhs: EventStore_Client_Users_EnableReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_EnableReq.Options, rhs: EventStore_Client_Users_EnableReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -804,31 +804,31 @@ extension EventStore_Client_Users_EnableReq.Options: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Users_EnableResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EnableResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".EnableResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_EnableResp, rhs: EventStore_Client_Users_EnableResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_EnableResp, rhs: EventStore_Client_Users_EnableResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Users_DisableReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DisableReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DisableReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -840,7 +840,7 @@ extension EventStore_Client_Users_DisableReq: SwiftProtobuf.Message, SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -851,7 +851,7 @@ extension EventStore_Client_Users_DisableReq: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DisableReq, rhs: EventStore_Client_Users_DisableReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DisableReq, rhs: EventStore_Client_Users_DisableReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -859,12 +859,12 @@ extension EventStore_Client_Users_DisableReq: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension EventStore_Client_Users_DisableReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_DisableReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_DisableReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -876,14 +876,14 @@ extension EventStore_Client_Users_DisableReq.Options: SwiftProtobuf.Message, Swi
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DisableReq.Options, rhs: EventStore_Client_Users_DisableReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DisableReq.Options, rhs: EventStore_Client_Users_DisableReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -891,31 +891,31 @@ extension EventStore_Client_Users_DisableReq.Options: SwiftProtobuf.Message, Swi
 }
 
 extension EventStore_Client_Users_DisableResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DisableResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".DisableResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DisableResp, rhs: EventStore_Client_Users_DisableResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DisableResp, rhs: EventStore_Client_Users_DisableResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Users_DetailsReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DetailsReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DetailsReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -927,7 +927,7 @@ extension EventStore_Client_Users_DetailsReq: SwiftProtobuf.Message, SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -938,7 +938,7 @@ extension EventStore_Client_Users_DetailsReq: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DetailsReq, rhs: EventStore_Client_Users_DetailsReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DetailsReq, rhs: EventStore_Client_Users_DetailsReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -946,12 +946,12 @@ extension EventStore_Client_Users_DetailsReq: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension EventStore_Client_Users_DetailsReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_DetailsReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_DetailsReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -963,14 +963,14 @@ extension EventStore_Client_Users_DetailsReq.Options: SwiftProtobuf.Message, Swi
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DetailsReq.Options, rhs: EventStore_Client_Users_DetailsReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DetailsReq.Options, rhs: EventStore_Client_Users_DetailsReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -978,12 +978,12 @@ extension EventStore_Client_Users_DetailsReq.Options: SwiftProtobuf.Message, Swi
 }
 
 extension EventStore_Client_Users_DetailsResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DetailsResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DetailsResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "user_details"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -995,7 +995,7 @@ extension EventStore_Client_Users_DetailsResp: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1006,7 +1006,7 @@ extension EventStore_Client_Users_DetailsResp: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DetailsResp, rhs: EventStore_Client_Users_DetailsResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DetailsResp, rhs: EventStore_Client_Users_DetailsResp) -> Bool {
     if lhs._userDetails != rhs._userDetails {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1014,8 +1014,8 @@ extension EventStore_Client_Users_DetailsResp: SwiftProtobuf.Message, SwiftProto
 }
 
 extension EventStore_Client_Users_DetailsResp.UserDetails: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_DetailsResp.protoMessageName + ".UserDetails"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_DetailsResp.protoMessageName + ".UserDetails"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
     2: .standard(proto: "full_name"),
     3: .same(proto: "groups"),
@@ -1023,7 +1023,7 @@ extension EventStore_Client_Users_DetailsResp.UserDetails: SwiftProtobuf.Message
     5: .same(proto: "disabled"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1039,7 +1039,7 @@ extension EventStore_Client_Users_DetailsResp.UserDetails: SwiftProtobuf.Message
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1062,7 +1062,7 @@ extension EventStore_Client_Users_DetailsResp.UserDetails: SwiftProtobuf.Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DetailsResp.UserDetails, rhs: EventStore_Client_Users_DetailsResp.UserDetails) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DetailsResp.UserDetails, rhs: EventStore_Client_Users_DetailsResp.UserDetails) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.fullName != rhs.fullName {return false}
     if lhs.groups != rhs.groups {return false}
@@ -1074,12 +1074,12 @@ extension EventStore_Client_Users_DetailsResp.UserDetails: SwiftProtobuf.Message
 }
 
 extension EventStore_Client_Users_DetailsResp.UserDetails.DateTime: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_DetailsResp.UserDetails.protoMessageName + ".DateTime"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_DetailsResp.UserDetails.protoMessageName + ".DateTime"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "ticks_since_epoch"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1091,14 +1091,14 @@ extension EventStore_Client_Users_DetailsResp.UserDetails.DateTime: SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.ticksSinceEpoch != 0 {
       try visitor.visitSingularInt64Field(value: self.ticksSinceEpoch, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_DetailsResp.UserDetails.DateTime, rhs: EventStore_Client_Users_DetailsResp.UserDetails.DateTime) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_DetailsResp.UserDetails.DateTime, rhs: EventStore_Client_Users_DetailsResp.UserDetails.DateTime) -> Bool {
     if lhs.ticksSinceEpoch != rhs.ticksSinceEpoch {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1106,12 +1106,12 @@ extension EventStore_Client_Users_DetailsResp.UserDetails.DateTime: SwiftProtobu
 }
 
 extension EventStore_Client_Users_ChangePasswordReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ChangePasswordReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ChangePasswordReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1123,7 +1123,7 @@ extension EventStore_Client_Users_ChangePasswordReq: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1134,7 +1134,7 @@ extension EventStore_Client_Users_ChangePasswordReq: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_ChangePasswordReq, rhs: EventStore_Client_Users_ChangePasswordReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_ChangePasswordReq, rhs: EventStore_Client_Users_ChangePasswordReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1142,14 +1142,14 @@ extension EventStore_Client_Users_ChangePasswordReq: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Users_ChangePasswordReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_ChangePasswordReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_ChangePasswordReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
     2: .standard(proto: "current_password"),
     3: .standard(proto: "new_password"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1163,7 +1163,7 @@ extension EventStore_Client_Users_ChangePasswordReq.Options: SwiftProtobuf.Messa
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
@@ -1176,7 +1176,7 @@ extension EventStore_Client_Users_ChangePasswordReq.Options: SwiftProtobuf.Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_ChangePasswordReq.Options, rhs: EventStore_Client_Users_ChangePasswordReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_ChangePasswordReq.Options, rhs: EventStore_Client_Users_ChangePasswordReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.currentPassword != rhs.currentPassword {return false}
     if lhs.newPassword != rhs.newPassword {return false}
@@ -1186,31 +1186,31 @@ extension EventStore_Client_Users_ChangePasswordReq.Options: SwiftProtobuf.Messa
 }
 
 extension EventStore_Client_Users_ChangePasswordResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ChangePasswordResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".ChangePasswordResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_ChangePasswordResp, rhs: EventStore_Client_Users_ChangePasswordResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_ChangePasswordResp, rhs: EventStore_Client_Users_ChangePasswordResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Users_ResetPasswordReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ResetPasswordReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ResetPasswordReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1222,7 +1222,7 @@ extension EventStore_Client_Users_ResetPasswordReq: SwiftProtobuf.Message, Swift
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1233,7 +1233,7 @@ extension EventStore_Client_Users_ResetPasswordReq: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_ResetPasswordReq, rhs: EventStore_Client_Users_ResetPasswordReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_ResetPasswordReq, rhs: EventStore_Client_Users_ResetPasswordReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1241,13 +1241,13 @@ extension EventStore_Client_Users_ResetPasswordReq: SwiftProtobuf.Message, Swift
 }
 
 extension EventStore_Client_Users_ResetPasswordReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Users_ResetPasswordReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Users_ResetPasswordReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "login_name"),
     2: .standard(proto: "new_password"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1260,7 +1260,7 @@ extension EventStore_Client_Users_ResetPasswordReq.Options: SwiftProtobuf.Messag
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.loginName.isEmpty {
       try visitor.visitSingularStringField(value: self.loginName, fieldNumber: 1)
     }
@@ -1270,7 +1270,7 @@ extension EventStore_Client_Users_ResetPasswordReq.Options: SwiftProtobuf.Messag
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_ResetPasswordReq.Options, rhs: EventStore_Client_Users_ResetPasswordReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_ResetPasswordReq.Options, rhs: EventStore_Client_Users_ResetPasswordReq.Options) -> Bool {
     if lhs.loginName != rhs.loginName {return false}
     if lhs.newPassword != rhs.newPassword {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1279,19 +1279,19 @@ extension EventStore_Client_Users_ResetPasswordReq.Options: SwiftProtobuf.Messag
 }
 
 extension EventStore_Client_Users_ResetPasswordResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ResetPasswordResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".ResetPasswordResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Users_ResetPasswordResp, rhs: EventStore_Client_Users_ResetPasswordResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Users_ResetPasswordResp, rhs: EventStore_Client_Users_ResetPasswordResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

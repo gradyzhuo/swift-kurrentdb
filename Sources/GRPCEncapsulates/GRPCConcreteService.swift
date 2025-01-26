@@ -9,7 +9,7 @@ import Foundation
 import GRPCCore
 import GRPCNIOTransportCore
 
-public protocol GRPCConcreteService: Sendable {
+package protocol GRPCConcreteService: Sendable {
     associatedtype Transport: ClientTransport
     associatedtype Client: GRPCServiceClient where Client.Transport == Transport
 }

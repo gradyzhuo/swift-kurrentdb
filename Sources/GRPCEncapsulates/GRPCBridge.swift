@@ -9,27 +9,27 @@ import Foundation
 import GRPCCore
 import SwiftProtobuf
 
-public protocol GRPCBridge: Sendable {
+package protocol GRPCBridge: Sendable {
     associatedtype UnderlyingMessage: SwiftProtobuf.Message, Sendable
 }
 
-public protocol GRPCRequest: GRPCBridge {}
+package protocol GRPCRequest: GRPCBridge {}
 
-public protocol GRPCResponse<UnderlyingMessage>: GRPCBridge {
+package protocol GRPCResponse<UnderlyingMessage>: GRPCBridge {
     init(from message: UnderlyingMessage) throws
 }
 
 public struct GenericGRPCRequest<M>: GRPCRequest where M: Message, M: Sendable {
-    public typealias UnderlyingMessage = M
+    package typealias UnderlyingMessage = M
 }
 
 public struct DiscardedResponse<M>: GRPCResponse where M: Message, M: Sendable {
-    public typealias UnderlyingMessage = M
+    package typealias UnderlyingMessage = M
 
-    public init(from _: UnderlyingMessage) throws {}
+    package init(from message: UnderlyingMessage) throws {}
 }
 
-public protocol GRPCJSONDecodableResponse: GRPCResponse {
+package protocol GRPCJSONDecodableResponse: GRPCResponse {
     var jsonValue: Google_Protobuf_Value { get }
 }
 

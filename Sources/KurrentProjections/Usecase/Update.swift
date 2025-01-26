@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Update: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Update.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Update.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let name: String
         public let query: String?
@@ -36,7 +36,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.update(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -51,7 +51,7 @@ extension Projections.Update {
     }
     
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var emitOption: EmitOption
 
@@ -59,7 +59,7 @@ extension Projections.Update {
             self.emitOption = emitOption
         }
         
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             .with {
                 switch emitOption {
                 case .noEmit:

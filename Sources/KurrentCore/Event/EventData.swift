@@ -40,19 +40,7 @@ public struct EventData: EventStoreEvent{
     public private(set) var customMetadata: Data?
     
     public private(set) var metadata: [String: String]
-    
-//    public init(id: UUID = .init(), eventType: String, payload: Content, contentType: ContentType, customMetadata: Data? = nil) {
-//        self.id = id
-//        self.eventType = eventType
-//        self.content = content
-//        self.contentType = contentType
-//        metadata = [
-//            "content-type": ContentType.json.rawValue,
-//            "type": eventType,
-//        ]
-//        self.customMetadata = customMetadata
-//    }
-    
+
     public init(id: UUID = .init(), eventType: String, payload: Content, contentType: ContentType, customMetadata: Data? = nil) {
         self.id = id
         self.eventType = eventType

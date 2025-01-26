@@ -12,10 +12,10 @@ import GRPCEncapsulates
 
 extension Users {
     public struct Details: UnaryStream {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Details.Output
-        public typealias Responses = AsyncThrowingStream<UserDetails, any Error>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Details.Output
+        package typealias Responses = AsyncThrowingStream<UserDetails, any Error>
 
         public let loginName: String
 
@@ -29,7 +29,7 @@ extension Users {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             return try await withThrowingDiscardingTaskGroup { group in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
                 try await client.details(request: request, options: callOptions) {
@@ -47,11 +47,11 @@ extension Users {
 
 extension Users.Details {
     public struct Response: GRPCResponse {
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         let userDetails: UserDetails
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             userDetails = try .init(from: message.userDetails)
         }
     }

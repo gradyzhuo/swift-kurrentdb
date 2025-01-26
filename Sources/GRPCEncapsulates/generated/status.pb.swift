@@ -41,33 +41,33 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 ///
 /// You can find out more about this error model and how to work with it in the
 /// [API Design Guide](https://cloud.google.com/apis/design/errors).
-public struct Google_Rpc_Status: Sendable {
+package struct Google_Rpc_Status: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
-  public var code: Google_Rpc_Code = .ok
+  package var code: Google_Rpc_Code = .ok
 
   /// A developer-facing error message, which should be in English. Any
   /// user-facing error message should be localized and sent in the
   /// [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
-  public var message: String = String()
+  package var message: String = String()
 
   /// A list of messages that carry the error details.  There is a common set of
   /// message types for APIs to use.
-  public var details: SwiftProtobuf.Google_Protobuf_Any {
+  package var details: SwiftProtobuf.Google_Protobuf_Any {
     get {return _details ?? SwiftProtobuf.Google_Protobuf_Any()}
     set {_details = newValue}
   }
   /// Returns true if `details` has been explicitly set.
-  public var hasDetails: Bool {return self._details != nil}
+  package var hasDetails: Bool {return self._details != nil}
   /// Clears the value of `details`. Subsequent reads from it will return its default value.
-  public mutating func clearDetails() {self._details = nil}
+  package mutating func clearDetails() {self._details = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _details: SwiftProtobuf.Google_Protobuf_Any? = nil
 }
@@ -77,14 +77,14 @@ public struct Google_Rpc_Status: Sendable {
 fileprivate let _protobuf_package = "google.rpc"
 
 extension Google_Rpc_Status: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".Status"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".Status"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "code"),
     2: .same(proto: "message"),
     3: .same(proto: "details"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -98,7 +98,7 @@ extension Google_Rpc_Status: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -115,7 +115,7 @@ extension Google_Rpc_Status: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Google_Rpc_Status, rhs: Google_Rpc_Status) -> Bool {
+  package static func ==(lhs: Google_Rpc_Status, rhs: Google_Rpc_Status) -> Bool {
     if lhs.code != rhs.code {return false}
     if lhs.message != rhs.message {return false}
     if lhs._details != rhs._details {return false}

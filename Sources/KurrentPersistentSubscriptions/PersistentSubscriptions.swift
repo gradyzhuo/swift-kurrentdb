@@ -17,8 +17,8 @@ import GRPCNIOTransportHTTP2Posix
 
 
 public struct PersistentSubscriptions: GRPCConcreteService {
-    public typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
-    public typealias Client = UnderlyingService.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
+    package typealias Client = UnderlyingService.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions

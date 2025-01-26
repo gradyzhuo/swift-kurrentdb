@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Users {
     public struct Create: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         let loginName: String
         let password: String
@@ -38,7 +38,7 @@ extension Users {
         }
         
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.create(request: request, options: callOptions){
                 try handle(response: $0)
             }

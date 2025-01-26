@@ -21,14 +21,14 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var content: EventStore_Client_PersistentSubscriptions_ReadReq.OneOf_Content? = nil
+  package var content: EventStore_Client_PersistentSubscriptions_ReadReq.OneOf_Content? = nil
 
-  public var options: EventStore_Client_PersistentSubscriptions_ReadReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_ReadReq.Options {
     get {
       if case .options(let v)? = content {return v}
       return EventStore_Client_PersistentSubscriptions_ReadReq.Options()
@@ -36,7 +36,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
     set {content = .options(newValue)}
   }
 
-  public var ack: EventStore_Client_PersistentSubscriptions_ReadReq.Ack {
+  package var ack: EventStore_Client_PersistentSubscriptions_ReadReq.Ack {
     get {
       if case .ack(let v)? = content {return v}
       return EventStore_Client_PersistentSubscriptions_ReadReq.Ack()
@@ -44,7 +44,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
     set {content = .ack(newValue)}
   }
 
-  public var nack: EventStore_Client_PersistentSubscriptions_ReadReq.Nack {
+  package var nack: EventStore_Client_PersistentSubscriptions_ReadReq.Nack {
     get {
       if case .nack(let v)? = content {return v}
       return EventStore_Client_PersistentSubscriptions_ReadReq.Nack()
@@ -52,23 +52,23 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
     set {content = .nack(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Content: Equatable, Sendable {
+  package enum OneOf_Content: Equatable, Sendable {
     case options(EventStore_Client_PersistentSubscriptions_ReadReq.Options)
     case ack(EventStore_Client_PersistentSubscriptions_ReadReq.Ack)
     case nack(EventStore_Client_PersistentSubscriptions_ReadReq.Nack)
 
   }
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: EventStore_Client_PersistentSubscriptions_ReadReq.Options.OneOf_StreamOption? = nil
+    package var streamOption: EventStore_Client_PersistentSubscriptions_ReadReq.Options.OneOf_StreamOption? = nil
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {
         if case .streamIdentifier(let v)? = streamOption {return v}
         return EventStore_Client_StreamIdentifier()
@@ -76,7 +76,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
       set {streamOption = .streamIdentifier(newValue)}
     }
 
-    public var all: EventStore_Client_Empty {
+    package var all: EventStore_Client_Empty {
       get {
         if case .all(let v)? = streamOption {return v}
         return EventStore_Client_Empty()
@@ -84,35 +84,35 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
       set {streamOption = .all(newValue)}
     }
 
-    public var groupName: String = String()
+    package var groupName: String = String()
 
-    public var bufferSize: Int32 = 0
+    package var bufferSize: Int32 = 0
 
-    public var uuidOption: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption {
+    package var uuidOption: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption {
       get {return _uuidOption ?? EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption()}
       set {_uuidOption = newValue}
     }
     /// Returns true if `uuidOption` has been explicitly set.
-    public var hasUuidOption: Bool {return self._uuidOption != nil}
+    package var hasUuidOption: Bool {return self._uuidOption != nil}
     /// Clears the value of `uuidOption`. Subsequent reads from it will return its default value.
-    public mutating func clearUuidOption() {self._uuidOption = nil}
+    package mutating func clearUuidOption() {self._uuidOption = nil}
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case streamIdentifier(EventStore_Client_StreamIdentifier)
       case all(EventStore_Client_Empty)
 
     }
 
-    public struct UUIDOption: Sendable {
+    package struct UUIDOption: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var content: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption.OneOf_Content? = nil
+      package var content: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption.OneOf_Content? = nil
 
-      public var structured: EventStore_Client_Empty {
+      package var structured: EventStore_Client_Empty {
         get {
           if case .structured(let v)? = content {return v}
           return EventStore_Client_Empty()
@@ -120,7 +120,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
         set {content = .structured(newValue)}
       }
 
-      public var string: EventStore_Client_Empty {
+      package var string: EventStore_Client_Empty {
         get {
           if case .string(let v)? = content {return v}
           return EventStore_Client_Empty()
@@ -128,53 +128,53 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
         set {content = .string(newValue)}
       }
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Content: Equatable, Sendable {
+      package enum OneOf_Content: Equatable, Sendable {
         case structured(EventStore_Client_Empty)
         case string(EventStore_Client_Empty)
 
       }
 
-      public init() {}
+      package init() {}
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _uuidOption: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption? = nil
   }
 
-  public struct Ack: @unchecked Sendable {
+  package struct Ack: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var id: Data = Data()
+    package var id: Data = Data()
 
-    public var ids: [EventStore_Client_UUID] = []
+    package var ids: [EventStore_Client_UUID] = []
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Nack: @unchecked Sendable {
+  package struct Nack: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var id: Data = Data()
+    package var id: Data = Data()
 
-    public var ids: [EventStore_Client_UUID] = []
+    package var ids: [EventStore_Client_UUID] = []
 
-    public var action: EventStore_Client_PersistentSubscriptions_ReadReq.Nack.Action = .unknown
+    package var action: EventStore_Client_PersistentSubscriptions_ReadReq.Nack.Action = .unknown
 
-    public var reason: String = String()
+    package var reason: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum Action: SwiftProtobuf.Enum, Swift.CaseIterable {
-      public typealias RawValue = Int
+    package enum Action: SwiftProtobuf.Enum, Swift.CaseIterable {
+      package typealias RawValue = Int
       case unknown // = 0
       case park // = 1
       case retry // = 2
@@ -182,11 +182,11 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
       case stop // = 4
       case UNRECOGNIZED(Int)
 
-      public init() {
+      package init() {
         self = .unknown
       }
 
-      public init?(rawValue: Int) {
+      package init?(rawValue: Int) {
         switch rawValue {
         case 0: self = .unknown
         case 1: self = .park
@@ -197,7 +197,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
         }
       }
 
-      public var rawValue: Int {
+      package var rawValue: Int {
         switch self {
         case .unknown: return 0
         case .park: return 1
@@ -209,7 +209,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
       }
 
       // The compiler won't synthesize support with the UNRECOGNIZED case.
-      public static let allCases: [EventStore_Client_PersistentSubscriptions_ReadReq.Nack.Action] = [
+      package static let allCases: [EventStore_Client_PersistentSubscriptions_ReadReq.Nack.Action] = [
         .unknown,
         .park,
         .retry,
@@ -219,20 +219,20 @@ public struct EventStore_Client_PersistentSubscriptions_ReadReq: Sendable {
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var content: EventStore_Client_PersistentSubscriptions_ReadResp.OneOf_Content? = nil
+  package var content: EventStore_Client_PersistentSubscriptions_ReadResp.OneOf_Content? = nil
 
-  public var event: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent {
+  package var event: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent {
     get {
       if case .event(let v)? = content {return v}
       return EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent()
@@ -240,7 +240,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
     set {content = .event(newValue)}
   }
 
-  public var subscriptionConfirmation: EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation {
+  package var subscriptionConfirmation: EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation {
     get {
       if case .subscriptionConfirmation(let v)? = content {return v}
       return EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation()
@@ -248,43 +248,43 @@ public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
     set {content = .subscriptionConfirmation(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Content: Equatable, Sendable {
+  package enum OneOf_Content: Equatable, Sendable {
     case event(EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent)
     case subscriptionConfirmation(EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation)
 
   }
 
-  public struct ReadEvent: @unchecked Sendable {
+  package struct ReadEvent: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var event: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent {
+    package var event: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent {
       get {return _storage._event ?? EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent()}
       set {_uniqueStorage()._event = newValue}
     }
     /// Returns true if `event` has been explicitly set.
-    public var hasEvent: Bool {return _storage._event != nil}
+    package var hasEvent: Bool {return _storage._event != nil}
     /// Clears the value of `event`. Subsequent reads from it will return its default value.
-    public mutating func clearEvent() {_uniqueStorage()._event = nil}
+    package mutating func clearEvent() {_uniqueStorage()._event = nil}
 
-    public var link: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent {
+    package var link: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent {
       get {return _storage._link ?? EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent()}
       set {_uniqueStorage()._link = newValue}
     }
     /// Returns true if `link` has been explicitly set.
-    public var hasLink: Bool {return _storage._link != nil}
+    package var hasLink: Bool {return _storage._link != nil}
     /// Clears the value of `link`. Subsequent reads from it will return its default value.
-    public mutating func clearLink() {_uniqueStorage()._link = nil}
+    package mutating func clearLink() {_uniqueStorage()._link = nil}
 
-    public var position: OneOf_Position? {
+    package var position: OneOf_Position? {
       get {return _storage._position}
       set {_uniqueStorage()._position = newValue}
     }
 
-    public var commitPosition: UInt64 {
+    package var commitPosition: UInt64 {
       get {
         if case .commitPosition(let v)? = _storage._position {return v}
         return 0
@@ -292,7 +292,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
       set {_uniqueStorage()._position = .commitPosition(newValue)}
     }
 
-    public var noPosition: EventStore_Client_Empty {
+    package var noPosition: EventStore_Client_Empty {
       get {
         if case .noPosition(let v)? = _storage._position {return v}
         return EventStore_Client_Empty()
@@ -300,12 +300,12 @@ public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
       set {_uniqueStorage()._position = .noPosition(newValue)}
     }
 
-    public var count: OneOf_Count? {
+    package var count: OneOf_Count? {
       get {return _storage._count}
       set {_uniqueStorage()._count = newValue}
     }
 
-    public var retryCount: Int32 {
+    package var retryCount: Int32 {
       get {
         if case .retryCount(let v)? = _storage._count {return v}
         return 0
@@ -313,7 +313,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
       set {_uniqueStorage()._count = .retryCount(newValue)}
     }
 
-    public var noRetryCount: EventStore_Client_Empty {
+    package var noRetryCount: EventStore_Client_Empty {
       get {
         if case .noRetryCount(let v)? = _storage._count {return v}
         return EventStore_Client_Empty()
@@ -321,111 +321,111 @@ public struct EventStore_Client_PersistentSubscriptions_ReadResp: Sendable {
       set {_uniqueStorage()._count = .noRetryCount(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Position: Equatable, Sendable {
+    package enum OneOf_Position: Equatable, Sendable {
       case commitPosition(UInt64)
       case noPosition(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_Count: Equatable, Sendable {
+    package enum OneOf_Count: Equatable, Sendable {
       case retryCount(Int32)
       case noRetryCount(EventStore_Client_Empty)
 
     }
 
-    public struct RecordedEvent: @unchecked Sendable {
+    package struct RecordedEvent: @unchecked Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var id: EventStore_Client_UUID {
+      package var id: EventStore_Client_UUID {
         get {return _id ?? EventStore_Client_UUID()}
         set {_id = newValue}
       }
       /// Returns true if `id` has been explicitly set.
-      public var hasID: Bool {return self._id != nil}
+      package var hasID: Bool {return self._id != nil}
       /// Clears the value of `id`. Subsequent reads from it will return its default value.
-      public mutating func clearID() {self._id = nil}
+      package mutating func clearID() {self._id = nil}
 
-      public var streamIdentifier: EventStore_Client_StreamIdentifier {
+      package var streamIdentifier: EventStore_Client_StreamIdentifier {
         get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
         set {_streamIdentifier = newValue}
       }
       /// Returns true if `streamIdentifier` has been explicitly set.
-      public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+      package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
       /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-      public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+      package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-      public var streamRevision: UInt64 = 0
+      package var streamRevision: UInt64 = 0
 
-      public var preparePosition: UInt64 = 0
+      package var preparePosition: UInt64 = 0
 
-      public var commitPosition: UInt64 = 0
+      package var commitPosition: UInt64 = 0
 
-      public var metadata: Dictionary<String,String> = [:]
+      package var metadata: Dictionary<String,String> = [:]
 
-      public var customMetadata: Data = Data()
+      package var customMetadata: Data = Data()
 
-      public var data: Data = Data()
+      package var data: Data = Data()
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
 
       fileprivate var _id: EventStore_Client_UUID? = nil
       fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _storage = _StorageClass.defaultInstance
   }
 
-  public struct SubscriptionConfirmation: Sendable {
+  package struct SubscriptionConfirmation: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var subscriptionID: String = String()
+    package var subscriptionID: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_PersistentSubscriptions_CreateReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_CreateReq.Options {
     get {return _options ?? EventStore_Client_PersistentSubscriptions_CreateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum ConsumerStrategy: SwiftProtobuf.Enum, Swift.CaseIterable {
-    public typealias RawValue = Int
+  package enum ConsumerStrategy: SwiftProtobuf.Enum, Swift.CaseIterable {
+    package typealias RawValue = Int
     case dispatchToSingle // = 0
     case roundRobin // = 1
     case pinned // = 2
     case UNRECOGNIZED(Int)
 
-    public init() {
+    package init() {
       self = .dispatchToSingle
     }
 
-    public init?(rawValue: Int) {
+    package init?(rawValue: Int) {
       switch rawValue {
       case 0: self = .dispatchToSingle
       case 1: self = .roundRobin
@@ -434,7 +434,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       }
     }
 
-    public var rawValue: Int {
+    package var rawValue: Int {
       switch self {
       case .dispatchToSingle: return 0
       case .roundRobin: return 1
@@ -444,7 +444,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [EventStore_Client_PersistentSubscriptions_CreateReq.ConsumerStrategy] = [
+    package static let allCases: [EventStore_Client_PersistentSubscriptions_CreateReq.ConsumerStrategy] = [
       .dispatchToSingle,
       .roundRobin,
       .pinned,
@@ -452,17 +452,17 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
 
   }
 
-  public struct Options: @unchecked Sendable {
+  package struct Options: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: OneOf_StreamOption? {
+    package var streamOption: OneOf_StreamOption? {
       get {return _storage._streamOption}
       set {_uniqueStorage()._streamOption = newValue}
     }
 
-    public var stream: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions {
+    package var stream: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions {
       get {
         if case .stream(let v)? = _storage._streamOption {return v}
         return EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions()
@@ -470,7 +470,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {_uniqueStorage()._streamOption = .stream(newValue)}
     }
 
-    public var all: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions {
+    package var all: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions {
       get {
         if case .all(let v)? = _storage._streamOption {return v}
         return EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions()
@@ -479,59 +479,59 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
     }
 
     /// NOTE: This field was marked as deprecated in the .proto file.
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _storage._streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_uniqueStorage()._streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return _storage._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return _storage._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {_uniqueStorage()._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {_uniqueStorage()._streamIdentifier = nil}
 
-    public var groupName: String {
+    package var groupName: String {
       get {return _storage._groupName}
       set {_uniqueStorage()._groupName = newValue}
     }
 
-    public var settings: EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
+    package var settings: EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
       get {return _storage._settings ?? EventStore_Client_PersistentSubscriptions_CreateReq.Settings()}
       set {_uniqueStorage()._settings = newValue}
     }
     /// Returns true if `settings` has been explicitly set.
-    public var hasSettings: Bool {return _storage._settings != nil}
+    package var hasSettings: Bool {return _storage._settings != nil}
     /// Clears the value of `settings`. Subsequent reads from it will return its default value.
-    public mutating func clearSettings() {_uniqueStorage()._settings = nil}
+    package mutating func clearSettings() {_uniqueStorage()._settings = nil}
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case stream(EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions)
       case all(EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions)
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _storage = _StorageClass.defaultInstance
   }
 
-  public struct StreamOptions: Sendable {
+  package struct StreamOptions: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var revisionOption: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions.OneOf_RevisionOption? = nil
+    package var revisionOption: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions.OneOf_RevisionOption? = nil
 
-    public var revision: UInt64 {
+    package var revision: UInt64 {
       get {
         if case .revision(let v)? = revisionOption {return v}
         return 0
@@ -539,7 +539,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {revisionOption = .revision(newValue)}
     }
 
-    public var start: EventStore_Client_Empty {
+    package var start: EventStore_Client_Empty {
       get {
         if case .start(let v)? = revisionOption {return v}
         return EventStore_Client_Empty()
@@ -547,7 +547,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {revisionOption = .start(newValue)}
     }
 
-    public var end: EventStore_Client_Empty {
+    package var end: EventStore_Client_Empty {
       get {
         if case .end(let v)? = revisionOption {return v}
         return EventStore_Client_Empty()
@@ -555,28 +555,28 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {revisionOption = .end(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_RevisionOption: Equatable, Sendable {
+    package enum OneOf_RevisionOption: Equatable, Sendable {
       case revision(UInt64)
       case start(EventStore_Client_Empty)
       case end(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public struct AllOptions: Sendable {
+  package struct AllOptions: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var allOption: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.OneOf_AllOption? = nil
+    package var allOption: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.OneOf_AllOption? = nil
 
-    public var position: EventStore_Client_PersistentSubscriptions_CreateReq.Position {
+    package var position: EventStore_Client_PersistentSubscriptions_CreateReq.Position {
       get {
         if case .position(let v)? = allOption {return v}
         return EventStore_Client_PersistentSubscriptions_CreateReq.Position()
@@ -584,7 +584,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {allOption = .position(newValue)}
     }
 
-    public var start: EventStore_Client_Empty {
+    package var start: EventStore_Client_Empty {
       get {
         if case .start(let v)? = allOption {return v}
         return EventStore_Client_Empty()
@@ -592,7 +592,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {allOption = .start(newValue)}
     }
 
-    public var end: EventStore_Client_Empty {
+    package var end: EventStore_Client_Empty {
       get {
         if case .end(let v)? = allOption {return v}
         return EventStore_Client_Empty()
@@ -600,9 +600,9 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {allOption = .end(newValue)}
     }
 
-    public var filterOption: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.OneOf_FilterOption? = nil
+    package var filterOption: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.OneOf_FilterOption? = nil
 
-    public var filter: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions {
+    package var filter: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions {
       get {
         if case .filter(let v)? = filterOption {return v}
         return EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions()
@@ -610,7 +610,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {filterOption = .filter(newValue)}
     }
 
-    public var noFilter: EventStore_Client_Empty {
+    package var noFilter: EventStore_Client_Empty {
       get {
         if case .noFilter(let v)? = filterOption {return v}
         return EventStore_Client_Empty()
@@ -618,29 +618,29 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {filterOption = .noFilter(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_AllOption: Equatable, Sendable {
+    package enum OneOf_AllOption: Equatable, Sendable {
       case position(EventStore_Client_PersistentSubscriptions_CreateReq.Position)
       case start(EventStore_Client_Empty)
       case end(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_FilterOption: Equatable, Sendable {
+    package enum OneOf_FilterOption: Equatable, Sendable {
       case filter(EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions)
       case noFilter(EventStore_Client_Empty)
 
     }
 
-    public struct FilterOptions: Sendable {
+    package struct FilterOptions: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var filter: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.OneOf_Filter? = nil
+      package var filter: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.OneOf_Filter? = nil
 
-      public var streamIdentifier: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression {
+      package var streamIdentifier: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression {
         get {
           if case .streamIdentifier(let v)? = filter {return v}
           return EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression()
@@ -648,7 +648,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
         set {filter = .streamIdentifier(newValue)}
       }
 
-      public var eventType: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression {
+      package var eventType: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression {
         get {
           if case .eventType(let v)? = filter {return v}
           return EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression()
@@ -656,9 +656,9 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
         set {filter = .eventType(newValue)}
       }
 
-      public var window: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.OneOf_Window? = nil
+      package var window: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.OneOf_Window? = nil
 
-      public var max: UInt32 {
+      package var max: UInt32 {
         get {
           if case .max(let v)? = window {return v}
           return 0
@@ -666,7 +666,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
         set {window = .max(newValue)}
       }
 
-      public var count: EventStore_Client_Empty {
+      package var count: EventStore_Client_Empty {
         get {
           if case .count(let v)? = window {return v}
           return EventStore_Client_Empty()
@@ -674,88 +674,88 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
         set {window = .count(newValue)}
       }
 
-      public var checkpointIntervalMultiplier: UInt32 = 0
+      package var checkpointIntervalMultiplier: UInt32 = 0
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Filter: Equatable, Sendable {
+      package enum OneOf_Filter: Equatable, Sendable {
         case streamIdentifier(EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression)
         case eventType(EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression)
 
       }
 
-      public enum OneOf_Window: Equatable, Sendable {
+      package enum OneOf_Window: Equatable, Sendable {
         case max(UInt32)
         case count(EventStore_Client_Empty)
 
       }
 
-      public struct Expression: Sendable {
+      package struct Expression: Sendable {
         // SwiftProtobuf.Message conformance is added in an extension below. See the
         // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
         // methods supported on all messages.
 
-        public var regex: String = String()
+        package var regex: String = String()
 
-        public var prefix: [String] = []
+        package var prefix: [String] = []
 
-        public var unknownFields = SwiftProtobuf.UnknownStorage()
+        package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-        public init() {}
+        package init() {}
       }
 
-      public init() {}
+      package init() {}
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Position: Sendable {
+  package struct Position: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var commitPosition: UInt64 = 0
+    package var commitPosition: UInt64 = 0
 
-    public var preparePosition: UInt64 = 0
+    package var preparePosition: UInt64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Settings: Sendable {
+  package struct Settings: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var resolveLinks: Bool = false
+    package var resolveLinks: Bool = false
 
     /// NOTE: This field was marked as deprecated in the .proto file.
-    public var revision: UInt64 = 0
+    package var revision: UInt64 = 0
 
-    public var extraStatistics: Bool = false
+    package var extraStatistics: Bool = false
 
-    public var maxRetryCount: Int32 = 0
+    package var maxRetryCount: Int32 = 0
 
-    public var minCheckpointCount: Int32 = 0
+    package var minCheckpointCount: Int32 = 0
 
-    public var maxCheckpointCount: Int32 = 0
+    package var maxCheckpointCount: Int32 = 0
 
-    public var maxSubscriberCount: Int32 = 0
+    package var maxSubscriberCount: Int32 = 0
 
-    public var liveBufferSize: Int32 = 0
+    package var liveBufferSize: Int32 = 0
 
-    public var readBatchSize: Int32 = 0
+    package var readBatchSize: Int32 = 0
 
-    public var historyBufferSize: Int32 = 0
+    package var historyBufferSize: Int32 = 0
 
     /// NOTE: This field was marked as deprecated in the .proto file.
-    public var namedConsumerStrategy: EventStore_Client_PersistentSubscriptions_CreateReq.ConsumerStrategy = .dispatchToSingle
+    package var namedConsumerStrategy: EventStore_Client_PersistentSubscriptions_CreateReq.ConsumerStrategy = .dispatchToSingle
 
-    public var messageTimeout: EventStore_Client_PersistentSubscriptions_CreateReq.Settings.OneOf_MessageTimeout? = nil
+    package var messageTimeout: EventStore_Client_PersistentSubscriptions_CreateReq.Settings.OneOf_MessageTimeout? = nil
 
-    public var messageTimeoutTicks: Int64 {
+    package var messageTimeoutTicks: Int64 {
       get {
         if case .messageTimeoutTicks(let v)? = messageTimeout {return v}
         return 0
@@ -763,7 +763,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {messageTimeout = .messageTimeoutTicks(newValue)}
     }
 
-    public var messageTimeoutMs: Int32 {
+    package var messageTimeoutMs: Int32 {
       get {
         if case .messageTimeoutMs(let v)? = messageTimeout {return v}
         return 0
@@ -771,9 +771,9 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {messageTimeout = .messageTimeoutMs(newValue)}
     }
 
-    public var checkpointAfter: EventStore_Client_PersistentSubscriptions_CreateReq.Settings.OneOf_CheckpointAfter? = nil
+    package var checkpointAfter: EventStore_Client_PersistentSubscriptions_CreateReq.Settings.OneOf_CheckpointAfter? = nil
 
-    public var checkpointAfterTicks: Int64 {
+    package var checkpointAfterTicks: Int64 {
       get {
         if case .checkpointAfterTicks(let v)? = checkpointAfter {return v}
         return 0
@@ -781,7 +781,7 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {checkpointAfter = .checkpointAfterTicks(newValue)}
     }
 
-    public var checkpointAfterMs: Int32 {
+    package var checkpointAfterMs: Int32 {
       get {
         if case .checkpointAfterMs(let v)? = checkpointAfter {return v}
         return 0
@@ -789,68 +789,68 @@ public struct EventStore_Client_PersistentSubscriptions_CreateReq: Sendable {
       set {checkpointAfter = .checkpointAfterMs(newValue)}
     }
 
-    public var consumerStrategy: String = String()
+    package var consumerStrategy: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_MessageTimeout: Equatable, Sendable {
+    package enum OneOf_MessageTimeout: Equatable, Sendable {
       case messageTimeoutTicks(Int64)
       case messageTimeoutMs(Int32)
 
     }
 
-    public enum OneOf_CheckpointAfter: Equatable, Sendable {
+    package enum OneOf_CheckpointAfter: Equatable, Sendable {
       case checkpointAfterTicks(Int64)
       case checkpointAfterMs(Int32)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_PersistentSubscriptions_CreateReq.Options? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_CreateResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_CreateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_PersistentSubscriptions_UpdateReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_UpdateReq.Options {
     get {return _options ?? EventStore_Client_PersistentSubscriptions_UpdateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum ConsumerStrategy: SwiftProtobuf.Enum, Swift.CaseIterable {
-    public typealias RawValue = Int
+  package enum ConsumerStrategy: SwiftProtobuf.Enum, Swift.CaseIterable {
+    package typealias RawValue = Int
     case dispatchToSingle // = 0
     case roundRobin // = 1
     case pinned // = 2
     case UNRECOGNIZED(Int)
 
-    public init() {
+    package init() {
       self = .dispatchToSingle
     }
 
-    public init?(rawValue: Int) {
+    package init?(rawValue: Int) {
       switch rawValue {
       case 0: self = .dispatchToSingle
       case 1: self = .roundRobin
@@ -859,7 +859,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       }
     }
 
-    public var rawValue: Int {
+    package var rawValue: Int {
       switch self {
       case .dispatchToSingle: return 0
       case .roundRobin: return 1
@@ -869,7 +869,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [EventStore_Client_PersistentSubscriptions_UpdateReq.ConsumerStrategy] = [
+    package static let allCases: [EventStore_Client_PersistentSubscriptions_UpdateReq.ConsumerStrategy] = [
       .dispatchToSingle,
       .roundRobin,
       .pinned,
@@ -877,17 +877,17 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
 
   }
 
-  public struct Options: @unchecked Sendable {
+  package struct Options: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: OneOf_StreamOption? {
+    package var streamOption: OneOf_StreamOption? {
       get {return _storage._streamOption}
       set {_uniqueStorage()._streamOption = newValue}
     }
 
-    public var stream: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions {
+    package var stream: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions {
       get {
         if case .stream(let v)? = _storage._streamOption {return v}
         return EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions()
@@ -895,7 +895,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {_uniqueStorage()._streamOption = .stream(newValue)}
     }
 
-    public var all: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions {
+    package var all: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions {
       get {
         if case .all(let v)? = _storage._streamOption {return v}
         return EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions()
@@ -904,59 +904,59 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
     }
 
     /// NOTE: This field was marked as deprecated in the .proto file.
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _storage._streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_uniqueStorage()._streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return _storage._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return _storage._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {_uniqueStorage()._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {_uniqueStorage()._streamIdentifier = nil}
 
-    public var groupName: String {
+    package var groupName: String {
       get {return _storage._groupName}
       set {_uniqueStorage()._groupName = newValue}
     }
 
-    public var settings: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
+    package var settings: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
       get {return _storage._settings ?? EventStore_Client_PersistentSubscriptions_UpdateReq.Settings()}
       set {_uniqueStorage()._settings = newValue}
     }
     /// Returns true if `settings` has been explicitly set.
-    public var hasSettings: Bool {return _storage._settings != nil}
+    package var hasSettings: Bool {return _storage._settings != nil}
     /// Clears the value of `settings`. Subsequent reads from it will return its default value.
-    public mutating func clearSettings() {_uniqueStorage()._settings = nil}
+    package mutating func clearSettings() {_uniqueStorage()._settings = nil}
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case stream(EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions)
       case all(EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions)
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _storage = _StorageClass.defaultInstance
   }
 
-  public struct StreamOptions: Sendable {
+  package struct StreamOptions: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var revisionOption: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions.OneOf_RevisionOption? = nil
+    package var revisionOption: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions.OneOf_RevisionOption? = nil
 
-    public var revision: UInt64 {
+    package var revision: UInt64 {
       get {
         if case .revision(let v)? = revisionOption {return v}
         return 0
@@ -964,7 +964,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {revisionOption = .revision(newValue)}
     }
 
-    public var start: EventStore_Client_Empty {
+    package var start: EventStore_Client_Empty {
       get {
         if case .start(let v)? = revisionOption {return v}
         return EventStore_Client_Empty()
@@ -972,7 +972,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {revisionOption = .start(newValue)}
     }
 
-    public var end: EventStore_Client_Empty {
+    package var end: EventStore_Client_Empty {
       get {
         if case .end(let v)? = revisionOption {return v}
         return EventStore_Client_Empty()
@@ -980,28 +980,28 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {revisionOption = .end(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_RevisionOption: Equatable, Sendable {
+    package enum OneOf_RevisionOption: Equatable, Sendable {
       case revision(UInt64)
       case start(EventStore_Client_Empty)
       case end(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public struct AllOptions: Sendable {
+  package struct AllOptions: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var allOption: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions.OneOf_AllOption? = nil
+    package var allOption: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions.OneOf_AllOption? = nil
 
-    public var position: EventStore_Client_PersistentSubscriptions_UpdateReq.Position {
+    package var position: EventStore_Client_PersistentSubscriptions_UpdateReq.Position {
       get {
         if case .position(let v)? = allOption {return v}
         return EventStore_Client_PersistentSubscriptions_UpdateReq.Position()
@@ -1009,7 +1009,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {allOption = .position(newValue)}
     }
 
-    public var start: EventStore_Client_Empty {
+    package var start: EventStore_Client_Empty {
       get {
         if case .start(let v)? = allOption {return v}
         return EventStore_Client_Empty()
@@ -1017,7 +1017,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {allOption = .start(newValue)}
     }
 
-    public var end: EventStore_Client_Empty {
+    package var end: EventStore_Client_Empty {
       get {
         if case .end(let v)? = allOption {return v}
         return EventStore_Client_Empty()
@@ -1025,63 +1025,63 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {allOption = .end(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_AllOption: Equatable, Sendable {
+    package enum OneOf_AllOption: Equatable, Sendable {
       case position(EventStore_Client_PersistentSubscriptions_UpdateReq.Position)
       case start(EventStore_Client_Empty)
       case end(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Position: Sendable {
+  package struct Position: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var commitPosition: UInt64 = 0
+    package var commitPosition: UInt64 = 0
 
-    public var preparePosition: UInt64 = 0
+    package var preparePosition: UInt64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Settings: Sendable {
+  package struct Settings: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var resolveLinks: Bool = false
+    package var resolveLinks: Bool = false
 
     /// NOTE: This field was marked as deprecated in the .proto file.
-    public var revision: UInt64 = 0
+    package var revision: UInt64 = 0
 
-    public var extraStatistics: Bool = false
+    package var extraStatistics: Bool = false
 
-    public var maxRetryCount: Int32 = 0
+    package var maxRetryCount: Int32 = 0
 
-    public var minCheckpointCount: Int32 = 0
+    package var minCheckpointCount: Int32 = 0
 
-    public var maxCheckpointCount: Int32 = 0
+    package var maxCheckpointCount: Int32 = 0
 
-    public var maxSubscriberCount: Int32 = 0
+    package var maxSubscriberCount: Int32 = 0
 
-    public var liveBufferSize: Int32 = 0
+    package var liveBufferSize: Int32 = 0
 
-    public var readBatchSize: Int32 = 0
+    package var readBatchSize: Int32 = 0
 
-    public var historyBufferSize: Int32 = 0
+    package var historyBufferSize: Int32 = 0
 
-    public var namedConsumerStrategy: EventStore_Client_PersistentSubscriptions_UpdateReq.ConsumerStrategy = .dispatchToSingle
+    package var namedConsumerStrategy: EventStore_Client_PersistentSubscriptions_UpdateReq.ConsumerStrategy = .dispatchToSingle
 
-    public var messageTimeout: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings.OneOf_MessageTimeout? = nil
+    package var messageTimeout: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings.OneOf_MessageTimeout? = nil
 
-    public var messageTimeoutTicks: Int64 {
+    package var messageTimeoutTicks: Int64 {
       get {
         if case .messageTimeoutTicks(let v)? = messageTimeout {return v}
         return 0
@@ -1089,7 +1089,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {messageTimeout = .messageTimeoutTicks(newValue)}
     }
 
-    public var messageTimeoutMs: Int32 {
+    package var messageTimeoutMs: Int32 {
       get {
         if case .messageTimeoutMs(let v)? = messageTimeout {return v}
         return 0
@@ -1097,9 +1097,9 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {messageTimeout = .messageTimeoutMs(newValue)}
     }
 
-    public var checkpointAfter: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings.OneOf_CheckpointAfter? = nil
+    package var checkpointAfter: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings.OneOf_CheckpointAfter? = nil
 
-    public var checkpointAfterTicks: Int64 {
+    package var checkpointAfterTicks: Int64 {
       get {
         if case .checkpointAfterTicks(let v)? = checkpointAfter {return v}
         return 0
@@ -1107,7 +1107,7 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {checkpointAfter = .checkpointAfterTicks(newValue)}
     }
 
-    public var checkpointAfterMs: Int32 {
+    package var checkpointAfterMs: Int32 {
       get {
         if case .checkpointAfterMs(let v)? = checkpointAfter {return v}
         return 0
@@ -1115,62 +1115,62 @@ public struct EventStore_Client_PersistentSubscriptions_UpdateReq: Sendable {
       set {checkpointAfter = .checkpointAfterMs(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_MessageTimeout: Equatable, Sendable {
+    package enum OneOf_MessageTimeout: Equatable, Sendable {
       case messageTimeoutTicks(Int64)
       case messageTimeoutMs(Int32)
 
     }
 
-    public enum OneOf_CheckpointAfter: Equatable, Sendable {
+    package enum OneOf_CheckpointAfter: Equatable, Sendable {
       case checkpointAfterTicks(Int64)
       case checkpointAfterMs(Int32)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_PersistentSubscriptions_UpdateReq.Options? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_UpdateResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_UpdateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_PersistentSubscriptions_DeleteReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_DeleteReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_PersistentSubscriptions_DeleteReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_DeleteReq.Options {
     get {return _options ?? EventStore_Client_PersistentSubscriptions_DeleteReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: EventStore_Client_PersistentSubscriptions_DeleteReq.Options.OneOf_StreamOption? = nil
+    package var streamOption: EventStore_Client_PersistentSubscriptions_DeleteReq.Options.OneOf_StreamOption? = nil
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {
         if case .streamIdentifier(let v)? = streamOption {return v}
         return EventStore_Client_StreamIdentifier()
@@ -1178,7 +1178,7 @@ public struct EventStore_Client_PersistentSubscriptions_DeleteReq: Sendable {
       set {streamOption = .streamIdentifier(newValue)}
     }
 
-    public var all: EventStore_Client_Empty {
+    package var all: EventStore_Client_Empty {
       get {
         if case .all(let v)? = streamOption {return v}
         return EventStore_Client_Empty()
@@ -1186,58 +1186,58 @@ public struct EventStore_Client_PersistentSubscriptions_DeleteReq: Sendable {
       set {streamOption = .all(newValue)}
     }
 
-    public var groupName: String = String()
+    package var groupName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case streamIdentifier(EventStore_Client_StreamIdentifier)
       case all(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_PersistentSubscriptions_DeleteReq.Options? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_DeleteResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_DeleteResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_PersistentSubscriptions_GetInfoReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_GetInfoReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options {
     get {return _options ?? EventStore_Client_PersistentSubscriptions_GetInfoReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options.OneOf_StreamOption? = nil
+    package var streamOption: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options.OneOf_StreamOption? = nil
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {
         if case .streamIdentifier(let v)? = streamOption {return v}
         return EventStore_Client_StreamIdentifier()
@@ -1245,7 +1245,7 @@ public struct EventStore_Client_PersistentSubscriptions_GetInfoReq: Sendable {
       set {streamOption = .streamIdentifier(newValue)}
     }
 
-    public var all: EventStore_Client_Empty {
+    package var all: EventStore_Client_Empty {
       get {
         if case .all(let v)? = streamOption {return v}
         return EventStore_Client_Empty()
@@ -1253,265 +1253,265 @@ public struct EventStore_Client_PersistentSubscriptions_GetInfoReq: Sendable {
       set {streamOption = .all(newValue)}
     }
 
-    public var groupName: String = String()
+    package var groupName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case streamIdentifier(EventStore_Client_StreamIdentifier)
       case all(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_GetInfoResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_GetInfoResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var subscriptionInfo: EventStore_Client_PersistentSubscriptions_SubscriptionInfo {
+  package var subscriptionInfo: EventStore_Client_PersistentSubscriptions_SubscriptionInfo {
     get {return _subscriptionInfo ?? EventStore_Client_PersistentSubscriptions_SubscriptionInfo()}
     set {_subscriptionInfo = newValue}
   }
   /// Returns true if `subscriptionInfo` has been explicitly set.
-  public var hasSubscriptionInfo: Bool {return self._subscriptionInfo != nil}
+  package var hasSubscriptionInfo: Bool {return self._subscriptionInfo != nil}
   /// Clears the value of `subscriptionInfo`. Subsequent reads from it will return its default value.
-  public mutating func clearSubscriptionInfo() {self._subscriptionInfo = nil}
+  package mutating func clearSubscriptionInfo() {self._subscriptionInfo = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _subscriptionInfo: EventStore_Client_PersistentSubscriptions_SubscriptionInfo? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_SubscriptionInfo: @unchecked Sendable {
+package struct EventStore_Client_PersistentSubscriptions_SubscriptionInfo: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var eventSource: String {
+  package var eventSource: String {
     get {return _storage._eventSource}
     set {_uniqueStorage()._eventSource = newValue}
   }
 
-  public var groupName: String {
+  package var groupName: String {
     get {return _storage._groupName}
     set {_uniqueStorage()._groupName = newValue}
   }
 
-  public var status: String {
+  package var status: String {
     get {return _storage._status}
     set {_uniqueStorage()._status = newValue}
   }
 
-  public var connections: [EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo] {
+  package var connections: [EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo] {
     get {return _storage._connections}
     set {_uniqueStorage()._connections = newValue}
   }
 
-  public var averagePerSecond: Int32 {
+  package var averagePerSecond: Int32 {
     get {return _storage._averagePerSecond}
     set {_uniqueStorage()._averagePerSecond = newValue}
   }
 
-  public var totalItems: Int64 {
+  package var totalItems: Int64 {
     get {return _storage._totalItems}
     set {_uniqueStorage()._totalItems = newValue}
   }
 
-  public var countSinceLastMeasurement: Int64 {
+  package var countSinceLastMeasurement: Int64 {
     get {return _storage._countSinceLastMeasurement}
     set {_uniqueStorage()._countSinceLastMeasurement = newValue}
   }
 
-  public var lastCheckpointedEventPosition: String {
+  package var lastCheckpointedEventPosition: String {
     get {return _storage._lastCheckpointedEventPosition}
     set {_uniqueStorage()._lastCheckpointedEventPosition = newValue}
   }
 
-  public var lastKnownEventPosition: String {
+  package var lastKnownEventPosition: String {
     get {return _storage._lastKnownEventPosition}
     set {_uniqueStorage()._lastKnownEventPosition = newValue}
   }
 
-  public var resolveLinkTos: Bool {
+  package var resolveLinkTos: Bool {
     get {return _storage._resolveLinkTos}
     set {_uniqueStorage()._resolveLinkTos = newValue}
   }
 
-  public var startFrom: String {
+  package var startFrom: String {
     get {return _storage._startFrom}
     set {_uniqueStorage()._startFrom = newValue}
   }
 
-  public var messageTimeoutMilliseconds: Int32 {
+  package var messageTimeoutMilliseconds: Int32 {
     get {return _storage._messageTimeoutMilliseconds}
     set {_uniqueStorage()._messageTimeoutMilliseconds = newValue}
   }
 
-  public var extraStatistics: Bool {
+  package var extraStatistics: Bool {
     get {return _storage._extraStatistics}
     set {_uniqueStorage()._extraStatistics = newValue}
   }
 
-  public var maxRetryCount: Int32 {
+  package var maxRetryCount: Int32 {
     get {return _storage._maxRetryCount}
     set {_uniqueStorage()._maxRetryCount = newValue}
   }
 
-  public var liveBufferSize: Int32 {
+  package var liveBufferSize: Int32 {
     get {return _storage._liveBufferSize}
     set {_uniqueStorage()._liveBufferSize = newValue}
   }
 
-  public var bufferSize: Int32 {
+  package var bufferSize: Int32 {
     get {return _storage._bufferSize}
     set {_uniqueStorage()._bufferSize = newValue}
   }
 
-  public var readBatchSize: Int32 {
+  package var readBatchSize: Int32 {
     get {return _storage._readBatchSize}
     set {_uniqueStorage()._readBatchSize = newValue}
   }
 
-  public var checkPointAfterMilliseconds: Int32 {
+  package var checkPointAfterMilliseconds: Int32 {
     get {return _storage._checkPointAfterMilliseconds}
     set {_uniqueStorage()._checkPointAfterMilliseconds = newValue}
   }
 
-  public var minCheckPointCount: Int32 {
+  package var minCheckPointCount: Int32 {
     get {return _storage._minCheckPointCount}
     set {_uniqueStorage()._minCheckPointCount = newValue}
   }
 
-  public var maxCheckPointCount: Int32 {
+  package var maxCheckPointCount: Int32 {
     get {return _storage._maxCheckPointCount}
     set {_uniqueStorage()._maxCheckPointCount = newValue}
   }
 
-  public var readBufferCount: Int32 {
+  package var readBufferCount: Int32 {
     get {return _storage._readBufferCount}
     set {_uniqueStorage()._readBufferCount = newValue}
   }
 
-  public var liveBufferCount: Int64 {
+  package var liveBufferCount: Int64 {
     get {return _storage._liveBufferCount}
     set {_uniqueStorage()._liveBufferCount = newValue}
   }
 
-  public var retryBufferCount: Int32 {
+  package var retryBufferCount: Int32 {
     get {return _storage._retryBufferCount}
     set {_uniqueStorage()._retryBufferCount = newValue}
   }
 
-  public var totalInFlightMessages: Int32 {
+  package var totalInFlightMessages: Int32 {
     get {return _storage._totalInFlightMessages}
     set {_uniqueStorage()._totalInFlightMessages = newValue}
   }
 
-  public var outstandingMessagesCount: Int32 {
+  package var outstandingMessagesCount: Int32 {
     get {return _storage._outstandingMessagesCount}
     set {_uniqueStorage()._outstandingMessagesCount = newValue}
   }
 
-  public var namedConsumerStrategy: String {
+  package var namedConsumerStrategy: String {
     get {return _storage._namedConsumerStrategy}
     set {_uniqueStorage()._namedConsumerStrategy = newValue}
   }
 
-  public var maxSubscriberCount: Int32 {
+  package var maxSubscriberCount: Int32 {
     get {return _storage._maxSubscriberCount}
     set {_uniqueStorage()._maxSubscriberCount = newValue}
   }
 
-  public var parkedMessageCount: Int64 {
+  package var parkedMessageCount: Int64 {
     get {return _storage._parkedMessageCount}
     set {_uniqueStorage()._parkedMessageCount = newValue}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct ConnectionInfo: Sendable {
+  package struct ConnectionInfo: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var from: String = String()
+    package var from: String = String()
 
-    public var username: String = String()
+    package var username: String = String()
 
-    public var averageItemsPerSecond: Int32 = 0
+    package var averageItemsPerSecond: Int32 = 0
 
-    public var totalItems: Int64 = 0
+    package var totalItems: Int64 = 0
 
-    public var countSinceLastMeasurement: Int64 = 0
+    package var countSinceLastMeasurement: Int64 = 0
 
-    public var observedMeasurements: [EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement] = []
+    package var observedMeasurements: [EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement] = []
 
-    public var availableSlots: Int32 = 0
+    package var availableSlots: Int32 = 0
 
-    public var inFlightMessages: Int32 = 0
+    package var inFlightMessages: Int32 = 0
 
-    public var connectionName: String = String()
+    package var connectionName: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Measurement: Sendable {
+  package struct Measurement: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var key: String = String()
+    package var key: String = String()
 
-    public var value: Int64 = 0
+    package var value: Int64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-public struct EventStore_Client_PersistentSubscriptions_ReplayParkedReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_ReplayParkedReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options {
     get {return _options ?? EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var groupName: String = String()
+    package var groupName: String = String()
 
-    public var streamOption: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options.OneOf_StreamOption? = nil
+    package var streamOption: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options.OneOf_StreamOption? = nil
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {
         if case .streamIdentifier(let v)? = streamOption {return v}
         return EventStore_Client_StreamIdentifier()
@@ -1519,7 +1519,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReplayParkedReq: Sendabl
       set {streamOption = .streamIdentifier(newValue)}
     }
 
-    public var all: EventStore_Client_Empty {
+    package var all: EventStore_Client_Empty {
       get {
         if case .all(let v)? = streamOption {return v}
         return EventStore_Client_Empty()
@@ -1527,9 +1527,9 @@ public struct EventStore_Client_PersistentSubscriptions_ReplayParkedReq: Sendabl
       set {streamOption = .all(newValue)}
     }
 
-    public var stopAtOption: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options.OneOf_StopAtOption? = nil
+    package var stopAtOption: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options.OneOf_StopAtOption? = nil
 
-    public var stopAt: Int64 {
+    package var stopAt: Int64 {
       get {
         if case .stopAt(let v)? = stopAtOption {return v}
         return 0
@@ -1537,7 +1537,7 @@ public struct EventStore_Client_PersistentSubscriptions_ReplayParkedReq: Sendabl
       set {stopAtOption = .stopAt(newValue)}
     }
 
-    public var noLimit: EventStore_Client_Empty {
+    package var noLimit: EventStore_Client_Empty {
       get {
         if case .noLimit(let v)? = stopAtOption {return v}
         return EventStore_Client_Empty()
@@ -1545,62 +1545,62 @@ public struct EventStore_Client_PersistentSubscriptions_ReplayParkedReq: Sendabl
       set {stopAtOption = .noLimit(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case streamIdentifier(EventStore_Client_StreamIdentifier)
       case all(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_StopAtOption: Equatable, Sendable {
+    package enum OneOf_StopAtOption: Equatable, Sendable {
       case stopAt(Int64)
       case noLimit(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_ReplayParkedResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_ReplayParkedResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_PersistentSubscriptions_ListReq: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_ListReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_PersistentSubscriptions_ListReq.Options {
+  package var options: EventStore_Client_PersistentSubscriptions_ListReq.Options {
     get {return _options ?? EventStore_Client_PersistentSubscriptions_ListReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var listOption: EventStore_Client_PersistentSubscriptions_ListReq.Options.OneOf_ListOption? = nil
+    package var listOption: EventStore_Client_PersistentSubscriptions_ListReq.Options.OneOf_ListOption? = nil
 
-    public var listAllSubscriptions: EventStore_Client_Empty {
+    package var listAllSubscriptions: EventStore_Client_Empty {
       get {
         if case .listAllSubscriptions(let v)? = listOption {return v}
         return EventStore_Client_Empty()
@@ -1608,7 +1608,7 @@ public struct EventStore_Client_PersistentSubscriptions_ListReq: Sendable {
       set {listOption = .listAllSubscriptions(newValue)}
     }
 
-    public var listForStream: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption {
+    package var listForStream: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption {
       get {
         if case .listForStream(let v)? = listOption {return v}
         return EventStore_Client_PersistentSubscriptions_ListReq.StreamOption()
@@ -1616,25 +1616,25 @@ public struct EventStore_Client_PersistentSubscriptions_ListReq: Sendable {
       set {listOption = .listForStream(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_ListOption: Equatable, Sendable {
+    package enum OneOf_ListOption: Equatable, Sendable {
       case listAllSubscriptions(EventStore_Client_Empty)
       case listForStream(EventStore_Client_PersistentSubscriptions_ListReq.StreamOption)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public struct StreamOption: Sendable {
+  package struct StreamOption: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption.OneOf_StreamOption? = nil
+    package var streamOption: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption.OneOf_StreamOption? = nil
 
-    public var stream: EventStore_Client_StreamIdentifier {
+    package var stream: EventStore_Client_StreamIdentifier {
       get {
         if case .stream(let v)? = streamOption {return v}
         return EventStore_Client_StreamIdentifier()
@@ -1642,7 +1642,7 @@ public struct EventStore_Client_PersistentSubscriptions_ListReq: Sendable {
       set {streamOption = .stream(newValue)}
     }
 
-    public var all: EventStore_Client_Empty {
+    package var all: EventStore_Client_Empty {
       get {
         if case .all(let v)? = streamOption {return v}
         return EventStore_Client_Empty()
@@ -1650,32 +1650,32 @@ public struct EventStore_Client_PersistentSubscriptions_ListReq: Sendable {
       set {streamOption = .all(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case stream(EventStore_Client_StreamIdentifier)
       case all(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_PersistentSubscriptions_ListReq.Options? = nil
 }
 
-public struct EventStore_Client_PersistentSubscriptions_ListResp: Sendable {
+package struct EventStore_Client_PersistentSubscriptions_ListResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var subscriptions: [EventStore_Client_PersistentSubscriptions_SubscriptionInfo] = []
+  package var subscriptions: [EventStore_Client_PersistentSubscriptions_SubscriptionInfo] = []
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -1683,14 +1683,14 @@ public struct EventStore_Client_PersistentSubscriptions_ListResp: Sendable {
 fileprivate let _protobuf_package = "event_store.client.persistent_subscriptions"
 
 extension EventStore_Client_PersistentSubscriptions_ReadReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReadReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReadReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
     2: .same(proto: "ack"),
     3: .same(proto: "nack"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1740,7 +1740,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq: SwiftProtobuf.Messa
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1763,7 +1763,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq: SwiftProtobuf.Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq, rhs: EventStore_Client_PersistentSubscriptions_ReadReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq, rhs: EventStore_Client_PersistentSubscriptions_ReadReq) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1771,8 +1771,8 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq: SwiftProtobuf.Messa
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     5: .same(proto: "all"),
     2: .standard(proto: "group_name"),
@@ -1780,7 +1780,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options: SwiftProtob
     4: .standard(proto: "uuid_option"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1820,7 +1820,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options: SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1843,7 +1843,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options: SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options) -> Bool {
     if lhs.streamOption != rhs.streamOption {return false}
     if lhs.groupName != rhs.groupName {return false}
     if lhs.bufferSize != rhs.bufferSize {return false}
@@ -1854,13 +1854,13 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options: SwiftProtob
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.Options.protoMessageName + ".UUIDOption"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.Options.protoMessageName + ".UUIDOption"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "structured"),
     2: .same(proto: "string"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1897,7 +1897,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption: 
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1916,7 +1916,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption: 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1924,13 +1924,13 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Options.UUIDOption: 
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadReq.Ack: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.protoMessageName + ".Ack"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.protoMessageName + ".Ack"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .same(proto: "ids"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1943,7 +1943,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Ack: SwiftProtobuf.M
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.id.isEmpty {
       try visitor.visitSingularBytesField(value: self.id, fieldNumber: 1)
     }
@@ -1953,7 +1953,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Ack: SwiftProtobuf.M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Ack, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Ack) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Ack, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Ack) -> Bool {
     if lhs.id != rhs.id {return false}
     if lhs.ids != rhs.ids {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1962,15 +1962,15 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Ack: SwiftProtobuf.M
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadReq.Nack: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.protoMessageName + ".Nack"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadReq.protoMessageName + ".Nack"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .same(proto: "ids"),
     3: .same(proto: "action"),
     4: .same(proto: "reason"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1985,7 +1985,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Nack: SwiftProtobuf.
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.id.isEmpty {
       try visitor.visitSingularBytesField(value: self.id, fieldNumber: 1)
     }
@@ -2001,7 +2001,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Nack: SwiftProtobuf.
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Nack, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Nack) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadReq.Nack, rhs: EventStore_Client_PersistentSubscriptions_ReadReq.Nack) -> Bool {
     if lhs.id != rhs.id {return false}
     if lhs.ids != rhs.ids {return false}
     if lhs.action != rhs.action {return false}
@@ -2012,7 +2012,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Nack: SwiftProtobuf.
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadReq.Nack.Action: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "Unknown"),
     1: .same(proto: "Park"),
     2: .same(proto: "Retry"),
@@ -2022,13 +2022,13 @@ extension EventStore_Client_PersistentSubscriptions_ReadReq.Nack.Action: SwiftPr
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReadResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReadResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "event"),
     2: .standard(proto: "subscription_confirmation"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2065,7 +2065,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp: SwiftProtobuf.Mess
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2084,7 +2084,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp: SwiftProtobuf.Mess
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp, rhs: EventStore_Client_PersistentSubscriptions_ReadResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp, rhs: EventStore_Client_PersistentSubscriptions_ReadResp) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2092,8 +2092,8 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp: SwiftProtobuf.Mess
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadResp.protoMessageName + ".ReadEvent"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadResp.protoMessageName + ".ReadEvent"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "event"),
     2: .same(proto: "link"),
     3: .standard(proto: "commit_position"),
@@ -2135,7 +2135,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent: SwiftPro
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2193,7 +2193,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent: SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every if/case branch local when no optimizations
@@ -2231,7 +2231,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent: SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent, rhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent, rhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -2250,8 +2250,8 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent: SwiftPro
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.protoMessageName + ".RecordedEvent"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.protoMessageName + ".RecordedEvent"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .standard(proto: "stream_identifier"),
     3: .standard(proto: "stream_revision"),
@@ -2262,7 +2262,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedE
     8: .same(proto: "data"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2281,7 +2281,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedE
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2313,7 +2313,7 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedE
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent, rhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent, rhs: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent) -> Bool {
     if lhs._id != rhs._id {return false}
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.streamRevision != rhs.streamRevision {return false}
@@ -2328,12 +2328,12 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedE
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadResp.protoMessageName + ".SubscriptionConfirmation"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReadResp.protoMessageName + ".SubscriptionConfirmation"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "subscription_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2345,14 +2345,14 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirm
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.subscriptionID.isEmpty {
       try visitor.visitSingularStringField(value: self.subscriptionID, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation, rhs: EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation, rhs: EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirmation) -> Bool {
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2360,12 +2360,12 @@ extension EventStore_Client_PersistentSubscriptions_ReadResp.SubscriptionConfirm
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".CreateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2377,7 +2377,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq: SwiftProtobuf.Mes
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2388,7 +2388,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq, rhs: EventStore_Client_PersistentSubscriptions_CreateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq, rhs: EventStore_Client_PersistentSubscriptions_CreateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2396,7 +2396,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq: SwiftProtobuf.Mes
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.ConsumerStrategy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "DispatchToSingle"),
     1: .same(proto: "RoundRobin"),
     2: .same(proto: "Pinned"),
@@ -2404,8 +2404,8 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.ConsumerStrategy: 
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     4: .same(proto: "stream"),
     5: .same(proto: "all"),
     1: .standard(proto: "stream_identifier"),
@@ -2446,7 +2446,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Options: SwiftProt
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2489,7 +2489,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Options: SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every if/case branch local when no optimizations
@@ -2519,7 +2519,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Options: SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.Options, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.Options, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.Options) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -2538,15 +2538,15 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Options: SwiftProt
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".StreamOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".StreamOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "revision"),
     3: .same(proto: "start"),
     4: .same(proto: "end"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2592,7 +2592,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions: Swi
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2618,7 +2618,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions: Swi
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.revisionOption != rhs.revisionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2627,8 +2627,8 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.StreamOptions: Swi
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".AllOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".AllOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "position"),
     2: .same(proto: "start"),
     3: .same(proto: "end"),
@@ -2636,7 +2636,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions: SwiftP
     5: .standard(proto: "no_filter"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2712,7 +2712,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions: SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2746,7 +2746,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions: SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions) -> Bool {
     if lhs.allOption != rhs.allOption {return false}
     if lhs.filterOption != rhs.filterOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2755,8 +2755,8 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions: SwiftP
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.protoMessageName + ".FilterOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.protoMessageName + ".FilterOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .standard(proto: "event_type"),
     3: .same(proto: "max"),
@@ -2764,7 +2764,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
     5: .same(proto: "checkpointIntervalMultiplier"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2823,7 +2823,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2856,7 +2856,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions) -> Bool {
     if lhs.filter != rhs.filter {return false}
     if lhs.window != rhs.window {return false}
     if lhs.checkpointIntervalMultiplier != rhs.checkpointIntervalMultiplier {return false}
@@ -2866,13 +2866,13 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.protoMessageName + ".Expression"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.protoMessageName + ".Expression"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "regex"),
     2: .same(proto: "prefix"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2885,7 +2885,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.regex.isEmpty {
       try visitor.visitSingularStringField(value: self.regex, fieldNumber: 1)
     }
@@ -2895,7 +2895,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions.Expression) -> Bool {
     if lhs.regex != rhs.regex {return false}
     if lhs.prefix != rhs.prefix {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2904,13 +2904,13 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".Position"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".Position"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2923,7 +2923,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Position: SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -2933,7 +2933,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Position: SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.Position, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.Position) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.Position, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2942,8 +2942,8 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Position: SwiftPro
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".Settings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_CreateReq.protoMessageName + ".Settings"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "resolve_links"),
     2: .same(proto: "revision"),
     3: .standard(proto: "extra_statistics"),
@@ -2962,7 +2962,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings: SwiftPro
     16: .standard(proto: "consumer_strategy"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3017,7 +3017,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings: SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3073,7 +3073,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings: SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.Settings, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.Settings) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateReq.Settings, rhs: EventStore_Client_PersistentSubscriptions_CreateReq.Settings) -> Bool {
     if lhs.resolveLinks != rhs.resolveLinks {return false}
     if lhs.revision != rhs.revision {return false}
     if lhs.extraStatistics != rhs.extraStatistics {return false}
@@ -3094,31 +3094,31 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings: SwiftPro
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".CreateResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateResp, rhs: EventStore_Client_PersistentSubscriptions_CreateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_CreateResp, rhs: EventStore_Client_PersistentSubscriptions_CreateResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".UpdateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3130,7 +3130,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq: SwiftProtobuf.Mes
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3141,7 +3141,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -3149,7 +3149,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq: SwiftProtobuf.Mes
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.ConsumerStrategy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "DispatchToSingle"),
     1: .same(proto: "RoundRobin"),
     2: .same(proto: "Pinned"),
@@ -3157,8 +3157,8 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.ConsumerStrategy: 
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     4: .same(proto: "stream"),
     5: .same(proto: "all"),
     1: .standard(proto: "stream_identifier"),
@@ -3199,7 +3199,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Options: SwiftProt
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3242,7 +3242,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Options: SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every if/case branch local when no optimizations
@@ -3272,7 +3272,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Options: SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Options, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Options, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Options) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -3291,15 +3291,15 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Options: SwiftProt
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".StreamOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".StreamOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "revision"),
     3: .same(proto: "start"),
     4: .same(proto: "end"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3345,7 +3345,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions: Swi
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3371,7 +3371,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions: Swi
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.revisionOption != rhs.revisionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3380,14 +3380,14 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.StreamOptions: Swi
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".AllOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".AllOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "position"),
     2: .same(proto: "start"),
     3: .same(proto: "end"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3437,7 +3437,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions: SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3460,7 +3460,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions: SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions) -> Bool {
     if lhs.allOption != rhs.allOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -3468,13 +3468,13 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.AllOptions: SwiftP
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".Position"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".Position"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3487,7 +3487,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Position: SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -3497,7 +3497,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Position: SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Position, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Position) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Position, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3506,8 +3506,8 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Position: SwiftPro
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".Settings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_UpdateReq.protoMessageName + ".Settings"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "resolve_links"),
     2: .same(proto: "revision"),
     3: .standard(proto: "extra_statistics"),
@@ -3525,7 +3525,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings: SwiftPro
     15: .standard(proto: "checkpoint_after_ms"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3579,7 +3579,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings: SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3632,7 +3632,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings: SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings, rhs: EventStore_Client_PersistentSubscriptions_UpdateReq.Settings) -> Bool {
     if lhs.resolveLinks != rhs.resolveLinks {return false}
     if lhs.revision != rhs.revision {return false}
     if lhs.extraStatistics != rhs.extraStatistics {return false}
@@ -3652,31 +3652,31 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings: SwiftPro
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".UpdateResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateResp, rhs: EventStore_Client_PersistentSubscriptions_UpdateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_UpdateResp, rhs: EventStore_Client_PersistentSubscriptions_UpdateResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_PersistentSubscriptions_DeleteReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DeleteReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3688,7 +3688,7 @@ extension EventStore_Client_PersistentSubscriptions_DeleteReq: SwiftProtobuf.Mes
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3699,7 +3699,7 @@ extension EventStore_Client_PersistentSubscriptions_DeleteReq: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_DeleteReq, rhs: EventStore_Client_PersistentSubscriptions_DeleteReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_DeleteReq, rhs: EventStore_Client_PersistentSubscriptions_DeleteReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -3707,14 +3707,14 @@ extension EventStore_Client_PersistentSubscriptions_DeleteReq: SwiftProtobuf.Mes
 }
 
 extension EventStore_Client_PersistentSubscriptions_DeleteReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_DeleteReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_DeleteReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     3: .same(proto: "all"),
     2: .standard(proto: "group_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3752,7 +3752,7 @@ extension EventStore_Client_PersistentSubscriptions_DeleteReq.Options: SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3769,7 +3769,7 @@ extension EventStore_Client_PersistentSubscriptions_DeleteReq.Options: SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_DeleteReq.Options, rhs: EventStore_Client_PersistentSubscriptions_DeleteReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_DeleteReq.Options, rhs: EventStore_Client_PersistentSubscriptions_DeleteReq.Options) -> Bool {
     if lhs.streamOption != rhs.streamOption {return false}
     if lhs.groupName != rhs.groupName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3778,31 +3778,31 @@ extension EventStore_Client_PersistentSubscriptions_DeleteReq.Options: SwiftProt
 }
 
 extension EventStore_Client_PersistentSubscriptions_DeleteResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".DeleteResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_DeleteResp, rhs: EventStore_Client_PersistentSubscriptions_DeleteResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_DeleteResp, rhs: EventStore_Client_PersistentSubscriptions_DeleteResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_PersistentSubscriptions_GetInfoReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GetInfoReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".GetInfoReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3814,7 +3814,7 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoReq: SwiftProtobuf.Me
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3825,7 +3825,7 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoReq: SwiftProtobuf.Me
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_GetInfoReq, rhs: EventStore_Client_PersistentSubscriptions_GetInfoReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_GetInfoReq, rhs: EventStore_Client_PersistentSubscriptions_GetInfoReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -3833,14 +3833,14 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoReq: SwiftProtobuf.Me
 }
 
 extension EventStore_Client_PersistentSubscriptions_GetInfoReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_GetInfoReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_GetInfoReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "all"),
     3: .standard(proto: "group_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3878,7 +3878,7 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoReq.Options: SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3900,7 +3900,7 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoReq.Options: SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options, rhs: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options, rhs: EventStore_Client_PersistentSubscriptions_GetInfoReq.Options) -> Bool {
     if lhs.streamOption != rhs.streamOption {return false}
     if lhs.groupName != rhs.groupName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3909,12 +3909,12 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoReq.Options: SwiftPro
 }
 
 extension EventStore_Client_PersistentSubscriptions_GetInfoResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GetInfoResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".GetInfoResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "subscription_info"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3926,7 +3926,7 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoResp: SwiftProtobuf.M
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3937,7 +3937,7 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoResp: SwiftProtobuf.M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_GetInfoResp, rhs: EventStore_Client_PersistentSubscriptions_GetInfoResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_GetInfoResp, rhs: EventStore_Client_PersistentSubscriptions_GetInfoResp) -> Bool {
     if lhs._subscriptionInfo != rhs._subscriptionInfo {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -3945,8 +3945,8 @@ extension EventStore_Client_PersistentSubscriptions_GetInfoResp: SwiftProtobuf.M
 }
 
 extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SubscriptionInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".SubscriptionInfo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "event_source"),
     2: .standard(proto: "group_name"),
     3: .same(proto: "status"),
@@ -4058,7 +4058,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo: SwiftProto
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4100,7 +4100,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo: SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       if !_storage._eventSource.isEmpty {
         try visitor.visitSingularStringField(value: _storage._eventSource, fieldNumber: 1)
@@ -4190,7 +4190,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo: SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo, rhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo, rhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -4233,8 +4233,8 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo: SwiftProto
 }
 
 extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_SubscriptionInfo.protoMessageName + ".ConnectionInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_SubscriptionInfo.protoMessageName + ".ConnectionInfo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "from"),
     2: .same(proto: "username"),
     3: .standard(proto: "average_items_per_second"),
@@ -4246,7 +4246,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionI
     9: .standard(proto: "connection_name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4266,7 +4266,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionI
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.from.isEmpty {
       try visitor.visitSingularStringField(value: self.from, fieldNumber: 1)
     }
@@ -4297,7 +4297,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionI
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo, rhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo, rhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionInfo) -> Bool {
     if lhs.from != rhs.from {return false}
     if lhs.username != rhs.username {return false}
     if lhs.averageItemsPerSecond != rhs.averageItemsPerSecond {return false}
@@ -4313,13 +4313,13 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.ConnectionI
 }
 
 extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_SubscriptionInfo.protoMessageName + ".Measurement"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_SubscriptionInfo.protoMessageName + ".Measurement"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "key"),
     2: .same(proto: "value"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4332,7 +4332,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.key.isEmpty {
       try visitor.visitSingularStringField(value: self.key, fieldNumber: 1)
     }
@@ -4342,7 +4342,7 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement, rhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement, rhs: EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement) -> Bool {
     if lhs.key != rhs.key {return false}
     if lhs.value != rhs.value {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -4351,12 +4351,12 @@ extension EventStore_Client_PersistentSubscriptions_SubscriptionInfo.Measurement
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplayParkedReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReplayParkedReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4368,7 +4368,7 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq: SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4379,7 +4379,7 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq: SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq, rhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq, rhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4387,8 +4387,8 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq: SwiftProtob
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReplayParkedReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ReplayParkedReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "group_name"),
     2: .standard(proto: "stream_identifier"),
     3: .same(proto: "all"),
@@ -4396,7 +4396,7 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options: Swi
     5: .standard(proto: "no_limit"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4455,7 +4455,7 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options: Swi
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4488,7 +4488,7 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options: Swi
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options, rhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options, rhs: EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options) -> Bool {
     if lhs.groupName != rhs.groupName {return false}
     if lhs.streamOption != rhs.streamOption {return false}
     if lhs.stopAtOption != rhs.stopAtOption {return false}
@@ -4498,31 +4498,31 @@ extension EventStore_Client_PersistentSubscriptions_ReplayParkedReq.Options: Swi
 }
 
 extension EventStore_Client_PersistentSubscriptions_ReplayParkedResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplayParkedResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".ReplayParkedResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReplayParkedResp, rhs: EventStore_Client_PersistentSubscriptions_ReplayParkedResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ReplayParkedResp, rhs: EventStore_Client_PersistentSubscriptions_ReplayParkedResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_PersistentSubscriptions_ListReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ListReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ListReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4534,7 +4534,7 @@ extension EventStore_Client_PersistentSubscriptions_ListReq: SwiftProtobuf.Messa
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4545,7 +4545,7 @@ extension EventStore_Client_PersistentSubscriptions_ListReq: SwiftProtobuf.Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListReq, rhs: EventStore_Client_PersistentSubscriptions_ListReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListReq, rhs: EventStore_Client_PersistentSubscriptions_ListReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4553,13 +4553,13 @@ extension EventStore_Client_PersistentSubscriptions_ListReq: SwiftProtobuf.Messa
 }
 
 extension EventStore_Client_PersistentSubscriptions_ListReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ListReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ListReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "list_all_subscriptions"),
     2: .standard(proto: "list_for_stream"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4596,7 +4596,7 @@ extension EventStore_Client_PersistentSubscriptions_ListReq.Options: SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4615,7 +4615,7 @@ extension EventStore_Client_PersistentSubscriptions_ListReq.Options: SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListReq.Options, rhs: EventStore_Client_PersistentSubscriptions_ListReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListReq.Options, rhs: EventStore_Client_PersistentSubscriptions_ListReq.Options) -> Bool {
     if lhs.listOption != rhs.listOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4623,13 +4623,13 @@ extension EventStore_Client_PersistentSubscriptions_ListReq.Options: SwiftProtob
 }
 
 extension EventStore_Client_PersistentSubscriptions_ListReq.StreamOption: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ListReq.protoMessageName + ".StreamOption"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_PersistentSubscriptions_ListReq.protoMessageName + ".StreamOption"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "stream"),
     2: .same(proto: "all"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4666,7 +4666,7 @@ extension EventStore_Client_PersistentSubscriptions_ListReq.StreamOption: SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4685,7 +4685,7 @@ extension EventStore_Client_PersistentSubscriptions_ListReq.StreamOption: SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption, rhs: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption, rhs: EventStore_Client_PersistentSubscriptions_ListReq.StreamOption) -> Bool {
     if lhs.streamOption != rhs.streamOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4693,12 +4693,12 @@ extension EventStore_Client_PersistentSubscriptions_ListReq.StreamOption: SwiftP
 }
 
 extension EventStore_Client_PersistentSubscriptions_ListResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ListResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ListResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "subscriptions"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4710,14 +4710,14 @@ extension EventStore_Client_PersistentSubscriptions_ListResp: SwiftProtobuf.Mess
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.subscriptions.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.subscriptions, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListResp, rhs: EventStore_Client_PersistentSubscriptions_ListResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_PersistentSubscriptions_ListResp, rhs: EventStore_Client_PersistentSubscriptions_ListResp) -> Bool {
     if lhs.subscriptions != rhs.subscriptions {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

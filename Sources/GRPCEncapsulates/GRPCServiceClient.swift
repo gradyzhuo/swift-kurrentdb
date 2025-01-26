@@ -16,29 +16,29 @@ public protocol GRPCServiceClient {
 }
 
 extension EventStore_Client_Streams_Streams.Client: GRPCServiceClient {
-    public typealias UnderlyingService = EventStore_Client_Streams_Streams
+    package typealias UnderlyingService = EventStore_Client_Streams_Streams
 }
 
 extension EventStore_Client_Users_Users.Client: GRPCServiceClient {
-    public typealias UnderlyingService = EventStore_Client_Users_Users
+    package typealias UnderlyingService = EventStore_Client_Users_Users
 }
 
 extension EventStore_Client_Projections_Projections.Client: GRPCServiceClient {
-    public typealias UnderlyingService = EventStore_Client_Projections_Projections
+    package typealias UnderlyingService = EventStore_Client_Projections_Projections
 }
 
 extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Client: GRPCServiceClient{
-    public typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
+    package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
 }
 
 extension EventStore_Client_Operations_Operations.Client: GRPCServiceClient {
-    public typealias UnderlyingService = EventStore_Client_Operations_Operations
+    package typealias UnderlyingService = EventStore_Client_Operations_Operations
 }
 
 extension EventStore_Client_Monitoring_Monitoring.Client: GRPCServiceClient {
-    public typealias UnderlyingService = EventStore_Client_Monitoring_Monitoring
+    package typealias UnderlyingService = EventStore_Client_Monitoring_Monitoring
 }
 
 extension EventStore_Client_Gossip_Gossip.Client: GRPCServiceClient {
-    public typealias UnderlyingService = EventStore_Client_Gossip_Gossip
+    package typealias UnderlyingService = EventStore_Client_Gossip_Gossip
 }

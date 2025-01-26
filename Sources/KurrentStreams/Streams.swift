@@ -16,7 +16,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 public struct Streams: GRPCConcreteService {
-    public typealias Client = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
+    package typealias Client = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions

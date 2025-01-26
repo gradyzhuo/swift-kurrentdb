@@ -10,7 +10,7 @@ import KurrentCore
 import GRPCEncapsulates
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
-    public static func make(settings: PersistentSubscription.Settings) -> Self {
+    package static func make(settings: PersistentSubscription.Settings) -> Self {
         .with {
             $0.resolveLinks = settings.resolveLink
             $0.extraStatistics = settings.extraStatistics
@@ -41,7 +41,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
-    public static func make(settings: PersistentSubscription.Settings) -> Self {
+    package static func make(settings: PersistentSubscription.Settings) -> Self {
         .with {
             $0.resolveLinks = settings.resolveLink
             $0.extraStatistics = settings.extraStatistics
@@ -71,7 +71,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions {
-    public static func make(with filter: SubscriptionFilter) -> Self {
+    package static func make(with filter: SubscriptionFilter) -> Self {
         .with {
             switch filter.window {
             case .count:

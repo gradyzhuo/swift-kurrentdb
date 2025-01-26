@@ -13,37 +13,37 @@ import GRPCProtobuf
 // MARK: - event_store.client.redaction.Redaction
 
 /// Namespace containing generated types for the "event_store.client.redaction.Redaction" service.
-public enum EventStore_Client_Redaction_Redaction {
+package enum EventStore_Client_Redaction_Redaction {
     /// Service descriptor for the "event_store.client.redaction.Redaction" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.redaction.Redaction")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.redaction.Redaction")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "GetEventPositions" metadata.
-        public enum GetEventPositions {
+        package enum GetEventPositions {
             /// Request type for "GetEventPositions".
-            public typealias Input = EventStore_Client_Redaction_GetEventPositionReq
+            package typealias Input = EventStore_Client_Redaction_GetEventPositionReq
             /// Response type for "GetEventPositions".
-            public typealias Output = EventStore_Client_Redaction_GetEventPositionResp
+            package typealias Output = EventStore_Client_Redaction_GetEventPositionResp
             /// Descriptor for "GetEventPositions".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.redaction.Redaction"),
                 method: "GetEventPositions"
             )
         }
         /// Namespace for "SwitchChunks" metadata.
-        public enum SwitchChunks {
+        package enum SwitchChunks {
             /// Request type for "SwitchChunks".
-            public typealias Input = EventStore_Client_Redaction_SwitchChunkReq
+            package typealias Input = EventStore_Client_Redaction_SwitchChunkReq
             /// Response type for "SwitchChunks".
-            public typealias Output = EventStore_Client_Redaction_SwitchChunkResp
+            package typealias Output = EventStore_Client_Redaction_SwitchChunkResp
             /// Descriptor for "SwitchChunks".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.redaction.Redaction"),
                 method: "SwitchChunks"
             )
         }
         /// Descriptors for all methods in the "event_store.client.redaction.Redaction" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             GetEventPositions.descriptor,
             SwitchChunks.descriptor
         ]
@@ -52,7 +52,7 @@ public enum EventStore_Client_Redaction_Redaction {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.redaction.Redaction" service.
-    public static let event_store_client_redaction_Redaction = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.redaction.Redaction")
+    package static let eventStore_client_redaction_Redaction = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.redaction.Redaction")
 }
 
 // MARK: event_store.client.redaction.Redaction (server)
@@ -68,7 +68,7 @@ extension EventStore_Client_Redaction_Redaction {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "GetEventPositions" method.
         ///
         /// - Parameters:
@@ -105,7 +105,7 @@ extension EventStore_Client_Redaction_Redaction {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Redaction_Redaction.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Redaction_Redaction.StreamingServiceProtocol {
         /// Handle the "GetEventPositions" method.
         ///
         /// - Parameters:
@@ -140,7 +140,7 @@ extension EventStore_Client_Redaction_Redaction {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Redaction_Redaction.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Redaction_Redaction.ServiceProtocol {
         /// Handle the "GetEventPositions" method.
         ///
         /// - Parameters:
@@ -175,7 +175,7 @@ extension EventStore_Client_Redaction_Redaction {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Redaction_Redaction.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Redaction_Redaction.Method.GetEventPositions.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Redaction_GetEventPositionReq>(),
@@ -207,7 +207,7 @@ extension EventStore_Client_Redaction_Redaction.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Redaction_Redaction.SimpleServiceProtocol {
-    public func getEventPositions(
+    package func getEventPositions(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Redaction_GetEventPositionReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_GetEventPositionResp> {
@@ -224,7 +224,7 @@ extension EventStore_Client_Redaction_Redaction.SimpleServiceProtocol {
         )
     }
 
-    public func switchChunks(
+    package func switchChunks(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Redaction_SwitchChunkReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_SwitchChunkResp> {
@@ -249,7 +249,7 @@ extension EventStore_Client_Redaction_Redaction {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "GetEventPositions" method.
         ///
         /// - Parameters:
@@ -294,14 +294,14 @@ extension EventStore_Client_Redaction_Redaction {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -316,7 +316,7 @@ extension EventStore_Client_Redaction_Redaction {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func getEventPositions<Result>(
+        package func getEventPositions<Result>(
             request: GRPCCore.StreamingClientRequest<EventStore_Client_Redaction_GetEventPositionReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Redaction_GetEventPositionReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Redaction_GetEventPositionResp>,
@@ -344,7 +344,7 @@ extension EventStore_Client_Redaction_Redaction {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func switchChunks<Result>(
+        package func switchChunks<Result>(
             request: GRPCCore.StreamingClientRequest<EventStore_Client_Redaction_SwitchChunkReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Redaction_SwitchChunkReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Redaction_SwitchChunkResp>,
@@ -374,7 +374,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func getEventPositions<Result>(
+    package func getEventPositions<Result>(
         request: GRPCCore.StreamingClientRequest<EventStore_Client_Redaction_GetEventPositionReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Redaction_GetEventPositionResp>) async throws -> Result
@@ -397,7 +397,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func switchChunks<Result>(
+    package func switchChunks<Result>(
         request: GRPCCore.StreamingClientRequest<EventStore_Client_Redaction_SwitchChunkReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Redaction_SwitchChunkResp>) async throws -> Result
@@ -425,7 +425,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func getEventPositions<Result>(
+    package func getEventPositions<Result>(
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         requestProducer producer: @Sendable @escaping (GRPCCore.RPCWriter<EventStore_Client_Redaction_GetEventPositionReq>) async throws -> Void,
@@ -453,7 +453,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func switchChunks<Result>(
+    package func switchChunks<Result>(
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         requestProducer producer: @Sendable @escaping (GRPCCore.RPCWriter<EventStore_Client_Redaction_SwitchChunkReq>) async throws -> Void,

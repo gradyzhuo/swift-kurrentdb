@@ -156,7 +156,6 @@ extension EventStoreDBClient {
 }
 
 // MARK: - Operations
-
 extension EventStoreDBClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
         let operations = Operations(settings: settings, callOptions: defaultCallOptions)

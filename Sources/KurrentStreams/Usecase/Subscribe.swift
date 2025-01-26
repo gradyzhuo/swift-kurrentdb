@@ -12,9 +12,9 @@ import GRPCEncapsulates
 
 extension Streams {
     public struct Subscribe: UnaryStream {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = Read.UnderlyingRequest
-        public typealias UnderlyingResponse = Read.UnderlyingResponse
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = Read.UnderlyingRequest
+        package typealias UnderlyingResponse = Read.UnderlyingResponse
         public typealias Responses = Subscription
 
         public let streamIdentifier: StreamIdentifier
@@ -45,7 +45,7 @@ extension Streams {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws ->Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws ->Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
             Task{
                 try await client.read(request: request, options: callOptions) {
@@ -70,7 +70,7 @@ extension Streams.Subscribe {
             case position(lastAllStream: StreamPosition)
         }
 
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         public var content: Content
 
@@ -78,7 +78,7 @@ extension Streams.Subscribe {
             self.content = content
         }
 
-        public init(from message: EventStore_Client_Streams_ReadResp) throws {
+        package init(from message: UnderlyingResponse) throws {
             guard let content = message.content else {
                 throw ClientError.readResponseError(message: "content not found in response: \(message)")
             }
@@ -130,7 +130,7 @@ extension Streams.Subscribe {
 
 extension Streams.Subscribe {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var resolveLinks: Bool
         public private(set) var uuidOption: UUIDOption

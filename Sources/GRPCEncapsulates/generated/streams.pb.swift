@@ -21,30 +21,30 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_Streams_ReadReq: Sendable {
+package struct EventStore_Client_Streams_ReadReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Streams_ReadReq.Options {
+  package var options: EventStore_Client_Streams_ReadReq.Options {
     get {return _options ?? EventStore_Client_Streams_ReadReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamOption: EventStore_Client_Streams_ReadReq.Options.OneOf_StreamOption? = nil
+    package var streamOption: EventStore_Client_Streams_ReadReq.Options.OneOf_StreamOption? = nil
 
-    public var stream: EventStore_Client_Streams_ReadReq.Options.StreamOptions {
+    package var stream: EventStore_Client_Streams_ReadReq.Options.StreamOptions {
       get {
         if case .stream(let v)? = streamOption {return v}
         return EventStore_Client_Streams_ReadReq.Options.StreamOptions()
@@ -52,7 +52,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       set {streamOption = .stream(newValue)}
     }
 
-    public var all: EventStore_Client_Streams_ReadReq.Options.AllOptions {
+    package var all: EventStore_Client_Streams_ReadReq.Options.AllOptions {
       get {
         if case .all(let v)? = streamOption {return v}
         return EventStore_Client_Streams_ReadReq.Options.AllOptions()
@@ -60,13 +60,13 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       set {streamOption = .all(newValue)}
     }
 
-    public var readDirection: EventStore_Client_Streams_ReadReq.Options.ReadDirection = .forwards
+    package var readDirection: EventStore_Client_Streams_ReadReq.Options.ReadDirection = .forwards
 
-    public var resolveLinks: Bool = false
+    package var resolveLinks: Bool = false
 
-    public var countOption: EventStore_Client_Streams_ReadReq.Options.OneOf_CountOption? = nil
+    package var countOption: EventStore_Client_Streams_ReadReq.Options.OneOf_CountOption? = nil
 
-    public var count: UInt64 {
+    package var count: UInt64 {
       get {
         if case .count(let v)? = countOption {return v}
         return 0
@@ -74,7 +74,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       set {countOption = .count(newValue)}
     }
 
-    public var subscription: EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions {
+    package var subscription: EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions {
       get {
         if case .subscription(let v)? = countOption {return v}
         return EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions()
@@ -82,9 +82,9 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       set {countOption = .subscription(newValue)}
     }
 
-    public var filterOption: EventStore_Client_Streams_ReadReq.Options.OneOf_FilterOption? = nil
+    package var filterOption: EventStore_Client_Streams_ReadReq.Options.OneOf_FilterOption? = nil
 
-    public var filter: EventStore_Client_Streams_ReadReq.Options.FilterOptions {
+    package var filter: EventStore_Client_Streams_ReadReq.Options.FilterOptions {
       get {
         if case .filter(let v)? = filterOption {return v}
         return EventStore_Client_Streams_ReadReq.Options.FilterOptions()
@@ -92,7 +92,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       set {filterOption = .filter(newValue)}
     }
 
-    public var noFilter: EventStore_Client_Empty {
+    package var noFilter: EventStore_Client_Empty {
       get {
         if case .noFilter(let v)? = filterOption {return v}
         return EventStore_Client_Empty()
@@ -100,55 +100,55 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       set {filterOption = .noFilter(newValue)}
     }
 
-    public var uuidOption: EventStore_Client_Streams_ReadReq.Options.UUIDOption {
+    package var uuidOption: EventStore_Client_Streams_ReadReq.Options.UUIDOption {
       get {return _uuidOption ?? EventStore_Client_Streams_ReadReq.Options.UUIDOption()}
       set {_uuidOption = newValue}
     }
     /// Returns true if `uuidOption` has been explicitly set.
-    public var hasUuidOption: Bool {return self._uuidOption != nil}
+    package var hasUuidOption: Bool {return self._uuidOption != nil}
     /// Clears the value of `uuidOption`. Subsequent reads from it will return its default value.
-    public mutating func clearUuidOption() {self._uuidOption = nil}
+    package mutating func clearUuidOption() {self._uuidOption = nil}
 
-    public var controlOption: EventStore_Client_Streams_ReadReq.Options.ControlOption {
+    package var controlOption: EventStore_Client_Streams_ReadReq.Options.ControlOption {
       get {return _controlOption ?? EventStore_Client_Streams_ReadReq.Options.ControlOption()}
       set {_controlOption = newValue}
     }
     /// Returns true if `controlOption` has been explicitly set.
-    public var hasControlOption: Bool {return self._controlOption != nil}
+    package var hasControlOption: Bool {return self._controlOption != nil}
     /// Clears the value of `controlOption`. Subsequent reads from it will return its default value.
-    public mutating func clearControlOption() {self._controlOption = nil}
+    package mutating func clearControlOption() {self._controlOption = nil}
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_StreamOption: Equatable, Sendable {
+    package enum OneOf_StreamOption: Equatable, Sendable {
       case stream(EventStore_Client_Streams_ReadReq.Options.StreamOptions)
       case all(EventStore_Client_Streams_ReadReq.Options.AllOptions)
 
     }
 
-    public enum OneOf_CountOption: Equatable, Sendable {
+    package enum OneOf_CountOption: Equatable, Sendable {
       case count(UInt64)
       case subscription(EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions)
 
     }
 
-    public enum OneOf_FilterOption: Equatable, Sendable {
+    package enum OneOf_FilterOption: Equatable, Sendable {
       case filter(EventStore_Client_Streams_ReadReq.Options.FilterOptions)
       case noFilter(EventStore_Client_Empty)
 
     }
 
-    public enum ReadDirection: SwiftProtobuf.Enum, Swift.CaseIterable {
-      public typealias RawValue = Int
+    package enum ReadDirection: SwiftProtobuf.Enum, Swift.CaseIterable {
+      package typealias RawValue = Int
       case forwards // = 0
       case backwards // = 1
       case UNRECOGNIZED(Int)
 
-      public init() {
+      package init() {
         self = .forwards
       }
 
-      public init?(rawValue: Int) {
+      package init?(rawValue: Int) {
         switch rawValue {
         case 0: self = .forwards
         case 1: self = .backwards
@@ -156,7 +156,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         }
       }
 
-      public var rawValue: Int {
+      package var rawValue: Int {
         switch self {
         case .forwards: return 0
         case .backwards: return 1
@@ -165,30 +165,30 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
       }
 
       // The compiler won't synthesize support with the UNRECOGNIZED case.
-      public static let allCases: [EventStore_Client_Streams_ReadReq.Options.ReadDirection] = [
+      package static let allCases: [EventStore_Client_Streams_ReadReq.Options.ReadDirection] = [
         .forwards,
         .backwards,
       ]
 
     }
 
-    public struct StreamOptions: Sendable {
+    package struct StreamOptions: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var streamIdentifier: EventStore_Client_StreamIdentifier {
+      package var streamIdentifier: EventStore_Client_StreamIdentifier {
         get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
         set {_streamIdentifier = newValue}
       }
       /// Returns true if `streamIdentifier` has been explicitly set.
-      public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+      package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
       /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-      public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+      package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-      public var revisionOption: EventStore_Client_Streams_ReadReq.Options.StreamOptions.OneOf_RevisionOption? = nil
+      package var revisionOption: EventStore_Client_Streams_ReadReq.Options.StreamOptions.OneOf_RevisionOption? = nil
 
-      public var revision: UInt64 {
+      package var revision: UInt64 {
         get {
           if case .revision(let v)? = revisionOption {return v}
           return 0
@@ -196,7 +196,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {revisionOption = .revision(newValue)}
       }
 
-      public var start: EventStore_Client_Empty {
+      package var start: EventStore_Client_Empty {
         get {
           if case .start(let v)? = revisionOption {return v}
           return EventStore_Client_Empty()
@@ -204,7 +204,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {revisionOption = .start(newValue)}
       }
 
-      public var end: EventStore_Client_Empty {
+      package var end: EventStore_Client_Empty {
         get {
           if case .end(let v)? = revisionOption {return v}
           return EventStore_Client_Empty()
@@ -212,28 +212,28 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {revisionOption = .end(newValue)}
       }
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_RevisionOption: Equatable, Sendable {
+      package enum OneOf_RevisionOption: Equatable, Sendable {
         case revision(UInt64)
         case start(EventStore_Client_Empty)
         case end(EventStore_Client_Empty)
 
       }
 
-      public init() {}
+      package init() {}
 
       fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
     }
 
-    public struct AllOptions: Sendable {
+    package struct AllOptions: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var allOption: EventStore_Client_Streams_ReadReq.Options.AllOptions.OneOf_AllOption? = nil
+      package var allOption: EventStore_Client_Streams_ReadReq.Options.AllOptions.OneOf_AllOption? = nil
 
-      public var position: EventStore_Client_Streams_ReadReq.Options.Position {
+      package var position: EventStore_Client_Streams_ReadReq.Options.Position {
         get {
           if case .position(let v)? = allOption {return v}
           return EventStore_Client_Streams_ReadReq.Options.Position()
@@ -241,7 +241,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {allOption = .position(newValue)}
       }
 
-      public var start: EventStore_Client_Empty {
+      package var start: EventStore_Client_Empty {
         get {
           if case .start(let v)? = allOption {return v}
           return EventStore_Client_Empty()
@@ -249,7 +249,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {allOption = .start(newValue)}
       }
 
-      public var end: EventStore_Client_Empty {
+      package var end: EventStore_Client_Empty {
         get {
           if case .end(let v)? = allOption {return v}
           return EventStore_Client_Empty()
@@ -257,50 +257,50 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {allOption = .end(newValue)}
       }
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_AllOption: Equatable, Sendable {
+      package enum OneOf_AllOption: Equatable, Sendable {
         case position(EventStore_Client_Streams_ReadReq.Options.Position)
         case start(EventStore_Client_Empty)
         case end(EventStore_Client_Empty)
 
       }
 
-      public init() {}
+      package init() {}
     }
 
-    public struct SubscriptionOptions: Sendable {
+    package struct SubscriptionOptions: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
     }
 
-    public struct Position: Sendable {
+    package struct Position: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var commitPosition: UInt64 = 0
+      package var commitPosition: UInt64 = 0
 
-      public var preparePosition: UInt64 = 0
+      package var preparePosition: UInt64 = 0
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
     }
 
-    public struct FilterOptions: Sendable {
+    package struct FilterOptions: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var filter: EventStore_Client_Streams_ReadReq.Options.FilterOptions.OneOf_Filter? = nil
+      package var filter: EventStore_Client_Streams_ReadReq.Options.FilterOptions.OneOf_Filter? = nil
 
-      public var streamIdentifier: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression {
+      package var streamIdentifier: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression {
         get {
           if case .streamIdentifier(let v)? = filter {return v}
           return EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression()
@@ -308,7 +308,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {filter = .streamIdentifier(newValue)}
       }
 
-      public var eventType: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression {
+      package var eventType: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression {
         get {
           if case .eventType(let v)? = filter {return v}
           return EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression()
@@ -316,9 +316,9 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {filter = .eventType(newValue)}
       }
 
-      public var window: EventStore_Client_Streams_ReadReq.Options.FilterOptions.OneOf_Window? = nil
+      package var window: EventStore_Client_Streams_ReadReq.Options.FilterOptions.OneOf_Window? = nil
 
-      public var max: UInt32 {
+      package var max: UInt32 {
         get {
           if case .max(let v)? = window {return v}
           return 0
@@ -326,7 +326,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {window = .max(newValue)}
       }
 
-      public var count: EventStore_Client_Empty {
+      package var count: EventStore_Client_Empty {
         get {
           if case .count(let v)? = window {return v}
           return EventStore_Client_Empty()
@@ -334,47 +334,47 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {window = .count(newValue)}
       }
 
-      public var checkpointIntervalMultiplier: UInt32 = 0
+      package var checkpointIntervalMultiplier: UInt32 = 0
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Filter: Equatable, Sendable {
+      package enum OneOf_Filter: Equatable, Sendable {
         case streamIdentifier(EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression)
         case eventType(EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression)
 
       }
 
-      public enum OneOf_Window: Equatable, Sendable {
+      package enum OneOf_Window: Equatable, Sendable {
         case max(UInt32)
         case count(EventStore_Client_Empty)
 
       }
 
-      public struct Expression: Sendable {
+      package struct Expression: Sendable {
         // SwiftProtobuf.Message conformance is added in an extension below. See the
         // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
         // methods supported on all messages.
 
-        public var regex: String = String()
+        package var regex: String = String()
 
-        public var prefix: [String] = []
+        package var prefix: [String] = []
 
-        public var unknownFields = SwiftProtobuf.UnknownStorage()
+        package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-        public init() {}
+        package init() {}
       }
 
-      public init() {}
+      package init() {}
     }
 
-    public struct UUIDOption: Sendable {
+    package struct UUIDOption: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var content: EventStore_Client_Streams_ReadReq.Options.UUIDOption.OneOf_Content? = nil
+      package var content: EventStore_Client_Streams_ReadReq.Options.UUIDOption.OneOf_Content? = nil
 
-      public var structured: EventStore_Client_Empty {
+      package var structured: EventStore_Client_Empty {
         get {
           if case .structured(let v)? = content {return v}
           return EventStore_Client_Empty()
@@ -382,7 +382,7 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {content = .structured(newValue)}
       }
 
-      public var string: EventStore_Client_Empty {
+      package var string: EventStore_Client_Empty {
         get {
           if case .string(let v)? = content {return v}
           return EventStore_Client_Empty()
@@ -390,48 +390,48 @@ public struct EventStore_Client_Streams_ReadReq: Sendable {
         set {content = .string(newValue)}
       }
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Content: Equatable, Sendable {
+      package enum OneOf_Content: Equatable, Sendable {
         case structured(EventStore_Client_Empty)
         case string(EventStore_Client_Empty)
 
       }
 
-      public init() {}
+      package init() {}
     }
 
-    public struct ControlOption: Sendable {
+    package struct ControlOption: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var compatibility: UInt32 = 0
+      package var compatibility: UInt32 = 0
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _uuidOption: EventStore_Client_Streams_ReadReq.Options.UUIDOption? = nil
     fileprivate var _controlOption: EventStore_Client_Streams_ReadReq.Options.ControlOption? = nil
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Streams_ReadReq.Options? = nil
 }
 
-public struct EventStore_Client_Streams_ReadResp: Sendable {
+package struct EventStore_Client_Streams_ReadResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var content: EventStore_Client_Streams_ReadResp.OneOf_Content? = nil
+  package var content: EventStore_Client_Streams_ReadResp.OneOf_Content? = nil
 
-  public var event: EventStore_Client_Streams_ReadResp.ReadEvent {
+  package var event: EventStore_Client_Streams_ReadResp.ReadEvent {
     get {
       if case .event(let v)? = content {return v}
       return EventStore_Client_Streams_ReadResp.ReadEvent()
@@ -439,7 +439,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .event(newValue)}
   }
 
-  public var confirmation: EventStore_Client_Streams_ReadResp.SubscriptionConfirmation {
+  package var confirmation: EventStore_Client_Streams_ReadResp.SubscriptionConfirmation {
     get {
       if case .confirmation(let v)? = content {return v}
       return EventStore_Client_Streams_ReadResp.SubscriptionConfirmation()
@@ -447,7 +447,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .confirmation(newValue)}
   }
 
-  public var checkpoint: EventStore_Client_Streams_ReadResp.Checkpoint {
+  package var checkpoint: EventStore_Client_Streams_ReadResp.Checkpoint {
     get {
       if case .checkpoint(let v)? = content {return v}
       return EventStore_Client_Streams_ReadResp.Checkpoint()
@@ -455,7 +455,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .checkpoint(newValue)}
   }
 
-  public var streamNotFound: EventStore_Client_Streams_ReadResp.StreamNotFound {
+  package var streamNotFound: EventStore_Client_Streams_ReadResp.StreamNotFound {
     get {
       if case .streamNotFound(let v)? = content {return v}
       return EventStore_Client_Streams_ReadResp.StreamNotFound()
@@ -463,7 +463,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .streamNotFound(newValue)}
   }
 
-  public var firstStreamPosition: UInt64 {
+  package var firstStreamPosition: UInt64 {
     get {
       if case .firstStreamPosition(let v)? = content {return v}
       return 0
@@ -471,7 +471,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .firstStreamPosition(newValue)}
   }
 
-  public var lastStreamPosition: UInt64 {
+  package var lastStreamPosition: UInt64 {
     get {
       if case .lastStreamPosition(let v)? = content {return v}
       return 0
@@ -479,7 +479,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .lastStreamPosition(newValue)}
   }
 
-  public var lastAllStreamPosition: EventStore_Client_AllStreamPosition {
+  package var lastAllStreamPosition: EventStore_Client_AllStreamPosition {
     get {
       if case .lastAllStreamPosition(let v)? = content {return v}
       return EventStore_Client_AllStreamPosition()
@@ -487,7 +487,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .lastAllStreamPosition(newValue)}
   }
 
-  public var caughtUp: EventStore_Client_Streams_ReadResp.CaughtUp {
+  package var caughtUp: EventStore_Client_Streams_ReadResp.CaughtUp {
     get {
       if case .caughtUp(let v)? = content {return v}
       return EventStore_Client_Streams_ReadResp.CaughtUp()
@@ -495,7 +495,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .caughtUp(newValue)}
   }
 
-  public var fellBehind: EventStore_Client_Streams_ReadResp.FellBehind {
+  package var fellBehind: EventStore_Client_Streams_ReadResp.FellBehind {
     get {
       if case .fellBehind(let v)? = content {return v}
       return EventStore_Client_Streams_ReadResp.FellBehind()
@@ -503,9 +503,9 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
     set {content = .fellBehind(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Content: Equatable, Sendable {
+  package enum OneOf_Content: Equatable, Sendable {
     case event(EventStore_Client_Streams_ReadResp.ReadEvent)
     case confirmation(EventStore_Client_Streams_ReadResp.SubscriptionConfirmation)
     case checkpoint(EventStore_Client_Streams_ReadResp.Checkpoint)
@@ -518,55 +518,55 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
 
   }
 
-  public struct CaughtUp: Sendable {
+  package struct CaughtUp: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct FellBehind: Sendable {
+  package struct FellBehind: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct ReadEvent: @unchecked Sendable {
+  package struct ReadEvent: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var event: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent {
+    package var event: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent {
       get {return _storage._event ?? EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent()}
       set {_uniqueStorage()._event = newValue}
     }
     /// Returns true if `event` has been explicitly set.
-    public var hasEvent: Bool {return _storage._event != nil}
+    package var hasEvent: Bool {return _storage._event != nil}
     /// Clears the value of `event`. Subsequent reads from it will return its default value.
-    public mutating func clearEvent() {_uniqueStorage()._event = nil}
+    package mutating func clearEvent() {_uniqueStorage()._event = nil}
 
-    public var link: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent {
+    package var link: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent {
       get {return _storage._link ?? EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent()}
       set {_uniqueStorage()._link = newValue}
     }
     /// Returns true if `link` has been explicitly set.
-    public var hasLink: Bool {return _storage._link != nil}
+    package var hasLink: Bool {return _storage._link != nil}
     /// Clears the value of `link`. Subsequent reads from it will return its default value.
-    public mutating func clearLink() {_uniqueStorage()._link = nil}
+    package mutating func clearLink() {_uniqueStorage()._link = nil}
 
-    public var position: OneOf_Position? {
+    package var position: OneOf_Position? {
       get {return _storage._position}
       set {_uniqueStorage()._position = newValue}
     }
 
-    public var commitPosition: UInt64 {
+    package var commitPosition: UInt64 {
       get {
         if case .commitPosition(let v)? = _storage._position {return v}
         return 0
@@ -574,7 +574,7 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
       set {_uniqueStorage()._position = .commitPosition(newValue)}
     }
 
-    public var noPosition: EventStore_Client_Empty {
+    package var noPosition: EventStore_Client_Empty {
       get {
         if case .noPosition(let v)? = _storage._position {return v}
         return EventStore_Client_Empty()
@@ -582,120 +582,120 @@ public struct EventStore_Client_Streams_ReadResp: Sendable {
       set {_uniqueStorage()._position = .noPosition(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Position: Equatable, Sendable {
+    package enum OneOf_Position: Equatable, Sendable {
       case commitPosition(UInt64)
       case noPosition(EventStore_Client_Empty)
 
     }
 
-    public struct RecordedEvent: @unchecked Sendable {
+    package struct RecordedEvent: @unchecked Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var id: EventStore_Client_UUID {
+      package var id: EventStore_Client_UUID {
         get {return _id ?? EventStore_Client_UUID()}
         set {_id = newValue}
       }
       /// Returns true if `id` has been explicitly set.
-      public var hasID: Bool {return self._id != nil}
+      package var hasID: Bool {return self._id != nil}
       /// Clears the value of `id`. Subsequent reads from it will return its default value.
-      public mutating func clearID() {self._id = nil}
+      package mutating func clearID() {self._id = nil}
 
-      public var streamIdentifier: EventStore_Client_StreamIdentifier {
+      package var streamIdentifier: EventStore_Client_StreamIdentifier {
         get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
         set {_streamIdentifier = newValue}
       }
       /// Returns true if `streamIdentifier` has been explicitly set.
-      public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+      package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
       /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-      public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+      package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-      public var streamRevision: UInt64 = 0
+      package var streamRevision: UInt64 = 0
 
-      public var preparePosition: UInt64 = 0
+      package var preparePosition: UInt64 = 0
 
-      public var commitPosition: UInt64 = 0
+      package var commitPosition: UInt64 = 0
 
-      public var metadata: Dictionary<String,String> = [:]
+      package var metadata: Dictionary<String,String> = [:]
 
-      public var customMetadata: Data = Data()
+      package var customMetadata: Data = Data()
 
-      public var data: Data = Data()
+      package var data: Data = Data()
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
 
       fileprivate var _id: EventStore_Client_UUID? = nil
       fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _storage = _StorageClass.defaultInstance
   }
 
-  public struct SubscriptionConfirmation: Sendable {
+  package struct SubscriptionConfirmation: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var subscriptionID: String = String()
+    package var subscriptionID: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Checkpoint: Sendable {
+  package struct Checkpoint: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var commitPosition: UInt64 = 0
+    package var commitPosition: UInt64 = 0
 
-    public var preparePosition: UInt64 = 0
+    package var preparePosition: UInt64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct StreamNotFound: Sendable {
+  package struct StreamNotFound: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Streams_AppendReq: Sendable {
+package struct EventStore_Client_Streams_AppendReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var content: EventStore_Client_Streams_AppendReq.OneOf_Content? = nil
+  package var content: EventStore_Client_Streams_AppendReq.OneOf_Content? = nil
 
-  public var options: EventStore_Client_Streams_AppendReq.Options {
+  package var options: EventStore_Client_Streams_AppendReq.Options {
     get {
       if case .options(let v)? = content {return v}
       return EventStore_Client_Streams_AppendReq.Options()
@@ -703,7 +703,7 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
     set {content = .options(newValue)}
   }
 
-  public var proposedMessage: EventStore_Client_Streams_AppendReq.ProposedMessage {
+  package var proposedMessage: EventStore_Client_Streams_AppendReq.ProposedMessage {
     get {
       if case .proposedMessage(let v)? = content {return v}
       return EventStore_Client_Streams_AppendReq.ProposedMessage()
@@ -711,31 +711,31 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
     set {content = .proposedMessage(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Content: Equatable, Sendable {
+  package enum OneOf_Content: Equatable, Sendable {
     case options(EventStore_Client_Streams_AppendReq.Options)
     case proposedMessage(EventStore_Client_Streams_AppendReq.ProposedMessage)
 
   }
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var expectedStreamRevision: EventStore_Client_Streams_AppendReq.Options.OneOf_ExpectedStreamRevision? = nil
+    package var expectedStreamRevision: EventStore_Client_Streams_AppendReq.Options.OneOf_ExpectedStreamRevision? = nil
 
-    public var revision: UInt64 {
+    package var revision: UInt64 {
       get {
         if case .revision(let v)? = expectedStreamRevision {return v}
         return 0
@@ -743,7 +743,7 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
       set {expectedStreamRevision = .revision(newValue)}
     }
 
-    public var noStream: EventStore_Client_Empty {
+    package var noStream: EventStore_Client_Empty {
       get {
         if case .noStream(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -751,7 +751,7 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
       set {expectedStreamRevision = .noStream(newValue)}
     }
 
-    public var any: EventStore_Client_Empty {
+    package var any: EventStore_Client_Empty {
       get {
         if case .any(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -759,7 +759,7 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
       set {expectedStreamRevision = .any(newValue)}
     }
 
-    public var streamExists: EventStore_Client_Empty {
+    package var streamExists: EventStore_Client_Empty {
       get {
         if case .streamExists(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -767,9 +767,9 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
       set {expectedStreamRevision = .streamExists(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_ExpectedStreamRevision: Equatable, Sendable {
+    package enum OneOf_ExpectedStreamRevision: Equatable, Sendable {
       case revision(UInt64)
       case noStream(EventStore_Client_Empty)
       case any(EventStore_Client_Empty)
@@ -777,49 +777,49 @@ public struct EventStore_Client_Streams_AppendReq: Sendable {
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public struct ProposedMessage: @unchecked Sendable {
+  package struct ProposedMessage: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var id: EventStore_Client_UUID {
+    package var id: EventStore_Client_UUID {
       get {return _id ?? EventStore_Client_UUID()}
       set {_id = newValue}
     }
     /// Returns true if `id` has been explicitly set.
-    public var hasID: Bool {return self._id != nil}
+    package var hasID: Bool {return self._id != nil}
     /// Clears the value of `id`. Subsequent reads from it will return its default value.
-    public mutating func clearID() {self._id = nil}
+    package mutating func clearID() {self._id = nil}
 
-    public var metadata: Dictionary<String,String> = [:]
+    package var metadata: Dictionary<String,String> = [:]
 
-    public var customMetadata: Data = Data()
+    package var customMetadata: Data = Data()
 
-    public var data: Data = Data()
+    package var data: Data = Data()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
 
     fileprivate var _id: EventStore_Client_UUID? = nil
   }
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Streams_AppendResp: Sendable {
+package struct EventStore_Client_Streams_AppendResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var result: EventStore_Client_Streams_AppendResp.OneOf_Result? = nil
+  package var result: EventStore_Client_Streams_AppendResp.OneOf_Result? = nil
 
-  public var success: EventStore_Client_Streams_AppendResp.Success {
+  package var success: EventStore_Client_Streams_AppendResp.Success {
     get {
       if case .success(let v)? = result {return v}
       return EventStore_Client_Streams_AppendResp.Success()
@@ -827,7 +827,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
     set {result = .success(newValue)}
   }
 
-  public var wrongExpectedVersion: EventStore_Client_Streams_AppendResp.WrongExpectedVersion {
+  package var wrongExpectedVersion: EventStore_Client_Streams_AppendResp.WrongExpectedVersion {
     get {
       if case .wrongExpectedVersion(let v)? = result {return v}
       return EventStore_Client_Streams_AppendResp.WrongExpectedVersion()
@@ -835,36 +835,36 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
     set {result = .wrongExpectedVersion(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Result: Equatable, Sendable {
+  package enum OneOf_Result: Equatable, Sendable {
     case success(EventStore_Client_Streams_AppendResp.Success)
     case wrongExpectedVersion(EventStore_Client_Streams_AppendResp.WrongExpectedVersion)
 
   }
 
-  public struct Position: Sendable {
+  package struct Position: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var commitPosition: UInt64 = 0
+    package var commitPosition: UInt64 = 0
 
-    public var preparePosition: UInt64 = 0
+    package var preparePosition: UInt64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public struct Success: Sendable {
+  package struct Success: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var currentRevisionOption: EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOption? = nil
+    package var currentRevisionOption: EventStore_Client_Streams_AppendResp.Success.OneOf_CurrentRevisionOption? = nil
 
-    public var currentRevision: UInt64 {
+    package var currentRevision: UInt64 {
       get {
         if case .currentRevision(let v)? = currentRevisionOption {return v}
         return 0
@@ -872,7 +872,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {currentRevisionOption = .currentRevision(newValue)}
     }
 
-    public var noStream: EventStore_Client_Empty {
+    package var noStream: EventStore_Client_Empty {
       get {
         if case .noStream(let v)? = currentRevisionOption {return v}
         return EventStore_Client_Empty()
@@ -880,9 +880,9 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {currentRevisionOption = .noStream(newValue)}
     }
 
-    public var positionOption: EventStore_Client_Streams_AppendResp.Success.OneOf_PositionOption? = nil
+    package var positionOption: EventStore_Client_Streams_AppendResp.Success.OneOf_PositionOption? = nil
 
-    public var position: EventStore_Client_Streams_AppendResp.Position {
+    package var position: EventStore_Client_Streams_AppendResp.Position {
       get {
         if case .position(let v)? = positionOption {return v}
         return EventStore_Client_Streams_AppendResp.Position()
@@ -890,7 +890,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {positionOption = .position(newValue)}
     }
 
-    public var noPosition: EventStore_Client_Empty {
+    package var noPosition: EventStore_Client_Empty {
       get {
         if case .noPosition(let v)? = positionOption {return v}
         return EventStore_Client_Empty()
@@ -898,31 +898,31 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {positionOption = .noPosition(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_CurrentRevisionOption: Equatable, Sendable {
+    package enum OneOf_CurrentRevisionOption: Equatable, Sendable {
       case currentRevision(UInt64)
       case noStream(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_PositionOption: Equatable, Sendable {
+    package enum OneOf_PositionOption: Equatable, Sendable {
       case position(EventStore_Client_Streams_AppendResp.Position)
       case noPosition(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public struct WrongExpectedVersion: Sendable {
+  package struct WrongExpectedVersion: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var currentRevisionOption2060: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_CurrentRevisionOption2060? = nil
+    package var currentRevisionOption2060: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_CurrentRevisionOption2060? = nil
 
-    public var currentRevision2060: UInt64 {
+    package var currentRevision2060: UInt64 {
       get {
         if case .currentRevision2060(let v)? = currentRevisionOption2060 {return v}
         return 0
@@ -930,7 +930,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {currentRevisionOption2060 = .currentRevision2060(newValue)}
     }
 
-    public var noStream2060: EventStore_Client_Empty {
+    package var noStream2060: EventStore_Client_Empty {
       get {
         if case .noStream2060(let v)? = currentRevisionOption2060 {return v}
         return EventStore_Client_Empty()
@@ -938,9 +938,9 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {currentRevisionOption2060 = .noStream2060(newValue)}
     }
 
-    public var expectedRevisionOption2060: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_ExpectedRevisionOption2060? = nil
+    package var expectedRevisionOption2060: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_ExpectedRevisionOption2060? = nil
 
-    public var expectedRevision2060: UInt64 {
+    package var expectedRevision2060: UInt64 {
       get {
         if case .expectedRevision2060(let v)? = expectedRevisionOption2060 {return v}
         return 0
@@ -948,7 +948,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption2060 = .expectedRevision2060(newValue)}
     }
 
-    public var any2060: EventStore_Client_Empty {
+    package var any2060: EventStore_Client_Empty {
       get {
         if case .any2060(let v)? = expectedRevisionOption2060 {return v}
         return EventStore_Client_Empty()
@@ -956,7 +956,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption2060 = .any2060(newValue)}
     }
 
-    public var streamExists2060: EventStore_Client_Empty {
+    package var streamExists2060: EventStore_Client_Empty {
       get {
         if case .streamExists2060(let v)? = expectedRevisionOption2060 {return v}
         return EventStore_Client_Empty()
@@ -964,9 +964,9 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption2060 = .streamExists2060(newValue)}
     }
 
-    public var currentRevisionOption: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_CurrentRevisionOption? = nil
+    package var currentRevisionOption: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_CurrentRevisionOption? = nil
 
-    public var currentRevision: UInt64 {
+    package var currentRevision: UInt64 {
       get {
         if case .currentRevision(let v)? = currentRevisionOption {return v}
         return 0
@@ -974,7 +974,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {currentRevisionOption = .currentRevision(newValue)}
     }
 
-    public var currentNoStream: EventStore_Client_Empty {
+    package var currentNoStream: EventStore_Client_Empty {
       get {
         if case .currentNoStream(let v)? = currentRevisionOption {return v}
         return EventStore_Client_Empty()
@@ -982,9 +982,9 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {currentRevisionOption = .currentNoStream(newValue)}
     }
 
-    public var expectedRevisionOption: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_ExpectedRevisionOption? = nil
+    package var expectedRevisionOption: EventStore_Client_Streams_AppendResp.WrongExpectedVersion.OneOf_ExpectedRevisionOption? = nil
 
-    public var expectedRevision: UInt64 {
+    package var expectedRevision: UInt64 {
       get {
         if case .expectedRevision(let v)? = expectedRevisionOption {return v}
         return 0
@@ -992,7 +992,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption = .expectedRevision(newValue)}
     }
 
-    public var expectedAny: EventStore_Client_Empty {
+    package var expectedAny: EventStore_Client_Empty {
       get {
         if case .expectedAny(let v)? = expectedRevisionOption {return v}
         return EventStore_Client_Empty()
@@ -1000,7 +1000,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption = .expectedAny(newValue)}
     }
 
-    public var expectedStreamExists: EventStore_Client_Empty {
+    package var expectedStreamExists: EventStore_Client_Empty {
       get {
         if case .expectedStreamExists(let v)? = expectedRevisionOption {return v}
         return EventStore_Client_Empty()
@@ -1008,7 +1008,7 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption = .expectedStreamExists(newValue)}
     }
 
-    public var expectedNoStream: EventStore_Client_Empty {
+    package var expectedNoStream: EventStore_Client_Empty {
       get {
         if case .expectedNoStream(let v)? = expectedRevisionOption {return v}
         return EventStore_Client_Empty()
@@ -1016,28 +1016,28 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
       set {expectedRevisionOption = .expectedNoStream(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_CurrentRevisionOption2060: Equatable, Sendable {
+    package enum OneOf_CurrentRevisionOption2060: Equatable, Sendable {
       case currentRevision2060(UInt64)
       case noStream2060(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_ExpectedRevisionOption2060: Equatable, Sendable {
+    package enum OneOf_ExpectedRevisionOption2060: Equatable, Sendable {
       case expectedRevision2060(UInt64)
       case any2060(EventStore_Client_Empty)
       case streamExists2060(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_CurrentRevisionOption: Equatable, Sendable {
+    package enum OneOf_CurrentRevisionOption: Equatable, Sendable {
       case currentRevision(UInt64)
       case currentNoStream(EventStore_Client_Empty)
 
     }
 
-    public enum OneOf_ExpectedRevisionOption: Equatable, Sendable {
+    package enum OneOf_ExpectedRevisionOption: Equatable, Sendable {
       case expectedRevision(UInt64)
       case expectedAny(EventStore_Client_Empty)
       case expectedStreamExists(EventStore_Client_Empty)
@@ -1045,58 +1045,58 @@ public struct EventStore_Client_Streams_AppendResp: Sendable {
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
+package struct EventStore_Client_Streams_BatchAppendReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var correlationID: EventStore_Client_UUID {
+  package var correlationID: EventStore_Client_UUID {
     get {return _correlationID ?? EventStore_Client_UUID()}
     set {_correlationID = newValue}
   }
   /// Returns true if `correlationID` has been explicitly set.
-  public var hasCorrelationID: Bool {return self._correlationID != nil}
+  package var hasCorrelationID: Bool {return self._correlationID != nil}
   /// Clears the value of `correlationID`. Subsequent reads from it will return its default value.
-  public mutating func clearCorrelationID() {self._correlationID = nil}
+  package mutating func clearCorrelationID() {self._correlationID = nil}
 
-  public var options: EventStore_Client_Streams_BatchAppendReq.Options {
+  package var options: EventStore_Client_Streams_BatchAppendReq.Options {
     get {return _options ?? EventStore_Client_Streams_BatchAppendReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var proposedMessages: [EventStore_Client_Streams_BatchAppendReq.ProposedMessage] = []
+  package var proposedMessages: [EventStore_Client_Streams_BatchAppendReq.ProposedMessage] = []
 
-  public var isFinal: Bool = false
+  package var isFinal: Bool = false
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var expectedStreamPosition: EventStore_Client_Streams_BatchAppendReq.Options.OneOf_ExpectedStreamPosition? = nil
+    package var expectedStreamPosition: EventStore_Client_Streams_BatchAppendReq.Options.OneOf_ExpectedStreamPosition? = nil
 
-    public var streamPosition: UInt64 {
+    package var streamPosition: UInt64 {
       get {
         if case .streamPosition(let v)? = expectedStreamPosition {return v}
         return 0
@@ -1104,7 +1104,7 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
       set {expectedStreamPosition = .streamPosition(newValue)}
     }
 
-    public var noStream: SwiftProtobuf.Google_Protobuf_Empty {
+    package var noStream: SwiftProtobuf.Google_Protobuf_Empty {
       get {
         if case .noStream(let v)? = expectedStreamPosition {return v}
         return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1112,7 +1112,7 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
       set {expectedStreamPosition = .noStream(newValue)}
     }
 
-    public var any: SwiftProtobuf.Google_Protobuf_Empty {
+    package var any: SwiftProtobuf.Google_Protobuf_Empty {
       get {
         if case .any(let v)? = expectedStreamPosition {return v}
         return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1120,7 +1120,7 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
       set {expectedStreamPosition = .any(newValue)}
     }
 
-    public var streamExists: SwiftProtobuf.Google_Protobuf_Empty {
+    package var streamExists: SwiftProtobuf.Google_Protobuf_Empty {
       get {
         if case .streamExists(let v)? = expectedStreamPosition {return v}
         return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1128,9 +1128,9 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
       set {expectedStreamPosition = .streamExists(newValue)}
     }
 
-    public var deadlineOption: EventStore_Client_Streams_BatchAppendReq.Options.OneOf_DeadlineOption? = nil
+    package var deadlineOption: EventStore_Client_Streams_BatchAppendReq.Options.OneOf_DeadlineOption? = nil
 
-    public var deadline21100: SwiftProtobuf.Google_Protobuf_Timestamp {
+    package var deadline21100: SwiftProtobuf.Google_Protobuf_Timestamp {
       get {
         if case .deadline21100(let v)? = deadlineOption {return v}
         return SwiftProtobuf.Google_Protobuf_Timestamp()
@@ -1138,7 +1138,7 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
       set {deadlineOption = .deadline21100(newValue)}
     }
 
-    public var deadline: SwiftProtobuf.Google_Protobuf_Duration {
+    package var deadline: SwiftProtobuf.Google_Protobuf_Duration {
       get {
         if case .deadline(let v)? = deadlineOption {return v}
         return SwiftProtobuf.Google_Protobuf_Duration()
@@ -1146,9 +1146,9 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
       set {deadlineOption = .deadline(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_ExpectedStreamPosition: Equatable, Sendable {
+    package enum OneOf_ExpectedStreamPosition: Equatable, Sendable {
       case streamPosition(UInt64)
       case noStream(SwiftProtobuf.Google_Protobuf_Empty)
       case any(SwiftProtobuf.Google_Protobuf_Empty)
@@ -1156,67 +1156,67 @@ public struct EventStore_Client_Streams_BatchAppendReq: Sendable {
 
     }
 
-    public enum OneOf_DeadlineOption: Equatable, Sendable {
+    package enum OneOf_DeadlineOption: Equatable, Sendable {
       case deadline21100(SwiftProtobuf.Google_Protobuf_Timestamp)
       case deadline(SwiftProtobuf.Google_Protobuf_Duration)
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public struct ProposedMessage: @unchecked Sendable {
+  package struct ProposedMessage: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var id: EventStore_Client_UUID {
+    package var id: EventStore_Client_UUID {
       get {return _id ?? EventStore_Client_UUID()}
       set {_id = newValue}
     }
     /// Returns true if `id` has been explicitly set.
-    public var hasID: Bool {return self._id != nil}
+    package var hasID: Bool {return self._id != nil}
     /// Clears the value of `id`. Subsequent reads from it will return its default value.
-    public mutating func clearID() {self._id = nil}
+    package mutating func clearID() {self._id = nil}
 
-    public var metadata: Dictionary<String,String> = [:]
+    package var metadata: Dictionary<String,String> = [:]
 
-    public var customMetadata: Data = Data()
+    package var customMetadata: Data = Data()
 
-    public var data: Data = Data()
+    package var data: Data = Data()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
 
     fileprivate var _id: EventStore_Client_UUID? = nil
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _correlationID: EventStore_Client_UUID? = nil
   fileprivate var _options: EventStore_Client_Streams_BatchAppendReq.Options? = nil
 }
 
-public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
+package struct EventStore_Client_Streams_BatchAppendResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var correlationID: EventStore_Client_UUID {
+  package var correlationID: EventStore_Client_UUID {
     get {return _correlationID ?? EventStore_Client_UUID()}
     set {_correlationID = newValue}
   }
   /// Returns true if `correlationID` has been explicitly set.
-  public var hasCorrelationID: Bool {return self._correlationID != nil}
+  package var hasCorrelationID: Bool {return self._correlationID != nil}
   /// Clears the value of `correlationID`. Subsequent reads from it will return its default value.
-  public mutating func clearCorrelationID() {self._correlationID = nil}
+  package mutating func clearCorrelationID() {self._correlationID = nil}
 
-  public var result: EventStore_Client_Streams_BatchAppendResp.OneOf_Result? = nil
+  package var result: EventStore_Client_Streams_BatchAppendResp.OneOf_Result? = nil
 
-  public var error: Google_Rpc_Status {
+  package var error: Google_Rpc_Status {
     get {
       if case .error(let v)? = result {return v}
       return Google_Rpc_Status()
@@ -1224,7 +1224,7 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
     set {result = .error(newValue)}
   }
 
-  public var success: EventStore_Client_Streams_BatchAppendResp.Success {
+  package var success: EventStore_Client_Streams_BatchAppendResp.Success {
     get {
       if case .success(let v)? = result {return v}
       return EventStore_Client_Streams_BatchAppendResp.Success()
@@ -1232,18 +1232,18 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
     set {result = .success(newValue)}
   }
 
-  public var streamIdentifier: EventStore_Client_StreamIdentifier {
+  package var streamIdentifier: EventStore_Client_StreamIdentifier {
     get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
     set {_streamIdentifier = newValue}
   }
   /// Returns true if `streamIdentifier` has been explicitly set.
-  public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+  package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
   /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-  public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+  package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-  public var expectedStreamPosition: EventStore_Client_Streams_BatchAppendResp.OneOf_ExpectedStreamPosition? = nil
+  package var expectedStreamPosition: EventStore_Client_Streams_BatchAppendResp.OneOf_ExpectedStreamPosition? = nil
 
-  public var streamPosition: UInt64 {
+  package var streamPosition: UInt64 {
     get {
       if case .streamPosition(let v)? = expectedStreamPosition {return v}
       return 0
@@ -1251,7 +1251,7 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
     set {expectedStreamPosition = .streamPosition(newValue)}
   }
 
-  public var noStream: SwiftProtobuf.Google_Protobuf_Empty {
+  package var noStream: SwiftProtobuf.Google_Protobuf_Empty {
     get {
       if case .noStream(let v)? = expectedStreamPosition {return v}
       return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1259,7 +1259,7 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
     set {expectedStreamPosition = .noStream(newValue)}
   }
 
-  public var any: SwiftProtobuf.Google_Protobuf_Empty {
+  package var any: SwiftProtobuf.Google_Protobuf_Empty {
     get {
       if case .any(let v)? = expectedStreamPosition {return v}
       return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1267,7 +1267,7 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
     set {expectedStreamPosition = .any(newValue)}
   }
 
-  public var streamExists: SwiftProtobuf.Google_Protobuf_Empty {
+  package var streamExists: SwiftProtobuf.Google_Protobuf_Empty {
     get {
       if case .streamExists(let v)? = expectedStreamPosition {return v}
       return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1275,15 +1275,15 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
     set {expectedStreamPosition = .streamExists(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Result: Equatable, Sendable {
+  package enum OneOf_Result: Equatable, Sendable {
     case error(Google_Rpc_Status)
     case success(EventStore_Client_Streams_BatchAppendResp.Success)
 
   }
 
-  public enum OneOf_ExpectedStreamPosition: Equatable, Sendable {
+  package enum OneOf_ExpectedStreamPosition: Equatable, Sendable {
     case streamPosition(UInt64)
     case noStream(SwiftProtobuf.Google_Protobuf_Empty)
     case any(SwiftProtobuf.Google_Protobuf_Empty)
@@ -1291,14 +1291,14 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
 
   }
 
-  public struct Success: Sendable {
+  package struct Success: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var currentRevisionOption: EventStore_Client_Streams_BatchAppendResp.Success.OneOf_CurrentRevisionOption? = nil
+    package var currentRevisionOption: EventStore_Client_Streams_BatchAppendResp.Success.OneOf_CurrentRevisionOption? = nil
 
-    public var currentRevision: UInt64 {
+    package var currentRevision: UInt64 {
       get {
         if case .currentRevision(let v)? = currentRevisionOption {return v}
         return 0
@@ -1306,7 +1306,7 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
       set {currentRevisionOption = .currentRevision(newValue)}
     }
 
-    public var noStream: SwiftProtobuf.Google_Protobuf_Empty {
+    package var noStream: SwiftProtobuf.Google_Protobuf_Empty {
       get {
         if case .noStream(let v)? = currentRevisionOption {return v}
         return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1314,9 +1314,9 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
       set {currentRevisionOption = .noStream(newValue)}
     }
 
-    public var positionOption: EventStore_Client_Streams_BatchAppendResp.Success.OneOf_PositionOption? = nil
+    package var positionOption: EventStore_Client_Streams_BatchAppendResp.Success.OneOf_PositionOption? = nil
 
-    public var position: EventStore_Client_AllStreamPosition {
+    package var position: EventStore_Client_AllStreamPosition {
       get {
         if case .position(let v)? = positionOption {return v}
         return EventStore_Client_AllStreamPosition()
@@ -1324,7 +1324,7 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
       set {positionOption = .position(newValue)}
     }
 
-    public var noPosition: SwiftProtobuf.Google_Protobuf_Empty {
+    package var noPosition: SwiftProtobuf.Google_Protobuf_Empty {
       get {
         if case .noPosition(let v)? = positionOption {return v}
         return SwiftProtobuf.Google_Protobuf_Empty()
@@ -1332,62 +1332,62 @@ public struct EventStore_Client_Streams_BatchAppendResp: Sendable {
       set {positionOption = .noPosition(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_CurrentRevisionOption: Equatable, Sendable {
+    package enum OneOf_CurrentRevisionOption: Equatable, Sendable {
       case currentRevision(UInt64)
       case noStream(SwiftProtobuf.Google_Protobuf_Empty)
 
     }
 
-    public enum OneOf_PositionOption: Equatable, Sendable {
+    package enum OneOf_PositionOption: Equatable, Sendable {
       case position(EventStore_Client_AllStreamPosition)
       case noPosition(SwiftProtobuf.Google_Protobuf_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _correlationID: EventStore_Client_UUID? = nil
   fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
 }
 
-public struct EventStore_Client_Streams_DeleteReq: Sendable {
+package struct EventStore_Client_Streams_DeleteReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Streams_DeleteReq.Options {
+  package var options: EventStore_Client_Streams_DeleteReq.Options {
     get {return _options ?? EventStore_Client_Streams_DeleteReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var expectedStreamRevision: EventStore_Client_Streams_DeleteReq.Options.OneOf_ExpectedStreamRevision? = nil
+    package var expectedStreamRevision: EventStore_Client_Streams_DeleteReq.Options.OneOf_ExpectedStreamRevision? = nil
 
-    public var revision: UInt64 {
+    package var revision: UInt64 {
       get {
         if case .revision(let v)? = expectedStreamRevision {return v}
         return 0
@@ -1395,7 +1395,7 @@ public struct EventStore_Client_Streams_DeleteReq: Sendable {
       set {expectedStreamRevision = .revision(newValue)}
     }
 
-    public var noStream: EventStore_Client_Empty {
+    package var noStream: EventStore_Client_Empty {
       get {
         if case .noStream(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -1403,7 +1403,7 @@ public struct EventStore_Client_Streams_DeleteReq: Sendable {
       set {expectedStreamRevision = .noStream(newValue)}
     }
 
-    public var any: EventStore_Client_Empty {
+    package var any: EventStore_Client_Empty {
       get {
         if case .any(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -1411,7 +1411,7 @@ public struct EventStore_Client_Streams_DeleteReq: Sendable {
       set {expectedStreamRevision = .any(newValue)}
     }
 
-    public var streamExists: EventStore_Client_Empty {
+    package var streamExists: EventStore_Client_Empty {
       get {
         if case .streamExists(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -1419,9 +1419,9 @@ public struct EventStore_Client_Streams_DeleteReq: Sendable {
       set {expectedStreamRevision = .streamExists(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_ExpectedStreamRevision: Equatable, Sendable {
+    package enum OneOf_ExpectedStreamRevision: Equatable, Sendable {
       case revision(UInt64)
       case noStream(EventStore_Client_Empty)
       case any(EventStore_Client_Empty)
@@ -1429,24 +1429,24 @@ public struct EventStore_Client_Streams_DeleteReq: Sendable {
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Streams_DeleteReq.Options? = nil
 }
 
-public struct EventStore_Client_Streams_DeleteResp: Sendable {
+package struct EventStore_Client_Streams_DeleteResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var positionOption: EventStore_Client_Streams_DeleteResp.OneOf_PositionOption? = nil
+  package var positionOption: EventStore_Client_Streams_DeleteResp.OneOf_PositionOption? = nil
 
-  public var position: EventStore_Client_Streams_DeleteResp.Position {
+  package var position: EventStore_Client_Streams_DeleteResp.Position {
     get {
       if case .position(let v)? = positionOption {return v}
       return EventStore_Client_Streams_DeleteResp.Position()
@@ -1454,7 +1454,7 @@ public struct EventStore_Client_Streams_DeleteResp: Sendable {
     set {positionOption = .position(newValue)}
   }
 
-  public var noPosition: EventStore_Client_Empty {
+  package var noPosition: EventStore_Client_Empty {
     get {
       if case .noPosition(let v)? = positionOption {return v}
       return EventStore_Client_Empty()
@@ -1462,64 +1462,64 @@ public struct EventStore_Client_Streams_DeleteResp: Sendable {
     set {positionOption = .noPosition(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_PositionOption: Equatable, Sendable {
+  package enum OneOf_PositionOption: Equatable, Sendable {
     case position(EventStore_Client_Streams_DeleteResp.Position)
     case noPosition(EventStore_Client_Empty)
 
   }
 
-  public struct Position: Sendable {
+  package struct Position: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var commitPosition: UInt64 = 0
+    package var commitPosition: UInt64 = 0
 
-    public var preparePosition: UInt64 = 0
+    package var preparePosition: UInt64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Streams_TombstoneReq: Sendable {
+package struct EventStore_Client_Streams_TombstoneReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Streams_TombstoneReq.Options {
+  package var options: EventStore_Client_Streams_TombstoneReq.Options {
     get {return _options ?? EventStore_Client_Streams_TombstoneReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var streamIdentifier: EventStore_Client_StreamIdentifier {
+    package var streamIdentifier: EventStore_Client_StreamIdentifier {
       get {return _streamIdentifier ?? EventStore_Client_StreamIdentifier()}
       set {_streamIdentifier = newValue}
     }
     /// Returns true if `streamIdentifier` has been explicitly set.
-    public var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
+    package var hasStreamIdentifier: Bool {return self._streamIdentifier != nil}
     /// Clears the value of `streamIdentifier`. Subsequent reads from it will return its default value.
-    public mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
+    package mutating func clearStreamIdentifier() {self._streamIdentifier = nil}
 
-    public var expectedStreamRevision: EventStore_Client_Streams_TombstoneReq.Options.OneOf_ExpectedStreamRevision? = nil
+    package var expectedStreamRevision: EventStore_Client_Streams_TombstoneReq.Options.OneOf_ExpectedStreamRevision? = nil
 
-    public var revision: UInt64 {
+    package var revision: UInt64 {
       get {
         if case .revision(let v)? = expectedStreamRevision {return v}
         return 0
@@ -1527,7 +1527,7 @@ public struct EventStore_Client_Streams_TombstoneReq: Sendable {
       set {expectedStreamRevision = .revision(newValue)}
     }
 
-    public var noStream: EventStore_Client_Empty {
+    package var noStream: EventStore_Client_Empty {
       get {
         if case .noStream(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -1535,7 +1535,7 @@ public struct EventStore_Client_Streams_TombstoneReq: Sendable {
       set {expectedStreamRevision = .noStream(newValue)}
     }
 
-    public var any: EventStore_Client_Empty {
+    package var any: EventStore_Client_Empty {
       get {
         if case .any(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -1543,7 +1543,7 @@ public struct EventStore_Client_Streams_TombstoneReq: Sendable {
       set {expectedStreamRevision = .any(newValue)}
     }
 
-    public var streamExists: EventStore_Client_Empty {
+    package var streamExists: EventStore_Client_Empty {
       get {
         if case .streamExists(let v)? = expectedStreamRevision {return v}
         return EventStore_Client_Empty()
@@ -1551,9 +1551,9 @@ public struct EventStore_Client_Streams_TombstoneReq: Sendable {
       set {expectedStreamRevision = .streamExists(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_ExpectedStreamRevision: Equatable, Sendable {
+    package enum OneOf_ExpectedStreamRevision: Equatable, Sendable {
       case revision(UInt64)
       case noStream(EventStore_Client_Empty)
       case any(EventStore_Client_Empty)
@@ -1561,24 +1561,24 @@ public struct EventStore_Client_Streams_TombstoneReq: Sendable {
 
     }
 
-    public init() {}
+    package init() {}
 
     fileprivate var _streamIdentifier: EventStore_Client_StreamIdentifier? = nil
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Streams_TombstoneReq.Options? = nil
 }
 
-public struct EventStore_Client_Streams_TombstoneResp: Sendable {
+package struct EventStore_Client_Streams_TombstoneResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var positionOption: EventStore_Client_Streams_TombstoneResp.OneOf_PositionOption? = nil
+  package var positionOption: EventStore_Client_Streams_TombstoneResp.OneOf_PositionOption? = nil
 
-  public var position: EventStore_Client_Streams_TombstoneResp.Position {
+  package var position: EventStore_Client_Streams_TombstoneResp.Position {
     get {
       if case .position(let v)? = positionOption {return v}
       return EventStore_Client_Streams_TombstoneResp.Position()
@@ -1586,7 +1586,7 @@ public struct EventStore_Client_Streams_TombstoneResp: Sendable {
     set {positionOption = .position(newValue)}
   }
 
-  public var noPosition: EventStore_Client_Empty {
+  package var noPosition: EventStore_Client_Empty {
     get {
       if case .noPosition(let v)? = positionOption {return v}
       return EventStore_Client_Empty()
@@ -1594,29 +1594,29 @@ public struct EventStore_Client_Streams_TombstoneResp: Sendable {
     set {positionOption = .noPosition(newValue)}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_PositionOption: Equatable, Sendable {
+  package enum OneOf_PositionOption: Equatable, Sendable {
     case position(EventStore_Client_Streams_TombstoneResp.Position)
     case noPosition(EventStore_Client_Empty)
 
   }
 
-  public struct Position: Sendable {
+  package struct Position: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var commitPosition: UInt64 = 0
+    package var commitPosition: UInt64 = 0
 
-    public var preparePosition: UInt64 = 0
+    package var preparePosition: UInt64 = 0
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -1624,12 +1624,12 @@ public struct EventStore_Client_Streams_TombstoneResp: Sendable {
 fileprivate let _protobuf_package = "event_store.client.streams"
 
 extension EventStore_Client_Streams_ReadReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReadReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReadReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1641,7 +1641,7 @@ extension EventStore_Client_Streams_ReadReq: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1652,7 +1652,7 @@ extension EventStore_Client_Streams_ReadReq: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq, rhs: EventStore_Client_Streams_ReadReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq, rhs: EventStore_Client_Streams_ReadReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1660,8 +1660,8 @@ extension EventStore_Client_Streams_ReadReq: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Client_Streams_ReadReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "stream"),
     2: .same(proto: "all"),
     3: .standard(proto: "read_direction"),
@@ -1674,7 +1674,7 @@ extension EventStore_Client_Streams_ReadReq.Options: SwiftProtobuf.Message, Swif
     10: .standard(proto: "control_option"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1762,7 +1762,7 @@ extension EventStore_Client_Streams_ReadReq.Options: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1815,7 +1815,7 @@ extension EventStore_Client_Streams_ReadReq.Options: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options, rhs: EventStore_Client_Streams_ReadReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options, rhs: EventStore_Client_Streams_ReadReq.Options) -> Bool {
     if lhs.streamOption != rhs.streamOption {return false}
     if lhs.readDirection != rhs.readDirection {return false}
     if lhs.resolveLinks != rhs.resolveLinks {return false}
@@ -1829,22 +1829,22 @@ extension EventStore_Client_Streams_ReadReq.Options: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.ReadDirection: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "Forwards"),
     1: .same(proto: "Backwards"),
   ]
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.StreamOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".StreamOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".StreamOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "revision"),
     3: .same(proto: "start"),
     4: .same(proto: "end"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1890,7 +1890,7 @@ extension EventStore_Client_Streams_ReadReq.Options.StreamOptions: SwiftProtobuf
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1916,7 +1916,7 @@ extension EventStore_Client_Streams_ReadReq.Options.StreamOptions: SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.StreamOptions, rhs: EventStore_Client_Streams_ReadReq.Options.StreamOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.StreamOptions, rhs: EventStore_Client_Streams_ReadReq.Options.StreamOptions) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.revisionOption != rhs.revisionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1925,14 +1925,14 @@ extension EventStore_Client_Streams_ReadReq.Options.StreamOptions: SwiftProtobuf
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.AllOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".AllOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".AllOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "position"),
     2: .same(proto: "start"),
     3: .same(proto: "end"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1982,7 +1982,7 @@ extension EventStore_Client_Streams_ReadReq.Options.AllOptions: SwiftProtobuf.Me
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2005,7 +2005,7 @@ extension EventStore_Client_Streams_ReadReq.Options.AllOptions: SwiftProtobuf.Me
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.AllOptions, rhs: EventStore_Client_Streams_ReadReq.Options.AllOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.AllOptions, rhs: EventStore_Client_Streams_ReadReq.Options.AllOptions) -> Bool {
     if lhs.allOption != rhs.allOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2013,32 +2013,32 @@ extension EventStore_Client_Streams_ReadReq.Options.AllOptions: SwiftProtobuf.Me
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".SubscriptionOptions"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".SubscriptionOptions"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions, rhs: EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions, rhs: EventStore_Client_Streams_ReadReq.Options.SubscriptionOptions) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".Position"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".Position"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2051,7 +2051,7 @@ extension EventStore_Client_Streams_ReadReq.Options.Position: SwiftProtobuf.Mess
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -2061,7 +2061,7 @@ extension EventStore_Client_Streams_ReadReq.Options.Position: SwiftProtobuf.Mess
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.Position, rhs: EventStore_Client_Streams_ReadReq.Options.Position) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.Position, rhs: EventStore_Client_Streams_ReadReq.Options.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2070,8 +2070,8 @@ extension EventStore_Client_Streams_ReadReq.Options.Position: SwiftProtobuf.Mess
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.FilterOptions: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".FilterOptions"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".FilterOptions"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .standard(proto: "event_type"),
     3: .same(proto: "max"),
@@ -2079,7 +2079,7 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions: SwiftProtobuf
     5: .same(proto: "checkpointIntervalMultiplier"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2138,7 +2138,7 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions: SwiftProtobuf
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2171,7 +2171,7 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions: SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions, rhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions, rhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions) -> Bool {
     if lhs.filter != rhs.filter {return false}
     if lhs.window != rhs.window {return false}
     if lhs.checkpointIntervalMultiplier != rhs.checkpointIntervalMultiplier {return false}
@@ -2181,13 +2181,13 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions: SwiftProtobuf
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.FilterOptions.protoMessageName + ".Expression"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.FilterOptions.protoMessageName + ".Expression"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "regex"),
     2: .same(proto: "prefix"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2200,7 +2200,7 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression: Sw
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.regex.isEmpty {
       try visitor.visitSingularStringField(value: self.regex, fieldNumber: 1)
     }
@@ -2210,7 +2210,7 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression: Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression, rhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression, rhs: EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression) -> Bool {
     if lhs.regex != rhs.regex {return false}
     if lhs.prefix != rhs.prefix {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2219,13 +2219,13 @@ extension EventStore_Client_Streams_ReadReq.Options.FilterOptions.Expression: Sw
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.UUIDOption: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".UUIDOption"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".UUIDOption"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "structured"),
     2: .same(proto: "string"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2262,7 +2262,7 @@ extension EventStore_Client_Streams_ReadReq.Options.UUIDOption: SwiftProtobuf.Me
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2281,7 +2281,7 @@ extension EventStore_Client_Streams_ReadReq.Options.UUIDOption: SwiftProtobuf.Me
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.UUIDOption, rhs: EventStore_Client_Streams_ReadReq.Options.UUIDOption) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.UUIDOption, rhs: EventStore_Client_Streams_ReadReq.Options.UUIDOption) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2289,12 +2289,12 @@ extension EventStore_Client_Streams_ReadReq.Options.UUIDOption: SwiftProtobuf.Me
 }
 
 extension EventStore_Client_Streams_ReadReq.Options.ControlOption: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".ControlOption"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadReq.Options.protoMessageName + ".ControlOption"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "compatibility"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2306,14 +2306,14 @@ extension EventStore_Client_Streams_ReadReq.Options.ControlOption: SwiftProtobuf
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.compatibility != 0 {
       try visitor.visitSingularUInt32Field(value: self.compatibility, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.ControlOption, rhs: EventStore_Client_Streams_ReadReq.Options.ControlOption) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadReq.Options.ControlOption, rhs: EventStore_Client_Streams_ReadReq.Options.ControlOption) -> Bool {
     if lhs.compatibility != rhs.compatibility {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2321,8 +2321,8 @@ extension EventStore_Client_Streams_ReadReq.Options.ControlOption: SwiftProtobuf
 }
 
 extension EventStore_Client_Streams_ReadResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReadResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReadResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "event"),
     2: .same(proto: "confirmation"),
     3: .same(proto: "checkpoint"),
@@ -2334,7 +2334,7 @@ extension EventStore_Client_Streams_ReadResp: SwiftProtobuf.Message, SwiftProtob
     9: .standard(proto: "fell_behind"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2452,7 +2452,7 @@ extension EventStore_Client_Streams_ReadResp: SwiftProtobuf.Message, SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2499,7 +2499,7 @@ extension EventStore_Client_Streams_ReadResp: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp, rhs: EventStore_Client_Streams_ReadResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp, rhs: EventStore_Client_Streams_ReadResp) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2507,46 +2507,46 @@ extension EventStore_Client_Streams_ReadResp: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension EventStore_Client_Streams_ReadResp.CaughtUp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".CaughtUp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".CaughtUp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.CaughtUp, rhs: EventStore_Client_Streams_ReadResp.CaughtUp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.CaughtUp, rhs: EventStore_Client_Streams_ReadResp.CaughtUp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Streams_ReadResp.FellBehind: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".FellBehind"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".FellBehind"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.FellBehind, rhs: EventStore_Client_Streams_ReadResp.FellBehind) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.FellBehind, rhs: EventStore_Client_Streams_ReadResp.FellBehind) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Streams_ReadResp.ReadEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".ReadEvent"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".ReadEvent"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "event"),
     2: .same(proto: "link"),
     3: .standard(proto: "commit_position"),
@@ -2584,7 +2584,7 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent: SwiftProtobuf.Message, S
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2621,7 +2621,7 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent: SwiftProtobuf.Message, S
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every if/case branch local when no optimizations
@@ -2648,7 +2648,7 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent: SwiftProtobuf.Message, S
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.ReadEvent, rhs: EventStore_Client_Streams_ReadResp.ReadEvent) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.ReadEvent, rhs: EventStore_Client_Streams_ReadResp.ReadEvent) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -2666,8 +2666,8 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent: SwiftProtobuf.Message, S
 }
 
 extension EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.ReadEvent.protoMessageName + ".RecordedEvent"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.ReadEvent.protoMessageName + ".RecordedEvent"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .standard(proto: "stream_identifier"),
     3: .standard(proto: "stream_revision"),
@@ -2678,7 +2678,7 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent: SwiftProto
     8: .same(proto: "data"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2697,7 +2697,7 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent: SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2729,7 +2729,7 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent: SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent, rhs: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent, rhs: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent) -> Bool {
     if lhs._id != rhs._id {return false}
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.streamRevision != rhs.streamRevision {return false}
@@ -2744,12 +2744,12 @@ extension EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent: SwiftProto
 }
 
 extension EventStore_Client_Streams_ReadResp.SubscriptionConfirmation: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".SubscriptionConfirmation"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".SubscriptionConfirmation"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "subscription_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2761,14 +2761,14 @@ extension EventStore_Client_Streams_ReadResp.SubscriptionConfirmation: SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.subscriptionID.isEmpty {
       try visitor.visitSingularStringField(value: self.subscriptionID, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.SubscriptionConfirmation, rhs: EventStore_Client_Streams_ReadResp.SubscriptionConfirmation) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.SubscriptionConfirmation, rhs: EventStore_Client_Streams_ReadResp.SubscriptionConfirmation) -> Bool {
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2776,13 +2776,13 @@ extension EventStore_Client_Streams_ReadResp.SubscriptionConfirmation: SwiftProt
 }
 
 extension EventStore_Client_Streams_ReadResp.Checkpoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".Checkpoint"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".Checkpoint"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2795,7 +2795,7 @@ extension EventStore_Client_Streams_ReadResp.Checkpoint: SwiftProtobuf.Message, 
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -2805,7 +2805,7 @@ extension EventStore_Client_Streams_ReadResp.Checkpoint: SwiftProtobuf.Message, 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.Checkpoint, rhs: EventStore_Client_Streams_ReadResp.Checkpoint) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.Checkpoint, rhs: EventStore_Client_Streams_ReadResp.Checkpoint) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2814,12 +2814,12 @@ extension EventStore_Client_Streams_ReadResp.Checkpoint: SwiftProtobuf.Message, 
 }
 
 extension EventStore_Client_Streams_ReadResp.StreamNotFound: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".StreamNotFound"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".StreamNotFound"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2831,7 +2831,7 @@ extension EventStore_Client_Streams_ReadResp.StreamNotFound: SwiftProtobuf.Messa
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2842,7 +2842,7 @@ extension EventStore_Client_Streams_ReadResp.StreamNotFound: SwiftProtobuf.Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_ReadResp.StreamNotFound, rhs: EventStore_Client_Streams_ReadResp.StreamNotFound) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.StreamNotFound, rhs: EventStore_Client_Streams_ReadResp.StreamNotFound) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2850,13 +2850,13 @@ extension EventStore_Client_Streams_ReadResp.StreamNotFound: SwiftProtobuf.Messa
 }
 
 extension EventStore_Client_Streams_AppendReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".AppendReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".AppendReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
     2: .standard(proto: "proposed_message"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2893,7 +2893,7 @@ extension EventStore_Client_Streams_AppendReq: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -2912,7 +2912,7 @@ extension EventStore_Client_Streams_AppendReq: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendReq, rhs: EventStore_Client_Streams_AppendReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendReq, rhs: EventStore_Client_Streams_AppendReq) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2920,8 +2920,8 @@ extension EventStore_Client_Streams_AppendReq: SwiftProtobuf.Message, SwiftProto
 }
 
 extension EventStore_Client_Streams_AppendReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_AppendReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_AppendReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "revision"),
     3: .standard(proto: "no_stream"),
@@ -2929,7 +2929,7 @@ extension EventStore_Client_Streams_AppendReq.Options: SwiftProtobuf.Message, Sw
     5: .standard(proto: "stream_exists"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2988,7 +2988,7 @@ extension EventStore_Client_Streams_AppendReq.Options: SwiftProtobuf.Message, Sw
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3018,7 +3018,7 @@ extension EventStore_Client_Streams_AppendReq.Options: SwiftProtobuf.Message, Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendReq.Options, rhs: EventStore_Client_Streams_AppendReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendReq.Options, rhs: EventStore_Client_Streams_AppendReq.Options) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.expectedStreamRevision != rhs.expectedStreamRevision {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3027,15 +3027,15 @@ extension EventStore_Client_Streams_AppendReq.Options: SwiftProtobuf.Message, Sw
 }
 
 extension EventStore_Client_Streams_AppendReq.ProposedMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_AppendReq.protoMessageName + ".ProposedMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_AppendReq.protoMessageName + ".ProposedMessage"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .same(proto: "metadata"),
     3: .standard(proto: "custom_metadata"),
     4: .same(proto: "data"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3050,7 +3050,7 @@ extension EventStore_Client_Streams_AppendReq.ProposedMessage: SwiftProtobuf.Mes
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3070,7 +3070,7 @@ extension EventStore_Client_Streams_AppendReq.ProposedMessage: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendReq.ProposedMessage, rhs: EventStore_Client_Streams_AppendReq.ProposedMessage) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendReq.ProposedMessage, rhs: EventStore_Client_Streams_AppendReq.ProposedMessage) -> Bool {
     if lhs._id != rhs._id {return false}
     if lhs.metadata != rhs.metadata {return false}
     if lhs.customMetadata != rhs.customMetadata {return false}
@@ -3081,13 +3081,13 @@ extension EventStore_Client_Streams_AppendReq.ProposedMessage: SwiftProtobuf.Mes
 }
 
 extension EventStore_Client_Streams_AppendResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".AppendResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".AppendResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "success"),
     2: .standard(proto: "wrong_expected_version"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3124,7 +3124,7 @@ extension EventStore_Client_Streams_AppendResp: SwiftProtobuf.Message, SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3143,7 +3143,7 @@ extension EventStore_Client_Streams_AppendResp: SwiftProtobuf.Message, SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendResp, rhs: EventStore_Client_Streams_AppendResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendResp, rhs: EventStore_Client_Streams_AppendResp) -> Bool {
     if lhs.result != rhs.result {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -3151,13 +3151,13 @@ extension EventStore_Client_Streams_AppendResp: SwiftProtobuf.Message, SwiftProt
 }
 
 extension EventStore_Client_Streams_AppendResp.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_AppendResp.protoMessageName + ".Position"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_AppendResp.protoMessageName + ".Position"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3170,7 +3170,7 @@ extension EventStore_Client_Streams_AppendResp.Position: SwiftProtobuf.Message, 
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -3180,7 +3180,7 @@ extension EventStore_Client_Streams_AppendResp.Position: SwiftProtobuf.Message, 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendResp.Position, rhs: EventStore_Client_Streams_AppendResp.Position) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendResp.Position, rhs: EventStore_Client_Streams_AppendResp.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3189,15 +3189,15 @@ extension EventStore_Client_Streams_AppendResp.Position: SwiftProtobuf.Message, 
 }
 
 extension EventStore_Client_Streams_AppendResp.Success: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_AppendResp.protoMessageName + ".Success"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_AppendResp.protoMessageName + ".Success"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "current_revision"),
     2: .standard(proto: "no_stream"),
     3: .same(proto: "position"),
     4: .standard(proto: "no_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3255,7 +3255,7 @@ extension EventStore_Client_Streams_AppendResp.Success: SwiftProtobuf.Message, S
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3285,7 +3285,7 @@ extension EventStore_Client_Streams_AppendResp.Success: SwiftProtobuf.Message, S
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendResp.Success, rhs: EventStore_Client_Streams_AppendResp.Success) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendResp.Success, rhs: EventStore_Client_Streams_AppendResp.Success) -> Bool {
     if lhs.currentRevisionOption != rhs.currentRevisionOption {return false}
     if lhs.positionOption != rhs.positionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3294,8 +3294,8 @@ extension EventStore_Client_Streams_AppendResp.Success: SwiftProtobuf.Message, S
 }
 
 extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_AppendResp.protoMessageName + ".WrongExpectedVersion"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_AppendResp.protoMessageName + ".WrongExpectedVersion"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "current_revision_20_6_0"),
     2: .standard(proto: "no_stream_20_6_0"),
     3: .standard(proto: "expected_revision_20_6_0"),
@@ -3309,7 +3309,7 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion: SwiftProtob
     11: .standard(proto: "expected_no_stream"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3443,7 +3443,7 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion: SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3507,7 +3507,7 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion: SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_AppendResp.WrongExpectedVersion, rhs: EventStore_Client_Streams_AppendResp.WrongExpectedVersion) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_AppendResp.WrongExpectedVersion, rhs: EventStore_Client_Streams_AppendResp.WrongExpectedVersion) -> Bool {
     if lhs.currentRevisionOption2060 != rhs.currentRevisionOption2060 {return false}
     if lhs.expectedRevisionOption2060 != rhs.expectedRevisionOption2060 {return false}
     if lhs.currentRevisionOption != rhs.currentRevisionOption {return false}
@@ -3518,15 +3518,15 @@ extension EventStore_Client_Streams_AppendResp.WrongExpectedVersion: SwiftProtob
 }
 
 extension EventStore_Client_Streams_BatchAppendReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".BatchAppendReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".BatchAppendReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "correlation_id"),
     2: .same(proto: "options"),
     3: .standard(proto: "proposed_messages"),
     4: .standard(proto: "is_final"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3541,7 +3541,7 @@ extension EventStore_Client_Streams_BatchAppendReq: SwiftProtobuf.Message, Swift
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3561,7 +3561,7 @@ extension EventStore_Client_Streams_BatchAppendReq: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_BatchAppendReq, rhs: EventStore_Client_Streams_BatchAppendReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_BatchAppendReq, rhs: EventStore_Client_Streams_BatchAppendReq) -> Bool {
     if lhs._correlationID != rhs._correlationID {return false}
     if lhs._options != rhs._options {return false}
     if lhs.proposedMessages != rhs.proposedMessages {return false}
@@ -3572,8 +3572,8 @@ extension EventStore_Client_Streams_BatchAppendReq: SwiftProtobuf.Message, Swift
 }
 
 extension EventStore_Client_Streams_BatchAppendReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_BatchAppendReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_BatchAppendReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .standard(proto: "stream_position"),
     3: .standard(proto: "no_stream"),
@@ -3583,7 +3583,7 @@ extension EventStore_Client_Streams_BatchAppendReq.Options: SwiftProtobuf.Messag
     7: .same(proto: "deadline"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3668,7 +3668,7 @@ extension EventStore_Client_Streams_BatchAppendReq.Options: SwiftProtobuf.Messag
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3709,7 +3709,7 @@ extension EventStore_Client_Streams_BatchAppendReq.Options: SwiftProtobuf.Messag
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_BatchAppendReq.Options, rhs: EventStore_Client_Streams_BatchAppendReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_BatchAppendReq.Options, rhs: EventStore_Client_Streams_BatchAppendReq.Options) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.expectedStreamPosition != rhs.expectedStreamPosition {return false}
     if lhs.deadlineOption != rhs.deadlineOption {return false}
@@ -3719,15 +3719,15 @@ extension EventStore_Client_Streams_BatchAppendReq.Options: SwiftProtobuf.Messag
 }
 
 extension EventStore_Client_Streams_BatchAppendReq.ProposedMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_BatchAppendReq.protoMessageName + ".ProposedMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_BatchAppendReq.protoMessageName + ".ProposedMessage"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .same(proto: "metadata"),
     3: .standard(proto: "custom_metadata"),
     4: .same(proto: "data"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3742,7 +3742,7 @@ extension EventStore_Client_Streams_BatchAppendReq.ProposedMessage: SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3762,7 +3762,7 @@ extension EventStore_Client_Streams_BatchAppendReq.ProposedMessage: SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_BatchAppendReq.ProposedMessage, rhs: EventStore_Client_Streams_BatchAppendReq.ProposedMessage) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_BatchAppendReq.ProposedMessage, rhs: EventStore_Client_Streams_BatchAppendReq.ProposedMessage) -> Bool {
     if lhs._id != rhs._id {return false}
     if lhs.metadata != rhs.metadata {return false}
     if lhs.customMetadata != rhs.customMetadata {return false}
@@ -3773,8 +3773,8 @@ extension EventStore_Client_Streams_BatchAppendReq.ProposedMessage: SwiftProtobu
 }
 
 extension EventStore_Client_Streams_BatchAppendResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".BatchAppendResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".BatchAppendResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "correlation_id"),
     2: .same(proto: "error"),
     3: .same(proto: "success"),
@@ -3785,7 +3785,7 @@ extension EventStore_Client_Streams_BatchAppendResp: SwiftProtobuf.Message, Swif
     8: .standard(proto: "stream_exists"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3871,7 +3871,7 @@ extension EventStore_Client_Streams_BatchAppendResp: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -3915,7 +3915,7 @@ extension EventStore_Client_Streams_BatchAppendResp: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_BatchAppendResp, rhs: EventStore_Client_Streams_BatchAppendResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_BatchAppendResp, rhs: EventStore_Client_Streams_BatchAppendResp) -> Bool {
     if lhs._correlationID != rhs._correlationID {return false}
     if lhs.result != rhs.result {return false}
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
@@ -3926,15 +3926,15 @@ extension EventStore_Client_Streams_BatchAppendResp: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Client_Streams_BatchAppendResp.Success: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_BatchAppendResp.protoMessageName + ".Success"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_BatchAppendResp.protoMessageName + ".Success"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "current_revision"),
     2: .standard(proto: "no_stream"),
     3: .same(proto: "position"),
     4: .standard(proto: "no_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -3992,7 +3992,7 @@ extension EventStore_Client_Streams_BatchAppendResp.Success: SwiftProtobuf.Messa
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4022,7 +4022,7 @@ extension EventStore_Client_Streams_BatchAppendResp.Success: SwiftProtobuf.Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_BatchAppendResp.Success, rhs: EventStore_Client_Streams_BatchAppendResp.Success) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_BatchAppendResp.Success, rhs: EventStore_Client_Streams_BatchAppendResp.Success) -> Bool {
     if lhs.currentRevisionOption != rhs.currentRevisionOption {return false}
     if lhs.positionOption != rhs.positionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -4031,12 +4031,12 @@ extension EventStore_Client_Streams_BatchAppendResp.Success: SwiftProtobuf.Messa
 }
 
 extension EventStore_Client_Streams_DeleteReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DeleteReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4048,7 +4048,7 @@ extension EventStore_Client_Streams_DeleteReq: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4059,7 +4059,7 @@ extension EventStore_Client_Streams_DeleteReq: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_DeleteReq, rhs: EventStore_Client_Streams_DeleteReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_DeleteReq, rhs: EventStore_Client_Streams_DeleteReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4067,8 +4067,8 @@ extension EventStore_Client_Streams_DeleteReq: SwiftProtobuf.Message, SwiftProto
 }
 
 extension EventStore_Client_Streams_DeleteReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_DeleteReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_DeleteReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "revision"),
     3: .standard(proto: "no_stream"),
@@ -4076,7 +4076,7 @@ extension EventStore_Client_Streams_DeleteReq.Options: SwiftProtobuf.Message, Sw
     5: .standard(proto: "stream_exists"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4135,7 +4135,7 @@ extension EventStore_Client_Streams_DeleteReq.Options: SwiftProtobuf.Message, Sw
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4165,7 +4165,7 @@ extension EventStore_Client_Streams_DeleteReq.Options: SwiftProtobuf.Message, Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_DeleteReq.Options, rhs: EventStore_Client_Streams_DeleteReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_DeleteReq.Options, rhs: EventStore_Client_Streams_DeleteReq.Options) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.expectedStreamRevision != rhs.expectedStreamRevision {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -4174,13 +4174,13 @@ extension EventStore_Client_Streams_DeleteReq.Options: SwiftProtobuf.Message, Sw
 }
 
 extension EventStore_Client_Streams_DeleteResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DeleteResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "position"),
     2: .standard(proto: "no_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4217,7 +4217,7 @@ extension EventStore_Client_Streams_DeleteResp: SwiftProtobuf.Message, SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4236,7 +4236,7 @@ extension EventStore_Client_Streams_DeleteResp: SwiftProtobuf.Message, SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_DeleteResp, rhs: EventStore_Client_Streams_DeleteResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_DeleteResp, rhs: EventStore_Client_Streams_DeleteResp) -> Bool {
     if lhs.positionOption != rhs.positionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4244,13 +4244,13 @@ extension EventStore_Client_Streams_DeleteResp: SwiftProtobuf.Message, SwiftProt
 }
 
 extension EventStore_Client_Streams_DeleteResp.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_DeleteResp.protoMessageName + ".Position"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_DeleteResp.protoMessageName + ".Position"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4263,7 +4263,7 @@ extension EventStore_Client_Streams_DeleteResp.Position: SwiftProtobuf.Message, 
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -4273,7 +4273,7 @@ extension EventStore_Client_Streams_DeleteResp.Position: SwiftProtobuf.Message, 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_DeleteResp.Position, rhs: EventStore_Client_Streams_DeleteResp.Position) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_DeleteResp.Position, rhs: EventStore_Client_Streams_DeleteResp.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -4282,12 +4282,12 @@ extension EventStore_Client_Streams_DeleteResp.Position: SwiftProtobuf.Message, 
 }
 
 extension EventStore_Client_Streams_TombstoneReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".TombstoneReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".TombstoneReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4299,7 +4299,7 @@ extension EventStore_Client_Streams_TombstoneReq: SwiftProtobuf.Message, SwiftPr
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4310,7 +4310,7 @@ extension EventStore_Client_Streams_TombstoneReq: SwiftProtobuf.Message, SwiftPr
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_TombstoneReq, rhs: EventStore_Client_Streams_TombstoneReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_TombstoneReq, rhs: EventStore_Client_Streams_TombstoneReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4318,8 +4318,8 @@ extension EventStore_Client_Streams_TombstoneReq: SwiftProtobuf.Message, SwiftPr
 }
 
 extension EventStore_Client_Streams_TombstoneReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_TombstoneReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_TombstoneReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "stream_identifier"),
     2: .same(proto: "revision"),
     3: .standard(proto: "no_stream"),
@@ -4327,7 +4327,7 @@ extension EventStore_Client_Streams_TombstoneReq.Options: SwiftProtobuf.Message,
     5: .standard(proto: "stream_exists"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4386,7 +4386,7 @@ extension EventStore_Client_Streams_TombstoneReq.Options: SwiftProtobuf.Message,
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4416,7 +4416,7 @@ extension EventStore_Client_Streams_TombstoneReq.Options: SwiftProtobuf.Message,
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_TombstoneReq.Options, rhs: EventStore_Client_Streams_TombstoneReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_TombstoneReq.Options, rhs: EventStore_Client_Streams_TombstoneReq.Options) -> Bool {
     if lhs._streamIdentifier != rhs._streamIdentifier {return false}
     if lhs.expectedStreamRevision != rhs.expectedStreamRevision {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -4425,13 +4425,13 @@ extension EventStore_Client_Streams_TombstoneReq.Options: SwiftProtobuf.Message,
 }
 
 extension EventStore_Client_Streams_TombstoneResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".TombstoneResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".TombstoneResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "position"),
     2: .standard(proto: "no_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4468,7 +4468,7 @@ extension EventStore_Client_Streams_TombstoneResp: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -4487,7 +4487,7 @@ extension EventStore_Client_Streams_TombstoneResp: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_TombstoneResp, rhs: EventStore_Client_Streams_TombstoneResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_TombstoneResp, rhs: EventStore_Client_Streams_TombstoneResp) -> Bool {
     if lhs.positionOption != rhs.positionOption {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -4495,13 +4495,13 @@ extension EventStore_Client_Streams_TombstoneResp: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Streams_TombstoneResp.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Streams_TombstoneResp.protoMessageName + ".Position"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Streams_TombstoneResp.protoMessageName + ".Position"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "commit_position"),
     2: .standard(proto: "prepare_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -4514,7 +4514,7 @@ extension EventStore_Client_Streams_TombstoneResp.Position: SwiftProtobuf.Messag
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.commitPosition != 0 {
       try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
     }
@@ -4524,7 +4524,7 @@ extension EventStore_Client_Streams_TombstoneResp.Position: SwiftProtobuf.Messag
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Streams_TombstoneResp.Position, rhs: EventStore_Client_Streams_TombstoneResp.Position) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_TombstoneResp.Position, rhs: EventStore_Client_Streams_TombstoneResp.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

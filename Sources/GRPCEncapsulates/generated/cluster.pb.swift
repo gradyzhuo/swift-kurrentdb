@@ -21,203 +21,203 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Cluster_GossipRequest: Sendable {
+package struct EventStore_Cluster_GossipRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var info: EventStore_Cluster_ClusterInfo {
+  package var info: EventStore_Cluster_ClusterInfo {
     get {return _info ?? EventStore_Cluster_ClusterInfo()}
     set {_info = newValue}
   }
   /// Returns true if `info` has been explicitly set.
-  public var hasInfo: Bool {return self._info != nil}
+  package var hasInfo: Bool {return self._info != nil}
   /// Clears the value of `info`. Subsequent reads from it will return its default value.
-  public mutating func clearInfo() {self._info = nil}
+  package mutating func clearInfo() {self._info = nil}
 
-  public var server: EventStore_Cluster_EndPoint {
+  package var server: EventStore_Cluster_EndPoint {
     get {return _server ?? EventStore_Cluster_EndPoint()}
     set {_server = newValue}
   }
   /// Returns true if `server` has been explicitly set.
-  public var hasServer: Bool {return self._server != nil}
+  package var hasServer: Bool {return self._server != nil}
   /// Clears the value of `server`. Subsequent reads from it will return its default value.
-  public mutating func clearServer() {self._server = nil}
+  package mutating func clearServer() {self._server = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _info: EventStore_Cluster_ClusterInfo? = nil
   fileprivate var _server: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_ViewChangeRequest: Sendable {
+package struct EventStore_Cluster_ViewChangeRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _serverID ?? EventStore_Client_UUID()}
     set {_serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return self._serverID != nil}
+  package var hasServerID: Bool {return self._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {self._serverID = nil}
+  package mutating func clearServerID() {self._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {self._serverHTTP = nil}
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-  public var attemptedView: Int32 = 0
+  package var attemptedView: Int32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _serverID: EventStore_Client_UUID? = nil
   fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_ViewChangeProofRequest: Sendable {
+package struct EventStore_Cluster_ViewChangeProofRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _serverID ?? EventStore_Client_UUID()}
     set {_serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return self._serverID != nil}
+  package var hasServerID: Bool {return self._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {self._serverID = nil}
+  package mutating func clearServerID() {self._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {self._serverHTTP = nil}
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-  public var installedView: Int32 = 0
+  package var installedView: Int32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _serverID: EventStore_Client_UUID? = nil
   fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_PrepareRequest: Sendable {
+package struct EventStore_Cluster_PrepareRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _serverID ?? EventStore_Client_UUID()}
     set {_serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return self._serverID != nil}
+  package var hasServerID: Bool {return self._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {self._serverID = nil}
+  package mutating func clearServerID() {self._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {self._serverHTTP = nil}
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-  public var view: Int32 = 0
+  package var view: Int32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _serverID: EventStore_Client_UUID? = nil
   fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_PrepareOkRequest: Sendable {
+package struct EventStore_Cluster_PrepareOkRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var view: Int32 = 0
+  package var view: Int32 = 0
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _serverID ?? EventStore_Client_UUID()}
     set {_serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return self._serverID != nil}
+  package var hasServerID: Bool {return self._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {self._serverID = nil}
+  package mutating func clearServerID() {self._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {self._serverHTTP = nil}
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-  public var epochNumber: Int32 = 0
+  package var epochNumber: Int32 = 0
 
-  public var epochPosition: Int64 = 0
+  package var epochPosition: Int64 = 0
 
-  public var epochID: EventStore_Client_UUID {
+  package var epochID: EventStore_Client_UUID {
     get {return _epochID ?? EventStore_Client_UUID()}
     set {_epochID = newValue}
   }
   /// Returns true if `epochID` has been explicitly set.
-  public var hasEpochID: Bool {return self._epochID != nil}
+  package var hasEpochID: Bool {return self._epochID != nil}
   /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
-  public mutating func clearEpochID() {self._epochID = nil}
+  package mutating func clearEpochID() {self._epochID = nil}
 
-  public var epochLeaderInstanceID: EventStore_Client_UUID {
+  package var epochLeaderInstanceID: EventStore_Client_UUID {
     get {return _epochLeaderInstanceID ?? EventStore_Client_UUID()}
     set {_epochLeaderInstanceID = newValue}
   }
   /// Returns true if `epochLeaderInstanceID` has been explicitly set.
-  public var hasEpochLeaderInstanceID: Bool {return self._epochLeaderInstanceID != nil}
+  package var hasEpochLeaderInstanceID: Bool {return self._epochLeaderInstanceID != nil}
   /// Clears the value of `epochLeaderInstanceID`. Subsequent reads from it will return its default value.
-  public mutating func clearEpochLeaderInstanceID() {self._epochLeaderInstanceID = nil}
+  package mutating func clearEpochLeaderInstanceID() {self._epochLeaderInstanceID = nil}
 
-  public var lastCommitPosition: Int64 = 0
+  package var lastCommitPosition: Int64 = 0
 
-  public var writerCheckpoint: Int64 = 0
+  package var writerCheckpoint: Int64 = 0
 
-  public var chaserCheckpoint: Int64 = 0
+  package var chaserCheckpoint: Int64 = 0
 
-  public var nodePriority: Int32 = 0
+  package var nodePriority: Int32 = 0
 
-  public var clusterInfo: EventStore_Cluster_ClusterInfo {
+  package var clusterInfo: EventStore_Cluster_ClusterInfo {
     get {return _clusterInfo ?? EventStore_Cluster_ClusterInfo()}
     set {_clusterInfo = newValue}
   }
   /// Returns true if `clusterInfo` has been explicitly set.
-  public var hasClusterInfo: Bool {return self._clusterInfo != nil}
+  package var hasClusterInfo: Bool {return self._clusterInfo != nil}
   /// Clears the value of `clusterInfo`. Subsequent reads from it will return its default value.
-  public mutating func clearClusterInfo() {self._clusterInfo = nil}
+  package mutating func clearClusterInfo() {self._clusterInfo = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _serverID: EventStore_Client_UUID? = nil
   fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
@@ -226,153 +226,153 @@ public struct EventStore_Cluster_PrepareOkRequest: Sendable {
   fileprivate var _clusterInfo: EventStore_Cluster_ClusterInfo? = nil
 }
 
-public struct EventStore_Cluster_ProposalRequest: @unchecked Sendable {
+package struct EventStore_Cluster_ProposalRequest: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _storage._serverID ?? EventStore_Client_UUID()}
     set {_uniqueStorage()._serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return _storage._serverID != nil}
+  package var hasServerID: Bool {return _storage._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {_uniqueStorage()._serverID = nil}
+  package mutating func clearServerID() {_uniqueStorage()._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _storage._serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_uniqueStorage()._serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return _storage._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return _storage._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {_uniqueStorage()._serverHTTP = nil}
+  package mutating func clearServerHTTP() {_uniqueStorage()._serverHTTP = nil}
 
-  public var leaderID: EventStore_Client_UUID {
+  package var leaderID: EventStore_Client_UUID {
     get {return _storage._leaderID ?? EventStore_Client_UUID()}
     set {_uniqueStorage()._leaderID = newValue}
   }
   /// Returns true if `leaderID` has been explicitly set.
-  public var hasLeaderID: Bool {return _storage._leaderID != nil}
+  package var hasLeaderID: Bool {return _storage._leaderID != nil}
   /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderID() {_uniqueStorage()._leaderID = nil}
+  package mutating func clearLeaderID() {_uniqueStorage()._leaderID = nil}
 
-  public var leaderHTTP: EventStore_Cluster_EndPoint {
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
     get {return _storage._leaderHTTP ?? EventStore_Cluster_EndPoint()}
     set {_uniqueStorage()._leaderHTTP = newValue}
   }
   /// Returns true if `leaderHTTP` has been explicitly set.
-  public var hasLeaderHTTP: Bool {return _storage._leaderHTTP != nil}
+  package var hasLeaderHTTP: Bool {return _storage._leaderHTTP != nil}
   /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderHTTP() {_uniqueStorage()._leaderHTTP = nil}
+  package mutating func clearLeaderHTTP() {_uniqueStorage()._leaderHTTP = nil}
 
-  public var view: Int32 {
+  package var view: Int32 {
     get {return _storage._view}
     set {_uniqueStorage()._view = newValue}
   }
 
-  public var epochNumber: Int32 {
+  package var epochNumber: Int32 {
     get {return _storage._epochNumber}
     set {_uniqueStorage()._epochNumber = newValue}
   }
 
-  public var epochPosition: Int64 {
+  package var epochPosition: Int64 {
     get {return _storage._epochPosition}
     set {_uniqueStorage()._epochPosition = newValue}
   }
 
-  public var epochID: EventStore_Client_UUID {
+  package var epochID: EventStore_Client_UUID {
     get {return _storage._epochID ?? EventStore_Client_UUID()}
     set {_uniqueStorage()._epochID = newValue}
   }
   /// Returns true if `epochID` has been explicitly set.
-  public var hasEpochID: Bool {return _storage._epochID != nil}
+  package var hasEpochID: Bool {return _storage._epochID != nil}
   /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
-  public mutating func clearEpochID() {_uniqueStorage()._epochID = nil}
+  package mutating func clearEpochID() {_uniqueStorage()._epochID = nil}
 
-  public var epochLeaderInstanceID: EventStore_Client_UUID {
+  package var epochLeaderInstanceID: EventStore_Client_UUID {
     get {return _storage._epochLeaderInstanceID ?? EventStore_Client_UUID()}
     set {_uniqueStorage()._epochLeaderInstanceID = newValue}
   }
   /// Returns true if `epochLeaderInstanceID` has been explicitly set.
-  public var hasEpochLeaderInstanceID: Bool {return _storage._epochLeaderInstanceID != nil}
+  package var hasEpochLeaderInstanceID: Bool {return _storage._epochLeaderInstanceID != nil}
   /// Clears the value of `epochLeaderInstanceID`. Subsequent reads from it will return its default value.
-  public mutating func clearEpochLeaderInstanceID() {_uniqueStorage()._epochLeaderInstanceID = nil}
+  package mutating func clearEpochLeaderInstanceID() {_uniqueStorage()._epochLeaderInstanceID = nil}
 
-  public var lastCommitPosition: Int64 {
+  package var lastCommitPosition: Int64 {
     get {return _storage._lastCommitPosition}
     set {_uniqueStorage()._lastCommitPosition = newValue}
   }
 
-  public var writerCheckpoint: Int64 {
+  package var writerCheckpoint: Int64 {
     get {return _storage._writerCheckpoint}
     set {_uniqueStorage()._writerCheckpoint = newValue}
   }
 
-  public var chaserCheckpoint: Int64 {
+  package var chaserCheckpoint: Int64 {
     get {return _storage._chaserCheckpoint}
     set {_uniqueStorage()._chaserCheckpoint = newValue}
   }
 
-  public var nodePriority: Int32 {
+  package var nodePriority: Int32 {
     get {return _storage._nodePriority}
     set {_uniqueStorage()._nodePriority = newValue}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-public struct EventStore_Cluster_AcceptRequest: Sendable {
+package struct EventStore_Cluster_AcceptRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _serverID ?? EventStore_Client_UUID()}
     set {_serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return self._serverID != nil}
+  package var hasServerID: Bool {return self._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {self._serverID = nil}
+  package mutating func clearServerID() {self._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {self._serverHTTP = nil}
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-  public var leaderID: EventStore_Client_UUID {
+  package var leaderID: EventStore_Client_UUID {
     get {return _leaderID ?? EventStore_Client_UUID()}
     set {_leaderID = newValue}
   }
   /// Returns true if `leaderID` has been explicitly set.
-  public var hasLeaderID: Bool {return self._leaderID != nil}
+  package var hasLeaderID: Bool {return self._leaderID != nil}
   /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderID() {self._leaderID = nil}
+  package mutating func clearLeaderID() {self._leaderID = nil}
 
-  public var leaderHTTP: EventStore_Cluster_EndPoint {
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
     get {return _leaderHTTP ?? EventStore_Cluster_EndPoint()}
     set {_leaderHTTP = newValue}
   }
   /// Returns true if `leaderHTTP` has been explicitly set.
-  public var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
+  package var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
   /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
+  package mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
 
-  public var view: Int32 = 0
+  package var view: Int32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _serverID: EventStore_Client_UUID? = nil
   fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
@@ -380,81 +380,81 @@ public struct EventStore_Cluster_AcceptRequest: Sendable {
   fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_LeaderIsResigningRequest: Sendable {
+package struct EventStore_Cluster_LeaderIsResigningRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: EventStore_Client_UUID {
+  package var leaderID: EventStore_Client_UUID {
     get {return _leaderID ?? EventStore_Client_UUID()}
     set {_leaderID = newValue}
   }
   /// Returns true if `leaderID` has been explicitly set.
-  public var hasLeaderID: Bool {return self._leaderID != nil}
+  package var hasLeaderID: Bool {return self._leaderID != nil}
   /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderID() {self._leaderID = nil}
+  package mutating func clearLeaderID() {self._leaderID = nil}
 
-  public var leaderHTTP: EventStore_Cluster_EndPoint {
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
     get {return _leaderHTTP ?? EventStore_Cluster_EndPoint()}
     set {_leaderHTTP = newValue}
   }
   /// Returns true if `leaderHTTP` has been explicitly set.
-  public var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
+  package var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
   /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
+  package mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _leaderID: EventStore_Client_UUID? = nil
   fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_LeaderIsResigningOkRequest: Sendable {
+package struct EventStore_Cluster_LeaderIsResigningOkRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: EventStore_Client_UUID {
+  package var leaderID: EventStore_Client_UUID {
     get {return _leaderID ?? EventStore_Client_UUID()}
     set {_leaderID = newValue}
   }
   /// Returns true if `leaderID` has been explicitly set.
-  public var hasLeaderID: Bool {return self._leaderID != nil}
+  package var hasLeaderID: Bool {return self._leaderID != nil}
   /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderID() {self._leaderID = nil}
+  package mutating func clearLeaderID() {self._leaderID = nil}
 
-  public var leaderHTTP: EventStore_Cluster_EndPoint {
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
     get {return _leaderHTTP ?? EventStore_Cluster_EndPoint()}
     set {_leaderHTTP = newValue}
   }
   /// Returns true if `leaderHTTP` has been explicitly set.
-  public var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
+  package var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
   /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
+  package mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
 
-  public var serverID: EventStore_Client_UUID {
+  package var serverID: EventStore_Client_UUID {
     get {return _serverID ?? EventStore_Client_UUID()}
     set {_serverID = newValue}
   }
   /// Returns true if `serverID` has been explicitly set.
-  public var hasServerID: Bool {return self._serverID != nil}
+  package var hasServerID: Bool {return self._serverID != nil}
   /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-  public mutating func clearServerID() {self._serverID = nil}
+  package mutating func clearServerID() {self._serverID = nil}
 
-  public var serverHTTP: EventStore_Cluster_EndPoint {
+  package var serverHTTP: EventStore_Cluster_EndPoint {
     get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
     set {_serverHTTP = newValue}
   }
   /// Returns true if `serverHTTP` has been explicitly set.
-  public var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
   /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-  public mutating func clearServerHTTP() {self._serverHTTP = nil}
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _leaderID: EventStore_Client_UUID? = nil
   fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
@@ -462,166 +462,166 @@ public struct EventStore_Cluster_LeaderIsResigningOkRequest: Sendable {
   fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
-public struct EventStore_Cluster_ClusterInfo: Sendable {
+package struct EventStore_Cluster_ClusterInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var members: [EventStore_Cluster_MemberInfo] = []
+  package var members: [EventStore_Cluster_MemberInfo] = []
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_EndPoint: Sendable {
+package struct EventStore_Cluster_EndPoint: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var address: String = String()
+  package var address: String = String()
 
-  public var port: UInt32 = 0
+  package var port: UInt32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
+package struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var instanceID: EventStore_Client_UUID {
+  package var instanceID: EventStore_Client_UUID {
     get {return _storage._instanceID ?? EventStore_Client_UUID()}
     set {_uniqueStorage()._instanceID = newValue}
   }
   /// Returns true if `instanceID` has been explicitly set.
-  public var hasInstanceID: Bool {return _storage._instanceID != nil}
+  package var hasInstanceID: Bool {return _storage._instanceID != nil}
   /// Clears the value of `instanceID`. Subsequent reads from it will return its default value.
-  public mutating func clearInstanceID() {_uniqueStorage()._instanceID = nil}
+  package mutating func clearInstanceID() {_uniqueStorage()._instanceID = nil}
 
-  public var timeStamp: Int64 {
+  package var timeStamp: Int64 {
     get {return _storage._timeStamp}
     set {_uniqueStorage()._timeStamp = newValue}
   }
 
-  public var state: EventStore_Cluster_MemberInfo.VNodeState {
+  package var state: EventStore_Cluster_MemberInfo.VNodeState {
     get {return _storage._state}
     set {_uniqueStorage()._state = newValue}
   }
 
-  public var isAlive: Bool {
+  package var isAlive: Bool {
     get {return _storage._isAlive}
     set {_uniqueStorage()._isAlive = newValue}
   }
 
-  public var httpEndPoint: EventStore_Cluster_EndPoint {
+  package var httpEndPoint: EventStore_Cluster_EndPoint {
     get {return _storage._httpEndPoint ?? EventStore_Cluster_EndPoint()}
     set {_uniqueStorage()._httpEndPoint = newValue}
   }
   /// Returns true if `httpEndPoint` has been explicitly set.
-  public var hasHTTPEndPoint: Bool {return _storage._httpEndPoint != nil}
+  package var hasHTTPEndPoint: Bool {return _storage._httpEndPoint != nil}
   /// Clears the value of `httpEndPoint`. Subsequent reads from it will return its default value.
-  public mutating func clearHTTPEndPoint() {_uniqueStorage()._httpEndPoint = nil}
+  package mutating func clearHTTPEndPoint() {_uniqueStorage()._httpEndPoint = nil}
 
-  public var internalTcp: EventStore_Cluster_EndPoint {
+  package var internalTcp: EventStore_Cluster_EndPoint {
     get {return _storage._internalTcp ?? EventStore_Cluster_EndPoint()}
     set {_uniqueStorage()._internalTcp = newValue}
   }
   /// Returns true if `internalTcp` has been explicitly set.
-  public var hasInternalTcp: Bool {return _storage._internalTcp != nil}
+  package var hasInternalTcp: Bool {return _storage._internalTcp != nil}
   /// Clears the value of `internalTcp`. Subsequent reads from it will return its default value.
-  public mutating func clearInternalTcp() {_uniqueStorage()._internalTcp = nil}
+  package mutating func clearInternalTcp() {_uniqueStorage()._internalTcp = nil}
 
-  public var externalTcp: EventStore_Cluster_EndPoint {
+  package var externalTcp: EventStore_Cluster_EndPoint {
     get {return _storage._externalTcp ?? EventStore_Cluster_EndPoint()}
     set {_uniqueStorage()._externalTcp = newValue}
   }
   /// Returns true if `externalTcp` has been explicitly set.
-  public var hasExternalTcp: Bool {return _storage._externalTcp != nil}
+  package var hasExternalTcp: Bool {return _storage._externalTcp != nil}
   /// Clears the value of `externalTcp`. Subsequent reads from it will return its default value.
-  public mutating func clearExternalTcp() {_uniqueStorage()._externalTcp = nil}
+  package mutating func clearExternalTcp() {_uniqueStorage()._externalTcp = nil}
 
-  public var internalTcpUsesTls: Bool {
+  package var internalTcpUsesTls: Bool {
     get {return _storage._internalTcpUsesTls}
     set {_uniqueStorage()._internalTcpUsesTls = newValue}
   }
 
-  public var externalTcpUsesTls: Bool {
+  package var externalTcpUsesTls: Bool {
     get {return _storage._externalTcpUsesTls}
     set {_uniqueStorage()._externalTcpUsesTls = newValue}
   }
 
-  public var lastCommitPosition: Int64 {
+  package var lastCommitPosition: Int64 {
     get {return _storage._lastCommitPosition}
     set {_uniqueStorage()._lastCommitPosition = newValue}
   }
 
-  public var writerCheckpoint: Int64 {
+  package var writerCheckpoint: Int64 {
     get {return _storage._writerCheckpoint}
     set {_uniqueStorage()._writerCheckpoint = newValue}
   }
 
-  public var chaserCheckpoint: Int64 {
+  package var chaserCheckpoint: Int64 {
     get {return _storage._chaserCheckpoint}
     set {_uniqueStorage()._chaserCheckpoint = newValue}
   }
 
-  public var epochPosition: Int64 {
+  package var epochPosition: Int64 {
     get {return _storage._epochPosition}
     set {_uniqueStorage()._epochPosition = newValue}
   }
 
-  public var epochNumber: Int32 {
+  package var epochNumber: Int32 {
     get {return _storage._epochNumber}
     set {_uniqueStorage()._epochNumber = newValue}
   }
 
-  public var epochID: EventStore_Client_UUID {
+  package var epochID: EventStore_Client_UUID {
     get {return _storage._epochID ?? EventStore_Client_UUID()}
     set {_uniqueStorage()._epochID = newValue}
   }
   /// Returns true if `epochID` has been explicitly set.
-  public var hasEpochID: Bool {return _storage._epochID != nil}
+  package var hasEpochID: Bool {return _storage._epochID != nil}
   /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
-  public mutating func clearEpochID() {_uniqueStorage()._epochID = nil}
+  package mutating func clearEpochID() {_uniqueStorage()._epochID = nil}
 
-  public var nodePriority: Int32 {
+  package var nodePriority: Int32 {
     get {return _storage._nodePriority}
     set {_uniqueStorage()._nodePriority = newValue}
   }
 
-  public var isReadOnlyReplica: Bool {
+  package var isReadOnlyReplica: Bool {
     get {return _storage._isReadOnlyReplica}
     set {_uniqueStorage()._isReadOnlyReplica = newValue}
   }
 
-  public var advertiseHostToClientAs: String {
+  package var advertiseHostToClientAs: String {
     get {return _storage._advertiseHostToClientAs}
     set {_uniqueStorage()._advertiseHostToClientAs = newValue}
   }
 
-  public var advertiseHTTPPortToClientAs: UInt32 {
+  package var advertiseHTTPPortToClientAs: UInt32 {
     get {return _storage._advertiseHTTPPortToClientAs}
     set {_uniqueStorage()._advertiseHTTPPortToClientAs = newValue}
   }
 
-  public var advertiseTcpPortToClientAs: UInt32 {
+  package var advertiseTcpPortToClientAs: UInt32 {
     get {return _storage._advertiseTcpPortToClientAs}
     set {_uniqueStorage()._advertiseTcpPortToClientAs = newValue}
   }
 
-  public var esVersion: String {
+  package var esVersion: String {
     get {return _storage._esVersion}
     set {_uniqueStorage()._esVersion = newValue}
   }
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum VNodeState: SwiftProtobuf.Enum, Swift.CaseIterable {
-    public typealias RawValue = Int
+  package enum VNodeState: SwiftProtobuf.Enum, Swift.CaseIterable {
+    package typealias RawValue = Int
     case initializing // = 0
     case discoverLeader // = 1
     case unknown // = 2
@@ -640,11 +640,11 @@ public struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
     case resigningLeader // = 15
     case UNRECOGNIZED(Int)
 
-    public init() {
+    package init() {
       self = .initializing
     }
 
-    public init?(rawValue: Int) {
+    package init?(rawValue: Int) {
       switch rawValue {
       case 0: self = .initializing
       case 1: self = .discoverLeader
@@ -666,7 +666,7 @@ public struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
       }
     }
 
-    public var rawValue: Int {
+    package var rawValue: Int {
       switch self {
       case .initializing: return 0
       case .discoverLeader: return 1
@@ -689,7 +689,7 @@ public struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [EventStore_Cluster_MemberInfo.VNodeState] = [
+    package static let allCases: [EventStore_Cluster_MemberInfo.VNodeState] = [
       .initializing,
       .discoverLeader,
       .unknown,
@@ -710,235 +710,235 @@ public struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
 
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-public struct EventStore_Cluster_ReplicaLogWrite: @unchecked Sendable {
+package struct EventStore_Cluster_ReplicaLogWrite: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var logPosition: Int64 = 0
+  package var logPosition: Int64 = 0
 
-  public var replicaID: Data = Data()
+  package var replicaID: Data = Data()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_ReplicatedTo: Sendable {
+package struct EventStore_Cluster_ReplicatedTo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var logPosition: Int64 = 0
+  package var logPosition: Int64 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_Epoch: @unchecked Sendable {
+package struct EventStore_Cluster_Epoch: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var epochPosition: Int64 = 0
+  package var epochPosition: Int64 = 0
 
-  public var epochNumber: Int32 = 0
+  package var epochNumber: Int32 = 0
 
-  public var epochID: Data = Data()
+  package var epochID: Data = Data()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_SubscribeReplica: @unchecked Sendable {
+package struct EventStore_Cluster_SubscribeReplica: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var logPosition: Int64 = 0
+  package var logPosition: Int64 = 0
 
-  public var chunkID: Data = Data()
+  package var chunkID: Data = Data()
 
-  public var lastEpochs: [EventStore_Cluster_Epoch] = []
+  package var lastEpochs: [EventStore_Cluster_Epoch] = []
 
-  public var ip: Data = Data()
+  package var ip: Data = Data()
 
-  public var port: Int32 = 0
+  package var port: Int32 = 0
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var isPromotable: Bool = false
+  package var isPromotable: Bool = false
 
-  public var version: Int32 = 0
+  package var version: Int32 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_ReplicaSubscriptionRetry: @unchecked Sendable {
+package struct EventStore_Cluster_ReplicaSubscriptionRetry: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_ReplicaSubscribed: @unchecked Sendable {
+package struct EventStore_Cluster_ReplicaSubscribed: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var subscriptionPosition: Int64 = 0
+  package var subscriptionPosition: Int64 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_ReplicaLogPositionAck: @unchecked Sendable {
+package struct EventStore_Cluster_ReplicaLogPositionAck: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var replicationLogPosition: Int64 = 0
+  package var replicationLogPosition: Int64 = 0
 
-  public var writerLogPosition: Int64 = 0
+  package var writerLogPosition: Int64 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_CreateChunk: @unchecked Sendable {
+package struct EventStore_Cluster_CreateChunk: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var chunkHeaderBytes: Data = Data()
+  package var chunkHeaderBytes: Data = Data()
 
-  public var fileSize: Int32 = 0
+  package var fileSize: Int32 = 0
 
-  public var isCompletedChunk: Bool = false
+  package var isCompletedChunk: Bool = false
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_RawChunkBulk: @unchecked Sendable {
+package struct EventStore_Cluster_RawChunkBulk: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var chunkStartNumber: Int32 = 0
+  package var chunkStartNumber: Int32 = 0
 
-  public var chunkEndNumber: Int32 = 0
+  package var chunkEndNumber: Int32 = 0
 
-  public var rawPosition: Int32 = 0
+  package var rawPosition: Int32 = 0
 
-  public var rawBytes: Data = Data()
+  package var rawBytes: Data = Data()
 
-  public var completeChunk: Bool = false
+  package var completeChunk: Bool = false
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_DataChunkBulk: @unchecked Sendable {
+package struct EventStore_Cluster_DataChunkBulk: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var chunkStartNumber: Int32 = 0
+  package var chunkStartNumber: Int32 = 0
 
-  public var chunkEndNumber: Int32 = 0
+  package var chunkEndNumber: Int32 = 0
 
-  public var subscriptionPosition: Int64 = 0
+  package var subscriptionPosition: Int64 = 0
 
-  public var dataBytes: Data = Data()
+  package var dataBytes: Data = Data()
 
-  public var completeChunk: Bool = false
+  package var completeChunk: Bool = false
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_FollowerAssignment: @unchecked Sendable {
+package struct EventStore_Cluster_FollowerAssignment: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_CloneAssignment: @unchecked Sendable {
+package struct EventStore_Cluster_CloneAssignment: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Cluster_DropSubscription: @unchecked Sendable {
+package struct EventStore_Cluster_DropSubscription: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var leaderID: Data = Data()
+  package var leaderID: Data = Data()
 
-  public var subscriptionID: Data = Data()
+  package var subscriptionID: Data = Data()
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -946,13 +946,13 @@ public struct EventStore_Cluster_DropSubscription: @unchecked Sendable {
 fileprivate let _protobuf_package = "event_store.cluster"
 
 extension EventStore_Cluster_GossipRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GossipRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".GossipRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "info"),
     2: .same(proto: "server"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -965,7 +965,7 @@ extension EventStore_Cluster_GossipRequest: SwiftProtobuf.Message, SwiftProtobuf
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -979,7 +979,7 @@ extension EventStore_Cluster_GossipRequest: SwiftProtobuf.Message, SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_GossipRequest, rhs: EventStore_Cluster_GossipRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_GossipRequest, rhs: EventStore_Cluster_GossipRequest) -> Bool {
     if lhs._info != rhs._info {return false}
     if lhs._server != rhs._server {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -988,14 +988,14 @@ extension EventStore_Cluster_GossipRequest: SwiftProtobuf.Message, SwiftProtobuf
 }
 
 extension EventStore_Cluster_ViewChangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ViewChangeRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ViewChangeRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "server_id"),
     2: .standard(proto: "server_http"),
     3: .standard(proto: "attempted_view"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1009,7 +1009,7 @@ extension EventStore_Cluster_ViewChangeRequest: SwiftProtobuf.Message, SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1026,7 +1026,7 @@ extension EventStore_Cluster_ViewChangeRequest: SwiftProtobuf.Message, SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ViewChangeRequest, rhs: EventStore_Cluster_ViewChangeRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ViewChangeRequest, rhs: EventStore_Cluster_ViewChangeRequest) -> Bool {
     if lhs._serverID != rhs._serverID {return false}
     if lhs._serverHTTP != rhs._serverHTTP {return false}
     if lhs.attemptedView != rhs.attemptedView {return false}
@@ -1036,14 +1036,14 @@ extension EventStore_Cluster_ViewChangeRequest: SwiftProtobuf.Message, SwiftProt
 }
 
 extension EventStore_Cluster_ViewChangeProofRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ViewChangeProofRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ViewChangeProofRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "server_id"),
     2: .standard(proto: "server_http"),
     3: .standard(proto: "installed_view"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1057,7 +1057,7 @@ extension EventStore_Cluster_ViewChangeProofRequest: SwiftProtobuf.Message, Swif
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1074,7 +1074,7 @@ extension EventStore_Cluster_ViewChangeProofRequest: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ViewChangeProofRequest, rhs: EventStore_Cluster_ViewChangeProofRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ViewChangeProofRequest, rhs: EventStore_Cluster_ViewChangeProofRequest) -> Bool {
     if lhs._serverID != rhs._serverID {return false}
     if lhs._serverHTTP != rhs._serverHTTP {return false}
     if lhs.installedView != rhs.installedView {return false}
@@ -1084,14 +1084,14 @@ extension EventStore_Cluster_ViewChangeProofRequest: SwiftProtobuf.Message, Swif
 }
 
 extension EventStore_Cluster_PrepareRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".PrepareRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".PrepareRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "server_id"),
     2: .standard(proto: "server_http"),
     3: .same(proto: "view"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1105,7 +1105,7 @@ extension EventStore_Cluster_PrepareRequest: SwiftProtobuf.Message, SwiftProtobu
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1122,7 +1122,7 @@ extension EventStore_Cluster_PrepareRequest: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_PrepareRequest, rhs: EventStore_Cluster_PrepareRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_PrepareRequest, rhs: EventStore_Cluster_PrepareRequest) -> Bool {
     if lhs._serverID != rhs._serverID {return false}
     if lhs._serverHTTP != rhs._serverHTTP {return false}
     if lhs.view != rhs.view {return false}
@@ -1132,8 +1132,8 @@ extension EventStore_Cluster_PrepareRequest: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension EventStore_Cluster_PrepareOkRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".PrepareOkRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".PrepareOkRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "view"),
     2: .standard(proto: "server_id"),
     3: .standard(proto: "server_http"),
@@ -1148,7 +1148,7 @@ extension EventStore_Cluster_PrepareOkRequest: SwiftProtobuf.Message, SwiftProto
     12: .standard(proto: "cluster_info"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1171,7 +1171,7 @@ extension EventStore_Cluster_PrepareOkRequest: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1215,7 +1215,7 @@ extension EventStore_Cluster_PrepareOkRequest: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_PrepareOkRequest, rhs: EventStore_Cluster_PrepareOkRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_PrepareOkRequest, rhs: EventStore_Cluster_PrepareOkRequest) -> Bool {
     if lhs.view != rhs.view {return false}
     if lhs._serverID != rhs._serverID {return false}
     if lhs._serverHTTP != rhs._serverHTTP {return false}
@@ -1234,8 +1234,8 @@ extension EventStore_Cluster_PrepareOkRequest: SwiftProtobuf.Message, SwiftProto
 }
 
 extension EventStore_Cluster_ProposalRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ProposalRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ProposalRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "server_id"),
     2: .standard(proto: "server_http"),
     3: .standard(proto: "leader_id"),
@@ -1302,7 +1302,7 @@ extension EventStore_Cluster_ProposalRequest: SwiftProtobuf.Message, SwiftProtob
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1329,7 +1329,7 @@ extension EventStore_Cluster_ProposalRequest: SwiftProtobuf.Message, SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every if/case branch local when no optimizations
@@ -1378,7 +1378,7 @@ extension EventStore_Cluster_ProposalRequest: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ProposalRequest, rhs: EventStore_Cluster_ProposalRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ProposalRequest, rhs: EventStore_Cluster_ProposalRequest) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -1406,8 +1406,8 @@ extension EventStore_Cluster_ProposalRequest: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension EventStore_Cluster_AcceptRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".AcceptRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".AcceptRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "server_id"),
     2: .standard(proto: "server_http"),
     3: .standard(proto: "leader_id"),
@@ -1415,7 +1415,7 @@ extension EventStore_Cluster_AcceptRequest: SwiftProtobuf.Message, SwiftProtobuf
     5: .same(proto: "view"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1431,7 +1431,7 @@ extension EventStore_Cluster_AcceptRequest: SwiftProtobuf.Message, SwiftProtobuf
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1454,7 +1454,7 @@ extension EventStore_Cluster_AcceptRequest: SwiftProtobuf.Message, SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_AcceptRequest, rhs: EventStore_Cluster_AcceptRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_AcceptRequest, rhs: EventStore_Cluster_AcceptRequest) -> Bool {
     if lhs._serverID != rhs._serverID {return false}
     if lhs._serverHTTP != rhs._serverHTTP {return false}
     if lhs._leaderID != rhs._leaderID {return false}
@@ -1466,13 +1466,13 @@ extension EventStore_Cluster_AcceptRequest: SwiftProtobuf.Message, SwiftProtobuf
 }
 
 extension EventStore_Cluster_LeaderIsResigningRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "leader_http"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1485,7 +1485,7 @@ extension EventStore_Cluster_LeaderIsResigningRequest: SwiftProtobuf.Message, Sw
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1499,7 +1499,7 @@ extension EventStore_Cluster_LeaderIsResigningRequest: SwiftProtobuf.Message, Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_LeaderIsResigningRequest, rhs: EventStore_Cluster_LeaderIsResigningRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_LeaderIsResigningRequest, rhs: EventStore_Cluster_LeaderIsResigningRequest) -> Bool {
     if lhs._leaderID != rhs._leaderID {return false}
     if lhs._leaderHTTP != rhs._leaderHTTP {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1508,15 +1508,15 @@ extension EventStore_Cluster_LeaderIsResigningRequest: SwiftProtobuf.Message, Sw
 }
 
 extension EventStore_Cluster_LeaderIsResigningOkRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningOkRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningOkRequest"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "leader_http"),
     3: .standard(proto: "server_id"),
     4: .standard(proto: "server_http"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1531,7 +1531,7 @@ extension EventStore_Cluster_LeaderIsResigningOkRequest: SwiftProtobuf.Message, 
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1551,7 +1551,7 @@ extension EventStore_Cluster_LeaderIsResigningOkRequest: SwiftProtobuf.Message, 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_LeaderIsResigningOkRequest, rhs: EventStore_Cluster_LeaderIsResigningOkRequest) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_LeaderIsResigningOkRequest, rhs: EventStore_Cluster_LeaderIsResigningOkRequest) -> Bool {
     if lhs._leaderID != rhs._leaderID {return false}
     if lhs._leaderHTTP != rhs._leaderHTTP {return false}
     if lhs._serverID != rhs._serverID {return false}
@@ -1562,12 +1562,12 @@ extension EventStore_Cluster_LeaderIsResigningOkRequest: SwiftProtobuf.Message, 
 }
 
 extension EventStore_Cluster_ClusterInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ClusterInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ClusterInfo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "members"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1579,14 +1579,14 @@ extension EventStore_Cluster_ClusterInfo: SwiftProtobuf.Message, SwiftProtobuf._
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.members.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.members, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ClusterInfo, rhs: EventStore_Cluster_ClusterInfo) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ClusterInfo, rhs: EventStore_Cluster_ClusterInfo) -> Bool {
     if lhs.members != rhs.members {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1594,13 +1594,13 @@ extension EventStore_Cluster_ClusterInfo: SwiftProtobuf.Message, SwiftProtobuf._
 }
 
 extension EventStore_Cluster_EndPoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EndPoint"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".EndPoint"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "address"),
     2: .same(proto: "port"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1613,7 +1613,7 @@ extension EventStore_Cluster_EndPoint: SwiftProtobuf.Message, SwiftProtobuf._Mes
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.address.isEmpty {
       try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
     }
@@ -1623,7 +1623,7 @@ extension EventStore_Cluster_EndPoint: SwiftProtobuf.Message, SwiftProtobuf._Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_EndPoint, rhs: EventStore_Cluster_EndPoint) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_EndPoint, rhs: EventStore_Cluster_EndPoint) -> Bool {
     if lhs.address != rhs.address {return false}
     if lhs.port != rhs.port {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1632,8 +1632,8 @@ extension EventStore_Cluster_EndPoint: SwiftProtobuf.Message, SwiftProtobuf._Mes
 }
 
 extension EventStore_Cluster_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".MemberInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".MemberInfo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "instance_id"),
     2: .standard(proto: "time_stamp"),
     3: .same(proto: "state"),
@@ -1724,7 +1724,7 @@ extension EventStore_Cluster_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._M
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1759,7 +1759,7 @@ extension EventStore_Cluster_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._M
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every if/case branch local when no optimizations
@@ -1832,7 +1832,7 @@ extension EventStore_Cluster_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_MemberInfo, rhs: EventStore_Cluster_MemberInfo) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_MemberInfo, rhs: EventStore_Cluster_MemberInfo) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -1868,7 +1868,7 @@ extension EventStore_Cluster_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._M
 }
 
 extension EventStore_Cluster_MemberInfo.VNodeState: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "Initializing"),
     1: .same(proto: "DiscoverLeader"),
     2: .same(proto: "Unknown"),
@@ -1889,13 +1889,13 @@ extension EventStore_Cluster_MemberInfo.VNodeState: SwiftProtobuf._ProtoNameProv
 }
 
 extension EventStore_Cluster_ReplicaLogWrite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplicaLogWrite"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaLogWrite"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "log_position"),
     2: .standard(proto: "replica_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1908,7 +1908,7 @@ extension EventStore_Cluster_ReplicaLogWrite: SwiftProtobuf.Message, SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.logPosition != 0 {
       try visitor.visitSingularInt64Field(value: self.logPosition, fieldNumber: 1)
     }
@@ -1918,7 +1918,7 @@ extension EventStore_Cluster_ReplicaLogWrite: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ReplicaLogWrite, rhs: EventStore_Cluster_ReplicaLogWrite) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ReplicaLogWrite, rhs: EventStore_Cluster_ReplicaLogWrite) -> Bool {
     if lhs.logPosition != rhs.logPosition {return false}
     if lhs.replicaID != rhs.replicaID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1927,12 +1927,12 @@ extension EventStore_Cluster_ReplicaLogWrite: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension EventStore_Cluster_ReplicatedTo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplicatedTo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReplicatedTo"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "log_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1944,14 +1944,14 @@ extension EventStore_Cluster_ReplicatedTo: SwiftProtobuf.Message, SwiftProtobuf.
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.logPosition != 0 {
       try visitor.visitSingularInt64Field(value: self.logPosition, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ReplicatedTo, rhs: EventStore_Cluster_ReplicatedTo) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ReplicatedTo, rhs: EventStore_Cluster_ReplicatedTo) -> Bool {
     if lhs.logPosition != rhs.logPosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1959,14 +1959,14 @@ extension EventStore_Cluster_ReplicatedTo: SwiftProtobuf.Message, SwiftProtobuf.
 }
 
 extension EventStore_Cluster_Epoch: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".Epoch"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".Epoch"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "epoch_position"),
     2: .standard(proto: "epoch_number"),
     3: .standard(proto: "epoch_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1980,7 +1980,7 @@ extension EventStore_Cluster_Epoch: SwiftProtobuf.Message, SwiftProtobuf._Messag
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.epochPosition != 0 {
       try visitor.visitSingularInt64Field(value: self.epochPosition, fieldNumber: 1)
     }
@@ -1993,7 +1993,7 @@ extension EventStore_Cluster_Epoch: SwiftProtobuf.Message, SwiftProtobuf._Messag
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_Epoch, rhs: EventStore_Cluster_Epoch) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_Epoch, rhs: EventStore_Cluster_Epoch) -> Bool {
     if lhs.epochPosition != rhs.epochPosition {return false}
     if lhs.epochNumber != rhs.epochNumber {return false}
     if lhs.epochID != rhs.epochID {return false}
@@ -2003,8 +2003,8 @@ extension EventStore_Cluster_Epoch: SwiftProtobuf.Message, SwiftProtobuf._Messag
 }
 
 extension EventStore_Cluster_SubscribeReplica: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".SubscribeReplica"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".SubscribeReplica"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "log_position"),
     2: .standard(proto: "chunk_id"),
     3: .same(proto: "LastEpochs"),
@@ -2016,7 +2016,7 @@ extension EventStore_Cluster_SubscribeReplica: SwiftProtobuf.Message, SwiftProto
     9: .same(proto: "version"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2036,7 +2036,7 @@ extension EventStore_Cluster_SubscribeReplica: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.logPosition != 0 {
       try visitor.visitSingularInt64Field(value: self.logPosition, fieldNumber: 1)
     }
@@ -2067,7 +2067,7 @@ extension EventStore_Cluster_SubscribeReplica: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_SubscribeReplica, rhs: EventStore_Cluster_SubscribeReplica) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_SubscribeReplica, rhs: EventStore_Cluster_SubscribeReplica) -> Bool {
     if lhs.logPosition != rhs.logPosition {return false}
     if lhs.chunkID != rhs.chunkID {return false}
     if lhs.lastEpochs != rhs.lastEpochs {return false}
@@ -2083,13 +2083,13 @@ extension EventStore_Cluster_SubscribeReplica: SwiftProtobuf.Message, SwiftProto
 }
 
 extension EventStore_Cluster_ReplicaSubscriptionRetry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplicaSubscriptionRetry"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaSubscriptionRetry"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2102,7 +2102,7 @@ extension EventStore_Cluster_ReplicaSubscriptionRetry: SwiftProtobuf.Message, Sw
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2112,7 +2112,7 @@ extension EventStore_Cluster_ReplicaSubscriptionRetry: SwiftProtobuf.Message, Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ReplicaSubscriptionRetry, rhs: EventStore_Cluster_ReplicaSubscriptionRetry) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ReplicaSubscriptionRetry, rhs: EventStore_Cluster_ReplicaSubscriptionRetry) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2121,14 +2121,14 @@ extension EventStore_Cluster_ReplicaSubscriptionRetry: SwiftProtobuf.Message, Sw
 }
 
 extension EventStore_Cluster_ReplicaSubscribed: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplicaSubscribed"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaSubscribed"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
     3: .standard(proto: "subscription_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2142,7 +2142,7 @@ extension EventStore_Cluster_ReplicaSubscribed: SwiftProtobuf.Message, SwiftProt
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2155,7 +2155,7 @@ extension EventStore_Cluster_ReplicaSubscribed: SwiftProtobuf.Message, SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ReplicaSubscribed, rhs: EventStore_Cluster_ReplicaSubscribed) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ReplicaSubscribed, rhs: EventStore_Cluster_ReplicaSubscribed) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.subscriptionPosition != rhs.subscriptionPosition {return false}
@@ -2165,14 +2165,14 @@ extension EventStore_Cluster_ReplicaSubscribed: SwiftProtobuf.Message, SwiftProt
 }
 
 extension EventStore_Cluster_ReplicaLogPositionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReplicaLogPositionAck"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaLogPositionAck"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "subscription_id"),
     2: .standard(proto: "replication_log_position"),
     3: .standard(proto: "writer_log_position"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2186,7 +2186,7 @@ extension EventStore_Cluster_ReplicaLogPositionAck: SwiftProtobuf.Message, Swift
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.subscriptionID.isEmpty {
       try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 1)
     }
@@ -2199,7 +2199,7 @@ extension EventStore_Cluster_ReplicaLogPositionAck: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_ReplicaLogPositionAck, rhs: EventStore_Cluster_ReplicaLogPositionAck) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_ReplicaLogPositionAck, rhs: EventStore_Cluster_ReplicaLogPositionAck) -> Bool {
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.replicationLogPosition != rhs.replicationLogPosition {return false}
     if lhs.writerLogPosition != rhs.writerLogPosition {return false}
@@ -2209,8 +2209,8 @@ extension EventStore_Cluster_ReplicaLogPositionAck: SwiftProtobuf.Message, Swift
 }
 
 extension EventStore_Cluster_CreateChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateChunk"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".CreateChunk"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
     3: .standard(proto: "chunk_header_bytes"),
@@ -2218,7 +2218,7 @@ extension EventStore_Cluster_CreateChunk: SwiftProtobuf.Message, SwiftProtobuf._
     5: .standard(proto: "is_completed_chunk"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2234,7 +2234,7 @@ extension EventStore_Cluster_CreateChunk: SwiftProtobuf.Message, SwiftProtobuf._
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2253,7 +2253,7 @@ extension EventStore_Cluster_CreateChunk: SwiftProtobuf.Message, SwiftProtobuf._
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_CreateChunk, rhs: EventStore_Cluster_CreateChunk) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_CreateChunk, rhs: EventStore_Cluster_CreateChunk) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.chunkHeaderBytes != rhs.chunkHeaderBytes {return false}
@@ -2265,8 +2265,8 @@ extension EventStore_Cluster_CreateChunk: SwiftProtobuf.Message, SwiftProtobuf._
 }
 
 extension EventStore_Cluster_RawChunkBulk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".RawChunkBulk"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".RawChunkBulk"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
     3: .standard(proto: "chunk_start_number"),
@@ -2276,7 +2276,7 @@ extension EventStore_Cluster_RawChunkBulk: SwiftProtobuf.Message, SwiftProtobuf.
     7: .standard(proto: "complete_chunk"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2294,7 +2294,7 @@ extension EventStore_Cluster_RawChunkBulk: SwiftProtobuf.Message, SwiftProtobuf.
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2319,7 +2319,7 @@ extension EventStore_Cluster_RawChunkBulk: SwiftProtobuf.Message, SwiftProtobuf.
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_RawChunkBulk, rhs: EventStore_Cluster_RawChunkBulk) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_RawChunkBulk, rhs: EventStore_Cluster_RawChunkBulk) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.chunkStartNumber != rhs.chunkStartNumber {return false}
@@ -2333,8 +2333,8 @@ extension EventStore_Cluster_RawChunkBulk: SwiftProtobuf.Message, SwiftProtobuf.
 }
 
 extension EventStore_Cluster_DataChunkBulk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DataChunkBulk"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DataChunkBulk"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
     3: .standard(proto: "chunk_start_number"),
@@ -2344,7 +2344,7 @@ extension EventStore_Cluster_DataChunkBulk: SwiftProtobuf.Message, SwiftProtobuf
     7: .standard(proto: "complete_chunk"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2362,7 +2362,7 @@ extension EventStore_Cluster_DataChunkBulk: SwiftProtobuf.Message, SwiftProtobuf
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2387,7 +2387,7 @@ extension EventStore_Cluster_DataChunkBulk: SwiftProtobuf.Message, SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_DataChunkBulk, rhs: EventStore_Cluster_DataChunkBulk) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_DataChunkBulk, rhs: EventStore_Cluster_DataChunkBulk) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.chunkStartNumber != rhs.chunkStartNumber {return false}
@@ -2401,13 +2401,13 @@ extension EventStore_Cluster_DataChunkBulk: SwiftProtobuf.Message, SwiftProtobuf
 }
 
 extension EventStore_Cluster_FollowerAssignment: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".FollowerAssignment"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".FollowerAssignment"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2420,7 +2420,7 @@ extension EventStore_Cluster_FollowerAssignment: SwiftProtobuf.Message, SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2430,7 +2430,7 @@ extension EventStore_Cluster_FollowerAssignment: SwiftProtobuf.Message, SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_FollowerAssignment, rhs: EventStore_Cluster_FollowerAssignment) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_FollowerAssignment, rhs: EventStore_Cluster_FollowerAssignment) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2439,13 +2439,13 @@ extension EventStore_Cluster_FollowerAssignment: SwiftProtobuf.Message, SwiftPro
 }
 
 extension EventStore_Cluster_CloneAssignment: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CloneAssignment"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".CloneAssignment"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2458,7 +2458,7 @@ extension EventStore_Cluster_CloneAssignment: SwiftProtobuf.Message, SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2468,7 +2468,7 @@ extension EventStore_Cluster_CloneAssignment: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_CloneAssignment, rhs: EventStore_Cluster_CloneAssignment) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_CloneAssignment, rhs: EventStore_Cluster_CloneAssignment) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2477,13 +2477,13 @@ extension EventStore_Cluster_CloneAssignment: SwiftProtobuf.Message, SwiftProtob
 }
 
 extension EventStore_Cluster_DropSubscription: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DropSubscription"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DropSubscription"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "leader_id"),
     2: .standard(proto: "subscription_id"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2496,7 +2496,7 @@ extension EventStore_Cluster_DropSubscription: SwiftProtobuf.Message, SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.leaderID.isEmpty {
       try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
@@ -2506,7 +2506,7 @@ extension EventStore_Cluster_DropSubscription: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Cluster_DropSubscription, rhs: EventStore_Cluster_DropSubscription) -> Bool {
+  package static func ==(lhs: EventStore_Cluster_DropSubscription, rhs: EventStore_Cluster_DropSubscription) -> Bool {
     if lhs.leaderID != rhs.leaderID {return false}
     if lhs.subscriptionID != rhs.subscriptionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

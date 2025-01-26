@@ -16,7 +16,7 @@ import GRPCNIOTransportHTTP2Posix
 
 
 public struct Gossip: GRPCConcreteService {
-    public typealias Client = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
+    package typealias Client = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
     
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions

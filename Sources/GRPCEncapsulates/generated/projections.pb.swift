@@ -20,30 +20,30 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_Projections_CreateReq: Sendable {
+package struct EventStore_Client_Projections_CreateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_CreateReq.Options {
+  package var options: EventStore_Client_Projections_CreateReq.Options {
     get {return _options ?? EventStore_Client_Projections_CreateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var mode: EventStore_Client_Projections_CreateReq.Options.OneOf_Mode? = nil
+    package var mode: EventStore_Client_Projections_CreateReq.Options.OneOf_Mode? = nil
 
-    public var oneTime: EventStore_Client_Empty {
+    package var oneTime: EventStore_Client_Empty {
       get {
         if case .oneTime(let v)? = mode {return v}
         return EventStore_Client_Empty()
@@ -51,7 +51,7 @@ public struct EventStore_Client_Projections_CreateReq: Sendable {
       set {mode = .oneTime(newValue)}
     }
 
-    public var transient: EventStore_Client_Projections_CreateReq.Options.Transient {
+    package var transient: EventStore_Client_Projections_CreateReq.Options.Transient {
       get {
         if case .transient(let v)? = mode {return v}
         return EventStore_Client_Projections_CreateReq.Options.Transient()
@@ -59,7 +59,7 @@ public struct EventStore_Client_Projections_CreateReq: Sendable {
       set {mode = .transient(newValue)}
     }
 
-    public var continuous: EventStore_Client_Projections_CreateReq.Options.Continuous {
+    package var continuous: EventStore_Client_Projections_CreateReq.Options.Continuous {
       get {
         if case .continuous(let v)? = mode {return v}
         return EventStore_Client_Projections_CreateReq.Options.Continuous()
@@ -67,91 +67,91 @@ public struct EventStore_Client_Projections_CreateReq: Sendable {
       set {mode = .continuous(newValue)}
     }
 
-    public var query: String = String()
+    package var query: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Mode: Equatable, Sendable {
+    package enum OneOf_Mode: Equatable, Sendable {
       case oneTime(EventStore_Client_Empty)
       case transient(EventStore_Client_Projections_CreateReq.Options.Transient)
       case continuous(EventStore_Client_Projections_CreateReq.Options.Continuous)
 
     }
 
-    public struct Transient: Sendable {
+    package struct Transient: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var name: String = String()
+      package var name: String = String()
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
     }
 
-    public struct Continuous: Sendable {
+    package struct Continuous: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var name: String = String()
+      package var name: String = String()
 
-      public var emitEnabled: Bool = false
+      package var emitEnabled: Bool = false
 
-      public var trackEmittedStreams: Bool = false
+      package var trackEmittedStreams: Bool = false
 
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
+      package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public init() {}
+      package init() {}
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_CreateReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_CreateResp: Sendable {
+package struct EventStore_Client_Projections_CreateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Projections_UpdateReq: Sendable {
+package struct EventStore_Client_Projections_UpdateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_UpdateReq.Options {
+  package var options: EventStore_Client_Projections_UpdateReq.Options {
     get {return _options ?? EventStore_Client_Projections_UpdateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var query: String = String()
+    package var query: String = String()
 
-    public var emitOption: EventStore_Client_Projections_UpdateReq.Options.OneOf_EmitOption? = nil
+    package var emitOption: EventStore_Client_Projections_UpdateReq.Options.OneOf_EmitOption? = nil
 
-    public var emitEnabled: Bool {
+    package var emitEnabled: Bool {
       get {
         if case .emitEnabled(let v)? = emitOption {return v}
         return false
@@ -159,7 +159,7 @@ public struct EventStore_Client_Projections_UpdateReq: Sendable {
       set {emitOption = .emitEnabled(newValue)}
     }
 
-    public var noEmitOptions: EventStore_Client_Empty {
+    package var noEmitOptions: EventStore_Client_Empty {
       get {
         if case .noEmitOptions(let v)? = emitOption {return v}
         return EventStore_Client_Empty()
@@ -167,105 +167,105 @@ public struct EventStore_Client_Projections_UpdateReq: Sendable {
       set {emitOption = .noEmitOptions(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_EmitOption: Equatable, Sendable {
+    package enum OneOf_EmitOption: Equatable, Sendable {
       case emitEnabled(Bool)
       case noEmitOptions(EventStore_Client_Empty)
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_UpdateReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_UpdateResp: Sendable {
+package struct EventStore_Client_Projections_UpdateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Projections_DeleteReq: Sendable {
+package struct EventStore_Client_Projections_DeleteReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_DeleteReq.Options {
+  package var options: EventStore_Client_Projections_DeleteReq.Options {
     get {return _options ?? EventStore_Client_Projections_DeleteReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var deleteEmittedStreams: Bool = false
+    package var deleteEmittedStreams: Bool = false
 
-    public var deleteStateStream: Bool = false
+    package var deleteStateStream: Bool = false
 
-    public var deleteCheckpointStream: Bool = false
+    package var deleteCheckpointStream: Bool = false
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_DeleteReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_DeleteResp: Sendable {
+package struct EventStore_Client_Projections_DeleteResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Projections_StatisticsReq: Sendable {
+package struct EventStore_Client_Projections_StatisticsReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_StatisticsReq.Options {
+  package var options: EventStore_Client_Projections_StatisticsReq.Options {
     get {return _options ?? EventStore_Client_Projections_StatisticsReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var mode: EventStore_Client_Projections_StatisticsReq.Options.OneOf_Mode? = nil
+    package var mode: EventStore_Client_Projections_StatisticsReq.Options.OneOf_Mode? = nil
 
-    public var name: String {
+    package var name: String {
       get {
         if case .name(let v)? = mode {return v}
         return String()
@@ -273,7 +273,7 @@ public struct EventStore_Client_Projections_StatisticsReq: Sendable {
       set {mode = .name(newValue)}
     }
 
-    public var all: EventStore_Client_Empty {
+    package var all: EventStore_Client_Empty {
       get {
         if case .all(let v)? = mode {return v}
         return EventStore_Client_Empty()
@@ -281,7 +281,7 @@ public struct EventStore_Client_Projections_StatisticsReq: Sendable {
       set {mode = .all(newValue)}
     }
 
-    public var transient: EventStore_Client_Empty {
+    package var transient: EventStore_Client_Empty {
       get {
         if case .transient(let v)? = mode {return v}
         return EventStore_Client_Empty()
@@ -289,7 +289,7 @@ public struct EventStore_Client_Projections_StatisticsReq: Sendable {
       set {mode = .transient(newValue)}
     }
 
-    public var continuous: EventStore_Client_Empty {
+    package var continuous: EventStore_Client_Empty {
       get {
         if case .continuous(let v)? = mode {return v}
         return EventStore_Client_Empty()
@@ -297,7 +297,7 @@ public struct EventStore_Client_Projections_StatisticsReq: Sendable {
       set {mode = .continuous(newValue)}
     }
 
-    public var oneTime: EventStore_Client_Empty {
+    package var oneTime: EventStore_Client_Empty {
       get {
         if case .oneTime(let v)? = mode {return v}
         return EventStore_Client_Empty()
@@ -305,9 +305,9 @@ public struct EventStore_Client_Projections_StatisticsReq: Sendable {
       set {mode = .oneTime(newValue)}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Mode: Equatable, Sendable {
+    package enum OneOf_Mode: Equatable, Sendable {
       case name(String)
       case all(EventStore_Client_Empty)
       case transient(EventStore_Client_Empty)
@@ -316,385 +316,385 @@ public struct EventStore_Client_Projections_StatisticsReq: Sendable {
 
     }
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_StatisticsReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_StatisticsResp: Sendable {
+package struct EventStore_Client_Projections_StatisticsResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var details: EventStore_Client_Projections_StatisticsResp.Details {
+  package var details: EventStore_Client_Projections_StatisticsResp.Details {
     get {return _details ?? EventStore_Client_Projections_StatisticsResp.Details()}
     set {_details = newValue}
   }
   /// Returns true if `details` has been explicitly set.
-  public var hasDetails: Bool {return self._details != nil}
+  package var hasDetails: Bool {return self._details != nil}
   /// Clears the value of `details`. Subsequent reads from it will return its default value.
-  public mutating func clearDetails() {self._details = nil}
+  package mutating func clearDetails() {self._details = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Details: @unchecked Sendable {
+  package struct Details: @unchecked Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var coreProcessingTime: Int64 {
+    package var coreProcessingTime: Int64 {
       get {return _storage._coreProcessingTime}
       set {_uniqueStorage()._coreProcessingTime = newValue}
     }
 
-    public var version: Int64 {
+    package var version: Int64 {
       get {return _storage._version}
       set {_uniqueStorage()._version = newValue}
     }
 
-    public var epoch: Int64 {
+    package var epoch: Int64 {
       get {return _storage._epoch}
       set {_uniqueStorage()._epoch = newValue}
     }
 
-    public var effectiveName: String {
+    package var effectiveName: String {
       get {return _storage._effectiveName}
       set {_uniqueStorage()._effectiveName = newValue}
     }
 
-    public var writesInProgress: Int32 {
+    package var writesInProgress: Int32 {
       get {return _storage._writesInProgress}
       set {_uniqueStorage()._writesInProgress = newValue}
     }
 
-    public var readsInProgress: Int32 {
+    package var readsInProgress: Int32 {
       get {return _storage._readsInProgress}
       set {_uniqueStorage()._readsInProgress = newValue}
     }
 
-    public var partitionsCached: Int32 {
+    package var partitionsCached: Int32 {
       get {return _storage._partitionsCached}
       set {_uniqueStorage()._partitionsCached = newValue}
     }
 
-    public var status: String {
+    package var status: String {
       get {return _storage._status}
       set {_uniqueStorage()._status = newValue}
     }
 
-    public var stateReason: String {
+    package var stateReason: String {
       get {return _storage._stateReason}
       set {_uniqueStorage()._stateReason = newValue}
     }
 
-    public var name: String {
+    package var name: String {
       get {return _storage._name}
       set {_uniqueStorage()._name = newValue}
     }
 
-    public var mode: String {
+    package var mode: String {
       get {return _storage._mode}
       set {_uniqueStorage()._mode = newValue}
     }
 
-    public var position: String {
+    package var position: String {
       get {return _storage._position}
       set {_uniqueStorage()._position = newValue}
     }
 
-    public var progress: Float {
+    package var progress: Float {
       get {return _storage._progress}
       set {_uniqueStorage()._progress = newValue}
     }
 
-    public var lastCheckpoint: String {
+    package var lastCheckpoint: String {
       get {return _storage._lastCheckpoint}
       set {_uniqueStorage()._lastCheckpoint = newValue}
     }
 
-    public var eventsProcessedAfterRestart: Int64 {
+    package var eventsProcessedAfterRestart: Int64 {
       get {return _storage._eventsProcessedAfterRestart}
       set {_uniqueStorage()._eventsProcessedAfterRestart = newValue}
     }
 
-    public var checkpointStatus: String {
+    package var checkpointStatus: String {
       get {return _storage._checkpointStatus}
       set {_uniqueStorage()._checkpointStatus = newValue}
     }
 
-    public var bufferedEvents: Int64 {
+    package var bufferedEvents: Int64 {
       get {return _storage._bufferedEvents}
       set {_uniqueStorage()._bufferedEvents = newValue}
     }
 
-    public var writePendingEventsBeforeCheckpoint: Int32 {
+    package var writePendingEventsBeforeCheckpoint: Int32 {
       get {return _storage._writePendingEventsBeforeCheckpoint}
       set {_uniqueStorage()._writePendingEventsBeforeCheckpoint = newValue}
     }
 
-    public var writePendingEventsAfterCheckpoint: Int32 {
+    package var writePendingEventsAfterCheckpoint: Int32 {
       get {return _storage._writePendingEventsAfterCheckpoint}
       set {_uniqueStorage()._writePendingEventsAfterCheckpoint = newValue}
     }
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
 
     fileprivate var _storage = _StorageClass.defaultInstance
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _details: EventStore_Client_Projections_StatisticsResp.Details? = nil
 }
 
-public struct EventStore_Client_Projections_StateReq: Sendable {
+package struct EventStore_Client_Projections_StateReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_StateReq.Options {
+  package var options: EventStore_Client_Projections_StateReq.Options {
     get {return _options ?? EventStore_Client_Projections_StateReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var partition: String = String()
+    package var partition: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_StateReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_StateResp: Sendable {
+package struct EventStore_Client_Projections_StateResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var state: SwiftProtobuf.Google_Protobuf_Value {
+  package var state: SwiftProtobuf.Google_Protobuf_Value {
     get {return _state ?? SwiftProtobuf.Google_Protobuf_Value()}
     set {_state = newValue}
   }
   /// Returns true if `state` has been explicitly set.
-  public var hasState: Bool {return self._state != nil}
+  package var hasState: Bool {return self._state != nil}
   /// Clears the value of `state`. Subsequent reads from it will return its default value.
-  public mutating func clearState() {self._state = nil}
+  package mutating func clearState() {self._state = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _state: SwiftProtobuf.Google_Protobuf_Value? = nil
 }
 
-public struct EventStore_Client_Projections_ResultReq: Sendable {
+package struct EventStore_Client_Projections_ResultReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_ResultReq.Options {
+  package var options: EventStore_Client_Projections_ResultReq.Options {
     get {return _options ?? EventStore_Client_Projections_ResultReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var partition: String = String()
+    package var partition: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_ResultReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_ResultResp: Sendable {
+package struct EventStore_Client_Projections_ResultResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var result: SwiftProtobuf.Google_Protobuf_Value {
+  package var result: SwiftProtobuf.Google_Protobuf_Value {
     get {return _result ?? SwiftProtobuf.Google_Protobuf_Value()}
     set {_result = newValue}
   }
   /// Returns true if `result` has been explicitly set.
-  public var hasResult: Bool {return self._result != nil}
+  package var hasResult: Bool {return self._result != nil}
   /// Clears the value of `result`. Subsequent reads from it will return its default value.
-  public mutating func clearResult() {self._result = nil}
+  package mutating func clearResult() {self._result = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 
   fileprivate var _result: SwiftProtobuf.Google_Protobuf_Value? = nil
 }
 
-public struct EventStore_Client_Projections_ResetReq: Sendable {
+package struct EventStore_Client_Projections_ResetReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_ResetReq.Options {
+  package var options: EventStore_Client_Projections_ResetReq.Options {
     get {return _options ?? EventStore_Client_Projections_ResetReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var writeCheckpoint: Bool = false
+    package var writeCheckpoint: Bool = false
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_ResetReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_ResetResp: Sendable {
+package struct EventStore_Client_Projections_ResetResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Projections_EnableReq: Sendable {
+package struct EventStore_Client_Projections_EnableReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_EnableReq.Options {
+  package var options: EventStore_Client_Projections_EnableReq.Options {
     get {return _options ?? EventStore_Client_Projections_EnableReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_EnableReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_EnableResp: Sendable {
+package struct EventStore_Client_Projections_EnableResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Projections_DisableReq: Sendable {
+package struct EventStore_Client_Projections_DisableReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var options: EventStore_Client_Projections_DisableReq.Options {
+  package var options: EventStore_Client_Projections_DisableReq.Options {
     get {return _options ?? EventStore_Client_Projections_DisableReq.Options()}
     set {_options = newValue}
   }
   /// Returns true if `options` has been explicitly set.
-  public var hasOptions: Bool {return self._options != nil}
+  package var hasOptions: Bool {return self._options != nil}
   /// Clears the value of `options`. Subsequent reads from it will return its default value.
-  public mutating func clearOptions() {self._options = nil}
+  package mutating func clearOptions() {self._options = nil}
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public struct Options: Sendable {
+  package struct Options: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var name: String = String()
+    package var name: String = String()
 
-    public var writeCheckpoint: Bool = false
+    package var writeCheckpoint: Bool = false
 
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {}
+    package init() {}
   }
 
-  public init() {}
+  package init() {}
 
   fileprivate var _options: EventStore_Client_Projections_DisableReq.Options? = nil
 }
 
-public struct EventStore_Client_Projections_DisableResp: Sendable {
+package struct EventStore_Client_Projections_DisableResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -702,12 +702,12 @@ public struct EventStore_Client_Projections_DisableResp: Sendable {
 fileprivate let _protobuf_package = "event_store.client.projections"
 
 extension EventStore_Client_Projections_CreateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".CreateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -719,7 +719,7 @@ extension EventStore_Client_Projections_CreateReq: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -730,7 +730,7 @@ extension EventStore_Client_Projections_CreateReq: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_CreateReq, rhs: EventStore_Client_Projections_CreateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_CreateReq, rhs: EventStore_Client_Projections_CreateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -738,15 +738,15 @@ extension EventStore_Client_Projections_CreateReq: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Projections_CreateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_CreateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_CreateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "one_time"),
     2: .same(proto: "transient"),
     3: .same(proto: "continuous"),
     4: .same(proto: "query"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -797,7 +797,7 @@ extension EventStore_Client_Projections_CreateReq.Options: SwiftProtobuf.Message
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -823,7 +823,7 @@ extension EventStore_Client_Projections_CreateReq.Options: SwiftProtobuf.Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_CreateReq.Options, rhs: EventStore_Client_Projections_CreateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_CreateReq.Options, rhs: EventStore_Client_Projections_CreateReq.Options) -> Bool {
     if lhs.mode != rhs.mode {return false}
     if lhs.query != rhs.query {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -832,12 +832,12 @@ extension EventStore_Client_Projections_CreateReq.Options: SwiftProtobuf.Message
 }
 
 extension EventStore_Client_Projections_CreateReq.Options.Transient: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_CreateReq.Options.protoMessageName + ".Transient"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_CreateReq.Options.protoMessageName + ".Transient"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -849,14 +849,14 @@ extension EventStore_Client_Projections_CreateReq.Options.Transient: SwiftProtob
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_CreateReq.Options.Transient, rhs: EventStore_Client_Projections_CreateReq.Options.Transient) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_CreateReq.Options.Transient, rhs: EventStore_Client_Projections_CreateReq.Options.Transient) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -864,14 +864,14 @@ extension EventStore_Client_Projections_CreateReq.Options.Transient: SwiftProtob
 }
 
 extension EventStore_Client_Projections_CreateReq.Options.Continuous: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_CreateReq.Options.protoMessageName + ".Continuous"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_CreateReq.Options.protoMessageName + ".Continuous"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .standard(proto: "emit_enabled"),
     3: .standard(proto: "track_emitted_streams"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -885,7 +885,7 @@ extension EventStore_Client_Projections_CreateReq.Options.Continuous: SwiftProto
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
@@ -898,7 +898,7 @@ extension EventStore_Client_Projections_CreateReq.Options.Continuous: SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_CreateReq.Options.Continuous, rhs: EventStore_Client_Projections_CreateReq.Options.Continuous) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_CreateReq.Options.Continuous, rhs: EventStore_Client_Projections_CreateReq.Options.Continuous) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.emitEnabled != rhs.emitEnabled {return false}
     if lhs.trackEmittedStreams != rhs.trackEmittedStreams {return false}
@@ -908,31 +908,31 @@ extension EventStore_Client_Projections_CreateReq.Options.Continuous: SwiftProto
 }
 
 extension EventStore_Client_Projections_CreateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".CreateResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".CreateResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_CreateResp, rhs: EventStore_Client_Projections_CreateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_CreateResp, rhs: EventStore_Client_Projections_CreateResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Projections_UpdateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".UpdateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -944,7 +944,7 @@ extension EventStore_Client_Projections_UpdateReq: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -955,7 +955,7 @@ extension EventStore_Client_Projections_UpdateReq: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_UpdateReq, rhs: EventStore_Client_Projections_UpdateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_UpdateReq, rhs: EventStore_Client_Projections_UpdateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -963,15 +963,15 @@ extension EventStore_Client_Projections_UpdateReq: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Projections_UpdateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_UpdateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_UpdateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .same(proto: "query"),
     3: .standard(proto: "emit_enabled"),
     4: .standard(proto: "no_emit_options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1005,7 +1005,7 @@ extension EventStore_Client_Projections_UpdateReq.Options: SwiftProtobuf.Message
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1030,7 +1030,7 @@ extension EventStore_Client_Projections_UpdateReq.Options: SwiftProtobuf.Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_UpdateReq.Options, rhs: EventStore_Client_Projections_UpdateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_UpdateReq.Options, rhs: EventStore_Client_Projections_UpdateReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.query != rhs.query {return false}
     if lhs.emitOption != rhs.emitOption {return false}
@@ -1040,31 +1040,31 @@ extension EventStore_Client_Projections_UpdateReq.Options: SwiftProtobuf.Message
 }
 
 extension EventStore_Client_Projections_UpdateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".UpdateResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".UpdateResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_UpdateResp, rhs: EventStore_Client_Projections_UpdateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_UpdateResp, rhs: EventStore_Client_Projections_UpdateResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Projections_DeleteReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DeleteReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1076,7 +1076,7 @@ extension EventStore_Client_Projections_DeleteReq: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1087,7 +1087,7 @@ extension EventStore_Client_Projections_DeleteReq: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_DeleteReq, rhs: EventStore_Client_Projections_DeleteReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_DeleteReq, rhs: EventStore_Client_Projections_DeleteReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1095,15 +1095,15 @@ extension EventStore_Client_Projections_DeleteReq: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Projections_DeleteReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_DeleteReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_DeleteReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .standard(proto: "delete_emitted_streams"),
     3: .standard(proto: "delete_state_stream"),
     4: .standard(proto: "delete_checkpoint_stream"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1118,7 +1118,7 @@ extension EventStore_Client_Projections_DeleteReq.Options: SwiftProtobuf.Message
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
@@ -1134,7 +1134,7 @@ extension EventStore_Client_Projections_DeleteReq.Options: SwiftProtobuf.Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_DeleteReq.Options, rhs: EventStore_Client_Projections_DeleteReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_DeleteReq.Options, rhs: EventStore_Client_Projections_DeleteReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.deleteEmittedStreams != rhs.deleteEmittedStreams {return false}
     if lhs.deleteStateStream != rhs.deleteStateStream {return false}
@@ -1145,31 +1145,31 @@ extension EventStore_Client_Projections_DeleteReq.Options: SwiftProtobuf.Message
 }
 
 extension EventStore_Client_Projections_DeleteResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DeleteResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".DeleteResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_DeleteResp, rhs: EventStore_Client_Projections_DeleteResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_DeleteResp, rhs: EventStore_Client_Projections_DeleteResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Projections_StatisticsReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StatisticsReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".StatisticsReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1181,7 +1181,7 @@ extension EventStore_Client_Projections_StatisticsReq: SwiftProtobuf.Message, Sw
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1192,7 +1192,7 @@ extension EventStore_Client_Projections_StatisticsReq: SwiftProtobuf.Message, Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StatisticsReq, rhs: EventStore_Client_Projections_StatisticsReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StatisticsReq, rhs: EventStore_Client_Projections_StatisticsReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1200,8 +1200,8 @@ extension EventStore_Client_Projections_StatisticsReq: SwiftProtobuf.Message, Sw
 }
 
 extension EventStore_Client_Projections_StatisticsReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_StatisticsReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_StatisticsReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .same(proto: "all"),
     3: .same(proto: "transient"),
@@ -1209,7 +1209,7 @@ extension EventStore_Client_Projections_StatisticsReq.Options: SwiftProtobuf.Mes
     5: .standard(proto: "one_time"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1280,7 +1280,7 @@ extension EventStore_Client_Projections_StatisticsReq.Options: SwiftProtobuf.Mes
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1311,7 +1311,7 @@ extension EventStore_Client_Projections_StatisticsReq.Options: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StatisticsReq.Options, rhs: EventStore_Client_Projections_StatisticsReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StatisticsReq.Options, rhs: EventStore_Client_Projections_StatisticsReq.Options) -> Bool {
     if lhs.mode != rhs.mode {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1319,12 +1319,12 @@ extension EventStore_Client_Projections_StatisticsReq.Options: SwiftProtobuf.Mes
 }
 
 extension EventStore_Client_Projections_StatisticsResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StatisticsResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".StatisticsResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "details"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1336,7 +1336,7 @@ extension EventStore_Client_Projections_StatisticsResp: SwiftProtobuf.Message, S
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1347,7 +1347,7 @@ extension EventStore_Client_Projections_StatisticsResp: SwiftProtobuf.Message, S
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StatisticsResp, rhs: EventStore_Client_Projections_StatisticsResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StatisticsResp, rhs: EventStore_Client_Projections_StatisticsResp) -> Bool {
     if lhs._details != rhs._details {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1355,8 +1355,8 @@ extension EventStore_Client_Projections_StatisticsResp: SwiftProtobuf.Message, S
 }
 
 extension EventStore_Client_Projections_StatisticsResp.Details: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_StatisticsResp.protoMessageName + ".Details"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_StatisticsResp.protoMessageName + ".Details"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "coreProcessingTime"),
     2: .same(proto: "version"),
     3: .same(proto: "epoch"),
@@ -1441,7 +1441,7 @@ extension EventStore_Client_Projections_StatisticsResp.Details: SwiftProtobuf.Me
     return _storage
   }
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     _ = _uniqueStorage()
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1474,7 +1474,7 @@ extension EventStore_Client_Projections_StatisticsResp.Details: SwiftProtobuf.Me
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
       if _storage._coreProcessingTime != 0 {
         try visitor.visitSingularInt64Field(value: _storage._coreProcessingTime, fieldNumber: 1)
@@ -1537,7 +1537,7 @@ extension EventStore_Client_Projections_StatisticsResp.Details: SwiftProtobuf.Me
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StatisticsResp.Details, rhs: EventStore_Client_Projections_StatisticsResp.Details) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StatisticsResp.Details, rhs: EventStore_Client_Projections_StatisticsResp.Details) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -1571,12 +1571,12 @@ extension EventStore_Client_Projections_StatisticsResp.Details: SwiftProtobuf.Me
 }
 
 extension EventStore_Client_Projections_StateReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StateReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".StateReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1588,7 +1588,7 @@ extension EventStore_Client_Projections_StateReq: SwiftProtobuf.Message, SwiftPr
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1599,7 +1599,7 @@ extension EventStore_Client_Projections_StateReq: SwiftProtobuf.Message, SwiftPr
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StateReq, rhs: EventStore_Client_Projections_StateReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StateReq, rhs: EventStore_Client_Projections_StateReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1607,13 +1607,13 @@ extension EventStore_Client_Projections_StateReq: SwiftProtobuf.Message, SwiftPr
 }
 
 extension EventStore_Client_Projections_StateReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_StateReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_StateReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .same(proto: "partition"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1626,7 +1626,7 @@ extension EventStore_Client_Projections_StateReq.Options: SwiftProtobuf.Message,
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
@@ -1636,7 +1636,7 @@ extension EventStore_Client_Projections_StateReq.Options: SwiftProtobuf.Message,
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StateReq.Options, rhs: EventStore_Client_Projections_StateReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StateReq.Options, rhs: EventStore_Client_Projections_StateReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.partition != rhs.partition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1645,12 +1645,12 @@ extension EventStore_Client_Projections_StateReq.Options: SwiftProtobuf.Message,
 }
 
 extension EventStore_Client_Projections_StateResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StateResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".StateResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "state"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1662,7 +1662,7 @@ extension EventStore_Client_Projections_StateResp: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1673,7 +1673,7 @@ extension EventStore_Client_Projections_StateResp: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_StateResp, rhs: EventStore_Client_Projections_StateResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_StateResp, rhs: EventStore_Client_Projections_StateResp) -> Bool {
     if lhs._state != rhs._state {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1681,12 +1681,12 @@ extension EventStore_Client_Projections_StateResp: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Projections_ResultReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ResultReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ResultReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1698,7 +1698,7 @@ extension EventStore_Client_Projections_ResultReq: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1709,7 +1709,7 @@ extension EventStore_Client_Projections_ResultReq: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_ResultReq, rhs: EventStore_Client_Projections_ResultReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_ResultReq, rhs: EventStore_Client_Projections_ResultReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1717,13 +1717,13 @@ extension EventStore_Client_Projections_ResultReq: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Projections_ResultReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_ResultReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_ResultReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .same(proto: "partition"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1736,7 +1736,7 @@ extension EventStore_Client_Projections_ResultReq.Options: SwiftProtobuf.Message
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
@@ -1746,7 +1746,7 @@ extension EventStore_Client_Projections_ResultReq.Options: SwiftProtobuf.Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_ResultReq.Options, rhs: EventStore_Client_Projections_ResultReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_ResultReq.Options, rhs: EventStore_Client_Projections_ResultReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.partition != rhs.partition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1755,12 +1755,12 @@ extension EventStore_Client_Projections_ResultReq.Options: SwiftProtobuf.Message
 }
 
 extension EventStore_Client_Projections_ResultResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ResultResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ResultResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "result"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1772,7 +1772,7 @@ extension EventStore_Client_Projections_ResultResp: SwiftProtobuf.Message, Swift
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1783,7 +1783,7 @@ extension EventStore_Client_Projections_ResultResp: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_ResultResp, rhs: EventStore_Client_Projections_ResultResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_ResultResp, rhs: EventStore_Client_Projections_ResultResp) -> Bool {
     if lhs._result != rhs._result {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1791,12 +1791,12 @@ extension EventStore_Client_Projections_ResultResp: SwiftProtobuf.Message, Swift
 }
 
 extension EventStore_Client_Projections_ResetReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ResetReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".ResetReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1808,7 +1808,7 @@ extension EventStore_Client_Projections_ResetReq: SwiftProtobuf.Message, SwiftPr
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1819,7 +1819,7 @@ extension EventStore_Client_Projections_ResetReq: SwiftProtobuf.Message, SwiftPr
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_ResetReq, rhs: EventStore_Client_Projections_ResetReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_ResetReq, rhs: EventStore_Client_Projections_ResetReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1827,13 +1827,13 @@ extension EventStore_Client_Projections_ResetReq: SwiftProtobuf.Message, SwiftPr
 }
 
 extension EventStore_Client_Projections_ResetReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_ResetReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_ResetReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .standard(proto: "write_checkpoint"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1846,7 +1846,7 @@ extension EventStore_Client_Projections_ResetReq.Options: SwiftProtobuf.Message,
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
@@ -1856,7 +1856,7 @@ extension EventStore_Client_Projections_ResetReq.Options: SwiftProtobuf.Message,
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_ResetReq.Options, rhs: EventStore_Client_Projections_ResetReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_ResetReq.Options, rhs: EventStore_Client_Projections_ResetReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.writeCheckpoint != rhs.writeCheckpoint {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1865,31 +1865,31 @@ extension EventStore_Client_Projections_ResetReq.Options: SwiftProtobuf.Message,
 }
 
 extension EventStore_Client_Projections_ResetResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ResetResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".ResetResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_ResetResp, rhs: EventStore_Client_Projections_ResetResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_ResetResp, rhs: EventStore_Client_Projections_ResetResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Projections_EnableReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EnableReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".EnableReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1901,7 +1901,7 @@ extension EventStore_Client_Projections_EnableReq: SwiftProtobuf.Message, SwiftP
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1912,7 +1912,7 @@ extension EventStore_Client_Projections_EnableReq: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_EnableReq, rhs: EventStore_Client_Projections_EnableReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_EnableReq, rhs: EventStore_Client_Projections_EnableReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1920,12 +1920,12 @@ extension EventStore_Client_Projections_EnableReq: SwiftProtobuf.Message, SwiftP
 }
 
 extension EventStore_Client_Projections_EnableReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_EnableReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_EnableReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1937,14 +1937,14 @@ extension EventStore_Client_Projections_EnableReq.Options: SwiftProtobuf.Message
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_EnableReq.Options, rhs: EventStore_Client_Projections_EnableReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_EnableReq.Options, rhs: EventStore_Client_Projections_EnableReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1952,31 +1952,31 @@ extension EventStore_Client_Projections_EnableReq.Options: SwiftProtobuf.Message
 }
 
 extension EventStore_Client_Projections_EnableResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".EnableResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".EnableResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_EnableResp, rhs: EventStore_Client_Projections_EnableResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_EnableResp, rhs: EventStore_Client_Projections_EnableResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension EventStore_Client_Projections_DisableReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DisableReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".DisableReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "options"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -1988,7 +1988,7 @@ extension EventStore_Client_Projections_DisableReq: SwiftProtobuf.Message, Swift
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
@@ -1999,7 +1999,7 @@ extension EventStore_Client_Projections_DisableReq: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_DisableReq, rhs: EventStore_Client_Projections_DisableReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_DisableReq, rhs: EventStore_Client_Projections_DisableReq) -> Bool {
     if lhs._options != rhs._options {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2007,13 +2007,13 @@ extension EventStore_Client_Projections_DisableReq: SwiftProtobuf.Message, Swift
 }
 
 extension EventStore_Client_Projections_DisableReq.Options: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = EventStore_Client_Projections_DisableReq.protoMessageName + ".Options"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = EventStore_Client_Projections_DisableReq.protoMessageName + ".Options"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
     2: .standard(proto: "write_checkpoint"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -2026,7 +2026,7 @@ extension EventStore_Client_Projections_DisableReq.Options: SwiftProtobuf.Messag
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
@@ -2036,7 +2036,7 @@ extension EventStore_Client_Projections_DisableReq.Options: SwiftProtobuf.Messag
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_DisableReq.Options, rhs: EventStore_Client_Projections_DisableReq.Options) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_DisableReq.Options, rhs: EventStore_Client_Projections_DisableReq.Options) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.writeCheckpoint != rhs.writeCheckpoint {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2045,19 +2045,19 @@ extension EventStore_Client_Projections_DisableReq.Options: SwiftProtobuf.Messag
 }
 
 extension EventStore_Client_Projections_DisableResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DisableResp"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let protoMessageName: String = _protobuf_package + ".DisableResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Projections_DisableResp, rhs: EventStore_Client_Projections_DisableResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Projections_DisableResp, rhs: EventStore_Client_Projections_DisableResp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

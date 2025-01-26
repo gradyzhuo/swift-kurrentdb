@@ -13,37 +13,37 @@ import GRPCProtobuf
 // MARK: - event_store.cluster.Gossip
 
 /// Namespace containing generated types for the "event_store.cluster.Gossip" service.
-public enum EventStore_Cluster_Gossip {
+package enum EventStore_Cluster_Gossip {
     /// Service descriptor for the "event_store.cluster.Gossip" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Gossip")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Gossip")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Update" metadata.
-        public enum Update {
+        package enum Update {
             /// Request type for "Update".
-            public typealias Input = EventStore_Cluster_GossipRequest
+            package typealias Input = EventStore_Cluster_GossipRequest
             /// Response type for "Update".
-            public typealias Output = EventStore_Cluster_ClusterInfo
+            package typealias Output = EventStore_Cluster_ClusterInfo
             /// Descriptor for "Update".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Gossip"),
                 method: "Update"
             )
         }
         /// Namespace for "Read" metadata.
-        public enum Read {
+        package enum Read {
             /// Request type for "Read".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "Read".
-            public typealias Output = EventStore_Cluster_ClusterInfo
+            package typealias Output = EventStore_Cluster_ClusterInfo
             /// Descriptor for "Read".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Gossip"),
                 method: "Read"
             )
         }
         /// Descriptors for all methods in the "event_store.cluster.Gossip" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Update.descriptor,
             Read.descriptor
         ]
@@ -52,7 +52,7 @@ public enum EventStore_Cluster_Gossip {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.cluster.Gossip" service.
-    public static let event_store_cluster_Gossip = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Gossip")
+    package static let eventStore_cluster_Gossip = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Gossip")
 }
 
 // MARK: event_store.cluster.Gossip (server)
@@ -68,7 +68,7 @@ extension EventStore_Cluster_Gossip {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Update" method.
         ///
         /// - Parameters:
@@ -105,7 +105,7 @@ extension EventStore_Cluster_Gossip {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Cluster_Gossip.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Cluster_Gossip.StreamingServiceProtocol {
         /// Handle the "Update" method.
         ///
         /// - Parameters:
@@ -140,7 +140,7 @@ extension EventStore_Cluster_Gossip {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Cluster_Gossip.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Cluster_Gossip.ServiceProtocol {
         /// Handle the "Update" method.
         ///
         /// - Parameters:
@@ -173,7 +173,7 @@ extension EventStore_Cluster_Gossip {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Cluster_Gossip.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Cluster_Gossip.Method.Update.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Cluster_GossipRequest>(),
@@ -201,7 +201,7 @@ extension EventStore_Cluster_Gossip.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Cluster_Gossip.ServiceProtocol {
-    public func update(
+    package func update(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_GossipRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Cluster_ClusterInfo> {
@@ -212,7 +212,7 @@ extension EventStore_Cluster_Gossip.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func read(
+    package func read(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Cluster_ClusterInfo> {
@@ -226,7 +226,7 @@ extension EventStore_Cluster_Gossip.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Cluster_Gossip.SimpleServiceProtocol {
-    public func update(
+    package func update(
         request: GRPCCore.ServerRequest<EventStore_Cluster_GossipRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo> {
@@ -239,7 +239,7 @@ extension EventStore_Cluster_Gossip.SimpleServiceProtocol {
         )
     }
 
-    public func read(
+    package func read(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo> {
@@ -260,7 +260,7 @@ extension EventStore_Cluster_Gossip {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Update" method.
         ///
         /// - Parameters:
@@ -305,14 +305,14 @@ extension EventStore_Cluster_Gossip {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -327,7 +327,7 @@ extension EventStore_Cluster_Gossip {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func update<Result>(
+        package func update<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_GossipRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_GossipRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Cluster_ClusterInfo>,
@@ -357,7 +357,7 @@ extension EventStore_Cluster_Gossip {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func read<Result>(
+        package func read<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Cluster_ClusterInfo>,
@@ -389,7 +389,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_GossipRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Cluster_ClusterInfo>) async throws -> Result = { response in
@@ -414,7 +414,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Cluster_ClusterInfo>) async throws -> Result = { response in
@@ -443,7 +443,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         _ message: EventStore_Cluster_GossipRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -472,7 +472,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -495,109 +495,109 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
 // MARK: - event_store.cluster.Elections
 
 /// Namespace containing generated types for the "event_store.cluster.Elections" service.
-public enum EventStore_Cluster_Elections {
+package enum EventStore_Cluster_Elections {
     /// Service descriptor for the "event_store.cluster.Elections" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "ViewChange" metadata.
-        public enum ViewChange {
+        package enum ViewChange {
             /// Request type for "ViewChange".
-            public typealias Input = EventStore_Cluster_ViewChangeRequest
+            package typealias Input = EventStore_Cluster_ViewChangeRequest
             /// Response type for "ViewChange".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "ViewChange".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "ViewChange"
             )
         }
         /// Namespace for "ViewChangeProof" metadata.
-        public enum ViewChangeProof {
+        package enum ViewChangeProof {
             /// Request type for "ViewChangeProof".
-            public typealias Input = EventStore_Cluster_ViewChangeProofRequest
+            package typealias Input = EventStore_Cluster_ViewChangeProofRequest
             /// Response type for "ViewChangeProof".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "ViewChangeProof".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "ViewChangeProof"
             )
         }
         /// Namespace for "Prepare" metadata.
-        public enum Prepare {
+        package enum Prepare {
             /// Request type for "Prepare".
-            public typealias Input = EventStore_Cluster_PrepareRequest
+            package typealias Input = EventStore_Cluster_PrepareRequest
             /// Response type for "Prepare".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "Prepare".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "Prepare"
             )
         }
         /// Namespace for "PrepareOk" metadata.
-        public enum PrepareOk {
+        package enum PrepareOk {
             /// Request type for "PrepareOk".
-            public typealias Input = EventStore_Cluster_PrepareOkRequest
+            package typealias Input = EventStore_Cluster_PrepareOkRequest
             /// Response type for "PrepareOk".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "PrepareOk".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "PrepareOk"
             )
         }
         /// Namespace for "Proposal" metadata.
-        public enum Proposal {
+        package enum Proposal {
             /// Request type for "Proposal".
-            public typealias Input = EventStore_Cluster_ProposalRequest
+            package typealias Input = EventStore_Cluster_ProposalRequest
             /// Response type for "Proposal".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "Proposal".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "Proposal"
             )
         }
         /// Namespace for "Accept" metadata.
-        public enum Accept {
+        package enum Accept {
             /// Request type for "Accept".
-            public typealias Input = EventStore_Cluster_AcceptRequest
+            package typealias Input = EventStore_Cluster_AcceptRequest
             /// Response type for "Accept".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "Accept".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "Accept"
             )
         }
         /// Namespace for "LeaderIsResigning" metadata.
-        public enum LeaderIsResigning {
+        package enum LeaderIsResigning {
             /// Request type for "LeaderIsResigning".
-            public typealias Input = EventStore_Cluster_LeaderIsResigningRequest
+            package typealias Input = EventStore_Cluster_LeaderIsResigningRequest
             /// Response type for "LeaderIsResigning".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "LeaderIsResigning".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "LeaderIsResigning"
             )
         }
         /// Namespace for "LeaderIsResigningOk" metadata.
-        public enum LeaderIsResigningOk {
+        package enum LeaderIsResigningOk {
             /// Request type for "LeaderIsResigningOk".
-            public typealias Input = EventStore_Cluster_LeaderIsResigningOkRequest
+            package typealias Input = EventStore_Cluster_LeaderIsResigningOkRequest
             /// Response type for "LeaderIsResigningOk".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "LeaderIsResigningOk".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections"),
                 method: "LeaderIsResigningOk"
             )
         }
         /// Descriptors for all methods in the "event_store.cluster.Elections" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             ViewChange.descriptor,
             ViewChangeProof.descriptor,
             Prepare.descriptor,
@@ -612,7 +612,7 @@ public enum EventStore_Cluster_Elections {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.cluster.Elections" service.
-    public static let event_store_cluster_Elections = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections")
+    package static let eventStore_cluster_Elections = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.cluster.Elections")
 }
 
 // MARK: event_store.cluster.Elections (server)
@@ -628,7 +628,7 @@ extension EventStore_Cluster_Elections {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "ViewChange" method.
         ///
         /// - Parameters:
@@ -749,7 +749,7 @@ extension EventStore_Cluster_Elections {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Cluster_Elections.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Cluster_Elections.StreamingServiceProtocol {
         /// Handle the "ViewChange" method.
         ///
         /// - Parameters:
@@ -868,7 +868,7 @@ extension EventStore_Cluster_Elections {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Cluster_Elections.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Cluster_Elections.ServiceProtocol {
         /// Handle the "ViewChange" method.
         ///
         /// - Parameters:
@@ -985,7 +985,7 @@ extension EventStore_Cluster_Elections {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Cluster_Elections.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Cluster_Elections.Method.ViewChange.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Cluster_ViewChangeRequest>(),
@@ -1079,7 +1079,7 @@ extension EventStore_Cluster_Elections.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Cluster_Elections.ServiceProtocol {
-    public func viewChange(
+    package func viewChange(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_ViewChangeRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1090,7 +1090,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func viewChangeProof(
+    package func viewChangeProof(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_ViewChangeProofRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1101,7 +1101,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func prepare(
+    package func prepare(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_PrepareRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1112,7 +1112,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func prepareOk(
+    package func prepareOk(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_PrepareOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1123,7 +1123,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func proposal(
+    package func proposal(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_ProposalRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1134,7 +1134,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func accept(
+    package func accept(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_AcceptRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1145,7 +1145,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func leaderIsResigning(
+    package func leaderIsResigning(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_LeaderIsResigningRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1156,7 +1156,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func leaderIsResigningOk(
+    package func leaderIsResigningOk(
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_LeaderIsResigningOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -1170,7 +1170,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Cluster_Elections.SimpleServiceProtocol {
-    public func viewChange(
+    package func viewChange(
         request: GRPCCore.ServerRequest<EventStore_Cluster_ViewChangeRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1183,7 +1183,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func viewChangeProof(
+    package func viewChangeProof(
         request: GRPCCore.ServerRequest<EventStore_Cluster_ViewChangeProofRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1196,7 +1196,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func prepare(
+    package func prepare(
         request: GRPCCore.ServerRequest<EventStore_Cluster_PrepareRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1209,7 +1209,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func prepareOk(
+    package func prepareOk(
         request: GRPCCore.ServerRequest<EventStore_Cluster_PrepareOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1222,7 +1222,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func proposal(
+    package func proposal(
         request: GRPCCore.ServerRequest<EventStore_Cluster_ProposalRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1235,7 +1235,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func accept(
+    package func accept(
         request: GRPCCore.ServerRequest<EventStore_Cluster_AcceptRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1248,7 +1248,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func leaderIsResigning(
+    package func leaderIsResigning(
         request: GRPCCore.ServerRequest<EventStore_Cluster_LeaderIsResigningRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1261,7 +1261,7 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         )
     }
 
-    public func leaderIsResigningOk(
+    package func leaderIsResigningOk(
         request: GRPCCore.ServerRequest<EventStore_Cluster_LeaderIsResigningOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -1282,7 +1282,7 @@ extension EventStore_Cluster_Elections {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "ViewChange" method.
         ///
         /// - Parameters:
@@ -1441,14 +1441,14 @@ extension EventStore_Cluster_Elections {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -1463,7 +1463,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func viewChange<Result>(
+        package func viewChange<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_ViewChangeRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_ViewChangeRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1493,7 +1493,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func viewChangeProof<Result>(
+        package func viewChangeProof<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_ViewChangeProofRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_ViewChangeProofRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1523,7 +1523,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func prepare<Result>(
+        package func prepare<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_PrepareRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_PrepareRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1553,7 +1553,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func prepareOk<Result>(
+        package func prepareOk<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_PrepareOkRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_PrepareOkRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1583,7 +1583,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func proposal<Result>(
+        package func proposal<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_ProposalRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_ProposalRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1613,7 +1613,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func accept<Result>(
+        package func accept<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_AcceptRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_AcceptRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1643,7 +1643,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func leaderIsResigning<Result>(
+        package func leaderIsResigning<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_LeaderIsResigningRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_LeaderIsResigningRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1673,7 +1673,7 @@ extension EventStore_Cluster_Elections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func leaderIsResigningOk<Result>(
+        package func leaderIsResigningOk<Result>(
             request: GRPCCore.ClientRequest<EventStore_Cluster_LeaderIsResigningOkRequest>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Cluster_LeaderIsResigningOkRequest>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1705,7 +1705,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func viewChange<Result>(
+    package func viewChange<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_ViewChangeRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1730,7 +1730,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func viewChangeProof<Result>(
+    package func viewChangeProof<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_ViewChangeProofRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1755,7 +1755,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func prepare<Result>(
+    package func prepare<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_PrepareRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1780,7 +1780,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func prepareOk<Result>(
+    package func prepareOk<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_PrepareOkRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1805,7 +1805,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func proposal<Result>(
+    package func proposal<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_ProposalRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1830,7 +1830,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func accept<Result>(
+    package func accept<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_AcceptRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1855,7 +1855,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func leaderIsResigning<Result>(
+    package func leaderIsResigning<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_LeaderIsResigningRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1880,7 +1880,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func leaderIsResigningOk<Result>(
+    package func leaderIsResigningOk<Result>(
         request: GRPCCore.ClientRequest<EventStore_Cluster_LeaderIsResigningOkRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1909,7 +1909,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func viewChange<Result>(
+    package func viewChange<Result>(
         _ message: EventStore_Cluster_ViewChangeRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1938,7 +1938,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func viewChangeProof<Result>(
+    package func viewChangeProof<Result>(
         _ message: EventStore_Cluster_ViewChangeProofRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1967,7 +1967,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func prepare<Result>(
+    package func prepare<Result>(
         _ message: EventStore_Cluster_PrepareRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1996,7 +1996,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func prepareOk<Result>(
+    package func prepareOk<Result>(
         _ message: EventStore_Cluster_PrepareOkRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -2025,7 +2025,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func proposal<Result>(
+    package func proposal<Result>(
         _ message: EventStore_Cluster_ProposalRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -2054,7 +2054,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func accept<Result>(
+    package func accept<Result>(
         _ message: EventStore_Cluster_AcceptRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -2083,7 +2083,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func leaderIsResigning<Result>(
+    package func leaderIsResigning<Result>(
         _ message: EventStore_Cluster_LeaderIsResigningRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -2112,7 +2112,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func leaderIsResigningOk<Result>(
+    package func leaderIsResigningOk<Result>(
         _ message: EventStore_Cluster_LeaderIsResigningOkRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,

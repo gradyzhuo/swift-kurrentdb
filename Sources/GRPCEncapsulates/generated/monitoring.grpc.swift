@@ -13,25 +13,25 @@ import GRPCProtobuf
 // MARK: - event_store.client.monitoring.Monitoring
 
 /// Namespace containing generated types for the "event_store.client.monitoring.Monitoring" service.
-public enum EventStore_Client_Monitoring_Monitoring {
+package enum EventStore_Client_Monitoring_Monitoring {
     /// Service descriptor for the "event_store.client.monitoring.Monitoring" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.monitoring.Monitoring")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.monitoring.Monitoring")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Stats" metadata.
-        public enum Stats {
+        package enum Stats {
             /// Request type for "Stats".
-            public typealias Input = EventStore_Client_Monitoring_StatsReq
+            package typealias Input = EventStore_Client_Monitoring_StatsReq
             /// Response type for "Stats".
-            public typealias Output = EventStore_Client_Monitoring_StatsResp
+            package typealias Output = EventStore_Client_Monitoring_StatsResp
             /// Descriptor for "Stats".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.monitoring.Monitoring"),
                 method: "Stats"
             )
         }
         /// Descriptors for all methods in the "event_store.client.monitoring.Monitoring" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Stats.descriptor
         ]
     }
@@ -39,7 +39,7 @@ public enum EventStore_Client_Monitoring_Monitoring {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.monitoring.Monitoring" service.
-    public static let event_store_client_monitoring_Monitoring = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.monitoring.Monitoring")
+    package static let eventStore_client_monitoring_Monitoring = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.monitoring.Monitoring")
 }
 
 // MARK: event_store.client.monitoring.Monitoring (server)
@@ -55,7 +55,7 @@ extension EventStore_Client_Monitoring_Monitoring {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Stats" method.
         ///
         /// - Parameters:
@@ -78,7 +78,7 @@ extension EventStore_Client_Monitoring_Monitoring {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Monitoring_Monitoring.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Monitoring_Monitoring.StreamingServiceProtocol {
         /// Handle the "Stats" method.
         ///
         /// - Parameters:
@@ -99,7 +99,7 @@ extension EventStore_Client_Monitoring_Monitoring {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Monitoring_Monitoring.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Monitoring_Monitoring.ServiceProtocol {
         /// Handle the "Stats" method.
         ///
         /// - Parameters:
@@ -119,7 +119,7 @@ extension EventStore_Client_Monitoring_Monitoring {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Monitoring_Monitoring.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Monitoring_Monitoring.Method.Stats.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Monitoring_StatsReq>(),
@@ -136,7 +136,7 @@ extension EventStore_Client_Monitoring_Monitoring.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_Monitoring_Monitoring.ServiceProtocol {
-    public func stats(
+    package func stats(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Monitoring_StatsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Monitoring_StatsResp> {
@@ -150,7 +150,7 @@ extension EventStore_Client_Monitoring_Monitoring.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Monitoring_Monitoring.SimpleServiceProtocol {
-    public func stats(
+    package func stats(
         request: GRPCCore.ServerRequest<EventStore_Client_Monitoring_StatsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Monitoring_StatsResp> {
@@ -175,7 +175,7 @@ extension EventStore_Client_Monitoring_Monitoring {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Stats" method.
         ///
         /// - Parameters:
@@ -201,14 +201,14 @@ extension EventStore_Client_Monitoring_Monitoring {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -223,7 +223,7 @@ extension EventStore_Client_Monitoring_Monitoring {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func stats<Result>(
+        package func stats<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Monitoring_StatsReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Monitoring_StatsReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Monitoring_StatsResp>,
@@ -253,7 +253,7 @@ extension EventStore_Client_Monitoring_Monitoring.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func stats<Result>(
+    package func stats<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Monitoring_StatsReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Monitoring_StatsResp>) async throws -> Result
@@ -280,7 +280,7 @@ extension EventStore_Client_Monitoring_Monitoring.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func stats<Result>(
+    package func stats<Result>(
         _ message: EventStore_Client_Monitoring_StatsReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,

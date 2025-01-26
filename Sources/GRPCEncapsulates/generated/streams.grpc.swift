@@ -14,73 +14,73 @@ import SwiftProtobuf
 // MARK: - event_store.client.streams.Streams
 
 /// Namespace containing generated types for the "event_store.client.streams.Streams" service.
-public enum EventStore_Client_Streams_Streams {
+package enum EventStore_Client_Streams_Streams {
     /// Service descriptor for the "event_store.client.streams.Streams" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Read" metadata.
-        public enum Read {
+        package enum Read {
             /// Request type for "Read".
-            public typealias Input = EventStore_Client_Streams_ReadReq
+            package typealias Input = EventStore_Client_Streams_ReadReq
             /// Response type for "Read".
-            public typealias Output = EventStore_Client_Streams_ReadResp
+            package typealias Output = EventStore_Client_Streams_ReadResp
             /// Descriptor for "Read".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams"),
                 method: "Read"
             )
         }
         /// Namespace for "Append" metadata.
-        public enum Append {
+        package enum Append {
             /// Request type for "Append".
-            public typealias Input = EventStore_Client_Streams_AppendReq
+            package typealias Input = EventStore_Client_Streams_AppendReq
             /// Response type for "Append".
-            public typealias Output = EventStore_Client_Streams_AppendResp
+            package typealias Output = EventStore_Client_Streams_AppendResp
             /// Descriptor for "Append".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams"),
                 method: "Append"
             )
         }
         /// Namespace for "Delete" metadata.
-        public enum Delete {
+        package enum Delete {
             /// Request type for "Delete".
-            public typealias Input = EventStore_Client_Streams_DeleteReq
+            package typealias Input = EventStore_Client_Streams_DeleteReq
             /// Response type for "Delete".
-            public typealias Output = EventStore_Client_Streams_DeleteResp
+            package typealias Output = EventStore_Client_Streams_DeleteResp
             /// Descriptor for "Delete".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams"),
                 method: "Delete"
             )
         }
         /// Namespace for "Tombstone" metadata.
-        public enum Tombstone {
+        package enum Tombstone {
             /// Request type for "Tombstone".
-            public typealias Input = EventStore_Client_Streams_TombstoneReq
+            package typealias Input = EventStore_Client_Streams_TombstoneReq
             /// Response type for "Tombstone".
-            public typealias Output = EventStore_Client_Streams_TombstoneResp
+            package typealias Output = EventStore_Client_Streams_TombstoneResp
             /// Descriptor for "Tombstone".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams"),
                 method: "Tombstone"
             )
         }
         /// Namespace for "BatchAppend" metadata.
-        public enum BatchAppend {
+        package enum BatchAppend {
             /// Request type for "BatchAppend".
-            public typealias Input = EventStore_Client_Streams_BatchAppendReq
+            package typealias Input = EventStore_Client_Streams_BatchAppendReq
             /// Response type for "BatchAppend".
-            public typealias Output = EventStore_Client_Streams_BatchAppendResp
+            package typealias Output = EventStore_Client_Streams_BatchAppendResp
             /// Descriptor for "BatchAppend".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams"),
                 method: "BatchAppend"
             )
         }
         /// Descriptors for all methods in the "event_store.client.streams.Streams" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Read.descriptor,
             Append.descriptor,
             Delete.descriptor,
@@ -92,7 +92,7 @@ public enum EventStore_Client_Streams_Streams {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.streams.Streams" service.
-    public static let event_store_client_streams_Streams = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams")
+    package static let eventStore_client_streams_Streams = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.streams.Streams")
 }
 
 // MARK: event_store.client.streams.Streams (server)
@@ -108,7 +108,7 @@ extension EventStore_Client_Streams_Streams {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Read" method.
         ///
         /// - Parameters:
@@ -187,7 +187,7 @@ extension EventStore_Client_Streams_Streams {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Streams_Streams.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Streams_Streams.StreamingServiceProtocol {
         /// Handle the "Read" method.
         ///
         /// - Parameters:
@@ -264,7 +264,7 @@ extension EventStore_Client_Streams_Streams {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Streams_Streams.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Streams_Streams.ServiceProtocol {
         /// Handle the "Read" method.
         ///
         /// - Parameters:
@@ -341,7 +341,7 @@ extension EventStore_Client_Streams_Streams {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Streams_Streams.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Streams_Streams.Method.Read.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_ReadReq>(),
@@ -402,7 +402,7 @@ extension EventStore_Client_Streams_Streams.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_Streams_Streams.ServiceProtocol {
-    public func read(
+    package func read(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_ReadReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_ReadResp> {
@@ -413,7 +413,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         return response
     }
 
-    public func append(
+    package func append(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_AppendReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_AppendResp> {
@@ -424,7 +424,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_DeleteResp> {
@@ -435,7 +435,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func tombstone(
+    package func tombstone(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_TombstoneReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_TombstoneResp> {
@@ -449,7 +449,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
-    public func read(
+    package func read(
         request: GRPCCore.ServerRequest<EventStore_Client_Streams_ReadReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_ReadResp> {
@@ -466,7 +466,7 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         )
     }
 
-    public func append(
+    package func append(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_AppendReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Streams_AppendResp> {
@@ -479,7 +479,7 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         )
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.ServerRequest<EventStore_Client_Streams_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Streams_DeleteResp> {
@@ -492,7 +492,7 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         )
     }
 
-    public func tombstone(
+    package func tombstone(
         request: GRPCCore.ServerRequest<EventStore_Client_Streams_TombstoneReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Streams_TombstoneResp> {
@@ -505,7 +505,7 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         )
     }
 
-    public func batchAppend(
+    package func batchAppend(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_BatchAppendReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_BatchAppendResp> {
@@ -530,7 +530,7 @@ extension EventStore_Client_Streams_Streams {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Read" method.
         ///
         /// - Parameters:
@@ -632,14 +632,14 @@ extension EventStore_Client_Streams_Streams {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -654,7 +654,7 @@ extension EventStore_Client_Streams_Streams {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func read<Result>(
+        package func read<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Streams_ReadReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Streams_ReadReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Streams_ReadResp>,
@@ -682,7 +682,7 @@ extension EventStore_Client_Streams_Streams {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func append<Result>(
+        package func append<Result>(
             request: GRPCCore.StreamingClientRequest<EventStore_Client_Streams_AppendReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Streams_AppendReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Streams_AppendResp>,
@@ -712,7 +712,7 @@ extension EventStore_Client_Streams_Streams {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func delete<Result>(
+        package func delete<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Streams_DeleteReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Streams_DeleteReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Streams_DeleteResp>,
@@ -742,7 +742,7 @@ extension EventStore_Client_Streams_Streams {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func tombstone<Result>(
+        package func tombstone<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Streams_TombstoneReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Streams_TombstoneReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Streams_TombstoneResp>,
@@ -772,7 +772,7 @@ extension EventStore_Client_Streams_Streams {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func batchAppend<Result>(
+        package func batchAppend<Result>(
             request: GRPCCore.StreamingClientRequest<EventStore_Client_Streams_BatchAppendReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Streams_BatchAppendReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Streams_BatchAppendResp>,
@@ -802,7 +802,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Streams_ReadReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Streams_ReadResp>) async throws -> Result
@@ -825,7 +825,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func append<Result>(
+    package func append<Result>(
         request: GRPCCore.StreamingClientRequest<EventStore_Client_Streams_AppendReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Streams_AppendResp>) async throws -> Result = { response in
@@ -850,7 +850,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Streams_DeleteReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Streams_DeleteResp>) async throws -> Result = { response in
@@ -875,7 +875,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func tombstone<Result>(
+    package func tombstone<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Streams_TombstoneReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Streams_TombstoneResp>) async throws -> Result = { response in
@@ -900,7 +900,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func batchAppend<Result>(
+    package func batchAppend<Result>(
         request: GRPCCore.StreamingClientRequest<EventStore_Client_Streams_BatchAppendReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Streams_BatchAppendResp>) async throws -> Result
@@ -927,7 +927,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func read<Result>(
+    package func read<Result>(
         _ message: EventStore_Client_Streams_ReadReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -955,7 +955,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func append<Result>(
+    package func append<Result>(
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         requestProducer producer: @Sendable @escaping (GRPCCore.RPCWriter<EventStore_Client_Streams_AppendReq>) async throws -> Void,
@@ -984,7 +984,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         _ message: EventStore_Client_Streams_DeleteReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1013,7 +1013,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func tombstone<Result>(
+    package func tombstone<Result>(
         _ message: EventStore_Client_Streams_TombstoneReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1043,7 +1043,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func batchAppend<Result>(
+    package func batchAppend<Result>(
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         requestProducer producer: @Sendable @escaping (GRPCCore.RPCWriter<EventStore_Client_Streams_BatchAppendReq>) async throws -> Void,

@@ -10,10 +10,10 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct SetNodePriority: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.SetNodePriority.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.SetNodePriority.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.SetNodePriority.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.SetNodePriority.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let priority: Int32
         
@@ -27,7 +27,7 @@ extension Operations {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.setNodePriority(request: request, options: callOptions){
                 try handle(response: $0)
             }

@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct List: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = UnderlyingService.Method.List.Input
-        public typealias UnderlyingResponse = UnderlyingService.Method.List.Output
-        public typealias Response = [PersistentSubscription.SubscriptionInfo]
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = UnderlyingService.Method.List.Input
+        package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
+        package typealias Response = [PersistentSubscription.SubscriptionInfo]
         
         public let options: Options
         
@@ -28,7 +28,7 @@ extension PersistentSubscriptions {
             }
         }
         
-        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.list(request: request, options: callOptions){
                 try $0.message.subscriptions.map { .init(from: $0) }
             }
@@ -40,7 +40,7 @@ extension PersistentSubscriptions {
 
 extension PersistentSubscriptions.List {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         private var options: UnderlyingMessage
         

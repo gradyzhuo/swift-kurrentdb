@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct Delete: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = UnderlyingService.Method.Delete.Input
-        public typealias UnderlyingResponse = UnderlyingService.Method.Delete.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = UnderlyingService.Method.Delete.Input
+        package typealias UnderlyingResponse = UnderlyingService.Method.Delete.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         let streamSelection: StreamSelector<StreamIdentifier>
         let groupName: String
@@ -24,7 +24,7 @@ extension PersistentSubscriptions {
             self.groupName = groupName
         }
         
-        public func requestMessage() throws -> UnderlyingRequest {
+        package func requestMessage() throws -> UnderlyingRequest {
             return try .with {
                 $0.options.groupName = groupName
                 switch streamSelection {
@@ -36,7 +36,7 @@ extension PersistentSubscriptions {
             }
         }
         
-        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.delete(request: request, options: callOptions){
                 try handle(response: $0)
             }

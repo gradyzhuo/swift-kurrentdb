@@ -11,7 +11,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct Nack: StreamRequestBuildable {
-        public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
+        package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
         
         public enum Action: Int, Sendable {
             case unknown = 0

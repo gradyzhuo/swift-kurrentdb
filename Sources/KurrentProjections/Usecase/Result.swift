@@ -12,9 +12,9 @@ import SwiftProtobuf
 
 extension Projections {
     public struct Result: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Result.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Result.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Result.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Result.Output
 
         public let name: String
         public let options: Options
@@ -26,7 +26,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.result(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -37,17 +37,17 @@ extension Projections {
 
 extension Projections.Result {
     public struct Response: GRPCJSONDecodableResponse {
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         public private(set) var jsonValue: Google_Protobuf_Value
 
-        public init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws {
             jsonValue = message.result
         }
     }
 
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         var partition: String?
 

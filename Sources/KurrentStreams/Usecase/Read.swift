@@ -11,9 +11,9 @@ import GRPCEncapsulates
 
 extension Streams {
     public struct Read: UnaryStream {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Responses = AsyncThrowingStream<Response, Error>
 
         public let streamIdentifier: StreamIdentifier
@@ -50,7 +50,7 @@ extension Streams {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             return try await withThrowingDiscardingTaskGroup { group in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.read(request: request, options: callOptions) {
@@ -74,7 +74,7 @@ extension Streams.Read {
             case position(lastAllStream: StreamPosition)
         }
 
-        public typealias UnderlyingMessage = UnderlyingResponse
+        package typealias UnderlyingMessage = UnderlyingResponse
 
         public var content: Content
 
@@ -82,7 +82,7 @@ extension Streams.Read {
             self.content = content
         }
 
-        public init(from message: EventStore_Client_Streams_ReadResp) throws {
+        package init(from message: UnderlyingResponse) throws {
             guard let content = message.content else {
                 throw ClientError.readResponseError(message: "content not found in response: \(message)")
             }
@@ -127,7 +127,7 @@ extension Streams.Read {
 
 extension Streams.Read {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
         
         public private(set) var resolveLinks: Bool
         public private(set) var limit: UInt64

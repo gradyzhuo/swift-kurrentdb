@@ -77,11 +77,13 @@ function generate_eventstore_client {
   local proto="$here/$1.proto"
   local output="$root/Sources/GRPCEncapsulates/Generated"
 
-  generate_message "$proto" "$(dirname "$proto")" "$output" "Visibility=Public"
-  generate_grpc "$proto" "$(dirname "$proto")" "$output" "Visibility=Public"
+  generate_message "$proto" "$(dirname "$proto")" "$output" "Visibility=Package"
+  generate_grpc "$proto" "$(dirname "$proto")" "$output" "Visibility=Package"
 }
 
 #------------------------------------------------------------------------------
+
+mkdir -p "$root/Sources/GRPCEncapsulates/Generated"
 
 # Generate examples
 generate_eventstore_client "code"

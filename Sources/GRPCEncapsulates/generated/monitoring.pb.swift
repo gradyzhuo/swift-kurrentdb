@@ -20,30 +20,30 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct EventStore_Client_Monitoring_StatsReq: Sendable {
+package struct EventStore_Client_Monitoring_StatsReq: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var useMetadata: Bool = false
+  package var useMetadata: Bool = false
 
-  public var refreshTimePeriodInMs: UInt64 = 0
+  package var refreshTimePeriodInMs: UInt64 = 0
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
-public struct EventStore_Client_Monitoring_StatsResp: Sendable {
+package struct EventStore_Client_Monitoring_StatsResp: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var stats: Dictionary<String,String> = [:]
+  package var stats: Dictionary<String,String> = [:]
 
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -51,13 +51,13 @@ public struct EventStore_Client_Monitoring_StatsResp: Sendable {
 fileprivate let _protobuf_package = "event_store.client.monitoring"
 
 extension EventStore_Client_Monitoring_StatsReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StatsReq"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".StatsReq"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "use_metadata"),
     4: .standard(proto: "refresh_time_period_in_ms"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -70,7 +70,7 @@ extension EventStore_Client_Monitoring_StatsReq: SwiftProtobuf.Message, SwiftPro
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.useMetadata != false {
       try visitor.visitSingularBoolField(value: self.useMetadata, fieldNumber: 1)
     }
@@ -80,7 +80,7 @@ extension EventStore_Client_Monitoring_StatsReq: SwiftProtobuf.Message, SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Monitoring_StatsReq, rhs: EventStore_Client_Monitoring_StatsReq) -> Bool {
+  package static func ==(lhs: EventStore_Client_Monitoring_StatsReq, rhs: EventStore_Client_Monitoring_StatsReq) -> Bool {
     if lhs.useMetadata != rhs.useMetadata {return false}
     if lhs.refreshTimePeriodInMs != rhs.refreshTimePeriodInMs {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -89,12 +89,12 @@ extension EventStore_Client_Monitoring_StatsReq: SwiftProtobuf.Message, SwiftPro
 }
 
 extension EventStore_Client_Monitoring_StatsResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".StatsResp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+  package static let protoMessageName: String = _protobuf_package + ".StatsResp"
+  package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "stats"),
   ]
 
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
@@ -106,14 +106,14 @@ extension EventStore_Client_Monitoring_StatsResp: SwiftProtobuf.Message, SwiftPr
     }
   }
 
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.stats.isEmpty {
       try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: self.stats, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: EventStore_Client_Monitoring_StatsResp, rhs: EventStore_Client_Monitoring_StatsResp) -> Bool {
+  package static func ==(lhs: EventStore_Client_Monitoring_StatsResp, rhs: EventStore_Client_Monitoring_StatsResp) -> Bool {
     if lhs.stats != rhs.stats {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Disable: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Disable.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Disable.Output
-        public typealias Response = DiscardedResponse<UnderlyingResponse>
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Disable.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Disable.Output
+        package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let name: String
         public let options: Options
@@ -26,7 +26,7 @@ extension Projections {
             }
         }
         
-        public func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
             return try await client.disable(request: request, options: callOptions){
                 try handle(response: $0)
             }
@@ -36,7 +36,7 @@ extension Projections {
 
 extension Projections.Disable {
     public struct Options: EventStoreOptions {
-        public typealias UnderlyingMessage = UnderlyingRequest.Options
+        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         var writeCheckpoint: Bool
         
@@ -44,7 +44,7 @@ extension Projections.Disable {
             self.writeCheckpoint = writeCheckpoint
         }
 
-        public func build() -> UnderlyingMessage {
+        package func build() -> UnderlyingMessage {
             return .with {
                 $0.writeCheckpoint = writeCheckpoint
             }

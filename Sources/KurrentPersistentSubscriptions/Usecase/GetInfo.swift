@@ -11,10 +11,10 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct GetInfo: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = UnderlyingService.Method.GetInfo.Input
-        public typealias UnderlyingResponse = UnderlyingService.Method.GetInfo.Output
-        public typealias Response = PersistentSubscription.SubscriptionInfo
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = UnderlyingService.Method.GetInfo.Input
+        package typealias UnderlyingResponse = UnderlyingService.Method.GetInfo.Output
+        package typealias Response = PersistentSubscription.SubscriptionInfo
 
         public let streamSelection: StreamSelector<StreamIdentifier>
         public let groupName: String
@@ -36,7 +36,7 @@ extension PersistentSubscriptions {
             }
         }
         
-        public func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> PersistentSubscription.SubscriptionInfo {
+        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> PersistentSubscription.SubscriptionInfo {
             return try await client.getInfo(request: request, options: callOptions){
                 try .init(from: $0.message.subscriptionInfo)
             }

@@ -10,9 +10,9 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct StopScavenge: UnaryUnary {
-        public typealias ServiceClient = Client
-        public typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StopScavenge.Input
-        public typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StopScavenge.Output
+        package typealias ServiceClient = Client
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StopScavenge.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StopScavenge.Output
         public typealias Response = ScavengeResponse
 
         let scavengeId: String
@@ -30,7 +30,7 @@ extension Operations {
             }
         }
         
-        public func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             return try await client.stopScavenge(request: request, options: callOptions){
                 try handle(response: $0)
             }

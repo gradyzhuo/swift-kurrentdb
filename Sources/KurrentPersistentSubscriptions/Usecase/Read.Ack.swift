@@ -12,7 +12,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct Ack: StreamRequestBuildable {
-        public typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
+        package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
 
         public let id: Data
         public let eventIds: [UUID]

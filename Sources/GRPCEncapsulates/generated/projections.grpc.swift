@@ -14,133 +14,133 @@ import SwiftProtobuf
 // MARK: - event_store.client.projections.Projections
 
 /// Namespace containing generated types for the "event_store.client.projections.Projections" service.
-public enum EventStore_Client_Projections_Projections {
+package enum EventStore_Client_Projections_Projections {
     /// Service descriptor for the "event_store.client.projections.Projections" service.
-    public static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections")
+    package static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections")
     /// Namespace for method metadata.
-    public enum Method {
+    package enum Method {
         /// Namespace for "Create" metadata.
-        public enum Create {
+        package enum Create {
             /// Request type for "Create".
-            public typealias Input = EventStore_Client_Projections_CreateReq
+            package typealias Input = EventStore_Client_Projections_CreateReq
             /// Response type for "Create".
-            public typealias Output = EventStore_Client_Projections_CreateResp
+            package typealias Output = EventStore_Client_Projections_CreateResp
             /// Descriptor for "Create".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Create"
             )
         }
         /// Namespace for "Update" metadata.
-        public enum Update {
+        package enum Update {
             /// Request type for "Update".
-            public typealias Input = EventStore_Client_Projections_UpdateReq
+            package typealias Input = EventStore_Client_Projections_UpdateReq
             /// Response type for "Update".
-            public typealias Output = EventStore_Client_Projections_UpdateResp
+            package typealias Output = EventStore_Client_Projections_UpdateResp
             /// Descriptor for "Update".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Update"
             )
         }
         /// Namespace for "Delete" metadata.
-        public enum Delete {
+        package enum Delete {
             /// Request type for "Delete".
-            public typealias Input = EventStore_Client_Projections_DeleteReq
+            package typealias Input = EventStore_Client_Projections_DeleteReq
             /// Response type for "Delete".
-            public typealias Output = EventStore_Client_Projections_DeleteResp
+            package typealias Output = EventStore_Client_Projections_DeleteResp
             /// Descriptor for "Delete".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Delete"
             )
         }
         /// Namespace for "Statistics" metadata.
-        public enum Statistics {
+        package enum Statistics {
             /// Request type for "Statistics".
-            public typealias Input = EventStore_Client_Projections_StatisticsReq
+            package typealias Input = EventStore_Client_Projections_StatisticsReq
             /// Response type for "Statistics".
-            public typealias Output = EventStore_Client_Projections_StatisticsResp
+            package typealias Output = EventStore_Client_Projections_StatisticsResp
             /// Descriptor for "Statistics".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Statistics"
             )
         }
         /// Namespace for "Disable" metadata.
-        public enum Disable {
+        package enum Disable {
             /// Request type for "Disable".
-            public typealias Input = EventStore_Client_Projections_DisableReq
+            package typealias Input = EventStore_Client_Projections_DisableReq
             /// Response type for "Disable".
-            public typealias Output = EventStore_Client_Projections_DisableResp
+            package typealias Output = EventStore_Client_Projections_DisableResp
             /// Descriptor for "Disable".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Disable"
             )
         }
         /// Namespace for "Enable" metadata.
-        public enum Enable {
+        package enum Enable {
             /// Request type for "Enable".
-            public typealias Input = EventStore_Client_Projections_EnableReq
+            package typealias Input = EventStore_Client_Projections_EnableReq
             /// Response type for "Enable".
-            public typealias Output = EventStore_Client_Projections_EnableResp
+            package typealias Output = EventStore_Client_Projections_EnableResp
             /// Descriptor for "Enable".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Enable"
             )
         }
         /// Namespace for "Reset" metadata.
-        public enum Reset {
+        package enum Reset {
             /// Request type for "Reset".
-            public typealias Input = EventStore_Client_Projections_ResetReq
+            package typealias Input = EventStore_Client_Projections_ResetReq
             /// Response type for "Reset".
-            public typealias Output = EventStore_Client_Projections_ResetResp
+            package typealias Output = EventStore_Client_Projections_ResetResp
             /// Descriptor for "Reset".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Reset"
             )
         }
         /// Namespace for "State" metadata.
-        public enum State {
+        package enum State {
             /// Request type for "State".
-            public typealias Input = EventStore_Client_Projections_StateReq
+            package typealias Input = EventStore_Client_Projections_StateReq
             /// Response type for "State".
-            public typealias Output = EventStore_Client_Projections_StateResp
+            package typealias Output = EventStore_Client_Projections_StateResp
             /// Descriptor for "State".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "State"
             )
         }
         /// Namespace for "Result" metadata.
-        public enum Result {
+        package enum Result {
             /// Request type for "Result".
-            public typealias Input = EventStore_Client_Projections_ResultReq
+            package typealias Input = EventStore_Client_Projections_ResultReq
             /// Response type for "Result".
-            public typealias Output = EventStore_Client_Projections_ResultResp
+            package typealias Output = EventStore_Client_Projections_ResultResp
             /// Descriptor for "Result".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "Result"
             )
         }
         /// Namespace for "RestartSubsystem" metadata.
-        public enum RestartSubsystem {
+        package enum RestartSubsystem {
             /// Request type for "RestartSubsystem".
-            public typealias Input = EventStore_Client_Empty
+            package typealias Input = EventStore_Client_Empty
             /// Response type for "RestartSubsystem".
-            public typealias Output = EventStore_Client_Empty
+            package typealias Output = EventStore_Client_Empty
             /// Descriptor for "RestartSubsystem".
-            public static let descriptor = GRPCCore.MethodDescriptor(
+            package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections"),
                 method: "RestartSubsystem"
             )
         }
         /// Descriptors for all methods in the "event_store.client.projections.Projections" service.
-        public static let descriptors: [GRPCCore.MethodDescriptor] = [
+        package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Create.descriptor,
             Update.descriptor,
             Delete.descriptor,
@@ -157,7 +157,7 @@ public enum EventStore_Client_Projections_Projections {
 
 extension GRPCCore.ServiceDescriptor {
     /// Service descriptor for the "event_store.client.projections.Projections" service.
-    public static let event_store_client_projections_Projections = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections")
+    package static let eventStore_client_projections_Projections = GRPCCore.ServiceDescriptor(fullyQualifiedService: "event_store.client.projections.Projections")
 }
 
 // MARK: event_store.client.projections.Projections (server)
@@ -173,7 +173,7 @@ extension EventStore_Client_Projections_Projections {
     ///
     /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
     /// or ``SimpleServiceProtocol`` instead.
-    public protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+    package protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -322,7 +322,7 @@ extension EventStore_Client_Projections_Projections {
     /// trailing response metadata. If you don't need these then consider using
     /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
     /// use ``StreamingServiceProtocol``.
-    public protocol ServiceProtocol: EventStore_Client_Projections_Projections.StreamingServiceProtocol {
+    package protocol ServiceProtocol: EventStore_Client_Projections_Projections.StreamingServiceProtocol {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -469,7 +469,7 @@ extension EventStore_Client_Projections_Projections {
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
     /// then use ``ServiceProtocol`` instead.
-    public protocol SimpleServiceProtocol: EventStore_Client_Projections_Projections.ServiceProtocol {
+    package protocol SimpleServiceProtocol: EventStore_Client_Projections_Projections.ServiceProtocol {
         /// Handle the "Create" method.
         ///
         /// - Parameters:
@@ -615,7 +615,7 @@ extension EventStore_Client_Projections_Projections {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Projections_Projections.StreamingServiceProtocol {
-    public func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
             forMethod: EventStore_Client_Projections_Projections.Method.Create.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_CreateReq>(),
@@ -731,7 +731,7 @@ extension EventStore_Client_Projections_Projections.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 extension EventStore_Client_Projections_Projections.ServiceProtocol {
-    public func create(
+    package func create(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_CreateResp> {
@@ -742,7 +742,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func update(
+    package func update(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_UpdateResp> {
@@ -753,7 +753,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_DeleteResp> {
@@ -764,7 +764,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func statistics(
+    package func statistics(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_StatisticsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StatisticsResp> {
@@ -775,7 +775,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return response
     }
 
-    public func disable(
+    package func disable(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_DisableResp> {
@@ -786,7 +786,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func enable(
+    package func enable(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_EnableResp> {
@@ -797,7 +797,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func reset(
+    package func reset(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_ResetReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_ResetResp> {
@@ -808,7 +808,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func state(
+    package func state(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_StateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StateResp> {
@@ -819,7 +819,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func result(
+    package func result(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_ResultReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_ResultResp> {
@@ -830,7 +830,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
-    public func restartSubsystem(
+    package func restartSubsystem(
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
@@ -844,7 +844,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
-    public func create(
+    package func create(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_CreateResp> {
@@ -857,7 +857,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func update(
+    package func update(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_UpdateResp> {
@@ -870,7 +870,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func delete(
+    package func delete(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_DeleteResp> {
@@ -883,7 +883,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func statistics(
+    package func statistics(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_StatisticsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StatisticsResp> {
@@ -900,7 +900,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func disable(
+    package func disable(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_DisableResp> {
@@ -913,7 +913,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func enable(
+    package func enable(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_EnableResp> {
@@ -926,7 +926,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func reset(
+    package func reset(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_ResetReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_ResetResp> {
@@ -939,7 +939,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func state(
+    package func state(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_StateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_StateResp> {
@@ -952,7 +952,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func result(
+    package func result(
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_ResultReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_ResultResp> {
@@ -965,7 +965,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         )
     }
 
-    public func restartSubsystem(
+    package func restartSubsystem(
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
@@ -986,7 +986,7 @@ extension EventStore_Client_Projections_Projections {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
-    public protocol ClientProtocol: Sendable {
+    package protocol ClientProtocol: Sendable {
         /// Call the "Create" method.
         ///
         /// - Parameters:
@@ -1183,14 +1183,14 @@ extension EventStore_Client_Projections_Projections {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
-    public struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+    package struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
         /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
         ///
         /// - Parameters:
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
-        public init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+        package init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
         }
 
@@ -1205,7 +1205,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func create<Result>(
+        package func create<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_CreateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_CreateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_CreateResp>,
@@ -1235,7 +1235,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func update<Result>(
+        package func update<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_UpdateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_UpdateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_UpdateResp>,
@@ -1265,7 +1265,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func delete<Result>(
+        package func delete<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_DeleteReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_DeleteReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_DeleteResp>,
@@ -1295,7 +1295,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func statistics<Result>(
+        package func statistics<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_StatisticsReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_StatisticsReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_StatisticsResp>,
@@ -1323,7 +1323,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func disable<Result>(
+        package func disable<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_DisableReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_DisableReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_DisableResp>,
@@ -1353,7 +1353,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func enable<Result>(
+        package func enable<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_EnableReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_EnableReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_EnableResp>,
@@ -1383,7 +1383,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func reset<Result>(
+        package func reset<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_ResetReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_ResetReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_ResetResp>,
@@ -1413,7 +1413,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func state<Result>(
+        package func state<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_StateReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_StateReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_StateResp>,
@@ -1443,7 +1443,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func result<Result>(
+        package func result<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Projections_ResultReq>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Projections_ResultReq>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Projections_ResultResp>,
@@ -1473,7 +1473,7 @@ extension EventStore_Client_Projections_Projections {
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
-        public func restartSubsystem<Result>(
+        package func restartSubsystem<Result>(
             request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
             serializer: some GRPCCore.MessageSerializer<EventStore_Client_Empty>,
             deserializer: some GRPCCore.MessageDeserializer<EventStore_Client_Empty>,
@@ -1505,7 +1505,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func create<Result>(
+    package func create<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_CreateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_CreateResp>) async throws -> Result = { response in
@@ -1530,7 +1530,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_UpdateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_UpdateResp>) async throws -> Result = { response in
@@ -1555,7 +1555,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_DeleteReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_DeleteResp>) async throws -> Result = { response in
@@ -1580,7 +1580,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func statistics<Result>(
+    package func statistics<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_StatisticsReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Projections_StatisticsResp>) async throws -> Result
@@ -1603,7 +1603,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func disable<Result>(
+    package func disable<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_DisableReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_DisableResp>) async throws -> Result = { response in
@@ -1628,7 +1628,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func enable<Result>(
+    package func enable<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_EnableReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_EnableResp>) async throws -> Result = { response in
@@ -1653,7 +1653,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func reset<Result>(
+    package func reset<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_ResetReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_ResetResp>) async throws -> Result = { response in
@@ -1678,7 +1678,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func state<Result>(
+    package func state<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_StateReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_StateResp>) async throws -> Result = { response in
@@ -1703,7 +1703,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func result<Result>(
+    package func result<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Projections_ResultReq>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Projections_ResultResp>) async throws -> Result = { response in
@@ -1728,7 +1728,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func restartSubsystem<Result>(
+    package func restartSubsystem<Result>(
         request: GRPCCore.ClientRequest<EventStore_Client_Empty>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<EventStore_Client_Empty>) async throws -> Result = { response in
@@ -1757,7 +1757,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func create<Result>(
+    package func create<Result>(
         _ message: EventStore_Client_Projections_CreateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1786,7 +1786,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func update<Result>(
+    package func update<Result>(
         _ message: EventStore_Client_Projections_UpdateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1815,7 +1815,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func delete<Result>(
+    package func delete<Result>(
         _ message: EventStore_Client_Projections_DeleteReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1844,7 +1844,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func statistics<Result>(
+    package func statistics<Result>(
         _ message: EventStore_Client_Projections_StatisticsReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1871,7 +1871,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func disable<Result>(
+    package func disable<Result>(
         _ message: EventStore_Client_Projections_DisableReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1900,7 +1900,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func enable<Result>(
+    package func enable<Result>(
         _ message: EventStore_Client_Projections_EnableReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1929,7 +1929,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func reset<Result>(
+    package func reset<Result>(
         _ message: EventStore_Client_Projections_ResetReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1958,7 +1958,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func state<Result>(
+    package func state<Result>(
         _ message: EventStore_Client_Projections_StateReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -1987,7 +1987,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func result<Result>(
+    package func result<Result>(
         _ message: EventStore_Client_Projections_ResultReq,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
@@ -2016,7 +2016,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
-    public func restartSubsystem<Result>(
+    package func restartSubsystem<Result>(
         _ message: EventStore_Client_Empty,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
