@@ -101,45 +101,9 @@ import EventStoreDB
 ### ClientSettings
 
 `Version: 1.0.0-beta.2`
-
-```swift
-import KurrentDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
-
-// convenience 
-let settings: ClientSettings = "esdb://admin:changeit@localhost:2113".parse()
-
-// using string literal 
-let settings: ClientSettings = "esdb://admin:changeit@localhost:2113"
-
-//using constructor
-let settings: ClientSettings = .localhost()
-
-
-// settings with credentials
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                   password: "changeit")
-
-//settings with credentials with adding ssl file by path
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                            password: "changeit"), 
-                                                                 trustRoots: .file("...filePath..."))
-
-//or add ssl file with bundle
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                 password: "changeit"), 
-                                                                 trustRoots: .fileInBundle(forResource: "ca", 
-                                                                                           withExtension: "crt", 
-                                                                                           inBundle: .main))
-```
-
 `Version: 0.6.x`
 
 ```swift
-import EventStoreDB
-
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
 
@@ -169,8 +133,6 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
                                                                                            withExtension: "crt", 
                                                                                            inBundle: .main))
 ```
-
-
 
 ### Appending Event
 
@@ -203,6 +165,7 @@ print("The latest revision of events appended:", appendResponse.currentRevision!
 `Version: 0.6.x`
 
 ```swift
+// Import packages of EventStoreDB.
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
@@ -255,6 +218,7 @@ for try await response in readResponses {
 `Version: 0.6.x`
 
 ```swift
+// Import packages of EventStoreDB.
 import EventStoreDB
 
 // Using a client setting to `EventStoreDBClient` by default.
@@ -298,6 +262,7 @@ try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentif
 `Version: 0.6.x`
 
 ```swift
+// Import packages of EventStoreDB.
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
@@ -343,6 +308,7 @@ for try await result in subscription.events {
 `Version: 0.6.x`
 
 ```swift
+// Import packages of EventStoreDB.
 import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
