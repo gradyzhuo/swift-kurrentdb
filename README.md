@@ -194,6 +194,8 @@ import EventStoreDB
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
+// Build a streams client.
+let client = Streams(settings: settings)
 
 // Create the data array of events.
 let events:[EventData] = [
@@ -201,11 +203,11 @@ let events:[EventData] = [
     .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", payload: "Gears of War 4")
         ]
 
-let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
-let client = try EventStoreDB.Client(settings: settings)
+//let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
+let client = EventStoreDBClient(settings: settings)
 
 let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
-    options.expectedRevision(.any)
+    options.revision(expected: .any)
 }
 
 ```
@@ -245,10 +247,10 @@ import EventStoreDB
 let settings: ClientSettings = .localhost()
 
 //prepare an identifier for a stream by a name.
-let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
+let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
 //Check the event is appended into testing stream.
-let client = try EventStoreDB.Client(settings: settings)
+let client = try EventStoreDBClient(settings: settings)
 let readResponses = try client.readStream(to: streamIdentifier, cursor: .end) { options in
     options.set(uuidOption: .string)
         .countBy(limit: 1)
@@ -289,7 +291,7 @@ let settings: ClientSettings = .localhost()
 
 let streamName = "stream_for_testing"
 
-let client = try EventStoreDB.Client(settings: settings)
+let client = try EventStoreDBClient(settings: settings)
 try await client.createPersistentSubscription(streamName: streamName, groupName: "mytest", options: .init())
 
 ```
@@ -334,7 +336,7 @@ let settings: ClientSettings = .localhost()
 
 let streamName = "stream_for_testing"
 
-let client = try EventStoreDB.Client(settings: settings)
+let client = try EventStoreDBClient(settings: settings)
 
 let subscription = try await client.subscribePersistentSubscriptionTo(.specified(streamName), groupName: "mytest")
 
