@@ -84,6 +84,20 @@ dependencies: [
 
 ## Examples
 
+### Package Name
+
+`Version: 1.0.0-beta.2`
+
+```
+import KurrentDB
+```
+
+`Version: 0.6.x`
+```
+import EventStoreDB
+```
+
+
 ### ClientSettings
 
 `Version: 1.0.0-beta.2`
