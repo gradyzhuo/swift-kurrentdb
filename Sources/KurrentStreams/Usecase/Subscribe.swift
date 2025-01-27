@@ -40,7 +40,7 @@ extension Streams {
                 case .end:
                     $0.options.stream.end = .init()
                 case let .specified(revision):
-                    $0.options.stream.revision = revision
+                    $0.options.stream.revision = revision.value
                 }
             }
         }

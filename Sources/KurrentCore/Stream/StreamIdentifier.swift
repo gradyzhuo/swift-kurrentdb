@@ -8,6 +8,7 @@
 import Foundation
 import GRPCEncapsulates
 
+
 public struct StreamIdentifier: Sendable {
     package typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
 
@@ -19,6 +20,7 @@ public struct StreamIdentifier: Sendable {
         self.encoding = encoding
     }
 }
+
 extension StreamIdentifier: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
 

@@ -59,7 +59,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
         let streamIdentifier = message.streamIdentifier.toIdentifier()
         let revision = message.streamRevision
-        let position = StreamPosition.at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
+        let position: StreamPosition = .at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
 
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }
@@ -76,7 +76,7 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
         let streamIdentifier = message.streamIdentifier.toIdentifier()
         let revision = message.streamRevision
-        let position = StreamPosition.at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
+        let position: StreamPosition = .at(commitPosition: message.commitPosition, preparePosition: message.preparePosition)
 
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }

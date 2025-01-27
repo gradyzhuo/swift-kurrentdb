@@ -7,4 +7,11 @@
 
 import Foundation
 
-public typealias StreamRevision = UInt64
+public struct StreamRevision: Sendable {
+    public let value: UInt64
+    
+    package init(value: UInt64) {
+        self.value = value
+    }
+}
+

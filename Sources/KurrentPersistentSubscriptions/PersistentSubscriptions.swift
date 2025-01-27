@@ -59,7 +59,7 @@ extension PersistentSubscriptions {
     // MARK: - Delete Actions
 
     public func delete(stream: StreamSelector<StreamIdentifier>, groupName: String) async throws {
-        let usecase = Delete(streamSelection: stream, groupName: groupName)
+        let usecase = Delete(stream: stream, groupName: groupName)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
@@ -73,7 +73,7 @@ extension PersistentSubscriptions {
     // MARK: - GetInfo Action
 
     public func getInfo(stream streamSelection: StreamSelector<StreamIdentifier>, groupName: String) async throws -> PersistentSubscription.SubscriptionInfo {
-        let usecase = GetInfo(streamSelection: streamSelection, groupName: groupName)
+        let usecase = GetInfo(stream: streamSelection, groupName: groupName)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 

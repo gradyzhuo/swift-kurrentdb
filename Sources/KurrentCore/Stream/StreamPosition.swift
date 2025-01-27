@@ -21,9 +21,8 @@ public struct StreamPosition: Sendable {
         self.prepare = prepare
     }
 }
-
 extension StreamPosition: Equatable{
-    public static func == (lhs: StreamPosition, rhs: StreamPosition) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.commit == rhs.commit && lhs.prepare == rhs.prepare
     }
 }

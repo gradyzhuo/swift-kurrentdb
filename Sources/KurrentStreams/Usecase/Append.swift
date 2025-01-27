@@ -168,13 +168,13 @@ extension Streams.Append {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public fileprivate(set) var expectedRevision: StreamRevisionRule
+        public fileprivate(set) var expectedRevision: StreamRevision.Rule
 
         public init() {
             expectedRevision = .any
         }
 
-        public func revision(expected: StreamRevisionRule) -> Self {
+        public func revision(expected: StreamRevision.Rule) -> Self {
             withCopy { options in
                 options.expectedRevision = expected
             }

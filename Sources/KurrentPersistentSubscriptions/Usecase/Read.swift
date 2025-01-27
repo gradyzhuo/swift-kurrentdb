@@ -4,11 +4,10 @@
 //
 //  Created by Grady Zhuo on 2023/12/8.
 //
-
+import Foundation
 import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
-import Foundation
 
 extension PersistentSubscriptions {
     public struct Read: StreamStream {

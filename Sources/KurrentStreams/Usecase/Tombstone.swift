@@ -57,9 +57,9 @@ extension Streams.Tombstone {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var expectedRevision: StreamRevisionRule
+        public private(set) var expectedRevision: StreamRevision.Rule
 
-        public init(expectedRevision: StreamRevisionRule = .streamExists) {
+        public init(expectedRevision: StreamRevision.Rule = .streamExists) {
             self.expectedRevision = expectedRevision
         }
         
@@ -79,7 +79,7 @@ extension Streams.Tombstone {
         }
 
         @discardableResult
-        public func revision(expected expectedRevision: StreamRevisionRule) -> Self {
+        public func revision(expected expectedRevision: StreamRevision.Rule) -> Self {
             withCopy { options in
                 options.expectedRevision = expectedRevision
             }

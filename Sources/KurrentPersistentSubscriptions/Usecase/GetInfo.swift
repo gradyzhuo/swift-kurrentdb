@@ -16,17 +16,17 @@ extension PersistentSubscriptions {
         package typealias UnderlyingResponse = UnderlyingService.Method.GetInfo.Output
         package typealias Response = PersistentSubscription.SubscriptionInfo
 
-        public let streamSelection: StreamSelector<StreamIdentifier>
+        public let stream: StreamSelector<StreamIdentifier>
         public let groupName: String
         
-        public init(streamSelection: StreamSelector<StreamIdentifier>, groupName: String) {
-            self.streamSelection = streamSelection
+        public init(stream: StreamSelector<StreamIdentifier>, groupName: String) {
+            self.stream = stream
             self.groupName = groupName
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             return try .with {
-                switch streamSelection {
+                switch stream {
                 case let .specified(streamIdentifier):
                     $0.options.streamIdentifier = try streamIdentifier.build()
                 case .all:

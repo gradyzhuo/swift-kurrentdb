@@ -97,6 +97,8 @@ public struct StreamMetadata: Buildable, Codable {
     }
 }
 
+
+
 extension StreamMetadata {
     public enum Acl: Codable, Sendable {
         public typealias RawValue = Data

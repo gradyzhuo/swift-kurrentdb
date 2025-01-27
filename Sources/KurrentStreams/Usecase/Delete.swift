@@ -62,7 +62,7 @@ extension Streams.Delete {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var expectedRevision: StreamRevisionRule
+        public private(set) var expectedRevision: StreamRevision.Rule
 
         public init() {
             expectedRevision = .streamExists
@@ -84,7 +84,7 @@ extension Streams.Delete {
         }
 
         @discardableResult
-        public func revision(expected: StreamRevisionRule) -> Self {
+        public func revision(expected: StreamRevision.Rule) -> Self {
             withCopy { options in
                 options.expectedRevision = expected
             }

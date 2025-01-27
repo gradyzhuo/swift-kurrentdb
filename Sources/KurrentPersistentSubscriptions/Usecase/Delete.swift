@@ -16,18 +16,18 @@ extension PersistentSubscriptions {
         package typealias UnderlyingResponse = UnderlyingService.Method.Delete.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        let streamSelection: StreamSelector<StreamIdentifier>
+        let stream: StreamSelector<StreamIdentifier>
         let groupName: String
 
-        public init(streamSelection: StreamSelector<StreamIdentifier>, groupName: String) {
-            self.streamSelection = streamSelection
+        public init(stream: StreamSelector<StreamIdentifier>, groupName: String) {
+            self.stream = stream
             self.groupName = groupName
         }
         
         package func requestMessage() throws -> UnderlyingRequest {
             return try .with {
                 $0.options.groupName = groupName
-                switch streamSelection {
+                switch stream {
                 case .all:
                     $0.options.all = .init()
                 case let .specified(streamIdentifier):
