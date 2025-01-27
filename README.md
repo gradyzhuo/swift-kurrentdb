@@ -62,7 +62,7 @@
 |Create|✅|
 |Details|✅|
 
-### Getting the gRPC library
+### Getting the library
 
 #### Swift Package Manager
 
