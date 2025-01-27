@@ -5,11 +5,9 @@
 //  Created by Grady Zhuo on 2024/3/25.
 //
 
-import EventStoreDB
-@testable import KurrentPersistentSubscriptions
 import Foundation
-import KurrentCore
 import Testing
+@testable import KurrentPersistentSubscriptions
 import KurrentStreams
 
 @Suite("EventStoreDB Persistent Subscription Tests", .serialized)

@@ -6,10 +6,8 @@
 //
 
 import Foundation
-@testable import KurrentStreams
-import EventStoreDB
 import Testing
-
+@testable import KurrentStreams
 
 @Suite("EventStoreDB Stream Tests", .serialized)
 struct StreamTests: Sendable{
