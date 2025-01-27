@@ -123,9 +123,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "EventStoreDBTests",
+            name: "KurrentCoreTests",
             dependencies: [
-                "EventStoreDB",
+                "KurrentCore",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -152,11 +152,7 @@ let package = Package(
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
             ]
-        ),
-        .testTarget(
-            name: "GRPCEncapsulatesTests",
-            dependencies: ["GRPCEncapsulates"]
-        ),
+        )
         
     ]
 )

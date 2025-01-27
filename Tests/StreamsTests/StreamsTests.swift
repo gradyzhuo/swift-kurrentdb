@@ -12,12 +12,12 @@ import Testing
 
 
 @Suite("EventStoreDB Stream Tests", .serialized)
-final class StreamTests: Sendable{
+struct StreamTests: Sendable{
     
     let streamIdentifier: StreamIdentifier
     let settings: ClientSettings
     
-    init () async throws {
+    init (){
         self.streamIdentifier = .init(name: UUID().uuidString)
         self.settings = .localhost()
     }
@@ -32,7 +32,6 @@ final class StreamTests: Sendable{
             let test = try await responsesIterator.next()
             print(test)
         }
-        
     }
     
     @Test("It should be succeed when append event to stream.", arguments: [
@@ -99,20 +98,23 @@ final class StreamTests: Sendable{
     
     @Test("It should be succeed when subscribe to all streams.")
     func testSubscribeAll() async throws {
+        let eventForTesting = EventData(
+            eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+         )
         let streams = Streams(settings: .localhost())
         
         let subscription = try await streams.subscribeToAll(cursor: .end, options: .init())
         let response = try await streams.append(to: self.streamIdentifier,
                                                       events: [
-                                                         .init(
-                                                            eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
-                                                         )
+                                                        eventForTesting
                                                       ], options: .init().revision(expected: .any))
         
         var lastEventResult: ReadEvent?
         for try await event in subscription.events {
-            lastEventResult = event
-            break
+            if event.recordedEvent.eventType == eventForTesting.eventType {
+                lastEventResult = event
+                break
+            }
         }
 
         let lastEventPosition = try #require(lastEventResult?.recordedEvent.position)
