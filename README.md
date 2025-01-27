@@ -84,7 +84,7 @@ dependencies: [
 
 ## Examples
 
-### Package Name
+### The library name to import.
 
 `Version: 1.0.0-beta.2`
 
