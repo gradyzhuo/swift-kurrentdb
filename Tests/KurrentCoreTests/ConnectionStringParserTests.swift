@@ -5,10 +5,9 @@
 //  Created by Grady Zhuo on 2024/5/25.
 //
 
+
 import Testing
 @testable import KurrentCore
-import Foundation
-import KurrentDB
 
 @Suite("ConnectionStringParser")
 struct ConnectionStringParser {
