@@ -40,7 +40,7 @@ public final class EventStoreDBClient {
 // MARK: - Streams Operations
 extension EventStoreDBClient {
     @discardableResult
-    public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response.Success {
+    public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response {
         try await appendStream(
             to: .init(name: "$$\(identifier.name)"),
             events: .init(
@@ -78,13 +78,13 @@ extension EventStoreDBClient {
     }
 
     // MARK: Append methods -
-    public func appendStream(to identifier: StreamIdentifier, events: [EventData], configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response.Success {
+    public func appendStream(to identifier: StreamIdentifier, events: [EventData], configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response {
         let options = configure(.init())
         let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.append(to: identifier, events: events, options: options)
     }
     
-    public func appendStream(to identifier: StreamIdentifier, events: EventData..., configure: (_ options: Streams.Append.Options) -> Streams.Append.Options = { $0 }) async throws -> Streams.Append.Response.Success {
+    public func appendStream(to identifier: StreamIdentifier, events: EventData..., configure: (_ options: Streams.Append.Options) -> Streams.Append.Options = { $0 }) async throws -> Streams.Append.Response {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
 

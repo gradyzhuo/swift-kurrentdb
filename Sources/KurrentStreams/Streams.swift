@@ -32,7 +32,7 @@ public struct Streams: GRPCConcreteService {
 extension Streams {
     
     @discardableResult
-    public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, options: Append.Options = .init()) async throws -> Append.Response.Success {
+    public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, options: Append.Options = .init()) async throws -> Append.Response {
         
         try await append(
             to: .init(name: "$$\(identifier.name)"),
@@ -73,15 +73,9 @@ extension Streams {
         }
     }
     
-    public func append(to streamIdentifier: StreamIdentifier, events: [EventData], options: Append.Options = .init()) async throws -> Append.Response.Success{
+    public func append(to streamIdentifier: StreamIdentifier, events: [EventData], options: Append.Options = .init()) async throws -> Append.Response{
         let usecase = Append(to: streamIdentifier, events: events, options: options)
-        let response = try await usecase.perform(settings: settings, callOptions: callOptions)
-        return switch response {
-        case let .success(successResult):
-            successResult
-        case let .wrong(wrongResult):
-            throw wrongResult
-        }
+        return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
     public func read(_ streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
