@@ -9,8 +9,8 @@
 # KurrentDB(formerly: EventStoreDB)
 [Kurrent](https://www.eventstore.com) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
 
-### Implementation Status
-#### Client Settings
+## Implementation Status
+### Client Settings
 |Feature|Implemented|
 |----|----|
 |ConnectionString parsed|✅|
@@ -18,7 +18,7 @@
 |UserCredentials ( username, password )|✅|
 |Gossip ClusterMode ||
 
-#### Stream
+### Stream
 |Feature|Implemented|
 |----|----|
 |Append|✅|
@@ -28,7 +28,7 @@
 |Subscribe All Stream|✅|
 |BatchAppend||
 
-#### Projection
+### Projection
 |Feature|Implemented|
 |----|----|
 |Create|✅|
@@ -42,7 +42,7 @@
 |Reset|✅|
 |RestartSubsystem|✅|
 
-#### PersistentSubscriptions
+### PersistentSubscriptions
 |Feature|Implemented|
 |----|----|
 |Create|✅|
@@ -56,21 +56,21 @@
 |Update|✅|
 
 
-#### User
+### User
 |Feature|Implemented|
 |----|----|
 |Create|✅|
 |Details|✅|
 
-### Getting the library
+## Getting the library
 
-#### Swift Package Manager
+### Swift Package Manager
 
 The Swift Package Manager is the preferred way to get EventStoreDB. Simply add the package dependency to your Package.swift:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/gradyzhuo/eventstoredb-swift.git", branch: "main")
+  .package(url: "https://github.com/gradyzhuo/eventstoredb-swift.git", from: "1.0.0-beta.2")
 ]
 ```
 ...and depend on "EventStoreDB" in the necessary targets:
@@ -82,9 +82,11 @@ dependencies: [
 ]
 ```
 
-### Examples
+## Examples
 
-#### ClientSettings
+### ClientSettings
+
+`Version: 1.0.0-beta.2`
 
 ```swift
 import KurrentDB
@@ -119,7 +121,46 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
                                                                                            inBundle: .main))
 ```
 
-#### Appending Event
+`Version: 0.6.x`
+
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
+
+// convenience 
+let settings: ClientSettings = "esdb://admin:changeit@localhost:2113".parse()
+
+// using string literal 
+let settings: ClientSettings = "esdb://admin:changeit@localhost:2113"
+
+//using constructor
+let settings: ClientSettings = .localhost()
+
+
+// settings with credentials
+let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
+                                                                   password: "changeit")
+
+//settings with credentials with adding ssl file by path
+let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
+                                                                            password: "changeit"), 
+                                                                 trustRoots: .file("...filePath..."))
+
+//or add ssl file with bundle
+let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
+                                                                 password: "changeit"), 
+                                                                 trustRoots: .fileInBundle(forResource: "ca", 
+                                                                                           withExtension: "crt", 
+                                                                                           inBundle: .main))
+```
+
+
+
+### Appending Event
+
+`Version: 1.0.0-beta.2`
 
 ```swift
 // Import packages of KurrentDB.
@@ -145,7 +186,33 @@ let appendResponse = try await streams.append(to: streamIdentifier, events: even
 print("The latest revision of events appended:", appendResponse.currentRevision!)
 ```
 
-#### Read Event
+`Version: 0.6.x`
+
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+let settings: ClientSettings = .localhost()
+
+
+// Create the data array of events.
+let events:[EventData] = [
+    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!, eventType: "ItemAdded", payload: ["Description": "Xbox One S 1TB (Console)"]),
+    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", payload: "Gears of War 4")
+        ]
+
+let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
+let client = try EventStoreDB.Client(settings: settings)
+
+let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
+    options.expectedRevision(.any)
+}
+
+```
+
+### Read Event
+
+`Version: 1.0.0-beta.2`
 
 ```swift
 // Import packages of KurrentDB.
@@ -169,8 +236,34 @@ for try await response in readResponses {
 }
 ```
 
-#### PersistentSubscriptions
-##### Create
+`Version: 0.6.x`
+
+```swift
+import EventStoreDB
+
+// Using a client setting to `EventStoreDBClient` by default.
+let settings: ClientSettings = .localhost()
+
+//prepare an identifier for a stream by a name.
+let streamIdentifier = Stream.Identifier(name: "stream_for_testing")
+
+//Check the event is appended into testing stream.
+let client = try EventStoreDB.Client(settings: settings)
+let readResponses = try client.readStream(to: streamIdentifier, cursor: .end) { options in
+    options.set(uuidOption: .string)
+        .countBy(limit: 1)
+}
+
+for await response in readResponses {
+    //handle response
+}
+```
+
+### PersistentSubscriptions
+#### Create
+
+`Version: 1.0.0-beta.2`
+
 ```swift
 // Import packages of KurrentDB.
 import KurrentDB
@@ -186,7 +279,25 @@ try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentif
 
 ```
 
-##### Subscribe
+`Version: 0.6.x`
+
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+let settings: ClientSettings = .localhost()
+
+let streamName = "stream_for_testing"
+
+let client = try EventStoreDB.Client(settings: settings)
+try await client.createPersistentSubscription(streamName: streamName, groupName: "mytest", options: .init())
+
+```
+
+#### Subscribe
+
+`Version: 1.0.0-beta.2`
+
 ```swift
 // Import packages of KurrentDB.
 import KurrentDB
@@ -211,4 +322,28 @@ for try await result in subscription.events {
     // try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
 }
 
+```
+
+`Version: 0.6.x`
+
+```swift
+import EventStoreDB
+
+// Using a client settings for a single node configuration by parsing a connection string.
+let settings: ClientSettings = .localhost()
+
+let streamName = "stream_for_testing"
+
+let client = try EventStoreDB.Client(settings: settings)
+
+let subscription = try await client.subscribePersistentSubscriptionTo(.specified(streamName), groupName: "mytest")
+
+for try await result in subscription {
+    // handle result
+    
+    // ack the readEvent if succeed 
+    try await subscription.ack(readEvents: result.event)
+    // else nack thr readEvent if not succeed.
+    try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
+}
 ```
