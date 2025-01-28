@@ -33,8 +33,8 @@ struct StreamTests: Sendable{
     
     @Test("It should be succeed when append event to stream.", arguments: [
         [
-            EventData(eventType: "AccountCreated", payload: ["Description": "Gears of War 4"]),
-            EventData(eventType: "AccountDeleted", payload: ["Description": "Gears of War 4"])
+            EventData(eventType: "AppendEvent-AccountCreated", payload: ["Description": "Gears of War 4"]),
+            EventData(eventType: "AppendEvent-AccountDeleted", payload: ["Description": "Gears of War 4"])
         ]
     ])
     func testAppendEvent(events: [EventData]) async throws {
@@ -81,7 +81,7 @@ struct StreamTests: Sendable{
         let response = try await streams.append(to: streamIdentifier,
                                                       events: [
                                                          .init(
-                                                            eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+                                                            eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]
                                                          )
                                                       ], options: .init().revision(expected: .any))
         
@@ -100,7 +100,7 @@ struct StreamTests: Sendable{
     func testSubscribeAll() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
-            eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
+            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
          )
         let streams = Streams(settings: .localhost())
         
