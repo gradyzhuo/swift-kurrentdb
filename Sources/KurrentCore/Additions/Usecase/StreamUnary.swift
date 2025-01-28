@@ -17,7 +17,7 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix{
     package func perform(settings: ClientSettings, callOptions: CallOptions) async throws -> Response{
         let client = try GRPCClient(settings: settings)
         let metadata = Metadata(from: settings)
-        return try await withThrowingDiscardingTaskGroup { group in
+        return try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
                 try await client.runConnections()
             }

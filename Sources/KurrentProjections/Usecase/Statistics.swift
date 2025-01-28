@@ -39,7 +39,7 @@ extension Projections {
         }
         
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            return try await withThrowingDiscardingTaskGroup { group in
+            return try await withThrowingTaskGroup(of: Void.self)  { group in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.statistics(request: request, options: callOptions) {
                     for try await message in $0.messages {

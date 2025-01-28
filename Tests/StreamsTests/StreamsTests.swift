@@ -9,7 +9,7 @@ import Foundation
 import Testing
 @testable import KurrentStreams
 
-@Suite("EventStoreDB Stream Tests", .serialized)
+@Suite("EventStoreDB Stream Tests")
 struct StreamTests: Sendable{
     
     let streamIdentifier: StreamIdentifier
