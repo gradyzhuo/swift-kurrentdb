@@ -61,6 +61,11 @@
 |----|----|
 |Create|✅|
 |Details|✅|
+|ChangePassword||
+|Disable||
+|Enable||
+|ResetPassword||
+|Update||
 
 ## Getting the library
 
