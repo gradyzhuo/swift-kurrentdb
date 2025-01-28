@@ -1,6 +1,6 @@
 //
 //  UUID+Additions.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2023/10/24.
 //
@@ -12,24 +12,24 @@ extension UUID {
     // UUID is 128-bit, we need two 64-bit values to represent it
     var integers: (Int64, Int64) {
         var a: UInt64 = 0
-        a |= UInt64(self.uuid.0)
-        a |= UInt64(self.uuid.1) << 8
-        a |= UInt64(self.uuid.2) << (8 * 2)
-        a |= UInt64(self.uuid.3) << (8 * 3)
-        a |= UInt64(self.uuid.4) << (8 * 4)
-        a |= UInt64(self.uuid.5) << (8 * 5)
-        a |= UInt64(self.uuid.6) << (8 * 6)
-        a |= UInt64(self.uuid.7) << (8 * 7)
+        a |= UInt64(uuid.0)
+        a |= UInt64(uuid.1) << 8
+        a |= UInt64(uuid.2) << (8 * 2)
+        a |= UInt64(uuid.3) << (8 * 3)
+        a |= UInt64(uuid.4) << (8 * 4)
+        a |= UInt64(uuid.5) << (8 * 5)
+        a |= UInt64(uuid.6) << (8 * 6)
+        a |= UInt64(uuid.7) << (8 * 7)
 
         var b: UInt64 = 0
-        b |= UInt64(self.uuid.8)
-        b |= UInt64(self.uuid.9) << 8
-        b |= UInt64(self.uuid.10) << (8 * 2)
-        b |= UInt64(self.uuid.11) << (8 * 3)
-        b |= UInt64(self.uuid.12) << (8 * 4)
-        b |= UInt64(self.uuid.13) << (8 * 5)
-        b |= UInt64(self.uuid.14) << (8 * 6)
-        b |= UInt64(self.uuid.15) << (8 * 7)
+        b |= UInt64(uuid.8)
+        b |= UInt64(uuid.9) << 8
+        b |= UInt64(uuid.10) << (8 * 2)
+        b |= UInt64(uuid.11) << (8 * 3)
+        b |= UInt64(uuid.12) << (8 * 4)
+        b |= UInt64(uuid.13) << (8 * 5)
+        b |= UInt64(uuid.14) << (8 * 6)
+        b |= UInt64(uuid.15) << (8 * 7)
 
         return (Int64(bitPattern: a), Int64(bitPattern: b))
     }

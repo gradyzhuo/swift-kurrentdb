@@ -1,14 +1,14 @@
 //
 //  Gossip.Read.swift
-//
+//  KurrentGossip
 //
 //  Created by Grady Zhuo on 2023/12/19.
 //
 
 import Foundation
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension Gossip {
     public struct Read: UnaryUnary {
@@ -16,9 +16,9 @@ extension Gossip {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = [Read.MemberInfo]
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.read(request: request, options: callOptions){
+            try await client.read(request: request, options: callOptions) {
                 try $0.message.members.map {
                     try .init(from: $0)
                 }
@@ -28,9 +28,9 @@ extension Gossip {
 }
 
 extension Gossip.Read {
-    public enum NodeState: Sendable{
+    public enum NodeState: Sendable {
         package typealias UnderlyingMessage = EventStore_Client_Gossip_MemberInfo.VNodeState
-        
+
         case initializing
         case discoverLeader
         case unknown
@@ -48,7 +48,7 @@ extension Gossip.Read {
         case readOnlyReplica
         case resigningLeader
         case UNRECOGNIZED(Int)
-        
+
         package init(from message: UnderlyingMessage) {
             switch message {
             case .initializing:
@@ -83,12 +83,12 @@ extension Gossip.Read {
                 self = .readOnlyReplica
             case .resigningLeader:
                 self = .resigningLeader
-            case .UNRECOGNIZED(let enumValue):
+            case let .UNRECOGNIZED(enumValue):
                 self = .UNRECOGNIZED(enumValue)
             }
         }
     }
-    
+
     public struct MemberInfo: GRPCResponse {
         package typealias UnderlyingMessage = EventStore_Client_Gossip_MemberInfo
 

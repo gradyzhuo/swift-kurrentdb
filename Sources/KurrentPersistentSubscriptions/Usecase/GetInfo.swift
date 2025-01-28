@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionsClient.GetInfo.swift
-//
+//  GetInfo.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct GetInfo: UnaryUnary {
@@ -18,14 +18,14 @@ extension PersistentSubscriptions {
 
         public let stream: StreamSelector<StreamIdentifier>
         public let groupName: String
-        
+
         public init(stream: StreamSelector<StreamIdentifier>, groupName: String) {
             self.stream = stream
             self.groupName = groupName
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 switch stream {
                 case let .specified(streamIdentifier):
                     $0.options.streamIdentifier = try streamIdentifier.build()
@@ -35,12 +35,11 @@ extension PersistentSubscriptions {
                 $0.options.groupName = groupName
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> PersistentSubscription.SubscriptionInfo {
-            return try await client.getInfo(request: request, options: callOptions){
+            try await client.getInfo(request: request, options: callOptions) {
                 try .init(from: $0.message.subscriptionInfo)
             }
         }
     }
-
 }

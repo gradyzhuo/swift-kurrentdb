@@ -1,12 +1,12 @@
 //
-//  PersistenSubscription.SubscriptionEvent.swift
-//  KurrentDB
+//  PersistenSubscription.EventResult.swift
+//  KurrentCore
 //
 //  Created by 卓俊諺 on 2025/1/13.
 //
 
-extension PersistentSubscription{
-    public struct EventResult : Sendable{
+extension PersistentSubscription {
+    public struct EventResult: Sendable {
         public let event: ReadEvent
         public let retryCount: Int32
 

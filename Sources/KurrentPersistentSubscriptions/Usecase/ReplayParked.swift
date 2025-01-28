@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionsClient.ReplayParked.swift
-//
+//  ReplayParked.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/11.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct ReplayParked: UnaryUnary {
@@ -19,9 +19,9 @@ extension PersistentSubscriptions {
         let streamSelection: StreamSelector<StreamIdentifier>
         let groupName: String
         let options: Options
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
 
@@ -33,9 +33,9 @@ extension PersistentSubscriptions {
                 }
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.replayParked(request: request, options: callOptions){
+            try await client.replayParked(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
@@ -48,8 +48,9 @@ extension PersistentSubscriptions.ReplayParked {
             case position(position: Int64)
             case noLimit
         }
+
         package typealias UnderlyingMessage = UnderlyingRequest.Options
-        
+
         var message: UnderlyingMessage
 
         public init() {

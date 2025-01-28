@@ -1,6 +1,6 @@
 //
-//  ProjectionsClient.RestartSubsystem.swift
-//
+//  RestartSubsystem.swift
+//  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/12/7.
 //
@@ -15,17 +15,15 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.RestartSubsystem.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.RestartSubsystem.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return .init()
+            .init()
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
-            return try await client.restartSubsystem(request: request, options: callOptions){
+            try await client.restartSubsystem(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
-
     }
-
 }

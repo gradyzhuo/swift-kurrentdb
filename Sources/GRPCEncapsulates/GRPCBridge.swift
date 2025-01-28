@@ -1,6 +1,6 @@
 //
 //  GRPCBridge.swift
-//
+//  GRPCEncapsulates
 //
 //  Created by Grady Zhuo on 2023/10/29.
 //
@@ -26,7 +26,7 @@ public struct GenericGRPCRequest<M>: GRPCRequest where M: Message, M: Sendable {
 public struct DiscardedResponse<M>: GRPCResponse where M: Message, M: Sendable {
     package typealias UnderlyingMessage = M
 
-    package init(from message: UnderlyingMessage) throws {}
+    package init(from _: UnderlyingMessage) throws {}
 }
 
 package protocol GRPCJSONDecodableResponse: GRPCResponse {

@@ -1,14 +1,14 @@
 //
-//  StreamClient.SubscribeToAll.swift
-//
+//  SubscribeToAll.swift
+//  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/21.
 //
 
-import KurrentCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCCore
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
+import KurrentCore
 
 extension Streams {
     public struct SubscribeToAll: UnaryStream {
@@ -16,17 +16,17 @@ extension Streams {
         package typealias UnderlyingRequest = Read.UnderlyingRequest
         package typealias UnderlyingResponse = Read.UnderlyingResponse
         public typealias Responses = Subscription
-        
+
         public let cursor: Cursor<StreamPosition>
         public let options: Options
-        
-        internal init(cursor: Cursor<StreamPosition>, options: Options) {
+
+        init(cursor: Cursor<StreamPosition>, options: Options) {
             self.cursor = cursor
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options = options.build()
                 $0.options.readDirection = .forwards
                 $0.options.subscription = .init()
@@ -45,9 +45,9 @@ extension Streams {
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws ->Responses {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
-            Task{
+            Task {
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {
                         continuation.yield(message)
@@ -56,7 +56,6 @@ extension Streams {
             }
             return try await .init(messages: stream)
         }
-
     }
 }
 
@@ -88,7 +87,7 @@ extension Streams.SubscribeToAll {
         init(subscriptionId: String) throws {
             content = .confirmation(subscriptionId: subscriptionId)
         }
-        
+
         init(message: UnderlyingMessage.ReadEvent) throws {
             content = try .event(readEvent: .init(message: message))
         }
@@ -140,7 +139,7 @@ extension Streams.SubscribeToAll {
             self.uuidOption = uuidOption
             self.filter = filter
         }
-        
+
         package func build() -> UnderlyingMessage {
             .with {
                 if let filter {

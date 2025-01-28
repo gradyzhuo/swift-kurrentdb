@@ -1,6 +1,6 @@
 //
 //  Monitoring.Stats.swift
-//
+//  KurrentMonitoring
 //
 //  Created by Grady Zhuo on 2023/12/11.
 //
@@ -17,22 +17,22 @@ extension Monitoring {
 
         public let useMetadata: Bool
         public let refreshTimePeriodInMs: UInt64
-        
+
         public init(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) {
             self.useMetadata = useMetadata
             self.refreshTimePeriodInMs = refreshTimePeriodInMs
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.useMetadata = useMetadata
                 $0.refreshTimePeriodInMs = refreshTimePeriodInMs
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-            Task{
+            Task {
                 try await client.stats(request: request, options: callOptions) {
                     for try await message in $0.messages {
                         try continuation.yield(.init(from: message))

@@ -30,9 +30,10 @@ package enum EventStore_Client_Gossip_Gossip {
                 method: "Read"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.gossip.Gossip" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
-            Read.descriptor
+            Read.descriptor,
         ]
     }
 }
@@ -118,7 +119,7 @@ extension EventStore_Client_Gossip_Gossip {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Gossip_Gossip.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Gossip_Gossip.Method.Read.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -139,7 +140,7 @@ extension EventStore_Client_Gossip_Gossip.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Gossip_ClusterInfo> {
-        let response = try await self.read(
+        let response = try await read(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -153,8 +154,8 @@ extension EventStore_Client_Gossip_Gossip.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Gossip_ClusterInfo> {
-        return GRPCCore.ServerResponse<EventStore_Client_Gossip_ClusterInfo>(
-            message: try await self.read(
+        try await GRPCCore.ServerResponse<EventStore_Client_Gossip_ClusterInfo>(
+            message: read(
                 request: request.message,
                 context: context
             ),
@@ -227,7 +228,7 @@ extension EventStore_Client_Gossip_Gossip {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Gossip_Gossip.Method.Read.descriptor,
                 serializer: serializer,
@@ -257,7 +258,7 @@ extension EventStore_Client_Gossip_Gossip.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.read(
+        try await read(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Gossip_ClusterInfo>(),
@@ -291,7 +292,7 @@ extension EventStore_Client_Gossip_Gossip.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.read(
+        return try await read(
             request: request,
             options: options,
             onResponse: handleResponse

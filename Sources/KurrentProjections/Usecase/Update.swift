@@ -1,6 +1,6 @@
 //
-//  ProjectionsClient.Update.swift
-//
+//  Update.swift
+//  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/11/26.
 //
@@ -19,7 +19,7 @@ extension Projections {
         public let name: String
         public let query: String?
         public let options: Options
-        
+
         public init(name: String, query: String? = nil, options: Options) {
             self.name = name
             self.query = query
@@ -27,7 +27,7 @@ extension Projections {
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options = options.build()
                 $0.options.name = name
                 if let query {
@@ -35,9 +35,9 @@ extension Projections {
                 }
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.update(request: request, options: callOptions){
+            try await client.update(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
@@ -49,7 +49,7 @@ extension Projections.Update {
         case noEmit
         case enable(Bool)
     }
-    
+
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
@@ -58,7 +58,7 @@ extension Projections.Update {
         public init(emitOption: EmitOption = .noEmit) {
             self.emitOption = emitOption
         }
-        
+
         package func build() -> UnderlyingMessage {
             .with {
                 switch emitOption {

@@ -30,9 +30,10 @@ package enum EventStore_Client_ServerFeatures_ServerFeatures {
                 method: "GetSupportedMethods"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.server_features.ServerFeatures" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
-            GetSupportedMethods.descriptor
+            GetSupportedMethods.descriptor,
         ]
     }
 }
@@ -118,7 +119,7 @@ extension EventStore_Client_ServerFeatures_ServerFeatures {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_ServerFeatures_ServerFeatures.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_ServerFeatures_ServerFeatures.Method.GetSupportedMethods.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -139,7 +140,7 @@ extension EventStore_Client_ServerFeatures_ServerFeatures.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_ServerFeatures_SupportedMethods> {
-        let response = try await self.getSupportedMethods(
+        let response = try await getSupportedMethods(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -153,8 +154,8 @@ extension EventStore_Client_ServerFeatures_ServerFeatures.SimpleServiceProtocol 
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_ServerFeatures_SupportedMethods> {
-        return GRPCCore.ServerResponse<EventStore_Client_ServerFeatures_SupportedMethods>(
-            message: try await self.getSupportedMethods(
+        try await GRPCCore.ServerResponse<EventStore_Client_ServerFeatures_SupportedMethods>(
+            message: getSupportedMethods(
                 request: request.message,
                 context: context
             ),
@@ -227,7 +228,7 @@ extension EventStore_Client_ServerFeatures_ServerFeatures {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_ServerFeatures_ServerFeatures.Method.GetSupportedMethods.descriptor,
                 serializer: serializer,
@@ -257,7 +258,7 @@ extension EventStore_Client_ServerFeatures_ServerFeatures.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.getSupportedMethods(
+        try await getSupportedMethods(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_ServerFeatures_SupportedMethods>(),
@@ -291,7 +292,7 @@ extension EventStore_Client_ServerFeatures_ServerFeatures.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.getSupportedMethods(
+        return try await getSupportedMethods(
             request: request,
             options: options,
             onResponse: handleResponse

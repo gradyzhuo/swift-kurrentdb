@@ -1,51 +1,50 @@
 //
 //  PersistentSubscriptionsClient.CreateToStream.swift
-//  KurrentDB
+//  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/12.
 //
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
-extension PersistentSubscriptions{
+extension PersistentSubscriptions {
     public struct CreateToStream: UnaryUnary {
         package typealias ServiceClient = Client
         package typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
         var streamIdentifier: StreamIdentifier
         var groupName: String
         var options: Options
-        
+
         public init(streamIdentifier: StreamIdentifier, groupName: String, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.groupName = groupName
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.create(request: request, options: callOptions){
+            try await client.create(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
     }
 }
 
-
-extension PersistentSubscriptions.CreateToStream{
+extension PersistentSubscriptions.CreateToStream {
     public struct Options: PersistentSubscriptionsCommonOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
-        
+
         public var settings: PersistentSubscription.Settings
         public var revisionCursor: Cursor<StreamRevision>
 
@@ -60,7 +59,7 @@ extension PersistentSubscriptions.CreateToStream{
                 options.revisionCursor = revision
             }
         }
-        
+
         @discardableResult
         public mutating func set(consumerStrategy: PersistentSubscription.SystemConsumerStrategy) -> Self {
             withCopy { options in

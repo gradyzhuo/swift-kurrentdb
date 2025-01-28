@@ -1,6 +1,6 @@
 //
-//  PersistentSubscriptionsClient.swift
-//
+//  PersistentSubscriptions.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/7.
 //
@@ -9,22 +9,21 @@
 import KurrentCore
 
 import Foundation
-import NIO
-import Logging
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
-
+import Logging
+import NIO
 
 public struct PersistentSubscriptions: GRPCConcreteService {
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
     package typealias Client = UnderlyingService.Client<HTTP2ClientTransport.Posix>
-    
+
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
-    
-    public init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup){
+
+    public init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.settings = settings
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
@@ -41,7 +40,7 @@ extension PersistentSubscriptions {
 
     public func createToAll(groupName: String, options: CreateToAll.Options = .init()) async throws {
         let usecase: CreateToAll = .init(groupName: groupName, options: options)
-        _ =  try await usecase.perform(settings: settings, callOptions: callOptions)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
     // MARK: - Update Action
@@ -89,7 +88,7 @@ extension PersistentSubscriptions {
     public func list(streamSelector: StreamSelector<StreamIdentifier>) async throws -> [PersistentSubscription.SubscriptionInfo] {
         let options: List.Options = switch streamSelector {
         case .all: .listAllScriptions()
-        case .specified(let streamIdentifier): try .listForStream(streamIdentifier)
+        case let .specified(streamIdentifier): try .listForStream(streamIdentifier)
         }
 
         let usecase = List(options: options)

@@ -1,11 +1,11 @@
 //
 //  PersistentSubscription.Settings.swift
-//  KurrentDB
+//  KurrentCore
 //
 //  Created by 卓俊諺 on 2025/1/12.
 //
 
-extension PersistentSubscription{
+extension PersistentSubscription {
     public struct Settings: Sendable {
         public var resolveLink: Bool
 

@@ -1,6 +1,6 @@
 //
-//  GRPCConcreteService.swift
-//
+//  ConcreteService.swift
+//  GRPCEncapsulates
 //
 //  Created by Grady Zhuo on 2023/12/7.
 //
@@ -13,4 +13,3 @@ public protocol ConcreteService: Sendable {
     associatedtype UnderlyingService
     associatedtype Client: GRPCServiceClient
 }
-

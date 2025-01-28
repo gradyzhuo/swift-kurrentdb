@@ -1,6 +1,6 @@
 //
-//  User.swift
-//  KurrentDB
+//  UserDetails.swift
+//  KurrentUsers
 //
 //  Created by 卓俊諺 on 2025/1/16.
 //
@@ -24,7 +24,7 @@ public struct UserDetails: Sendable {
     }
 }
 
-extension UserDetails{
+extension UserDetails {
     package init(from message: Users.Client.UnderlyingService.Method.Details.Output.UserDetails) throws {
         self.init(
             loginName: message.loginName,

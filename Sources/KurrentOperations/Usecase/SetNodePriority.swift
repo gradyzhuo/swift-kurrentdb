@@ -1,6 +1,6 @@
 //
-//  Operations.SetNodePriority.swift
-//
+//  SetNodePriority.swift
+//  KurrentOperations
 //
 //  Created by Grady Zhuo on 2023/12/12.
 //
@@ -16,19 +16,19 @@ extension Operations {
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         public let priority: Int32
-        
+
         public init(priority: Int32) {
             self.priority = priority
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.priority = priority
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.setNodePriority(request: request, options: callOptions){
+            try await client.setNodePriority(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }

@@ -1,20 +1,20 @@
 //
-//  StreamUnary+Additions.swift
-//  KurrentDB
+//  StreamUnary.swift
+//  KurrentCore
 //
 //  Created by 卓俊諺 on 2025/1/20.
 //
 
 import GRPCCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
 
-extension StreamUnary where Transport == HTTP2ClientTransport.Posix{
-    package func send(client: ServiceClient, metadata: Metadata, callOptions: CallOptions) async throws -> Response{
-        return try await send(client: client, request: request(metadata: metadata), callOptions: callOptions)
+extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
+    package func send(client: ServiceClient, metadata: Metadata, callOptions: CallOptions) async throws -> Response {
+        try await send(client: client, request: request(metadata: metadata), callOptions: callOptions)
     }
-    
-    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws -> Response{
+
+    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws -> Response {
         let client = try GRPCClient(settings: settings)
         let metadata = Metadata(from: settings)
         return try await withThrowingTaskGroup(of: Void.self) { group in

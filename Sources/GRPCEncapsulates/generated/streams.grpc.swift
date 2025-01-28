@@ -31,6 +31,7 @@ package enum EventStore_Client_Streams_Streams {
                 method: "Read"
             )
         }
+
         /// Namespace for "Append" metadata.
         package enum Append {
             /// Request type for "Append".
@@ -43,6 +44,7 @@ package enum EventStore_Client_Streams_Streams {
                 method: "Append"
             )
         }
+
         /// Namespace for "Delete" metadata.
         package enum Delete {
             /// Request type for "Delete".
@@ -55,6 +57,7 @@ package enum EventStore_Client_Streams_Streams {
                 method: "Delete"
             )
         }
+
         /// Namespace for "Tombstone" metadata.
         package enum Tombstone {
             /// Request type for "Tombstone".
@@ -67,6 +70,7 @@ package enum EventStore_Client_Streams_Streams {
                 method: "Tombstone"
             )
         }
+
         /// Namespace for "BatchAppend" metadata.
         package enum BatchAppend {
             /// Request type for "BatchAppend".
@@ -79,13 +83,14 @@ package enum EventStore_Client_Streams_Streams {
                 method: "BatchAppend"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.streams.Streams" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Read.descriptor,
             Append.descriptor,
             Delete.descriptor,
             Tombstone.descriptor,
-            BatchAppend.descriptor
+            BatchAppend.descriptor,
         ]
     }
 }
@@ -341,7 +346,7 @@ extension EventStore_Client_Streams_Streams {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Streams_Streams.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Streams_Streams.Method.Read.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_ReadReq>(),
@@ -406,7 +411,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_ReadReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_ReadResp> {
-        let response = try await self.read(
+        let response = try await read(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -417,7 +422,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_AppendReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_AppendResp> {
-        let response = try await self.append(
+        let response = try await append(
             request: request,
             context: context
         )
@@ -428,7 +433,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_DeleteResp> {
-        let response = try await self.delete(
+        let response = try await delete(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -439,7 +444,7 @@ extension EventStore_Client_Streams_Streams.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_TombstoneReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_TombstoneResp> {
-        let response = try await self.tombstone(
+        let response = try await tombstone(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -453,7 +458,7 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Streams_ReadReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_ReadResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Streams_ReadResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Streams_ReadResp>(
             metadata: [:],
             producer: { writer in
                 try await self.read(
@@ -470,8 +475,8 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_AppendReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Streams_AppendResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Streams_AppendResp>(
-            message: try await self.append(
+        try await GRPCCore.ServerResponse<EventStore_Client_Streams_AppendResp>(
+            message: append(
                 request: request.messages,
                 context: context
             ),
@@ -483,8 +488,8 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Streams_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Streams_DeleteResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Streams_DeleteResp>(
-            message: try await self.delete(
+        try await GRPCCore.ServerResponse<EventStore_Client_Streams_DeleteResp>(
+            message: delete(
                 request: request.message,
                 context: context
             ),
@@ -496,8 +501,8 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Streams_TombstoneReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Streams_TombstoneResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Streams_TombstoneResp>(
-            message: try await self.tombstone(
+        try await GRPCCore.ServerResponse<EventStore_Client_Streams_TombstoneResp>(
+            message: tombstone(
                 request: request.message,
                 context: context
             ),
@@ -509,7 +514,7 @@ extension EventStore_Client_Streams_Streams.SimpleServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Streams_BatchAppendReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Streams_BatchAppendResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Streams_BatchAppendResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Streams_BatchAppendResp>(
             metadata: [:],
             producer: { writer in
                 try await self.batchAppend(
@@ -661,7 +666,7 @@ extension EventStore_Client_Streams_Streams {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Streams_ReadResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.serverStreaming(
+            try await client.serverStreaming(
                 request: request,
                 descriptor: EventStore_Client_Streams_Streams.Method.Read.descriptor,
                 serializer: serializer,
@@ -691,7 +696,7 @@ extension EventStore_Client_Streams_Streams {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.clientStreaming(
+            try await client.clientStreaming(
                 request: request,
                 descriptor: EventStore_Client_Streams_Streams.Method.Append.descriptor,
                 serializer: serializer,
@@ -721,7 +726,7 @@ extension EventStore_Client_Streams_Streams {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Streams_Streams.Method.Delete.descriptor,
                 serializer: serializer,
@@ -751,7 +756,7 @@ extension EventStore_Client_Streams_Streams {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Streams_Streams.Method.Tombstone.descriptor,
                 serializer: serializer,
@@ -779,7 +784,7 @@ extension EventStore_Client_Streams_Streams {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Streams_BatchAppendResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.bidirectionalStreaming(
+            try await client.bidirectionalStreaming(
                 request: request,
                 descriptor: EventStore_Client_Streams_Streams.Method.BatchAppend.descriptor,
                 serializer: serializer,
@@ -807,7 +812,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Streams_ReadResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.read(
+        try await read(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Streams_ReadReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_ReadResp>(),
@@ -832,7 +837,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.append(
+        try await append(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Streams_AppendReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_AppendResp>(),
@@ -857,7 +862,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.delete(
+        try await delete(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Streams_DeleteReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_DeleteResp>(),
@@ -882,7 +887,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.tombstone(
+        try await tombstone(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Streams_TombstoneReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_TombstoneResp>(),
@@ -905,7 +910,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Streams_BatchAppendResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.batchAppend(
+        try await batchAppend(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Streams_BatchAppendReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Streams_BatchAppendResp>(),
@@ -937,7 +942,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.read(
+        return try await read(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -967,7 +972,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             metadata: metadata,
             producer: producer
         )
-        return try await self.append(
+        return try await append(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -996,7 +1001,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.delete(
+        return try await delete(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1025,7 +1030,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.tombstone(
+        return try await tombstone(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1053,7 +1058,7 @@ extension EventStore_Client_Streams_Streams.ClientProtocol {
             metadata: metadata,
             producer: producer
         )
-        return try await self.batchAppend(
+        return try await batchAppend(
             request: request,
             options: options,
             onResponse: handleResponse

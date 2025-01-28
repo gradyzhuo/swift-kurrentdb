@@ -1,6 +1,6 @@
 //
 //  StreamPosition.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2024/5/21.
 //
@@ -21,8 +21,9 @@ public struct StreamPosition: Sendable {
         self.prepare = prepare
     }
 }
-extension StreamPosition: Equatable{
+
+extension StreamPosition: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.commit == rhs.commit && lhs.prepare == rhs.prepare
+        lhs.commit == rhs.commit && lhs.prepare == rhs.prepare
     }
 }

@@ -1,6 +1,6 @@
 //
 //  EventStore_Client_UUID+Additions.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2023/10/24.
 //

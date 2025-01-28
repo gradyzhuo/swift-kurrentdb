@@ -1,6 +1,6 @@
 //
-//  UnderlyGRPCClient.swift
-//
+//  GRPCServiceClient.swift
+//  GRPCEncapsulates
 //
 //  Created by Grady Zhuo on 2023/12/19.
 //
@@ -27,7 +27,7 @@ extension EventStore_Client_Projections_Projections.Client: GRPCServiceClient {
     package typealias UnderlyingService = EventStore_Client_Projections_Projections
 }
 
-extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Client: GRPCServiceClient{
+extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Client: GRPCServiceClient {
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
 }
 

@@ -1,6 +1,6 @@
 //
-//  Operations.ScavengeResponse.swift
-//
+//  ScavengeResponse.swift
+//  KurrentOperations
 //
 //  Created by Grady Zhuo on 2023/12/12.
 //

@@ -1,25 +1,25 @@
 //
 //  Deprecated.swift
-//  KurrentDB
+//  EventStoreDB
 //
 //  Created by 卓俊諺 on 2025/1/27.
 //
 
 import KurrentDB
 
-public struct Stream {
-    @available(*, deprecated, message: "please use StreamIdentifier instead.")
+public enum Stream {
+    @available(*, deprecated, message: "please use StreamIdentifier from KurrentCore instead.")
     public typealias Identifier = StreamIdentifier
-    
-    @available(*, deprecated, message: "please use StreamMetadata instead.")
+
+    @available(*, deprecated, message: "please use StreamMetadata from KurrentCore instead.")
     public typealias Metadata = StreamMetadata
-    
-    @available(*, deprecated, message: "please use StreamPosition instead.")
+
+    @available(*, deprecated, message: "please use StreamPosition from KurrentCore instead.")
     public typealias Position = StreamPosition
-    
-    @available(*, deprecated, message: "please use StreamRevision instead.")
+
+    @available(*, deprecated, message: "please use StreamRevision from KurrentCore instead.")
     public typealias Revision = StreamRevision
-    
-    @available(*, deprecated, message: "please use StreamSelector instead.")
+
+    @available(*, deprecated, message: "please use StreamSelector from KurrentCore instead.")
     public typealias Selector = StreamSelector
 }

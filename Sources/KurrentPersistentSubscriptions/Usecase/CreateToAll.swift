@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionsClient.CreateToAll.swift
-//  KurrentDB
+//  CreateToAll.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/12.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct CreateToAll: UnaryUnary {
@@ -15,31 +15,31 @@ extension PersistentSubscriptions {
         package typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
         let groupName: String
         let options: Options
-        
+
         public init(groupName: String, options: Options) {
             self.groupName = groupName
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.create(request: request, options: callOptions){
+            try await client.create(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
     }
 }
 
-extension PersistentSubscriptions.CreateToAll{
+extension PersistentSubscriptions.CreateToAll {
     public struct Options: PersistentSubscriptionsCommonOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
@@ -59,7 +59,7 @@ extension PersistentSubscriptions.CreateToAll{
                 options.positionCursor = position
             }
         }
-        
+
         @discardableResult
         public mutating func set(consumerStrategy: PersistentSubscription.SystemConsumerStrategy) -> Self {
             withCopy { options in

@@ -1,14 +1,14 @@
 //
-//  PersistentSubscriptionsClient.Read.Ack.swift
-//
+//  Read.Ack.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.
 //
 
 import Foundation
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct Ack: StreamRequestBuildable {
@@ -16,14 +16,14 @@ extension PersistentSubscriptions {
 
         public let id: Data
         public let eventIds: [UUID]
-        
-        internal init(id: Data, eventIds: [UUID]) {
+
+        init(id: Data, eventIds: [UUID]) {
             self.id = id
             self.eventIds = eventIds
         }
-        
+
         package func requestMessages() throws -> [UnderlyingRequest] {
-            return [
+            [
                 .with {
                     $0.ack = .with {
                         $0.id = id

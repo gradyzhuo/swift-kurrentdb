@@ -1,6 +1,6 @@
 //
 //  EventData.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2023/10/17.
 //
@@ -8,54 +8,52 @@
 import Foundation
 import GRPCEncapsulates
 
-public struct EventData: EventStoreEvent{
-    public enum Content : Sendable{
+public struct EventData: EventStoreEvent {
+    public enum Content: Sendable {
         case binary(Data)
         case json(Codable & Sendable)
-        
-        internal var contentType: String {
+
+        var contentType: String {
             switch self {
             case .binary:
-                return "application/octet-stream"
+                "application/octet-stream"
             case .json:
-                return "application/json"
+                "application/json"
             }
         }
-        
+
         package var data: Data {
-            get throws{
+            get throws {
                 switch self {
-                case .binary(let data):
-                    return data
-                case .json(let json):
-                    return try JSONEncoder().encode(json)
+                case let .binary(data):
+                    data
+                case let .json(json):
+                    try JSONEncoder().encode(json)
                 }
             }
         }
-        
     }
+
     public private(set) var id: UUID
     public private(set) var eventType: String
     public private(set) var payload: Content
     public private(set) var customMetadata: Data?
-    
+
     public private(set) var metadata: [String: String]
 
-    public init(id: UUID = .init(), eventType: String, payload: Content, contentType: ContentType, customMetadata: Data? = nil) {
+    public init(id: UUID = .init(), eventType: String, payload: Content, contentType _: ContentType, customMetadata: Data? = nil) {
         self.id = id
         self.eventType = eventType
         self.payload = payload
         self.customMetadata = customMetadata
-        
-        self.metadata = [
+
+        metadata = [
             "content-type": payload.contentType,
-            "type": eventType
+            "type": eventType,
         ]
     }
-    
+
     public init(id: UUID = .init(), eventType: String, payload: Codable & Sendable, customMetadata: Data? = nil) {
         self.init(id: id, eventType: eventType, payload: .json(payload), contentType: .json, customMetadata: customMetadata)
     }
 }
-
-

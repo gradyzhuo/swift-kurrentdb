@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionsClient.Delete.swift
-//
+//  Delete.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/7.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct Delete: UnaryUnary {
@@ -23,9 +23,9 @@ extension PersistentSubscriptions {
             self.stream = stream
             self.groupName = groupName
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options.groupName = groupName
                 switch stream {
                 case .all:
@@ -35,12 +35,11 @@ extension PersistentSubscriptions {
                 }
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.delete(request: request, options: callOptions){
+            try await client.delete(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
-
     }
 }

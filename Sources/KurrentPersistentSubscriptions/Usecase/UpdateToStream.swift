@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionsClient.UpdateToStream.swift
-//  KurrentDB
+//  UpdateToStream.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/12.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct UpdateToStream: UnaryUnary {
@@ -19,23 +19,23 @@ extension PersistentSubscriptions {
         var streamIdentifier: StreamIdentifier
         var groupName: String
         var options: Options
-        
-        internal init(streamIdentifier: StreamIdentifier, groupName: String, options: Options) {
+
+        init(streamIdentifier: StreamIdentifier, groupName: String, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.groupName = groupName
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.update(request: request, options: callOptions){
+            try await client.update(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
@@ -53,7 +53,7 @@ extension PersistentSubscriptions.UpdateToStream {
             self.settings = settings
             self.revisionCursor = revisionCursor
         }
-        
+
         @discardableResult
         public func startFrom(cursor: Cursor<StreamRevision>) -> Self {
             withCopy { options in

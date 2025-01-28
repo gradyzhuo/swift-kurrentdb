@@ -1,17 +1,17 @@
 //
-//  PersistentSubscriptionsClient.Subscription.swift
-//
+//  Subscription.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2024/3/23.
 //
 
-import Foundation
-import KurrentCore
-import GRPCCore
-import GRPCNIOTransportCore
-import GRPCEncapsulates
-import GRPCNIOTransportHTTP2Posix
 import DequeModule
+import Foundation
+import GRPCCore
+import GRPCEncapsulates
+import GRPCNIOTransportCore
+import GRPCNIOTransportHTTP2Posix
+import KurrentCore
 
 extension PersistentSubscriptions {
     public final class Subscription: @unchecked Sendable {
@@ -19,22 +19,22 @@ extension PersistentSubscriptions {
         public typealias Element = PersistentSubscription.EventResult
 
         let writer: Writer
-        
+
         public let subscriptionId: String?
         public let events: AsyncThrowingStream<Element, Error>
-        
+
         package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.Read.Response, any Error>) async throws {
             self.writer = writer
-            
+
             var iterator = reader.makeAsyncIterator()
-            subscriptionId = if case let .confirmation(subscriptionId) = try await iterator.next(){
+            subscriptionId = if case let .confirmation(subscriptionId) = try await iterator.next() {
                 subscriptionId
-            }else{
+            } else {
                 nil
             }
-            
+
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Element.self)
-            Task{
+            Task {
                 while let response = try await iterator.next() {
                     if case let .readEvent(event, retryCount) = response {
                         continuation.yield(.init(event: event, retryCount: retryCount))
@@ -47,7 +47,7 @@ extension PersistentSubscriptions {
         func ack(eventIds: [UUID]) async throws {
             let id = subscriptionId?.data(using: .utf8) ?? .init()
             let usecase = PersistentSubscriptions.Ack(id: id, eventIds: eventIds)
-            
+
             let messages = try usecase.requestMessages()
             writer.write(messages: messages)
         }
@@ -86,35 +86,33 @@ extension PersistentSubscriptions {
         public func nack(readEvents: ReadEvent ..., action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
             try await nack(readEvents: readEvents, action: action, reason: reason)
         }
-
     }
 }
 
-
 extension PersistentSubscriptions.Subscription {
-    package struct Writer{
+    package struct Writer {
         package typealias MessageType = Request
-        
+
         package let sender: AsyncStream<MessageType>
         package let continuation: AsyncStream<MessageType>.Continuation
-        
-        init(){
+
+        init() {
             let (stream, continuation) = AsyncStream.makeStream(of: MessageType.self)
-            self.sender = stream
+            sender = stream
             self.continuation = continuation
         }
-        
-        public func write(_ messages: MessageType...){
+
+        public func write(_ messages: MessageType...) {
             write(messages: messages)
         }
-        
-        public func write(messages: [MessageType]){
-            for message in messages{
+
+        public func write(messages: [MessageType]) {
+            for message in messages {
                 continuation.yield(message)
             }
         }
-        
-        public func stop(){
+
+        public func stop() {
             continuation.finish()
         }
     }

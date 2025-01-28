@@ -1,6 +1,6 @@
 //
-//  ReadEvent.swift
-//  KurrentDB
+//  ReadEvent+Additions.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/24.
 //
@@ -10,18 +10,17 @@ extension ReadEvent {
         let recordedEvent: RecordedEvent = try .init(message: message.event)
         let linkedRecordedEvent: RecordedEvent? = try message.hasLink ? .init(message: message.link) : nil
 
-        let commitPosition: StreamPosition?
-        if let position = message.position {
+        let commitPosition: StreamPosition? = if let position = message.position {
             switch position {
             case .noPosition:
-                commitPosition = nil
+                nil
             case let .commitPosition(position):
-                commitPosition = .at(commitPosition: position)
+                .at(commitPosition: position)
             }
         } else {
-            commitPosition = nil
+            nil
         }
-        
+
         self.init(event: recordedEvent, link: linkedRecordedEvent, commitPosition: commitPosition)
     }
 }

@@ -1,6 +1,6 @@
 //
 //  ClientSettings.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2023/10/17.
 //
@@ -73,7 +73,7 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
 public struct ClientSettings: Sendable {
     public var configuration: TLSConfiguration
     public private(set) var clusterMode: TopologyClusterMode
-    
+
     public var trustRoots: TLSConfig.TrustRootsSource?
 
     public private(set) var tls: Bool = false
@@ -93,7 +93,6 @@ public struct ClientSettings: Sendable {
     public init(clusterMode: TopologyClusterMode, configure: () -> TLSConfiguration = { .clientDefault }) {
         self.init(clusterMode: clusterMode, configuration: configure())
     }
-
 }
 
 extension ClientSettings {
@@ -214,7 +213,6 @@ extension ClientSettings {
             self.host = host
             self.port = port ?? DEFAULT_PORT_NUMBER
         }
-
     }
 }
 

@@ -1,14 +1,14 @@
 //
-//  StreamClient.Subscribe.swift
-//  KurrentDB
+//  Subscribe.swift
+//  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/21.
 //
 
-import KurrentCore
 import GRPCCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
+import KurrentCore
 
 extension Streams {
     public struct Subscribe: UnaryStream {
@@ -20,15 +20,15 @@ extension Streams {
         public let streamIdentifier: StreamIdentifier
         public let cursor: Cursor<StreamRevision>
         public let options: Options
-        
+
         public init(streamIdentifier: StreamIdentifier, cursor: Cursor<StreamRevision>, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
                 $0.options.subscription = .init()
@@ -44,10 +44,10 @@ extension Streams {
                 }
             }
         }
-        
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws ->Responses {
+
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
-            Task{
+            Task {
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {
                         continuation.yield(message)
@@ -56,7 +56,6 @@ extension Streams {
             }
             return try await .init(messages: stream)
         }
-
     }
 }
 
@@ -88,7 +87,7 @@ extension Streams.Subscribe {
         init(subscriptionId: String) throws {
             content = .confirmation(subscriptionId: subscriptionId)
         }
-        
+
         init(message: UnderlyingMessage.ReadEvent) throws {
             content = try .event(readEvent: .init(message: message))
         }
@@ -106,7 +105,6 @@ extension Streams.Subscribe {
         }
 
         init(content: UnderlyingMessage.OneOf_Content) throws {
-            
             switch content {
             case let .confirmation(confirmation):
                 try self.init(subscriptionId: confirmation.subscriptionID)
@@ -139,7 +137,7 @@ extension Streams.Subscribe {
             self.resolveLinks = resolveLinks
             self.uuidOption = uuidOption
         }
-        
+
         package func build() -> UnderlyingMessage {
             .with {
                 $0.noFilter = .init()

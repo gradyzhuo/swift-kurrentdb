@@ -1,13 +1,13 @@
 //
-//  StreamClient.Tombstone.swift
-//
+//  Tombstone.swift
+//  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/11/2.
 //
-import KurrentCore
 import GRPCCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
+import KurrentCore
 
 extension Streams {
     public struct Tombstone: UnaryUnary {
@@ -17,17 +17,17 @@ extension Streams {
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 var options = options.build()
                 options.streamIdentifier = try streamIdentifier.build()
                 $0.options = options
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.tombstone(request: request, options: callOptions){
+            try await client.tombstone(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
@@ -41,10 +41,10 @@ extension Streams.Tombstone {
         public internal(set) var position: StreamPosition?
 
         package init(from message: UnderlyingMessage) throws {
-            self.position  = message.positionOption.flatMap{
+            position = message.positionOption.flatMap {
                 switch $0 {
                 case let .position(position):
-                        .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
+                    .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
                 case .noPosition:
                     nil
                 }
@@ -62,7 +62,7 @@ extension Streams.Tombstone {
         public init(expectedRevision: StreamRevision.Rule = .streamExists) {
             self.expectedRevision = expectedRevision
         }
-        
+
         package func build() -> UnderlyingMessage {
             .with {
                 switch expectedRevision {

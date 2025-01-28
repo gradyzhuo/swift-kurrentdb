@@ -1,14 +1,14 @@
 //
 //  ServerError.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2024/5/15.
 //
 
 import Foundation
-import GRPCProtobuf
 import GRPCCore
 import GRPCEncapsulates
+import GRPCProtobuf
 
 public enum EventStoreError: Error, Sendable {
     case serverError(String)

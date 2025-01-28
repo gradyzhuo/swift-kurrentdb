@@ -1,14 +1,14 @@
 //
-//  UserClient.Details.swift
-//
+//  Details.swift
+//  KurrentUsers
 //
 //  Created by Grady Zhuo on 2023/12/20.
 //
 
 import Foundation
 import GRPCCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
 
 extension Users {
     public struct Details: UnaryStream {
@@ -22,15 +22,15 @@ extension Users {
         public init(loginName: String) {
             self.loginName = loginName
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options.loginName = loginName
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            return try await withThrowingTaskGroup(of: Void.self) { group in
+            try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
                 try await client.details(request: request, options: callOptions) {
                     for try await message in $0.messages {

@@ -30,6 +30,7 @@ package enum EventStore_Client_Redaction_Redaction {
                 method: "GetEventPositions"
             )
         }
+
         /// Namespace for "SwitchChunks" metadata.
         package enum SwitchChunks {
             /// Request type for "SwitchChunks".
@@ -42,10 +43,11 @@ package enum EventStore_Client_Redaction_Redaction {
                 method: "SwitchChunks"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.redaction.Redaction" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             GetEventPositions.descriptor,
-            SwitchChunks.descriptor
+            SwitchChunks.descriptor,
         ]
     }
 }
@@ -175,7 +177,7 @@ extension EventStore_Client_Redaction_Redaction {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Redaction_Redaction.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Redaction_Redaction.Method.GetEventPositions.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Redaction_GetEventPositionReq>(),
@@ -202,8 +204,7 @@ extension EventStore_Client_Redaction_Redaction.StreamingServiceProtocol {
 }
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
-extension EventStore_Client_Redaction_Redaction.ServiceProtocol {
-}
+extension EventStore_Client_Redaction_Redaction.ServiceProtocol {}
 
 // Default implementation of methods from 'ServiceProtocol'.
 extension EventStore_Client_Redaction_Redaction.SimpleServiceProtocol {
@@ -211,7 +212,7 @@ extension EventStore_Client_Redaction_Redaction.SimpleServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Redaction_GetEventPositionReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_GetEventPositionResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_GetEventPositionResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_GetEventPositionResp>(
             metadata: [:],
             producer: { writer in
                 try await self.getEventPositions(
@@ -228,7 +229,7 @@ extension EventStore_Client_Redaction_Redaction.SimpleServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Redaction_SwitchChunkReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_SwitchChunkResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_SwitchChunkResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Redaction_SwitchChunkResp>(
             metadata: [:],
             producer: { writer in
                 try await self.switchChunks(
@@ -323,7 +324,7 @@ extension EventStore_Client_Redaction_Redaction {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Redaction_GetEventPositionResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.bidirectionalStreaming(
+            try await client.bidirectionalStreaming(
                 request: request,
                 descriptor: EventStore_Client_Redaction_Redaction.Method.GetEventPositions.descriptor,
                 serializer: serializer,
@@ -351,7 +352,7 @@ extension EventStore_Client_Redaction_Redaction {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Redaction_SwitchChunkResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.bidirectionalStreaming(
+            try await client.bidirectionalStreaming(
                 request: request,
                 descriptor: EventStore_Client_Redaction_Redaction.Method.SwitchChunks.descriptor,
                 serializer: serializer,
@@ -379,7 +380,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Redaction_GetEventPositionResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.getEventPositions(
+        try await getEventPositions(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Redaction_GetEventPositionReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Redaction_GetEventPositionResp>(),
@@ -402,7 +403,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Redaction_SwitchChunkResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.switchChunks(
+        try await switchChunks(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Redaction_SwitchChunkReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Redaction_SwitchChunkResp>(),
@@ -435,7 +436,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
             metadata: metadata,
             producer: producer
         )
-        return try await self.getEventPositions(
+        return try await getEventPositions(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -463,7 +464,7 @@ extension EventStore_Client_Redaction_Redaction.ClientProtocol {
             metadata: metadata,
             producer: producer
         )
-        return try await self.switchChunks(
+        return try await switchChunks(
             request: request,
             options: options,
             onResponse: handleResponse

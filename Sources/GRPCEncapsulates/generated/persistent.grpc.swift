@@ -30,6 +30,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "Create"
             )
         }
+
         /// Namespace for "Update" metadata.
         package enum Update {
             /// Request type for "Update".
@@ -42,6 +43,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "Update"
             )
         }
+
         /// Namespace for "Delete" metadata.
         package enum Delete {
             /// Request type for "Delete".
@@ -54,6 +56,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "Delete"
             )
         }
+
         /// Namespace for "Read" metadata.
         package enum Read {
             /// Request type for "Read".
@@ -66,6 +69,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "Read"
             )
         }
+
         /// Namespace for "GetInfo" metadata.
         package enum GetInfo {
             /// Request type for "GetInfo".
@@ -78,6 +82,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "GetInfo"
             )
         }
+
         /// Namespace for "ReplayParked" metadata.
         package enum ReplayParked {
             /// Request type for "ReplayParked".
@@ -90,6 +95,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "ReplayParked"
             )
         }
+
         /// Namespace for "List" metadata.
         package enum List {
             /// Request type for "List".
@@ -102,6 +108,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "List"
             )
         }
+
         /// Namespace for "RestartSubsystem" metadata.
         package enum RestartSubsystem {
             /// Request type for "RestartSubsystem".
@@ -114,6 +121,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 method: "RestartSubsystem"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.persistent_subscriptions.PersistentSubscriptions" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Create.descriptor,
@@ -123,7 +131,7 @@ package enum EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
             GetInfo.descriptor,
             ReplayParked.descriptor,
             List.descriptor,
-            RestartSubsystem.descriptor
+            RestartSubsystem.descriptor,
         ]
     }
 }
@@ -504,7 +512,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.Create.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_CreateReq>(),
@@ -602,7 +610,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_CreateResp> {
-        let response = try await self.create(
+        let response = try await create(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -613,7 +621,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_UpdateResp> {
-        let response = try await self.update(
+        let response = try await update(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -624,7 +632,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_DeleteResp> {
-        let response = try await self.delete(
+        let response = try await delete(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -635,7 +643,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp> {
-        let response = try await self.getInfo(
+        let response = try await getInfo(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -646,7 +654,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp> {
-        let response = try await self.replayParked(
+        let response = try await replayParked(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -657,7 +665,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_ListReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ListResp> {
-        let response = try await self.list(
+        let response = try await list(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -668,7 +676,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Serv
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.restartSubsystem(
+        let response = try await restartSubsystem(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -682,8 +690,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_CreateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_CreateResp>(
-            message: try await self.create(
+        try await GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_CreateResp>(
+            message: create(
                 request: request.message,
                 context: context
             ),
@@ -695,8 +703,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_UpdateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_UpdateResp>(
-            message: try await self.update(
+        try await GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_UpdateResp>(
+            message: update(
                 request: request.message,
                 context: context
             ),
@@ -708,8 +716,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_DeleteResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_DeleteResp>(
-            message: try await self.delete(
+        try await GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_DeleteResp>(
+            message: delete(
                 request: request.message,
                 context: context
             ),
@@ -721,7 +729,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.StreamingServerRequest<EventStore_Client_PersistentSubscriptions_ReadReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ReadResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ReadResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_PersistentSubscriptions_ReadResp>(
             metadata: [:],
             producer: { writer in
                 try await self.read(
@@ -738,8 +746,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_GetInfoReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp>(
-            message: try await self.getInfo(
+        try await GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_GetInfoResp>(
+            message: getInfo(
                 request: request.message,
                 context: context
             ),
@@ -751,8 +759,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>(
-            message: try await self.replayParked(
+        try await GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>(
+            message: replayParked(
                 request: request.message,
                 context: context
             ),
@@ -764,8 +772,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_PersistentSubscriptions_ListReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ListResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ListResp>(
-            message: try await self.list(
+        try await GRPCCore.ServerResponse<EventStore_Client_PersistentSubscriptions_ListResp>(
+            message: list(
                 request: request.message,
                 context: context
             ),
@@ -777,8 +785,8 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Simp
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.restartSubsystem(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: restartSubsystem(
                 request: request.message,
                 context: context
             ),
@@ -984,7 +992,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.Create.descriptor,
                 serializer: serializer,
@@ -1014,7 +1022,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.Update.descriptor,
                 serializer: serializer,
@@ -1044,7 +1052,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.Delete.descriptor,
                 serializer: serializer,
@@ -1072,7 +1080,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_PersistentSubscriptions_ReadResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.bidirectionalStreaming(
+            try await client.bidirectionalStreaming(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.Read.descriptor,
                 serializer: serializer,
@@ -1102,7 +1110,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.GetInfo.descriptor,
                 serializer: serializer,
@@ -1132,7 +1140,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.ReplayParked.descriptor,
                 serializer: serializer,
@@ -1162,7 +1170,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.List.descriptor,
                 serializer: serializer,
@@ -1192,7 +1200,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Method.RestartSubsystem.descriptor,
                 serializer: serializer,
@@ -1222,7 +1230,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.create(
+        try await create(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_CreateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_CreateResp>(),
@@ -1247,7 +1255,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.update(
+        try await update(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_UpdateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_UpdateResp>(),
@@ -1272,7 +1280,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.delete(
+        try await delete(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_DeleteReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_DeleteResp>(),
@@ -1295,7 +1303,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_PersistentSubscriptions_ReadResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.read(
+        try await read(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_ReadReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_ReadResp>(),
@@ -1320,7 +1328,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.getInfo(
+        try await getInfo(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_GetInfoReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_GetInfoResp>(),
@@ -1345,7 +1353,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.replayParked(
+        try await replayParked(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_ReplayParkedReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_ReplayParkedResp>(),
@@ -1370,7 +1378,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.list(
+        try await list(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_PersistentSubscriptions_ListReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_PersistentSubscriptions_ListResp>(),
@@ -1395,7 +1403,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.restartSubsystem(
+        try await restartSubsystem(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1429,7 +1437,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.create(
+        return try await create(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1458,7 +1466,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.update(
+        return try await update(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1487,7 +1495,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.delete(
+        return try await delete(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1515,7 +1523,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             metadata: metadata,
             producer: producer
         )
-        return try await self.read(
+        return try await read(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1544,7 +1552,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.getInfo(
+        return try await getInfo(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1573,7 +1581,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.replayParked(
+        return try await replayParked(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1602,7 +1610,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.list(
+        return try await list(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1631,7 +1639,7 @@ extension EventStore_Client_PersistentSubscriptions_PersistentSubscriptions.Clie
             message: message,
             metadata: metadata
         )
-        return try await self.restartSubsystem(
+        return try await restartSubsystem(
             request: request,
             options: options,
             onResponse: handleResponse

@@ -1,26 +1,26 @@
 //
-//  MonitoringClient.swift
-//
+//  Monitoring.swift
+//  KurrentMonitoring
 //
 //  Created by Grady Zhuo on 2023/12/11.
 //
 
 import Foundation
-import NIO
-import Logging
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 import KurrentCore
+import Logging
+import NIO
 
 public struct Monitoring: GRPCConcreteService {
     package typealias Client = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
-    
+
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
-    
-    public init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup){
+
+    public init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.settings = settings
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup

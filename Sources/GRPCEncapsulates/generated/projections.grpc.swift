@@ -31,6 +31,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Create"
             )
         }
+
         /// Namespace for "Update" metadata.
         package enum Update {
             /// Request type for "Update".
@@ -43,6 +44,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Update"
             )
         }
+
         /// Namespace for "Delete" metadata.
         package enum Delete {
             /// Request type for "Delete".
@@ -55,6 +57,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Delete"
             )
         }
+
         /// Namespace for "Statistics" metadata.
         package enum Statistics {
             /// Request type for "Statistics".
@@ -67,6 +70,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Statistics"
             )
         }
+
         /// Namespace for "Disable" metadata.
         package enum Disable {
             /// Request type for "Disable".
@@ -79,6 +83,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Disable"
             )
         }
+
         /// Namespace for "Enable" metadata.
         package enum Enable {
             /// Request type for "Enable".
@@ -91,6 +96,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Enable"
             )
         }
+
         /// Namespace for "Reset" metadata.
         package enum Reset {
             /// Request type for "Reset".
@@ -103,6 +109,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Reset"
             )
         }
+
         /// Namespace for "State" metadata.
         package enum State {
             /// Request type for "State".
@@ -115,6 +122,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "State"
             )
         }
+
         /// Namespace for "Result" metadata.
         package enum Result {
             /// Request type for "Result".
@@ -127,6 +135,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "Result"
             )
         }
+
         /// Namespace for "RestartSubsystem" metadata.
         package enum RestartSubsystem {
             /// Request type for "RestartSubsystem".
@@ -139,6 +148,7 @@ package enum EventStore_Client_Projections_Projections {
                 method: "RestartSubsystem"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.projections.Projections" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Create.descriptor,
@@ -150,7 +160,7 @@ package enum EventStore_Client_Projections_Projections {
             Reset.descriptor,
             State.descriptor,
             Result.descriptor,
-            RestartSubsystem.descriptor
+            RestartSubsystem.descriptor,
         ]
     }
 }
@@ -615,7 +625,7 @@ extension EventStore_Client_Projections_Projections {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Projections_Projections.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Projections_Projections.Method.Create.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_CreateReq>(),
@@ -735,7 +745,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_CreateResp> {
-        let response = try await self.create(
+        let response = try await create(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -746,7 +756,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_UpdateResp> {
-        let response = try await self.update(
+        let response = try await update(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -757,7 +767,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_DeleteResp> {
-        let response = try await self.delete(
+        let response = try await delete(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -768,7 +778,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_StatisticsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StatisticsResp> {
-        let response = try await self.statistics(
+        let response = try await statistics(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -779,7 +789,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_DisableResp> {
-        let response = try await self.disable(
+        let response = try await disable(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -790,7 +800,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_EnableResp> {
-        let response = try await self.enable(
+        let response = try await enable(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -801,7 +811,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_ResetReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_ResetResp> {
-        let response = try await self.reset(
+        let response = try await reset(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -812,7 +822,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_StateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StateResp> {
-        let response = try await self.state(
+        let response = try await state(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -823,7 +833,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Projections_ResultReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_ResultResp> {
-        let response = try await self.result(
+        let response = try await result(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -834,7 +844,7 @@ extension EventStore_Client_Projections_Projections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.restartSubsystem(
+        let response = try await restartSubsystem(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -848,8 +858,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_CreateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_CreateResp>(
-            message: try await self.create(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_CreateResp>(
+            message: create(
                 request: request.message,
                 context: context
             ),
@@ -861,8 +871,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_UpdateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_UpdateResp>(
-            message: try await self.update(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_UpdateResp>(
+            message: update(
                 request: request.message,
                 context: context
             ),
@@ -874,8 +884,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_DeleteResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_DeleteResp>(
-            message: try await self.delete(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_DeleteResp>(
+            message: delete(
                 request: request.message,
                 context: context
             ),
@@ -887,7 +897,7 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_StatisticsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StatisticsResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StatisticsResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Projections_StatisticsResp>(
             metadata: [:],
             producer: { writer in
                 try await self.statistics(
@@ -904,8 +914,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_DisableResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_DisableResp>(
-            message: try await self.disable(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_DisableResp>(
+            message: disable(
                 request: request.message,
                 context: context
             ),
@@ -917,8 +927,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_EnableResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_EnableResp>(
-            message: try await self.enable(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_EnableResp>(
+            message: enable(
                 request: request.message,
                 context: context
             ),
@@ -930,8 +940,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_ResetReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_ResetResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_ResetResp>(
-            message: try await self.reset(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_ResetResp>(
+            message: reset(
                 request: request.message,
                 context: context
             ),
@@ -943,8 +953,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_StateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_StateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_StateResp>(
-            message: try await self.state(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_StateResp>(
+            message: state(
                 request: request.message,
                 context: context
             ),
@@ -956,8 +966,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Projections_ResultReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Projections_ResultResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Projections_ResultResp>(
-            message: try await self.result(
+        try await GRPCCore.ServerResponse<EventStore_Client_Projections_ResultResp>(
+            message: result(
                 request: request.message,
                 context: context
             ),
@@ -969,8 +979,8 @@ extension EventStore_Client_Projections_Projections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.restartSubsystem(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: restartSubsystem(
                 request: request.message,
                 context: context
             ),
@@ -1214,7 +1224,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Create.descriptor,
                 serializer: serializer,
@@ -1244,7 +1254,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Update.descriptor,
                 serializer: serializer,
@@ -1274,7 +1284,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Delete.descriptor,
                 serializer: serializer,
@@ -1302,7 +1312,7 @@ extension EventStore_Client_Projections_Projections {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Projections_StatisticsResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.serverStreaming(
+            try await client.serverStreaming(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Statistics.descriptor,
                 serializer: serializer,
@@ -1332,7 +1342,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Disable.descriptor,
                 serializer: serializer,
@@ -1362,7 +1372,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Enable.descriptor,
                 serializer: serializer,
@@ -1392,7 +1402,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Reset.descriptor,
                 serializer: serializer,
@@ -1422,7 +1432,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.State.descriptor,
                 serializer: serializer,
@@ -1452,7 +1462,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.Result.descriptor,
                 serializer: serializer,
@@ -1482,7 +1492,7 @@ extension EventStore_Client_Projections_Projections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Projections_Projections.Method.RestartSubsystem.descriptor,
                 serializer: serializer,
@@ -1512,7 +1522,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.create(
+        try await create(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_CreateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_CreateResp>(),
@@ -1537,7 +1547,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.update(
+        try await update(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_UpdateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_UpdateResp>(),
@@ -1562,7 +1572,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.delete(
+        try await delete(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_DeleteReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_DeleteResp>(),
@@ -1585,7 +1595,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Projections_StatisticsResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.statistics(
+        try await statistics(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_StatisticsReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_StatisticsResp>(),
@@ -1610,7 +1620,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.disable(
+        try await disable(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_DisableReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_DisableResp>(),
@@ -1635,7 +1645,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.enable(
+        try await enable(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_EnableReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_EnableResp>(),
@@ -1660,7 +1670,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.reset(
+        try await reset(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_ResetReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_ResetResp>(),
@@ -1685,7 +1695,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.state(
+        try await state(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_StateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_StateResp>(),
@@ -1710,7 +1720,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.result(
+        try await result(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Projections_ResultReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Projections_ResultResp>(),
@@ -1735,7 +1745,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.restartSubsystem(
+        try await restartSubsystem(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1769,7 +1779,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.create(
+        return try await create(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1798,7 +1808,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.update(
+        return try await update(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1827,7 +1837,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.delete(
+        return try await delete(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1854,7 +1864,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.statistics(
+        return try await statistics(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1883,7 +1893,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.disable(
+        return try await disable(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1912,7 +1922,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.enable(
+        return try await enable(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1941,7 +1951,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.reset(
+        return try await reset(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1970,7 +1980,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.state(
+        return try await state(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1999,7 +2009,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.result(
+        return try await result(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -2028,7 +2038,7 @@ extension EventStore_Client_Projections_Projections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.restartSubsystem(
+        return try await restartSubsystem(
             request: request,
             options: options,
             onResponse: handleResponse

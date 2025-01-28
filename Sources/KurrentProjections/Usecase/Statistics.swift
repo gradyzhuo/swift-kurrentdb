@@ -1,6 +1,6 @@
 //
-//  ProjectionsClient.Statistics.swift
-//
+//  Statistics.swift
+//  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/11/26.
 //
@@ -15,7 +15,7 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
         public typealias Responses = AsyncThrowingStream<Response, Error>
-        
+
         public enum ModeOptions: Sendable {
             case all
             case transient
@@ -25,21 +25,21 @@ extension Projections {
 
         public let name: String
         public let options: Options
-        
+
         public init(name: String, options: Options) {
             self.name = name
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options = options.build()
                 $0.options.name = name
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            return try await withThrowingTaskGroup(of: Void.self)  { group in
+            try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.statistics(request: request, options: callOptions) {
                     for try await message in $0.messages {
@@ -134,7 +134,7 @@ extension Projections.Statistics {
         var mode: ModeOptions = .all
 
         package func build() -> UnderlyingRequest.Options {
-            return .with {
+            .with {
                 switch mode {
                 case .all:
                     $0.all = .init()

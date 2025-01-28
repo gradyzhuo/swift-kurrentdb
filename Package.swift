@@ -14,19 +14,21 @@ let package = Package(
         .library(
             name: "EventStoreDB",
             targets: [
-                "EventStoreDB"
-            ]),
+                "EventStoreDB",
+            ]
+        ),
         .library(
             name: "KurrentDB",
             targets: [
-                "KurrentDB"
-            ])
+                "KurrentDB",
+            ]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "2.0.0-rc.1"),
         .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "1.0.0-rc.1"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "1.0.0-rc.1"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -34,7 +36,7 @@ let package = Package(
         .target(
             name: "EventStoreDB",
             dependencies: [
-                "KurrentDB"
+                "KurrentDB",
             ]
         ),
         .target(
@@ -48,14 +50,14 @@ let package = Package(
                 "KurrentOperations",
                 "KurrentMonitoring",
                 "KurrentGossip",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
             name: "KurrentCore",
             dependencies: [
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -63,7 +65,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -71,7 +73,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -79,7 +81,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -87,7 +89,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -95,7 +97,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -103,7 +105,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -111,7 +113,7 @@ let package = Package(
             dependencies: [
                 "KurrentCore",
                 "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -146,13 +148,12 @@ let package = Package(
             name: "PersistentSubscriptionsTests",
             dependencies: [
                 "KurrentPersistentSubscriptions",
-                "KurrentStreams"
+                "KurrentStreams",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
             ]
-        )
-        
+        ),
     ]
 )

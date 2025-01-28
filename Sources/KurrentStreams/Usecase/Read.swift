@@ -1,13 +1,13 @@
 //
-//  StreamClient.Read.swift
-//  KurrentDB
+//  Read.swift
+//  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/21.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension Streams {
     public struct Read: UnaryStream {
@@ -19,15 +19,15 @@ extension Streams {
         public let streamIdentifier: StreamIdentifier
         public let cursor: Cursor<CursorPointer>
         public let options: Options
-        
-        internal init(streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Options) {
+
+        init(streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
 
@@ -49,9 +49,9 @@ extension Streams {
                 }
             }
         }
-        
+
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            return try await withThrowingTaskGroup(of: Void.self)  { group in
+            try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {
@@ -128,7 +128,7 @@ extension Streams.Read {
 extension Streams.Read {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
-        
+
         public private(set) var resolveLinks: Bool
         public private(set) var limit: UInt64
         public private(set) var uuidOption: UUIDOption
@@ -140,7 +140,7 @@ extension Streams.Read {
             self.uuidOption = uuidOption
             self.compatibility = compatibility
         }
-        
+
         package func build() -> UnderlyingMessage {
             .with {
                 $0.noFilter = .init()
@@ -151,8 +151,8 @@ extension Streams.Read {
                 case .string:
                     $0.uuidOption.string = .init()
                 }
-                
-                $0.controlOption = .with{
+
+                $0.controlOption = .with {
                     $0.compatibility = compatibility
                 }
                 $0.resolveLinks = resolveLinks
@@ -180,7 +180,7 @@ extension Streams.Read {
                 options.uuidOption = uuidOption
             }
         }
-        
+
         @discardableResult
         public func set(compatibility: UInt32) -> Self {
             withCopy { options in

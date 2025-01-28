@@ -1,6 +1,6 @@
 //
-//  PersistentSubscriptionsClient.Read.Nack.swift
-//
+//  Read.Nack.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.
 //
@@ -12,7 +12,7 @@ import GRPCEncapsulates
 extension PersistentSubscriptions {
     public struct Nack: StreamRequestBuildable {
         package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
-        
+
         public enum Action: Int, Sendable {
             case unknown = 0
             case park = 1
@@ -40,8 +40,8 @@ extension PersistentSubscriptions {
         let eventIds: [UUID]
         let action: Nack.Action
         let reason: String
-        
-        internal init(id: Data, eventIds: [UUID], action: Nack.Action, reason: String) {
+
+        init(id: Data, eventIds: [UUID], action: Nack.Action, reason: String) {
             self.id = id
             self.eventIds = eventIds
             self.action = action
@@ -49,7 +49,7 @@ extension PersistentSubscriptions {
         }
 
         package func requestMessages() throws -> [UnderlyingRequest] {
-            return [
+            [
                 .with {
                     $0.nack = .with {
                         $0.id = id
@@ -62,6 +62,5 @@ extension PersistentSubscriptions {
                 },
             ]
         }
-        
     }
 }

@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionsClient.UpdateToAll.swift
-//  KurrentDB
+//  UpdateToAll.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/13.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension PersistentSubscriptions {
     public struct UpdateToAll: UnaryUnary {
@@ -18,26 +18,25 @@ extension PersistentSubscriptions {
 
         var groupName: String
         var options: Options
-        
-        internal init(groupName: String, options: Options) {
+
+        init(groupName: String, options: Options) {
             self.groupName = groupName
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options = options.build()
                 $0.options.groupName = groupName
             }
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.update(request: request, options: callOptions){
+            try await client.update(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
     }
-
 }
 
 extension PersistentSubscriptions.UpdateToAll {
@@ -51,7 +50,7 @@ extension PersistentSubscriptions.UpdateToAll {
             self.settings = settings
             self.positionCursor = positionCursor
         }
-        
+
         @discardableResult
         public func startFrom(cursor: Cursor<StreamPosition>) -> Self {
             withCopy { options in

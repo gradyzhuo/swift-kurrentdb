@@ -1,13 +1,13 @@
 //
 //  EventStore_Client_PersistentSubscriptions+Additions.swift
-//
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2024/3/22.
 //
 
 import Foundation
-import KurrentCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
     package static func make(settings: PersistentSubscription.Settings) -> Self {

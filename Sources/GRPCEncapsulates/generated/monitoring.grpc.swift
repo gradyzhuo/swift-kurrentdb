@@ -30,9 +30,10 @@ package enum EventStore_Client_Monitoring_Monitoring {
                 method: "Stats"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.monitoring.Monitoring" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
-            Stats.descriptor
+            Stats.descriptor,
         ]
     }
 }
@@ -119,7 +120,7 @@ extension EventStore_Client_Monitoring_Monitoring {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Monitoring_Monitoring.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Monitoring_Monitoring.Method.Stats.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Monitoring_StatsReq>(),
@@ -140,7 +141,7 @@ extension EventStore_Client_Monitoring_Monitoring.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Monitoring_StatsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Monitoring_StatsResp> {
-        let response = try await self.stats(
+        let response = try await stats(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -154,7 +155,7 @@ extension EventStore_Client_Monitoring_Monitoring.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Monitoring_StatsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Monitoring_StatsResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Monitoring_StatsResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Monitoring_StatsResp>(
             metadata: [:],
             producer: { writer in
                 try await self.stats(
@@ -230,7 +231,7 @@ extension EventStore_Client_Monitoring_Monitoring {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Monitoring_StatsResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.serverStreaming(
+            try await client.serverStreaming(
                 request: request,
                 descriptor: EventStore_Client_Monitoring_Monitoring.Method.Stats.descriptor,
                 serializer: serializer,
@@ -258,7 +259,7 @@ extension EventStore_Client_Monitoring_Monitoring.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Monitoring_StatsResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.stats(
+        try await stats(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Monitoring_StatsReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Monitoring_StatsResp>(),
@@ -290,7 +291,7 @@ extension EventStore_Client_Monitoring_Monitoring.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.stats(
+        return try await stats(
             request: request,
             options: options,
             onResponse: handleResponse

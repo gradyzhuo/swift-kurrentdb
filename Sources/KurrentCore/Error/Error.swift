@@ -1,6 +1,6 @@
 //
 //  Error.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2023/10/17.
 //

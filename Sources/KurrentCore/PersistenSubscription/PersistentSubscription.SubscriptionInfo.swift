@@ -1,13 +1,13 @@
 //
 //  PersistentSubscription.SubscriptionInfo.swift
-//  KurrentDB
+//  KurrentCore
 //
 //  Created by 卓俊諺 on 2025/1/12.
 //
 
 import GRPCEncapsulates
 
-extension PersistentSubscription{
+extension PersistentSubscription {
     public struct SubscriptionInfo: GRPCBridge {
         package typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_SubscriptionInfo
         public let eventSource: String

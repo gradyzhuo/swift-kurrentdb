@@ -1,13 +1,13 @@
 //
-//  StreamClient.Delete.swift
-//  KurrentDB
+//  Delete.swift
+//  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/31.
 //
 
-import KurrentCore
 import GRPCCore
 import GRPCEncapsulates
+import KurrentCore
 
 extension Streams {
     public struct Delete: UnaryUnary {
@@ -17,25 +17,24 @@ extension Streams {
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
-        
-        internal init(streamIdentifier: StreamIdentifier, options: Options) {
+
+        init(streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.options = options
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return try .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.streamIdentifier = try streamIdentifier.build()
             }
         }
-        
+
         package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
-            return try await client.delete(request: request, options: callOptions){
+            try await client.delete(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
-        
     }
 }
 
@@ -46,10 +45,10 @@ extension Streams.Delete {
         public internal(set) var position: StreamPosition?
 
         package init(from message: UnderlyingMessage) throws {
-            self.position = message.positionOption.flatMap{
-                return switch $0 {
+            position = message.positionOption.flatMap {
+                switch $0 {
                 case let .position(position):
-                        .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
+                    .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
                 case .noPosition:
                     nil
                 }

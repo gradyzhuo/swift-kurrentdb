@@ -30,6 +30,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "StartScavenge"
             )
         }
+
         /// Namespace for "StopScavenge" metadata.
         package enum StopScavenge {
             /// Request type for "StopScavenge".
@@ -42,6 +43,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "StopScavenge"
             )
         }
+
         /// Namespace for "Shutdown" metadata.
         package enum Shutdown {
             /// Request type for "Shutdown".
@@ -54,6 +56,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "Shutdown"
             )
         }
+
         /// Namespace for "MergeIndexes" metadata.
         package enum MergeIndexes {
             /// Request type for "MergeIndexes".
@@ -66,6 +69,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "MergeIndexes"
             )
         }
+
         /// Namespace for "ResignNode" metadata.
         package enum ResignNode {
             /// Request type for "ResignNode".
@@ -78,6 +82,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "ResignNode"
             )
         }
+
         /// Namespace for "SetNodePriority" metadata.
         package enum SetNodePriority {
             /// Request type for "SetNodePriority".
@@ -90,6 +95,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "SetNodePriority"
             )
         }
+
         /// Namespace for "RestartPersistentSubscriptions" metadata.
         package enum RestartPersistentSubscriptions {
             /// Request type for "RestartPersistentSubscriptions".
@@ -102,6 +108,7 @@ package enum EventStore_Client_Operations_Operations {
                 method: "RestartPersistentSubscriptions"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.operations.Operations" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             StartScavenge.descriptor,
@@ -110,7 +117,7 @@ package enum EventStore_Client_Operations_Operations {
             MergeIndexes.descriptor,
             ResignNode.descriptor,
             SetNodePriority.descriptor,
-            RestartPersistentSubscriptions.descriptor
+            RestartPersistentSubscriptions.descriptor,
         ]
     }
 }
@@ -448,7 +455,7 @@ extension EventStore_Client_Operations_Operations {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Operations_Operations.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Operations_Operations.Method.StartScavenge.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Operations_StartScavengeReq>(),
@@ -535,7 +542,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Operations_StartScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Operations_ScavengeResp> {
-        let response = try await self.startScavenge(
+        let response = try await startScavenge(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -546,7 +553,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Operations_StopScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Operations_ScavengeResp> {
-        let response = try await self.stopScavenge(
+        let response = try await stopScavenge(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -557,7 +564,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.shutdown(
+        let response = try await shutdown(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -568,7 +575,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.mergeIndexes(
+        let response = try await mergeIndexes(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -579,7 +586,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.resignNode(
+        let response = try await resignNode(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -590,7 +597,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Operations_SetNodePriorityReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.setNodePriority(
+        let response = try await setNodePriority(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -601,7 +608,7 @@ extension EventStore_Client_Operations_Operations.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.restartPersistentSubscriptions(
+        let response = try await restartPersistentSubscriptions(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -615,8 +622,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Operations_StartScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp>(
-            message: try await self.startScavenge(
+        try await GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp>(
+            message: startScavenge(
                 request: request.message,
                 context: context
             ),
@@ -628,8 +635,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Operations_StopScavengeReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp>(
-            message: try await self.stopScavenge(
+        try await GRPCCore.ServerResponse<EventStore_Client_Operations_ScavengeResp>(
+            message: stopScavenge(
                 request: request.message,
                 context: context
             ),
@@ -641,8 +648,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.shutdown(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: shutdown(
                 request: request.message,
                 context: context
             ),
@@ -654,8 +661,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.mergeIndexes(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: mergeIndexes(
                 request: request.message,
                 context: context
             ),
@@ -667,8 +674,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.resignNode(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: resignNode(
                 request: request.message,
                 context: context
             ),
@@ -680,8 +687,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Operations_SetNodePriorityReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.setNodePriority(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: setNodePriority(
                 request: request.message,
                 context: context
             ),
@@ -693,8 +700,8 @@ extension EventStore_Client_Operations_Operations.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.restartPersistentSubscriptions(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: restartPersistentSubscriptions(
                 request: request.message,
                 context: context
             ),
@@ -881,7 +888,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.StartScavenge.descriptor,
                 serializer: serializer,
@@ -911,7 +918,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.StopScavenge.descriptor,
                 serializer: serializer,
@@ -941,7 +948,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.Shutdown.descriptor,
                 serializer: serializer,
@@ -971,7 +978,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.MergeIndexes.descriptor,
                 serializer: serializer,
@@ -1001,7 +1008,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.ResignNode.descriptor,
                 serializer: serializer,
@@ -1031,7 +1038,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.SetNodePriority.descriptor,
                 serializer: serializer,
@@ -1061,7 +1068,7 @@ extension EventStore_Client_Operations_Operations {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Operations_Operations.Method.RestartPersistentSubscriptions.descriptor,
                 serializer: serializer,
@@ -1091,7 +1098,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.startScavenge(
+        try await startScavenge(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Operations_StartScavengeReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Operations_ScavengeResp>(),
@@ -1116,7 +1123,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.stopScavenge(
+        try await stopScavenge(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Operations_StopScavengeReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Operations_ScavengeResp>(),
@@ -1141,7 +1148,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.shutdown(
+        try await shutdown(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1166,7 +1173,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.mergeIndexes(
+        try await mergeIndexes(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1191,7 +1198,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.resignNode(
+        try await resignNode(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1216,7 +1223,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.setNodePriority(
+        try await setNodePriority(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Operations_SetNodePriorityReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1241,7 +1248,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.restartPersistentSubscriptions(
+        try await restartPersistentSubscriptions(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1275,7 +1282,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.startScavenge(
+        return try await startScavenge(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1304,7 +1311,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.stopScavenge(
+        return try await stopScavenge(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1333,7 +1340,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.shutdown(
+        return try await shutdown(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1362,7 +1369,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.mergeIndexes(
+        return try await mergeIndexes(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1391,7 +1398,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.resignNode(
+        return try await resignNode(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1420,7 +1427,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.setNodePriority(
+        return try await setNodePriority(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1449,7 +1456,7 @@ extension EventStore_Client_Operations_Operations.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.restartPersistentSubscriptions(
+        return try await restartPersistentSubscriptions(
             request: request,
             options: options,
             onResponse: handleResponse

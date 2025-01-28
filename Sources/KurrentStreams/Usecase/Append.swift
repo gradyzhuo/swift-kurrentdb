@@ -1,16 +1,15 @@
 //
 //  StreamClient.Append.swift
-//  KurrentDB
+//  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/22.
 //
-import KurrentCore
 import GRPCCore
-import SwiftProtobuf
 import GRPCEncapsulates
+import KurrentCore
+import SwiftProtobuf
 
 extension Streams {
-    
     public struct Append: StreamUnary {
         package typealias ServiceClient = Client
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
@@ -19,13 +18,13 @@ extension Streams {
         public let events: [EventData]
         public let identifier: StreamIdentifier
         public private(set) var options: Options
-        
-        internal init(to identifier: StreamIdentifier, events: [EventData], options: Options = .init()) {
+
+        init(to identifier: StreamIdentifier, events: [EventData], options: Options = .init()) {
             self.events = events
             self.options = options
             self.identifier = identifier
         }
-        
+
         package func requestMessages() throws -> [UnderlyingRequest] {
             var messages: [UnderlyingRequest] = []
             let optionMessage = try UnderlyingRequest.with {
@@ -33,28 +32,28 @@ extension Streams {
                 $0.options.streamIdentifier = try identifier.build()
             }
             messages.append(optionMessage)
-            
-            try messages.append(contentsOf: events.map{ event in
+
+            try messages.append(contentsOf: events.map { event in
                 try UnderlyingRequest.with {
-                    $0.proposedMessage = try .with{
+                    $0.proposedMessage = try .with {
                         $0.id = .with {
                             $0.value = .string(event.id.uuidString)
                         }
                         $0.metadata = event.metadata
-                        $0.data = try  event.payload.data
-                        
+                        $0.data = try event.payload.data
+
                         if let customMetaData = event.customMetadata {
                             $0.customMetadata = customMetaData
                         }
                     }
                 }
             })
-            
+
             return messages
         }
 
         package func send(client: ServiceClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.append(request: request, options: callOptions) {
+            try await client.append(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
@@ -68,11 +67,11 @@ extension Streams.Append {
         public let currentRevision: UInt64?
         public let position: StreamPosition?
 
-        internal init(currentRevision: UInt64?, position: StreamPosition?) {
+        init(currentRevision: UInt64?, position: StreamPosition?) {
             self.currentRevision = currentRevision
             self.position = position
         }
-        
+
         package init(from message: UnderlyingMessage) throws {
             switch message.result! {
             case let .success(successResult):
@@ -83,28 +82,27 @@ extension Streams.Append {
         }
 
         package init(from message: UnderlyingMessage.Success) {
-            
-            let currentRevision: UInt64? = message.currentRevisionOption.flatMap{
-                return switch $0 {
+            let currentRevision: UInt64? = message.currentRevisionOption.flatMap {
+                switch $0 {
                 case let .currentRevision(revision):
                     revision
                 case .noStream:
                     nil
                 }
             }
-            let position: StreamPosition? = message.positionOption.flatMap{
-                return switch $0 {
+            let position: StreamPosition? = message.positionOption.flatMap {
+                switch $0 {
                 case let .position(position):
-                        .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
+                    .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition)
                 case .noPosition:
                     nil
                 }
             }
-            
 
             self.init(
                 currentRevision: currentRevision,
-                position: position)
+                position: position
+            )
         }
     }
 }
@@ -112,7 +110,7 @@ extension Streams.Append {
 extension Streams.Append {
     public struct WrongExpectedVersionError: GRPCResponse, Error {
         package typealias UnderlyingMessage = UnderlyingResponse.WrongExpectedVersion
-    
+
         public enum ExpectedRevisionOption: Sendable {
             case any
             case streamExists
@@ -129,18 +127,17 @@ extension Streams.Append {
         }
 
         package init(from message: UnderlyingMessage) {
-            
             let currentRevision: UInt64? = message.currentRevisionOption2060.flatMap {
-                return switch $0 {
+                switch $0 {
                 case let .currentRevision2060(revision):
                     revision
-                case .noStream2060(_):
+                case .noStream2060:
                     nil
                 }
             }
-            
-            let expectedRevision: ExpectedRevisionOption?  = message.expectedRevisionOption.map{
-                return switch $0 {
+
+            let expectedRevision: ExpectedRevisionOption? = message.expectedRevisionOption.map {
+                switch $0 {
                 case .expectedAny:
                     .any
                 case .expectedNoStream:
@@ -154,7 +151,8 @@ extension Streams.Append {
 
             self.init(
                 currentRevision: currentRevision,
-                excepted: expectedRevision ?? .any)
+                excepted: expectedRevision ?? .any
+            )
         }
     }
 }
@@ -191,4 +189,3 @@ extension Streams.Append {
         }
     }
 }
-

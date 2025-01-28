@@ -1,6 +1,6 @@
 //
-//  ProjectionsClient.Create.swift
-//
+//  ContinuousCreate.swift
+//  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/11/22.
 //
@@ -21,19 +21,18 @@ extension Projections {
         public let options: Options
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options = options.build()
                 $0.options.continuous.name = name
                 $0.options.query = query
             }
         }
-        
+
         package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.create(request: request, options: callOptions){
+            try await client.create(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
-        
     }
 }
 
@@ -50,10 +49,10 @@ extension Projections.ContinuousCreate {
             self.emitEnabled = emitEnabled
             self.trackEmittedStreams = trackEmittedStreams
         }
-        
+
         package func build() -> UnderlyingMessage {
-            return .with{
-                $0.continuous = .with{
+            .with {
+                $0.continuous = .with {
                     $0.emitEnabled = emitEnabled
                     $0.trackEmittedStreams = trackEmittedStreams
                 }

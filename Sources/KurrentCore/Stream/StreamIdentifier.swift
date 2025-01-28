@@ -1,13 +1,12 @@
 //
 //  StreamIdentifier.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2024/5/21.
 //
 
 import Foundation
 import GRPCEncapsulates
-
 
 public struct StreamIdentifier: Sendable {
     package typealias UnderlyingMessage = EventStore_Client_StreamIdentifier

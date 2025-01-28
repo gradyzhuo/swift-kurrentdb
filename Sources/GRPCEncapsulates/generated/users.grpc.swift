@@ -30,6 +30,7 @@ package enum EventStore_Client_Users_Users {
                 method: "Create"
             )
         }
+
         /// Namespace for "Update" metadata.
         package enum Update {
             /// Request type for "Update".
@@ -42,6 +43,7 @@ package enum EventStore_Client_Users_Users {
                 method: "Update"
             )
         }
+
         /// Namespace for "Delete" metadata.
         package enum Delete {
             /// Request type for "Delete".
@@ -54,6 +56,7 @@ package enum EventStore_Client_Users_Users {
                 method: "Delete"
             )
         }
+
         /// Namespace for "Disable" metadata.
         package enum Disable {
             /// Request type for "Disable".
@@ -66,6 +69,7 @@ package enum EventStore_Client_Users_Users {
                 method: "Disable"
             )
         }
+
         /// Namespace for "Enable" metadata.
         package enum Enable {
             /// Request type for "Enable".
@@ -78,6 +82,7 @@ package enum EventStore_Client_Users_Users {
                 method: "Enable"
             )
         }
+
         /// Namespace for "Details" metadata.
         package enum Details {
             /// Request type for "Details".
@@ -90,6 +95,7 @@ package enum EventStore_Client_Users_Users {
                 method: "Details"
             )
         }
+
         /// Namespace for "ChangePassword" metadata.
         package enum ChangePassword {
             /// Request type for "ChangePassword".
@@ -102,6 +108,7 @@ package enum EventStore_Client_Users_Users {
                 method: "ChangePassword"
             )
         }
+
         /// Namespace for "ResetPassword" metadata.
         package enum ResetPassword {
             /// Request type for "ResetPassword".
@@ -114,6 +121,7 @@ package enum EventStore_Client_Users_Users {
                 method: "ResetPassword"
             )
         }
+
         /// Descriptors for all methods in the "event_store.client.users.Users" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Create.descriptor,
@@ -123,7 +131,7 @@ package enum EventStore_Client_Users_Users {
             Enable.descriptor,
             Details.descriptor,
             ChangePassword.descriptor,
-            ResetPassword.descriptor
+            ResetPassword.descriptor,
         ]
     }
 }
@@ -504,7 +512,7 @@ extension EventStore_Client_Users_Users {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Client_Users_Users.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Client_Users_Users.Method.Create.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_CreateReq>(),
@@ -602,7 +610,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_CreateResp> {
-        let response = try await self.create(
+        let response = try await create(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -613,7 +621,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_UpdateResp> {
-        let response = try await self.update(
+        let response = try await update(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -624,7 +632,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DeleteResp> {
-        let response = try await self.delete(
+        let response = try await delete(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -635,7 +643,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DisableResp> {
-        let response = try await self.disable(
+        let response = try await disable(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -646,7 +654,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_EnableResp> {
-        let response = try await self.enable(
+        let response = try await enable(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -657,7 +665,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_DetailsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DetailsResp> {
-        let response = try await self.details(
+        let response = try await details(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -668,7 +676,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_ChangePasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_ChangePasswordResp> {
-        let response = try await self.changePassword(
+        let response = try await changePassword(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -679,7 +687,7 @@ extension EventStore_Client_Users_Users.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Users_ResetPasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_ResetPasswordResp> {
-        let response = try await self.resetPassword(
+        let response = try await resetPassword(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -693,8 +701,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_CreateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_CreateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_CreateResp>(
-            message: try await self.create(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_CreateResp>(
+            message: create(
                 request: request.message,
                 context: context
             ),
@@ -706,8 +714,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_UpdateReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_UpdateResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_UpdateResp>(
-            message: try await self.update(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_UpdateResp>(
+            message: update(
                 request: request.message,
                 context: context
             ),
@@ -719,8 +727,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_DeleteReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_DeleteResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_DeleteResp>(
-            message: try await self.delete(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_DeleteResp>(
+            message: delete(
                 request: request.message,
                 context: context
             ),
@@ -732,8 +740,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_DisableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_DisableResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_DisableResp>(
-            message: try await self.disable(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_DisableResp>(
+            message: disable(
                 request: request.message,
                 context: context
             ),
@@ -745,8 +753,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_EnableReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_EnableResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_EnableResp>(
-            message: try await self.enable(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_EnableResp>(
+            message: enable(
                 request: request.message,
                 context: context
             ),
@@ -758,7 +766,7 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_DetailsReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Users_DetailsResp> {
-        return GRPCCore.StreamingServerResponse<EventStore_Client_Users_DetailsResp>(
+        GRPCCore.StreamingServerResponse<EventStore_Client_Users_DetailsResp>(
             metadata: [:],
             producer: { writer in
                 try await self.details(
@@ -775,8 +783,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_ChangePasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_ChangePasswordResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_ChangePasswordResp>(
-            message: try await self.changePassword(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_ChangePasswordResp>(
+            message: changePassword(
                 request: request.message,
                 context: context
             ),
@@ -788,8 +796,8 @@ extension EventStore_Client_Users_Users.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Users_ResetPasswordReq>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Users_ResetPasswordResp> {
-        return GRPCCore.ServerResponse<EventStore_Client_Users_ResetPasswordResp>(
-            message: try await self.resetPassword(
+        try await GRPCCore.ServerResponse<EventStore_Client_Users_ResetPasswordResp>(
+            message: resetPassword(
                 request: request.message,
                 context: context
             ),
@@ -995,7 +1003,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.Create.descriptor,
                 serializer: serializer,
@@ -1025,7 +1033,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.Update.descriptor,
                 serializer: serializer,
@@ -1055,7 +1063,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.Delete.descriptor,
                 serializer: serializer,
@@ -1085,7 +1093,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.Disable.descriptor,
                 serializer: serializer,
@@ -1115,7 +1123,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.Enable.descriptor,
                 serializer: serializer,
@@ -1143,7 +1151,7 @@ extension EventStore_Client_Users_Users {
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Users_DetailsResp>) async throws -> Result
         ) async throws -> Result where Result: Sendable {
-            try await self.client.serverStreaming(
+            try await client.serverStreaming(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.Details.descriptor,
                 serializer: serializer,
@@ -1173,7 +1181,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.ChangePassword.descriptor,
                 serializer: serializer,
@@ -1203,7 +1211,7 @@ extension EventStore_Client_Users_Users {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Client_Users_Users.Method.ResetPassword.descriptor,
                 serializer: serializer,
@@ -1233,7 +1241,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.create(
+        try await create(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_CreateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_CreateResp>(),
@@ -1258,7 +1266,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.update(
+        try await update(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_UpdateReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_UpdateResp>(),
@@ -1283,7 +1291,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.delete(
+        try await delete(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_DeleteReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_DeleteResp>(),
@@ -1308,7 +1316,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.disable(
+        try await disable(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_DisableReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_DisableResp>(),
@@ -1333,7 +1341,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.enable(
+        try await enable(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_EnableReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_EnableResp>(),
@@ -1356,7 +1364,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<EventStore_Client_Users_DetailsResp>) async throws -> Result
     ) async throws -> Result where Result: Sendable {
-        try await self.details(
+        try await details(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_DetailsReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_DetailsResp>(),
@@ -1381,7 +1389,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.changePassword(
+        try await changePassword(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_ChangePasswordReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_ChangePasswordResp>(),
@@ -1406,7 +1414,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.resetPassword(
+        try await resetPassword(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Users_ResetPasswordReq>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Users_ResetPasswordResp>(),
@@ -1440,7 +1448,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.create(
+        return try await create(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1469,7 +1477,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.update(
+        return try await update(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1498,7 +1506,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.delete(
+        return try await delete(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1527,7 +1535,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.disable(
+        return try await disable(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1556,7 +1564,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.enable(
+        return try await enable(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1583,7 +1591,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.details(
+        return try await details(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1612,7 +1620,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.changePassword(
+        return try await changePassword(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1641,7 +1649,7 @@ extension EventStore_Client_Users_Users.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.resetPassword(
+        return try await resetPassword(
             request: request,
             options: options,
             onResponse: handleResponse

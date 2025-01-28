@@ -1,20 +1,20 @@
 //
 //  EventStoreDBClient.swift
-//
+//  EventStoreDB
 //
 //  Created by Grady Zhuo on 2024/3/18.
 //
 
 import Foundation
-import NIOCore
-import NIOPosix
 import GRPCCore
-import GRPCNIOTransportHTTP2
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2
 @_exported import KurrentCore
-@_exported import KurrentStreams
 @_exported import KurrentOperations
 @_exported import KurrentPersistentSubscriptions
+@_exported import KurrentStreams
+import NIOCore
+import NIOPosix
 
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.
@@ -24,7 +24,7 @@ public final class EventStoreDBClient {
     public let defaultCallOptions: CallOptions
     public let settings: ClientSettings
     private let group: EventLoopGroup
-    
+
     /// construct `EventStoreDBClient`  with `ClientSettings` and `numberOfThreads`.
     /// - Parameters:
     ///   - settings: encapsulates various configuration settings for a client.
@@ -32,12 +32,14 @@ public final class EventStoreDBClient {
     public init(settings: ClientSettings, numberOfThreads: Int = 1, defaultCallOptions: CallOptions = .defaults) {
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
-        self.group = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
+        group = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
     }
-    
 }
+
 //
+
 // MARK: - Streams Operations
+
 extension EventStoreDBClient {
     @discardableResult
     public func setMetadata(to identifier: StreamIdentifier, metadata: StreamMetadata, configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response {
@@ -78,12 +80,13 @@ extension EventStoreDBClient {
     }
 
     // MARK: Append methods -
+
     public func appendStream(to identifier: StreamIdentifier, events: [EventData], configure: (_ options: Streams.Append.Options) -> Streams.Append.Options) async throws -> Streams.Append.Response {
         let options = configure(.init())
         let streams = Streams(settings: settings, callOptions: defaultCallOptions)
         return try await streams.append(to: identifier, events: events, options: options)
     }
-    
+
     public func appendStream(to identifier: StreamIdentifier, events: EventData..., configure: (_ options: Streams.Append.Options) -> Streams.Append.Options = { $0 }) async throws -> Streams.Append.Response {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
@@ -116,10 +119,11 @@ extension EventStoreDBClient {
     }
 
     public func readStream(to streamIdentifier: StreamIdentifier, at revision: UInt64, direction: Direction = .forward, configure: (_ options: Streams.Read.Options) -> Streams.Read.Options = { $0 }) async throws -> Streams.Read.Responses {
-        return try await readStream(
+        try await readStream(
             to: streamIdentifier,
             cursor: .specified(.init(revision: revision, direction: direction)),
-            configure: configure)
+            configure: configure
+        )
     }
 
     // MARK: Subscribe by all streams methods -
@@ -156,19 +160,21 @@ extension EventStoreDBClient {
 }
 
 // MARK: - Operations
+
 extension EventStoreDBClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
         let operations = Operations(settings: settings, callOptions: defaultCallOptions)
         return try await operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
-    
+
     public func stopScavenge(scavengeId: String) async throws -> Operations.ScavengeResponse {
         let operations = Operations(settings: settings, callOptions: defaultCallOptions)
         return try await operations.stopScavenge(scavengeId: scavengeId)
     }
 }
 
-//MARK: - PersistentSubscriptions
+// MARK: - PersistentSubscriptions
+
 extension EventStoreDBClient {
     public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, configure: (_ options: PersistentSubscriptions.CreateToStream.Options) -> PersistentSubscriptions.CreateToStream.Options = { $0 }) async throws {
         let options = configure(.init())
@@ -177,20 +183,21 @@ extension EventStoreDBClient {
     }
 
     public func createPersistentSubscriptionToAll(groupName: String, configure: (_ options: PersistentSubscriptions.CreateToAll.Options) -> PersistentSubscriptions.CreateToAll.Options = { $0 }) async throws {
-        
         let options = configure(.init())
         let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.createToAll(groupName: groupName, options: options)
     }
-    
+
     // MARK: Delete PersistentSubscriptions
+
     public func deletePersistentSubscription(streamSelector: StreamSelector<StreamIdentifier>, groupName: String) async throws {
         let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.delete(stream: streamSelector, groupName: groupName)
     }
-    
+
     // MARK: List PersistentSubscriptions
-    public func listPersistentSubscription(streamSelector: StreamSelector<StreamIdentifier>) async throws -> [PersistentSubscription.SubscriptionInfo]{
+
+    public func listPersistentSubscription(streamSelector: StreamSelector<StreamIdentifier>) async throws -> [PersistentSubscription.SubscriptionInfo] {
         let persistentSubscriptions = PersistentSubscriptions(settings: settings, callOptions: defaultCallOptions)
         return try await persistentSubscriptions.list(streamSelector: streamSelector)
     }

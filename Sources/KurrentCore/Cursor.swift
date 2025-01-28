@@ -1,6 +1,6 @@
 //
 //  Cursor.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2024/3/21.
 //

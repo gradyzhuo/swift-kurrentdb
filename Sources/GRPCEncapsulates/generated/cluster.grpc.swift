@@ -30,6 +30,7 @@ package enum EventStore_Cluster_Gossip {
                 method: "Update"
             )
         }
+
         /// Namespace for "Read" metadata.
         package enum Read {
             /// Request type for "Read".
@@ -42,10 +43,11 @@ package enum EventStore_Cluster_Gossip {
                 method: "Read"
             )
         }
+
         /// Descriptors for all methods in the "event_store.cluster.Gossip" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             Update.descriptor,
-            Read.descriptor
+            Read.descriptor,
         ]
     }
 }
@@ -173,7 +175,7 @@ extension EventStore_Cluster_Gossip {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Cluster_Gossip.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Cluster_Gossip.Method.Update.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Cluster_GossipRequest>(),
@@ -205,7 +207,7 @@ extension EventStore_Cluster_Gossip.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_GossipRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Cluster_ClusterInfo> {
-        let response = try await self.update(
+        let response = try await update(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -216,7 +218,7 @@ extension EventStore_Cluster_Gossip.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Cluster_ClusterInfo> {
-        let response = try await self.read(
+        let response = try await read(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -230,8 +232,8 @@ extension EventStore_Cluster_Gossip.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_GossipRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo> {
-        return GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo>(
-            message: try await self.update(
+        try await GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo>(
+            message: update(
                 request: request.message,
                 context: context
             ),
@@ -243,8 +245,8 @@ extension EventStore_Cluster_Gossip.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Client_Empty>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo> {
-        return GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo>(
-            message: try await self.read(
+        try await GRPCCore.ServerResponse<EventStore_Cluster_ClusterInfo>(
+            message: read(
                 request: request.message,
                 context: context
             ),
@@ -336,7 +338,7 @@ extension EventStore_Cluster_Gossip {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Gossip.Method.Update.descriptor,
                 serializer: serializer,
@@ -366,7 +368,7 @@ extension EventStore_Cluster_Gossip {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Gossip.Method.Read.descriptor,
                 serializer: serializer,
@@ -396,7 +398,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.update(
+        try await update(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_GossipRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Cluster_ClusterInfo>(),
@@ -421,7 +423,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.read(
+        try await read(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Client_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Cluster_ClusterInfo>(),
@@ -455,7 +457,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.update(
+        return try await update(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -484,7 +486,7 @@ extension EventStore_Cluster_Gossip.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.read(
+        return try await read(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -512,6 +514,7 @@ package enum EventStore_Cluster_Elections {
                 method: "ViewChange"
             )
         }
+
         /// Namespace for "ViewChangeProof" metadata.
         package enum ViewChangeProof {
             /// Request type for "ViewChangeProof".
@@ -524,6 +527,7 @@ package enum EventStore_Cluster_Elections {
                 method: "ViewChangeProof"
             )
         }
+
         /// Namespace for "Prepare" metadata.
         package enum Prepare {
             /// Request type for "Prepare".
@@ -536,6 +540,7 @@ package enum EventStore_Cluster_Elections {
                 method: "Prepare"
             )
         }
+
         /// Namespace for "PrepareOk" metadata.
         package enum PrepareOk {
             /// Request type for "PrepareOk".
@@ -548,6 +553,7 @@ package enum EventStore_Cluster_Elections {
                 method: "PrepareOk"
             )
         }
+
         /// Namespace for "Proposal" metadata.
         package enum Proposal {
             /// Request type for "Proposal".
@@ -560,6 +566,7 @@ package enum EventStore_Cluster_Elections {
                 method: "Proposal"
             )
         }
+
         /// Namespace for "Accept" metadata.
         package enum Accept {
             /// Request type for "Accept".
@@ -572,6 +579,7 @@ package enum EventStore_Cluster_Elections {
                 method: "Accept"
             )
         }
+
         /// Namespace for "LeaderIsResigning" metadata.
         package enum LeaderIsResigning {
             /// Request type for "LeaderIsResigning".
@@ -584,6 +592,7 @@ package enum EventStore_Cluster_Elections {
                 method: "LeaderIsResigning"
             )
         }
+
         /// Namespace for "LeaderIsResigningOk" metadata.
         package enum LeaderIsResigningOk {
             /// Request type for "LeaderIsResigningOk".
@@ -596,6 +605,7 @@ package enum EventStore_Cluster_Elections {
                 method: "LeaderIsResigningOk"
             )
         }
+
         /// Descriptors for all methods in the "event_store.cluster.Elections" service.
         package static let descriptors: [GRPCCore.MethodDescriptor] = [
             ViewChange.descriptor,
@@ -605,7 +615,7 @@ package enum EventStore_Cluster_Elections {
             Proposal.descriptor,
             Accept.descriptor,
             LeaderIsResigning.descriptor,
-            LeaderIsResigningOk.descriptor
+            LeaderIsResigningOk.descriptor,
         ]
     }
 }
@@ -985,7 +995,7 @@ extension EventStore_Cluster_Elections {
 
 // Default implementation of 'registerMethods(with:)'.
 extension EventStore_Cluster_Elections.StreamingServiceProtocol {
-    package func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+    package func registerMethods(with router: inout GRPCCore.RPCRouter<some GRPCCore.ServerTransport>) {
         router.registerHandler(
             forMethod: EventStore_Cluster_Elections.Method.ViewChange.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Cluster_ViewChangeRequest>(),
@@ -1083,7 +1093,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_ViewChangeRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.viewChange(
+        let response = try await viewChange(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1094,7 +1104,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_ViewChangeProofRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.viewChangeProof(
+        let response = try await viewChangeProof(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1105,7 +1115,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_PrepareRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.prepare(
+        let response = try await prepare(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1116,7 +1126,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_PrepareOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.prepareOk(
+        let response = try await prepareOk(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1127,7 +1137,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_ProposalRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.proposal(
+        let response = try await proposal(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1138,7 +1148,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_AcceptRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.accept(
+        let response = try await accept(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1149,7 +1159,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_LeaderIsResigningRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.leaderIsResigning(
+        let response = try await leaderIsResigning(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1160,7 +1170,7 @@ extension EventStore_Cluster_Elections.ServiceProtocol {
         request: GRPCCore.StreamingServerRequest<EventStore_Cluster_LeaderIsResigningOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.StreamingServerResponse<EventStore_Client_Empty> {
-        let response = try await self.leaderIsResigningOk(
+        let response = try await leaderIsResigningOk(
             request: GRPCCore.ServerRequest(stream: request),
             context: context
         )
@@ -1174,8 +1184,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_ViewChangeRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.viewChange(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: viewChange(
                 request: request.message,
                 context: context
             ),
@@ -1187,8 +1197,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_ViewChangeProofRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.viewChangeProof(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: viewChangeProof(
                 request: request.message,
                 context: context
             ),
@@ -1200,8 +1210,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_PrepareRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.prepare(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: prepare(
                 request: request.message,
                 context: context
             ),
@@ -1213,8 +1223,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_PrepareOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.prepareOk(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: prepareOk(
                 request: request.message,
                 context: context
             ),
@@ -1226,8 +1236,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_ProposalRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.proposal(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: proposal(
                 request: request.message,
                 context: context
             ),
@@ -1239,8 +1249,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_AcceptRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.accept(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: accept(
                 request: request.message,
                 context: context
             ),
@@ -1252,8 +1262,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_LeaderIsResigningRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.leaderIsResigning(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: leaderIsResigning(
                 request: request.message,
                 context: context
             ),
@@ -1265,8 +1275,8 @@ extension EventStore_Cluster_Elections.SimpleServiceProtocol {
         request: GRPCCore.ServerRequest<EventStore_Cluster_LeaderIsResigningOkRequest>,
         context: GRPCCore.ServerContext
     ) async throws -> GRPCCore.ServerResponse<EventStore_Client_Empty> {
-        return GRPCCore.ServerResponse<EventStore_Client_Empty>(
-            message: try await self.leaderIsResigningOk(
+        try await GRPCCore.ServerResponse<EventStore_Client_Empty>(
+            message: leaderIsResigningOk(
                 request: request.message,
                 context: context
             ),
@@ -1472,7 +1482,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.ViewChange.descriptor,
                 serializer: serializer,
@@ -1502,7 +1512,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.ViewChangeProof.descriptor,
                 serializer: serializer,
@@ -1532,7 +1542,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.Prepare.descriptor,
                 serializer: serializer,
@@ -1562,7 +1572,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.PrepareOk.descriptor,
                 serializer: serializer,
@@ -1592,7 +1602,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.Proposal.descriptor,
                 serializer: serializer,
@@ -1622,7 +1632,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.Accept.descriptor,
                 serializer: serializer,
@@ -1652,7 +1662,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.LeaderIsResigning.descriptor,
                 serializer: serializer,
@@ -1682,7 +1692,7 @@ extension EventStore_Cluster_Elections {
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
+            try await client.unary(
                 request: request,
                 descriptor: EventStore_Cluster_Elections.Method.LeaderIsResigningOk.descriptor,
                 serializer: serializer,
@@ -1712,7 +1722,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.viewChange(
+        try await viewChange(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_ViewChangeRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1737,7 +1747,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.viewChangeProof(
+        try await viewChangeProof(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_ViewChangeProofRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1762,7 +1772,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.prepare(
+        try await prepare(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_PrepareRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1787,7 +1797,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.prepareOk(
+        try await prepareOk(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_PrepareOkRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1812,7 +1822,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.proposal(
+        try await proposal(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_ProposalRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1837,7 +1847,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.accept(
+        try await accept(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_AcceptRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1862,7 +1872,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.leaderIsResigning(
+        try await leaderIsResigning(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_LeaderIsResigningRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1887,7 +1897,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        try await self.leaderIsResigningOk(
+        try await leaderIsResigningOk(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<EventStore_Cluster_LeaderIsResigningOkRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<EventStore_Client_Empty>(),
@@ -1921,7 +1931,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.viewChange(
+        return try await viewChange(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1950,7 +1960,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.viewChangeProof(
+        return try await viewChangeProof(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1979,7 +1989,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.prepare(
+        return try await prepare(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -2008,7 +2018,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.prepareOk(
+        return try await prepareOk(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -2037,7 +2047,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.proposal(
+        return try await proposal(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -2066,7 +2076,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.accept(
+        return try await accept(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -2095,7 +2105,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.leaderIsResigning(
+        return try await leaderIsResigning(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -2124,7 +2134,7 @@ extension EventStore_Cluster_Elections.ClientProtocol {
             message: message,
             metadata: metadata
         )
-        return try await self.leaderIsResigningOk(
+        return try await leaderIsResigningOk(
             request: request,
             options: options,
             onResponse: handleResponse

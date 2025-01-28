@@ -1,6 +1,6 @@
 //
 //  UserCredentials.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2024/1/1.
 //

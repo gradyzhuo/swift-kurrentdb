@@ -1,6 +1,6 @@
 //
-//  ProjectionsClient.Delete.swift
-//
+//  Delete.swift
+//  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/11/26.
 //
@@ -18,22 +18,20 @@ extension Projections {
 
         public let name: String
         public let options: Options
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
-            return .with {
+            .with {
                 $0.options.name = name
                 $0.options = options.build()
             }
         }
-        
+
         package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.delete(request: request, options: callOptions){
+            try await client.delete(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
-
     }
-
 }
 
 extension Projections.Delete {
@@ -43,7 +41,7 @@ extension Projections.Delete {
         public private(set) var deleteCheckpointStream: Bool
         public private(set) var deleteEmittedStreams: Bool
         public private(set) var deleteStateStream: Bool
-        
+
         public init(deleteCheckpointStream: Bool = false, deleteEmittedStreams: Bool = false, deleteStateStream: Bool = false) {
             self.deleteCheckpointStream = deleteCheckpointStream
             self.deleteEmittedStreams = deleteEmittedStreams
@@ -51,7 +49,7 @@ extension Projections.Delete {
         }
 
         package func build() -> UnderlyingMessage {
-            return .with { message in
+            .with { message in
                 message.deleteStateStream = deleteStateStream
                 message.deleteEmittedStreams = deleteEmittedStreams
                 message.deleteCheckpointStream = deleteCheckpointStream

@@ -1,6 +1,6 @@
 //
 //  StreamMetadata.swift
-//
+//  KurrentCore
 //
 //  Created by Grady Zhuo on 2023/11/7.
 //
@@ -96,8 +96,6 @@ public struct StreamMetadata: Buildable, Codable {
         return try JSONSerialization.data(withJSONObject: customProperties)
     }
 }
-
-
 
 extension StreamMetadata {
     public enum Acl: Codable, Sendable {

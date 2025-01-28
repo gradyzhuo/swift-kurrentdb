@@ -1,6 +1,6 @@
 //
 //  RequestBuildable.swift
-//
+//  GRPCEncapsulates
 //
 //  Created by Grady Zhuo on 2023/12/7.
 //
@@ -18,7 +18,7 @@ package protocol StreamRequestBuildable: RequestBuildable {
 }
 
 extension StreamRequestBuildable {
-    package func request(metadata: Metadata) throws -> StreamingClientRequest<UnderlyingRequest>{
+    package func request(metadata: Metadata) throws -> StreamingClientRequest<UnderlyingRequest> {
         let messages = try requestMessages()
         return StreamingClientRequest(metadata: metadata) { writer in
             try await writer.write(contentsOf: messages)
@@ -30,8 +30,8 @@ package protocol UnaryRequestBuildable: RequestBuildable {
     func requestMessage() throws -> UnderlyingRequest
 }
 
-extension UnaryRequestBuildable{
-    package func request(metadata: Metadata) throws -> ClientRequest<UnderlyingRequest>{
+extension UnaryRequestBuildable {
+    package func request(metadata: Metadata) throws -> ClientRequest<UnderlyingRequest> {
         let message = try requestMessage()
         return .init(message: message, metadata: metadata)
     }

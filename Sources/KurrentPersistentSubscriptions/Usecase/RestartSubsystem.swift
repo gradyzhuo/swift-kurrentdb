@@ -1,6 +1,6 @@
 //
-//  PersistentSubscriptionsClient.RestartSubsystem.swift
-//
+//  RestartSubsystem.swift
+//  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/11.
 //
@@ -16,11 +16,11 @@ extension PersistentSubscriptions {
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         package func requestMessage() throws -> UnderlyingRequest {
-            return .init()
+            .init()
         }
-        
+
         package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            return try await client.restartSubsystem(request: request, options: callOptions){
+            try await client.restartSubsystem(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
