@@ -100,8 +100,7 @@ import EventStoreDB
 
 ### ClientSettings
 
-`Version: 1.0.0-beta.2`
-`Version: 0.6.x`
+`Version: 1.0.0 && 0.6.x`
 
 ```swift
 // Using a client settings for a single node configuration by parsing a connection string.
@@ -136,7 +135,7 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 
 ### Appending Event
 
-`Version: 1.0.0-beta.2`
+`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
@@ -191,7 +190,7 @@ let appendResponse = try await client.appendStream(to: streamIdentifier, events:
 
 ### Read Event
 
-`Version: 1.0.0-beta.2`
+`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
@@ -242,7 +241,7 @@ for await response in readResponses {
 ### PersistentSubscriptions
 #### Create
 
-`Version: 1.0.0-beta.2`
+`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
@@ -277,7 +276,7 @@ try await client.createPersistentSubscription(streamName: streamName, groupName:
 
 #### Subscribe
 
-`Version: 1.0.0-beta.2`
+`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
