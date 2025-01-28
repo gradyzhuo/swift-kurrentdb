@@ -14,17 +14,16 @@ import KurrentStreams
 struct PersistentSubscriptionsTests {
     
     let groupName: String
-    let streamIdentifier: StreamIdentifier
     let settings: ClientSettings
     
     init() {
         self.settings = .localhost()
-        self.streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        self.groupName = streamIdentifier.name
+        self.groupName = "test-for-persistent-subscriptions"
     }
     
     @Test("Create PersistentSubscription for Stream")
     func testCreateToStream() async throws{
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let persistentSubscriptions = PersistentSubscriptions(settings: settings)
         try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: groupName, options: .init())
         
@@ -36,6 +35,7 @@ struct PersistentSubscriptionsTests {
     
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToStream() async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let persistentSubscriptions = PersistentSubscriptions(settings: settings)
         try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: groupName, options: .init())
         
@@ -73,6 +73,7 @@ struct PersistentSubscriptionsTests {
             eventType: "AccountCreated", payload: ["Description": "Gears of War 10:\(UUID().uuidString)"]
         )
         
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let streams = Streams(settings: settings)
         let response = try await streams.append(to: streamIdentifier, events: [
             event

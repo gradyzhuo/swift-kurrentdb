@@ -12,16 +12,15 @@ import Testing
 @Suite("EventStoreDB Stream Tests", .serialized)
 struct StreamTests: Sendable{
     
-    let streamIdentifier: StreamIdentifier
     let settings: ClientSettings
     
     init (){
-        self.streamIdentifier = .init(name: UUID().uuidString)
         self.settings = .localhost()
     }
     
     @Test("Stream should be not found and throw an error.")
     func testStreamNoFound() async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let streams = Streams(settings: .localhost())
         
         await #expect(throws: EventStoreError.self){
@@ -39,6 +38,7 @@ struct StreamTests: Sendable{
         ]
     ])
     func testAppendEvent(events: [EventData]) async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let streams = Streams(settings: .localhost())
         let appendResponse = try await streams.append(to: streamIdentifier, events: events, options: .init().revision(expected: .any))
 
@@ -58,6 +58,7 @@ struct StreamTests: Sendable{
     
     @Test("It should be succeed when set metadata to stream.")
     func testMetadata() async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let metadata = StreamMetadata()
             .cacheControl(.seconds(3))
             .maxAge(.seconds(30))
@@ -73,10 +74,11 @@ struct StreamTests: Sendable{
     
     @Test("It should be succeed when subscribe to stream.")
     func testSubscribe() async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let streams = Streams(settings: .localhost())
         
-        let subscription = try await streams.subscribe(self.streamIdentifier, cursor: .end, options: .init())
-        let response = try await streams.append(to: self.streamIdentifier,
+        let subscription = try await streams.subscribe(streamIdentifier, cursor: .end, options: .init())
+        let response = try await streams.append(to: streamIdentifier,
                                                       events: [
                                                          .init(
                                                             eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
@@ -96,13 +98,14 @@ struct StreamTests: Sendable{
     
     @Test("It should be succeed when subscribe to all streams.")
     func testSubscribeAll() async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
             eventType: "AccountCreated", payload: ["Description": "Gears of War 10"]
          )
         let streams = Streams(settings: .localhost())
         
         let subscription = try await streams.subscribeToAll(cursor: .end, options: .init())
-        let response = try await streams.append(to: self.streamIdentifier,
+        let response = try await streams.append(to: streamIdentifier,
                                                       events: [
                                                         eventForTesting
                                                       ], options: .init().revision(expected: .any))
