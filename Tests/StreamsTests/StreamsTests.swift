@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@testable import KurrentStreams
+@testable import KurrentDB
 import Testing
 
 @Suite("EventStoreDB Stream Tests", .serialized)
