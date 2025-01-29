@@ -42,76 +42,6 @@ let package = Package(
         .target(
             name: "KurrentDB",
             dependencies: [
-                "KurrentCore",
-                "KurrentStreams",
-                "KurrentPersistentSubscriptions",
-                "KurrentUsers",
-                "KurrentProjections",
-                "KurrentOperations",
-                "KurrentMonitoring",
-                "KurrentGossip",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentCore",
-            dependencies: [
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentStreams",
-            dependencies: [
-                "KurrentCore",
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentPersistentSubscriptions",
-            dependencies: [
-                "KurrentCore",
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentUsers",
-            dependencies: [
-                "KurrentCore",
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentProjections",
-            dependencies: [
-                "KurrentCore",
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentOperations",
-            dependencies: [
-                "KurrentCore",
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentMonitoring",
-            dependencies: [
-                "KurrentCore",
-                "GRPCEncapsulates",
-                .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentGossip",
-            dependencies: [
-                "KurrentCore",
                 "GRPCEncapsulates",
                 .product(name: "Logging", package: "swift-log"),
             ]
@@ -127,7 +57,7 @@ let package = Package(
         .testTarget(
             name: "KurrentCoreTests",
             dependencies: [
-                "KurrentCore",
+                "KurrentDB"
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -137,7 +67,7 @@ let package = Package(
         .testTarget(
             name: "StreamsTests",
             dependencies: [
-                "KurrentStreams",
+                "KurrentDB"
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -147,8 +77,7 @@ let package = Package(
         .testTarget(
             name: "PersistentSubscriptionsTests",
             dependencies: [
-                "KurrentPersistentSubscriptions",
-                "KurrentStreams",
+                "KurrentDB"
             ],
             resources: [
                 .copy("Resources/ca.crt"),

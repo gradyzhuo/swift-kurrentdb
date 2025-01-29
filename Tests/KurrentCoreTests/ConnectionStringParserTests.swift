@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2024/5/25.
 //
 
-@testable import KurrentCore
+@testable import KurrentDB
 import Testing
 
 @Suite("ConnectionStringParser")
