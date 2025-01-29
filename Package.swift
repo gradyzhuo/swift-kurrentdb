@@ -7,7 +7,10 @@ let package = Package(
     name: "KurrentDB",
     platforms: [
         .macOS(.v15),
-        .iOS(.v16),
+        .iOS(.v18),
+        .tvOS(.v18),
+        .watchOS(.v11),
+        .visionOS(.v2),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -29,6 +32,7 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "1.0.0-rc.1"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "1.0.0-rc.1"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
