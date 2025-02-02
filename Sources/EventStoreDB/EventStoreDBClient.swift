@@ -5,11 +5,12 @@
 //  Created by Grady Zhuo on 2024/3/18.
 //
 
+@_exported import KurrentDB
+
 import Foundation
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2
-import KurrentDB
 import NIOCore
 import NIOPosix
 
