@@ -5,7 +5,7 @@
 
 
 # KurrentDB 
-Hi, this is [Kurrent](https://www.kurrent.io/) (formerly: EventStoreDB) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
+Hi, this is [Kurrent](https://www.kurrent.io/) (formerly: EventStore) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK in Swift.
 
 Kurrent is the first and only event-native data platform. It is built to store and stream data as events for use in downstream use cases such as advanced analytics, microservices and AI/ML initiatives.
 
