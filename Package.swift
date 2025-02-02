@@ -61,7 +61,7 @@ let package = Package(
         .testTarget(
             name: "KurrentCoreTests",
             dependencies: [
-                "KurrentDB"
+                "KurrentDB",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -71,7 +71,7 @@ let package = Package(
         .testTarget(
             name: "StreamsTests",
             dependencies: [
-                "KurrentDB"
+                "KurrentDB",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -81,7 +81,7 @@ let package = Package(
         .testTarget(
             name: "PersistentSubscriptionsTests",
             dependencies: [
-                "KurrentDB"
+                "KurrentDB",
             ],
             resources: [
                 .copy("Resources/ca.crt"),

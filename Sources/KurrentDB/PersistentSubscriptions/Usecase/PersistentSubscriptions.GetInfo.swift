@@ -1,5 +1,5 @@
 //
-//  GetInfo.swift
+//  PersistentSubscriptions.GetInfo.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.

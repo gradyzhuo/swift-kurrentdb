@@ -1,5 +1,5 @@
 //
-//  Subscription.swift
+//  PersistentSubscriptions.Subscription.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2024/3/23.

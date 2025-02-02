@@ -1,5 +1,5 @@
 //
-//  Result.swift
+//  Projections.Result.swift
 //  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/11/27.

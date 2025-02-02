@@ -9,9 +9,9 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2
+import KurrentDB
 import NIOCore
 import NIOPosix
-import KurrentDB
 
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.

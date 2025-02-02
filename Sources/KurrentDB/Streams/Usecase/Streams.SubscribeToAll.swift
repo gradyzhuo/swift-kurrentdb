@@ -1,5 +1,5 @@
 //
-//  SubscribeToAll.swift
+//  Streams.SubscribeToAll.swift
 //  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/21.

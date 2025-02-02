@@ -1,5 +1,5 @@
 //
-//  Details.swift
+//  Users.Details.swift
 //  KurrentUsers
 //
 //  Created by Grady Zhuo on 2023/12/20.
