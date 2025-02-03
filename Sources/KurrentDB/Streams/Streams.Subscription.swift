@@ -10,9 +10,7 @@ import GRPCEncapsulates
 
 extension Streams {
     public final class Subscription {
-        public typealias Element = ReadEvent
-        
-        public let events: AsyncThrowingStream<Element, Error>
+        public let events: AsyncThrowingStream<ReadEvent, Error>
         public let subscriptionId: String?
 
         package init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse, any Error>) async throws {
@@ -24,7 +22,7 @@ extension Streams {
                 nil
             }
 
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Element.self)
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
             Task {
                 while let message = try await iterator.next() {
                     if case let .event(message) = message.content {

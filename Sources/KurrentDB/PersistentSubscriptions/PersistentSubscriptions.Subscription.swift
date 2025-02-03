@@ -15,12 +15,11 @@ import GRPCNIOTransportHTTP2Posix
 extension PersistentSubscriptions {
     public final class Subscription: @unchecked Sendable {
         package typealias Request = PersistentSubscriptions.Read.UnderlyingRequest
-        public typealias Element = PersistentSubscription.EventResult
 
         let writer: Writer
 
         public let subscriptionId: String?
-        public let events: AsyncThrowingStream<Element, Error>
+        public let events: AsyncThrowingStream<PersistentSubscription.EventResult, Error>
 
         package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.Read.Response, any Error>) async throws {
             self.writer = writer
@@ -32,7 +31,7 @@ extension PersistentSubscriptions {
                 nil
             }
 
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Element.self)
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: PersistentSubscription.EventResult.self)
             Task {
                 while let response = try await iterator.next() {
                     if case let .readEvent(event, retryCount) = response {
