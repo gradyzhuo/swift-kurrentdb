@@ -91,21 +91,12 @@ dependencies: [
 
 ### The library name to import.
 
-`Version: 1.0.0`
-
 ```
 import KurrentDB
 ```
 
-`Version: 0.6.x`
-```
-import EventStoreDB
-```
-
 
 ### ClientSettings
-
-`Version: 1.0.0 && 0.6.x`
 
 ```swift
 // Using a client settings for a single node configuration by parsing a connection string.
@@ -140,8 +131,6 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 
 ### Appending Event
 
-`Version: 1.0.0`
-
 ```swift
 // Import packages of KurrentDB.
 import KurrentDB
@@ -166,36 +155,7 @@ let appendResponse = try await streams.append(to: streamIdentifier, events: even
 print("The latest revision of events appended:", appendResponse.currentRevision!)
 ```
 
-`Version: 0.6.x`
-
-```swift
-// Import packages of EventStoreDB.
-import EventStoreDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
-
-// Build a streams client.
-let client = Streams(settings: settings)
-
-// Create the data array of events.
-let events:[EventData] = [
-    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!, eventType: "ItemAdded", payload: ["Description": "Xbox One S 1TB (Console)"]),
-    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", payload: "Gears of War 4")
-        ]
-
-//let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
-let client = EventStoreDBClient(settings: settings)
-
-let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
-    options.revision(expected: .any)
-}
-
-```
-
 ### Read Event
-
-`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
@@ -219,34 +179,8 @@ for try await response in readResponses {
 }
 ```
 
-`Version: 0.6.x`
-
-```swift
-// Import packages of EventStoreDB.
-import EventStoreDB
-
-// Using a client setting to `EventStoreDBClient` by default.
-let settings: ClientSettings = .localhost()
-
-//prepare an identifier for a stream by a name.
-let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
-
-//Check the event is appended into testing stream.
-let client = try EventStoreDBClient(settings: settings)
-let readResponses = try client.readStream(to: streamIdentifier, cursor: .end) { options in
-    options.set(uuidOption: .string)
-        .countBy(limit: 1)
-}
-
-for await response in readResponses {
-    //handle response
-}
-```
-
 ### PersistentSubscriptions
 #### Create
-
-`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
@@ -263,25 +197,7 @@ try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentif
 
 ```
 
-`Version: 0.6.x`
-
-```swift
-// Import packages of EventStoreDB.
-import EventStoreDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
-
-let streamName = "stream_for_testing"
-
-let client = try EventStoreDBClient(settings: settings)
-try await client.createPersistentSubscription(streamName: streamName, groupName: "mytest", options: .init())
-
-```
-
 #### Subscribe
-
-`Version: 1.0.0`
 
 ```swift
 // Import packages of KurrentDB.
@@ -307,29 +223,4 @@ for try await result in subscription.events {
     // try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
 }
 
-```
-
-`Version: 0.6.x`
-
-```swift
-// Import packages of EventStoreDB.
-import EventStoreDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
-
-let streamName = "stream_for_testing"
-
-let client = try EventStoreDBClient(settings: settings)
-
-let subscription = try await client.subscribePersistentSubscriptionTo(.specified(streamName), groupName: "mytest")
-
-for try await result in subscription {
-    // handle result
-    
-    // ack the readEvent if succeed 
-    try await subscription.ack(readEvents: result.event)
-    // else nack thr readEvent if not succeed.
-    try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
-}
 ```
