@@ -8,10 +8,10 @@
 import Foundation
 import RegexBuilder
 
-class KurrentSchemeParser: ConnctionStringParser {
+class URLSchemeParser: ConnctionStringParser {
     typealias SchemeReference = Reference<String>
     typealias RegexType = Regex<(Substring, SchemeReference.RegexOutput)>
-    typealias Result = KurrentScheme
+    typealias Result = URLScheme
 
     let _scheme: SchemeReference = .init()
 
@@ -25,7 +25,7 @@ class KurrentSchemeParser: ConnctionStringParser {
         "://"
     }
 
-    func parse(_ connectionString: String) throws -> KurrentScheme? {
+    func parse(_ connectionString: String) throws -> URLScheme? {
         let match = connectionString.firstMatch(of: regex)
         return match.flatMap {
             .init(rawValue: $0[_scheme])

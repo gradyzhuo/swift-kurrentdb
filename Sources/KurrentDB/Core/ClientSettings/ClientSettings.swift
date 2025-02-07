@@ -111,7 +111,7 @@ extension ClientSettings {
     }
 
     public static func parse(connectionString: String) throws -> Self {
-        let schemeParser = KurrentSchemeParser()
+        let schemeParser = URLSchemeParser()
         let endpointParser = EndpointParser()
         let queryItemParser = QueryItemParser()
         let userCredentialParser = UserCredentialsParser()

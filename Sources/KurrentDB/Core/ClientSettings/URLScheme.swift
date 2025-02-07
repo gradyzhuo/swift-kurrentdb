@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum KurrentScheme: String {
+enum URLScheme: String {
     case esdb
     case dnsDiscover = "esdb+discover"
 }
