@@ -11,15 +11,15 @@ import Testing
 @Suite("ConnectionStringParser")
 struct ConnectionStringParser {
     @Test("Test scheme of url should be esdb explicitly", arguments: [
-        ("esdb://localhost:2113?tls=false", ClientSettings.ValidScheme.esdb),
-        ("esdb+discover://", ClientSettings.ValidScheme.dnsDiscover),
+        ("esdb://localhost:2113?tls=false", URLScheme.esdb),
+        ("esdb+discover://", URLScheme.dnsDiscover),
         ("esd://", nil),
         ("http://", nil),
         ("https://", nil),
         ("testuri", nil),
     ])
-    func testSchemeESDB(connectionString: String, scheme: ClientSettings.ValidScheme?) async throws {
-        let parser = KurrentSchemeParser()
+    func testSchemeESDB(connectionString: String, scheme: URLScheme?) async throws {
+        let parser = URLSchemeParser()
         let parsedResult = try parser.parse(connectionString)
 
         #expect(parsedResult == scheme)
