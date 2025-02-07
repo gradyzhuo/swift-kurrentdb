@@ -12,7 +12,7 @@ import GRPCProtobuf
 
 public enum EventStoreError: Error, Sendable {
     case serverError(String)
-    case notLeaderException(endpoint: ClientSettings.Endpoint)
+    case notLeaderException(endpoint: Endpoint)
     case connectionClosed
     case grpc(code: GoogleRPCStatus, reason: String)
     case grpcConnectionError(error: GoogleRPCStatus)

@@ -95,7 +95,7 @@ extension Gossip.Read {
         public let timeStamp: TimeInterval
         public let state: NodeState
         public let isAlive: Bool
-        public let httpEndPoint: ClientSettings.Endpoint
+        public let httpEndPoint: Endpoint
 
         package init(from message: UnderlyingMessage) throws {
             guard let uuid = message.instanceID.toUUID() else {

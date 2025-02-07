@@ -111,7 +111,7 @@ extension ClientSettings {
     }
 
     public static func parse(connectionString: String) throws -> Self {
-        let schemeParser = SchemeParser()
+        let schemeParser = KurrentSchemeParser()
         let endpointParser = EndpointParser()
         let queryItemParser = QueryItemParser()
         let userCredentialParser = UserCredentialsParser()
@@ -187,35 +187,6 @@ extension ClientSettings {
     }
 }
 
-extension ClientSettings {
-    public enum TopologyClusterMode: Sendable {
-        public enum NodePreference: String, Sendable {
-            case leader
-            case follower
-            case random
-            case readOnlyReplica = "readonlyreplica"
-        }
-
-        case singleNode(at: Endpoint)
-        case dnsDiscovery(from: Endpoint, interval: TimeInterval, maxAttempts: Int)
-        case gossipCluster(endpoints: [Endpoint], nodePreference: NodePreference, timeout: TimeInterval)
-
-        static func gossipCluster(endpoints: [Endpoint], nodePreference: NodePreference) -> Self {
-            .gossipCluster(endpoints: endpoints, nodePreference: nodePreference, timeout: DEFAULT_GOSSIP_TIMEOUT)
-        }
-    }
-
-    public struct Endpoint: Sendable {
-        let host: String
-        let port: UInt32
-
-        package init(host: String, port: UInt32? = nil) {
-            self.host = host
-            self.port = port ?? DEFAULT_PORT_NUMBER
-        }
-    }
-}
-
 extension ClientSettings: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
 
@@ -233,8 +204,3 @@ extension ClientSettings: ExpressibleByStringLiteral {
     }
 }
 
-extension ClientSettings.Endpoint: CustomStringConvertible {
-    public var description: String {
-        "\(Self.self)(\(host):\(port))"
-    }
-}

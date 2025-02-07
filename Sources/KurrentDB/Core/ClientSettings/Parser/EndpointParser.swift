@@ -10,7 +10,7 @@ import RegexBuilder
 
 class EndpointParser: ConnctionStringParser {
     typealias RegexType = Regex<(Substring, HostReference.RegexOutput, PortReference.RegexOutput?)>
-    typealias Result = [ClientSettings.Endpoint]
+    typealias Result = [Endpoint]
     typealias HostReference = Reference<String>
     typealias PortReference = Reference<UInt32>
 
