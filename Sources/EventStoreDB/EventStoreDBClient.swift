@@ -18,7 +18,7 @@ import NIOPosix
 /// A client to encapsulates GRPC Call in EventStoreDB.
 
 @available(*, deprecated, message: "Use Several Service instead. e.g. Streams()")
-public final class EventStoreDBClient {
+public final class EventStoreDBClient: Sendable {
     public let defaultCallOptions: CallOptions
     public let settings: ClientSettings
     private let group: EventLoopGroup
