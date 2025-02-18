@@ -29,7 +29,6 @@ extension Users {}
 
 extension Users {
     // MARK: - Create Actions
-
     public func create(loginName: String, password: String, fullName: String, groups: String...) async throws -> UserDetails? {
         let usecase = Create(loginName: loginName, password: password, fullName: fullName, groups: groups)
 
@@ -40,9 +39,40 @@ extension Users {
     }
 
     // MARK: - Details Actions
-
     public func details(loginName: String) async throws -> AsyncThrowingStream<UserDetails, Error> {
         let usecase = Details(loginName: loginName)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
+    
+    public func enable(loginName: String) async throws {
+        let usecase = Enable(loginName: loginName)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    public func disable(loginName: String) async throws {
+        let usecase = Disable(loginName: loginName)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    public func update(loginName: String, password: String, options: Update.Options) async throws {
+        let usecase = Update(loginName: loginName, password: password, options: options)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    public func update(fullName: String, to loginName: String, with password: String) async throws {
+        let options = Users.Update.Options()
+            .set(fullName: fullName)
+        try await update(loginName: loginName, password: password, options: options)
+    }
+    
+    public func change(password newPassword: String, origin currentPassword: String, to loginName: String) async throws{
+        let usecase = ChangePassword(loginName: loginName, currentPassword: currentPassword, newPassword: newPassword)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    public func reset(password newPassword: String, loginName: String) async throws{
+        let usecase = ResetPassword(loginName: loginName, newPassword: newPassword)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
 }

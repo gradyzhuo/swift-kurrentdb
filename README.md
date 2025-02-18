@@ -61,11 +61,12 @@ Kurrent is the first and only event-native data platform. It is built to store a
 |----|----|
 |Create|✅|
 |Details|✅|
-|ChangePassword||
-|Disable||
-|Enable||
-|ResetPassword||
-|Update||
+|Disable|✅|
+|Enable|✅|
+|Update|✅|
+|ChangePassword|✅|
+|ResetPassword|✅|
+
 
 ## Getting the library
 
