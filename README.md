@@ -134,7 +134,7 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 
 ```swift
 // Import packages of KurrentDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -149,10 +149,13 @@ let events:[EventData] = [
 let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
 // Build a streams client.
-let streams = Streams(settings: settings)
+let client = EventStoreDBClient(settings: .localhost())
 
 // Append two events with one response
-let appendResponse = try await streams.append(to: streamIdentifier, events: events)
+let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
+    options.revision(expected: .any)
+}
+
 print("The latest revision of events appended:", appendResponse.currentRevision!)
 ```
 
@@ -160,7 +163,7 @@ print("The latest revision of events appended:", appendResponse.currentRevision!
 
 ```swift
 // Import packages of KurrentDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -169,10 +172,12 @@ let settings: ClientSettings = .localhost()
 let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
 // Build a streams client.
-let streams = Streams(settings: settings)
+let client = EventStoreDBClient(settings: settings)
 
 // Read events from stream.
-let readResponses = try await streams.read(streamIdentifier, cursor: .start)
+let readResponses = try await client.readStream(to: streamIdentifier, cursor: .start) { options in
+    options.set(resolveLinks: true)
+}
 
 // loop it.
 for try await response in readResponses {
@@ -185,33 +190,45 @@ for try await response in readResponses {
 
 ```swift
 // Import packages of KurrentDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
 // Build a persistentSubscriptions client.
-let persistentSubscriptions = PersistentSubscriptions(settings: settings)
+let client = EventStoreDBClient(settings: settings)
 
-// Create it to specified identifier of streams. 
-try await persistentSubscriptions.createToStream(streamIdentifier: streamIdentifier, groupName: "mytest")
+// the stream identifier to subscribe.
+let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 
+// the group of subscription
+let groupName = "myGroupTest"
+
+// Create it to specified identifier of streams.
+try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 ```
 
 #### Subscribe
 
 ```swift
-// Import packages of KurrentDB.
-import KurrentDB
+// Import packages of EventStoreDB.
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
 // Build a persistentSubscriptions client.
-let persistentSubscriptions = PersistentSubscriptions(settings: settings)
+let client = EventStoreDBClient(settings: settings)
+
+// the stream identifier to subscribe.
+let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+
+// the group of subscription
+let groupName = "myGroupTest"
+
 
 // Subscribe to stream or all, and get a subscription.
-let subscription = try await persistentSubscriptions.subscribe(.specified(streamIdentifier), groupName: "mytest")
+let subscription = try await client.subscribePersistentSubscription(to: .specified(streamIdentifier), groupName: groupName)
 
 // Loop all results by subscription.events
 for try await result in subscription.events {
@@ -223,5 +240,4 @@ for try await result in subscription.events {
     // else nack thr readEvent if not succeed.
     // try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
 }
-
 ```
