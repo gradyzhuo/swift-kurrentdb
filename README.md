@@ -93,7 +93,7 @@ dependencies: [
 ### The library name to import.
 
 ```
-import KurrentDB
+import EventStoreDB
 ```
 
 
