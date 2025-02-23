@@ -5,9 +5,12 @@
 
 
 # KurrentDB 
-This is unofficial [Kurrent](https://www.kurrent.io/) (formerly: EventStore) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK, written in Swift.
+This is unofficial [Kurrent](https://www.kurrent.io/) (formerly: EventStore) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK, developing in [Swift language](https://www.swift.org/)
 
 Kurrent is the first and only event-native data platform. It is built to store and stream data as events for use in downstream use cases such as advanced analytics, microservices and AI/ML initiatives.
+
+Swift is a general-purpose programming language that’s approachable for newcomers and powerful for experts.
+It is fast, modern, safe, and a joy to write.
 
 ## Implementation Status
 ### Client Settings
@@ -76,7 +79,7 @@ The Swift Package Manager is the preferred way to get EventStoreDB. Simply add t
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/gradyzhuo/eventstoredb-swift.git", from: "1.0.0-beta.2")
+  .package(url: "https://github.com/gradyzhuo/eventstoredb-swift.git", from: "1.0.0")
 ]
 ```
 ...and depend on "EventStoreDB" in the necessary targets:
@@ -93,7 +96,7 @@ dependencies: [
 ### The library name to import.
 
 ```
-import EventStoreDB
+import KurrentDB
 ```
 
 
@@ -134,7 +137,7 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 
 ```swift
 // Import packages of KurrentDB.
-import EventStoreDB
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -163,7 +166,7 @@ print("The latest revision of events appended:", appendResponse.currentRevision!
 
 ```swift
 // Import packages of KurrentDB.
-import EventStoreDB
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -190,7 +193,7 @@ for try await response in readResponses {
 
 ```swift
 // Import packages of KurrentDB.
-import EventStoreDB
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -212,7 +215,7 @@ try await client.createPersistentSubscription(to: streamIdentifier, groupName: g
 
 ```swift
 // Import packages of EventStoreDB.
-import EventStoreDB
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
