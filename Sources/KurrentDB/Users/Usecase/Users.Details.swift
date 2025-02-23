@@ -12,7 +12,7 @@ import GRPCNIOTransportHTTP2Posix
 
 extension Users {
     public struct Details: UnaryStream {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Details.Output
         package typealias Responses = AsyncThrowingStream<UserDetails, any Error>

@@ -11,7 +11,7 @@ import GRPCNIOTransportHTTP2Posix
 
 extension Streams {
     public struct SubscribeToAll: UnaryStream {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = Read.UnderlyingRequest
         package typealias UnderlyingResponse = Read.UnderlyingResponse
         public typealias Responses = Subscription

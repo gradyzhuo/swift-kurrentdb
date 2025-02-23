@@ -12,7 +12,7 @@ import SwiftProtobuf
 
 extension Projections {
     public struct Result: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Result.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Result.Output
 

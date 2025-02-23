@@ -11,7 +11,7 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct Reset: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Reset.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Reset.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

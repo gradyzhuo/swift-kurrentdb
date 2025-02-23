@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct Read: StreamStream {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
         package typealias Responses = Subscription
@@ -39,7 +39,7 @@ extension PersistentSubscriptions {
             ]
         }
 
-        package func send(client: Client, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
+        package func send(client: UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
             let responses = AsyncThrowingStream.makeStream(of: Response.self)
 
             let writer = Subscription.Writer()

@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Streams {
     public struct Read: UnaryStream {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Responses = AsyncThrowingStream<Response, Error>

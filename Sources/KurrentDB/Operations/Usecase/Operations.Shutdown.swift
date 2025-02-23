@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct Shutdown: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Shutdown.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Shutdown.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

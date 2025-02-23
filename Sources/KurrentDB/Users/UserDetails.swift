@@ -25,7 +25,7 @@ public struct UserDetails: Sendable {
 }
 
 extension UserDetails {
-    package init(from message: Users.Client.UnderlyingService.Method.Details.Output.UserDetails) throws {
+    package init(from message: Users.UnderlyingClient.UnderlyingService.Method.Details.Output.UserDetails) throws {
         self.init(
             loginName: message.loginName,
             fullName: message.fullName,

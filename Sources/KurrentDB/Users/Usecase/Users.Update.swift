@@ -11,7 +11,7 @@ import GRPCEncapsulates
 
 extension Users {
     public struct Update: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

@@ -13,7 +13,7 @@ import Logging
 import NIO
 
 public struct Monitoring: GRPCConcreteService {
-    package typealias Client = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
 
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions

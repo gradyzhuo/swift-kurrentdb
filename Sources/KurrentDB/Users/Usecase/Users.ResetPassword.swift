@@ -11,7 +11,7 @@ import GRPCEncapsulates
 
 extension Users {
     public struct ResetPassword: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.ResetPassword.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.ResetPassword.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

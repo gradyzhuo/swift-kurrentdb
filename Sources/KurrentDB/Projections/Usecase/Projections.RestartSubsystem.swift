@@ -11,7 +11,7 @@ import GRPCEncapsulates
 
 extension Projections {
     public struct RestartSubsystem: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.RestartSubsystem.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.RestartSubsystem.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

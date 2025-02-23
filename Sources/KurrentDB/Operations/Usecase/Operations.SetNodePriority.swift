@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct SetNodePriority: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.SetNodePriority.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.SetNodePriority.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

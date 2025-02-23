@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct ResignNode: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.ResignNode.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.ResignNode.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

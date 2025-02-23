@@ -13,7 +13,7 @@ import NIO
 
 public struct PersistentSubscriptions: GRPCConcreteService {
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
-    package typealias Client = UnderlyingService.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = UnderlyingService.Client<HTTP2ClientTransport.Posix>
 
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions

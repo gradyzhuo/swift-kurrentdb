@@ -10,7 +10,7 @@ import GRPCNIOTransportHTTP2Posix
 
 extension Streams {
     public struct Tombstone: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Tombstone.Output
 

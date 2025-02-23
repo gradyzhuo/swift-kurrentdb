@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct MergeIndexes: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.MergeIndexes.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.MergeIndexes.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

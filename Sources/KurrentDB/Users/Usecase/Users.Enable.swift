@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Users {
     public struct Enable: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Enable.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>

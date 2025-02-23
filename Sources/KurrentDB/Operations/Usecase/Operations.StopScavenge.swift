@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Operations {
     public struct StopScavenge: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StopScavenge.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StopScavenge.Output
         public typealias Response = ScavengeResponse

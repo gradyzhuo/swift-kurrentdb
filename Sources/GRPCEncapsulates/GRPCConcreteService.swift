@@ -11,5 +11,5 @@ import GRPCNIOTransportCore
 
 package protocol GRPCConcreteService: Sendable {
     associatedtype Transport: ClientTransport
-    associatedtype Client: GRPCServiceClient where Client.Transport == Transport
+    associatedtype UnderlyingClient: GRPCServiceClient where UnderlyingClient.Transport == Transport
 }

@@ -12,7 +12,7 @@ import Logging
 import NIO
 
 public struct Users: GRPCConcreteService {
-    package typealias Client = EventStore_Client_Users_Users.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Users_Users.Client<HTTP2ClientTransport.Posix>
 
     public private(set) var settings: ClientSettings
     public var callOptions: CallOptions
@@ -24,8 +24,6 @@ public struct Users: GRPCConcreteService {
         self.eventLoopGroup = eventLoopGroup
     }
 }
-
-extension Users {}
 
 extension Users {
     // MARK: - Create Actions

@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct UpdateToAll: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
@@ -30,7 +30,7 @@ extension PersistentSubscriptions {
             }
         }
 
-        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             try await client.update(request: request, options: callOptions) {
                 try handle(response: $0)
             }

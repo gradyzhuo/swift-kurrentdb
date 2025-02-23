@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public struct RestartSubsystem: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.RestartSubsystem.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.RestartSubsystem.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
@@ -19,7 +19,7 @@ extension PersistentSubscriptions {
             .init()
         }
 
-        package func send(client: Client, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             try await client.restartSubsystem(request: request, options: callOptions) {
                 try handle(response: $0)
             }

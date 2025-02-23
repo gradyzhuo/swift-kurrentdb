@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Monitoring {
     public struct Stats: UnaryStream {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Stats.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Stats.Output
         package typealias Responses = AsyncThrowingStream<Response, any Error>

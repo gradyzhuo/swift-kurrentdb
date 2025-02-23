@@ -11,7 +11,7 @@ import GRPCEncapsulates
 
 extension Gossip {
     public struct Read: UnaryUnary {
-        package typealias ServiceClient = Client
+        package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = [Read.MemberInfo]
