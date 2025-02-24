@@ -96,7 +96,7 @@ dependencies: [
 ### The library name to import.
 
 ```
-import KurrentDB
+import EventStoreDB
 ```
 
 
@@ -136,8 +136,8 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 ### Appending Event
 
 ```swift
-// Import packages of KurrentDB.
-import KurrentDB
+// Import packages of EventStoreDB.
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -165,8 +165,8 @@ print("The latest revision of events appended:", appendResponse.currentRevision!
 ### Read Event
 
 ```swift
-// Import packages of KurrentDB.
-import KurrentDB
+// Import packages of EventStoreDB.
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -192,8 +192,8 @@ for try await response in readResponses {
 #### Create
 
 ```swift
-// Import packages of KurrentDB.
-import KurrentDB
+// Import packages of EventStoreDB.
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -215,7 +215,7 @@ try await client.createPersistentSubscription(to: streamIdentifier, groupName: g
 
 ```swift
 // Import packages of EventStoreDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
