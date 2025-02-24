@@ -1,15 +1,6 @@
-//
-//  .spi.yml
-//  KurrentDB
-//
-//  Created by 卓俊諺 on 2025/1/23.
-//
-
 version: 1
 builder:
   configs:
-    - documentation_targets: [EventStoreDB]
-      swift_version: 6.0
-    - documentation_targets: [KurrentCore, KurrentGossip, KurrentStreams, KurrentProjections, KurrentPersistentSubscriptions, KurrentMonitoring, KurrentUsers]
+    - documentation_targets: [KurrentDB]
       swift_version: 6.0
       custom_documentation_parameters: [--exclude-extended-types]
