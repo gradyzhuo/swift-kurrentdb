@@ -1,5 +1,8 @@
 # ``KurrentDB``
 
-This is unofficial [Kurrent](https://www.kurrent.io/) (formerly: EventStore) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK, developing in [Swift language](https://www.swift.org/).
+This is unofficial Kurrent Database gRPC Client SDK, developing in Swift language.
 
+:::    warning
+This document is not complete yet and is still under construction.
+:::
 

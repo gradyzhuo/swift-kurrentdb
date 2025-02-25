@@ -13,12 +13,12 @@ dependencies: [
   .package(url: "https://github.com/gradyzhuo/eventstoredb-swift.git", from: "1.0.0")
 ]
 ```
-...and depend on "EventStoreDB" in the necessary targets:
+...and depend on "KurrentDB" in the necessary targets:
 
 ```swift
 .target(
   name: ...,
-  dependencies: [.product(name: "EventStoreDB", package: "eventstoredb-swift")]
+  dependencies: [.product(name: "KurrentDB", package: "eventstoredb-swift")]
 ]
 ```
 
@@ -32,11 +32,17 @@ The connection string has the following format:
 esdb+discover://admin:changeit@cluster.dns.name:2113
 ```
 
-There, cluster.dns.name is the name of a DNS A record that points to all the cluster nodes. Alternatively, you can list cluster nodes separated by comma instead of the cluster DNS name:
+There, ==cluster.dns.name== is the name of a DNS A record that points to all the cluster nodes. Alternatively, you can list cluster nodes separated by comma instead of the cluster DNS name:
 
 ```
 esdb+discover://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
 ```
+
+:::    warning
+When connecting to an insecure instance, specify ==tls=false== parameter. For example, for a node running locally use ==esdb://localhost:2113?tls=false==. Note that ==usernames== and ==passwords== aren't provided there because insecure deployments don't support authentication and authorisation.
+:::
+
+
 
 ## Client Settings
 
