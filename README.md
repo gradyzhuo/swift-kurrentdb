@@ -87,7 +87,7 @@ dependencies: [
 ```swift
 .target(
   name: ...,
-  dependencies: [.product(name: "EventStoreDB", package: "eventstoredb-swift")]
+  dependencies: [.product(name: "KurrentDB", package: "eventstoredb-swift")]
 ]
 ```
 
@@ -136,7 +136,7 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 ### Appending Event
 
 ```swift
-// Import packages of EventStoreDB.
+// Import packages of KurrentDB.
 import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
