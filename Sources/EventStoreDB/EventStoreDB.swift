@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2024/3/18.
 //
 
-import KurrentDB
+@_exported import KurrentDB
 
 /// `EventStoreDBClient`
 /// A client to encapsulates GRPC Call in EventStoreDB.
