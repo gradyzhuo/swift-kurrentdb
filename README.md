@@ -166,7 +166,7 @@ print("The latest revision of events appended:", appendResponse.currentRevision!
 
 ```swift
 // Import packages of EventStoreDB.
-import EventStoreDB
+import KurrentDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
