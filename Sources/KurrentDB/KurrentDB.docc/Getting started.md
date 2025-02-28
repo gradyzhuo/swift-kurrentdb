@@ -25,22 +25,45 @@ dependencies: [
 
 ## Connection string
 [Official Reference](https://docs.kurrent.io/clients/grpc/getting-started.html#connection-string)
-
 The connection string has the following format:
 
 ```
 esdb+discover://admin:changeit@cluster.dns.name:2113
 ```
 
-There, ==cluster.dns.name== is the name of a DNS A record that points to all the cluster nodes. Alternatively, you can list cluster nodes separated by comma instead of the cluster DNS name:
+There, `cluster.dns.name` is the name of a DNS A record that points to all the cluster nodes. Alternatively, you can list cluster nodes separated by comma instead of the cluster DNS name:
 
 ```
 esdb+discover://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
 ```
 
-:::    warning
-When connecting to an insecure instance, specify ==tls=false== parameter. For example, for a node running locally use ==esdb://localhost:2113?tls=false==. Note that ==usernames== and ==passwords== aren't provided there because insecure deployments don't support authentication and authorisation.
-:::
+There are a number of query parameters that can be used in the connection string to instruct the cluster how and where the connection should be established. All query parameters are optional.
+
+|Parameter|Accepted values|Default|Description|
+|:--------|:-------------:|:-----:|-----------|
+|tls|  true | true |Use secure connection, set to false when connecting to a non-secure server or cluster.|
+| ^ | false |   ^  |     ^     |
+|connectionName|String|None|Connection name|
+|maxDiscoverAttempts|Number|10|Number of attempts to discover the cluster.|
+|discoveryInterval|Number|100|Cluster discovery polling interval in milliseconds.|
+|gossipTimeout|Number|5|Gossip timeout in seconds, when the gossip call times out, it will be retried.|
+|nodePreference|leader|leader|Preferred node role. When creating a client for write operations, always use leader.|
+| ^ | follower |   ^  |     ^     |
+| ^ | random |   ^  |     ^     |
+| ^ | readOnlyReplica |   ^  |     ^     |
+|tlsVerifyCert|true|true|In secure mode, set to true when using an untrusted connection to the node if you don't have the CA file available. Don't use in production.|
+| ^ | false |   ^  |     ^     |
+|tlsCaFile|String|None|Path to the CA file when connecting to a secure cluster with a certificate that's not signed by a trusted CA.|
+| ^ | file path |   ^  |     ^     |
+|defaultDeadline|Number|None|Default timeout for client operations, in milliseconds. Most clients allow overriding the deadline per operation.|
+|keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds.|
+|keepAliveTimeout|Number|10|Keep-alive ping call timeout, in seconds.|
+|userCertFile|String|None|User certificate file for X.509 authentication.|
+| ^ | file path |   ^  |     ^     |
+|userKeyFile|String|None|Key file for the user certificate used for X.509 authentication.|
+| ^ | file path |   ^  |     ^     |
+
+When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `esdb://localhost:2113?tls=false`. Note that `usernames` and `passwords` aren't provided there because insecure deployments don't support authentication and authorisation.
 
 
 
@@ -91,10 +114,12 @@ let client = KurrentDBClient(settings: settings)
 
 ## Creating an event
 
+
 In `Swift`, the payload in EventData conforms to the Codable protocol, which means you can use any type that can be encoded or decoded to `JSON`.
 
-> User-defined server-side projections require events to be serialized in JSON format.
-> `KurrentDB` use JSON for serialization in the documentation examples.
+> Server-side projections: User-defined server-side projections require events to be serialized in JSON format.
+>
+>`KurrentDB` use JSON for serialization in the documentation examples.
 
 ### Using a string as the payload
 ```swift
@@ -107,7 +132,7 @@ let eventData = EventData(
 ```
 
 ### Using a customized event model as the payload
-```
+```swift
 struct TestEvent: Codable {
     let note: String
 }
