@@ -96,7 +96,7 @@ dependencies: [
 ### The library name to import.
 
 ```
-import KurrentDB
+import EventStoreDB
 ```
 
 
@@ -137,7 +137,7 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
 
 ```swift
 // Import packages of KurrentDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -152,7 +152,7 @@ let events:[EventData] = [
 let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
 // Build a streams client.
-let client = KurrentDBClient(settings: .localhost())
+let client = EventStoreDBClient(settings: .localhost())
 
 // Append two events with one response
 let appendResponse = try await client.appendStream(to: streamIdentifier, events: events) { options in
@@ -166,7 +166,7 @@ print("The latest revision of events appended:", appendResponse.currentRevision!
 
 ```swift
 // Import packages of EventStoreDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
@@ -175,7 +175,7 @@ let settings: ClientSettings = .localhost()
 let streamIdentifier = StreamIdentifier(name: "stream_for_testing")
 
 // Build a streams client.
-let client = KurrentDBClient(settings: settings)
+let client = EventStoreDBClient(settings: settings)
 
 // Read events from stream.
 let readResponses = try await client.readStream(to: streamIdentifier, cursor: .start) { options in
@@ -193,13 +193,13 @@ for try await response in readResponses {
 
 ```swift
 // Import packages of EventStoreDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
 // Build a persistentSubscriptions client.
-let client = KurrentDBClient(settings: settings)
+let client = EventStoreDBClient(settings: settings)
 
 // the stream identifier to subscribe.
 let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
@@ -215,13 +215,13 @@ try await client.createPersistentSubscription(to: streamIdentifier, groupName: g
 
 ```swift
 // Import packages of EventStoreDB.
-import KurrentDB
+import EventStoreDB
 
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
 // Build a persistentSubscriptions client.
-let client = KurrentDBClient(settings: settings)
+let client = EventStoreDBClient(settings: settings)
 
 // the stream identifier to subscribe.
 let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
