@@ -87,7 +87,7 @@ dependencies: [
 ```swift
 .target(
   name: ...,
-  dependencies: [.product(name: "KurrentDB", package: "eventstoredb-swift")]
+  dependencies: [.product(name: "EventStoreDB", package: "eventstoredb-swift")]
 ]
 ```
 
