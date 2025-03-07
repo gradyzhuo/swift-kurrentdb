@@ -1,9 +1,19 @@
 # ``KurrentDB``
 
-This is unofficial Kurrent Database gRPC Client SDK, developing in Swift language.
+@Options(scope: local) {
+    @TopicsVisualStyle(hidden)
+}
 
-> This package and documentation is not complete yet and is still under construction.
+The Kurrent Database Client SDK connected by `gRPC`.
+
+## Articles 
+- <doc:Getting-started>
+
+## API
+- ``KurrentDBClient``
+
 
 ## References
-- [Kurrent](https://kurrent.io)
+- [Kurrent Database](https://kurrent.io)
 - [gRPC-Swift](https://github.com/grpc/grpc-swift.git)
+

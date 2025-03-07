@@ -15,18 +15,18 @@ extension PersistentSubscriptions {
         package typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        let groupName: String
+        let group: String
         let options: Options
 
-        public init(groupName: String, options: Options) {
-            self.groupName = groupName
+        public init(group: String, options: Options) {
+            self.group = group
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
-                $0.options.groupName = groupName
+                $0.options.groupName = group
             }
         }
 

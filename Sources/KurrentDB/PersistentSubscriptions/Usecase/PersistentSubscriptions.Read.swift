@@ -16,12 +16,12 @@ extension PersistentSubscriptions {
         package typealias Responses = Subscription
 
         public let streamSelection: StreamSelector<StreamIdentifier>
-        public let groupName: String
+        public let group: String
         public let options: Options
 
-        init(streamSelection: StreamSelector<StreamIdentifier>, groupName: String, options: Options) {
+        package init(streamSelection: StreamSelector<StreamIdentifier>, group: String, options: Options) {
             self.streamSelection = streamSelection
-            self.groupName = groupName
+            self.group = group
             self.options = options
         }
 
@@ -34,7 +34,7 @@ extension PersistentSubscriptions {
                     } else {
                         $0.options.all = .init()
                     }
-                    $0.options.groupName = groupName
+                    $0.options.groupName = group
                 },
             ]
         }

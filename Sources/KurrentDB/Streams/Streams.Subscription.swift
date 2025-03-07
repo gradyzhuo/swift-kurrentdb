@@ -7,30 +7,39 @@
 
 import GRPCCore
 import GRPCEncapsulates
+import SwiftProtobuf
 
 extension Streams {
     public final class Subscription {
         public let events: AsyncThrowingStream<ReadEvent, Error>
         public let subscriptionId: String?
+        
+        internal init(events: AsyncThrowingStream<ReadEvent, Error>, subscriptionId: String?) {
+            self.events = events
+            self.subscriptionId = subscriptionId
+        }
+    }
+}
 
-        package init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse, any Error>) async throws {
-            var iterator = messages.makeAsyncIterator()
+extension Streams.Subscription where Target == AllStreams {
+    package convenience init(messages: AsyncThrowingStream<Streams.SubscribeAll.UnderlyingResponse, any Error>) async throws {
+        var iterator = messages.makeAsyncIterator()
 
-            subscriptionId = if case let .confirmation(confirmation) = try await iterator.next()?.content {
-                confirmation.subscriptionID
-            } else {
-                nil
-            }
+        let subscriptionId: String? = if case let .confirmation(confirmation) = try await iterator.next()?.content {
+            confirmation.subscriptionID
+        } else {
+            nil
+        }
 
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
-            Task {
-                while let message = try await iterator.next() {
-                    if case let .event(message) = message.content {
-                        try continuation.yield(.init(message: message))
-                    }
+        let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
+        Task {
+            while let message = try await iterator.next() {
+                if case let .event(message) = message.content {
+                    try continuation.yield(.init(message: message))
                 }
             }
-            events = stream
         }
+        let events = stream
+        self.init(events: events, subscriptionId: subscriptionId)
     }
 }

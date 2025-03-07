@@ -6,7 +6,7 @@
 //
 
 extension ReadEvent {
-    package init(message: PersistentSubscriptions.Read.Response.UnderlyingMessage.ReadEvent) throws {
+    package init(message: PersistentSubscriptions<AnyStreamTarget>.Read.Response.UnderlyingMessage.ReadEvent) throws {
         let recordedEvent: RecordedEvent = try .init(message: message.event)
         let linkedRecordedEvent: RecordedEvent? = try message.hasLink ? .init(message: message.link) : nil
 

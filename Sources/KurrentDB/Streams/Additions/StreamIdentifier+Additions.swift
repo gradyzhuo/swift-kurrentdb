@@ -6,7 +6,7 @@
 //
 
 extension StreamIdentifier {
-    func build(options: inout Streams.Append.UnderlyingRequest.Options) throws {
+    func build(options: inout Streams<SpecifiedStream>.Append.UnderlyingRequest.Options) throws {
         options.streamIdentifier = try build()
     }
 }

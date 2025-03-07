@@ -13,6 +13,7 @@ import NIOCore
 import NIOPosix
 import NIOSSL
 import RegexBuilder
+import GRPCEncapsulates
 
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
@@ -204,3 +205,73 @@ extension ClientSettings: ExpressibleByStringLiteral {
     }
 }
 
+
+extension ClientSettings: Buildable{
+    
+    
+    @discardableResult
+    public func configuration(_ configuration: TLSConfiguration)->Self{
+        return withCopy {
+            $0.configuration = configuration
+        }
+    }
+    
+    
+    @discardableResult
+    public func clusterMode(_ clusterMode: TopologyClusterMode)->Self{
+        return withCopy {
+            $0.clusterMode = clusterMode
+        }
+    }
+
+    @discardableResult
+    public func trustRoots(_ trustRoots: TLSConfig.TrustRootsSource)->Self{
+        return withCopy {
+            $0.trustRoots = trustRoots
+        }
+    }
+    
+    @discardableResult
+    public func tls(_ tls: Bool)->Self{
+        return withCopy {
+            $0.tls = tls
+        }
+    }
+    
+    @discardableResult
+    public func tlsVerifyCert(_ tlsVerifyCert: Bool)->Self{
+        return withCopy {
+            $0.tlsVerifyCert = tlsVerifyCert
+        }
+    }
+    
+    @discardableResult
+    public func defaultDeadline(_ defaultDeadline: Int)->Self{
+        return withCopy {
+            $0.defaultDeadline = defaultDeadline
+        }
+    }
+    
+    @discardableResult
+    public func connectionName(_ connectionName: String)->Self{
+        return withCopy {
+            $0.connectionName = connectionName
+        }
+    }
+    
+    @discardableResult
+    public func keepAlive(_ keepAlive: KeepAlive)->Self{
+        return withCopy {
+            $0.keepAlive = keepAlive
+        }
+    }
+    
+    @discardableResult
+    public func defaultUserCredentials(_ defaultUserCredentials: UserCredentials)->Self{
+        return withCopy {
+            $0.defaultUserCredentials = defaultUserCredentials
+        }
+    }
+    
+    
+}

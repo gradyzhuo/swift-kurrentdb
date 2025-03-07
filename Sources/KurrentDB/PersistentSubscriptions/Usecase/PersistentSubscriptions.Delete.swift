@@ -16,16 +16,16 @@ extension PersistentSubscriptions {
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         let stream: StreamSelector<StreamIdentifier>
-        let groupName: String
+        let group: String
 
-        public init(stream: StreamSelector<StreamIdentifier>, groupName: String) {
+        public init(stream: StreamSelector<StreamIdentifier>, group: String) {
             self.stream = stream
-            self.groupName = groupName
+            self.group = group
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
-                $0.options.groupName = groupName
+                $0.options.groupName = group
                 switch stream {
                 case .all:
                     $0.options.all = .init()

@@ -16,11 +16,11 @@ extension PersistentSubscriptions {
         package typealias Response = PersistentSubscription.SubscriptionInfo
 
         public let stream: StreamSelector<StreamIdentifier>
-        public let groupName: String
+        public let group: String
 
-        public init(stream: StreamSelector<StreamIdentifier>, groupName: String) {
+        public init(stream: StreamSelector<StreamIdentifier>, group: String) {
             self.stream = stream
-            self.groupName = groupName
+            self.group = group
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
@@ -31,7 +31,7 @@ extension PersistentSubscriptions {
                 case .all:
                     $0.options.all = .init()
                 }
-                $0.options.groupName = groupName
+                $0.options.groupName = group
             }
         }
 

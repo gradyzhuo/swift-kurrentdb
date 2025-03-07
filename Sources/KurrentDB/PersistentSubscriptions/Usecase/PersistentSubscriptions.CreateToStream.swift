@@ -15,19 +15,19 @@ extension PersistentSubscriptions {
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         var streamIdentifier: StreamIdentifier
-        var groupName: String
+        var group: String
         var options: Options
 
-        public init(streamIdentifier: StreamIdentifier, groupName: String, options: Options) {
+        public init(streamIdentifier: StreamIdentifier, group: String, options: Options) {
             self.streamIdentifier = streamIdentifier
-            self.groupName = groupName
+            self.group = group
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
-                $0.options.groupName = groupName
+                $0.options.groupName = group
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
             }
         }

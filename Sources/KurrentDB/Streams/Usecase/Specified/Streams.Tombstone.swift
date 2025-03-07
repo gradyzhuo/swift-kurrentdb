@@ -1,43 +1,44 @@
 //
-//  Streams.Delete.swift
+//  Tombstone.swift
 //  KurrentStreams
 //
-//  Created by Grady Zhuo on 2023/10/31.
+//  Created by Grady Zhuo on 2023/11/2.
 //
-
 import GRPCCore
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
 
-extension Streams {
-    public struct Delete: UnaryUnary {
+extension Streams where Target == SpecifiedStream {
+    public struct Tombstone: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
-        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Tombstone.Output
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
-
-        init(streamIdentifier: StreamIdentifier, options: Options) {
+        
+        init(to streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
-                $0.options = options.build()
-                $0.options.streamIdentifier = try streamIdentifier.build()
+                var options = options.build()
+                options.streamIdentifier = try streamIdentifier.build()
+                $0.options = options
             }
         }
 
-        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: GRPCCore.CallOptions) async throws -> Response {
-            try await client.delete(request: request, options: callOptions) {
+        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            try await client.tombstone(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }
     }
 }
 
-extension Streams.Delete {
+extension Streams.Tombstone where Target == SpecifiedStream {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
@@ -56,14 +57,14 @@ extension Streams.Delete {
     }
 }
 
-extension Streams.Delete {
+extension Streams.Tombstone where Target == SpecifiedStream {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var expectedRevision: StreamRevision.Rule
 
-        public init() {
-            expectedRevision = .streamExists
+        public init(expectedRevision: StreamRevision.Rule = .streamExists) {
+            self.expectedRevision = expectedRevision
         }
 
         package func build() -> UnderlyingMessage {
@@ -82,9 +83,9 @@ extension Streams.Delete {
         }
 
         @discardableResult
-        public func revision(expected: StreamRevision.Rule) -> Self {
+        public func revision(expected expectedRevision: StreamRevision.Rule) -> Self {
             withCopy { options in
-                options.expectedRevision = expected
+                options.expectedRevision = expectedRevision
             }
         }
     }

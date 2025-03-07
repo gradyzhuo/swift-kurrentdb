@@ -7,7 +7,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension Streams {
+extension Streams where Target == SpecifiedStream {
     public struct Append: StreamUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input

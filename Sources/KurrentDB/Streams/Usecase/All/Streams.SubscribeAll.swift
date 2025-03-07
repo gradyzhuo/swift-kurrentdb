@@ -1,5 +1,5 @@
 //
-//  Streams.Read.swift
+//  Streams.SubscribeToAll.swift
 //  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/21.
@@ -7,67 +7,62 @@
 
 import GRPCCore
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
 
-extension Streams {
-    public struct Read: UnaryStream {
+extension Streams where Target == AllStreams {
+    public struct SubscribeAll: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
-        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
-        public typealias Responses = AsyncThrowingStream<Response, Error>
+        package typealias UnderlyingRequest = ReadAll.UnderlyingRequest
+        package typealias UnderlyingResponse = ReadAll.UnderlyingResponse
+        public typealias Responses = Subscription
 
-        public let streamIdentifier: StreamIdentifier
-        public let cursor: Cursor<CursorPointer>
+        public let cursor: Cursor<StreamPosition>
         public let options: Options
 
-        init(streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Options) {
-            self.streamIdentifier = streamIdentifier
+        init(cursor: Cursor<StreamPosition>, options: Options) {
             self.cursor = cursor
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            try .with {
+            .with {
                 $0.options = options.build()
-                $0.options.stream.streamIdentifier = try streamIdentifier.build()
+                $0.options.readDirection = .forwards
+                $0.options.subscription = .init()
 
                 switch cursor {
                 case .start:
-                    $0.options.stream.start = .init()
-                    $0.options.readDirection = .forwards
+                    $0.options.all.start = .init()
                 case .end:
-                    $0.options.stream.end = .init()
-                    $0.options.readDirection = .backwards
-                case let .specified(pointer):
-                    $0.options.stream.revision = pointer.revision
-
-                    if case .forward = pointer.direction {
-                        $0.options.readDirection = .forwards
-                    } else {
-                        $0.options.readDirection = .backwards
+                    $0.options.all.end = .init()
+                case let .specified(position):
+                    $0.options.all.position = .with {
+                        $0.commitPosition = position.commit
+                        $0.preparePosition = position.prepare
                     }
                 }
             }
         }
 
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            try await withThrowingTaskGroup(of: Void.self) { _ in
-                let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
+            Task {
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {
-                        try continuation.yield(handle(message: message))
+                        continuation.yield(message)
                     }
                 }
-                continuation.finish()
-                return stream
             }
+            return try await .init(messages: stream)
         }
     }
 }
 
-extension Streams.Read {
+extension Streams.SubscribeAll where Target == AllStreams {
     public struct Response: GRPCResponse {
         public enum Content: Sendable {
             case event(readEvent: ReadEvent)
+            case confirmation(subscriptionId: String)
             case commitPosition(firstStream: UInt64)
             case commitPosition(lastStream: UInt64)
             case position(lastAllStream: StreamPosition)
@@ -88,6 +83,10 @@ extension Streams.Read {
             try self.init(content: content)
         }
 
+        init(subscriptionId: String) throws {
+            content = .confirmation(subscriptionId: subscriptionId)
+        }
+
         init(message: UnderlyingMessage.ReadEvent) throws {
             content = try .event(readEvent: .init(message: message))
         }
@@ -106,6 +105,8 @@ extension Streams.Read {
 
         init(content: UnderlyingMessage.OneOf_Content) throws {
             switch content {
+            case let .confirmation(confirmation):
+                try self.init(subscriptionId: confirmation.subscriptionID)
             case let .event(value):
                 try self.init(message: value)
             case let .firstStreamPosition(value):
@@ -124,25 +125,51 @@ extension Streams.Read {
     }
 }
 
-extension Streams.Read {
+extension Streams.SubscribeAll where Target == AllStreams {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var resolveLinks: Bool
-        public private(set) var limit: UInt64
         public private(set) var uuidOption: UUIDOption
-        public private(set) var compatibility: UInt32
+        public private(set) var filter: SubscriptionFilter?
 
-        public init(resolveLinks: Bool = false, limit: UInt64 = .max, uuidOption: UUIDOption = .string, compatibility: UInt32 = 0) {
+        public init(resolveLinks: Bool = false, uuidOption: UUIDOption = .string, filter: SubscriptionFilter? = nil) {
             self.resolveLinks = resolveLinks
-            self.limit = limit
             self.uuidOption = uuidOption
-            self.compatibility = compatibility
+            self.filter = filter
         }
 
         package func build() -> UnderlyingMessage {
             .with {
-                $0.noFilter = .init()
+                if let filter {
+                    $0.filter = .with {
+                        // filter
+                        switch filter.type {
+                        case let .streamName(regex):
+                            $0.streamIdentifier = .with {
+                                $0.regex = regex
+                                $0.prefix = filter.prefixes
+                            }
+                        case let .eventType(regex):
+                            $0.eventType = .with {
+                                $0.regex = regex
+                                $0.prefix = filter.prefixes
+                            }
+                        }
+                        // window
+                        switch filter.window {
+                        case .count:
+                            $0.count = .init()
+                        case let .max(value):
+                            $0.max = value
+                        }
+
+                        // checkpointIntervalMultiplier
+                        $0.checkpointIntervalMultiplier = filter.checkpointIntervalMultiplier
+                    }
+                } else {
+                    $0.noFilter = .init()
+                }
 
                 switch uuidOption {
                 case .structured:
@@ -151,11 +178,7 @@ extension Streams.Read {
                     $0.uuidOption.string = .init()
                 }
 
-                $0.controlOption = .with {
-                    $0.compatibility = compatibility
-                }
                 $0.resolveLinks = resolveLinks
-                $0.count = limit
             }
         }
 
@@ -167,9 +190,9 @@ extension Streams.Read {
         }
 
         @discardableResult
-        public func set(limit: UInt64) -> Self {
+        public func set(filter: SubscriptionFilter) -> Self {
             withCopy { options in
-                options.limit = limit
+                options.filter = filter
             }
         }
 
@@ -177,13 +200,6 @@ extension Streams.Read {
         public func set(uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
-            }
-        }
-
-        @discardableResult
-        public func set(compatibility: UInt32) -> Self {
-            withCopy { options in
-                options.compatibility = compatibility
             }
         }
     }
