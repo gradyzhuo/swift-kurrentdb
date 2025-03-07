@@ -43,7 +43,7 @@ struct PersistentSubscriptionsTests {
 
         let subscription = try await persistentSubscriptions.subscribe(group: groupName, options: .init())
 
-        let streams = client.streams(streamTarget)
+        let streams = client.streams(of: streamTarget)
         let response = try await streams.append(events: [
             .init(
                 eventType: "PS-SubscribeToStream-AccountCreated", payload: ["Description": "Gears of War 10"]
@@ -76,7 +76,7 @@ struct PersistentSubscriptionsTests {
         )
 
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let streams = client.streams(.specified(streamIdentifier))
+        let streams = client.streams(of: .specified(streamIdentifier))
         let response = try await streams.append(events: [
             event,
         ], options: .init().revision(expected: .any))
