@@ -35,13 +35,18 @@ extension KurrentDBClient {
     /// - Parameter identifier: the instance of `StreamIdentifier`.
     /// - Returns: the instance of `Streams` to operate.
     public func streams<Target: StreamTarget>(of target: Target)-> Streams<Target>{
-        return .init(stream: target, settings: settings, callOptions: defaultCallOptions)
+        return .init(target: target, settings: settings, callOptions: defaultCallOptions)
     }
     
+    public var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.AnyTarget>{
+        get {
+            return .init(target: .init(), settings: settings)
+        }
+    }
     
     ///The client instance of `PersistentSubscriptions`, which constructed by settings passed in KurrentDBClient.
-    public func persistentSubscriptions<Target: StreamTarget>(streams target: Target)-> PersistentSubscriptions<Target>{
-        return .init(stream: target, settings: settings, callOptions: defaultCallOptions)
+    public func persistentSubscriptions<Target: PersistenSubscriptionTarget>(of target: Target)-> PersistentSubscriptions<Target>{
+        return .init(target: target, settings: settings, callOptions: defaultCallOptions)
     }
     
     ///The client instance of `Projections`, which constructed by settings passed in KurrentDBClient.

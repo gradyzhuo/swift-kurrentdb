@@ -110,7 +110,6 @@ First, create a client and get it connected to the database.
 ```swift
 let settings: ClientSettings = .localhost()
 let client = KurrentDBClient(settings: settings)
-let stream = client.streams(of: .specified("some-stream"))
 ```
 
 
@@ -156,9 +155,11 @@ Each event in the database has its own unique identifier (UUID). The database us
 In the snippet below, we append the event to the stream `some-stream`.
 
 ```swift
-try await stream.append(
-    events: [eventData], 
-    options: .init().revision(expected: .any))
+let stream = client.streams(of: .specified("some-stream"))
+
+try await stream.append(events: [eventData]){ options in
+    options.revision(expected: .any)
+}
 ```
 
 Here we are appending events without checking if the stream exists or if the stream version matches the expected event version. See more advanced scenarios in appending [events documentation](https://docs.kurrent.io/clients/grpc/appending-events.html).
@@ -170,8 +171,12 @@ Finally, we can read events back from the `some-stream` stream.
 
 
 ```swift
+let stream = client.streams(of: .specified("some-stream"))
+
 // Read events from stream.
-let responses = try await stream.read(cursor: .start, options: .init().set(limit: 10))
+let responses = try await stream.read(cursor: .start){ options in
+    options.set(limit: 10)
+}
 
 // loop it.
 for try await response in responses {

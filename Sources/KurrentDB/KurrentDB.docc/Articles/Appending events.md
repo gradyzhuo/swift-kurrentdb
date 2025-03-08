@@ -55,22 +55,12 @@ let event = EventData(
     payload: data
 )
 
+let copiedEvent = event
+
 let stream = client.streams(of: .specified("some-stream"))
 
 let _ = try await stream.append(
-            events: [
-                event
-            ], 
-            options: .init()
-        )
-
-let copiedEvent = event
-
-let _ = try await stream.append(
-            events: [
-                copiedEvent
-            ], 
-            options: .init())
+            events: event, copiedEvent)
 ```
 
 ### type
@@ -118,11 +108,9 @@ let event = EventData(
 
 let stream = client.streams(of: .specified("same-event-stream"))
 
-let _ = try await stream.append(
-            events: [
-                event
-            ], 
-            options: .init().revision(expected: .noStream))
+try await stream.append(events: event){ options in
+    options.revision(expected: .noStream)
+}
 
 let data2 = TestEvent(
     id: "2",
@@ -135,11 +123,10 @@ let event2 = EventData(
     payload: data2
 )
 
-let _ = try await stream.append(
-            events: [
-                event2
-            ], 
-            options: .init().revision(expected: .noStream))
+try await stream.append(events: event2){ options in
+    options.revision(expected: .noStream)
+}
+
 ```
 
 There are three available stream states:
@@ -208,10 +195,8 @@ let client = KurrentDBClient(settings: settings)
 let stream = client.streams(of: .specified("some-stream"))
 
 _ = try await stream.append(
-        events: [
-            .init(
-                id: UUID(),
-                eventType: "some-event",
-                payload: data2)
-        ], options: .init())
+        events: .init(
+            id: UUID(),
+            eventType: "some-event",
+            payload: data2))
 ```

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol EventStoreEvent: Sendable {
+internal protocol EventStoreEvent: Sendable {
     var id: UUID { get }
     var eventType: String { get }
 }

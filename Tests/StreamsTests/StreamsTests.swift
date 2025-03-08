@@ -83,11 +83,11 @@ struct StreamTests: Sendable {
         let streams = client.streams(of: .specified(streamIdentifier))
 
         let subscription = try await streams.subscribe(cursor: .end, options: .init())
-        let response = try await streams.append(events: [
-                                                    .init(
-                                                        eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]
-                                                    ),
-                                                ], options: .init().revision(expected: .any))
+        let response = try await streams.append(events: .init(
+            eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]
+        )){
+            $0.revision(expected: .any)
+        }
 
         var lastEventResult: ReadEvent?
         for try await event in subscription.events {
@@ -112,9 +112,9 @@ struct StreamTests: Sendable {
         let subscription = try await client.streams(of: .all).subscribe(cursor: .end, options: .init())
         
         
-        let response = try await streams.append(events: [
-                                                    eventForTesting,
-                                                ], options: .init().revision(expected: .any))
+        let response = try await streams.append(events: eventForTesting){
+            $0.revision(expected: .any)
+        }
 
         var lastEventResult: ReadEvent?
         for try await event in subscription.events {
