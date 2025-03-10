@@ -13,6 +13,7 @@ extension Streams where Target == SpecifiedStream{
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
+        public typealias Response = ReadResponse
         public typealias Responses = AsyncThrowingStream<Response, Error>
 
         public let streamIdentifier: StreamIdentifier
@@ -59,66 +60,6 @@ extension Streams where Target == SpecifiedStream{
                 }
                 continuation.finish()
                 return stream
-            }
-        }
-    }
-}
-
-extension Streams.Read where Target == SpecifiedStream {
-    public struct Response: GRPCResponse {
-        public enum Content: Sendable {
-            case event(readEvent: ReadEvent)
-            case commitPosition(firstStream: UInt64)
-            case commitPosition(lastStream: UInt64)
-            case position(lastAllStream: StreamPosition)
-        }
-
-        package typealias UnderlyingMessage = UnderlyingResponse
-
-        public var content: Content
-
-        init(content: Content) {
-            self.content = content
-        }
-
-        package init(from message: UnderlyingResponse) throws {
-            guard let content = message.content else {
-                throw ClientError.readResponseError(message: "content not found in response: \(message)")
-            }
-            try self.init(content: content)
-        }
-
-        init(message: UnderlyingMessage.ReadEvent) throws {
-            content = try .event(readEvent: .init(message: message))
-        }
-
-        init(firstStreamPosition commitPosition: UInt64) {
-            content = .commitPosition(firstStream: commitPosition)
-        }
-
-        init(lastStreamPosition commitPosition: UInt64) {
-            content = .commitPosition(lastStream: commitPosition)
-        }
-
-        init(lastAllStreamPosition commitPosition: UInt64, preparePosition: UInt64) {
-            content = .position(lastAllStream: .at(commitPosition: commitPosition, preparePosition: preparePosition))
-        }
-
-        init(content: UnderlyingMessage.OneOf_Content) throws {
-            switch content {
-            case let .event(value):
-                try self.init(message: value)
-            case let .firstStreamPosition(value):
-                self.init(firstStreamPosition: value)
-            case let .lastStreamPosition(value):
-                self.init(lastStreamPosition: value)
-            case let .lastAllStreamPosition(value):
-                self.init(lastAllStreamPosition: value.commitPosition, preparePosition: value.preparePosition)
-            case let .streamNotFound(errorMessage):
-                let streamName = String(data: errorMessage.streamIdentifier.streamName, encoding: .utf8) ?? ""
-                throw EventStoreError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
-            default:
-                throw EventStoreError.unsupportedFeature
             }
         }
     }
