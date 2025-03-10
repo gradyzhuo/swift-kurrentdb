@@ -180,7 +180,7 @@ let responses = try await stream.read(cursor: .start){ options in
 
 // loop it.
 for try await response in responses {
-    if let .event(readEvent) = response.content{
+    if let .event(readEvent) = response{
         //handle event
     }
 }
