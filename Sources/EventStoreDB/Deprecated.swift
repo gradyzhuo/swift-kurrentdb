@@ -92,7 +92,7 @@ extension ReadEvent {
     @available(*, deprecated, renamed: "event")
     public var recordedEvent: RecordedEvent{
         get{
-            event
+            record
         }
     }
 }

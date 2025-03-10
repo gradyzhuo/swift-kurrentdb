@@ -55,7 +55,7 @@ extension PersistentSubscriptions {
                 if let link = $0.link {
                     link.id
                 } else {
-                    $0.event.id
+                    $0.record.id
                 }
             }
             try await ack(eventIds: eventIds)
@@ -75,7 +75,7 @@ extension PersistentSubscriptions {
                 if let link = $0.link {
                     link.id
                 } else {
-                    $0.event.id
+                    $0.record.id
                 }
             }
             try await nack(eventIds: eventIds, action: action, reason: reason)

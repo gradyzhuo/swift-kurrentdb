@@ -105,10 +105,10 @@ extension Streams where Target == SpecifiedStream {
             return false
         }.flatMap {
             switch $0 {
-            case let .event(readEvent):
-                switch readEvent.event.contentType {
+            case let .event(event):
+                switch event.record.contentType {
                 case .json:
-                    try JSONDecoder().decode(StreamMetadata.self, from: readEvent.event.data)
+                    try JSONDecoder().decode(StreamMetadata.self, from: event.record.data)
                 default:
                     throw ClientError.eventDataError(message: "The event data could not be parsed. Stream metadata must be encoded in JSON format.")
                 }
