@@ -7,7 +7,7 @@
 
 extension ReadEvent {
     package init(message: PersistentSubscriptions<PersistentSubscription.AnyTarget>.Read.Response.UnderlyingMessage.ReadEvent) throws {
-        let recordedEvent: RecordedEvent = try .init(message: message.event)
+        let recorded: RecordedEvent = try .init(message: message.event)
         let linkedRecordedEvent: RecordedEvent? = try message.hasLink ? .init(message: message.link) : nil
 
         let commitPosition: StreamPosition? = if let position = message.position {
@@ -21,6 +21,6 @@ extension ReadEvent {
             nil
         }
 
-        self.init(event: recordedEvent, link: linkedRecordedEvent, commitPosition: commitPosition)
+        self.init(recorded: recorded, link: linkedRecordedEvent, commitPosition: commitPosition)
     }
 }

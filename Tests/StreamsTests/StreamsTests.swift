@@ -47,7 +47,7 @@ struct StreamTests: Sendable {
         let readResponses = try await streams.read(cursor: .specified(.forwardOn(revision: appendedRevision)), options: .init())
         
         let firstResponse = try await readResponses.first { _ in true }
-        guard case let .event(readEvent) = firstResponse?.content,
+        guard case let .event(readEvent) = firstResponse,
               let readPosition = readEvent.commitPosition,
               let position = appendResponse.position
         else {
@@ -89,13 +89,13 @@ struct StreamTests: Sendable {
             $0.revision(expected: .any)
         }
 
-        var lastEventResult: ReadEvent?
+        var lastEvent: ReadEvent?
         for try await event in subscription.events {
-            lastEventResult = event
+            lastEvent = event
             break
         }
 
-        let lastEventRevision = try #require(lastEventResult?.recordedEvent.revision)
+        let lastEventRevision = try #require(lastEvent?.record.revision)
         #expect(response.currentRevision == lastEventRevision)
         try await streams.delete()
     }
@@ -116,15 +116,15 @@ struct StreamTests: Sendable {
             $0.revision(expected: .any)
         }
 
-        var lastEventResult: ReadEvent?
+        var lastEvent: ReadEvent?
         for try await event in subscription.events {
-            if event.recordedEvent.eventType == eventForTesting.eventType {
-                lastEventResult = event
+            if event.record.eventType == eventForTesting.eventType {
+                lastEvent = event
                 break
             }
         }
 
-        let lastEventPosition = try #require(lastEventResult?.recordedEvent.position)
+        let lastEventPosition = try #require(lastEvent?.record.position)
         #expect(response.position?.commit == lastEventPosition.commit)
         try await streams.delete()
     }

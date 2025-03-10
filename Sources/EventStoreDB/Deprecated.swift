@@ -71,3 +71,28 @@ extension Streams.Subscription: AsyncSequence{
     }
     
 }
+
+extension Streams.ReadResponse {
+    @available(*, deprecated, message: "content is unnecessary, handle response content by ReadResponse itself.")
+    public var content: Self {
+        get{
+            self
+        }
+    }
+}
+
+extension ReadEvent {
+    @available(*, deprecated, renamed: "link")
+    public var linkedRecordedEvent: RecordedEvent?{
+        get{
+            link
+        }
+    }
+    
+    @available(*, deprecated, renamed: "event")
+    public var recordedEvent: RecordedEvent{
+        get{
+            record
+        }
+    }
+}

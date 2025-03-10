@@ -58,7 +58,7 @@ struct PersistentSubscriptionsTests {
             break
         }
 
-        #expect(response.currentRevision == lastEventResult?.event.recordedEvent.revision)
+        #expect(response.currentRevision == lastEventResult?.event.record.revision)
 
         try await streams.delete()
         try await persistentSubscriptions.delete()
@@ -86,7 +86,7 @@ struct PersistentSubscriptionsTests {
         for try await result in subscription.events {
             try await subscription.ack(readEvents: result.event)
 
-            if result.event.recordedEvent.eventType == event.eventType {
+            if result.event.record.eventType == event.eventType {
                 lastEventResult = result
                 break
             }

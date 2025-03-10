@@ -101,14 +101,14 @@ extension Streams where Target == SpecifiedStream {
         let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
 
         return try await responses.first {
-            if case .event = $0.content { return true }
+            if case .event = $0 { return true }
             return false
         }.flatMap {
-            switch $0.content {
-            case let .event(readEvent):
-                switch readEvent.recordedEvent.contentType {
+            switch $0 {
+            case let .event(event):
+                switch event.record.contentType {
                 case .json:
-                    try JSONDecoder().decode(StreamMetadata.self, from: readEvent.recordedEvent.data)
+                    try JSONDecoder().decode(StreamMetadata.self, from: event.record.data)
                 default:
                     throw ClientError.eventDataError(message: "The event data could not be parsed. Stream metadata must be encoded in JSON format.")
                 }
