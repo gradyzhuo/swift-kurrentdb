@@ -179,6 +179,10 @@ let readResponses = try await stream.read(cursor: .start) { options in
 // loop it.
 for try await response in readResponses {
     //handle response
+    if let case .event(event) = response {
+        //handle event
+    }
+ }
 }
 ```
 
