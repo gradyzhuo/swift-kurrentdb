@@ -60,14 +60,14 @@ extension EventStoreDBClient {
             .init(name: "$$\(identifier.name)"),
             cursor: cursor)
         return try await responses.first {
-            switch $0.content {
+            switch $0 {
             case .event:
                 true
             default:
                 false
             }
         }.flatMap {
-            switch $0.content {
+            switch $0 {
             case let .event(readEvent):
                 switch readEvent.recordedEvent.contentType {
                 case .json:

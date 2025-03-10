@@ -9,21 +9,6 @@ import Foundation
 import GRPCEncapsulates
 
 public struct ReadEvent: Sendable {
-    
-    @available(*, deprecated, renamed: "link")
-    public var linkedRecordedEvent: RecordedEvent?{
-        get{
-            link
-        }
-    }
-    
-    @available(*, deprecated, renamed: "event")
-    public var recordedEvent: RecordedEvent{
-        get{
-            event
-        }
-    }
-    
     public internal(set) var event: RecordedEvent
     public internal(set) var link: RecordedEvent?
     public internal(set) var commitPosition: StreamPosition?

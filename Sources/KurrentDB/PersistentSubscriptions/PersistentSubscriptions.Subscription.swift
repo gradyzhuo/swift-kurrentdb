@@ -52,10 +52,10 @@ extension PersistentSubscriptions {
 
         public func ack(readEvents: [ReadEvent]) async throws {
             let eventIds = readEvents.map {
-                if let linked = $0.linkedRecordedEvent {
-                    linked.id
+                if let link = $0.link {
+                    link.id
                 } else {
-                    $0.recordedEvent.id
+                    $0.event.id
                 }
             }
             try await ack(eventIds: eventIds)
@@ -72,10 +72,10 @@ extension PersistentSubscriptions {
 
         public func nack(readEvents: [ReadEvent], action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
             let eventIds = readEvents.map {
-                if let linked = $0.linkedRecordedEvent {
-                    linked.id
+                if let link = $0.link {
+                    link.id
                 } else {
-                    $0.recordedEvent.id
+                    $0.event.id
                 }
             }
             try await nack(eventIds: eventIds, action: action, reason: reason)
