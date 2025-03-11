@@ -9,7 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
-extension Streams where Target == SpecifiedStream {
+extension Streams where Target: SpecifiedStreamTarget {
     public struct Subscribe: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = Read.UnderlyingRequest
@@ -58,7 +58,7 @@ extension Streams where Target == SpecifiedStream {
     }
 }
 
-extension Streams.Subscription where Target == SpecifiedStream{
+extension Streams.Subscription where Target: SpecifiedStreamTarget{
     package convenience init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse , any Error>) async throws {
         var iterator = messages.makeAsyncIterator()
 
@@ -81,7 +81,7 @@ extension Streams.Subscription where Target == SpecifiedStream{
     }
 }
 
-extension Streams.Subscribe where Target == SpecifiedStream {
+extension Streams.Subscribe {
     public struct Response: GRPCResponse {
         public enum Content: Sendable {
             case event(readEvent: ReadEvent)
@@ -148,7 +148,7 @@ extension Streams.Subscribe where Target == SpecifiedStream {
     }
 }
 
-extension Streams.Subscribe where Target == SpecifiedStream {
+extension Streams.Subscribe {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 

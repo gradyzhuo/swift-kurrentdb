@@ -10,7 +10,7 @@ import GRPCEncapsulates
 import SwiftProtobuf
 
 extension Streams {
-    public final class Subscription {
+    public final class Subscription: Sendable {
         public let events: AsyncThrowingStream<ReadEvent, Error>
         public let subscriptionId: String?
         

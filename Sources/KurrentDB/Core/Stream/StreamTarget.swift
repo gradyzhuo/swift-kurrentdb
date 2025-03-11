@@ -34,12 +34,17 @@ public protocol StreamTarget: Sendable {}
 /// `AnyStreamTarget` is used in generic contexts where a specific stream type is not required.
 public struct AnyStreamTarget: StreamTarget{}
 
+
+public protocol SpecifiedStreamTarget: StreamTarget {
+    var identifier: StreamIdentifier { get }
+}
+
 //MARK: - Specified Stream
 
 /// Represents a specific stream that conforms to `StreamTarget`.
 ///
 /// `SpecifiedStream` is identified by a `StreamIdentifier` and can be instantiated using `StreamTarget.specified`.
-public struct SpecifiedStream: StreamTarget {
+public struct SpecifiedStream: SpecifiedStreamTarget {
     
     /// The identifier for the stream, represented as a `StreamIdentifier`.
     public private(set) var identifier: StreamIdentifier
@@ -95,3 +100,22 @@ extension StreamTarget where Self == AllStreams {
         return .init()
     }
 }
+
+extension SpecifiedStream: ExpressibleByStringLiteral{
+    public typealias StringLiteralType = String
+    
+    public init(stringLiteral value: String) {
+        self.identifier = .init(name: value)
+    }
+}
+
+
+// MARK: -
+extension String: SpecifiedStreamTarget {
+    public var identifier: StreamIdentifier {
+        get {
+            .init(name: self)
+        }
+    }
+}
+

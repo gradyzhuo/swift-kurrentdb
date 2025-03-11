@@ -69,6 +69,7 @@ struct StreamTests: Sendable {
 
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
+        
         try await streams.setMetadata(metadata: metadata)
 
         let responseMetadata = try #require(try await streams.getMetadata())
@@ -81,7 +82,7 @@ struct StreamTests: Sendable {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
-
+        
         let subscription = try await streams.subscribe(cursor: .end, options: .init())
         let response = try await streams.append(events: .init(
             eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]

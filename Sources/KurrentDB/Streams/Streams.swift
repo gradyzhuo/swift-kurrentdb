@@ -67,7 +67,7 @@ public struct Streams<Target: StreamTarget>: GRPCConcreteService {
 }
 
 // MARK: - Specified Stream Operations
-extension Streams where Target == SpecifiedStream {
+extension Streams where Target: SpecifiedStreamTarget {
     
     /// The identifier of the specific stream.
     public var identifier: StreamIdentifier {

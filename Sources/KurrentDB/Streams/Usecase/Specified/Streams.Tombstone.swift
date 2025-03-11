@@ -8,7 +8,7 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
-extension Streams where Target == SpecifiedStream {
+extension Streams where Target: SpecifiedStreamTarget {
     public struct Tombstone: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
@@ -38,7 +38,7 @@ extension Streams where Target == SpecifiedStream {
     }
 }
 
-extension Streams.Tombstone where Target == SpecifiedStream {
+extension Streams.Tombstone {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
@@ -57,7 +57,7 @@ extension Streams.Tombstone where Target == SpecifiedStream {
     }
 }
 
-extension Streams.Tombstone where Target == SpecifiedStream {
+extension Streams.Tombstone{
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 

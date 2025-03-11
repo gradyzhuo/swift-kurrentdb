@@ -5,7 +5,7 @@
 //  Created by Grady Zhuo on 2025/3/9.
 //
 
-extension Streams where Target == SpecifiedStream {
+extension Streams where Target: SpecifiedStreamTarget {
     
     /// Appends a list of events to the specified stream.
     ///
