@@ -13,7 +13,7 @@ import GRPCNIOTransportCore
 import GRPCNIOTransportHTTP2Posix
 
 extension PersistentSubscriptions {
-    public final class Subscription: @unchecked Sendable {
+    public final class Subscription: Sendable {
         package typealias Request = PersistentSubscriptions.Read.UnderlyingRequest
 
         let writer: Writer
