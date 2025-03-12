@@ -35,7 +35,7 @@ public protocol StreamTarget: Sendable {}
 public struct AnyStreamTarget: StreamTarget{}
 
 
-public protocol SpecifiedStreamTarget: StreamTarget, Subscribable {
+public protocol SpecifiedStreamTarget: StreamTarget {
     var identifier: StreamIdentifier { get }
 }
 
@@ -121,7 +121,7 @@ extension String: SpecifiedStreamTarget {
 
 
 
-public struct ProjectionStream: StreamTarget, Subscribable {
+public struct ProjectionStream: StreamTarget {
     
     /// The identifier for the stream, represented as a `StreamIdentifier`.
     public private(set) var identifier: StreamIdentifier
