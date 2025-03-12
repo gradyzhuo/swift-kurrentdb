@@ -129,12 +129,12 @@ extension EventStoreDBClient {
     // MARK: Subscribe by all streams methods -
     public func subscribeToAll(from cursor: Cursor<StreamPosition>, configure: (_ options: Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
-        return try await client.streams(of: .all).subscribe(cursor: cursor, options: options)
+        return try await client.streams(of: .all).subscribe(from: cursor, options: options)
     }
 
     public func subscribeTo(stream identifier: StreamIdentifier, from cursor: Cursor<StreamRevision>, configure: (_ options: Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
-        return try await client.streams(of: .specified(identifier)).subscribe(cursor: cursor, options: options)
+        return try await client.streams(of: .specified(identifier)).subscribe(from: cursor, options: options)
     }
 
     // MARK: (Soft) Delete a stream -

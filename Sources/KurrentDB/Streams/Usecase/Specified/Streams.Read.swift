@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension Streams where Target : SpecifiedStreamTarget {
+extension Streams{
     public struct Read: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
@@ -65,7 +65,7 @@ extension Streams where Target : SpecifiedStreamTarget {
     }
 }
 
-extension Streams.Read where Target: SpecifiedStreamTarget {
+extension Streams.Read {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 

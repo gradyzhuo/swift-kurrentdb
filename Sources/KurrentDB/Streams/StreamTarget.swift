@@ -35,7 +35,7 @@ public protocol StreamTarget: Sendable {}
 public struct AnyStreamTarget: StreamTarget{}
 
 
-public protocol SpecifiedStreamTarget: StreamTarget {
+public protocol SpecifiedStreamTarget: StreamTarget, Subscribable {
     var identifier: StreamIdentifier { get }
 }
 
@@ -119,3 +119,28 @@ extension String: SpecifiedStreamTarget {
     }
 }
 
+
+
+public struct ProjectionStream: StreamTarget, Subscribable {
+    
+    /// The identifier for the stream, represented as a `StreamIdentifier`.
+    public private(set) var identifier: StreamIdentifier
+    
+    /// Initializes a `SpecifiedStream` instance.
+    ///
+    /// - Parameter identifier: The identifier for the stream.
+    public init(identifier: StreamIdentifier) {
+        self.identifier = identifier
+    }
+}
+
+
+extension StreamTarget where Self == ProjectionStream {
+    public static func byEventType(_ eventType: String)->ProjectionStream{
+        return .init(identifier: .init(name: "$et-\(eventType)"))
+    }
+
+    public static func byStreamPrefix(_ prefix : String)->ProjectionStream{
+        return .init(identifier: .init(name: "$ce-\(prefix)"))
+    }
+}

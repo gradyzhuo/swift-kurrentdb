@@ -57,7 +57,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: An asynchronous stream of `Subscribe.Response` values.
     public func subscribe(cursor: Cursor<StreamRevision>, configure: (Subscribe.Options) throws ->Subscribe.Options) async throws -> Subscription {
         let options = try configure(.init())
-        return try await subscribe(cursor: cursor, options: options)
+        return try await subscribe(from: cursor, options: options)
     }
 
     /// Deletes the specified stream.
@@ -112,7 +112,7 @@ extension Streams where Target == AllStreams {
     /// - Returns: A `Streams.Subscription` instance.
     public func subscribe(cursor: Cursor<StreamPosition>, configure: (SubscribeAll.Options) throws ->SubscribeAll.Options) async throws -> Streams.Subscription {
         let options = try configure(.init())
-        return try await subscribe(cursor: cursor, options: options)
+        return try await subscribe(from: cursor, options: options)
     }
     
     /// Subscribes to all streams from a specified position.
@@ -123,6 +123,6 @@ extension Streams where Target == AllStreams {
     /// - Returns: A `Streams.Subscription` instance.
     public func subscribe(from position: StreamPosition, configure: (SubscribeAll.Options) throws ->SubscribeAll.Options) async throws -> Streams.Subscription {
         let options = try configure(.init())
-        return try await subscribe(cursor: .specified(position), options: options)
+        return try await subscribe(from: .specified(position), options: options)
     }
 }

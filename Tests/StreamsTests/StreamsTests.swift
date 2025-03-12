@@ -39,7 +39,7 @@ struct StreamTests: Sendable {
     ])
     func testAppendEvent(events: [EventData]) async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: .localhost())        
         let streams = client.streams(of: .specified(streamIdentifier))
         let appendResponse = try await streams.append(events: events, options: .init().revision(expected: .any))
 
@@ -53,7 +53,7 @@ struct StreamTests: Sendable {
         else {
             throw TestingError.exception("readResponse.content or appendResponse.position is not Event or Position")
         }
-
+        
         #expect(readPosition == position)
 
         try await streams.delete()
@@ -83,7 +83,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         
-        let subscription = try await streams.subscribe(cursor: .end, options: .init())
+        let subscription = try await streams.subscribe(from: .end, options: .init())
         let response = try await streams.append(events: .init(
             eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]
         )){
@@ -110,7 +110,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
 
-        let subscription = try await client.streams(of: .all).subscribe(cursor: .end, options: .init())
+        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init())
         
         
         let response = try await streams.append(events: eventForTesting){

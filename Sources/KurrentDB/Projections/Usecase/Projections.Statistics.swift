@@ -16,25 +16,36 @@ extension Projections {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
         public typealias Responses = AsyncThrowingStream<Response, Error>
 
-        public enum ModeOptions: Sendable {
-            case all
+        public enum Mode: Sendable {
+            case any
             case transient
             case continuous
             case oneTime
         }
 
-        public let name: String
         public let options: Options
 
-        public init(name: String, options: Options) {
-            self.name = name
+        public init(options: Options) {
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
-                $0.options = options.build()
-                $0.options.name = name
+                switch options {
+                case .specified(let name):
+                    $0.options.name = name
+                case .listAll(let mode):
+                    switch mode {
+                    case .any:
+                        $0.options.all = .init()
+                    case .continuous:
+                        $0.options.continuous = .init()
+                    case .oneTime:
+                        $0.options.oneTime = .init()
+                    case .transient:
+                        $0.options.transient = .init()
+                    }
+                }
             }
         }
 
@@ -127,32 +138,9 @@ extension Projections.Statistics {
     }
 }
 
-extension Projections.Statistics {
-    public struct Options: EventStoreOptions {
-        package typealias UnderlyingMessage = UnderlyingRequest.Options
-
-        var mode: ModeOptions = .all
-
-        package func build() -> UnderlyingRequest.Options {
-            .with {
-                switch mode {
-                case .all:
-                    $0.all = .init()
-                case .transient:
-                    $0.transient = .init()
-                case .continuous:
-                    $0.continuous = .init()
-                case .oneTime:
-                    $0.oneTime = .init()
-                }
-            }
-        }
-
-        @discardableResult
-        public func set(mode: ModeOptions) -> Self {
-            withCopy { options in
-                options.mode = mode
-            }
-        }
+extension Projections.Statistics{
+    public enum Options : Sendable{
+        case specified(name: String)
+        case listAll(mode: Mode)
     }
 }

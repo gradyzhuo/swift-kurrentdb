@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension Streams where Target: SpecifiedStreamTarget {
+extension Streams{
     public struct Delete: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
@@ -37,7 +37,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     }
 }
 
-extension Streams.Delete where Target: SpecifiedStreamTarget {
+extension Streams.Delete {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
@@ -56,7 +56,7 @@ extension Streams.Delete where Target: SpecifiedStreamTarget {
     }
 }
 
-extension Streams.Delete where Target: SpecifiedStreamTarget {
+extension Streams.Delete {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 

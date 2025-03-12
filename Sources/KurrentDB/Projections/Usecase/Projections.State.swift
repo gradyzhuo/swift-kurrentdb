@@ -43,7 +43,7 @@ extension Projections.State {
     public struct Response: GRPCJSONDecodableResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
-        public private(set) var jsonValue: SwiftProtobuf.Google_Protobuf_Value
+        package var jsonValue: SwiftProtobuf.Google_Protobuf_Value
 
         package init(from message: UnderlyingMessage) throws {
             jsonValue = message.state
