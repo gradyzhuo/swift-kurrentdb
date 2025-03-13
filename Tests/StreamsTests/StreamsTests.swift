@@ -112,11 +112,10 @@ struct StreamTests: Sendable {
 
         let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init())
         
-        
         let response = try await streams.append(events: eventForTesting){
             $0.revision(expected: .any)
         }
-
+        
         var lastEvent: ReadEvent?
         for try await event in subscription.events {
             if event.record.eventType == eventForTesting.eventType {

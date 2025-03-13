@@ -52,7 +52,7 @@ public struct SpecifiedStream: SpecifiedStreamTarget {
     /// Initializes a `SpecifiedStream` instance.
     ///
     /// - Parameter identifier: The identifier for the stream.
-    public init(identifier: StreamIdentifier) {
+    init(identifier: StreamIdentifier) {
         self.identifier = identifier
     }
 }
@@ -129,7 +129,7 @@ public struct ProjectionStream: StreamTarget {
     /// Initializes a `SpecifiedStream` instance.
     ///
     /// - Parameter identifier: The identifier for the stream.
-    public init(identifier: StreamIdentifier) {
+    init(identifier: StreamIdentifier) {
         self.identifier = identifier
     }
 }
@@ -140,7 +140,7 @@ extension StreamTarget where Self == ProjectionStream {
         return .init(identifier: .init(name: "$et-\(eventType)"))
     }
 
-    public static func byStreamPrefix(_ prefix : String)->ProjectionStream{
+    public static func byStream(prefix : String)->ProjectionStream{
         return .init(identifier: .init(name: "$ce-\(prefix)"))
     }
 }

@@ -79,6 +79,15 @@ let package = Package(
             ]
         ),
         .testTarget(
+            name: "ProjectionsTests",
+            dependencies: [
+                "KurrentDB"
+            ],
+            resources: [
+                .copy("Resources/ca.crt"),
+                .copy("Resources/multiple-events.json"),
+            ]),
+        .testTarget(
             name: "PersistentSubscriptionsTests",
             dependencies: [
                 "KurrentDB",

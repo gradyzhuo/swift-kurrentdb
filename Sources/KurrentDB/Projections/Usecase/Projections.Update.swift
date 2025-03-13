@@ -52,7 +52,7 @@ extension Projections.Update {
 
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
-
+        
         public var emitOption: EmitOption
 
         public init(emitOption: EmitOption = .noEmit) {

@@ -18,11 +18,16 @@ extension Projections {
 
         public let name: String
         public let options: Options
+        
+        init(name: String, options: Options) {
+            self.name = name
+            self.options = options
+        }
 
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
-                $0.options.name = name
                 $0.options = options.build()
+                $0.options.name = name
             }
         }
 

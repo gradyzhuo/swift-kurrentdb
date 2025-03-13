@@ -7,42 +7,41 @@
 
 public protocol ProjectionTarget: Sendable {}
 
-public struct AllProjectionTarget: ProjectionTarget { }
-public struct TransientProjectionTarget: ProjectionTarget { }
-public struct ContinuousProjectionTarget: ProjectionTarget { }
-public struct OneTimeProjectionTarget: ProjectionTarget { }
-
-
-
-public struct SpecifiedProjection: ProjectionTarget {
-    public private(set) var name: String
-    
-    internal init(name: String) {
-        self.name = name
-    }
+public struct AllProjectionTarget: ProjectionTarget {
+    internal let mode: Projection.Mode
 }
+public struct TransientProjectionTarget: ProjectionTarget { }
+public struct ContinuousProjectionTarget: ProjectionTarget {
+    internal let name: String
+}
+public struct OneTimeProjectionTarget: ProjectionTarget { }
 
 public struct PredefinedProjection: ProjectionTarget {
     public enum Names: String, Sendable {
+        /// Representation `$by_category`
         case byCategory = "$by_category"
+        /// Representation  `$by_correlation_id`
         case byCorrelationId = "$by_correlation_id"
+        /// Representation  `$by_event_type`
         case byEventType = "$by_event_type"
+        /// Representation  `$stream_by_category`
         case streamByCategory = "$stream_by_category"
+        /// Representation  `$streams`
         case streams = "$streams"
     }
     
-    public private(set) var name: Names
+    internal private(set) var name: Names
+    internal private(set) var mode: Projection.Mode
     
-    internal init(name: Names) {
+    internal init(name: Names, mode: Projection.Mode) {
         self.name = name
+        self.mode = mode
     }
 }
 
 extension ProjectionTarget where Self == AllProjectionTarget {
-    public static var all: Self {
-        get{
-            .init()
-        }
+    public static func all(_ mode: Projection.Mode) -> Self {
+        return .init(mode: mode)
     }
 }
 
@@ -56,12 +55,16 @@ extension ProjectionTarget where Self == TransientProjectionTarget {
 }
 
 extension ProjectionTarget where Self == ContinuousProjectionTarget {
-    public static var continuous: Self {
-        get{
-            .init()
-        }
+    
+    public static func continuous(name: String)->Self{
+        return .init(name: name)
+    }
+    
+    public static func continuous(system: PredefinedProjection.Names)->Self{
+        return .init(name: system.rawValue)
     }
 }
+
 
 extension ProjectionTarget where Self == OneTimeProjectionTarget {
     @available(*, unavailable)
@@ -72,18 +75,3 @@ extension ProjectionTarget where Self == OneTimeProjectionTarget {
     }
 }
 
-
-
-extension ProjectionTarget where Self == SpecifiedProjection {
-    
-    public static func specified(_ name: String) -> Self {
-        return .init(name: name)
-    }
-    
-}
-
-extension ProjectionTarget where Self == PredefinedProjection {
-    public static func system(_ name: Self.Names) -> Self {
-        return .init(name: name)
-    }
-}
