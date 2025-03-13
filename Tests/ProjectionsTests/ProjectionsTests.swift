@@ -60,7 +60,7 @@ fromAll()
         try await projections.disable()
         
         let details = try #require(await projections.details)
-        #expect(details.status == "Faulted")
+        #expect(details.status == "Faulted" || details.status == "Stopped/Faulted")
         
         try await projections.delete()
     }

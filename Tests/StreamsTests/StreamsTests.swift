@@ -26,8 +26,7 @@ struct StreamTests: Sendable {
                 .streams(of: .specified(UUID().uuidString))
                 .read(cursor: .start, options: .init())
             var responsesIterator = responses.makeAsyncIterator()
-            let test = try await responsesIterator.next()
-            print(test)
+           _ = try await responsesIterator.next()
         }
     }
 
