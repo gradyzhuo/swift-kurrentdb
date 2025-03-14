@@ -151,7 +151,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 ```swift
 do{
     try await client.projections(mode: .continuous(name: "projection that does not exists"))
-                    .disable()
+                    .abort()
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
