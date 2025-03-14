@@ -16,8 +16,8 @@ extension PersistentSubscriptions {
         public let id: Data
         public let eventIds: [UUID]
 
-        init(id: Data, eventIds: [UUID]) {
-            self.id = id
+        init(subscriptionId id: String?, eventIds: [UUID]) {
+            self.id = id.flatMap{ $0.data(using: .utf8) } ?? .init()
             self.eventIds = eventIds
         }
 

@@ -66,8 +66,7 @@ extension PersistentSubscriptions {
         ///   - eventIds: An array of `UUID` identifiers for the events to acknowledge.
         /// - Throws: An error if the acknowledgment request fails.
         func ack(eventIds: [UUID]) async throws {
-            let id = subscriptionId?.data(using: .utf8) ?? .init()
-            let usecase = PersistentSubscriptions.Ack(id: id, eventIds: eventIds)
+            let usecase = PersistentSubscriptions.Ack(subscriptionId: subscriptionId, eventIds: eventIds)
 
             let messages = try usecase.requestMessages()
             writer.write(messages: messages)
@@ -106,7 +105,7 @@ extension PersistentSubscriptions {
         ///   - reason: A string explaining why the events are negatively acknowledged.
         /// - Throws: An error if the negative acknowledgment request fails.
         func nack(eventIds: [UUID], action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
-            let usecase = PersistentSubscriptions.Nack(id: .init(), eventIds: eventIds, action: action, reason: reason)
+            let usecase = PersistentSubscriptions.Nack(subscriptionId: subscriptionId, eventIds: eventIds, action: action, reason: reason)
             try writer.write(messages: usecase.requestMessages())
         }
 
