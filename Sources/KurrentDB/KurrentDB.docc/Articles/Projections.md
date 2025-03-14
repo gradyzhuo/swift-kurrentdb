@@ -242,7 +242,7 @@ Gets the status of a named projection. See the projection details section for an
 ```swift
 // by name
 let detail = try await client.projections(mode: .continuous(name: "$by_category"))
-                            .status()
+                            .detail()
 print("\(detail?.name), \(detail?.status), \(detail?.checkpointStatus), \(detail?.mode), \(detail?.progress)")
 ```
 
