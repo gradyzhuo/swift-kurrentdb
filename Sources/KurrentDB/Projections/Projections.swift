@@ -117,13 +117,6 @@ extension Projections where Target == AllProjectionTarget {
     }
 }
 
-extension Projections where Target == ContinuousProjectionTarget {
-    public func create(name: String, query: String, options: ContinuousCreate.Options = .init()) async throws {
-        let usecase = ContinuousCreate(name: name, query: query, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-}
-
 extension Projections where Target == PredefinedProjection {
     
     var name: String {
