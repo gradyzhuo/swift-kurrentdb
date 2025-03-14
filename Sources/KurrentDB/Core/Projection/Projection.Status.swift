@@ -66,7 +66,7 @@ extension Projection {
             case .aborted:
                 self = .aborted
             case .faultedEnabled:
-                self = .faulted
+                self = [.faulted, .enabled]
             }
         }
         
@@ -82,11 +82,11 @@ extension Projection {
         public static let loadStateRequested = Status(rawValue: 1 << 5)
         public static let stateLoaded = Status(rawValue: 1 << 6)
         public static let subscribed = Status(rawValue: 1 << 7)
-        public static let faultedStopping = Status(rawValue: 1 << 8)
-        public static let stopping = Status(rawValue: 1 << 9)
-        public static let completingPhase = Status(rawValue: 1 << 10)
-        public static let phaseCompleted = Status(rawValue: 1 << 11)
-        public static let aborted = Status(rawValue: 1 << 12)
+        public static let stopping = Status(rawValue: 1 << 8)
+        public static let completingPhase = Status(rawValue: 1 << 9)
+        public static let phaseCompleted = Status(rawValue: 1 << 10)
+        public static let aborted = Status(rawValue: 1 << 11)
+        public static let enabled = Status(rawValue: 1 << 12)
     }
     
 }
