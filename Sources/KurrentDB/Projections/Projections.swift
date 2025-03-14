@@ -47,7 +47,7 @@ extension Projections where Target == ContinuousProjectionTarget {
             .deleteCheckpointStream(enabled: deleteCheckpointStream)
             .deleteEmittedStreams(enabled: deleteEmittedStreams)
             .deleteStateStream(enabled: deleteStateStream)
-        let usecase = Delete(name: name, options: .init())
+        let usecase = Delete(name: name, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
@@ -57,8 +57,14 @@ extension Projections where Target == ContinuousProjectionTarget {
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    public func disable(writeCheckpoint: Bool = true) async throws {
-        let options = Disable.Options().writeCheckpoint(enabled: writeCheckpoint)
+    public func disable() async throws {
+        let options = Disable.Options().writeCheckpoint(enabled: true)
+        let usecase = Disable(name: name, options: options)
+        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    public func abort() async throws {
+        let options = Disable.Options().writeCheckpoint(enabled: false)
         let usecase = Disable(name: name, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -74,24 +80,23 @@ extension Projections where Target == ContinuousProjectionTarget {
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    public func getResult(partition: String? = nil) async throws -> Result.Response {
-        let options = Result.Options(partition: partition)
-        let usecase = Result(name: name, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+    public func detail() async throws -> Statistics.Detail? {
+        let usecase = Statistics(options: .specified(name: name))
+        let response = try await usecase.perform(settings: settings, callOptions: callOptions).first{ _ in true }
+        return response?.detail
     }
     
-    public var details: Statistics.Details? {
-        get async throws {
-            let usecase = Statistics(options: .specified(name: name))
-            let response = try await usecase.perform(settings: settings, callOptions: callOptions).first{ _ in true }
-            return response?.details
-        }
+    public func result<DecodeType: Decodable>(of _: DecodeType.Type, partition: String? = nil) async throws -> DecodeType? {
+        let options = Result.Options(partition: partition)
+        let usecase = Result(name: name, options: options)
+        let response = try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try response.decode(to: DecodeType.self)
     }
 
-    public func getState(partition: String? = nil) async throws -> State.Response {
+    public func state<DecodeType: Decodable>(of _: DecodeType.Type, partition: String? = nil) async throws -> DecodeType? {
         let options = State.Options(partition: partition)
         let usecase = State(name: name, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(settings: settings, callOptions: callOptions).decode(to: DecodeType.self)
     }
 
 }
@@ -104,9 +109,11 @@ extension Projections where Target == AllProjectionTarget {
         }
     }
     
-    public func list() async throws -> Statistics.Responses {
+    public func list() async throws -> [Statistics.Detail] {
         let usecase = Statistics(options: .listAll(mode: mode))
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(settings: settings, callOptions: callOptions).reduce(into: .init()) { partialResult, response in
+            partialResult.append(response.detail)
+        }
     }
 }
 

@@ -124,6 +124,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - events: The list of events to append.
     ///   - options: Options for appending events.
     /// - Returns: An `Append.Response` indicating the result of the operation.
+    @discardableResult
     public func append(events: [EventData], options: Append.Options = .init()) async throws -> Append.Response {
         let usecase = Append(to: identifier, events: events, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)

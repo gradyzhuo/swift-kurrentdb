@@ -58,7 +58,7 @@ extension Projections {
 }
 
 extension Projections.Statistics {
-    public struct Details: Sendable {
+    public struct Detail: Sendable {
         public let coreProcessingTime: Int64
         public let version: Int64
         public let epoch: Int64
@@ -66,10 +66,10 @@ extension Projections.Statistics {
         public let writesInProgress: Int32
         public let readsInProgress: Int32
         public let partitionsCached: Int32
-        public let status: String
+        public let status: Projection.Status
         public let stateReason: String
         public let name: String
-        public let mode: Projection.Mode?
+        public let mode: Projection.Mode
         public let position: String
         public let progress: Float
         public let lastCheckpoint: String
@@ -79,7 +79,17 @@ extension Projections.Statistics {
         public let writePendingEventsBeforeCheckpoint: Int32
         public let writePendingEventsAfterCheckpoint: Int32
 
-        internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) {
+        internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) throws {
+            guard let mode = Projection.Mode(rawValue: mode) else {
+                throw EventStoreError.initializationError(reason: "Invalid mode \(mode)")
+            }
+            
+            guard let status = Projection.Status(name: status) else {
+                throw EventStoreError.initializationError(reason: "Invalid status \(status)")
+            }
+            
+            self.name = name
+            self.mode = mode
             self.coreProcessingTime = coreProcessingTime
             self.version = version
             self.epoch = epoch
@@ -89,8 +99,6 @@ extension Projections.Statistics {
             self.partitionsCached = partitionsCached
             self.status = status
             self.stateReason = stateReason
-            self.name = name
-            self.mode = .init(rawValue: mode)
             self.position = position
             self.progress = progress
             self.lastCheckpoint = lastCheckpoint
@@ -106,13 +114,12 @@ extension Projections.Statistics {
 extension Projections.Statistics {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
-        public let details: Details
-        
+        public let detail: Detail
 
         package init(from message: UnderlyingResponse) throws {
             let details = message.details
 
-            self.details = .init(
+            self.detail = try .init(
                 coreProcessingTime: details.coreProcessingTime,
                 version: details.version,
                 epoch: details.epoch,

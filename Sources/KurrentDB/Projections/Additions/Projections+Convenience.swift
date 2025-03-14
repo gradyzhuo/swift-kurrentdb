@@ -59,13 +59,6 @@ extension Projections where Target == ContinuousProjectionTarget {
 }
 
 extension Projections where Target == PredefinedProjection {
-    
-    public func disable(configure: (Disable.Options) throws ->Disable.Options) async throws {
-        let options = try configure(.init(writeCheckpoint: false))
-        let usecase = Disable(name: name, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-
     public func reset(configure: (Reset.Options) throws ->Reset.Options) async throws {
         let options = try configure(.init(writeCheckpoint: false))
         let usecase = Reset(name: name, options: options)

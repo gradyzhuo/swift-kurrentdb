@@ -32,8 +32,18 @@ extension Projections {
         }
 
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            try await client.reset(request: request, options: callOptions) {
-                try handle(response: $0)
+            do{
+                return try await client.reset(request: request, options: callOptions) {
+                    try handle(response: $0)
+                }
+            }catch let error as RPCError {
+                if error.message.contains("NotFound"){
+                    throw EventStoreError.resourceNotFound(reason: "Projection \(name) not found.")
+                }
+                
+                throw EventStoreError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
+            }catch {
+                throw EventStoreError.serverError("Unknown error occurred: \(error)")
             }
         }
     }

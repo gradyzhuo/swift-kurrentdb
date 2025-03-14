@@ -29,8 +29,17 @@ extension Projections {
         }
 
         package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            try await client.create(request: request, options: callOptions) {
-                try handle(response: $0)
+            do{
+                return try await client.create(request: request, options: callOptions) {
+                    try handle(response: $0)
+                }
+            }catch let error as RPCError{
+                if error.message.contains("Conflict"){
+                    throw EventStoreError.resourceAlreadyExists
+                }
+                throw EventStoreError.grpc(code: .init(code: error.code, message: error.message, details: []), reason: error.message)
+            }catch {
+                throw EventStoreError.serverError("unexpected error: \(error)")
             }
         }
     }

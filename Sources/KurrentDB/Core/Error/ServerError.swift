@@ -14,7 +14,7 @@ public enum EventStoreError: Error, Sendable {
     case serverError(String)
     case notLeaderException(endpoint: Endpoint)
     case connectionClosed
-    case grpc(code: GoogleRPCStatus, reason: String)
+    case grpc(code: GoogleRPCStatus?, reason: String)
     case grpcConnectionError(error: GoogleRPCStatus)
     case internalParsingError(reason: String)
     case accessDenied

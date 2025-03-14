@@ -20,7 +20,7 @@ struct StreamTests: Sendable {
     @Test("Stream should be not found and throw an error.")
     func testStreamNoFound() async throws {
         let client = KurrentDBClient(settings: .localhost())
-
+        
         await #expect(throws: EventStoreError.self) {
             let responses = try await client
                 .streams(of: .specified(UUID().uuidString))
