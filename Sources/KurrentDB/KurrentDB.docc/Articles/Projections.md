@@ -89,7 +89,7 @@ Disables a projection, this will save the projection checkpoint. Once disabled, 
 ```swift
 // by predefined enum.
 try await client.projections(mode: .continuous(system: .byCategory))
-            .disble()
+            .disable()
 // The projection can now be deleted
 try await client.projections(mode: .continuous(name: "$by_category"))
             .disable()
@@ -116,7 +116,7 @@ Deletes an existing projection. You must disable the projection before deleting 
 let name = "projection"
 // A projection must be disabled to allow it to be deleted.
 try await client.projections(mode: .continuous(name: name))
-            .disble()
+            .disable()
 // The projection can now be deleted
 try await client.projections(mode: .continuous(name: name))
             .delete()
