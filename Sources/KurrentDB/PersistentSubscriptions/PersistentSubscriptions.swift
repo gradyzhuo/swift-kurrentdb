@@ -48,7 +48,7 @@ public struct PersistentSubscriptions<Target: PersistenSubscriptionTarget>: GRPC
     ///   - settings: The settings used for client communication.
     ///   - callOptions: Options for the gRPC call (default is `.defaults`).
     ///   - eventLoopGroup: The event loop group for async operations (default is `.singletonMultiThreadedEventLoopGroup`).
-    public init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    internal init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.settings = settings
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup

@@ -19,7 +19,7 @@ public struct Projections<Target: ProjectionTarget>: GRPCConcreteService {
     let eventLoopGroup: EventLoopGroup
     private(set) var target: Target
 
-    public init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    internal init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.target = target
         self.settings = settings
         self.callOptions = callOptions

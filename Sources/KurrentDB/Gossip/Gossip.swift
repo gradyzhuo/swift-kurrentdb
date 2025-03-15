@@ -18,7 +18,7 @@ public struct Gossip: GRPCConcreteService {
     public var callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
-    public init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    internal init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.settings = settings
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup

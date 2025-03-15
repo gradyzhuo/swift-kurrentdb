@@ -157,13 +157,11 @@ extension EventStoreDBClient {
 
 extension EventStoreDBClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
-        let operations = Operations(settings: settings, callOptions: defaultCallOptions)
-        return try await operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
+        return try await client.operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
 
     public func stopScavenge(scavengeId: String) async throws -> Operations.ScavengeResponse {
-        let operations = Operations(settings: settings, callOptions: defaultCallOptions)
-        return try await operations.stopScavenge(scavengeId: scavengeId)
+        return try await client.operations.stopScavenge(scavengeId: scavengeId)
     }
 }
 

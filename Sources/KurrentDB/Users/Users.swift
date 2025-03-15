@@ -55,7 +55,7 @@ public struct Users: GRPCConcreteService {
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
-    public init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    internal init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.settings = settings
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup

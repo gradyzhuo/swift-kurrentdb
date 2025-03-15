@@ -58,7 +58,7 @@ public struct Streams<Target: StreamTarget>: GRPCConcreteService {
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
-    public init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    internal init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.target = target
         self.settings = settings
         self.callOptions = callOptions
