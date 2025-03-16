@@ -48,11 +48,7 @@ fromAll()
         #expect(details.mode == .continuous)
         
         try await projections.disable()
-        try await projections.delete{
-            $0.delete(checkpointStream: true)
-            $0.delete(stateStream: true)
-            $0.delete(emittedStreams: true)
-        }
+        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
     }
     
     @Test
@@ -66,11 +62,7 @@ fromAll()
         let details = try #require(await projections.detail())
         #expect(details.status.contains(.stopped))
         
-        try await projections.delete{
-            $0.delete(checkpointStream: true)
-            $0.delete(stateStream: true)
-            $0.delete(emittedStreams: true)
-        }
+        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
     }
     
     @Test
@@ -91,11 +83,7 @@ fromAll()
         #expect(enabledDetails.status == .running)
         
         try await projections.disable()
-        try await projections.delete{
-            $0.delete(checkpointStream: true)
-            $0.delete(stateStream: true)
-            $0.delete(emittedStreams: true)
-        }
+        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
     }
     
     @Test
@@ -114,11 +102,7 @@ fromAll()
         let enabledDetails = try #require(await projections.detail())
         #expect(enabledDetails.status == .stopped)
     
-        try await projections.delete{
-            $0.delete(checkpointStream: true)
-            $0.delete(stateStream: true)
-            $0.delete(emittedStreams: true)
-        }
+        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
     }
     
     @Test
@@ -163,11 +147,7 @@ fromAll()
         
         try await stream.delete()
         try await projectionClient.disable()
-        try await projectionClient.delete{
-            $0.delete(checkpointStream: true)
-            $0.delete(stateStream: true)
-            $0.delete(emittedStreams: true)
-        }
+        try await projectionClient.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
     }
     
     @Test func getResultExample() async throws {
@@ -204,11 +184,7 @@ fromAll()
         
         try await stream.delete()
         try await projection.disable()
-        try await projection.delete{
-            $0.delete(checkpointStream: true)
-            $0.delete(stateStream: true)
-            $0.delete(emittedStreams: true)
-        }
+        try await projection.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
     }
     
     @Test("status from string", arguments: [
