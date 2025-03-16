@@ -42,15 +42,13 @@ public struct Projections<Target: ProjectionTarget>: GRPCConcreteService {
 }
 
 extension Projections where Target: NameSpecifiable & ProjectionCreatable {
-    /// Creates a continuous projection with the specified query and configuration.
+    /// Creates a continuous projection with the specified query and options.
     ///
     /// - Parameters:
     ///   - query: The query string defining the projection.
-    ///   - configure: A closure to modify the `ContinuousCreate.Options` in-place. Throws if configuration fails.
-    /// - Throws: An error if the creation process or configuration fails.
-    public func createContinuous(query: String, configure: (inout ContinuousCreate.Options) throws -> Void = { _ in }) async throws {
-        var options = ContinuousCreate.Options()
-        try configure(&options)
+    ///   - options: The options for creating the projection. Defaults to an empty configuration.
+    /// - Throws: An error if the creation process fails.
+    public func createContinuous(query: String, options: ContinuousCreate.Options = .init()) async throws {
         let usecase = ContinuousCreate(name: target.name, query: query, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -130,28 +128,24 @@ extension Projections where Target: NameSpecifiable & ProjectionResetable {
 }
 
 extension Projections where Target: NameSpecifiable & ProjectionDeletable {
-    /// Deletes the projection with the specified configuration.
+    /// Deletes the projection with the specified options.
     ///
-    /// - Parameter configure: A closure to modify the `Delete.Options` in-place. Defaults to no modifications.
-    /// - Throws: An error if deletion or configuration fails.
-    public func delete(configure: (inout Delete.Options) throws -> Void = { _ in }) async throws {
-        var options = Delete.Options()
-        try configure(&options)
+    /// - Parameter options: The options for deleting the projection. Defaults to an empty configuration.
+    /// - Throws: An error if deletion fails.
+    public func delete(options: Delete.Options = .init()) async throws {
         let usecase = Delete(name: name, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 }
 
 extension Projections where Target: NameSpecifiable & ProjectionUpdatable {
-    /// Updates the projection with an optional query and configuration.
+    /// Updates the projection with an optional query and options.
     ///
     /// - Parameters:
     ///   - query: An optional query string to update the projection. If `nil`, the query remains unchanged.
-    ///   - configure: A closure to modify the `Update.Options` in-place.
-    /// - Throws: An error if updating or configuration fails.
-    public func update(query: String?, configure: (inout Update.Options) throws -> Void) async throws {
-        var options = Update.Options()
-        try configure(&options)
+    ///   - options: The options for updating the projection. Defaults to an empty configuration.
+    /// - Throws: An error if updating fails.
+    public func update(query: String?, options: Update.Options = .init()) async throws {
         let usecase = Update(name: name, query: query, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -174,12 +168,10 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
     ///
     /// - Parameters:
     ///   - _: The type to decode the result into, conforming to `Decodable`.
-    ///   - configure: A closure to modify the `Result.Options` in-place. Defaults to no modifications.
+    ///   - options: The options for retrieving the result. Defaults to an empty configuration.
     /// - Returns: An optional decoded result of type `DecodeType`, or `nil` if decoding fails.
     /// - Throws: An error if the operation or decoding fails.
-    public func result<DecodeType: Decodable>(of _: DecodeType.Type, configure: (inout Result.Options) throws -> Void = { _ in }) async throws -> DecodeType? {
-        var options = Result.Options()
-        try configure(&options)
+    public func result<DecodeType: Decodable>(of _: DecodeType.Type, options: Result.Options = .init()) async throws -> DecodeType? {
         let usecase = Result(name: name, options: options)
         let response = try await usecase.perform(settings: settings, callOptions: callOptions)
         return try response.decode(to: DecodeType.self)
@@ -189,12 +181,10 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
     ///
     /// - Parameters:
     ///   - _: The type to decode the state into, conforming to `Decodable`.
-    ///   - configure: A closure to modify the `State.Options` in-place. Defaults to no modifications.
+    ///   - options: The options for retrieving the state. Defaults to an empty configuration.
     /// - Returns: An optional decoded state of type `DecodeType`, or `nil` if decoding fails.
     /// - Throws: An error if the operation or decoding fails.
-    public func state<DecodeType: Decodable>(of _: DecodeType.Type, configure: (inout State.Options) throws -> Void = { _ in }) async throws -> DecodeType? {
-        var options = State.Options()
-        try configure(&options)
+    public func state<DecodeType: Decodable>(of _: DecodeType.Type, options: State.Options = .init()) async throws -> DecodeType? {
         let usecase = State(name: name, options: options)
         let response = try await usecase.perform(settings: settings, callOptions: callOptions)
         return try response.decode(to: DecodeType.self)

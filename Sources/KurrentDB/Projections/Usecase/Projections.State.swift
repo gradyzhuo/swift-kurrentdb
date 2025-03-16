@@ -63,7 +63,11 @@ extension Projections.State {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        var partition: String?
+        public private(set) var partition: String?
+        
+        public init() {
+            self.partition = nil
+        }
 
         public func partition(_ partition: String) -> Self {
             withCopy { options in
