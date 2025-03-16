@@ -308,9 +308,9 @@ print(result)
 ```
 
 ## Projection Details
-`List all`, `list continuous` and `get status` all return the details and statistics of projections
-
+`List all`, `list continuous` and `get status` all return the details and statistics of projections.
 |Field|Description|
+|-----|-----------|
 |Name, EffectiveName|The name of the projection.|
 |Status|A human readable string of the current statuses of the projection (see below)|
 |StateReason|A human readable string explaining the reason of the current projection state.|
@@ -331,9 +331,9 @@ print(result)
 |Epoch|This is used internally, the epoch is increased when the projection is reset.|
 
 
-The Status string is a combination of the following values. The first 3 are the most common one, as the other one are transient values while the projection is initialised or stopped
-
+The Status string is a combination of the following values. The first 3 are the most common one, as the other one are transient values while the projection is initialised or stopped.
 |Value|Description|
+|-----|-----------|
 |Running|The projection is running and processing events.|
 |Stopped|The projection is stopped and is no longer processing new events.|
 |Faulted|An error occurred in the projection, StateReason will give the fault details, the projection is not processing events.|
