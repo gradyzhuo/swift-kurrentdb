@@ -55,8 +55,8 @@ extension Projections.Reset {
 
         public private(set) var writeCheckpoint: Bool
 
-        public init(writeCheckpoint: Bool = false) {
-            self.writeCheckpoint = writeCheckpoint
+        public init() {
+            self.writeCheckpoint = true
         }
 
         public func writeCheckpoint(enable: Bool) -> Self {

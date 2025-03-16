@@ -57,10 +57,10 @@ extension Projections.Delete {
         public private(set) var deleteEmittedStreams: Bool
         public private(set) var deleteStateStream: Bool
 
-        public init(deleteCheckpointStream: Bool = false, deleteEmittedStreams: Bool = false, deleteStateStream: Bool = false) {
-            self.deleteCheckpointStream = deleteCheckpointStream
-            self.deleteEmittedStreams = deleteEmittedStreams
-            self.deleteStateStream = deleteStateStream
+        public init() {
+            self.deleteCheckpointStream = false
+            self.deleteEmittedStreams = false
+            self.deleteStateStream = false
         }
 
         package func build() -> UnderlyingMessage {
@@ -72,21 +72,21 @@ extension Projections.Delete {
         }
 
         @discardableResult
-        public func deleteEmittedStreams(enabled: Bool) -> Self {
+        public func delete(emittedStreams enabled: Bool) -> Self {
             withCopy { options in
                 options.deleteEmittedStreams = enabled
             }
         }
 
         @discardableResult
-        public func deleteStateStream(enabled: Bool) -> Self {
+        public func delete(stateStream enabled: Bool) -> Self {
             withCopy { options in
                 options.deleteStateStream = enabled
             }
         }
 
         @discardableResult
-        public func deleteCheckpointStream(enabled: Bool) -> Self {
+        public func delete(checkpointStream enabled: Bool) -> Self {
             withCopy { options in
                 options.deleteCheckpointStream = enabled
             }

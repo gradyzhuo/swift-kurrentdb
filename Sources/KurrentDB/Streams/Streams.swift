@@ -14,24 +14,27 @@ import NIO
 
 /// A generic gRPC service for handling event streams.
 ///
-/// `Streams` is a concrete gRPC service that enables interaction with event streams through operations
-/// such as appending, reading, subscribing, deleting, and managing metadata.
+/// `Streams` enables interaction with event streams through operations such as appending, reading,
+/// subscribing, deleting, and managing metadata. It is a concrete implementation of `GRPCConcreteService`.
 ///
 /// The type parameter `Target` determines the scope of the stream, allowing either a specific stream
-/// (`SpecifiedStream`) or all streams (`AllStreams`).
+/// (`SpecifiedStream`), a projection stream (`ProjectionStream`), or all streams (`AllStreams`).
 ///
 /// ## Usage
 ///
-/// Creating a client for a specified stream:
+/// Creating a client for a specified stream and appending events:
 /// ```swift
-/// let specifiedStream = Streams(stream: StreamTarget.specified("log.txt"), settings: clientSettings)
+/// let specifiedStream = Streams(target: StreamTarget.specified("log.txt"), settings: clientSettings)
 /// try await specifiedStream.append(events: [event])
 /// ```
 ///
-/// Creating a client for all streams:
+/// Reading from all streams:
 /// ```swift
-/// let allStreams = Streams(stream: StreamTarget.all, settings: clientSettings)
-/// try await allStreams.read(cursor: .start)
+/// let allStreams = Streams(target: StreamTarget.all, settings: clientSettings)
+/// let responses = try await allStreams.read(cursor: .start)
+/// for try await response in responses {
+///     print(response)
+/// }
 /// ```
 ///
 /// - Note: This service relies on **gRPC** and requires a valid `ClientSettings` configuration.
@@ -45,6 +48,9 @@ import NIO
 /// - ``subscribe(from:options:)``
 /// - ``delete(options:)``
 /// - ``tombstone(options:)``
+///
+/// #### Projection Stream Operations
+/// - ``subscribe(from:options:)-swift.struct-8y6e8``
 ///
 /// #### All Streams Operations
 /// - ``read(cursor:options:)-6h8h2``
@@ -63,13 +69,13 @@ public struct Streams<Target: StreamTarget>: GRPCConcreteService {
     /// The event loop group handling asynchronous tasks.
     public let eventLoopGroup: EventLoopGroup
     
-    /// The target stream, which can be either a specific stream or all streams.
+    /// The target stream, defining the scope of operations (e.g., specific stream or all streams).
     public let target: Target
 
-    /// Initializes a `Streams` instance with the given target and settings.
+    /// Initializes a `Streams` instance with a target and settings.
     ///
     /// - Parameters:
-    ///   - target: The stream target, either `SpecifiedStream` or `AllStreams`.
+    ///   - target: The stream target (e.g., `SpecifiedStream`, `ProjectionStream`, or `AllStreams`).
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
@@ -82,7 +88,7 @@ public struct Streams<Target: StreamTarget>: GRPCConcreteService {
 }
 
 // MARK: - Specified Stream Operations
-/// Extension providing operations for specific streams.
+/// Provides operations for specific streams conforming to `SpecifiedStreamTarget`.
 extension Streams where Target: SpecifiedStreamTarget {
     
     /// The identifier of the specific stream.
@@ -230,7 +236,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     }
 }
 
-/// Extension providing operations for projection streams.
+/// Provides operations for projection streams.
 extension Streams where Target == ProjectionStream {
     
     /// The identifier of the projection stream.
@@ -265,7 +271,7 @@ extension Streams where Target == ProjectionStream {
 }
 
 // MARK: - All Streams Operations
-/// Extension providing operations for all streams.
+/// Provides operations for all streams.
 extension Streams where Target == AllStreams {
 
     /// Reads events from all available streams.

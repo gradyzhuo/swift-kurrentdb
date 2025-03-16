@@ -55,21 +55,25 @@ fromAll()
     func disableProjection() async throws {
         let projectionName = "testDisableProjection_\(UUID())"
         let projections = client.projections(name: projectionName)
-        try await projections.continousCreate(query: "fromAll().outputState()")
+        try await projections.createContinuous(query: "fromAll().outputState()")
         
         try await projections.disable()
         
         let details = try #require(await projections.detail())
         #expect(details.status.contains(.stopped))
         
-        try await projections.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+        try await projections.delete{
+            $0.delete(checkpointStream: true)
+            $0.delete(stateStream: true)
+            $0.delete(emittedStreams: true)
+        }
     }
     
     @Test
     func enableProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
         let projections = client.projections(name: projectionName)
-        try await projections.continousCreate(query: "fromAll().outputState()")
+        try await projections.createContinuous(query: "fromAll().outputState()")
         
         
         try await projections.disable()
@@ -83,15 +87,18 @@ fromAll()
         #expect(enabledDetails.status == .running)
         
         try await projections.disable()
-        try await projections.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+        try await projections.delete{
+            $0.delete(checkpointStream: true)
+            $0.delete(stateStream: true)
+            $0.delete(emittedStreams: true)
+        }
     }
     
     @Test
     func abortProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
         let projections = client.projections(name: projectionName)
-        try await projections.continousCreate(query: "fromAll().outputState()")
-        
+        try await projections.createContinuous(query: "fromAll().outputState()")
         
         try await projections.abort()
         
@@ -103,7 +110,11 @@ fromAll()
         let enabledDetails = try #require(await projections.detail())
         #expect(enabledDetails.status == .stopped)
     
-        try await projections.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+        try await projections.delete{
+            $0.delete(checkpointStream: true)
+            $0.delete(stateStream: true)
+            $0.delete(emittedStreams: true)
+        }
     }
     
     @Test
@@ -139,7 +150,7 @@ fromAll()
         ])
 
         let projectionClient = client.projections(name: name)
-        try await projectionClient.continousCreate(query: js)
+        try await projectionClient.createContinuous(query: js)
 
         try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
         
@@ -148,7 +159,11 @@ fromAll()
         
         try await stream.delete()
         try await projectionClient.disable()
-        try await projectionClient.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+        try await projectionClient.delete{
+            $0.delete(checkpointStream: true)
+            $0.delete(stateStream: true)
+            $0.delete(emittedStreams: true)
+        }
     }
     
     @Test func getResultExample() async throws {
@@ -176,7 +191,7 @@ fromAll()
         ])
         
         let projection = client.projections(name: name)
-        try await projection.continousCreate(query: js)
+        try await projection.createContinuous(query: js)
         
         try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
         
@@ -185,7 +200,11 @@ fromAll()
         
         try await stream.delete()
         try await projection.disable()
-        try await projection.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+        try await projection.delete{
+            $0.delete(checkpointStream: true)
+            $0.delete(stateStream: true)
+            $0.delete(emittedStreams: true)
+        }
     }
     
     @Test("status from string", arguments: [

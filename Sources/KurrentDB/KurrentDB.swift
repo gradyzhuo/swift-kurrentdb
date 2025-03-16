@@ -50,7 +50,7 @@ extension KurrentDBClient {
     }
     
     ///The client instance of `Projections`, which constructed by settings passed in KurrentDBClient.
-    public func projections<Mode: ProjectionTargetMode>(all mode: Mode)->Projections<AllProjectionTarget<Mode>> {
+    public func projections<Mode: ProjectionMode>(all mode: Mode)->Projections<AllProjectionTarget<Mode>> {
         .init(target: .init(mode: mode), settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     

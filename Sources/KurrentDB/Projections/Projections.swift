@@ -29,12 +29,7 @@ public struct Projections<Target: ProjectionTarget>: GRPCConcreteService {
 
 
 extension Projections where Target: NameSpecifiable & ProjectionCreatable{
-    public func continousCreate(query: String, options: ContinuousCreate.Options = .init()) async throws {
-        let usecase = ContinuousCreate(name: target.name, query: query, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-    
-    public func continousCreate(query: String, configure: (ContinuousCreate.Options) throws ->ContinuousCreate.Options) async throws {
+    public func createContinuous(query: String, configure: (ContinuousCreate.Options) throws ->ContinuousCreate.Options = { $0 }) async throws {
         let options = try configure(.init())
         let usecase = ContinuousCreate(name: target.name, query: query, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
@@ -92,15 +87,9 @@ extension Projections where Target: NameSpecifiable & ProjectionDisable{
 }
 
 extension Projections where Target: NameSpecifiable & ProjectionResetable {
-    public func reset(writeCheckpoint: Bool = false) async throws {
-        let options = Reset.Options().writeCheckpoint(enable: writeCheckpoint)
-        let usecase = Reset(name: name, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
     
-    public func reset(configure: (Reset.Options) throws ->Reset.Options) async throws {
-        let options = try configure(.init(writeCheckpoint: false))
-        let usecase = Reset(name: name, options: options)
+    public func reset() async throws {
+        let usecase = Reset(name: name, options: .init())
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 }
@@ -108,15 +97,7 @@ extension Projections where Target: NameSpecifiable & ProjectionResetable {
 
 
 extension Projections where Target: NameSpecifiable & ProjectionDeletable {
-    public func delete(deleteCheckpointStream: Bool = false, deleteEmittedStreams: Bool = false, deleteStateStream: Bool = false) async throws {
-        let options = Delete.Options()
-            .deleteCheckpointStream(enabled: deleteCheckpointStream)
-            .deleteEmittedStreams(enabled: deleteEmittedStreams)
-            .deleteStateStream(enabled: deleteStateStream)
-        let usecase = Delete(name: name, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-    
+
     public func delete(configure: (Delete.Options) throws ->Delete.Options = { $0 }) async throws {
         let options = try configure(.init())
         let usecase = Delete(name: name, options: options)
@@ -127,14 +108,9 @@ extension Projections where Target: NameSpecifiable & ProjectionDeletable {
 
 
 extension Projections where Target: NameSpecifiable & ProjectionUpdatable {
-    public func update(query: String?, emit emitOption: Update.EmitOption = .noEmit) async throws {
-        let options = Update.Options(emitOption: emitOption)
-        let usecase = Update(name: name, query: query, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-    
+
     public func update(query: String?, configure: (Update.Options) throws ->Update.Options) async throws {
-        let options = try configure(.init(emitOption: .noEmit))
+        let options = try configure(.init())
         let usecase = Update(name: name, query: query, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -149,28 +125,17 @@ extension Projections where Target: NameSpecifiable & ProjectionDescribable {
 }
 
 extension Projections where Target: NameSpecifiable & ProjectionResulable{
-    public func result<DecodeType: Decodable>(of _: DecodeType.Type, partition: String? = nil) async throws -> DecodeType? {
-        let options = Result.Options(partition: partition)
+    public func result<DecodeType: Decodable>(of _: DecodeType.Type, configure: (Result.Options) throws ->Result.Options = { $0 }) async throws -> DecodeType? {
+        let options = try configure(.init())
         let usecase = Result(name: name, options: options)
         let response = try await usecase.perform(settings: settings, callOptions: callOptions)
         return try response.decode(to: DecodeType.self)
     }
     
-    public func result(configure: (Result.Options) throws ->Result.Options) async throws -> Result.Response {
-        let options = try configure(.init())
-        let usecase = Result(name: name, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
-
-    public func state<DecodeType: Decodable>(of _: DecodeType.Type, partition: String? = nil) async throws -> DecodeType? {
-        let options = State.Options(partition: partition)
-        let usecase = State(name: name, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions).decode(to: DecodeType.self)
-    }
-    
-    public func state(configure: (State.Options) throws ->State.Options) async throws -> State.Response {
+    public func state<DecodeType: Decodable>(of _: DecodeType.Type, configure: (State.Options) throws ->State.Options = { $0 }) async throws -> DecodeType? {
         let options = try configure(.init())
         let usecase = State(name: name, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        let response = try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try response.decode(to: DecodeType.self)
     }
 }

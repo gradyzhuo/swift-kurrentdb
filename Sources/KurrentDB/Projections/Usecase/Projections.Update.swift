@@ -65,8 +65,8 @@ extension Projections.Update {
         
         public var emitOption: EmitOption
 
-        public init(emitOption: EmitOption = .noEmit) {
-            self.emitOption = emitOption
+        public init() {
+            self.emitOption = .noEmit
         }
 
         package func build() -> UnderlyingMessage {

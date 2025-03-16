@@ -33,14 +33,14 @@ fromAll()
 """
 let name = "countEvents_Create_\(UUID())"
 let projection = client.projections(name: name)
-try await projection.continousCreate(query: js)
+try await projection.createContinous(query: js)
 ```
 
 Trying to create projections with the same name will result in an error:
 
 ```swift
 do {
-    try await projection.continousCreate(query: js)
+    try await projection.createContinous(query: js)
 }catch let error as EventStoreError {
     if case .resourceAlreadyExists = error {
         print("\(name) already exists")
@@ -203,7 +203,7 @@ fromAll()
 """
 
 let projection = client.projections(name: name)
-try await projection.continousCreate(query: "fromAll().when()")
+try await projection.createContinous(query: "fromAll().when()")
 try await projection.update(query: js)
 ```
 
@@ -269,7 +269,7 @@ fromAll()
 """
 
 let projection = client.projections(name: name)
-try await projection.continousCreate(query: js)
+try await projection.createContinous(query: js)
 
 try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
 
@@ -299,7 +299,7 @@ fromAll()
 """
 
 let projectionClient = client.projections(name: name)
-try await projectionClient.continousCreate(query: js)
+try await projectionClient.createContinous(query: js)
 
 try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
 

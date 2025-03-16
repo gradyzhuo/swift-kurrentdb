@@ -4,6 +4,7 @@
 //
 //  Created by Grady Zhuo on 2023/12/7.
 //
+
 import Foundation
 import GRPCCore
 import GRPCEncapsulates
@@ -13,41 +14,78 @@ import NIO
 
 /// A service for managing persistent subscriptions to streams.
 ///
-/// `PersistentSubscriptions` allows you to create, update, delete, subscribe to, and retrieve information
-/// about persistent subscriptions for streams in the EventStore system. It supports operations on both
-/// all streams and specified streams, depending on the provided `Target`.
+/// `PersistentSubscriptions` provides methods to create, update, delete, subscribe to, and retrieve
+/// information about persistent subscriptions in an EventStore system. The type parameter `Target`
+/// determines whether the subscription applies to a specific stream (`Specified`), all streams (`All`),
+/// or a generic target (`AnyTarget`).
 ///
-/// ## Usage Example:
+/// ## Usage
+///
+/// Creating a persistent subscription to a specific stream:
 /// ```swift
-/// let persistentSubscriptions = PersistentSubscriptions<SpecifiedStream>(stream: .specified("streamName"),
-///                                                                         settings: clientSettings)
-/// try await persistentSubscriptions.create(group: "subscriptionGroup")
+/// let subscription = PersistentSubscriptions(target: .specified("streamName", group: "myGroup"),
+///                                            settings: clientSettings)
+/// try await subscription.create()
 /// ```
 ///
-/// - SeeAlso: `AllStreams` and `SpecifiedStream` for selecting different stream targets.
+/// Subscribing to all streams:
+/// ```swift
+/// let subscription = PersistentSubscriptions(target: .all(group: "myGroup"), settings: clientSettings)
+/// let sub = try await subscription.subscribe()
+/// for try await event in sub.events {
+///     print(event)
+/// }
+/// ```
+///
+/// - Note: This service relies on **gRPC** and requires a valid `ClientSettings` configuration.
+///
+/// ### Topics
+/// #### Specific Stream Operations
+/// - ``create(options:)-swift.struct-7k8n2``
+/// - ``update(options:)-swift.struct-5m3j8``
+/// - ``delete()-swift.struct-9p2k1``
+/// - ``subscribe(options:)-swift.struct-3h7v9``
+/// - ``getInfo()-swift.struct-1d5r4``
+/// - ``replayParkedMessages(options:)-swift.struct-8t9m0``
+///
+/// #### All Streams Operations
+/// - ``create(options:)-swift.struct-2x4p7``
+/// - ``update(options:)-swift.struct-6y8q3``
+/// - ``delete()-swift.struct-4z2n9``
+/// - ``subscribe(options:)-swift.struct-9r5t1``
+/// - ``getInfo()-swift.struct-7u3m8``
+/// - ``replayParkedMessages(options:)-swift.struct-3v6k2``
+///
+/// #### General Operations
+/// - ``restartSubsystem()``
+/// - ``listForStream(_:)``
+/// - ``listAll()``
 public struct PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
+    /// The underlying gRPC service type.
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
+    
+    /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = UnderlyingService.Client<HTTP2ClientTransport.Posix>
 
     /// The settings used for client communication.
     public private(set) var settings: ClientSettings
     
-    /// Options to be used for each service call.
+    /// Options to be used for each gRPC service call.
     public var callOptions: CallOptions
     
     /// The event loop group for asynchronous execution.
     public let eventLoopGroup: EventLoopGroup
     
-    /// The target stream, which could be either `AllStreams` or a `SpecifiedStream`.
+    /// The target stream for the subscription (e.g., specific stream, all streams, or generic).
     public let target: Target
 
-    /// Initializes a new instance of `PersistentSubscriptions`.
+    /// Initializes a `PersistentSubscriptions` instance.
     ///
     /// - Parameters:
-    ///   - target: The target stream for the subscription, either a specific stream or all streams.
+    ///   - target: The target stream for the subscription (e.g., `Specified`, `All`, or `AnyTarget`).
     ///   - settings: The settings used for client communication.
-    ///   - callOptions: Options for the gRPC call (default is `.defaults`).
-    ///   - eventLoopGroup: The event loop group for async operations (default is `.singletonMultiThreadedEventLoopGroup`).
+    ///   - callOptions: Options for the gRPC call, defaulting to `.defaults`.
+    ///   - eventLoopGroup: The event loop group for async operations, defaulting to `.singletonMultiThreadedEventLoopGroup`.
     internal init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.settings = settings
         self.callOptions = callOptions
@@ -56,30 +94,31 @@ public struct PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRP
     }
 }
 
-
 // MARK: - All Streams
+/// Provides operations for persistent subscriptions targeting all streams.
 extension PersistentSubscriptions where Target == PersistentSubscription.All {
-    /// The stream identifier for the specified stream.
+    /// The group name of the persistent subscription.
     public var group: String {
-        get{
+        get {
             target.group
         }
     }
+    
     /// Creates a persistent subscription for all streams.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for the subscription (default is `.init()`).
+    ///   - options: Configuration options for creating the subscription, defaulting to an empty configuration.
+    /// - Throws: An error if the creation fails.
     public func create(options: CreateToAll.Options = .init()) async throws {
         let usecase: CreateToAll = .init(group: group, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    /// Updates a persistent subscription for all streams.
+    /// Updates an existing persistent subscription for all streams.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for the update (default is `.init()`).
+    ///   - options: Configuration options for updating the subscription, defaulting to an empty configuration.
+    /// - Throws: An error if the update fails.
     public func update(options: UpdateToAll.Options = .init()) async throws {
         let usecase = UpdateToAll(group: group, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
@@ -87,8 +126,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     
     /// Deletes a persistent subscription for all streams.
     ///
-    /// - Parameters:
-    ///   - group: The subscription group name.
+    /// - Throws: An error if the deletion fails.
     public func delete() async throws {
         let usecase = Delete(stream: .all, group: group)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
@@ -97,9 +135,9 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// Subscribes to a persistent subscription for all streams.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for the subscription (default is `.init()`).
-    /// - Returns: A `Subscription` object for managing the subscription.
+    ///   - options: Configuration options for subscribing, defaulting to an empty configuration.
+    /// - Returns: A `Subscription` instance for receiving events.
+    /// - Throws: An error if the subscription fails.
     public func subscribe(options: Read.Options = .init()) async throws -> Subscription {
         let usecase = Read(streamSelection: .all, group: group, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
@@ -107,127 +145,127 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     
     /// Retrieves information about a persistent subscription for all streams.
     ///
-    /// - Parameters:
-    ///   - group: The subscription group name.
-    /// - Returns: A `PersistentSubscription.SubscriptionInfo` object with subscription details.
+    /// - Returns: A `PersistentSubscription.SubscriptionInfo` object containing subscription details.
+    /// - Throws: An error if the information cannot be retrieved.
     public func getInfo() async throws -> PersistentSubscription.SubscriptionInfo {
         let usecase = GetInfo(stream: .all, group: group)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    /// Replays parked messages for a persistent subscription for all streams.
+    /// Replays parked messages for a persistent subscription targeting all streams.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for replaying the parked messages (default is `.init()`).
+    ///   - options: Configuration options for replaying parked messages, defaulting to an empty configuration.
+    /// - Throws: An error if the replay operation fails.
     public func replayParkedMessages(options: ReplayParked.Options = .init()) async throws {
         let usecase = ReplayParked(streamSelection: .all, group: group, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 }
 
-
-//MARK: - Specified Stream
+// MARK: - Specified Stream
+/// Provides operations for persistent subscriptions targeting a specific stream.
 extension PersistentSubscriptions where Target == PersistentSubscription.Specified {
-    
-    /// The stream identifier for the specified stream.
+    /// The identifier of the specific stream.
     public var streamIdentifier: StreamIdentifier {
-        get{
+        get {
             target.identifier
         }
     }
     
-    /// The stream identifier for the specified stream.
+    /// The group name of the persistent subscription.
     public var group: String {
-        get{
+        get {
             target.group
         }
     }
     
-    /// Creates a persistent subscription for a specified stream.
+    /// Creates a persistent subscription for a specific stream.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for the subscription (default is `.init()`).
+    ///   - options: Configuration options for creating the subscription, defaulting to an empty configuration.
+    /// - Throws: An error if the creation fails.
     public func create(options: CreateToStream.Options = .init()) async throws {
         let usecase: CreateToStream = .init(streamIdentifier: streamIdentifier, group: group, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    /// Updates a persistent subscription for a specified stream.
+    /// Updates an existing persistent subscription for a specific stream.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for the update (default is `.init()`).
+    ///   - options: Configuration options for updating the subscription, defaulting to an empty configuration.
+    /// - Throws: An error if the update fails.
     public func update(options: UpdateToStream.Options = .init()) async throws {
         let usecase = UpdateToStream(streamIdentifier: streamIdentifier, group: group, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    /// Deletes a persistent subscription for a specified stream.
+    /// Deletes a persistent subscription for a specific stream.
     ///
-    /// - Parameters:
-    ///   - group: The subscription group name.
+    /// - Throws: An error if the deletion fails.
     public func delete() async throws {
         let usecase = Delete(stream: .specified(streamIdentifier), group: group)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    /// Subscribes to a persistent subscription for a specified stream.
+    /// Subscribes to a persistent subscription for a specific stream.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for the subscription (default is `.init()`).
-    /// - Returns: A `Subscription` object for managing the subscription.
+    ///   - options: Configuration options for subscribing, defaulting to an empty configuration.
+    /// - Returns: A `Subscription` instance for receiving events.
+    /// - Throws: An error if the subscription fails.
     public func subscribe(options: Read.Options = .init()) async throws -> Subscription {
         let usecase = Read(streamSelection: .specified(streamIdentifier), group: group, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    /// Retrieves information about a persistent subscription for a specified stream.
+    /// Retrieves information about a persistent subscription for a specific stream.
     ///
-    /// - Parameters:
-    ///   - group: The subscription group name.
-    /// - Returns: A `PersistentSubscription.SubscriptionInfo` object with subscription details.
+    /// - Returns: A `PersistentSubscription.SubscriptionInfo` object containing subscription details.
+    /// - Throws: An error if the information cannot be retrieved.
     public func getInfo() async throws -> PersistentSubscription.SubscriptionInfo {
         let usecase = GetInfo(stream: .specified(streamIdentifier), group: group)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
-    /// Replays parked messages for a persistent subscription for a specified stream.
+    /// Replays parked messages for a persistent subscription targeting a specific stream.
     ///
     /// - Parameters:
-    ///   - group: The subscription group name.
-    ///   - options: Options for replaying the parked messages (default is `.init()`).
+    ///   - options: Configuration options for replaying parked messages, defaulting to an empty configuration.
+    /// - Throws: An error if the replay operation fails.
     public func replayParkedMessages(options: ReplayParked.Options = .init()) async throws {
         let usecase = ReplayParked(streamSelection: .specified(streamIdentifier), group: group, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
-
-    
 }
 
+// MARK: - Generic Operations
+/// Provides general operations for persistent subscriptions with an unspecified target.
 extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarget {
-    /// Restarts the subsystem for managing persistent subscriptions.
+    /// Restarts the subsystem managing persistent subscriptions.
+    ///
+    /// - Throws: An error if the restart operation fails.
     @MainActor
     public func restartSubsystem() async throws {
         let usecase = RestartSubsystem()
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    
-    /// Lists all persistent subscriptions for a specified stream.
+    /// Lists all persistent subscriptions for a specific stream.
     ///
+    /// - Parameter streamIdentifier: The identifier of the stream to list subscriptions for.
     /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
+    /// - Throws: An error if the list operation fails.
     public func listForStream(_ streamIdentifier: StreamIdentifier) async throws -> [PersistentSubscription.SubscriptionInfo] {
         let options: List.Options = try .listForStream(streamIdentifier)
         let usecase = List(options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    /// Lists all persistent subscriptions.
+    /// Lists all persistent subscriptions in the system.
     ///
     /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
+    /// - Throws: An error if the list operation fails.
     public func listAll() async throws -> [PersistentSubscription.SubscriptionInfo] {
         let options: List.Options = .listAllScriptions()
         let usecase = List(options: options)
