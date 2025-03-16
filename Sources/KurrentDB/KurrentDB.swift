@@ -45,7 +45,7 @@ extension KurrentDBClient {
     }
     
     ///The client instance of `PersistentSubscriptions`, which constructed by settings passed in KurrentDBClient.
-    public func persistentSubscriptions<Target: PersistenSubscriptionTarget>(of target: Target)-> PersistentSubscriptions<Target>{
+    public func persistentSubscriptions<Target: PersistentSubscriptionTarget>(of target: Target)-> PersistentSubscriptions<Target>{
         return .init(target: target, settings: settings, callOptions: defaultCallOptions)
     }
     

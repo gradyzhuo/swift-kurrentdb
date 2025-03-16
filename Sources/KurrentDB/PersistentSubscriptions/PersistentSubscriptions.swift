@@ -25,7 +25,7 @@ import NIO
 /// ```
 ///
 /// - SeeAlso: `AllStreams` and `SpecifiedStream` for selecting different stream targets.
-public struct PersistentSubscriptions<Target: PersistenSubscriptionTarget>: GRPCConcreteService {
+public struct PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
     package typealias UnderlyingClient = UnderlyingService.Client<HTTP2ClientTransport.Posix>
 
