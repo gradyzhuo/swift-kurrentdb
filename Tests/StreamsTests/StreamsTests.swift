@@ -24,7 +24,7 @@ struct StreamTests: Sendable {
         await #expect(throws: EventStoreError.self) {
             let responses = try await client
                 .streams(of: .specified(UUID().uuidString))
-                .read(cursor: .start, options: .init())
+                .read(cursor: .start)
             var responsesIterator = responses.makeAsyncIterator()
            _ = try await responsesIterator.next()
         }
@@ -41,7 +41,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())        
         let streams = client.streams(of: .specified(streamIdentifier))
         let appendResponse = try await streams.append(events: events, options: .init().revision(expected: .any))
-
+        
         let appendedRevision = try #require(appendResponse.currentRevision)
         let readResponses = try await streams.read(cursor: .specified(.forwardOn(revision: appendedRevision)), options: .init())
         
@@ -82,12 +82,10 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         
-        let subscription = try await streams.subscribe(from: .end, options: .init())
+        let subscription = try await streams.subscribe(from: .end)
         let response = try await streams.append(events: .init(
             eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]
-        )){
-            $0.revision(expected: .any)
-        }
+        ), options: .init().revision(expected: .any))
 
         var lastEvent: ReadEvent?
         for try await event in subscription.events {
@@ -108,11 +106,9 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
-        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init())
+        let subscription = try await client.streams(of: .all).subscribe(from: .end)
         
-        let response = try await streams.append(events: eventForTesting){
-            $0.revision(expected: .any)
-        }
+        let response = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
         
         var lastEvent: ReadEvent?
         for try await event in subscription.events {

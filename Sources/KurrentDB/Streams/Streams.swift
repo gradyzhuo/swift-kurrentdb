@@ -146,7 +146,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - events: An array of events to append.
-    ///   - options: Options for appending events, defaulting to an empty configuration.
+    ///   - options: The options for appending events. Defaults to an empty configuration.
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the append operation fails.
     @discardableResult
@@ -159,9 +159,10 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - events: A variadic list of events to append.
-    ///   - options: Options for appending events, defaulting to an empty configuration.
+    ///   - options: The options for appending events. Defaults to an empty configuration.
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the append operation fails.
+    @discardableResult
     public func append(events: EventData..., options: Append.Options = .init()) async throws -> Append.Response {
         return try await append(events: events, options: options)
     }
@@ -170,7 +171,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - cursor: The position in the stream from which to read.
-    ///   - options: Options for reading events, defaulting to an empty configuration.
+    ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
     public func read(cursor: Cursor<CursorPointer>, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
@@ -183,7 +184,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Parameters:
     ///   - revision: The revision of the stream to start reading from.
     ///   - direction: The direction to read (forward or backward).
-    ///   - options: Options for reading events, defaulting to an empty configuration.
+    ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
     public func read(from revision: UInt64, directTo direction: Direction, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
@@ -194,7 +195,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - cursor: The position in the stream from which to start subscribing.
-    ///   - options: Options for subscribing, defaulting to an empty configuration.
+    ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     public func subscribe(from cursor: Cursor<StreamRevision>, options: Subscribe.Options = .init()) async throws -> Subscription {
@@ -206,7 +207,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - revision: The revision of the stream to start subscribing from.
-    ///   - options: Options for subscribing, defaulting to an empty configuration.
+    ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     public func subscribe(from revision: UInt64, options: Subscribe.Options = .init()) async throws -> Subscription {
@@ -215,7 +216,7 @@ extension Streams where Target: SpecifiedStreamTarget {
 
     /// Deletes the specified stream.
     ///
-    /// - Parameter options: Options for deleting the stream, defaulting to an empty configuration.
+    /// - Parameter options: The options for deleting the stream. Defaults to an empty configuration.
     /// - Returns: A `Delete.Response` indicating the result of the operation.
     /// - Throws: An error if the delete operation fails.
     @discardableResult
@@ -226,7 +227,7 @@ extension Streams where Target: SpecifiedStreamTarget {
 
     /// Marks the specified stream as permanently deleted (tombstoned).
     ///
-    /// - Parameter options: Options for tombstoning the stream, defaulting to an empty configuration.
+    /// - Parameter options: The options for tombstoning the stream. Defaults to an empty configuration.
     /// - Returns: A `Tombstone.Response` indicating the result of the operation.
     /// - Throws: An error if the tombstone operation fails.
     @discardableResult
@@ -246,11 +247,11 @@ extension Streams where Target == ProjectionStream {
         }
     }
 
-    /// Subscribes to events from the projection stream.
+    /// Subscribes to events from the specified stream.
     ///
     /// - Parameters:
     ///   - cursor: The position in the stream from which to start subscribing.
-    ///   - options: Options for subscribing, defaulting to an empty configuration.
+    ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     public func subscribe(from cursor: Cursor<StreamRevision>, options: Subscribe.Options = .init()) async throws -> Subscription {
@@ -258,11 +259,11 @@ extension Streams where Target == ProjectionStream {
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
-    /// Subscribes to events from the projection stream starting at a given revision.
+    /// Subscribes to events from the specified stream starting at a given revision.
     ///
     /// - Parameters:
     ///   - revision: The revision of the stream to start subscribing from.
-    ///   - options: Options for subscribing, defaulting to an empty configuration.
+    ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     public func subscribe(from revision: UInt64, options: Subscribe.Options = .init()) async throws -> Subscription {
@@ -278,7 +279,7 @@ extension Streams where Target == AllStreams {
     ///
     /// - Parameters:
     ///   - cursor: The position from which to start reading.
-    ///   - options: Options for reading events, defaulting to an empty configuration.
+    ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
     public func read(cursor: Cursor<ReadAll.CursorPointer>, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
@@ -291,22 +292,33 @@ extension Streams where Target == AllStreams {
     /// - Parameters:
     ///   - position: The starting position in the stream.
     ///   - direction: The reading direction (forward or backward).
-    ///   - options: Options for reading events, defaulting to an empty configuration.
+    ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
     public func read(from position: StreamPosition, directTo direction: Direction, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
-        try await read(cursor: .specified(.init(position: position, direction: direction)), options: options)
+        return try await read(cursor: .specified(.init(position: position, direction: direction)), options: options)
     }
 
     /// Subscribes to all streams from a specified position.
     ///
     /// - Parameters:
     ///   - cursor: The position from which to start subscribing.
-    ///   - options: Options for subscribing, defaulting to an empty configuration.
+    ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Streams.Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     public func subscribe(from cursor: Cursor<StreamPosition>, options: SubscribeAll.Options = .init()) async throws -> Streams.Subscription {
         let usecase = SubscribeAll(cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    /// Subscribes to all streams from a specified position.
+    ///
+    /// - Parameters:
+    ///   - position: The position from which to start subscribing.
+    ///   - options: The options for subscribing. Defaults to an empty configuration.
+    /// - Returns: A `Streams.Subscription` instance for receiving events.
+    /// - Throws: An error if the subscription fails.
+    public func subscribe(from position: StreamPosition, options: SubscribeAll.Options = .init()) async throws -> Streams.Subscription {
+        return try await subscribe(from: .specified(position), options: options)
     }
 }
