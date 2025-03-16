@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "kurrentdb-swift",
+    name: "KurrentDB-Swift",
     platforms: [
         .macOS(.v15),
         .iOS(.v18),
