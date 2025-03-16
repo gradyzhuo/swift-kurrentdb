@@ -77,17 +77,12 @@ extension Projections where Target: NameSpecifiable & ProjectionEnable {
 }
 
 extension Projections where Target: NameSpecifiable & ProjectionDisable{
-    public func disable(writeCheckpoint _: Bool = false) async throws {
-        let options = Disable.Options().writeCheckpoint(enabled: false)
+    public func disable() async throws {
+        let options = Disable.Options().writeCheckpoint(enabled: true)
         let usecase = Disable(name: name, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
-    
-    public func disable(configure: (Disable.Options) throws ->Disable.Options) async throws {
-        let options = try configure(.init(writeCheckpoint: false))
-        let usecase = Disable(name: name, options: options)
-        _ = try await usecase.perform(settings: settings, callOptions: callOptions)
-    }
+
     
     public func abort() async throws {
         let options = Disable.Options().writeCheckpoint(enabled: false)
