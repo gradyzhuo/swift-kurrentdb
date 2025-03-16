@@ -24,7 +24,7 @@ struct ProjectionsTests: Sendable {
     
     @Test("Testing create a projection")
     func createProjection() async throws {
-        let name = "test_countEvents_Create"
+        let name = "test_countEvents_Create_\(UUID())"
         let js = """
 fromAll()
     .when({
@@ -132,7 +132,7 @@ fromAll()
     }
     
     @Test func getResultExample() async throws {
-        let name = "get_result_example"
+        let name = "get_result_example_\(UUID())"
         let streamName = "test-forProjection"
         let js = """
             fromStream('\(streamName)')
