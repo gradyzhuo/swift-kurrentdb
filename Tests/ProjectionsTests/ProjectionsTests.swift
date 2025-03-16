@@ -41,14 +41,18 @@ fromAll()
 """
         
         let projections = client.projections(name: name)
-        try await projections.continousCreate(query: js)
+        try await projections.createContinuous(query: js)
         
         let details = try #require(await projections.detail())
         #expect(details.name == name)
         #expect(details.mode == .continuous)
         
         try await projections.disable()
-        try await projections.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+        try await projections.delete{
+            $0.delete(checkpointStream: true)
+            $0.delete(stateStream: true)
+            $0.delete(emittedStreams: true)
+        }
     }
     
     @Test
