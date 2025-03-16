@@ -87,6 +87,26 @@ fromAll()
     }
     
     @Test
+    func abortProjection() async throws {
+        let projectionName = "testEnableProjection_\(UUID())"
+        let projections = client.projections(name: projectionName)
+        try await projections.continousCreate(query: "fromAll().outputState()")
+        
+        
+        try await projections.abort()
+        
+        let details = try #require(await projections.detail())
+        #expect(details.status.contains(.aborted))
+        
+        try await projections.reset()
+        
+        let enabledDetails = try #require(await projections.detail())
+        #expect(enabledDetails.status == .stopped)
+    
+        try await projections.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
+    }
+    
+    @Test
     func getStatusExample() async throws {
         // by name
         let projectionClient = client.projections(system: .byCategory)
