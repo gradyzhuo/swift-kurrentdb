@@ -108,7 +108,6 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
-
         let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init())
         
         let response = try await streams.append(events: eventForTesting){

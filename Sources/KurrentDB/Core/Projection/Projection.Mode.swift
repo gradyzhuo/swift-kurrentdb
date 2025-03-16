@@ -7,8 +7,8 @@
 
 extension Projection{
     public enum Mode: String, Sendable {
-        case any
-        @available(*, unavailable)
+        case any = "Any"
+//        @available(*, unavailable)
         case transient = "Transient"
         case continuous = "Continuous"
         case oneTime = "OneTime"

@@ -41,7 +41,7 @@ extension Projections {
                     throw EventStoreError.resourceNotFound(reason: "Projection \(name) not found.")
                 }
                 
-                throw EventStoreError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
+                throw EventStoreError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred, \(error.message)")
             }catch {
                 throw EventStoreError.serverError("Unknown error occurred: \(error)")
             }

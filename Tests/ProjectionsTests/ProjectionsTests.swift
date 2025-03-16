@@ -24,7 +24,7 @@ struct ProjectionsTests: Sendable {
     
     @Test("Testing create a projection")
     func createProjection() async throws {
-        let name = "test_countEvents_Create_\(UUID())"
+        let name = "test_countEvents_Create"
         let js = """
 fromAll()
     .when({
@@ -39,9 +39,9 @@ fromAll()
     })
     .outputState();
 """
-
-        let projections = client.projections(mode: .continuous(name: name))
-        try await projections.create(query: js)
+        
+        let projections = client.projections(name: name)
+        try await projections.continousCreate(query: js)
         
         let details = try #require(await projections.detail())
         #expect(details.name == name)
@@ -54,8 +54,8 @@ fromAll()
     @Test
     func disableProjection() async throws {
         let projectionName = "testDisableProjection_\(UUID())"
-        let projections = client.projections(mode: .continuous(name: projectionName))
-        try await projections.create(query: "fromAll().outputState()")
+        let projections = client.projections(name: projectionName)
+        try await projections.continousCreate(query: "fromAll().outputState()")
         
         try await projections.disable()
         
@@ -68,8 +68,8 @@ fromAll()
     @Test
     func enableProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
-        let projections = client.projections(mode: .continuous(name: projectionName))
-        try await projections.create(query: "fromAll().outputState()")
+        let projections = client.projections(name: projectionName)
+        try await projections.continousCreate(query: "fromAll().outputState()")
         
         
         try await projections.disable()
@@ -84,14 +84,12 @@ fromAll()
         
         try await projections.disable()
         try await projections.delete(deleteCheckpointStream: true, deleteEmittedStreams: true, deleteStateStream: true)
-        
-//        try await client.streams(of: "$projections-\(projectionName)").delete()
     }
     
     @Test
     func getStatusExample() async throws {
         // by name
-        let projectionClient = client.projections(mode: .continuous(name: "$by_category"))
+        let projectionClient = client.projections(system: .byCategory)
         let detail = try #require(await projectionClient.detail())
         print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
     }
@@ -120,8 +118,8 @@ fromAll()
             .init(eventType: "ProjectionEventCreated", payload: ["hello":"world"])
         ])
 
-        let projectionClient = client.projections(mode: .continuous(name: name))
-        try await projectionClient.create(query: js)
+        let projectionClient = client.projections(name: name)
+        try await projectionClient.continousCreate(query: js)
 
         try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
         
@@ -157,9 +155,9 @@ fromAll()
             .init(eventType: "ProjectionEventCreated", payload: ["hello":"world"])
         ])
         
-        let projection = client.projections(mode: .continuous(name: name))
-        try await projection.create(query: js)
-
+        let projection = client.projections(name: name)
+        try await projection.continousCreate(query: js)
+        
         try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
         
         let result = try #require(await projection.result(of: Int.self))

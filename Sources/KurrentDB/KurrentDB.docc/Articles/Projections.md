@@ -32,15 +32,15 @@ fromAll()
     .outputState();
 """
 let name = "countEvents_Create_\(UUID())"
-try await client.projections(mode: .continuous(name: name))
-                .create(query: js)
+let projection = client.projections(name: name)
+try await projection.continousCreate(query: js)
 ```
 
 Trying to create projections with the same name will result in an error:
 
 ```swift
 do {
-    try await projections.create(query: js)
+    try await projection.continousCreate(query: js)
 }catch let error as EventStoreError {
     if case .resourceAlreadyExists = error {
         print("\(name) already exists")
@@ -63,18 +63,15 @@ Enables an existing projection by name. Once enabled, the projection will start 
 
 ```swift
 // by predefined enum.
-try await client.projections(mode: .continuous(system: .byCategory))
-            .enable()
-// The projection can now be deleted
-try await client.projections(mode: .continuous(name: "$by_category"))
-            .enable()
+let projection = client.projections(system: .byCategory)
+try await projection.enable()
 ```
 
 You can only enable an existing projection. When you try to enable a non-existing projection, you'll get an error:
 
 ```swift
 do{
-    try await client.projections(mode: .continuous(name: "projection that does not exists"))
+    try await client.projections(name: "projection that does not exists")
                     .enable()
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
@@ -88,10 +85,10 @@ Disables a projection, this will save the projection checkpoint. Once disabled, 
 
 ```swift
 // by predefined enum.
-try await client.projections(mode: .continuous(system: .byCategory))
+try await client.projections(system: .byCategory)
             .disable()
-// The projection can now be deleted
-try await client.projections(mode: .continuous(name: "$by_category"))
+// by name
+try await client.projections(name: "$by_category")
             .disable()
 ```
 
@@ -99,7 +96,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 
 ```swift
 do{
-    try await client.projections(mode: .continuous(name: "projection that does not exists"))
+    try await client.projections(name: "projection that does not exists")
                     .disable()
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
@@ -115,17 +112,17 @@ Deletes an existing projection. You must disable the projection before deleting 
 ```swift
 let name = "projection"
 // A projection must be disabled to allow it to be deleted.
-try await client.projections(mode: .continuous(name: name))
+try await client.projections(name: name)
             .disable()
 // The projection can now be deleted
-try await client.projections(mode: .continuous(name: name))
+try await client.projections(name: name)
             .delete()
 ```
 You can only delete an existing projection. When you try to delete a non-existing projection, you'll get an error:
 
 ```swift
 do{
-    try await client.projections(mode: .continuous(name: name))
+    try await client.projections(name: "projection that does not exists")
                     .delete()
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
@@ -139,10 +136,10 @@ Aborts a projection, this will not save the projection's checkpoint.
 
 ```swift
 // by predefined enum.
-try await client.projections(mode: .continuous(system: .byCategory))
+try await client.projections(system: .byCategory)
             .abort()
 // by name
-try await client.projections(mode: .continuous(name: "$by_category"))
+try await client.projections(name: "$by_category")
             .abort()
 ```
 
@@ -150,7 +147,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 
 ```swift
 do{
-    try await client.projections(mode: .continuous(name: "projection that does not exists"))
+    try await client.projections(name: "projection that does not exists")
                     .abort()
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
@@ -164,10 +161,10 @@ Resets a projection, which causes deleting the projection checkpoint. This will 
 
 ```swift
 // by predefined enum.
-try await client.projections(mode: .continuous(system: .byCategory))
+try await client.projections(system: .byCategory)
             .reset()
 // by name
-try await client.projections(mode: .continuous(name: "$by_category"))
+try await client.projections(name: "$by_category")
             .reset()
 ```
 
@@ -175,7 +172,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 
 ```swift
 do{
-    try await client.projections(mode: .continuous(name: "projection that does not exists"))
+    try await client.projections(name: "projection that does not exists")
                     .reset()
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
@@ -205,8 +202,8 @@ fromAll()
     .outputState();
 """
 
-let projection = client.projections(mode: .continuous(name: name))
-try await projection.create(query: "fromAll().when()")
+let projection = client.projections(name: name)
+try await projection.continousCreate(query: "fromAll().when()")
 try await projection.update(query: js)
 ```
 
@@ -214,7 +211,7 @@ You can only update an existing projection. When you try to update a non-existin
 
 ```swift
 do{
-    try await client.projections(mode: .continuous(name: "projection that does not exists"))
+    try await client.projections(name: "projection that does not exists")
                 .update(query: "fromAll().when()")
 }catch let error as EventStoreError {
     if case .resourceNotFound(let reason) = error {
@@ -227,7 +224,7 @@ do{
 Returns a list of all projections, user defined & system projections. See the projection details section for an explanation of the returned values.
 
 ```swift
-let allProjections = try await client.projections(mode: .all(.any))
+let allProjections = try await client.projections(.all(.any))
 let details = try await allProjections.list()
 
 for try await detail in details {
@@ -241,7 +238,7 @@ Gets the status of a named projection. See the projection details section for an
 
 ```swift
 // by name
-let detail = try await client.projections(mode: .continuous(name: "$by_category"))
+let detail = try await client.projections(name: "$by_category")
                             .detail()
 print("\(detail?.name), \(detail?.status), \(detail?.checkpointStatus), \(detail?.mode), \(detail?.progress)")
 ```
@@ -271,12 +268,12 @@ fromAll()
     .outputState();
 """
 
-let projectionClient = client.projections(mode: .continuous(name: name))
-try await projectionClient.create(query: js)
+let projection = client.projections(name: name)
+try await projection.continousCreate(query: js)
 
 try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
 
-let result = try await projectionClient.state(of: CountResult.self)
+let result = try await projection.state(of: CountResult.self)
 print(result)
 ```
 
@@ -301,8 +298,8 @@ fromAll()
     .outputState();
 """
 
-let projectionClient = client.projections(mode: .continuous(name: name))
-try await projectionClient.create(query: js)
+let projectionClient = client.projections(name: name)
+try await projectionClient.continousCreate(query: js)
 
 try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
 

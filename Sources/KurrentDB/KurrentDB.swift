@@ -50,8 +50,18 @@ extension KurrentDBClient {
     }
     
     ///The client instance of `Projections`, which constructed by settings passed in KurrentDBClient.
-    public func projections<Target: ProjectionTarget>(mode target: Target)->Projections<Target> {
-        .init(target: target, settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
+    public func projections<Mode: ProjectionTargetMode>(all mode: Mode)->Projections<AllProjectionTarget<Mode>> {
+        .init(target: .init(mode: mode), settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
+    }
+    
+    ///The client instance of `Projections`, which constructed by settings passed in KurrentDBClient.
+    public func projections(name: String)->Projections<String> {
+        .init(target: name, settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
+    }
+    
+    ///The client instance of `Projections`, which constructed by settings passed in KurrentDBClient.
+    public func projections(system predefined: SystemProjectionTarget.Predefined)->Projections<SystemProjectionTarget> {
+        .init(target: .init(predefined: predefined), settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
     ///The client instance of `Users`, which constructed by settings passed in KurrentDBClient.

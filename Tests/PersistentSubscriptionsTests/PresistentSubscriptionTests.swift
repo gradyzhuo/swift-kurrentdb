@@ -70,6 +70,8 @@ struct PersistentSubscriptionsTests {
         let persistentSubscriptions = client.persistentSubscriptions(of: .all(group: groupName))
         try await persistentSubscriptions.create()
 
+        
+        
         let subscription = try await persistentSubscriptions.subscribe()
 
         let event = EventData(
