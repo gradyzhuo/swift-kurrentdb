@@ -153,9 +153,7 @@ let stream = KurrentDBClient(settings: .localhost())
                 .streams(of: .specified("stream_for_testing"))
 
 // Append two events with one response
-try await stream.append(events: events){ options in
-    options.revision(expected: .any)
-}
+try await stream.append(events: events, options: .init().revision(expected: .any))
 ```
 
 ### Read Event
@@ -172,9 +170,7 @@ let stream = KurrentDBClient(settings: .localhost())
                 .streams(of: .specified("stream_for_testing"))
 
 // Read events from stream.
-let readResponses = try await stream.read(cursor: .start) { options in
-    options.set(resolveLinks: true)
-}
+let readResponses = try await stream.read(from: .start, options: .init().set(resolveLinks: true))
 
 // loop it.
 for try await response in readResponses {
