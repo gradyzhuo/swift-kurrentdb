@@ -29,7 +29,7 @@ It is fast, modern, safe, and a joy to write.
 |Metadata|✅|
 |Subscribe Specified Stream|✅|
 |Subscribe All Stream|✅|
-|BatchAppend||
+|BatchAppend|✅|
 
 ### Projection
 |Feature|Implemented|
