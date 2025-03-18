@@ -13,7 +13,6 @@ extension Streams {
         
         case unserviceable(link: RecordedEvent?)
         case event(readEvent: ReadEvent)
-        case readEvent(recorded: RecordedEvent, link: RecordedEvent?, commit: StreamPosition?)
         
 // TODO: Not sure how to request to get first_stream_position, last_stream_position, first_all_stream_position.
 //            case firstStreamPosition(UInt64)
@@ -22,12 +21,13 @@ extension Streams {
         
         package init(from message: Streams<Target>.UnderlyingClient.UnderlyingService.Method.Read.Output) throws {
             switch message.content {
-            case let .event(value):
+            case let .event(message):
                 do{
-                    self = try .event(readEvent: .init(message: value))
+                    let readEvent = try ReadEvent(message: message)
+                    self = .event(readEvent: readEvent)
                 }catch{
-                    if value.hasLink {
-                        self = try .unserviceable(link: RecordedEvent(message: value.link))
+                    if message.hasLink {
+                        self = try .unserviceable(link: RecordedEvent(message: message.link))
                     }else{
                         self = .unserviceable(link: nil)
                     }
