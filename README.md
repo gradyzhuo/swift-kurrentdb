@@ -170,7 +170,7 @@ let stream = KurrentDBClient(settings: .localhost())
                 .streams(of: .specified("stream_for_testing"))
 
 // Read events from stream.
-let readResponses = try await stream.read(from: .start, options: .init().set(resolveLinks: true))
+let readResponses = try await stream.read(from: .start, options: .init().resolveLinks())
 
 // loop it.
 for try await response in readResponses {
