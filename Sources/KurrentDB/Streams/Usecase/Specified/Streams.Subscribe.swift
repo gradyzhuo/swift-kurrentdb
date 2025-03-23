@@ -17,10 +17,10 @@ extension Streams {
         public typealias Responses = Subscription
 
         public let streamIdentifier: StreamIdentifier
-        public let cursor: Cursor<StreamRevision>
+        public let cursor: Read.Cursor
         public let options: Options
 
-        public init(from streamIdentifier: StreamIdentifier, cursor: Cursor<StreamRevision>, options: Options) {
+        public init(from streamIdentifier: StreamIdentifier, cursor: Read.Cursor, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options
@@ -38,8 +38,8 @@ extension Streams {
                     $0.options.stream.start = .init()
                 case .end:
                     $0.options.stream.end = .init()
-                case let .specified(revision):
-                    $0.options.stream.revision = revision.value
+                case let .revision(revision):
+                    $0.options.stream.revision = revision
                 }
             }
         }

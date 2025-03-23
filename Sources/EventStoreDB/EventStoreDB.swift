@@ -95,9 +95,26 @@ extension EventStoreDBClient {
 
     // MARK: Read by all streams methods -
     @available(*, deprecated, message: "Please use the new API .streams(of:.all).append(events:options:) instead.")
-    public func readAllStreams(cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
-        let options = configure(.init())
-        return try await client.streams(of: .all).read(cursor: cursor, options: options)
+    public func readAllStreams(cursor _cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
+        var options = configure(.init())
+        let cursor: Streams<AllStreams>.ReadAll.Cursor
+        switch _cursor {
+        case .start:
+            options = options.forward()
+            cursor = .start
+        case .end:
+            options = options.backward()
+            cursor = .end
+        case .specified(let pointer):
+            cursor = .position(pointer.position)
+            switch pointer.direction {
+            case .backward:
+                options = options.backward()
+            case .forward:
+                options = options.forward()
+            }
+        }
+        return try await client.streams(of: .all).read(from: cursor, options: options)
     }
 
     // MARK: Read by a stream methos -
@@ -113,9 +130,26 @@ extension EventStoreDBClient {
     ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
-    public func readStream(to identifier: StreamIdentifier, cursor: Cursor<CursorPointer>, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
-        let options = configure(.init())
-        return try await client.streams(of: .specified(identifier)).read(cursor: cursor, options: options)
+    public func readStream(to identifier: StreamIdentifier, cursor _cursor: Cursor<CursorPointer>, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
+        var options = configure(.init())
+        let cursor: Streams<SpecifiedStream>.Read.Cursor
+        switch _cursor {
+        case .start:
+            cursor = .start
+            options = options.forward()
+        case .end:
+            cursor = .end
+            options = options.backward()
+        case .specified(let pointer):
+            cursor = .revision(pointer.revision)
+            switch pointer.direction {
+            case .backward:
+                options = options.backward()
+            case .forward:
+                options = options.forward()
+            }
+        }
+        return try await client.streams(of: .specified(identifier)).read(from: cursor, options: options)
     }
 
     public func readStream(to streamIdentifier: StreamIdentifier, at revision: UInt64, direction: Direction = .forward, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
@@ -132,8 +166,17 @@ extension EventStoreDBClient {
         return try await client.streams(of: .all).subscribe(from: cursor, options: options)
     }
 
-    public func subscribeTo(stream identifier: StreamIdentifier, from cursor: Cursor<StreamRevision>, configure: (_ options: Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeTo(stream identifier: StreamIdentifier, from _cursor: Cursor<StreamRevision>, configure: (_ options: Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
+        let cursor: Streams<SpecifiedStream>.Read.Cursor
+        switch _cursor {
+        case .start:
+            cursor = .start
+        case .end:
+            cursor = .end
+        case .specified(let pointer):
+            cursor = .revision(pointer.value)
+        }
         return try await client.streams(of: .specified(identifier)).subscribe(from: cursor, options: options)
     }
 

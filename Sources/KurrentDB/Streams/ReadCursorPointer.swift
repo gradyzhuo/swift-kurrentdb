@@ -5,6 +5,7 @@
 //  Created by 卓俊諺 on 2025/1/24.
 //
 
+@available(*, deprecated)
 public struct CursorPointer: Sendable {
     public let revision: UInt64
     public let direction: Direction

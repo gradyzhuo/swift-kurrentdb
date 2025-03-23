@@ -24,7 +24,7 @@ struct StreamTests: Sendable {
         await #expect(throws: EventStoreError.self) {
             let responses = try await client
                 .streams(of: .specified(UUID().uuidString))
-                .read(cursor: .start)
+                .read(from: .start)
             var responsesIterator = responses.makeAsyncIterator()
            _ = try await responsesIterator.next()
         }
@@ -43,7 +43,7 @@ struct StreamTests: Sendable {
         let appendResponse = try await streams.append(events: events, options: .init().revision(expected: .any))
         
         let appendedRevision = try #require(appendResponse.currentRevision)
-        let readResponses = try await streams.read(cursor: .specified(.forwardOn(revision: appendedRevision)), options: .init())
+        let readResponses = try await streams.read(from: .revision(appendedRevision), options: .init().forward())
         
         let firstResponse = try await readResponses.first { _ in true }
         guard case let .event(readEvent) = firstResponse,

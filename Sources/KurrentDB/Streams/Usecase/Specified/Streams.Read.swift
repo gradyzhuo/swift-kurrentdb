@@ -17,12 +17,10 @@ extension Streams{
         public typealias Responses = AsyncThrowingStream<Response, Error>
 
         public let streamIdentifier: StreamIdentifier
-        public let cursor: Cursor<CursorPointer>
         public let options: Options
 
-        init(from streamIdentifier: StreamIdentifier, cursor: Cursor<CursorPointer>, options: Options) {
+        init(from streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
-            self.cursor = cursor
             self.options = options
         }
 
@@ -30,23 +28,6 @@ extension Streams{
             try .with {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
-
-                switch cursor {
-                case .start:
-                    $0.options.stream.start = .init()
-                    $0.options.readDirection = .forwards
-                case .end:
-                    $0.options.stream.end = .init()
-                    $0.options.readDirection = .backwards
-                case let .specified(pointer):
-                    $0.options.stream.revision = pointer.revision
-
-                    if case .forward = pointer.direction {
-                        $0.options.readDirection = .forwards
-                    } else {
-                        $0.options.readDirection = .backwards
-                    }
-                }
             }
         }
 
@@ -66,21 +47,35 @@ extension Streams{
 }
 
 extension Streams.Read {
+    public enum Cursor: Sendable {
+        case start
+        case end
+        case revision(UInt64)
+    }
+}
+
+extension Streams.Read {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var resolveLinks: Bool
-        public private(set) var limit: UInt64
-        public private(set) var uuidOption: UUIDOption
-        public private(set) var compatibility: UInt32
+        private var cursor: Cursor
+        public package(set) var direction: Direction
+        public package(set) var resolveLinksEnabled: Bool
+        public package(set) var limit: UInt64
+        public package(set) var uuidOption: UUIDOption
+        public package(set) var compatibility: UInt32
+        
 
-        public init(resolveLinks: Bool = false, limit: UInt64 = .max, uuidOption: UUIDOption = .string, compatibility: UInt32 = 0) {
-            self.resolveLinks = resolveLinks
-            self.limit = limit
-            self.uuidOption = uuidOption
-            self.compatibility = compatibility
+        public init() {
+            self.resolveLinksEnabled = false
+            self.limit = .max
+            self.uuidOption = .string
+            self.compatibility = 0
+            self.cursor = .start
+            self.direction = .forward
         }
 
+        
         package func build() -> UnderlyingMessage {
             .with {
                 $0.noFilter = .init()
@@ -95,37 +90,114 @@ extension Streams.Read {
                 $0.controlOption = .with {
                     $0.compatibility = compatibility
                 }
-                $0.resolveLinks = resolveLinks
+                $0.resolveLinks = resolveLinksEnabled
                 $0.count = limit
+                
+                switch cursor {
+                case .start:
+                    $0.stream.start = .init()
+                case .end:
+                    $0.stream.end = .init()
+                case let .revision(revision):
+                    $0.stream.revision = revision
+                }
+                
+                $0.readDirection = switch direction {
+                case .forward:
+                    .forwards
+                case .backward:
+                    .backwards
+                }
+                
             }
         }
 
         @discardableResult
-        public func set(resolveLinks: Bool) -> Self {
+        public func resolveLinks() -> Self {
             withCopy { options in
-                options.resolveLinks = resolveLinks
+                options.resolveLinksEnabled = true
             }
         }
 
         @discardableResult
-        public func set(limit: UInt64) -> Self {
+        public func limit(_ limit: UInt64) -> Self {
             withCopy { options in
                 options.limit = limit
             }
         }
 
         @discardableResult
-        public func set(uuidOption: UUIDOption) -> Self {
+        public func uuidOption(_ uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
             }
         }
 
         @discardableResult
-        public func set(compatibility: UInt32) -> Self {
+        public func compatibility(_ compatibility: UInt32) -> Self {
             withCopy { options in
                 options.compatibility = compatibility
             }
         }
+        
+        @discardableResult
+        public func forward() -> Self {
+            withCopy{ options in
+                options.direction = .forward
+            }
+        }
+        
+        @discardableResult
+        public func backward() -> Self {
+            withCopy{ options in
+                options.direction = .backward
+            }
+        }
+        
+        @discardableResult
+        internal func cursor(_ cursor: Cursor) -> Self {
+            withCopy{ options in
+                options.cursor = cursor
+            }
+        }
     }
+}
+
+
+
+//MARK: - Deprecated
+extension Streams.Read.Options {
+    @available(*, deprecated, renamed: "limit")
+    @discardableResult
+    public func set(limit: UInt64) -> Self {
+        withCopy { options in
+            options.limit = limit
+        }
+    }
+    
+    @available(*, deprecated, renamed: "resolveLinks")
+    @discardableResult
+    public func set(resolveLinks: Bool) -> Self {
+        withCopy { options in
+            options.resolveLinksEnabled = resolveLinks
+        }
+    }
+    
+    @available(*, deprecated, renamed: "uuidOption")
+    @discardableResult
+    public func set(uuidOption: UUIDOption) -> Self {
+        withCopy { options in
+            options.uuidOption = uuidOption
+        }
+    }
+    
+    
+    @available(*, deprecated, renamed: "compatibility")
+    @discardableResult
+    public func set(compatibility: UInt32) -> Self {
+        withCopy { options in
+            options.compatibility = compatibility
+        }
+    }
+    
 }
