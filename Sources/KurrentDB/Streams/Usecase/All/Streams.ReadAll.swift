@@ -46,7 +46,11 @@ extension Streams.ReadAll {
     public enum Cursor: Sendable {
         case start
         case end
-        case position(StreamPosition)
+        case position(commit: UInt64, prepare: UInt64)
+        
+        public static func position(commit: UInt64) -> Self{
+            return .position(commit: commit, prepare: commit)
+        }
     }
 }
 
@@ -107,10 +111,10 @@ extension Streams.ReadAll{
                     $0.stream.start = .init()
                 case .end:
                     $0.stream.end = .init()
-                case let .position(position):
+                case let .position(commitPosition, preparePosition):
                     $0.all.position = .with {
-                        $0.commitPosition = position.commit
-                        $0.preparePosition = position.prepare
+                        $0.commitPosition = commitPosition
+                        $0.preparePosition = preparePosition
                     }
                 }
                 

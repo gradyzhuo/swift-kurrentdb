@@ -106,7 +106,7 @@ extension EventStoreDBClient {
             options = options.backward()
             cursor = .end
         case .specified(let pointer):
-            cursor = .position(pointer.position)
+            cursor = .position(commit: pointer.position.commit, prepare: pointer.position.prepare)
             switch pointer.direction {
             case .backward:
                 options = options.backward()
