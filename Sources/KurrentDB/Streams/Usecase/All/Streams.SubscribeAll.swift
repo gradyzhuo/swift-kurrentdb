@@ -130,14 +130,14 @@ extension Streams.SubscribeAll where Target == AllStreams {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var resolveLinks: Bool
+        public private(set) var resolveLinksEnabled: Bool
         public private(set) var uuidOption: UUIDOption
         public private(set) var filter: SubscriptionFilter?
 
-        public init(resolveLinks: Bool = false, uuidOption: UUIDOption = .string, filter: SubscriptionFilter? = nil) {
-            self.resolveLinks = resolveLinks
-            self.uuidOption = uuidOption
-            self.filter = filter
+        public init() {
+            self.resolveLinksEnabled = false
+            self.uuidOption = .string
+            self.filter = nil
         }
 
         package func build() -> UnderlyingMessage {
@@ -179,29 +179,56 @@ extension Streams.SubscribeAll where Target == AllStreams {
                     $0.uuidOption.string = .init()
                 }
 
-                $0.resolveLinks = resolveLinks
+                $0.resolveLinks = resolveLinksEnabled
             }
         }
 
         @discardableResult
-        public func set(resolveLinks: Bool) -> Self {
+        public func resolveLinks() -> Self {
             withCopy { options in
-                options.resolveLinks = resolveLinks
+                options.resolveLinksEnabled = true
             }
         }
 
         @discardableResult
-        public func set(filter: SubscriptionFilter) -> Self {
+        public func filter(_ filter: SubscriptionFilter) -> Self {
             withCopy { options in
                 options.filter = filter
             }
         }
 
         @discardableResult
-        public func set(uuidOption: UUIDOption) -> Self {
+        public func uuidOption(_ uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
             }
+        }
+    }
+}
+
+//MARK: - Deprecated
+extension Streams.SubscribeAll.Options {
+    @available(*, deprecated, renamed: "resolveLinks")
+    @discardableResult
+    public func set(resolveLinks: Bool) -> Self {
+        withCopy { options in
+            options.resolveLinksEnabled = resolveLinks
+        }
+    }
+    
+    @available(*, deprecated, renamed: "uuidOption")
+    @discardableResult
+    public func set(uuidOption: UUIDOption) -> Self {
+        withCopy { options in
+            options.uuidOption = uuidOption
+        }
+    }
+    
+    @available(*, deprecated, renamed: "filter")
+    @discardableResult
+    public func set(filter: SubscriptionFilter) -> Self {
+        withCopy { options in
+            options.filter = filter
         }
     }
 }
