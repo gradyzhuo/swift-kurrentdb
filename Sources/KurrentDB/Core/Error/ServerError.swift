@@ -43,7 +43,7 @@ extension EventStoreError: CustomStringConvertible, CustomDebugStringConvertible
         case .connectionClosed:
             "Connection is closed."
         case let .grpc(code, reason):
-            "Unmapped gRPC error: code: \(code), reason: \(reason)."
+            "Unmapped gRPC error: code: \(String(describing: code)), reason: \(reason)."
         case let .grpcConnectionError(error):
             "gRPC connection error: \(error)"
         case let .internalParsingError(reason):
