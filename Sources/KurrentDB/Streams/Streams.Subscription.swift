@@ -35,13 +35,16 @@ extension Streams {
         /// The unique identifier of the subscription, if provided by the server.
         public let subscriptionId: String?
         
+        public let continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation
+        
         /// Initializes a `Subscription` instance with an event stream and subscription ID.
         ///
         /// - Parameters:
         ///   - events: The asynchronous stream of `ReadEvent` objects.
         ///   - subscriptionId: An optional subscription identifier.
-        internal init(events: AsyncThrowingStream<ReadEvent, Error>, subscriptionId: String?) {
+        private init(events: AsyncThrowingStream<ReadEvent, Error>, continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation, subscriptionId: String?) {
             self.events = events
+            self.continuation = continuation
             self.subscriptionId = subscriptionId
         }
     }
@@ -67,6 +70,7 @@ extension Streams.Subscription where Target == AllStreams {
         }
 
         let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
+        
         Task {
             while let message = try await iterator.next() {
                 if case let .event(message) = message.content {
@@ -75,6 +79,33 @@ extension Streams.Subscription where Target == AllStreams {
             }
         }
         let events = stream
-        self.init(events: events, subscriptionId: subscriptionId)
+        self.init(events: events, continuation: continuation, subscriptionId: subscriptionId)
+    }
+    
+    public func terminate() {
+        continuation.finish(throwing: KurrentError.subscriptionTerminated(subscriptionId: subscriptionId))
+    }
+}
+
+extension Streams.Subscription{
+    package convenience init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse , any Error>) async throws {
+        var iterator = messages.makeAsyncIterator()
+
+        let subscriptionId: String? = if case let .confirmation(confirmation) = try await iterator.next()?.content {
+            confirmation.subscriptionID
+        } else {
+            nil
+        }
+
+        let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
+        Task {
+            while let message = try await iterator.next() {
+                if case let .event(message) = message.content {
+                    try continuation.yield(.init(message: message))
+                }
+            }
+        }
+        let events = stream
+        self.init(events: events, continuation: continuation, subscriptionId: subscriptionId)
     }
 }

@@ -58,29 +58,6 @@ extension Streams {
     }
 }
 
-extension Streams.Subscription{
-    package convenience init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse , any Error>) async throws {
-        var iterator = messages.makeAsyncIterator()
-
-        let subscriptionId: String? = if case let .confirmation(confirmation) = try await iterator.next()?.content {
-            confirmation.subscriptionID
-        } else {
-            nil
-        }
-
-        let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
-        Task {
-            while let message = try await iterator.next() {
-                if case let .event(message) = message.content {
-                    try continuation.yield(.init(message: message))
-                }
-            }
-        }
-        let events = stream
-        self.init(events: events, subscriptionId: subscriptionId)
-    }
-}
-
 extension Streams.Subscribe {
     public struct Response: GRPCResponse {
         public enum Content: Sendable {
