@@ -80,14 +80,19 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
             }
 
             switch filter.type {
-            case let .streamName(regex):
+            case .streamName:
                 $0.streamIdentifier = .with {
-                    $0.regex = regex
+                    if let regex = filter.regex{
+                        $0.regex = regex
+                    }
+                    
                     $0.prefix = filter.prefixes
                 }
-            case let .eventType(regex):
+            case .eventType:
                 $0.eventType = .with {
-                    $0.regex = regex
+                    if let regex = filter.regex{
+                        $0.regex = regex
+                    }
                     $0.prefix = filter.prefixes
                 }
             }
