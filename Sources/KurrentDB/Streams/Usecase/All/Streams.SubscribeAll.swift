@@ -33,9 +33,9 @@ extension Streams where Target == AllStreams {
                 $0.options.readDirection = .forwards
                 switch cursor {
                 case .start:
-                    $0.options.stream.start = .init()
+                    $0.options.all.start = .init()
                 case .end:
-                    $0.options.stream.end = .init()
+                    $0.options.all.end = .init()
                 case let .position(commitPosition, preparePosition):
                     $0.options.all.position = .with {
                         $0.commitPosition = commitPosition
