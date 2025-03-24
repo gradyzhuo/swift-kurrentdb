@@ -34,9 +34,9 @@ extension Streams {
                 }
             case let .streamNotFound(errorMessage):
                 let streamName = String(data: errorMessage.streamIdentifier.streamName, encoding: .utf8) ?? ""
-                throw EventStoreError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
+                throw KurrentError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
             default:
-                throw EventStoreError.unsupportedFeature
+                throw KurrentError.unsupportedFeature
             }
         }
     }

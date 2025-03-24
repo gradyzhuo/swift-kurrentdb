@@ -81,11 +81,11 @@ extension Projections.Statistics {
 
         internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) throws {
             guard let mode = Projection.Mode(rawValue: mode) else {
-                throw EventStoreError.initializationError(reason: "Invalid mode \(mode)")
+                throw KurrentError.initializationError(reason: "Invalid mode \(mode)")
             }
             
             guard let status = Projection.Status(name: status) else {
-                throw EventStoreError.initializationError(reason: "Invalid status \(status)")
+                throw KurrentError.initializationError(reason: "Invalid status \(status)")
             }
             
             self.name = name

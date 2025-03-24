@@ -118,9 +118,9 @@ extension Streams.SubscribeAll where Target == AllStreams {
                 self.init(lastAllStreamPosition: value.commitPosition, preparePosition: value.preparePosition)
             case let .streamNotFound(errorMessage):
                 let streamName = String(data: errorMessage.streamIdentifier.streamName, encoding: .utf8) ?? ""
-                throw EventStoreError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
+                throw KurrentError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
             default:
-                throw EventStoreError.unsupportedFeature
+                throw KurrentError.unsupportedFeature
             }
         }
     }

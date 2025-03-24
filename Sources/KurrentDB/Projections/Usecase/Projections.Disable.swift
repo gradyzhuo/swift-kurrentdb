@@ -33,12 +33,12 @@ extension Projections {
                 }
             }catch let error as RPCError {
                 if error.message.contains("NotFound"){
-                    throw EventStoreError.resourceNotFound(reason: "Projection \(name) not found.")
+                    throw KurrentError.resourceNotFound(reason: "Projection \(name) not found.")
                 }
                 
-                throw EventStoreError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
+                throw KurrentError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
             }catch {
-                throw EventStoreError.serverError("Unknown error occurred: \(error)")
+                throw KurrentError.serverError("Unknown error occurred: \(error)")
             }
         }
     }

@@ -69,7 +69,7 @@ extension PersistentSubscriptions.Read {
 
         package init(from message: UnderlyingMessage) throws {
             guard let content = message.content else {
-                throw EventStoreError.resourceNotFound(reason: "The content of PersistentSubscriptions Read Response is missing.")
+                throw KurrentError.resourceNotFound(reason: "The content of PersistentSubscriptions Read Response is missing.")
             }
             switch content {
             case let .event(eventMessage):

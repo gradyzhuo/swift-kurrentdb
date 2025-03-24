@@ -35,11 +35,11 @@ extension Projections {
                 }
             }catch let error as RPCError{
                 if error.message.contains("Conflict"){
-                    throw EventStoreError.resourceAlreadyExists
+                    throw KurrentError.resourceAlreadyExists
                 }
-                throw EventStoreError.grpc(code: .init(code: error.code, message: error.message, details: []), reason: error.message)
+                throw KurrentError.grpc(code: .init(code: error.code, message: error.message, details: []), reason: error.message)
             }catch {
-                throw EventStoreError.serverError("unexpected error: \(error)")
+                throw KurrentError.serverError("unexpected error: \(error)")
             }
         }
     }

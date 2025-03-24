@@ -10,7 +10,9 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCProtobuf
 
-public enum EventStoreError: Error, Sendable {
+public typealias EventStoreError = KurrentError
+
+public enum KurrentError: Error, Sendable {
     case serverError(String)
     case notLeaderException(endpoint: Endpoint)
     case connectionClosed
@@ -27,9 +29,10 @@ public enum EventStoreError: Error, Sendable {
     case initializationError(reason: String)
     case illegalStateError(reason: String)
     case WrongExpectedVersion(expected: StreamRevision, current: StreamRevision)
+    case subscriptionTerminated(subscriptionId: String?)
 }
 
-extension EventStoreError: CustomStringConvertible, CustomDebugStringConvertible {
+extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {
         description
     }
@@ -68,6 +71,8 @@ extension EventStoreError: CustomStringConvertible, CustomDebugStringConvertible
             "Illegal state error: \(reason)"
         case let .WrongExpectedVersion(expected, current):
             "Wrong expected version: expected '\(expected)' but got '\(current)'"
+        case .subscriptionTerminated(let subscriptionId):
+            "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId))"
         }
     }
 }

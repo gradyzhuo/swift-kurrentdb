@@ -41,7 +41,7 @@ Trying to create projections with the same name will result in an error:
 ```swift
 do {
     try await projection.createContinous(query: js)
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceAlreadyExists = error {
         print("\(name) already exists")
     }
@@ -73,7 +73,7 @@ You can only enable an existing projection. When you try to enable a non-existin
 do{
     try await client.projections(name: "projection that does not exists")
                     .enable()
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
     }
@@ -98,7 +98,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 do{
     try await client.projections(name: "projection that does not exists")
                     .disable()
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
     }
@@ -124,7 +124,7 @@ You can only delete an existing projection. When you try to delete a non-existin
 do{
     try await client.projections(name: "projection that does not exists")
                     .delete()
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
     }
@@ -149,7 +149,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 do{
     try await client.projections(name: "projection that does not exists")
                     .abort()
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
     }
@@ -174,7 +174,7 @@ You can only disable an existing projection. When you try to disable a non-exist
 do{
     try await client.projections(name: "projection that does not exists")
                     .reset()
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
     }
@@ -213,7 +213,7 @@ You can only update an existing projection. When you try to update a non-existin
 do{
     try await client.projections(name: "projection that does not exists")
                 .update(query: "fromAll().when()")
-}catch let error as EventStoreError {
+}catch let error as KurrentError {
     if case .resourceNotFound(let reason) = error {
         print(reason)
     }
