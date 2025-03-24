@@ -16,10 +16,10 @@ extension Streams where Target == AllStreams {
         package typealias UnderlyingResponse = ReadAll.UnderlyingResponse
         public typealias Responses = Subscription
 
-        public let cursor: Cursor<StreamPosition>
+        public let cursor: ReadAll.Cursor
         public let options: Options
 
-        init(cursor: Cursor<StreamPosition>, options: Options) {
+        init(cursor: ReadAll.Cursor, options: Options) {
             self.cursor = cursor
             self.options = options
         }
@@ -29,16 +29,17 @@ extension Streams where Target == AllStreams {
                 $0.options = options.build()
                 $0.options.readDirection = .forwards
                 $0.options.subscription = .init()
-
+                
+                $0.options.readDirection = .forwards
                 switch cursor {
                 case .start:
-                    $0.options.all.start = .init()
+                    $0.options.stream.start = .init()
                 case .end:
-                    $0.options.all.end = .init()
-                case let .specified(position):
+                    $0.options.stream.end = .init()
+                case let .position(commitPosition, preparePosition):
                     $0.options.all.position = .with {
-                        $0.commitPosition = position.commit
-                        $0.preparePosition = position.prepare
+                        $0.commitPosition = commitPosition
+                        $0.preparePosition = preparePosition
                     }
                 }
             }

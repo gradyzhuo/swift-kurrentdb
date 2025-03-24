@@ -161,8 +161,16 @@ extension EventStoreDBClient {
     }
 
     // MARK: Subscribe by all streams methods -
-    public func subscribeToAll(from cursor: Cursor<StreamPosition>, configure: (_ options: Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
+    public func subscribeToAll(from _cursor: Cursor<StreamPosition>, configure: (_ options: Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
+        let cursor: Streams<AllStreams>.ReadAll.Cursor = switch _cursor {
+        case .start:
+            .start
+        case .end:
+            .end
+        case .specified(let position):
+            .position(commit: position.commit, prepare: position.prepare)
+        }
         return try await client.streams(of: .all).subscribe(from: cursor, options: options)
     }
 

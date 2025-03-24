@@ -259,11 +259,11 @@ extension Streams where Target == AllStreams {
     /// Reads events from all available streams.
     ///
     /// - Parameters:
-    ///   - cursor: The position from which to start reading.
+    ///   - cursor: The position from which to start reading. default is `.start`.
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func read(from cursor: ReadAll.Cursor,options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
+    public func read(from cursor: ReadAll.Cursor = .start, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
         let usecase = ReadAll(options: options.curosr(cursor))
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -271,11 +271,11 @@ extension Streams where Target == AllStreams {
     /// Subscribes to all streams from a specified position.
     ///
     /// - Parameters:
-    ///   - cursor: The position from which to start subscribing.
+    ///   - cursor: The position from which to start subscribing. default is `.end`
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Streams.Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(from cursor: Cursor<StreamPosition>, options: SubscribeAll.Options = .init()) async throws -> Streams.Subscription {
+    public func subscribe(from cursor: ReadAll.Cursor = .end, options: SubscribeAll.Options = .init()) async throws -> Streams.Subscription {
         let usecase = SubscribeAll(cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
