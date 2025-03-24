@@ -32,7 +32,7 @@ for try await response in responses {
 
 There are a number of additional arguments you can provide when reading a stream, listed below.
 
-#### maxCount
+#### maxCount (limit)
 Passing in the max count will limit the number of events returned.
 
 #### resolveLinkTos
@@ -45,7 +45,7 @@ You can use the configureOperationOptions argument to provide a function that wi
 The userCredentials argument is optional. It is used to override the default credentials specified when creating the client instance.
 
 ```swift
-let settings:ClientSettings = .localhost().defaultUserCredentials(.init(username: "admin", password: "changeit"))
+let settings:ClientSettings = .localhost().authenticated(.credentials(username: "admin", password: "changeit"))
 
 let client = KurrentDBClient(settings: settings)
 
@@ -54,11 +54,133 @@ let responses = try await stream.read(from: .start)
 ```
 
 ## Reading from a revision
-Instead of providing the StreamPosition you can also provide a specific stream revision as a big int (unsigned 64-bit integer).
+Instead of providing the __StreamPosition__ you can also provide a specific stream revision as a big int (unsigned 64-bit integer).
 
 ```swift 
 let stream = client.streams(of: .specified("some-stream"))
-let responses = try await stream.read(from: 10, directTo: .forward, options: .init().set(limit: 20))
+let responses = try await stream.read(from: .revision(10), options: .init().limit(20))
 ```
 
 
+## Reading backwards
+In addition to reading a stream forwards, streams can be read backwards. To read all the events backwards, set the _stream position_ to the end:
+
+```swift
+let stream = client.streams(of: .specified("some-stream"))
+let responses = try await stream.read(from: .end, options: .init().backwards())
+
+for try await response in responses {
+    if case let .event(readEvent) = response {
+        print("Event> \(try readEvent.record.decode(to: TestEvent.self))")
+    }
+}
+```
+
+> Tips: 
+> Read one event backwards to find the last position in the stream.
+
+## Checking if the stream exists
+Reading a stream returns a `ReadStreamResult`, which contains a property `ReadState`. This property can have the value `StreamNotFound` or `Ok`.
+
+It is important to check the value of this field before attempting to iterate an empty stream, as it will throw an exception.
+
+For example:
+```swift
+let stream = client.streams(of: .specified("some-stream"))
+do{
+    let responses = try await stream.read(from: .revision(10))
+    for try await response in responses {
+        if case let .event(readEvent) = response {
+            let testEvent = try readEvent.record.decode(to: TestEvent.self)
+            print("Event> \(testEvent)")
+        }
+    }
+}catch let error as EventStoreError{
+    if case .resourceNotFound(let reason) = error {
+        print("reason:", reason)
+    }
+}
+```
+
+> Console:
+> reason: The name 'some-stream' of streams not found.
+
+## Reading from the $all stream
+
+Reading from the `$all` stream is similar to reading from an individual stream, but please note there are differences. One significant difference is the need to provide admin user account credentials to read from the `$all` stream. Additionally, you need to provide a transaction log position instead of a stream revision when reading from the `$all` stream.
+
+
+### Reading forwards
+The simplest way to read the `$all` stream forwards is to supply a read direction and the transaction log position from which you want to start. The transaction log postion can either be a stream position `Start` or a big int (unsigned 64-bit integer):
+
+```swift
+let allstream = client.streams(of: .all)
+let responses = try await stream.read(from: .start)
+```
+
+You can iterate asynchronously through the result:
+```swift
+for try await response in responses {
+    if case let .event(readEvent) = response {
+        print("Event>", readEvent.record)
+    }
+}
+```
+
+
+#### maxCount (limit)
+Passing in the max count will limit the number of events returned.
+
+#### resolveLinkTos
+When using projections to create new events, you can set whether the generated events are pointers to existing events. Setting this value to `true` tells KurrentDB to return the event as well as the event linking to it.
+
+```swift
+let allStream = client.streams(of: .all)
+try await allStream.read(options: .init().resolveLinks())
+```
+
+
+#### configureOperationOptions
+This argument is generic setting class for all operations that can be set on all operations executed against EventStoreDB.
+
+
+#### userCredentials
+The userCredentials argument is optional. It is used to override the default credentials specified when creating the client instance.
+
+```swift
+let settings:ClientSettings = "esdb://localhost:2113?tls=false"
+
+let client = KurrentDBClient(settings: settings .authenticated(.credentials(username: "admin", password: "changeit")))
+
+let allStream = client.streams(of: .all)
+let responses = try await allStream.read(from: .position(commit: 1110, prepare: 1110))
+```
+
+### Reading backwards
+In addition to reading the `$all` stream forwards, it can be read backwards. To read all the events backwards, set the _position_ to the end:
+
+```swift
+let allstream = client.streams(of: .all)
+try await allStream.read(from: .end)
+```
+
+> Tips:
+Read one event backwards to find the last position in the $all stream.
+
+### Handling system events
+KurrentDB will also return system events when reading from the `$all` stream. In most cases you can ignore these events.
+
+All system events begin with `$` or `$$` and can be easily ignored by checking the `EventType` property.
+
+```swift
+let allstream = client.streams(of: .all)
+let responses = try await allStream.read()
+
+for try await response in responses {
+    guard case let .event(readEvent) = response,
+          readEvent.record.eventType.hasPrefix("$") else {
+        continue
+    }
+    print("Event>", readEvent.record)
+}
+```

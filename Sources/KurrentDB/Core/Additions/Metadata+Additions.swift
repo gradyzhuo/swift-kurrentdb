@@ -9,12 +9,12 @@ import GRPCCore
 extension Metadata {
     package init(from settings: ClientSettings) {
         self.init()
-
-        if let credentials = settings.defaultUserCredentials {
+        
+        if let authentication = settings.authentication {
             do {
-                try replaceOrAddString(credentials.makeBasicAuthHeader(), forKey: "Authorization")
+                try replaceOrAddString(authentication.makeBasicAuthHeader(), forKey: "Authorization")
             } catch {
-                logger.error("Could not setting Authorization with credentials: \(credentials).\n Original error:\(error).")
+                logger.error("Could not setting Authorization with credentials: \(authentication).\n Original error:\(error).")
             }
         }
     }

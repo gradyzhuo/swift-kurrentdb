@@ -84,7 +84,7 @@ public struct ClientSettings: Sendable {
     public private(set) var connectionName: String?
 
     public var keepAlive: KeepAlive = .default
-    public var defaultUserCredentials: UserCredentials?
+    public var authentication: Authentication?
 
     public init(clusterMode: TopologyClusterMode, configuration: TLSConfiguration) {
         self.clusterMode = clusterMode
@@ -97,7 +97,7 @@ public struct ClientSettings: Sendable {
 }
 
 extension ClientSettings {
-    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, userCredentials: UserCredentials? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
+    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, authentication: Authentication? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
         var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)))
 
         if let trustRoots {
@@ -107,7 +107,7 @@ extension ClientSettings {
             settings.tls = false
         }
 
-        settings.defaultUserCredentials = userCredentials
+        settings.authentication = authentication
         return settings
     }
 
@@ -155,8 +155,10 @@ extension ClientSettings {
         }
 
         var settings = Self(clusterMode: clusterMode)
-        settings.defaultUserCredentials = try userCredentialParser.parse(connectionString)
-
+        if let authentication = try userCredentialParser.parse(connectionString) {
+            settings.authentication = authentication
+        }
+    
         if let keepAliveInterval: TimeInterval = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
            let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
         {
@@ -267,11 +269,10 @@ extension ClientSettings: Buildable{
     }
     
     @discardableResult
-    public func defaultUserCredentials(_ defaultUserCredentials: UserCredentials)->Self{
+    public func authenticated(_ authenication: Authentication)->Self{
         return withCopy {
-            $0.defaultUserCredentials = defaultUserCredentials
+            $0.authentication = authenication
         }
     }
-    
     
 }
