@@ -194,7 +194,37 @@ struct StreamTests: Sendable {
         #expect(response.position?.commit == lastEventPosition.commit)
         try await streams.delete()
     }
+    
+    @Test("It should be failed when subscribe to all streams by filter on wrong stream name.")
+    func testSubscribeFilterFailedOnStreamName() async throws {
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+        let eventForTesting = EventData(
+            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
+        )
+        let client = KurrentDBClient(settings: .localhost())
+        let streams = client.streams(of: .specified(streamIdentifier))
+        let filter: SubscriptionFilter = .onStreamName(prefix: "wrong")
+        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init().filter(filter))
+        
+        _ = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
 
+        
+        Task {
+            try await Task.sleep(for: .microseconds(500))
+            subscription.terminate()
+        }
+        
+        
+        await #expect(throws: KurrentError.self, performing: {
+            for try await _ in subscription.events {
+                break
+            }
+        })
+
+    }
+
+    
+    
     @Test("Testing streamAcl encoding and decoding should be succeed.", arguments: [
         (StreamMetadata.Acl.systemStream, "$systemStreamAcl"),
         (StreamMetadata.Acl.userStream, "$userStreamAcl"),
