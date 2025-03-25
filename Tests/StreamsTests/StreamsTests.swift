@@ -214,12 +214,9 @@ struct StreamTests: Sendable {
             subscription.terminate()
         }
         
-        
-        await #expect(throws: KurrentError.self, performing: {
-            for try await _ in subscription.events {
-                break
-            }
-        })
+        for try await _ in subscription.events {
+            break
+        }
 
     }
 

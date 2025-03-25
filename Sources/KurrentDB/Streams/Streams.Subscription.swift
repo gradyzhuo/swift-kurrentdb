@@ -72,18 +72,23 @@ extension Streams.Subscription where Target == AllStreams {
         let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
         
         Task {
-            while let message = try await iterator.next() {
-                if case let .event(message) = message.content {
-                    try continuation.yield(.init(message: message))
+            do{
+                while let message = try await iterator.next() {
+                    if case let .event(message) = message.content {
+                        try continuation.yield(.init(message: message))
+                    }
                 }
+            }catch{
+                continuation.finish(throwing: KurrentError.subscriptionTerminated(subscriptionId: subscriptionId, origin: error))
             }
+            
         }
         let events = stream
         self.init(events: events, continuation: continuation, subscriptionId: subscriptionId)
     }
     
     public func terminate() {
-        continuation.finish(throwing: KurrentError.subscriptionTerminated(subscriptionId: subscriptionId))
+        continuation.finish()
     }
 }
 

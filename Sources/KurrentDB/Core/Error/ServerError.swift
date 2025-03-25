@@ -29,7 +29,7 @@ public enum KurrentError: Error, Sendable {
     case initializationError(reason: String)
     case illegalStateError(reason: String)
     case WrongExpectedVersion(expected: StreamRevision, current: StreamRevision)
-    case subscriptionTerminated(subscriptionId: String?)
+    case subscriptionTerminated(subscriptionId: String?, origin: (any Error)?)
 }
 
 extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
@@ -71,8 +71,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "Illegal state error: \(reason)"
         case let .WrongExpectedVersion(expected, current):
             "Wrong expected version: expected '\(expected)' but got '\(current)'"
-        case .subscriptionTerminated(let subscriptionId):
-            "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId))"
+        case .subscriptionTerminated(let subscriptionId, let originError):
+            "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId)), originError: \(String(describing: originError))"
         }
     }
 }
