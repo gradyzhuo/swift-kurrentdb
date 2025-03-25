@@ -32,14 +32,18 @@ extension Streams{
         }
 
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            try await withThrowingTaskGroup(of: Void.self) { _ in
+            await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-                try await client.read(request: request, options: callOptions) {
-                    for try await message in $0.messages {
-                        try continuation.yield(handle(message: message))
+                do{
+                    try await client.read(request: request, options: callOptions) {
+                        for try await message in $0.messages {
+                            try continuation.yield(handle(message: message))
+                        }
                     }
+                }catch {
+                    logger.warning("The error skipped when reading events: \(error)")
+                    continuation.finish()
                 }
-                continuation.finish()
                 return stream
             }
         }
@@ -150,6 +154,14 @@ extension Streams.Read {
         internal func cursor(_ cursor: RevisionCursor) -> Self {
             withCopy{ options in
                 options.cursor = cursor
+                switch cursor {
+                case .start:
+                    options.direction = .forward
+                case .end:
+                    options.direction = .backward
+                case .revision:
+                    options.direction = options.direction
+                }
             }
         }
     }

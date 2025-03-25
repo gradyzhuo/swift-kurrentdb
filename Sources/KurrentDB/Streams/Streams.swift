@@ -121,9 +121,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Throws: An error if the metadata cannot be retrieved or parsed.
     @discardableResult
     public func getMetadata(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws -> StreamMetadata? {
-        let options: Streams.Read.Options = .init()
-                                            .cursor(cursor)
-                                            .forward()
+        let options: Streams.Read.Options = options.cursor(cursor)
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
         let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
 

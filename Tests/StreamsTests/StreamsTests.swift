@@ -71,7 +71,7 @@ struct StreamTests: Sendable {
         
         try await streams.setMetadata(metadata: metadata)
 
-        let responseMetadata = try #require(try await streams.getMetadata())
+        let responseMetadata = try #require(try await streams.getMetadata(from: .end))
         #expect(metadata == responseMetadata)
         try await streams.delete()
     }
