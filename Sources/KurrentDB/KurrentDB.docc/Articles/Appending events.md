@@ -188,7 +188,7 @@ if case let .event(event) = try await stream.read(cursor: .end).first{ _ in true
 You can provide user credentials to append the data as follows. This will override the default credentials set on the connection.
 
 ```swift
-let settings:ClientSettings = .localhost().defaultUserCredentials(.init(username: "admin", password: "changeit"))
+let settings:ClientSettings = .localhost().authenticated(.credentials(username: "admin", password: "changeit"))
 
 let client = KurrentDBClient(settings: settings)
 

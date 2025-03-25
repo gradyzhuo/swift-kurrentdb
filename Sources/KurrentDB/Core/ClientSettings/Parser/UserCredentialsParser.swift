@@ -12,7 +12,7 @@ class UserCredentialsParser: ConnctionStringParser {
     typealias UserReference = Reference<String>
     typealias PasswordReference = Reference<String>
     typealias RegexType = Regex<(Substring, UserReference.RegexOutput, PasswordReference.RegexOutput?)>
-    typealias Result = UserCredentials
+    typealias Result = Authentication
 
     let _user: UserReference = .init()
     let _password: PasswordReference = .init()
@@ -34,10 +34,10 @@ class UserCredentialsParser: ConnctionStringParser {
         "@"
     }
 
-    func parse(_ connectionString: String) throws -> UserCredentials? {
+    func parse(_ connectionString: String) throws -> Authentication? {
         let match = connectionString.firstMatch(of: regex)
         return match.flatMap {
-            .init(username: $0[_user], password: $0[_password])
+            .credentials(username: $0[_user], password: $0[_password])
         }
     }
 }
