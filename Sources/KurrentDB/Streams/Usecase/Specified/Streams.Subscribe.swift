@@ -17,10 +17,10 @@ extension Streams {
         public typealias Responses = Subscription
 
         public let streamIdentifier: StreamIdentifier
-        public let cursor: Read.Cursor
+        public let cursor: RevisionCursor
         public let options: Options
 
-        public init(from streamIdentifier: StreamIdentifier, cursor: Read.Cursor, options: Options) {
+        public init(from streamIdentifier: StreamIdentifier, cursor: RevisionCursor, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.cursor = cursor
             self.options = options

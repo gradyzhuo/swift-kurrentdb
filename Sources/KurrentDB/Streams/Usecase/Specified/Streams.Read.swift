@@ -47,18 +47,10 @@ extension Streams{
 }
 
 extension Streams.Read {
-    public enum Cursor: Sendable {
-        case start
-        case end
-        case revision(UInt64)
-    }
-}
-
-extension Streams.Read {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        private var cursor: Cursor
+        private var cursor: RevisionCursor
         public package(set) var direction: Direction
         public package(set) var resolveLinksEnabled: Bool
         public package(set) var limit: UInt64
@@ -155,7 +147,7 @@ extension Streams.Read {
         }
         
         @discardableResult
-        internal func cursor(_ cursor: Cursor) -> Self {
+        internal func cursor(_ cursor: RevisionCursor) -> Self {
             withCopy{ options in
                 options.cursor = cursor
             }

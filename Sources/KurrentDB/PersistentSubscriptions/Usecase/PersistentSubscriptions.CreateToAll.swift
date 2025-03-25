@@ -44,18 +44,18 @@ extension PersistentSubscriptions.CreateToAll {
 
         public var settings: PersistentSubscription.Settings
         public var filter: SubscriptionFilter?
-        public var positionCursor: Cursor<StreamPosition>
+        public var cursor: PositionCursor
 
-        public init(settings: PersistentSubscription.Settings = .init(), filter: SubscriptionFilter? = nil, positionCursor: Cursor<StreamPosition> = .end) {
+        public init(settings: PersistentSubscription.Settings = .init(), filter: SubscriptionFilter? = nil, from cursor: PositionCursor = .end) {
             self.settings = settings
             self.filter = filter
-            self.positionCursor = positionCursor
+            self.cursor = cursor
         }
 
         @discardableResult
-        public func startFrom(position: Cursor<StreamPosition>) -> Self {
+        public func startFrom(position: PositionCursor) -> Self {
             withCopy { options in
-                options.positionCursor = position
+                options.cursor = position
             }
         }
 
@@ -69,15 +69,15 @@ extension PersistentSubscriptions.CreateToAll {
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)
-                switch positionCursor {
+                switch cursor {
                 case .start:
                     $0.all.start = .init()
                 case .end:
                     $0.all.end = .init()
-                case let .specified(pointer):
+                case let .position(commitPosition, preparePosition):
                     $0.all.position = .with {
-                        $0.commitPosition = pointer.commit
-                        $0.preparePosition = pointer.prepare
+                        $0.commitPosition = commitPosition
+                        $0.preparePosition = preparePosition
                     }
                 }
 

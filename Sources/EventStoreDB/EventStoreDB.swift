@@ -97,7 +97,7 @@ extension EventStoreDBClient {
     @available(*, deprecated, message: "Please use the new API .streams(of:.all).append(events:options:) instead.")
     public func readAllStreams(cursor _cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
         var options = configure(.init())
-        let cursor: Streams<AllStreams>.ReadAll.Cursor
+        let cursor: PositionCursor
         switch _cursor {
         case .start:
             options = options.forward()
@@ -132,7 +132,7 @@ extension EventStoreDBClient {
     /// - Returns: AsyncStream to Read.Response
     public func readStream(to identifier: StreamIdentifier, cursor _cursor: Cursor<CursorPointer>, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         var options = configure(.init())
-        let cursor: Streams<SpecifiedStream>.Read.Cursor
+        let cursor: RevisionCursor
         switch _cursor {
         case .start:
             cursor = .start
@@ -163,7 +163,7 @@ extension EventStoreDBClient {
     // MARK: Subscribe by all streams methods -
     public func subscribeToAll(from _cursor: Cursor<StreamPosition>, configure: (_ options: Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
-        let cursor: Streams<AllStreams>.ReadAll.Cursor = switch _cursor {
+        let cursor: PositionCursor = switch _cursor {
         case .start:
             .start
         case .end:
@@ -176,7 +176,7 @@ extension EventStoreDBClient {
 
     public func subscribeTo(stream identifier: StreamIdentifier, from _cursor: Cursor<StreamRevision>, configure: (_ options: Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
-        let cursor: Streams<SpecifiedStream>.Read.Cursor
+        let cursor: RevisionCursor
         switch _cursor {
         case .start:
             cursor = .start

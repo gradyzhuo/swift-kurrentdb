@@ -43,32 +43,32 @@ extension PersistentSubscriptions.UpdateToAll {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.Settings
-        public var positionCursor: Cursor<StreamPosition>
+        public var cursor: PositionCursor
 
-        public init(settings: PersistentSubscription.Settings = .init(), positionCursor: Cursor<StreamPosition> = .end) {
+        public init(settings: PersistentSubscription.Settings = .init(), from cursor: PositionCursor = .end) {
             self.settings = settings
-            self.positionCursor = positionCursor
+            self.cursor = cursor
         }
 
         @discardableResult
-        public func startFrom(cursor: Cursor<StreamPosition>) -> Self {
+        public func startFrom(_ cursor: PositionCursor) -> Self {
             withCopy { options in
-                options.positionCursor = cursor
+                options.cursor = cursor
             }
         }
 
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)
-                switch positionCursor {
+                switch cursor {
                 case .start:
                     $0.all.start = .init()
                 case .end:
                     $0.all.end = .init()
-                case let .specified(pointer):
+                case let .position(commitPosition, preparePosition):
                     $0.all.position = .with {
-                        $0.commitPosition = pointer.commit
-                        $0.preparePosition = pointer.prepare
+                        $0.commitPosition = commitPosition
+                        $0.preparePosition = preparePosition
                     }
                 }
             }

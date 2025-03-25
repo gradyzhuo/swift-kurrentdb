@@ -46,15 +46,15 @@ extension PersistentSubscriptions.UpdateToStream {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var settings: PersistentSubscription.Settings
-        public private(set) var revisionCursor: Cursor<StreamRevision>
+        public private(set) var revisionCursor: RevisionCursor
 
-        public init(settings: PersistentSubscription.Settings = .init(), revisionCursor: Cursor<StreamRevision> = .end) {
+        public init(settings: PersistentSubscription.Settings = .init(), revisionCursor: RevisionCursor = .end) {
             self.settings = settings
             self.revisionCursor = revisionCursor
         }
 
         @discardableResult
-        public func startFrom(cursor: Cursor<StreamRevision>) -> Self {
+        public func startFrom(cursor: RevisionCursor) -> Self {
             withCopy { options in
                 options.revisionCursor = cursor
             }
@@ -69,8 +69,8 @@ extension PersistentSubscriptions.UpdateToStream {
                     $0.stream.start = .init()
                 case .end:
                     $0.stream.end = .init()
-                case let .specified(revision):
-                    $0.stream.revision = revision.value
+                case let .revision(revision):
+                    $0.stream.revision = revision
                 }
             }
         }

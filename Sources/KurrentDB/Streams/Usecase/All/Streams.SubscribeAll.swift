@@ -16,10 +16,10 @@ extension Streams where Target == AllStreams {
         package typealias UnderlyingResponse = ReadAll.UnderlyingResponse
         public typealias Responses = Subscription
 
-        public let cursor: ReadAll.Cursor
+        public let cursor: PositionCursor
         public let options: Options
 
-        init(cursor: ReadAll.Cursor, options: Options) {
+        init(cursor: PositionCursor, options: Options) {
             self.cursor = cursor
             self.options = options
         }

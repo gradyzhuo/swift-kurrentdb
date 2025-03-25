@@ -42,18 +42,6 @@ extension Streams where Target == AllStreams {
     }
 }
 
-extension Streams.ReadAll {
-    public enum Cursor: Sendable {
-        case start
-        case end
-        case position(commit: UInt64, prepare: UInt64)
-        
-        public static func position(commit: UInt64) -> Self{
-            return .position(commit: commit, prepare: commit)
-        }
-    }
-}
-
 extension Streams.ReadAll where Target == AllStreams {
     public struct CursorPointer: Sendable {
         public let position: StreamPosition
@@ -73,7 +61,7 @@ extension Streams.ReadAll{
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        private var cursor: Cursor
+        private var cursor: PositionCursor
         public package(set) var direction: Direction
         public private(set) var resolveLinksEnabled: Bool
         public private(set) var limit: UInt64
@@ -169,7 +157,7 @@ extension Streams.ReadAll{
         }
         
         @discardableResult
-        internal func curosr(_ cursor: Cursor) -> Self {
+        internal func curosr(_ cursor: PositionCursor) -> Self {
             withCopy{ options in
                 options.cursor = cursor
             }

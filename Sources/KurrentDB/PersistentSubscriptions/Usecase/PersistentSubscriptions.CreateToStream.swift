@@ -45,17 +45,17 @@ extension PersistentSubscriptions.CreateToStream {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.Settings
-        public var revisionCursor: Cursor<StreamRevision>
+        public var cursor: RevisionCursor
 
-        public init(settings: PersistentSubscription.Settings = .init(), revisionCursor: Cursor<StreamRevision> = .end) {
+        public init(settings: PersistentSubscription.Settings = .init(), from cursor: RevisionCursor = .end) {
             self.settings = settings
-            self.revisionCursor = revisionCursor
+            self.cursor = cursor
         }
 
         @discardableResult
-        public func startFrom(revision: Cursor<StreamRevision>) -> Self {
+        public func startFrom(_ cursor: RevisionCursor) -> Self {
             withCopy { options in
-                options.revisionCursor = revision
+                options.cursor = cursor
             }
         }
 
@@ -70,13 +70,13 @@ extension PersistentSubscriptions.CreateToStream {
             .with {
                 $0.settings = .make(settings: settings)
 
-                switch revisionCursor {
+                switch cursor {
                 case .start:
                     $0.stream.start = .init()
                 case .end:
                     $0.stream.end = .init()
-                case let .specified(revision):
-                    $0.stream.revision = revision.value
+                case let .revision(revision):
+                    $0.stream.revision = revision
                 }
             }
         }
