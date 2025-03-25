@@ -120,7 +120,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: The `StreamMetadata` if available, otherwise `nil`.
     /// - Throws: An error if the metadata cannot be retrieved or parsed.
     @discardableResult
-    public func getMetadata(cursor: RevisionCursor = .end) async throws -> StreamMetadata? {
+    public func getMetadata(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws -> StreamMetadata? {
         let options: Streams.Read.Options = .init()
                                             .cursor(cursor)
                                             .forward()
