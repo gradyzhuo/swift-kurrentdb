@@ -32,7 +32,7 @@ extension Streams{
         }
 
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            await withThrowingTaskGroup(of: Void.self) { _ in
+            try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 do{
                     try await client.read(request: request, options: callOptions) {
@@ -41,8 +41,8 @@ extension Streams{
                         }
                     }
                 }catch {
-                    logger.warning("The error skipped when reading events: \(error)")
                     continuation.finish()
+                    throw error
                 }
                 return stream
             }
