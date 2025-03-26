@@ -47,13 +47,13 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         self.data = data
     }
 
-    package init(message: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent) throws {
+    package init(message: EventStore_Client_Streams_ReadResp.ReadEvent.RecordedEvent) throws(KurrentError) {
         guard let id = message.id.toUUID() else {
-            throw ReadEventError.GRPCDecodeException(message: "RecordedEvent can't convert an UUID from message.id: \(message.id)")
+            throw .initializationError(reason: "RecordedEvent can't convert an UUID from message.id: \(message.id)")
         }
 
         guard let eventType = message.metadata["type"] else {
-            throw ReadEventError.GRPCDecodeException(message: "RecordedEvent can't get an event type from message.metadata: \(message.metadata)")
+            throw .initializationError(reason: "RecordedEvent can't get an event type from message.metadata: \(message.metadata)")
         }
 
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown
@@ -64,13 +64,13 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         self.init(id: id, eventType: eventType, contentType: contentType, streamIdentifier: streamIdentifier, revision: revision, position: position, data: message.data, customMetadata: message.customMetadata)
     }
 
-    package init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent) throws {
+    package init(message: EventStore_Client_PersistentSubscriptions_ReadResp.ReadEvent.RecordedEvent) throws(KurrentError) {
         guard let id = message.id.toUUID() else {
-            throw ReadEventError.GRPCDecodeException(message: "RecordedEvent can't convert an UUID from message.id: \(message.id)")
+            throw .initializationError(reason: "RecordedEvent can't convert an UUID from message.id: \(message.id)")
         }
 
         guard let eventType = message.metadata["type"] else {
-            throw ReadEventError.GRPCDecodeException(message: "RecordedEvent can't get an event type from message.metadata: \(message.metadata)")
+            throw .initializationError(reason: "RecordedEvent can't get an event type from message.metadata: \(message.metadata)")
         }
 
         let contentType = ContentType(rawValue: message.metadata["content-type"] ?? ContentType.binary.rawValue) ?? .unknown

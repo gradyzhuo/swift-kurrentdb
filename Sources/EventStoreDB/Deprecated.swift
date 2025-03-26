@@ -6,6 +6,9 @@
 //
 import KurrentDB
 
+@available(*, deprecated, renamed: "KurrentError")
+public typealias EventStoreError = KurrentError
+
 public enum Stream {
     @available(*, deprecated, message: "please use StreamIdentifier from KurrentCore instead.")
     public typealias Identifier = StreamIdentifier
@@ -96,3 +99,4 @@ extension ReadEvent {
         }
     }
 }
+

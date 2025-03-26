@@ -52,7 +52,7 @@ extension PersistentSubscriptions.List {
         }
 
         @discardableResult
-        public static func listForStream(_ streamIdentifier: StreamIdentifier) throws -> Self {
+        public static func listForStream(_ streamIdentifier: StreamIdentifier) throws(KurrentError) -> Self {
             var options = UnderlyingMessage()
             options.listForStream.stream = try streamIdentifier.build()
             return .init(options: options)

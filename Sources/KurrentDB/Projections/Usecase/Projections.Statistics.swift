@@ -14,7 +14,7 @@ extension Projections {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
-        public typealias Responses = AsyncThrowingStream<Response, Error>
+        public typealias Responses = AsyncThrowingStream<Response, any Error>
 
         public let options: Options
 
@@ -79,13 +79,13 @@ extension Projections.Statistics {
         public let writePendingEventsBeforeCheckpoint: Int32
         public let writePendingEventsAfterCheckpoint: Int32
 
-        internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) throws {
+        internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) throws(KurrentError) {
             guard let mode = Projection.Mode(rawValue: mode) else {
-                throw KurrentError.initializationError(reason: "Invalid mode \(mode)")
+                throw .initializationError(reason: "Invalid mode \(mode)")
             }
             
             guard let status = Projection.Status(name: status) else {
-                throw KurrentError.initializationError(reason: "Invalid status \(status)")
+                throw .initializationError(reason: "Invalid status \(status)")
             }
             
             self.name = name
@@ -116,7 +116,7 @@ extension Projections.Statistics {
         package typealias UnderlyingMessage = UnderlyingResponse
         public let detail: Detail
 
-        package init(from message: UnderlyingResponse) throws {
+        package init(from message: UnderlyingResponse) throws(KurrentError) {
             let details = message.details
 
             self.detail = try .init(

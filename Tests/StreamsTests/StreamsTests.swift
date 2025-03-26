@@ -9,6 +9,10 @@ import Foundation
 @testable import KurrentDB
 import Testing
 
+package enum TestingError: Error {
+    case exception(String)
+}
+
 @Suite("EventStoreDB Stream Tests", .serialized)
 struct StreamTests: Sendable {
     let settings: ClientSettings

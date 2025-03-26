@@ -77,18 +77,18 @@ extension Streams.SubscribeAll where Target == AllStreams {
             self.content = content
         }
 
-        package init(from message: UnderlyingResponse) throws {
+        package init(from message: UnderlyingResponse) throws(KurrentError) {
             guard let content = message.content else {
-                throw ClientError.readResponseError(message: "content not found in response: \(message)")
+                throw .initializationError(reason: "content not found in response: \(message)")
             }
             try self.init(content: content)
         }
 
-        init(subscriptionId: String) throws {
+        init(subscriptionId: String) throws(KurrentError) {
             content = .confirmation(subscriptionId: subscriptionId)
         }
 
-        init(message: UnderlyingMessage.ReadEvent) throws {
+        init(message: UnderlyingMessage.ReadEvent) throws(KurrentError) {
             content = try .event(readEvent: .init(message: message))
         }
 
@@ -104,7 +104,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
             content = .position(lastAllStream: .at(commitPosition: commitPosition, preparePosition: preparePosition))
         }
 
-        init(content: UnderlyingMessage.OneOf_Content) throws {
+        init(content: UnderlyingMessage.OneOf_Content) throws(KurrentError) {
             switch content {
             case let .confirmation(confirmation):
                 try self.init(subscriptionId: confirmation.subscriptionID)

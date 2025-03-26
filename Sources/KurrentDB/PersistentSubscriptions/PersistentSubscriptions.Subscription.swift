@@ -65,11 +65,15 @@ extension PersistentSubscriptions {
         /// - Parameters:
         ///   - eventIds: An array of `UUID` identifiers for the events to acknowledge.
         /// - Throws: An error if the acknowledgment request fails.
-        func ack(eventIds: [UUID]) async throws {
+        func ack(eventIds: [UUID]) async throws(KurrentError) {
             let usecase = PersistentSubscriptions.Ack(subscriptionId: subscriptionId, eventIds: eventIds)
 
-            let messages = try usecase.requestMessages()
-            writer.write(messages: messages)
+            do{
+                let messages = try usecase.requestMessages()
+                writer.write(messages: messages)
+            } catch {
+                throw .internalClientError(reasone: "Ack eventIds:\(eventIds) failed", cause: error)
+            }
         }
 
         /// Acknowledges a list of read events.
@@ -78,7 +82,7 @@ extension PersistentSubscriptions {
         ///
         /// - Parameter readEvents: An array of `ReadEvent` objects to acknowledge.
         /// - Throws: An error if the acknowledgment process fails.
-        public func ack(readEvents: [ReadEvent]) async throws {
+        public func ack(readEvents: [ReadEvent]) async throws(KurrentError) {
             let eventIds = readEvents.map {
                 if let link = $0.link {
                     link.id
@@ -93,7 +97,7 @@ extension PersistentSubscriptions {
         ///
         /// - Parameter readEvents: A variadic list of `ReadEvent` objects to acknowledge.
         /// - Throws: An error if the acknowledgment process fails.
-        public func ack(readEvents: ReadEvent ...) async throws {
+        public func ack(readEvents: ReadEvent ...) async throws(KurrentError) {
             try await ack(readEvents: readEvents)
         }
 
@@ -104,9 +108,15 @@ extension PersistentSubscriptions {
         ///   - action: The action to take for the negatively acknowledged events.
         ///   - reason: A string explaining why the events are negatively acknowledged.
         /// - Throws: An error if the negative acknowledgment request fails.
-        func nack(eventIds: [UUID], action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
+        func nack(eventIds: [UUID], action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             let usecase = PersistentSubscriptions.Nack(subscriptionId: subscriptionId, eventIds: eventIds, action: action, reason: reason)
-            try writer.write(messages: usecase.requestMessages())
+            do{
+                let messages = try usecase.requestMessages()
+                writer.write(messages: messages)
+            } catch {
+                throw .internalClientError(reasone: "Nack eventIds:\(eventIds) failed", cause: error)
+            }
+            
         }
 
         /// Negatively acknowledges a list of read events.
@@ -118,7 +128,7 @@ extension PersistentSubscriptions {
         ///   - action: The action to take for the negatively acknowledged events.
         ///   - reason: A string explaining why the events are negatively acknowledged.
         /// - Throws: An error if the negative acknowledgment process fails.
-        public func nack(readEvents: [ReadEvent], action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
+        public func nack(readEvents: [ReadEvent], action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             let eventIds = readEvents.map {
                 if let link = $0.link {
                     link.id
@@ -136,7 +146,7 @@ extension PersistentSubscriptions {
         ///   - action: The action to take for the negatively acknowledged events.
         ///   - reason: A string explaining why the events are negatively acknowledged.
         /// - Throws: An error if the negative acknowledgment process fails.
-        public func nack(readEvents: ReadEvent ..., action: PersistentSubscriptions.Nack.Action, reason: String) async throws {
+        public func nack(readEvents: ReadEvent ..., action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             try await nack(readEvents: readEvents, action: action, reason: reason)
         }
     }

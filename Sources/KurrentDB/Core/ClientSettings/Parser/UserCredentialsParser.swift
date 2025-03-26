@@ -34,7 +34,7 @@ class UserCredentialsParser: ConnctionStringParser {
         "@"
     }
 
-    func parse(_ connectionString: String) throws -> Authentication? {
+    func parse(_ connectionString: String) -> Authentication? {
         let match = connectionString.firstMatch(of: regex)
         return match.flatMap {
             .credentials(username: $0[_user], password: $0[_password])

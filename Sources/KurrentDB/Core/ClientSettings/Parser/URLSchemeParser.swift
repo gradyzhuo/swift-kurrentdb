@@ -25,7 +25,7 @@ class URLSchemeParser: ConnctionStringParser {
         "://"
     }
 
-    func parse(_ connectionString: String) throws -> URLScheme? {
+    func parse(_ connectionString: String) -> URLScheme? {
         let match = connectionString.firstMatch(of: regex)
         return match.flatMap {
             .init(rawValue: $0[_scheme])

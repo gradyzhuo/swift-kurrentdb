@@ -97,9 +97,9 @@ extension Gossip.Read {
         public let isAlive: Bool
         public let httpEndPoint: Endpoint
 
-        package init(from message: UnderlyingMessage) throws {
+        package init(from message: UnderlyingMessage) throws(KurrentError) {
             guard let uuid = message.instanceID.toUUID() else {
-                throw ClientError.readResponseError(message: "The instance id not found.")
+                throw .initializationError(reason: "MemberInfo can't convert an UUID from message.instanceID: \(message.instanceID)")
             }
             instanceId = uuid
             timeStamp = TimeInterval(message.timeStamp)

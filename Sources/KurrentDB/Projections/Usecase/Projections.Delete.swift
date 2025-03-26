@@ -31,19 +31,19 @@ extension Projections {
             }
         }
 
-        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws(KurrentError) -> Response {
             do{
                 return try await client.delete(request: request, options: callOptions) {
                     try handle(response: $0)
                 }
             }catch let error as RPCError {
                 if error.message.contains("NotFound"){
-                    throw KurrentError.resourceNotFound(reason: "Projection \(name) not found.")
+                    throw .resourceNotFound(reason: "Projection \(name) not found.")
                 }
-                
-                throw KurrentError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred, \(error.message)")
+                let code = try? error.unpackGoogleRPCStatus()
+                throw .grpc(code: code, reason: "Unknown error occurred, \(error.message)")
             }catch {
-                throw KurrentError.serverError("Unknown error occurred: \(error)")
+                throw .serverError("Unknown error occurred", cause: error)
             }
         }
     }

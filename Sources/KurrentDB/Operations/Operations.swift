@@ -78,7 +78,7 @@ extension Operations {
     ///   - startFromChunk: The chunk number from which to start scavenging.
     /// - Returns: A `StartScavenge.Response` containing details about the started scavenge operation.
     /// - Throws: An error if the scavenge operation cannot be started.
-    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> StartScavenge.Response {
+    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws(KurrentError) -> StartScavenge.Response {
         let usecase = StartScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -88,7 +88,7 @@ extension Operations {
     /// - Parameter scavengeId: The identifier of the scavenge operation to stop.
     /// - Returns: A `StopScavenge.Response` indicating the result of the stop operation.
     /// - Throws: An error if the scavenge operation cannot be stopped.
-    public func stopScavenge(scavengeId: String) async throws -> StopScavenge.Response {
+    public func stopScavenge(scavengeId: String) async throws(KurrentError) -> StopScavenge.Response {
         let usecase = StopScavenge(scavengeId: scavengeId)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -96,7 +96,7 @@ extension Operations {
     /// Merges indexes to optimize database performance.
     ///
     /// - Throws: An error if the merge operation fails.
-    public func mergeIndeexes() async throws {
+    public func mergeIndeexes() async throws(KurrentError) {
         let usecase = MergeIndexes()
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -104,7 +104,7 @@ extension Operations {
     /// Resigns the current node from its role in a cluster.
     ///
     /// - Throws: An error if the resignation fails.
-    public func resignNode() async throws {
+    public func resignNode() async throws(KurrentError) {
         let usecase = ResignNode()
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -112,7 +112,7 @@ extension Operations {
     /// Restarts the persistent subscriptions subsystem.
     ///
     /// - Throws: An error if the restart operation fails.
-    public func restartPersistentSubscriptions() async throws {
+    public func restartPersistentSubscriptions() async throws(KurrentError) {
         let usecase = RestartPersistentSubscriptions()
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -121,7 +121,7 @@ extension Operations {
     ///
     /// - Parameter priority: The priority value to set for the node.
     /// - Throws: An error if the priority cannot be set.
-    public func setNodePriority(priority: Int32) async throws {
+    public func setNodePriority(priority: Int32) async throws(KurrentError) {
         let usecase = SetNodePriority(priority: priority)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -129,7 +129,7 @@ extension Operations {
     /// Shuts down the EventStore server.
     ///
     /// - Throws: An error if the shutdown operation fails.
-    public func shutdown() async throws {
+    public func shutdown() async throws(KurrentError) {
         let usecase = Shutdown()
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }

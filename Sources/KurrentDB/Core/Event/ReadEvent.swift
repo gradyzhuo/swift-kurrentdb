@@ -23,7 +23,7 @@ public struct ReadEvent: Sendable {
         self.commitPosition = commitPosition
     }
 
-    package init(message: EventStore_Client_Streams_ReadResp.ReadEvent) throws {
+    package init(message: EventStore_Client_Streams_ReadResp.ReadEvent) throws(KurrentError) {
         let recorded: RecordedEvent = try .init(message: message.event)
         let link: RecordedEvent? = try message.hasLink ? .init(message: message.link) : nil
         

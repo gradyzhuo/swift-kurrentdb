@@ -48,7 +48,7 @@ extension Projections {
                 
                 throw KurrentError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
             }catch {
-                throw KurrentError.serverError("Unknown error occurred: \(error)")
+                throw KurrentError.serverError("Unknown error occurred", cause: error)
             }
         }
     }

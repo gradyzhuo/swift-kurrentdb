@@ -83,7 +83,7 @@ extension KurrentDBClient {
 
 
 extension KurrentDBClient {
-    public func restartSubsystem() async throws {
+    public func restartSubsystem() async throws(KurrentError) {
         let usecase = Projections<AllProjectionTarget<AnyMode>>.RestartSubsystem()
         _ = try await usecase.perform(settings: settings, callOptions: defaultCallOptions)
     }

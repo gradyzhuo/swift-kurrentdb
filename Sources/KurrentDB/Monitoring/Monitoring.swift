@@ -27,7 +27,7 @@ public struct Monitoring: GRPCConcreteService {
 }
 
 extension Monitoring {
-    package func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws -> Stats.Responses {
+    package func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Stats.Responses {
         let usecase = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }

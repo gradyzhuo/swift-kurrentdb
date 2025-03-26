@@ -73,13 +73,17 @@ extension Users {
     ///   - fullName: The full name of the user.
     ///   - groups: A list of groups to which the user belongs.
     /// - Returns: The created `UserDetails` if successful, otherwise `nil`.
-    public func create(loginName: String, password: String, fullName: String, groups: String...) async throws -> UserDetails? {
+    public func create(loginName: String, password: String, fullName: String, groups: String...) async throws(KurrentError) -> UserDetails? {
         let usecase = Create(loginName: loginName, password: password, fullName: fullName, groups: groups)
 
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
 
         let responses = try await details(loginName: loginName)
-        return try await responses.first { _ in true }
+        do{
+            return try await responses.first { _ in true }
+        } catch {
+            throw .serverError("create user with loginName: \(loginName) failed", cause: error)
+        }
     }
 
     // MARK: - Details Actions
@@ -88,7 +92,7 @@ extension Users {
     ///
     /// - Parameter loginName: The username of the user.
     /// - Returns: An asynchronous stream of `UserDetails` values.
-    public func details(loginName: String) async throws -> AsyncThrowingStream<UserDetails, Error> {
+    public func details(loginName: String) async throws(KurrentError) -> AsyncThrowingStream<UserDetails, Error> {
         let usecase = Details(loginName: loginName)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -96,7 +100,7 @@ extension Users {
     /// Enables a user account.
     ///
     /// - Parameter loginName: The username of the account to enable.
-    public func enable(loginName: String) async throws {
+    public func enable(loginName: String) async throws(KurrentError) {
         let usecase = Enable(loginName: loginName)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -104,7 +108,7 @@ extension Users {
     /// Disables a user account.
     ///
     /// - Parameter loginName: The username of the account to disable.
-    public func disable(loginName: String) async throws {
+    public func disable(loginName: String) async throws(KurrentError) {
         let usecase = Disable(loginName: loginName)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -115,7 +119,7 @@ extension Users {
     ///   - loginName: The username of the user to update.
     ///   - password: The password required for authentication.
     ///   - options: The update options containing the new values.
-    public func update(loginName: String, password: String, options: Update.Options) async throws {
+    public func update(loginName: String, password: String, options: Update.Options) async throws(KurrentError) {
         let usecase = Update(loginName: loginName, password: password, options: options)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -126,7 +130,7 @@ extension Users {
     ///   - fullName: The new full name of the user.
     ///   - loginName: The username of the user.
     ///   - password: The password required for authentication.
-    public func update(fullName: String, to loginName: String, with password: String) async throws {
+    public func update(fullName: String, to loginName: String, with password: String) async throws(KurrentError) {
         let options = Users.Update.Options()
             .set(fullName: fullName)
         try await update(loginName: loginName, password: password, options: options)
@@ -138,7 +142,7 @@ extension Users {
     ///   - newPassword: The new password.
     ///   - currentPassword: The current password.
     ///   - loginName: The username of the user.
-    public func change(password newPassword: String, origin currentPassword: String, to loginName: String) async throws {
+    public func change(password newPassword: String, origin currentPassword: String, to loginName: String) async throws(KurrentError) {
         let usecase = ChangePassword(loginName: loginName, currentPassword: currentPassword, newPassword: newPassword)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -148,7 +152,7 @@ extension Users {
     /// - Parameters:
     ///   - newPassword: The new password.
     ///   - loginName: The username of the user.
-    public func reset(password newPassword: String, loginName: String) async throws {
+    public func reset(password newPassword: String, loginName: String) async throws(KurrentError) {
         let usecase = ResetPassword(loginName: loginName, newPassword: newPassword)
         _ = try await usecase.perform(settings: settings, callOptions: callOptions)
     }

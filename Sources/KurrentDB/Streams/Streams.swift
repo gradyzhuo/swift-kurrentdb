@@ -104,7 +104,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the operation fails.
     @discardableResult
-    public func setMetadata(metadata: StreamMetadata) async throws -> Append.Response {
+    public func setMetadata(metadata: StreamMetadata) async throws(KurrentError) -> Append.Response {
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
@@ -120,26 +120,30 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: The `StreamMetadata` if available, otherwise `nil`.
     /// - Throws: An error if the metadata cannot be retrieved or parsed.
     @discardableResult
-    public func getMetadata(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws -> StreamMetadata? {
+    public func getMetadata(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws(KurrentError) -> StreamMetadata? {
         let options: Streams.Read.Options = options.cursor(cursor)
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
         let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
 
-        return try await responses.first {
-            if case .event = $0 { return true }
-            return false
-        }.flatMap {
-            switch $0 {
-            case let .event(event):
-                switch event.record.contentType {
-                case .json:
-                    try JSONDecoder().decode(StreamMetadata.self, from: event.record.data)
+        do{
+            return try await responses.first {
+                if case .event = $0 { return true }
+                return false
+            }.flatMap {
+                switch $0 {
+                case let .event(event):
+                    switch event.record.contentType {
+                    case .json:
+                        try JSONDecoder().decode(StreamMetadata.self, from: event.record.data)
+                    default:
+                        throw KurrentError.internalParsingError(reason: "The event data could not be parsed. Stream metadata must be encoded in JSON format.")
+                    }
                 default:
-                    throw ClientError.eventDataError(message: "The event data could not be parsed. Stream metadata must be encoded in JSON format.")
+                    throw KurrentError.initializationError(reason:  "The metadata event does not exist.")
                 }
-            default:
-                throw ClientError.readResponseError(message: "The metadata event does not exist.")
             }
+        }catch {
+            throw .internalClientError(reasone: "\(#function) failed.", cause: error)
         }
     }
 
@@ -151,7 +155,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the append operation fails.
     @discardableResult
-    public func append(events: [EventData], options: Append.Options = .init()) async throws -> Append.Response {
+    public func append(events: [EventData], options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
         let usecase = Append(to: identifier, events: events, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -164,7 +168,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the append operation fails.
     @discardableResult
-    public func append(events: EventData..., options: Append.Options = .init()) async throws -> Append.Response {
+    public func append(events: EventData..., options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
         return try await append(events: events, options: options)
     }
 
@@ -175,7 +179,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func read(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws -> AsyncThrowingStream<Read.Response, Error> {
+    public func read(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
         let usecase = Read(from: identifier, options: options.cursor(cursor))
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -187,7 +191,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(from cursor: RevisionCursor = .end, options: Subscribe.Options = .init()) async throws -> Subscription {
+    public func subscribe(from cursor: RevisionCursor = .end, options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Subscribe(from: identifier, cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -199,7 +203,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(fromRevision revision: UInt64, options: Subscribe.Options = .init()) async throws -> Subscription {
+    public func subscribe(fromRevision revision: UInt64, options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         return try await subscribe(from: .revision(revision), options: options)
     }
 
@@ -209,7 +213,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: A `Delete.Response` indicating the result of the operation.
     /// - Throws: An error if the delete operation fails.
     @discardableResult
-    public func delete(options: Delete.Options = .init()) async throws -> Delete.Response {
+    public func delete(options: Delete.Options = .init()) async throws(KurrentError) -> Delete.Response {
         let usecase = Delete(to: identifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -220,7 +224,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: A `Tombstone.Response` indicating the result of the operation.
     /// - Throws: An error if the tombstone operation fails.
     @discardableResult
-    public func tombstone(options: Tombstone.Options = .init()) async throws -> Tombstone.Response {
+    public func tombstone(options: Tombstone.Options = .init()) async throws(KurrentError) -> Tombstone.Response {
         let usecase = Tombstone(to: identifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -243,7 +247,7 @@ extension Streams where Target == ProjectionStream {
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(from cursor: RevisionCursor, options: Subscribe.Options = .init()) async throws -> Subscription {
+    public func subscribe(from cursor: RevisionCursor, options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Subscribe(from: identifier, cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -261,7 +265,7 @@ extension Streams where Target == AllStreams {
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func read(from cursor: PositionCursor = .start, options: ReadAll.Options = .init()) async throws -> AsyncThrowingStream<ReadAll.Response, Error> {
+    public func read(from cursor: PositionCursor = .start, options: ReadAll.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadAll.Response, Error> {
         let usecase = ReadAll(options: options.curosr(cursor))
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
@@ -273,7 +277,7 @@ extension Streams where Target == AllStreams {
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Streams.Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(from cursor: PositionCursor = .end, options: SubscribeAll.Options = .init()) async throws -> Streams.Subscription {
+    public func subscribe(from cursor: PositionCursor = .end, options: SubscribeAll.Options = .init()) async throws(KurrentError) -> Streams.Subscription {
         let usecase = SubscribeAll(cursor: cursor, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }

@@ -111,28 +111,28 @@ extension ClientSettings {
         return settings
     }
 
-    public static func parse(connectionString: String) throws -> Self {
+    public static func parse(connectionString: String) throws(KurrentError) -> Self {
         let schemeParser = URLSchemeParser()
         let endpointParser = EndpointParser()
         let queryItemParser = QueryItemParser()
         let userCredentialParser = UserCredentialsParser()
-
-        guard let scheme = try schemeParser.parse(connectionString) else {
-            throw ClientSettingsError.parseError(message: "Unknown URL scheme: \(connectionString)")
+        
+        guard let scheme = schemeParser.parse(connectionString) else {
+            throw KurrentError.internalParsingError(reason: "Unknown URL scheme: \(connectionString)")
         }
 
-        guard let endpoints = try endpointParser.parse(connectionString),
+        guard let endpoints = endpointParser.parse(connectionString),
               endpoints.count > 0
         else {
-            throw ClientSettingsError.parseError(message: "Connection string doesn't have an host")
+            throw KurrentError.internalParsingError(reason: "Connection string doesn't have an host")
         }
 
-        let parsedResult = try queryItemParser.parse(connectionString) ?? []
+        let parsedResult = queryItemParser.parse(connectionString) ?? []
 
         let queryItems: [String: URLQueryItem] = .init(uniqueKeysWithValues: parsedResult.map {
             ($0.name.lowercased(), $0)
         })
-
+        
         let clusterMode: TopologyClusterMode
         if endpoints.count > 1 {
             // gossip mode
@@ -155,7 +155,7 @@ extension ClientSettings {
         }
 
         var settings = Self(clusterMode: clusterMode)
-        if let authentication = try userCredentialParser.parse(connectionString) {
+        if let authentication = userCredentialParser.parse(connectionString) {
             settings.authentication = authentication
         }
     
@@ -185,7 +185,7 @@ extension ClientSettings {
         if let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) }}) {
             settings.defaultDeadline = defaultDeadline
         }
-
+        
         return settings
     }
 }
@@ -196,9 +196,9 @@ extension ClientSettings: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         do {
             self = try Self.parse(connectionString: value)
-        } catch let ClientSettingsError.parseError(message) {
-            logger.error(.init(stringLiteral: message))
-            fatalError(message)
+        } catch let .internalParsingError(reason) {
+            logger.error(.init(stringLiteral: reason))
+            fatalError(reason)
 
         } catch {
             logger.error(.init(stringLiteral: "\(error)"))

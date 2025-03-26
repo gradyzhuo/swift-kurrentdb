@@ -11,5 +11,5 @@ import RegexBuilder
 protocol ConnctionStringParser {
     associatedtype Result
 
-    mutating func parse(_ connectionString: String) throws -> Result?
+    mutating func parse(_ connectionString: String) -> Result?
 }

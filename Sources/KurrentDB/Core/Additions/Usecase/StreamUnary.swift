@@ -14,17 +14,22 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
         try await send(client: client, request: request(metadata: metadata), callOptions: callOptions)
     }
 
-    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws -> Response {
+    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Response {
         let client = try GRPCClient(settings: settings)
         let metadata = Metadata(from: settings)
-        return try await withThrowingTaskGroup(of: Void.self) { group in
-            group.addTask {
-                try await client.runConnections()
+        do{
+            return try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await client.runConnections()
+                }
+                let underlying = ServiceClient(wrapping: client)
+                let response = try await send(client: underlying, metadata: metadata, callOptions: callOptions)
+                client.beginGracefulShutdown()
+                return response
             }
-            let underlying = ServiceClient(wrapping: client)
-            let response = try await send(client: underlying, metadata: metadata, callOptions: callOptions)
-            client.beginGracefulShutdown()
-            return response
+        }catch {
+            throw .internalClientError(reasone: "\(Self.self) perform failed: \(error)", cause: error)
         }
+        
     }
 }

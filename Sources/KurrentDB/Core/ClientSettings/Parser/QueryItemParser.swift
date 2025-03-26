@@ -39,7 +39,7 @@ class QueryItemParser: ConnctionStringParser {
         }
     }
 
-    func parse(_ connectionString: String) throws -> [URLQueryItem]? {
+    func parse(_ connectionString: String) -> [URLQueryItem]? {
         let queryItemsMatches = connectionString.matches(of: regex)
         return queryItemsMatches.map {
             .init(name: $0[_key], value: $0[_value])

@@ -29,9 +29,9 @@ extension StreamIdentifier: ExpressibleByStringLiteral {
 }
 
 extension StreamIdentifier {
-    package func build() throws -> UnderlyingMessage {
+    package func build() throws(KurrentError) -> UnderlyingMessage {
         guard let streamName = name.data(using: encoding) else {
-            throw ClientError.streamNameError(message: "name: \(name), encoding: \(encoding)")
+            throw .internalParsingError(reason: "name coding error: \(name), encoding: \(encoding)")
         }
 
         return .with {

@@ -120,7 +120,7 @@ class EndpointParser: ConnctionStringParser {
     let _host: HostReference = .init()
     let _port: PortReference = .init()
 
-    func parse(_ connectionString: String) throws -> Result? {
+    func parse(_ connectionString: String) -> Result? {
         var connectionString = connectionString
         if let atIndex = connectionString.firstIndex(of: "@") {
             let range = connectionString.startIndex ..< atIndex

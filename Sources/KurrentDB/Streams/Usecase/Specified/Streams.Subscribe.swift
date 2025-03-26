@@ -78,7 +78,7 @@ extension Streams.Subscribe {
 
         package init(from message: UnderlyingResponse) throws {
             guard let content = message.content else {
-                throw ClientError.readResponseError(message: "content not found in response: \(message)")
+                throw KurrentError.internalParsingError(reason: "content not found in response: \(message)")
             }
             try self.init(content: content)
         }

@@ -28,7 +28,7 @@ extension Projections {
             }
         }
 
-        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws(KurrentError) -> Response {
             do{
                 return try await client.create(request: request, options: callOptions) {
                     try handle(response: $0)
@@ -37,9 +37,9 @@ extension Projections {
                 if error.message.contains("Conflict"){
                     throw KurrentError.resourceAlreadyExists
                 }
-                throw KurrentError.grpc(code: .init(code: error.code, message: error.message, details: []), reason: error.message)
+                throw .grpc(code: .init(code: error.code, message: error.message, details: []), reason: error.message)
             }catch {
-                throw KurrentError.serverError("unexpected error: \(error)")
+                throw .serverError("unexpected error", cause: error)
             }
         }
     }

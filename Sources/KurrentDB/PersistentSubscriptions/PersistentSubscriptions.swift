@@ -109,7 +109,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// - Parameters:
     ///   - options: Configuration options for creating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the creation fails.
-    public func create(options: CreateToAll.Options = .init()) async throws {
+    public func create(options: CreateToAll.Options = .init()) async throws(KurrentError) {
         let usecase: CreateToAll = .init(group: group, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -119,7 +119,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// - Parameters:
     ///   - options: Configuration options for updating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the update fails.
-    public func update(options: UpdateToAll.Options = .init()) async throws {
+    public func update(options: UpdateToAll.Options = .init()) async throws(KurrentError) {
         let usecase = UpdateToAll(group: group, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -127,7 +127,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// Deletes a persistent subscription for all streams.
     ///
     /// - Throws: An error if the deletion fails.
-    public func delete() async throws {
+    public func delete() async throws(KurrentError) {
         let usecase = Delete(stream: .all, group: group)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -138,7 +138,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     ///   - options: Configuration options for subscribing, defaulting to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(options: Read.Options = .init()) async throws -> Subscription {
+    public func subscribe(options: Read.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Read(streamSelection: .all, group: group, options: options)
         return try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -147,7 +147,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     ///
     /// - Returns: A `PersistentSubscription.SubscriptionInfo` object containing subscription details.
     /// - Throws: An error if the information cannot be retrieved.
-    public func getInfo() async throws -> PersistentSubscription.SubscriptionInfo {
+    public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
         let usecase = GetInfo(stream: .all, group: group)
         return try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -157,7 +157,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// - Parameters:
     ///   - options: Configuration options for replaying parked messages, defaulting to an empty configuration.
     /// - Throws: An error if the replay operation fails.
-    public func replayParkedMessages(options: ReplayParked.Options = .init()) async throws {
+    public func replayParkedMessages(options: ReplayParked.Options = .init()) async throws(KurrentError) {
         let usecase = ReplayParked(streamSelection: .all, group: group, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -185,7 +185,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     /// - Parameters:
     ///   - options: Configuration options for creating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the creation fails.
-    public func create(options: CreateToStream.Options = .init()) async throws {
+    public func create(options: CreateToStream.Options = .init()) async throws(KurrentError) {
         let usecase: CreateToStream = .init(streamIdentifier: streamIdentifier, group: group, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -195,7 +195,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     /// - Parameters:
     ///   - options: Configuration options for updating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the update fails.
-    public func update(settings: PersistentSubscription.Settings, from cursor: RevisionCursor = .end) async throws {
+    public func update(settings: PersistentSubscription.Settings, from cursor: RevisionCursor = .end) async throws(KurrentError) {
         let usecase = UpdateToStream(streamIdentifier: streamIdentifier, group: group, options: .init(settings: settings).startFrom(cursor: cursor))
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -203,7 +203,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     /// Deletes a persistent subscription for a specific stream.
     ///
     /// - Throws: An error if the deletion fails.
-    public func delete() async throws {
+    public func delete() async throws(KurrentError) {
         let usecase = Delete(stream: .specified(streamIdentifier), group: group)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -214,7 +214,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     ///   - options: Configuration options for subscribing, defaulting to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribe(options: Read.Options = .init()) async throws -> Subscription {
+    public func subscribe(options: Read.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Read(streamSelection: .specified(streamIdentifier), group: group, options: options)
         return try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -223,7 +223,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     ///
     /// - Returns: A `PersistentSubscription.SubscriptionInfo` object containing subscription details.
     /// - Throws: An error if the information cannot be retrieved.
-    public func getInfo() async throws -> PersistentSubscription.SubscriptionInfo {
+    public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
         let usecase = GetInfo(stream: .specified(streamIdentifier), group: group)
         return try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -233,7 +233,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     /// - Parameters:
     ///   - options: Configuration options for replaying parked messages, defaulting to an empty configuration.
     /// - Throws: An error if the replay operation fails.
-    public func replayParkedMessages(options: ReplayParked.Options = .init()) async throws {
+    public func replayParkedMessages(options: ReplayParked.Options = .init()) async throws(KurrentError) {
         let usecase = ReplayParked(streamSelection: .specified(streamIdentifier), group: group, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -246,7 +246,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
     ///
     /// - Throws: An error if the restart operation fails.
     @MainActor
-    public func restartSubsystem() async throws {
+    public func restartSubsystem() async throws(KurrentError) {
         let usecase = RestartSubsystem()
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
@@ -256,7 +256,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
     /// - Parameter streamIdentifier: The identifier of the stream to list subscriptions for.
     /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
     /// - Throws: An error if the list operation fails.
-    public func listForStream(_ streamIdentifier: StreamIdentifier) async throws -> [PersistentSubscription.SubscriptionInfo] {
+    public func listForStream(_ streamIdentifier: StreamIdentifier) async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         let options: List.Options = try .listForStream(streamIdentifier)
         let usecase = List(options: options)
         return try await usecase.perform(settings: clientSettings, callOptions: callOptions)
@@ -266,7 +266,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
     ///
     /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
     /// - Throws: An error if the list operation fails.
-    public func listAll() async throws -> [PersistentSubscription.SubscriptionInfo] {
+    public func listAll() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         let options: List.Options = .listAllScriptions()
         let usecase = List(options: options)
         return try await usecase.perform(settings: clientSettings, callOptions: callOptions)
