@@ -16,10 +16,12 @@ extension PersistentSubscriptions {
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         let group: String
+        let cursor: PositionCursor
         let options: Options
 
-        public init(group: String, options: Options) {
+        public init(group: String, cursor: PositionCursor, options: Options) {
             self.group = group
+            self.cursor = cursor
             self.options = options
         }
 
@@ -27,6 +29,17 @@ extension PersistentSubscriptions {
             .with {
                 $0.options = options.build()
                 $0.options.groupName = group
+                switch cursor {
+                case .start:
+                    $0.options.all.start = .init()
+                case .end:
+                    $0.options.all.end = .init()
+                case let .position(commitPosition, preparePosition):
+                    $0.options.all.position = .with {
+                        $0.commitPosition = commitPosition
+                        $0.preparePosition = preparePosition
+                    }
+                }
             }
         }
 
@@ -53,33 +66,13 @@ extension PersistentSubscriptions.CreateToAll {
         }
 
         @discardableResult
-        public func startFrom(position: PositionCursor) -> Self {
-            withCopy { options in
-                options.cursor = position
-            }
-        }
-
-        @discardableResult
-        public mutating func set(consumerStrategy: PersistentSubscription.SystemConsumerStrategy) -> Self {
-            withCopy { options in
-                options.settings.consumerStrategy = consumerStrategy
-            }
+        public func filter(_ value: SubscriptionFilter) -> Self {
+            withCopy { $0.filter = filter }
         }
 
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)
-                switch cursor {
-                case .start:
-                    $0.all.start = .init()
-                case .end:
-                    $0.all.end = .init()
-                case let .position(commitPosition, preparePosition):
-                    $0.all.position = .with {
-                        $0.commitPosition = commitPosition
-                        $0.preparePosition = preparePosition
-                    }
-                }
 
                 if let filter {
                     $0.all.filter = .make(with: filter)

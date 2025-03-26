@@ -14,6 +14,67 @@ protocol PersistentSubscriptionsCommonOptions: EventStoreOptions {
 
 extension PersistentSubscriptionsCommonOptions {
     @discardableResult
+    public func resolveLink() -> Self {
+        withCopy { $0.settings.resolveLink = true }
+    }
+
+    @discardableResult
+    public func extraStatistics() -> Self {
+        withCopy { $0.settings.extraStatistics = true }
+    }
+
+    @discardableResult
+    public func messageTimeout(_ value: TimeSpan) -> Self {
+        withCopy { $0.settings.messageTimeout = value }
+    }
+
+    @discardableResult
+    public func maxRetryCount(_ value: Int32) -> Self {
+        withCopy { $0.settings.maxRetryCount = value }
+    }
+
+    @discardableResult
+    public func checkpoint(count value: ClosedRange<Int32>) -> Self {
+        withCopy { $0.settings.checkpointCount = value }
+    }
+    
+    @discardableResult
+    public func checkpoint(after value: TimeSpan) -> Self {
+        withCopy { $0.settings.checkpointAfter = value }
+    }
+
+    @discardableResult
+    public func maxSubscriberCount(_ value: Int32) -> Self {
+        withCopy { $0.settings.maxSubscriberCount = value }
+    }
+
+    @discardableResult
+    public func liveBufferSize(_ value: Int32) -> Self {
+        withCopy { $0.settings.liveBufferSize = value }
+    }
+
+    @discardableResult
+    public func readBatchSize(_ value: Int32) -> Self {
+        withCopy { $0.settings.readBatchSize = value }
+    }
+
+    @discardableResult
+    public func historyBufferSize(_ value: Int32) -> Self {
+        withCopy { $0.settings.historyBufferSize = value }
+    }
+
+    
+
+    @discardableResult
+    public func consumerStrategy(_ value: PersistentSubscription.SystemConsumerStrategy) -> Self {
+        withCopy { $0.settings.consumerStrategy = value }
+    }
+}
+
+// MARK: - Deprecated
+extension PersistentSubscriptionsCommonOptions {
+    @discardableResult
+    @available(*, deprecated)
     public mutating func set(resolveLinks: Bool) -> Self {
         withCopy { copied in
             copied.settings.resolveLink = resolveLinks
@@ -21,6 +82,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(extraStatistics: Bool) -> Self {
         withCopy { copied in
             copied.settings.extraStatistics = extraStatistics
@@ -28,6 +90,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(maxRetryCount: Int32) -> Self {
         withCopy { copied in
             copied.settings.maxRetryCount = maxRetryCount
@@ -35,6 +98,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(minCheckpointCount: Int32) -> Self {
         withCopy { copied in
             copied.settings.checkpointCount = minCheckpointCount ... settings.checkpointCount.upperBound
@@ -42,6 +106,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(maxCheckpointCount: Int32) -> Self {
         withCopy { copied in
             copied.settings.checkpointCount = settings.checkpointCount.lowerBound ... maxCheckpointCount
@@ -49,6 +114,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(maxSubscriberCount: Int32) -> Self {
         withCopy { copied in
             copied.settings.maxSubscriberCount = maxSubscriberCount
@@ -56,6 +122,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(liveBufferSize: Int32) -> Self {
         withCopy { copied in
             copied.settings.liveBufferSize = liveBufferSize
@@ -63,6 +130,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(readBatchSize: Int32) -> Self {
         withCopy { copied in
             copied.settings.readBatchSize = readBatchSize
@@ -70,6 +138,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(historyBufferSize: Int32) -> Self {
         withCopy { copied in
             copied.settings.historyBufferSize = historyBufferSize
@@ -77,6 +146,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func set(messageTimeout timeout: TimeSpan) -> Self {
         withCopy { copied in
             copied.settings.messageTimeout = timeout
@@ -84,6 +154,7 @@ extension PersistentSubscriptionsCommonOptions {
     }
 
     @discardableResult
+    @available(*, deprecated)
     public mutating func setCheckpoint(after span: TimeSpan) -> Self {
         withCopy { copied in
             copied.settings.checkpointAfter = span

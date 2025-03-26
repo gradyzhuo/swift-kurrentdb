@@ -15,20 +15,32 @@ extension PersistentSubscriptions {
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         var streamIdentifier: StreamIdentifier
+        var cursor: RevisionCursor
         var group: String
         var options: Options
 
-        public init(streamIdentifier: StreamIdentifier, group: String, options: Options) {
+        public init(streamIdentifier: StreamIdentifier, group: String, cursor: RevisionCursor, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.group = group
+            self.cursor = cursor
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
-                $0.options.groupName = group
+                
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
+                $0.options.groupName = group
+                
+                switch cursor {
+                case .start:
+                    $0.options.stream.start = .init()
+                case .end:
+                    $0.options.stream.end = .init()
+                case let .revision(revision):
+                    $0.options.stream.revision = revision
+                }
             }
         }
 
@@ -45,39 +57,14 @@ extension PersistentSubscriptions.CreateToStream {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.Settings
-        public var cursor: RevisionCursor
 
-        public init(settings: PersistentSubscription.Settings = .init(), from cursor: RevisionCursor = .end) {
-            self.settings = settings
-            self.cursor = cursor
-        }
-
-        @discardableResult
-        public func startFrom(_ cursor: RevisionCursor) -> Self {
-            withCopy { options in
-                options.cursor = cursor
-            }
-        }
-
-        @discardableResult
-        public mutating func set(consumerStrategy: PersistentSubscription.SystemConsumerStrategy) -> Self {
-            withCopy { options in
-                options.settings.consumerStrategy = consumerStrategy
-            }
+        public init() {
+            self.settings = .init()
         }
 
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)
-
-                switch cursor {
-                case .start:
-                    $0.stream.start = .init()
-                case .end:
-                    $0.stream.end = .init()
-                case let .revision(revision):
-                    $0.stream.revision = revision
-                }
             }
         }
     }

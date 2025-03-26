@@ -40,7 +40,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
-    package static func make(settings: PersistentSubscription.Settings) -> Self {
+    package static func from(settings: PersistentSubscription.Settings) -> Self {
         .with {
             $0.resolveLinks = settings.resolveLink
             $0.extraStatistics = settings.extraStatistics

@@ -109,8 +109,8 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// - Parameters:
     ///   - options: Configuration options for creating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the creation fails.
-    public func create(options: CreateToAll.Options = .init()) async throws(KurrentError) {
-        let usecase: CreateToAll = .init(group: group, options: options)
+    public func create(startFrom cursor: PositionCursor = .end, options: CreateToAll.Options = .init()) async throws(KurrentError) {
+        let usecase = CreateToAll(group: group, cursor: cursor, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
     
@@ -119,8 +119,8 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     /// - Parameters:
     ///   - options: Configuration options for updating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the update fails.
-    public func update(options: UpdateToAll.Options = .init()) async throws(KurrentError) {
-        let usecase = UpdateToAll(group: group, options: options)
+    public func update(startFrom cursor: PositionCursor = .end, options: UpdateToAll.Options = .init()) async throws(KurrentError) {
+        let usecase = UpdateToAll(group: group, cursor: cursor, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
     
@@ -185,8 +185,8 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     /// - Parameters:
     ///   - options: Configuration options for creating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the creation fails.
-    public func create(options: CreateToStream.Options = .init()) async throws(KurrentError) {
-        let usecase: CreateToStream = .init(streamIdentifier: streamIdentifier, group: group, options: options)
+    public func create(startFrom cursor: RevisionCursor = .end, options: CreateToStream.Options = .init()) async throws(KurrentError) {
+        let usecase = CreateToStream(streamIdentifier: streamIdentifier, group: group, cursor: cursor, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
 
@@ -195,8 +195,8 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     /// - Parameters:
     ///   - options: Configuration options for updating the subscription, defaulting to an empty configuration.
     /// - Throws: An error if the update fails.
-    public func update(settings: PersistentSubscription.Settings, from cursor: RevisionCursor = .end) async throws(KurrentError) {
-        let usecase = UpdateToStream(streamIdentifier: streamIdentifier, group: group, options: .init(settings: settings).startFrom(cursor: cursor))
+    public func update(startFrom cursor: RevisionCursor = .end, options: UpdateToStream.Options = .init()) async throws(KurrentError) {
+        let usecase = UpdateToStream(streamIdentifier: streamIdentifier, group: group, cursor: cursor, options: options)
         _ = try await usecase.perform(settings: clientSettings, callOptions: callOptions)
     }
 

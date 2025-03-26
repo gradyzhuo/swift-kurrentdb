@@ -65,5 +65,8 @@ extension PersistentSubscription {
             self.checkpointAfter = checkpointAfter
             self.consumerStrategy = consumerStrategy
         }
+        
+        
+        
     }
 }
