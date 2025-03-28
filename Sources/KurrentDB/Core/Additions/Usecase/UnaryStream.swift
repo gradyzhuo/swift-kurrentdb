@@ -15,15 +15,13 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses =
         Task {
             try await client.runConnections()
         }
-
-        let metadata = Metadata(from: settings)
-        do{
+        
+        return try await withRethrowingError(usage: #function) {
+            let metadata = Metadata(from: settings)
             let request = try request(metadata: metadata)
 
             let underlying = ServiceClient(wrapping: client)
             return try await send(client: underlying, request: request, callOptions: callOptions)
-        }catch {
-            throw .internalClientError(reason: "\(Self.self) perform failed: \(error)", cause: error)
         }
         
     }
