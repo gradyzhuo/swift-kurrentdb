@@ -75,6 +75,12 @@ extension Streams.Subscription: AsyncSequence{
     
 }
 
+extension KurrentDB.StreamRevision {
+    public static func revision(_ value: UInt64)->Self{
+        return .at(value)
+    }
+}
+
 extension Streams.ReadResponse {
     @available(*, deprecated, message: "content is unnecessary, handle response content by ReadResponse itself.")
     public var content: Self {
