@@ -21,13 +21,12 @@ struct PersistentSubscriptionsTests {
 
     @Test("Create PersistentSubscription for Stream")
     func testCreateToStream() async throws {
-        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+        let streamName = "test-persistent-subscription:\(UUID().uuidString)"
         let client = KurrentDBClient(settings: .localhost())
-        let persistentSubscriptions = client.persistentSubscriptions(of: .specified(streamIdentifier, group: groupName))
+        let persistentSubscriptions = client.persistentSubscriptions(of: .specified(streamName, group: groupName))
         try await persistentSubscriptions.create(options: .init())
-        
-        
-        let subscriptions = try await client.persistentSubscriptions.listAll()
+
+        let subscriptions = try await client.persistentSubscriptions(of: .all).list()
         #expect(subscriptions.count == 1)
 
         try await persistentSubscriptions.delete()
@@ -67,7 +66,7 @@ struct PersistentSubscriptionsTests {
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToAll() async throws {
         let client = KurrentDBClient(settings: .localhost())
-        let persistentSubscriptions = client.persistentSubscriptions(of: .all(group: groupName))
+        let persistentSubscriptions = client.persistentSubscriptions(of: .group(groupName))
         try await persistentSubscriptions.create()
 
         

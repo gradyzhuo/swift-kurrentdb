@@ -18,9 +18,9 @@ extension PersistentSubscriptions {
 
         public private(set) var group: String
         public private(set) var cursor: PositionCursor
-        public private(set) var options: Options
+        public private(set) var options: UpdateOptions
 
-        init(group: String, cursor: PositionCursor = .start, options: Options) {
+        init(group: String, cursor: PositionCursor = .start, options: UpdateOptions) {
             self.group = group
             self.cursor = cursor
             self.options = options
@@ -53,20 +53,4 @@ extension PersistentSubscriptions {
     }
 }
 
-extension PersistentSubscriptions.UpdateToAll {
-    public struct Options: PersistentSubscriptionsCommonOptions {
-        package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        internal var settings: PersistentSubscription.Settings
-
-        public init() {
-            self.settings = .init()
-        }
-
-        package func build() -> UnderlyingMessage {
-            .with {
-                $0.settings = .from(settings: settings)
-            }
-        }
-    }
-}

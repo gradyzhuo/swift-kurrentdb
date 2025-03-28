@@ -143,7 +143,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 }
             }
         }catch {
-            throw .internalClientError(reasone: "\(#function) failed.", cause: error)
+            throw .internalClientError(reason: "\(#function) failed.", cause: error)
         }
     }
 

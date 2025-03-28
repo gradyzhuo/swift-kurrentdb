@@ -7,11 +7,9 @@
 
 import Foundation
 
-extension StreamRevision {
-    public enum Rule: Sendable {
-        case any
-        case noStream
-        case streamExists
-        case revision(UInt64)
-    }
+public enum StreamRevision: Sendable {
+    case any
+    case noStream
+    case streamExists
+    case at(UInt64)
 }

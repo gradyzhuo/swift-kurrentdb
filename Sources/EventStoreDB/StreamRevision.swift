@@ -7,6 +7,7 @@
 
 import Foundation
 
+@available(*, deprecated)
 public struct StreamRevision: Sendable {
     public let value: UInt64
 

@@ -23,7 +23,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses =
             let underlying = ServiceClient(wrapping: client)
             return try await send(client: underlying, request: request, callOptions: callOptions)
         }catch {
-            throw .internalClientError(reasone: "\(Self.self) perform failed: \(error)", cause: error)
+            throw .internalClientError(reason: "\(Self.self) perform failed: \(error)", cause: error)
         }
         
     }
@@ -36,14 +36,13 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
             try await client.runConnections()
         }
         
-        do{
+        return try await withRethrowingError(usage: #function) {
             let metadata = Metadata(from: settings)
             let request = try request(metadata: metadata)
 
             let underlying = ServiceClient(wrapping: client)
             return try await send(client: underlying, request: request, callOptions: callOptions)
-        }catch{
-            throw .internalClientError(reasone: "\(Self.self) perform failed: \(error)", cause: error)
         }
+        
     }
 }

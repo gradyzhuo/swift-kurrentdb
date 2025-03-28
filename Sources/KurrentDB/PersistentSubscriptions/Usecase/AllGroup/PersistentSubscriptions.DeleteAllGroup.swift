@@ -1,37 +1,29 @@
 //
-//  PersistentSubscriptions.Delete.swift
-//  KurrentPersistentSubscriptions
+//  PersistentSubscriptions.DeleteAll.swift
+//  KurrentDB-Swift
 //
-//  Created by Grady Zhuo on 2023/12/7.
+//  Created by Grady Zhuo on 2025/3/27.
 //
-
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions {
-    public struct Delete: UnaryUnary {
+extension PersistentSubscriptions where Target == PersistentSubscription.AllGroup{
+    public struct DeleteAllGroup: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.Delete.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Delete.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        let stream: StreamSelector<StreamIdentifier>
         let group: String
 
-        public init(stream: StreamSelector<StreamIdentifier>, group: String) {
-            self.stream = stream
+        public init(group: String) {
             self.group = group
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            try .with {
+            .with {
                 $0.options.groupName = group
-                switch stream {
-                case .all:
-                    $0.options.all = .init()
-                case let .specified(streamIdentifier):
-                    $0.options.streamIdentifier = try streamIdentifier.build()
-                }
+                $0.options.all = .init()
             }
         }
 

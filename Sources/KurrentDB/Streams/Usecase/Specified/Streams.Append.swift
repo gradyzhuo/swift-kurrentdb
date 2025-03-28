@@ -159,13 +159,13 @@ extension Streams.Append {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public fileprivate(set) var expectedRevision: StreamRevision.Rule
+        public fileprivate(set) var expectedRevision: StreamRevision
 
         public init() {
             expectedRevision = .any
         }
 
-        public func revision(expected: StreamRevision.Rule) -> Self {
+        public func revision(expected: StreamRevision) -> Self {
             withCopy { options in
                 options.expectedRevision = expected
             }
@@ -180,8 +180,8 @@ extension Streams.Append {
                     $0.noStream = .init()
                 case .streamExists:
                     $0.streamExists = .init()
-                case let .revision(rev):
-                    $0.revision = rev
+                case let .at(revision):
+                    $0.revision = revision
                 }
             }
         }

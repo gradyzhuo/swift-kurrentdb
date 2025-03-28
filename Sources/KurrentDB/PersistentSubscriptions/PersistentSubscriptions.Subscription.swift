@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Subscription.swift
+//  Subscription.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2024/3/23.
@@ -39,7 +39,7 @@ extension PersistentSubscriptions {
         ///   - writer: The `Writer` instance used to send requests. Defaults to a new `Writer`.
         ///   - reader: An asynchronous stream of responses from the subscription service.
         /// - Throws: An error if the initialization process fails, such as when the response stream cannot be processed.
-        package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.Read.Response, any Error>) async throws {
+        package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>) async throws {
             self.writer = writer
 
             var iterator = reader.makeAsyncIterator()
@@ -72,7 +72,7 @@ extension PersistentSubscriptions {
                 let messages = try usecase.requestMessages()
                 writer.write(messages: messages)
             } catch {
-                throw .internalClientError(reasone: "Ack eventIds:\(eventIds) failed", cause: error)
+                throw .internalClientError(reason: "Ack eventIds:\(eventIds) failed", cause: error)
             }
         }
 
@@ -114,7 +114,7 @@ extension PersistentSubscriptions {
                 let messages = try usecase.requestMessages()
                 writer.write(messages: messages)
             } catch {
-                throw .internalClientError(reasone: "Nack eventIds:\(eventIds) failed", cause: error)
+                throw .internalClientError(reason: "Nack eventIds:\(eventIds) failed", cause: error)
             }
             
         }
@@ -165,7 +165,7 @@ extension PersistentSubscriptions.Subscription {
         package let continuation: AsyncStream<MessageType>.Continuation
 
         /// Initializes a new writer with an asynchronous stream for sending messages.
-        init() {
+        package init() {
             let (stream, continuation) = AsyncStream.makeStream(of: MessageType.self)
             sender = stream
             self.continuation = continuation

@@ -18,11 +18,9 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
 
         let metadata = Metadata(from: settings)
         let serviceClient = ServiceClient(wrapping: client)
-        do{
-            return try await send(client: serviceClient, metadata: metadata, callOptions: callOptions)
-        }catch{
-            throw .internalClientError(reasone: "\(Self.self) perform failed: \(error)", cause: error)
-        }
         
+        return try await withRethrowingError(usage: #function) {
+            return try await send(client: serviceClient, metadata: metadata, callOptions: callOptions)
+        }
     }
 }

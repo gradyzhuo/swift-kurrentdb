@@ -69,7 +69,7 @@ extension PersistentSubscription {
     ///
     /// `All` represents all available stream targets for a subscription and can be accessed
     /// using `PersistentSubscriptionTarget.all(group:)`.
-    public struct All: PersistentSubscriptionTarget {
+    public struct AllGroup: PersistentSubscriptionTarget {
         /// The group name for the persistent subscription.
         public private(set) var group: String
         
@@ -79,6 +79,22 @@ extension PersistentSubscription {
         public init(group: String) {
             self.group = group
         }
+    }
+    
+    public struct AllStream: PersistentSubscriptionTarget {
+        /// The group name for the persistent subscription.
+        public private(set) var streamIdentifier: StreamIdentifier
+        
+        /// Initializes an `All` persistent subscription target instance.
+        ///
+        /// - Parameter group: The group name for the persistent subscription.
+        public init(stream streamIdentifier: StreamIdentifier) {
+            self.streamIdentifier = streamIdentifier
+        }
+    }
+    
+    public struct All: PersistentSubscriptionTarget {
+        
     }
 }
 
@@ -108,13 +124,40 @@ extension PersistentSubscriptionTarget where Self == PersistentSubscription.Spec
 }
 
 /// Extension providing a static method to create an `All` persistent subscription target.
-extension PersistentSubscriptionTarget where Self == PersistentSubscription.All {
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.AllStream {
     
+    public static func stream(_ identifier: StreamIdentifier) -> PersistentSubscription.AllStream {
+        return .init(stream: identifier)
+    }
+    
+    public static func stream(_ name: String) -> PersistentSubscription.AllStream {
+        return .init(stream: .init(name: name))
+    }
+    
+}
+
+/// Extension providing a static method to create an `All` persistent subscription target.
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.AllGroup {
+    
+    /// Creates an `AllStream` target representing all streams for a persistent subscription.
+    ///
+    /// - Parameter group: The group name for the persistent subscription.
+    /// - Returns: A `PersistentSubscription.All` instance.
+    public static func group(_ group: String) -> PersistentSubscription.AllGroup {
+        return .init(group: group)
+    }
+    
+}
+
+
+
+/// Extension providing a static method to create an `All` persistent subscription target.
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.All {
     /// Creates an `All` target representing all streams for a persistent subscription.
     ///
     /// - Parameter group: The group name for the persistent subscription.
     /// - Returns: A `PersistentSubscription.All` instance.
-    public static func all(group: String) -> PersistentSubscription.All {
-        return .init(group: group)
+    public static var all: PersistentSubscription.All {
+        return .init()
     }
 }

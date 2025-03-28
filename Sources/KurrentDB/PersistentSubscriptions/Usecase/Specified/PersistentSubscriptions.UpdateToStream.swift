@@ -18,9 +18,9 @@ extension PersistentSubscriptions {
         var streamIdentifier: StreamIdentifier
         var group: String
         var cursor: RevisionCursor
-        var options: Options
+        var options: UpdateOptions
 
-        init(streamIdentifier: StreamIdentifier, group: String, cursor: RevisionCursor, options: Options) {
+        init(streamIdentifier: StreamIdentifier, group: String, cursor: RevisionCursor, options: UpdateOptions) {
             self.streamIdentifier = streamIdentifier
             self.group = group
             self.cursor = cursor
@@ -48,24 +48,6 @@ extension PersistentSubscriptions {
         package func send(client: UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             try await client.update(request: request, options: callOptions) {
                 try handle(response: $0)
-            }
-        }
-    }
-}
-
-extension PersistentSubscriptions.UpdateToStream {
-    public struct Options: PersistentSubscriptionsCommonOptions {
-        package typealias UnderlyingMessage = UnderlyingRequest.Options
-
-        public internal(set) var settings: PersistentSubscription.Settings
-
-        public init() {
-            self.settings = .init()
-        }
-
-        package func build() -> UnderlyingMessage {
-            .with {
-                $0.settings = .from(settings: settings)
             }
         }
     }

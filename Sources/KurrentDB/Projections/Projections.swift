@@ -74,7 +74,7 @@ extension Projections where Target == AllProjectionTarget<ContinuousMode> {
                 partialResult.append(response.detail)
             }
         }catch {
-            throw .internalClientError(reasone: "The error happened while get the list of projections.", cause: error)
+            throw .internalClientError(reason: "The error happened while get the list of projections.", cause: error)
         }
     }
 }
@@ -92,7 +92,7 @@ extension Projections where Target == AllProjectionTarget<AnyMode> {
                 partialResult.append(response.detail)
             }
         }catch{
-            throw .internalClientError(reasone: "The error happened while get the list of projections.", cause: error)
+            throw .internalClientError(reason: "The error happened while get the list of projections.", cause: error)
         }
     }
 }
@@ -173,7 +173,7 @@ extension Projections where Target: NameSpecifiable & ProjectionDescribable {
             let result = try await response.first { _ in true }
             return result?.detail
         }catch{
-            throw .internalClientError(reasone: "The error happened while get the first detail from resposes.", cause: error)
+            throw .internalClientError(reason: "The error happened while get the first detail from resposes.", cause: error)
         }
     }
 }
@@ -194,7 +194,7 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
         } catch let error as DecodingError{
             throw .decodingError(cause: error)
         }catch {
-            throw .internalClientError(reasone: "Decoding state failed", cause: error)
+            throw .internalClientError(reason: "Decoding state failed", cause: error)
         }
     }
     
@@ -215,7 +215,7 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
         }catch let error as DecodingError{
             throw .decodingError(cause: error)
         }catch {
-            throw .internalClientError(reasone: "Decoding state failed", cause: error)
+            throw .internalClientError(reason: "Decoding state failed", cause: error)
         }
     }
 }
