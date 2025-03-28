@@ -35,6 +35,7 @@ extension Streams where Target == AllStreams {
                     for try await message in $0.messages {
                         try continuation.yield(handle(message: message))
                     }
+                    continuation.finish()
                 }
                 return stream
             }

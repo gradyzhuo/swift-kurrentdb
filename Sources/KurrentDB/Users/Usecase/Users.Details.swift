@@ -37,8 +37,9 @@ extension Users {
                         let response = try handle(message: message)
                         continuation.yield(response.userDetails)
                     }
+                    continuation.finish()
                 }
-                continuation.finish()
+                
                 return stream
             }
         }

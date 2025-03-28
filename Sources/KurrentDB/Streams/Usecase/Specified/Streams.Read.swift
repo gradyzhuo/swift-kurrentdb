@@ -34,15 +34,11 @@ extension Streams{
         package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-                do{
-                    try await client.read(request: request, options: callOptions) {
-                        for try await message in $0.messages {
-                            try continuation.yield(handle(message: message))
-                        }
+                try await client.read(request: request, options: callOptions) {
+                    for try await message in $0.messages {
+                        try continuation.yield(handle(message: message))
                     }
-                }catch {
                     continuation.finish()
-                    throw error
                 }
                 return stream
             }

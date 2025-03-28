@@ -37,6 +37,7 @@ extension Monitoring {
                     for try await message in $0.messages {
                         try continuation.yield(.init(from: message))
                     }
+                    continuation.finish()
                 }
             }
             return stream

@@ -49,6 +49,7 @@ extension Projections {
                     for try await message in $0.messages {
                         try continuation.yield(handle(message: message))
                     }
+                    continuation.finish()
                 }
                 continuation.finish()
                 return stream
