@@ -38,9 +38,9 @@ extension KurrentDBClient {
         return .init(target: target, settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
-    ///The client instance of `PersistentSubscriptions`, which constructed by settings passed in KurrentDBClient.
-    public func persistentSubscriptions<Target: PersistentSubscriptionTarget>(of target: Target)-> PersistentSubscriptions<Target>{
-        return .init(target: target, settings: settings, callOptions: defaultCallOptions)
+    
+    public var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All>{
+        return .init(target: .all, settings: settings, callOptions: defaultCallOptions)
     }
     
     ///The client instance of `Projections`, which constructed by settings passed in KurrentDBClient.

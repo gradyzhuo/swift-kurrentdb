@@ -23,10 +23,10 @@ struct PersistentSubscriptionsTests {
     func testCreateToStream() async throws {
         let streamName = "test-persistent-subscription:\(UUID().uuidString)"
         let client = KurrentDBClient(settings: .localhost())
-        let persistentSubscriptions = client.persistentSubscriptions(of: .specified(streamName, group: groupName))
+        let persistentSubscriptions = client.streams(of: streamName).persistentSubscriptions(group: groupName)
         try await persistentSubscriptions.create(options: .init())
 
-        let subscriptions = try await client.persistentSubscriptions(of: .all).list()
+        let subscriptions = try await client.persistentSubscriptions.list(for: .stream(.init(name: streamName)))
         #expect(subscriptions.count == 1)
 
         try await persistentSubscriptions.delete()
@@ -36,14 +36,13 @@ struct PersistentSubscriptionsTests {
     func testSubscribeToStream() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: .localhost())
-        let streamTarget = PersistentSubscription.Specified(identifier: streamIdentifier, group: groupName)
-        let persistentSubscriptions = client.persistentSubscriptions(of: streamTarget)
+        let streams = client.streams(of: .specified(streamIdentifier))
         
+        let persistentSubscriptions = streams.persistentSubscriptions(group: groupName)
         try await persistentSubscriptions.create()
 
         let subscription = try await persistentSubscriptions.subscribe()
 
-        let streams = client.streams(of: .specified(streamIdentifier))
         let response = try await streams.append(events: [
             .init(
                 eventType: "PS-SubscribeToStream-AccountCreated", payload: ["Description": "Gears of War 10"]
@@ -66,19 +65,20 @@ struct PersistentSubscriptionsTests {
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToAll() async throws {
         let client = KurrentDBClient(settings: .localhost())
-        let persistentSubscriptions = client.persistentSubscriptions(of: .group(groupName))
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+        let streams = client.streams(of: .specified(streamIdentifier))
+        
+        let persistentSubscriptions = streams.persistentSubscriptions(group: groupName)
+        
         try await persistentSubscriptions.create()
 
-        
-        
         let subscription = try await persistentSubscriptions.subscribe()
 
         let event = EventData(
             eventType: "PS-SubscribeToAll-AccountCreated", payload: ["Description": "Gears of War 10:\(UUID().uuidString)"]
         )
 
-        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let streams = client.streams(of: .specified(streamIdentifier))
+        
         let response = try await streams.append(events: [
             event,
         ], options: .init().revision(expected: .any))

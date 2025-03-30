@@ -15,15 +15,23 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AllStre
         package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
 
-        public let streamIdentifier: StreamIdentifier
+        public let streamIdentifier: StreamIdentifier?
 
         internal init(stream streamIdentifier: StreamIdentifier) {
             self.streamIdentifier = streamIdentifier
         }
+        
+        internal init() {
+            self.streamIdentifier = nil
+        }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
-                $0.options.listForStream.stream = try streamIdentifier.build()
+                if let streamIdentifier {
+                    $0.options.listForStream.stream = try streamIdentifier.build()
+                }else{
+                    $0.options.listForStream.all = .init()
+                }
             }
         }
 

@@ -8,34 +8,46 @@ import Foundation
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions where Target == PersistentSubscription.AllStream{
-    public struct ReadAllStream: StreamStream {
+extension PersistentSubscriptions {
+    public struct Read: StreamStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
         package typealias Response = ReadResponse
         package typealias Responses = Subscription
-        
-        public let streamIdentifier: StreamIdentifier
+
+        public let streamIdentifier: StreamIdentifier?
+        public let group: String
         public let options: ReadOptions
 
-        package init(streamIdentifier: StreamIdentifier, options: ReadOptions) {
+        init(stream streamIdentifier: StreamIdentifier, group: String, options: ReadOptions) {
             self.streamIdentifier = streamIdentifier
+            self.group = group
+            self.options = options
+        }
+        
+        init(group: String, options: ReadOptions) {
+            self.streamIdentifier = nil
+            self.group = group
             self.options = options
         }
 
         package func requestMessages() throws -> [UnderlyingRequest] {
-            [
-                try .with {
+            try [
+                .with {
                     $0.options = options.build()
-                    $0.options.all = .init()
-                    $0.options.streamIdentifier = try streamIdentifier.build()
+                    $0.options.groupName = group
+                    if let streamIdentifier {
+                        $0.options.streamIdentifier = try streamIdentifier.build()
+                    }else{
+                        $0.options.all = .init()
+                    }
                 },
             ]
         }
 
         package func send(client: UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
-            let responses = AsyncThrowingStream.makeStream(of: ReadResponse.self)
+            let responses = AsyncThrowingStream.makeStream(of: Response.self)
 
             let writer = Subscription.Writer()
             let requestMessages = try requestMessages()
@@ -54,7 +66,3 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AllStre
         }
     }
 }
-
-
-
-

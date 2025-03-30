@@ -15,19 +15,28 @@ extension PersistentSubscriptions {
         package typealias UnderlyingResponse = UnderlyingService.Method.GetInfo.Output
         package typealias Response = PersistentSubscription.SubscriptionInfo
 
-        public let streamIdentifier: StreamIdentifier
+        public let streamIdentifier: StreamIdentifier?
         public let group: String
 
-        public init(stream streamIdentifier: StreamIdentifier, group: String) {
+        init(stream streamIdentifier: StreamIdentifier, group: String) {
             self.streamIdentifier = streamIdentifier
+            self.group = group
+        }
+        
+        init(group: String) {
+            self.streamIdentifier = nil
             self.group = group
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = .init()
-                $0.options.streamIdentifier = try streamIdentifier.build()
                 $0.options.groupName = group
+                if let streamIdentifier {
+                    $0.options.streamIdentifier = try streamIdentifier.build()
+                }else{
+                    $0.options.all = .init()
+                }
             }
         }
 

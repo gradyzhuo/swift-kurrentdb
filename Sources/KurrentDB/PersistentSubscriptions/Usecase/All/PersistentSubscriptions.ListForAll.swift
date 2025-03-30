@@ -14,10 +14,25 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All{
         package typealias UnderlyingRequest = UnderlyingService.Method.List.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
+        
+        public let filter: ListFilter
+        
+        package init(filter: ListFilter) {
+            self.filter = filter
+        }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            .with {
-                $0.options.listAllSubscriptions = .init()
+            try .with {
+                switch filter {
+                case .allSubscriptions:
+                    $0.options.listAllSubscriptions = .init()
+                case .stream(let streamIdentifier):
+                    if streamIdentifier == .all {
+                        $0.options.listForStream.all = .init()
+                    }else{
+                        $0.options.listForStream.stream = try streamIdentifier.build()
+                    }
+                }
             }
         }
 
@@ -26,5 +41,13 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All{
                 try $0.message.subscriptions.map { .init(from: $0) }
             }
         }
+    }
+}
+
+
+extension PersistentSubscriptions.ListForAll{
+    public enum ListFilter: Sendable{
+        case allSubscriptions
+        case stream(StreamIdentifier)
     }
 }

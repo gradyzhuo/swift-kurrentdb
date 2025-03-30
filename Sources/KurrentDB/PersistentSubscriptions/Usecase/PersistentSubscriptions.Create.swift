@@ -9,37 +9,57 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions {
-    public struct CreateToAll: UnaryUnary {
+    public struct Create: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        let streamSelection: StreamSelection
         let group: String
-        let cursor: PositionCursor
         let options: Options
 
-        public init(group: String, cursor: PositionCursor, options: Options) {
+        public init(stream streamSelection: StreamSelection, group: String, options: Options) {
+            self.streamSelection = streamSelection
             self.group = group
-            self.cursor = cursor
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            .with {
+            try .with {
                 $0.options = options.build()
                 $0.options.groupName = group
-                switch cursor {
-                case .start:
-                    $0.options.all.start = .init()
-                case .end:
-                    $0.options.all.end = .init()
-                case let .position(commitPosition, preparePosition):
-                    $0.options.all.position = .with {
-                        $0.commitPosition = commitPosition
-                        $0.preparePosition = preparePosition
+                switch streamSelection {
+                case .all(let cursor):
+                    $0.options.all = .with{
+                        switch cursor {
+                        case .start:
+                            $0.start = .init()
+                        case .end:
+                            $0.end = .init()
+                        case let .position(commitPosition, preparePosition):
+                            $0.position = .with {
+                                $0.commitPosition = commitPosition
+                                $0.preparePosition = preparePosition
+                            }
+                        }
                     }
+                case .specified(let identifier, let cursor):
+                    $0.options.stream = try .with{
+                        $0.streamIdentifier = try identifier.build()
+                        switch cursor {
+                        case .start:
+                            $0.start = .init()
+                        case .end:
+                            $0.end = .init()
+                        case .revision(let revision):
+                            $0.revision = revision
+                        }
+                    }
+                    
                 }
+                
+                
             }
         }
 
@@ -51,7 +71,8 @@ extension PersistentSubscriptions {
     }
 }
 
-extension PersistentSubscriptions.CreateToAll {
+
+extension PersistentSubscriptions.Create {
     public struct Options: PersistentSubscriptionsCommonOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 

@@ -20,7 +20,7 @@ struct ConnectionStringParser {
     ])
     func testSchemeESDB(connectionString: String, scheme: URLScheme?) async throws {
         let parser = URLSchemeParser()
-        let parsedResult = try parser.parse(connectionString)
+        let parsedResult = parser.parse(connectionString)
 
         #expect(parsedResult == scheme)
     }

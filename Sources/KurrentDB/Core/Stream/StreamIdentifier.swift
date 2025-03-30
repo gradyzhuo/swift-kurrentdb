@@ -28,6 +28,12 @@ extension StreamIdentifier: ExpressibleByStringLiteral {
     }
 }
 
+extension StreamIdentifier: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.name == rhs.name && lhs.encoding == rhs.encoding
+    }
+}
+
 extension StreamIdentifier {
     package func build() throws(KurrentError) -> UnderlyingMessage {
         guard let streamName = name.data(using: encoding) else {
@@ -40,8 +46,10 @@ extension StreamIdentifier {
     }
 }
 
-extension StreamSelector where T == StreamIdentifier {
-    public static func specified(streamName: String) -> Self {
-        .specified(.init(name: streamName))
+extension StreamIdentifier {
+    public static var all: Self {
+        get{
+            .init(name: "$all")
+        }
     }
 }
