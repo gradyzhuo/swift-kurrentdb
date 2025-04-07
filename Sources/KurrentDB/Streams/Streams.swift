@@ -179,18 +179,9 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func read(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadEvent, Error> {
+    public func read(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
         let usecase = Read(from: identifier, options: options.cursor(cursor))
-        
-        let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
-        let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
-        try await withRethrowingError(usage: "Read Event") {
-            for try await response in responses{
-                try continuation.yield(response.event)
-            }
-            continuation.finish()
-        }
-        return stream
+        return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
     
     /// Subscribes to events from the specified stream.
@@ -274,17 +265,9 @@ extension Streams where Target == AllStreams {
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func read(from cursor: PositionCursor = .start, options: ReadAll.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadEvent, Error>  {
+    public func read(from cursor: PositionCursor = .start, options: ReadAll.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadAll.Response, Error> {
         let usecase = ReadAll(options: options.curosr(cursor))
-        let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
-        let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
-        try await withRethrowingError(usage: "Read Event") {
-            for try await response in responses{
-                try continuation.yield(response.event)
-            }
-            continuation.finish()
-        }
-        return stream
+        return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
     /// Subscribes to all streams from a specified position.

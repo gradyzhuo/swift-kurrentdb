@@ -56,16 +56,27 @@ extension EventStoreDBClient {
 
     @available(*, deprecated, message: "Please use the new API .streams(identifier:).getStreamMetadata(cursor:) instead.")
     public func getStreamMetadata(to identifier: StreamIdentifier, cursor: Cursor<CursorPointer> = .end) async throws -> StreamMetadata? {
-        let events = try await readStream(to:
+        let responses = try await readStream(to:
             .init(name: "$$\(identifier.name)"),
             cursor: cursor)
-        
-        return try await events.first {_ in true}.flatMap {
-            switch $0.recordedEvent.contentType {
-            case .json:
-                try JSONDecoder().decode(StreamMetadata.self, from: $0.recordedEvent.data)
+        return try await responses.first {
+            switch $0 {
+            case .event:
+                true
             default:
-                nil
+                false
+            }
+        }.flatMap {
+            switch $0 {
+            case let .event(readEvent):
+                switch readEvent.recordedEvent.contentType {
+                case .json:
+                    try JSONDecoder().decode(StreamMetadata.self, from: readEvent.recordedEvent.data)
+                default:
+                    throw ClientError.eventDataError(message: "The data of event could not be parsed. ContentType of Stream Metadata should be encoded in .json format.")
+                }
+            default:
+                throw ClientError.readResponseError(message: "The metadata event is not exist.")
             }
         }
     }
@@ -84,7 +95,7 @@ extension EventStoreDBClient {
 
     // MARK: Read by all streams methods -
     @available(*, deprecated, message: "Please use the new API .streams(of:.all).append(events:options:) instead.")
-    public func readAllStreams(cursor _cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> AsyncThrowingStream<ReadEvent, Error> {
+    public func readAllStreams(cursor _cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
         var options = configure(.init())
         let cursor: PositionCursor
         switch _cursor {
@@ -120,7 +131,7 @@ extension EventStoreDBClient {
     ///   - configure: A closure of building read options.
     /// - Returns: AsyncStream to Read.Response
     @available(*, deprecated)
-    public func readStream(to identifier: StreamIdentifier, cursor _cursor: Cursor<CursorPointer>, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> AsyncThrowingStream<ReadEvent, Error> {
+    public func readStream(to identifier: StreamIdentifier, cursor _cursor: Cursor<CursorPointer>, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         var options = configure(.init())
         let cursor: RevisionCursor
         switch _cursor {
@@ -143,7 +154,7 @@ extension EventStoreDBClient {
     }
 
     @available(*, deprecated)
-    public func readStream(to streamIdentifier: StreamIdentifier, at revision: UInt64, direction: Direction = .forward, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> AsyncThrowingStream<ReadEvent, Error> {
+    public func readStream(to streamIdentifier: StreamIdentifier, at revision: UInt64, direction: Direction = .forward, configure: (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         try await readStream(
             to: streamIdentifier,
             cursor: .specified(.init(revision: revision, direction: direction)),

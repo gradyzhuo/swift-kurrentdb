@@ -156,7 +156,7 @@ extension KurrentDBClient {
     ///   - options: Configuration options for the read operation.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func readAllStreams(from cursor: PositionCursor, options: Streams<AllStreams>.ReadAll.Options) async throws -> AsyncThrowingStream<ReadEvent, Error> {
+    public func readAllStreams(from cursor: PositionCursor, options: Streams<AllStreams>.ReadAll.Options) async throws -> Streams<AllStreams>.ReadAll.Responses {
         return try await streams(of: .all).read(from: cursor, options: options)
     }
     
@@ -168,7 +168,7 @@ extension KurrentDBClient {
     ///   - options: Configuration options for the read operation.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func readStream(to streamIdentifier: StreamIdentifier, from cursor: RevisionCursor, options: Streams<SpecifiedStream>.Read.Options) async throws -> AsyncThrowingStream<ReadEvent, Error>  {
+    public func readStream(to streamIdentifier: StreamIdentifier, from cursor: RevisionCursor, options: Streams<SpecifiedStream>.Read.Options) async throws -> Streams<SpecifiedStream>.Read.Responses {
         return try await streams(of: .specified(streamIdentifier)).read(from: cursor, options: options)
     }
     
