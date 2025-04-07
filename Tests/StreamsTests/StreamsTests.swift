@@ -49,13 +49,9 @@ struct StreamTests: Sendable {
         let appendedRevision = try #require(appendResponse.currentRevision)
         let readResponses = try await streams.read(from: .revision(appendedRevision), options: .init().forward())
         
-        let firstResponse = try await readResponses.first { _ in true }
-        guard case let .event(readEvent) = firstResponse,
-              let readPosition = readEvent.commitPosition,
-              let position = appendResponse.position
-        else {
-            throw TestingError.exception("readResponse.content or appendResponse.position is not Event or Position")
-        }
+        let firstEvent = try await readResponses.first { _ in true }
+        let readPosition = firstEvent?.commitPosition
+        let position = appendResponse.position
         
         #expect(readPosition == position)
 
