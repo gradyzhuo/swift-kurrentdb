@@ -24,6 +24,7 @@ public enum KurrentError: Error, Sendable {
     case resourceAlreadyExists
     case resourceNotFound(reason: String)
     case resourceDeleted
+    case unservicableEventLink(link: RecordedEvent)
     case unsupportedFeature
     case internalClientError(reason: String, cause: (any Error)?)
     case deadlineExceeded
@@ -66,6 +67,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "The resource you asked for doesn't exist, reason: \(reason)"
         case .resourceDeleted:
             "The resource you asked for was deleted"
+        case .unservicableEventLink(let link):
+            "The linked event \(link.id) you asked is unservicable, may be because it was deleted."
         case .unsupportedFeature:
             "The operation is unsupported by the server"
         case .internalClientError(let reason, let cause):

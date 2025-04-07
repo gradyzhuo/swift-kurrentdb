@@ -42,3 +42,18 @@ extension Streams {
     }
 }
 
+extension Streams.ReadResponse {
+    public var event: ReadEvent {
+        get throws(KurrentError) {
+            return switch self {
+            case .event(let readEvent):
+                readEvent
+            case .unserviceable(let link):
+                if let link {
+                    throw .unservicableEventLink(link: link)
+                }
+                throw .resourceNotFound(reason: "read event not found.")
+            }
+        }
+    }
+}
