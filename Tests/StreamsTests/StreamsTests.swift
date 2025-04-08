@@ -28,7 +28,7 @@ struct StreamTests: Sendable {
         await #expect(throws: KurrentError.self) {
             let responses = try await client
                 .streams(of: .specified(UUID().uuidString))
-                .read(from: .start)
+                .read(startFrom: .start)
             var responsesIterator = responses.makeAsyncIterator()
            _ = try await responsesIterator.next()
         }
@@ -47,7 +47,7 @@ struct StreamTests: Sendable {
         let appendResponse = try await streams.append(events: events, options: .init().revision(expected: .any))
         
         let appendedRevision = try #require(appendResponse.currentRevision)
-        let readResponses = try await streams.read(from: .revision(appendedRevision), options: .init().forward())
+        let readResponses = try await streams.read(startFrom: .revision(appendedRevision), options: .init().forward())
         
         let firstResponse = try await readResponses.first { _ in true }
         guard case let .event(readEvent) = firstResponse,
@@ -86,7 +86,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         
-        let subscription = try await streams.subscribe(from: .end)
+        let subscription = try await streams.subscribe(startFrom: .end)
         let response = try await streams.append(events: .init(
             eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"]
         ), options: .init().revision(expected: .any))
@@ -110,7 +110,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
-        let subscription = try await client.streams(of: .all).subscribe(from: .end)
+        let subscription = try await client.streams(of: .all).subscribe(startFrom: .end)
         
         let response = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
         
@@ -136,7 +136,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         let filter: SubscriptionFilter = .onEventType(prefixes: "SubscribeAll-AccountCreated")
-        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init().filter(filter))
+        let subscription = try await client.streams(of: .all).subscribe(startFrom: .end, options: .init().filter(filter))
         
         let response = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
         
@@ -160,7 +160,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         let filter: SubscriptionFilter = .excludeSystemEvents()
-        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init().filter(filter))
+        let subscription = try await client.streams(of: .all).subscribe(startFrom: .end, options: .init().filter(filter))
         
         let response = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
         
@@ -184,7 +184,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         let filter: SubscriptionFilter = .onStreamName(prefix: streamIdentifier.name)
-        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init().filter(filter))
+        let subscription = try await client.streams(of: .all).subscribe(startFrom: .end, options: .init().filter(filter))
         
         let response = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
         
@@ -208,7 +208,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: .localhost())
         let streams = client.streams(of: .specified(streamIdentifier))
         let filter: SubscriptionFilter = .onStreamName(prefix: "wrong")
-        let subscription = try await client.streams(of: .all).subscribe(from: .end, options: .init().filter(filter))
+        let subscription = try await client.streams(of: .all).subscribe(startFrom: .end, options: .init().filter(filter))
         
         _ = try await streams.append(events: eventForTesting, options: .init().revision(expected: .any))
 

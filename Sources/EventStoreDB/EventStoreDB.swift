@@ -114,7 +114,7 @@ extension EventStoreDBClient {
                 options = options.forward()
             }
         }
-        return try await client.streams(of: .all).read(from: cursor, options: options)
+        return try await client.streams(of: .all).read(startFrom: cursor, options: options)
     }
 
     // MARK: Read by a stream methos -
@@ -150,7 +150,7 @@ extension EventStoreDBClient {
                 options = options.forward()
             }
         }
-        return try await client.streams(of: .specified(identifier)).read(from: cursor, options: options)
+        return try await client.streams(of: .specified(identifier)).read(startFrom: cursor, options: options)
     }
 
     @available(*, deprecated)
@@ -174,7 +174,7 @@ extension EventStoreDBClient {
         case .specified(let position):
             .position(commit: position.commit, prepare: position.prepare)
         }
-        return try await client.streams(of: .all).subscribe(from: cursor, options: options)
+        return try await client.streams(of: .all).subscribe(startFrom: cursor, options: options)
     }
 
     @available(*, deprecated)
@@ -189,7 +189,7 @@ extension EventStoreDBClient {
         case .specified(let pointer):
             cursor = .revision(pointer.value)
         }
-        return try await client.streams(of: .specified(identifier)).subscribe(from: cursor, options: options)
+        return try await client.streams(of: .specified(identifier)).subscribe(startFrom: cursor, options: options)
     }
 
     // MARK: (Soft) Delete a stream -
