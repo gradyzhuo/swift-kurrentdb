@@ -176,7 +176,7 @@ let responses = try await stream.read(from: .start, options: .init().limit(10))
 
 // loop it.
 for try await response in responses {
-    if let .event(readEvent) = response{
+    if let readEvent = try response.event{
         //handle event
     }
 }

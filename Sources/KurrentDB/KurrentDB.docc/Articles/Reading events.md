@@ -16,15 +16,14 @@ You can read all the events or a sample of the events from individual streams, s
 ### Reading forwards
 The simplest way to read a stream forwards is to supply a stream name, read direction, and revision from which to start. The revision can either be a stream position `Start` or a _big int_ (`UInt64`):
 ```swift
-let stream = client.streams(of: "some-stream")
-let responses = try await stream.read(from: .start)
+let responses = try await client.readStream(on: "some-stream", startFrom: .start)
 ```
 
 This will return an enumerable that can be iterated on:
 
 ```swift
 for try await response in responses {
-    if case let .event(readEvent) = response {
+    if let readEvent = try response.event {
         let domainEvent = try readEvent.record.decode(to: TestEvent.self)
     }
 }
@@ -49,16 +48,16 @@ let settings:ClientSettings = .localhost().authenticated(.credentials(username: 
 
 let client = KurrentDBClient(settings: settings)
 
-let stream = client.streams(of: .specified("some-stream"))
-let responses = try await stream.read(from: .start)
+let responses = try await client.readStream(on: "some-stream", startFrom: .start)
 ```
 
 ## Reading from a revision
 Instead of providing the __StreamPosition__ you can also provide a specific stream revision as a big int (unsigned 64-bit integer).
 
 ```swift 
-let stream = client.streams(of: .specified("some-stream"))
-let responses = try await stream.read(from: .revision(10), options: .init().limit(20))
+let responses = try await client.readStream(on: "some-stream", 
+                                            startFrom: .revision(10), 
+                                            options: .init().limit(20))
 ```
 
 
@@ -66,11 +65,12 @@ let responses = try await stream.read(from: .revision(10), options: .init().limi
 In addition to reading a stream forwards, streams can be read backwards. To read all the events backwards, set the _stream position_ to the end:
 
 ```swift
-let stream = client.streams(of: .specified("some-stream"))
-let responses = try await stream.read(from: .end, options: .init().backwards())
+let responses = try await client.readStream(on: "some-stream", 
+                                            startFrom: .end,
+                                            options: .init().backwards())
 
 for try await response in responses {
-    if case let .event(readEvent) = response {
+    if let readEvent = try response.event {
         print("Event> \(try readEvent.record.decode(to: TestEvent.self))")
     }
 }
@@ -88,9 +88,10 @@ For example:
 ```swift
 let stream = client.streams(of: .specified("some-stream"))
 do{
-    let responses = try await stream.read(from: .revision(10))
+    let responses = try await client.readStream(on: "some-stream", 
+                                                startFrom: .revision(10))
     for try await response in responses {
-        if case let .event(readEvent) = response {
+        if let readEvent = try response.event {
             let testEvent = try readEvent.record.decode(to: TestEvent.self)
             print("Event> \(testEvent)")
         }
@@ -114,14 +115,13 @@ Reading from the `$all` stream is similar to reading from an individual stream, 
 The simplest way to read the `$all` stream forwards is to supply a read direction and the transaction log position from which you want to start. The transaction log postion can either be a stream position `Start` or a big int (unsigned 64-bit integer):
 
 ```swift
-let allstream = client.streams(of: .all)
-let responses = try await stream.read(from: .start)
+let responses = try await client.readAllStream(startFrom: .start)
 ```
 
 You can iterate asynchronously through the result:
 ```swift
 for try await response in responses {
-    if case let .event(readEvent) = response {
+    if let readEvent = try response.event {
         print("Event>", readEvent.record)
     }
 }
@@ -135,8 +135,8 @@ Passing in the max count will limit the number of events returned.
 When using projections to create new events, you can set whether the generated events are pointers to existing events. Setting this value to `true` tells KurrentDB to return the event as well as the event linking to it.
 
 ```swift
-let allStream = client.streams(of: .all)
-try await allStream.read(options: .init().resolveLinks())
+let responses = try await client.readAllStream(startFrom: .start, 
+                                               options: .init().resolveLinks())
 ```
 
 
@@ -152,16 +152,14 @@ let settings:ClientSettings = "esdb://localhost:2113?tls=false"
 
 let client = KurrentDBClient(settings: settings .authenticated(.credentials(username: "admin", password: "changeit")))
 
-let allStream = client.streams(of: .all)
-let responses = try await allStream.read(from: .position(commit: 1110, prepare: 1110))
+let responses = try await client.readAllStream(startFrom: .position(commit: 1110, prepare: 1110))
 ```
 
 ### Reading backwards
 In addition to reading the `$all` stream forwards, it can be read backwards. To read all the events backwards, set the _position_ to the end:
 
 ```swift
-let allstream = client.streams(of: .all)
-try await allStream.read(from: .end)
+let responses = try await client.readAllStream(startFrom: .end)
 ```
 
 > Tips:
@@ -173,11 +171,10 @@ KurrentDB will also return system events when reading from the `$all` stream. In
 All system events begin with `$` or `$$` and can be easily ignored by checking the `EventType` property.
 
 ```swift
-let allstream = client.streams(of: .all)
-let responses = try await allStream.read()
+let responses = try await client.readAllStream(startFrom: .start)
 
 for try await response in responses {
-    guard case let .event(readEvent) = response,
+    guard let readEvent = try response.event,
           readEvent.record.eventType.hasPrefix("$") else {
         continue
     }
