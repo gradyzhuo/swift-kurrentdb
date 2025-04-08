@@ -108,7 +108,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
-                payload: metadata
+                content: metadata
             )
         ], options: .init())
         return try await usecase.perform(settings: settings, callOptions: callOptions)
@@ -227,6 +227,17 @@ extension Streams where Target: SpecifiedStreamTarget {
     public func tombstone(options: Tombstone.Options = .init()) async throws(KurrentError) -> Tombstone.Response {
         let usecase = Tombstone(to: identifier, options: options)
         return try await usecase.perform(settings: settings, callOptions: callOptions)
+    }
+    
+    
+    public func copy(to: StreamIdentifier, readOptions: Read.Options = .init().resolveLinks(), appendOptions: Append.Options = .init().revision(expected: .noStream)) async throws {
+        let readResponses = try await self.read(options: readOptions)
+        let events = try await readResponses.reduce(into: [EventData]()) { partialResult, response in
+            let recordedEvent = try response.event.record
+            let event = EventData(like: recordedEvent)
+            partialResult.append(event)
+        }
+        try await append(events: events, options: appendOptions)
     }
 }
 

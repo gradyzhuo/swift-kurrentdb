@@ -27,10 +27,20 @@ public struct EventData: EventStoreEvent {
             "type": eventType,
         ]
     }
-
+    
+    @available(*, deprecated)
     public init(id: UUID = .init(), eventType: String, payload: Codable & Sendable, customMetadata: Data? = nil) {
         self.init(id: id, eventType: eventType, payload: .json(payload), contentType: .json, customMetadata: customMetadata)
     }
+    
+    public init(id: UUID = .init(), eventType: String, content: Codable & Sendable, customMetadata: Data? = nil){
+        self.init(id: id, eventType: eventType, payload: .json(content), contentType: .json, customMetadata: customMetadata)
+    }
+    
+    public init(id: UUID = .init(), eventType: String, data: Data, customMetadata: Data? = nil) {
+        self.init(id: id, eventType: eventType, payload: .binary(data), contentType: .binary, customMetadata: customMetadata)
+    }
+    
 }
 
 
@@ -58,5 +68,11 @@ extension EventData {
                 }
             }
         }
+    }
+}
+
+extension EventData {
+    public init(id: UUID = .init(), like recordedEvent: RecordedEvent){
+        self.init(id: id, eventType: recordedEvent.eventType, data: recordedEvent.data, customMetadata: recordedEvent.customMetadata)
     }
 }

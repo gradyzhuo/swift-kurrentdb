@@ -220,6 +220,12 @@ extension KurrentDBClient {
     }
 }
 
+extension KurrentDBClient {
+    public func copyStream(newStreamIdentifier: StreamIdentifier, fromStream fromIdentifier: StreamIdentifier) async throws {
+        try await streams(of: .specified(fromIdentifier)).copy(to: newStreamIdentifier)
+    }
+}
+
 /// Provides convenience methods for persistent subscription operations.
 extension KurrentDBClient {
     /// Creates a persistent subscription to a specific stream.
