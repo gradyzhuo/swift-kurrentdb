@@ -222,8 +222,14 @@ extension KurrentDBClient {
 }
 
 extension KurrentDBClient {
-    public func copyStream(newStreamIdentifier: StreamIdentifier, fromStream fromIdentifier: StreamIdentifier) async throws {
-        try await streams(of: .specified(fromIdentifier)).copy(to: newStreamIdentifier)
+    public func copyStream(_ fromIdentifier: StreamIdentifier, toNewStream newIdentifier: StreamIdentifier, readOptions: Streams<SpecifiedStream>.Read.Options = .init().resolveLinks(), appendOptions: Streams<SpecifiedStream>.Append.Options = .init().revision(expected: .noStream)) async throws {
+        let readResponses = try await streams(of: .specified(fromIdentifier)).read(options: readOptions)
+        let events = try await readResponses.reduce(into: [EventData]()) { partialResult, response in
+            let recordedEvent = try response.event.record
+            let event = EventData(like: recordedEvent)
+            partialResult.append(event)
+        }
+        try await streams(of: .specified(newIdentifier)).append(events: events, options: appendOptions)
     }
 }
 
