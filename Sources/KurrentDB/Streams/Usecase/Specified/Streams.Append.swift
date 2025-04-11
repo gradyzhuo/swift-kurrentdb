@@ -70,12 +70,16 @@ extension Streams.Append {
             self.position = position
         }
 
-        package init(from message: UnderlyingMessage) throws {
-            switch message.result! {
+        package init(from message: UnderlyingMessage) throws(KurrentError) {
+            guard let result = message.result else {
+                throw .initializationError(reason: "The result of appending usecase is missing.")
+            }
+            switch result {
             case let .success(successResult):
                 self.init(from: successResult)
             case let .wrongExpectedVersion(wrongResult):
-                throw WrongExpectedVersionError(from: wrongResult)
+                let response = WrongExpectedVersionResponse(from: wrongResult)
+                throw .wrongExpectedVersion(expected: response.excepted, current: response.current, requested: response.requested)
             }
         }
 
@@ -106,7 +110,7 @@ extension Streams.Append {
 }
 
 extension Streams.Append {
-    public struct WrongExpectedVersionError: GRPCResponse, Error {
+    public struct WrongExpectedVersionResponse: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse.WrongExpectedVersion
 
         public enum ExpectedRevisionOption: Sendable {
@@ -116,25 +120,18 @@ extension Streams.Append {
             case revision(UInt64)
         }
 
-        public let currentRevision: UInt64?
-        public let excepted: ExpectedRevisionOption
+        public let current: UInt64
+        public let excepted: UInt64
+        public let requested: StreamRevision
 
-        init(currentRevision: UInt64?, excepted: ExpectedRevisionOption) {
-            self.currentRevision = currentRevision
+        init(current: UInt64, excepted: UInt64, requested: StreamRevision) {
+            self.current = current
             self.excepted = excepted
+            self.requested = requested
         }
 
         package init(from message: UnderlyingMessage) {
-            let currentRevision: UInt64? = message.currentRevisionOption2060.flatMap {
-                switch $0 {
-                case let .currentRevision2060(revision):
-                    revision
-                case .noStream2060:
-                    nil
-                }
-            }
-
-            let expectedRevision: ExpectedRevisionOption? = message.expectedRevisionOption.map {
+            let requestedRevision: StreamRevision? = message.expectedRevisionOption.map {
                 switch $0 {
                 case .expectedAny:
                     .any
@@ -143,13 +140,14 @@ extension Streams.Append {
                 case .expectedStreamExists:
                     .streamExists
                 case let .expectedRevision(revision):
-                    .revision(revision)
+                    .at(revision)
                 }
             }
 
             self.init(
-                currentRevision: currentRevision,
-                excepted: expectedRevision ?? .any
+                current: message.currentRevision,
+                excepted: message.expectedRevision,
+                requested: requestedRevision ?? .any
             )
         }
     }
