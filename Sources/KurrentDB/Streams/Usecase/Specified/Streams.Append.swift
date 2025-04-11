@@ -58,6 +58,8 @@ extension Streams {
     }
 }
 
+
+
 extension Streams.Append {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
@@ -69,7 +71,7 @@ extension Streams.Append {
             self.currentRevision = currentRevision
             self.position = position
         }
-
+        
         package init(from message: UnderlyingMessage) throws(KurrentError) {
             guard let result = message.result else {
                 throw .initializationError(reason: "The result of appending usecase is missing.")
@@ -78,8 +80,7 @@ extension Streams.Append {
             case let .success(successResult):
                 self.init(from: successResult)
             case let .wrongExpectedVersion(wrongResult):
-                let response = WrongExpectedVersionResponse(from: wrongResult)
-                throw .wrongExpectedVersion(expected: response.excepted, current: response.current, requested: response.requested)
+                throw .wrongExpectedVersion(wrongResult)
             }
         }
 
@@ -104,50 +105,6 @@ extension Streams.Append {
             self.init(
                 currentRevision: currentRevision,
                 position: position
-            )
-        }
-    }
-}
-
-extension Streams.Append {
-    public struct WrongExpectedVersionResponse: GRPCResponse {
-        package typealias UnderlyingMessage = UnderlyingResponse.WrongExpectedVersion
-
-        public enum ExpectedRevisionOption: Sendable {
-            case any
-            case streamExists
-            case noStream
-            case revision(UInt64)
-        }
-
-        public let current: UInt64
-        public let excepted: UInt64
-        public let requested: StreamRevision
-
-        init(current: UInt64, excepted: UInt64, requested: StreamRevision) {
-            self.current = current
-            self.excepted = excepted
-            self.requested = requested
-        }
-
-        package init(from message: UnderlyingMessage) {
-            let requestedRevision: StreamRevision? = message.expectedRevisionOption.map {
-                switch $0 {
-                case .expectedAny:
-                    .any
-                case .expectedNoStream:
-                    .noStream
-                case .expectedStreamExists:
-                    .streamExists
-                case let .expectedRevision(revision):
-                    .at(revision)
-                }
-            }
-
-            self.init(
-                current: message.currentRevision,
-                excepted: message.expectedRevision,
-                requested: requestedRevision ?? .any
             )
         }
     }

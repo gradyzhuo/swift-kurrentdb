@@ -30,7 +30,7 @@ public enum KurrentError: Error, Sendable {
     case deadlineExceeded
     case initializationError(reason: String)
     case illegalStateError(reason: String)
-    case wrongExpectedVersion(expected: UInt64, current: UInt64, requested: StreamRevision)
+    case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionOption)
     case subscriptionTerminated(subscriptionId: String?, origin: (any Error)?)
     case encodingError(message: String, encoding: String.Encoding)
     case decodingError(cause: DecodingError)
@@ -72,15 +72,15 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
         case .unsupportedFeature:
             "The operation is unsupported by the server"
         case .internalClientError(let reason, let cause):
-            "Unexpected internal client error. Please fill an issue on GitHub. reason: \(reason), error: \(cause)"
+            "Unexpected internal client error. Please fill an issue on GitHub. reason: \(reason), error: \(String(describing: cause))"
         case .deadlineExceeded:
             "Deadline exceeded"
         case let .initializationError(reason):
             "Initialization error: \(reason)"
         case let .illegalStateError(reason):
             "Illegal state error: \(reason)"
-        case let .wrongExpectedVersion(expected, current, requested):
-            "Wrong expected version '\(expected)' but got '\(current)', requested \(requested)"
+        case let .wrongExpectedVersion(expected, current):
+            "Wrong expected version '\(expected)' but got '\(current)'."
         case .subscriptionTerminated(let subscriptionId, let originError):
             "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId)), originError: \(String(describing: originError))"
         case .encodingError(message: let message, encoding: let encoding):
