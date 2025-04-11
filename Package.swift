@@ -104,5 +104,5 @@ let package = Package(
                 .copy("Resources/multiple-events.json"),
             ]
         ),
-    ],
+    ]
 )
