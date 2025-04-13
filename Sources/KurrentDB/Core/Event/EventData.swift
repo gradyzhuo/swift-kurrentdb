@@ -33,12 +33,16 @@ public struct EventData: EventStoreEvent {
         self.init(id: id, eventType: eventType, payload: .json(payload), contentType: .json, customMetadata: customMetadata)
     }
     
-    public init(id: UUID = .init(), eventType: String, content: Codable & Sendable, customMetadata: Data? = nil){
-        self.init(id: id, eventType: eventType, payload: .json(content), contentType: .json, customMetadata: customMetadata)
+    public init(id: UUID = .init(), eventType: String, model: Codable & Sendable, customMetadata: Data? = nil){
+        self.init(id: id, eventType: eventType, payload: .json(model), contentType: .json, customMetadata: customMetadata)
     }
     
     public init(id: UUID = .init(), eventType: String, data: Data, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .binary(data), contentType: .binary, customMetadata: customMetadata)
+        self.init(id: id, eventType: eventType, payload: .data(data), contentType: .binary, customMetadata: customMetadata)
+    }
+    
+    public init(id: UUID = .init(), eventType: String, bytes: [UInt8], customMetadata: Data? = nil) {
+        self.init(id: id, eventType: eventType, payload: .data(.init(bytes)), contentType: .binary, customMetadata: customMetadata)
     }
     
 }
@@ -46,12 +50,12 @@ public struct EventData: EventStoreEvent {
 
 extension EventData {
     public enum Payload: Sendable {
-        case binary(Data)
+        case data(Data)
         case json(Codable & Sendable)
 
         var contentType: String {
             switch self {
-            case .binary:
+            case .data:
                 "application/octet-stream"
             case .json:
                 "application/json"
@@ -61,7 +65,7 @@ extension EventData {
         package var data: Data {
             get throws {
                 switch self {
-                case let .binary(data):
+                case let .data(data):
                     data
                 case let .json(json):
                     try JSONEncoder().encode(json)

@@ -108,7 +108,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
-                content: metadata
+                model: metadata
             )
         ], options: .init())
         return try await usecase.perform(settings: settings, callOptions: callOptions)
