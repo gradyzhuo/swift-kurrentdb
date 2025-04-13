@@ -80,10 +80,10 @@ extension PersistentSubscriptions.Create {
         public var filter: SubscriptionFilter?
         public var cursor: PositionCursor
 
-        public init(settings: PersistentSubscription.Settings = .init(), filter: SubscriptionFilter? = nil, from cursor: PositionCursor = .end) {
-            self.settings = settings
-            self.filter = filter
-            self.cursor = cursor
+        public init() {
+            self.settings = .init()
+            self.filter = nil
+            self.cursor = .end
         }
 
         @discardableResult
