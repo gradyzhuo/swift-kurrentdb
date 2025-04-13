@@ -22,7 +22,8 @@ import NIOSSL
 ///
 /// ### Topics
 /// #### Stream Operations
-/// - ``streams(of:)``
+/// - ``setStreamMetadata(on:metadata:expectedRevision:)``
+/// - ``getStreamMetadata(on:)``
 /// - ``appendStream(on:events:configure:)``
 /// - ``readAllStreams(startFrom:configure:)``
 /// - ``readStream(on:startFrom:configure:)``
@@ -33,7 +34,6 @@ import NIOSSL
 /// - ``copyStream(_:toNewStream:)``
 ///
 /// #### Persistent Subscription Operations
-/// - ``persistentSubscriptions``
 /// - ``createPersistentSubscription(to:groupName:startFrom:configure:)``
 /// - ``createPersistentSubscriptionToAllStream(groupName:startFrom:configure:)``
 /// - ``deletePersistentSubscription(to:groupName:)``
@@ -43,9 +43,6 @@ import NIOSSL
 /// - ``listAllPersistentSubscription()``
 ///
 /// #### Projection Operations
-/// - ``projections(all:)``
-/// - ``projections(name:)``
-/// - ``projections(system:)``
 /// - ``createContinuousProjection(name:query:configure:)``
 /// - ``updateProjection(name:query:configure:)``
 /// - ``disableProjection(name:)``
@@ -96,12 +93,12 @@ extension KurrentDBClient {
     ///
     /// - Parameter target: The stream target (e.g., `SpecifiedStream`, `AllStreams`, or `ProjectionStream`).
     /// - Returns: A `Streams` instance configured with the client's settings.
-    public func streams<Target: StreamTarget>(of target: Target) -> Streams<Target> {
+    private func streams<Target: StreamTarget>(of target: Target) -> Streams<Target> {
         return .init(target: target, settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
     /// The persistent subscriptions service for all streams.
-    public var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
+    private var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
         return .init(target: .all, settings: settings, callOptions: defaultCallOptions)
     }
     
@@ -109,7 +106,7 @@ extension KurrentDBClient {
     ///
     /// - Parameter mode: The projection mode (e.g., `ContinuousMode` or `AnyMode`).
     /// - Returns: A `Projections` instance configured with the client's settings.
-    public func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
+    private func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
         .init(target: .init(mode: mode), settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
@@ -117,7 +114,7 @@ extension KurrentDBClient {
     ///
     /// - Parameter name: The name of the projection.
     /// - Returns: A `Projections` instance configured with the client's settings.
-    public func projections(name: String) -> Projections<String> {
+    private func projections(name: String) -> Projections<String> {
         .init(target: name, settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
@@ -125,7 +122,7 @@ extension KurrentDBClient {
     ///
     /// - Parameter predefined: The predefined system projection type (e.g., `.byCategory`).
     /// - Returns: A `Projections` instance configured with the client's settings.
-    public func projections(system predefined: SystemProjectionTarget.Predefined) -> Projections<SystemProjectionTarget> {
+    private func projections(system predefined: SystemProjectionTarget.Predefined) -> Projections<SystemProjectionTarget> {
         .init(target: .init(predefined: predefined), settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
@@ -147,6 +144,29 @@ extension KurrentDBClient {
 
 /// Provides convenience methods for stream operations.
 extension KurrentDBClient {
+    /// Sets metadata for a specific stream.
+    ///
+    /// - Parameters:
+    ///   - streamIdentifier: The identifier of the target stream.
+    ///   - metadata: The metadata to associate with the stream.
+    ///   - expectedRevision: The expected revision of the stream for concurrency control, defaulting to `.any`.
+    /// - Returns: An `Append.Response` indicating the result of the operation.
+    /// - Throws: An error if the metadata cannot be set.
+    @discardableResult
+    public func setStreamMetadata(on streamIdentifier: StreamIdentifier, metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamIdentifier))
+            .setMetadata(metadata: metadata, expectedRevision: expectedRevision)
+    }
+
+    /// Retrieves metadata for a specific stream.
+    ///
+    /// - Parameter streamIdentifier: The identifier of the target stream.
+    /// - Returns: The `StreamMetadata` if available, otherwise `nil`.
+    /// - Throws: An error if the metadata cannot be retrieved.
+    public func getStreamMetadata(on streamIdentifier: StreamIdentifier) async throws -> StreamMetadata? {
+        return try await streams(of: .specified(streamIdentifier)).getMetadata()
+    }
+    
     /// Appends events to a specific stream.
     ///
     /// - Parameters:
@@ -285,6 +305,18 @@ extension KurrentDBClient {
             .create(startFrom: cursor, options: options)
     }
     
+    public func subscribePersistentSubscription(to streamIdentifier: StreamIdentifier, groupName: String, configure: (PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+        let options = configure(.init())
+        let stream = streams(of: .specified(streamIdentifier))
+        return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
+    }
+    
+    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: (PersistentSubscriptions<PersistentSubscription.AllStream>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.AllStream>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AllStream>.Subscription {
+        let options = configure(.init())
+        let stream = streams(of: .all)
+        return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
+    }
+    
     /// Deletes a persistent subscription for a specific stream.
     ///
     /// - Parameters:
@@ -331,6 +363,10 @@ extension KurrentDBClient {
     public func listAllPersistentSubscription() async throws -> [PersistentSubscription.SubscriptionInfo] {
         return try await persistentSubscriptions.list(for: .allSubscriptions)
     }
+    
+    public func restartPersistentSubscriptionSubsystem() async throws {
+        try await persistentSubscriptions.restartSubsystem()
+    }
 }
 
 /// Provides methods for projection operations.
@@ -357,6 +393,14 @@ extension KurrentDBClient {
     public func updateProjection(name: String, query: String, configure: (Projections<String>.Update.Options) -> Projections<String>.Update.Options = { $0 }) async throws {
         let options = configure(.init())
         try await projections(name: name).update(query: query, options: options)
+    }
+    
+    /// Disables a projection.
+    ///
+    /// - Parameter name: The name of the projection to disable.
+    /// - Throws: An error if the disable operation fails.
+    public func enableProjection(name: String) async throws {
+        try await projections(name: name).enable()
     }
     
     /// Disables a projection.
@@ -401,7 +445,7 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the result options, defaulting to no modifications.
     /// - Returns: The decoded result of type `T`, or `nil` if no result is available.
     /// - Throws: An error if the retrieval or decoding fails.
-    public func getProjectionResult<T: Decodable>(name: String, configure: (Projections<String>.Result.Options) -> Projections<String>.Result.Options = { $0 }) async throws -> T? {
+    public func getProjectionResult<T: Decodable>(of: T.Type = T.self, name: String, configure: (Projections<String>.Result.Options) -> Projections<String>.Result.Options = { $0 }) async throws -> T? {
         let options = configure(.init())
         return try await projections(name: name).result(of: T.self, options: options)
     }
@@ -413,7 +457,7 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the state options, defaulting to no modifications.
     /// - Returns: The decoded state of type `T`, or `nil` if no state is available.
     /// - Throws: An error if the retrieval or decoding fails.
-    public func getProjectionState<T: Decodable>(name: String, configure: (Projections<String>.State.Options) -> Projections<String>.State.Options = { $0 }) async throws -> T? {
+    public func getProjectionState<T: Decodable>(of: T.Type = T.self, name: String, configure: (Projections<String>.State.Options) -> Projections<String>.State.Options = { $0 }) async throws -> T? {
         let options = configure(.init())
         return try await projections(name: name).state(of: T.self, options: options)
     }

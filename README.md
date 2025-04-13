@@ -144,16 +144,14 @@ let settings: ClientSettings = .localhost()
 
 // Create the data array of events.
 let events:[EventData] = [
-    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!, eventType: "ItemAdded", payload: ["Description": "Xbox One S 1TB (Console)"]),
-    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", payload: "Gears of War 4")]
-
-
-// Build a streams client.
-let stream = KurrentDBClient(settings: .localhost())
-                .streams(of: .specified("stream_for_testing"))
+    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!, eventType: "ItemAdded", model: ["Description": "Xbox One S 1TB (Console)"]),
+    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", model: "Gears of War 4")]
 
 // Append two events with one response
-try await stream.append(events: events, options: .init().revision(expected: .any))
+let client = KurrentDBClient(settings: .localhost())
+try await client.appendStream(on: "stream_for_testing", events: events){
+    $0.revision(expected: .any)
+}
 ```
 
 ### Read Event
@@ -165,20 +163,17 @@ import KurrentDB
 // Using a client settings for a single node configuration by parsing a connection string.
 let settings: ClientSettings = .localhost()
 
-// Build a streams client.
-let stream = KurrentDBClient(settings: .localhost())
-                .streams(of: .specified("stream_for_testing"))
-
-// Read events from stream.
-let readResponses = try await stream.read(from: .start, options: .init().resolveLinks())
+// Read responses of event from specified stream.
+let responses = try await client.readStream(on: "stream_for_testing", startFrom: .start){
+    $0.backward()
+}
 
 // loop it.
-for try await response in readResponses {
+for try await response in responses {
     //handle response
     if let readEvent = try response.event {
         //handle event
     }
- }
 }
 ```
 

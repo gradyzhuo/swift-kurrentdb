@@ -1,13 +1,13 @@
 //
-//  PresistentSubscriptionTests.swift
-//
+//  PersistentSubscriptionTests.swift
+//  KurrentDB
 //
 //  Created by Grady Zhuo on 2024/3/25.
 //
 
 import Foundation
-@testable import KurrentDB
 import Testing
+@testable import KurrentDB
 
 @Suite("EventStoreDB Persistent Subscription Tests", .serialized)
 struct PersistentSubscriptionsTests {
@@ -22,32 +22,31 @@ struct PersistentSubscriptionsTests {
     @Test("Create PersistentSubscription for Stream")
     func testCreateToStream() async throws {
         let streamName = "test-persistent-subscription:\(UUID().uuidString)"
+        let streamIdentifier = StreamIdentifier(name: streamName)
         let client = KurrentDBClient(settings: .localhost())
-        let persistentSubscriptions = client.streams(of: streamName).persistentSubscriptions(group: groupName)
-        try await persistentSubscriptions.create(options: .init())
+        
+        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 
-        let subscriptions = try await client.persistentSubscriptions.list(for: .stream(.init(name: streamName)))
+        let subscriptions = try await client.listPersistentSubscriptions(to: streamIdentifier)
         #expect(subscriptions.count == 1)
 
-        try await persistentSubscriptions.delete()
+        try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
     }
 
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToStream() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: .localhost())
-        let streams = client.streams(of: .specified(streamIdentifier))
         
-        let persistentSubscriptions = streams.persistentSubscriptions(group: groupName)
-        try await persistentSubscriptions.create()
+        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 
-        let subscription = try await persistentSubscriptions.subscribe()
-
-        let response = try await streams.append(events: [
-            .init(
-                eventType: "PS-SubscribeToStream-AccountCreated", payload: ["Description": "Gears of War 10"]
-            ),
-        ], options: .init().revision(expected: .any))
+        let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
+  
+        let response = try await client.appendStream(on: streamIdentifier, events: [
+            .init(eventType: "PS-SubscribeToStream-AccountCreated", payload: ["Description": "Gears of War 10"])
+        ]) {
+            $0.revision(expected: .any)
+        }
 
         var lastEventResult: PersistentSubscription.EventResult?
         for try await result in subscription.events {
@@ -58,30 +57,26 @@ struct PersistentSubscriptionsTests {
 
         #expect(response.currentRevision == lastEventResult?.event.record.revision)
 
-        try await streams.delete()
-        try await persistentSubscriptions.delete()
+        try await client.deleteStream(on: streamIdentifier)
+        try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
     }
 
-    @Test("Subscribe PersistentSubscription for Stream")
+    @Test("Subscribe PersistentSubscription for All Streams")
     func testSubscribeToAll() async throws {
         let client = KurrentDBClient(settings: .localhost())
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let streams = client.streams(of: .specified(streamIdentifier))
         
-        let persistentSubscriptions = streams.persistentSubscriptions(group: groupName)
-        
-        try await persistentSubscriptions.create()
+        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 
-        let subscription = try await persistentSubscriptions.subscribe()
+        let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
 
         let event = EventData(
             eventType: "PS-SubscribeToAll-AccountCreated", payload: ["Description": "Gears of War 10:\(UUID().uuidString)"]
         )
 
-        
-        let response = try await streams.append(events: [
-            event,
-        ], options: .init().revision(expected: .any))
+        let response = try await client.appendStream(on: streamIdentifier, events: [event]) {
+            $0.revision(expected: .any)
+        }
 
         var lastEventResult: PersistentSubscription.EventResult?
         for try await result in subscription.events {
@@ -95,7 +90,7 @@ struct PersistentSubscriptionsTests {
 
         #expect(response.position?.commit == lastEventResult?.event.commitPosition?.commit)
 
-        try await streams.delete()
-        try await persistentSubscriptions.delete()
+        try await client.deleteStream(on: streamIdentifier)
+        try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
     }
 }

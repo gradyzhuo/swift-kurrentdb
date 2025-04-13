@@ -104,13 +104,13 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the operation fails.
     @discardableResult
-    public func setMetadata(metadata: StreamMetadata) async throws(KurrentError) -> Append.Response {
+    public func setMetadata(metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Append.Response {
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
                 model: metadata
             )
-        ], options: .init())
+        ], options: .init().revision(expected: expectedRevision))
         return try await usecase.perform(settings: settings, callOptions: callOptions)
     }
 
@@ -120,8 +120,8 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: The `StreamMetadata` if available, otherwise `nil`.
     /// - Throws: An error if the metadata cannot be retrieved or parsed.
     @discardableResult
-    public func getMetadata(from cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws(KurrentError) -> StreamMetadata? {
-        let options: Streams.Read.Options = options.cursor(cursor)
+    public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
+        let options: Streams.Read.Options = .init().cursor(.end).backward().limit(1)
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
         let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
 

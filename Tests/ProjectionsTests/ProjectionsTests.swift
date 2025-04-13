@@ -4,6 +4,7 @@
 //
 //  Created by Grady Zhuo on 2025/3/13.
 //
+
 import Foundation
 import Testing
 import GRPCCore
@@ -15,7 +16,6 @@ struct CountResult: Codable {
 
 @Suite("EventStoreDB Projections Tests", .serialized)
 struct ProjectionsTests: Sendable {
-    
     let client: KurrentDBClient
 
     init() {
@@ -40,80 +40,81 @@ fromAll()
     .outputState();
 """
         
-        let projections = client.projections(name: name)
-        try await projections.createContinuous(query: js)
+        try await client.createContinuousProjection(name: name, query: js)
         
-        let details = try #require(await projections.detail())
+        let details = try #require(await client.getProjectionDetail(name: name))
         #expect(details.name == name)
         #expect(details.mode == .continuous)
         
-        try await projections.disable()
-        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
+        try await client.disableProjection(name: name)
+        try await client.deleteProjection(name: name) {
+            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+        }
     }
     
-    @Test
+    @Test("Disable a projection")
     func disableProjection() async throws {
         let projectionName = "testDisableProjection_\(UUID())"
-        let projections = client.projections(name: projectionName)
-        try await projections.createContinuous(query: "fromAll().outputState()")
+        try await client.createContinuousProjection(name: projectionName, query: "fromAll().outputState()")
         
-        try await projections.disable()
+        try await client.disableProjection(name: projectionName)
         
-        let details = try #require(await projections.detail())
+        let details = try #require(await client.getProjectionDetail(name: projectionName))
         #expect(details.status.contains(.stopped))
         
-        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
+        try await client.deleteProjection(name: projectionName) {
+            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+        }
     }
     
-    @Test
+    @Test("Enable a projection")
     func enableProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
-        let projections = client.projections(name: projectionName)
-        try await projections.createContinuous(query: "fromAll().outputState()")
+        try await client.createContinuousProjection(name: projectionName, query: "fromAll().outputState()")
         
+        try await client.disableProjection(name: projectionName)
         
-        try await projections.disable()
-        
-        let details = try #require(await projections.detail())
+        let details = try #require(await client.getProjectionDetail(name: projectionName))
         #expect(details.status.contains(.stopped))
         
-        try await projections.enable()
+        try await client.enableProjection(name: projectionName)
         
-        let enabledDetails = try #require(await projections.detail())
+        let enabledDetails = try #require(await client.getProjectionDetail(name: projectionName))
         #expect(enabledDetails.status == .running)
         
-        try await projections.disable()
-        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
+        try await client.disableProjection(name: projectionName)
+        try await client.deleteProjection(name: projectionName) {
+            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+        }
     }
     
-    @Test
+    @Test("Abort a projection")
     func abortProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
-        let projections = client.projections(name: projectionName)
-        try await projections.createContinuous(query: "fromAll().outputState()")
+        try await client.createContinuousProjection(name: projectionName, query: "fromAll().outputState()")
         
-        try await projections.abort()
+        try await client.abortProjection(name: projectionName)
         
-        let details = try #require(await projections.detail())
+        let details = try #require(await client.getProjectionDetail(name: projectionName))
         #expect(details.status.contains(.aborted))
         
-        try await projections.reset()
+        try await client.resetProjection(name: projectionName)
         
-        let enabledDetails = try #require(await projections.detail())
+        let enabledDetails = try #require(await client.getProjectionDetail(name: projectionName))
         #expect(enabledDetails.status == .stopped)
     
-        try await projections.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
+        try await client.deleteProjection(name: projectionName) {
+            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+        }
     }
     
-    @Test
+    @Test("Get projection status for a system projection")
     func getStatusExample() async throws {
-        // by name
-        let projectionClient = client.projections(system: .byCategory)
-        let detail = try #require(await projectionClient.detail())
+        let detail = try #require(await client.getProjectionDetail(name: SystemProjectionTarget.Predefined.byCategory.rawValue))
         print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
     }
     
-    @Test
+    @Test("Get projection state")
     func getStateExample() async throws {
         let name = "get_state_example_\(UUID())"
         let streamName = "test-forProjection"
@@ -132,25 +133,26 @@ fromAll()
             .outputState();
         """
         
-        let stream = client.streams(of: .specified(streamName))
-        try await stream.append(events: [
+        try await client.appendStream(on: StreamIdentifier(name: streamName), events: [
             .init(eventType: "ProjectionEventCreated", payload: ["hello":"world"])
         ])
 
-        let projectionClient = client.projections(name: name)
-        try await projectionClient.createContinuous(query: js)
+        try await client.createContinuousProjection(name: name, query: js)
 
-        try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
+        try await Task.sleep(for: .microseconds(500)) // Give it some time to process and have a state.
         
-        let state = try #require(await projectionClient.state(of: CountResult.self))
+        let state = try #require(await client.getProjectionState(of: CountResult.self, name: name))
         #expect(state.count == 1)
         
-        try await stream.delete()
-        try await projectionClient.disable()
-        try await projectionClient.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
+        try await client.deleteStream(on: StreamIdentifier(name: streamName))
+        try await client.disableProjection(name: name)
+        try await client.deleteProjection(name: name) {
+            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+        }
     }
     
-    @Test func getResultExample() async throws {
+    @Test("Get projection result")
+    func getResultExample() async throws {
         let name = "get_result_example_\(UUID())"
         let streamName = "test-forProjection"
         let js = """
@@ -169,26 +171,26 @@ fromAll()
             .outputState();
         """
 
-        let stream = client.streams(of: .specified(streamName))
-        try await stream.append(events: [
+        try await client.appendStream(on: StreamIdentifier(name: streamName), events: [
             .init(eventType: "ProjectionEventCreated", payload: ["hello":"world"])
         ])
         
-        let projection = client.projections(name: name)
-        try await projection.createContinuous(query: js)
+        try await client.createContinuousProjection(name: name, query: js)
         
-        try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
+        try await Task.sleep(for: .microseconds(500)) // Give it some time to process and have a result.
         
-        let result = try #require(await projection.result(of: Int.self))
+        let result = try #require(await client.getProjectionResult(of: Int.self, name: name))
         #expect(result == 1)
         
-        try await stream.delete()
-        try await projection.disable()
-        try await projection.delete(options: .init().delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true))
+        try await client.deleteStream(on: StreamIdentifier(name: streamName))
+        try await client.disableProjection(name: name)
+        try await client.deleteProjection(name: name) {
+            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+        }
     }
     
-    @Test("status from string", arguments: [
-        ("Aborted/Stopped", Projection.Status([Projection.Status.aborted, Projection.Status.stopped]) ),
+    @Test("Status parsing from string", arguments: [
+        ("Aborted/Stopped", Projection.Status([Projection.Status.aborted, Projection.Status.stopped])),
         ("Stopped/Faulted", Projection.Status([Projection.Status.stopped, Projection.Status.faulted])),
         ("Stopped", Projection.Status.stopped)
     ])
@@ -196,5 +198,4 @@ fromAll()
         let status = try #require(Projection.Status(name: name))
         #expect(status.contains(status))
     }
-
 }
