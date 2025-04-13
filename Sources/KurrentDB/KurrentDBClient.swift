@@ -23,18 +23,19 @@ import NIOSSL
 /// ### Topics
 /// #### Stream Operations
 /// - ``streams(of:)``
-/// - ``appendStream(to:events:options:)``
-/// - ``readAllStreams(from:options:)``
-/// - ``readStream(to:from:options:)``
-/// - ``subscribeAllStreams(from:options:)``
-/// - ``subscribeStream(to:from:options:)``
-/// - ``deleteStream(to:options:)``
-/// - ``tombstoneStream(to:options:)``
+/// - ``appendStream(on:events:configure:)``
+/// - ``readAllStreams(startFrom:configure:)``
+/// - ``readStream(on:startFrom:configure:)``
+/// - ``subscribeAllStreams(startFrom:configure:)``
+/// - ``subscribeStream(on:startFrom:configure:)``
+/// - ``deleteStream(on:configure:)``
+/// - ``tombstoneStream(on:configure:)``
+/// - ``copyStream(_:toNewStream:)``
 ///
 /// #### Persistent Subscription Operations
 /// - ``persistentSubscriptions``
-/// - ``createPersistentSubscription(to:groupName:startFrom:options:)``
-/// - ``createPersistentSubscriptionToAllStream(groupName:startFrom:options:)``
+/// - ``createPersistentSubscription(to:groupName:startFrom:configure:)``
+/// - ``createPersistentSubscriptionToAllStream(groupName:startFrom:configure:)``
 /// - ``deletePersistentSubscription(to:groupName:)``
 /// - ``deletePersistentSubscriptionToAllStream(groupName:)``
 /// - ``listPersistentSubscriptions(to:)``
@@ -45,6 +46,15 @@ import NIOSSL
 /// - ``projections(all:)``
 /// - ``projections(name:)``
 /// - ``projections(system:)``
+/// - ``createContinuousProjection(name:query:configure:)``
+/// - ``updateProjection(name:query:configure:)``
+/// - ``disableProjection(name:)``
+/// - ``abortProjection(name:)``
+/// - ``deleteProjection(name:configure:)``
+/// - ``resetProjection(name:)``
+/// - ``getProjectionResult(name:configure:)``
+/// - ``getProjectionState(name:configure:)``
+/// - ``getProjectionDetail(name:)``
 /// - ``restartProjectionSubsystem()``
 ///
 /// #### User Management
@@ -80,11 +90,11 @@ public struct KurrentDBClient: Sendable, Buildable {
     }
 }
 
-/// Provides access to stream-related operations.
+/// Provides access to core service instances.
 extension KurrentDBClient {
     /// Creates a `Streams` instance for a specific target.
     ///
-    /// - Parameter target: The stream target (e.g., `SpecifiedStream` or `AllStreams`).
+    /// - Parameter target: The stream target (e.g., `SpecifiedStream`, `AllStreams`, or `ProjectionStream`).
     /// - Returns: A `Streams` instance configured with the client's settings.
     public func streams<Target: StreamTarget>(of target: Target) -> Streams<Target> {
         return .init(target: target, settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
@@ -97,7 +107,7 @@ extension KurrentDBClient {
     
     /// Creates a `Projections` instance for all projections with a specific mode.
     ///
-    /// - Parameter mode: The projection mode (e.g., `ContinuousMode`).
+    /// - Parameter mode: The projection mode (e.g., `ContinuousMode` or `AnyMode`).
     /// - Returns: A `Projections` instance configured with the client's settings.
     public func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
         .init(target: .init(mode: mode), settings: settings, callOptions: defaultCallOptions, eventLoopGroup: group)
@@ -141,23 +151,25 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
-    ///   - events: The array of events to append.
-    ///   - options: Configuration options for the append operation.
+    ///   - events: An array of events to append.
+    ///   - configure: A closure to customize the append options, defaulting to no modifications.
     /// - Returns: An `Append.Response` indicating the result.
     /// - Throws: An error if the append operation fails.
     @discardableResult
-    public func appendStream(on streamIdentifier: StreamIdentifier, events: [EventData], options: Streams<SpecifiedStream>.Append.Options = .init()) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendStream(on streamIdentifier: StreamIdentifier, events: [EventData], configure: (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+        let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).append(events: events, options: options)
     }
     
     /// Reads events from all streams.
     ///
     /// - Parameters:
-    ///   - cursor: The starting position for reading.
-    ///   - options: Configuration options for the read operation.
+    ///   - cursor: The starting position for reading, defaulting to `.start`.
+    ///   - configure: A closure to customize the read options, defaulting to no modifications.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func readAllStreams(startFrom cursor: PositionCursor = .start, options: Streams<AllStreams>.ReadAll.Options = .init()) async throws -> Streams<AllStreams>.ReadAll.Responses {
+    public func readAllStreams(startFrom cursor: PositionCursor = .start, configure: (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
+        let options = configure(.init())
         return try await streams(of: .all).read(startFrom: cursor, options: options)
     }
     
@@ -165,22 +177,24 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
-    ///   - cursor: The starting revision for reading.
-    ///   - options: Configuration options for the read operation.
+    ///   - cursor: The starting revision for reading, defaulting to `.start`.
+    ///   - configure: A closure to customize the read options, defaulting to no modifications.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
-    public func readStream(on streamIdentifier: StreamIdentifier, startFrom cursor: RevisionCursor = .start, options: Streams<SpecifiedStream>.Read.Options = .init()) async throws -> Streams<SpecifiedStream>.Read.Responses {
+    public func readStream(on streamIdentifier: StreamIdentifier, startFrom cursor: RevisionCursor = .start, configure: (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
+        let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).read(startFrom: cursor, options: options)
     }
     
     /// Subscribes to all streams.
     ///
     /// - Parameters:
-    ///   - cursor: The starting position for the subscription.
-    ///   - options: Configuration options for the subscription.
+    ///   - cursor: The starting position for the subscription, defaulting to `.start`.
+    ///   - configure: A closure to customize the subscription options, defaulting to no modifications.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribeAllStreams(startFrom cursor: PositionCursor = .start, options: Streams<AllStreams>.SubscribeAll.Options = .init()) async throws -> Streams<AllStreams>.Subscription {
+    public func subscribeAllStreams(startFrom cursor: PositionCursor = .start, configure: (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
+        let options = configure(.init())
         return try await streams(of: .all).subscribe(startFrom: cursor, options: options)
     }
     
@@ -188,11 +202,12 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
-    ///   - cursor: The starting revision for the subscription.
-    ///   - options: Configuration options for the subscription.
+    ///   - cursor: The starting revision for the subscription, defaulting to `.end`.
+    ///   - configure: A closure to customize the subscription options, defaulting to no modifications.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    public func subscribeStream(on streamIdentifier: StreamIdentifier, startFrom cursor: RevisionCursor = .end, options: Streams<SpecifiedStream>.Subscribe.Options = .init()) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeStream(on streamIdentifier: StreamIdentifier, startFrom cursor: RevisionCursor = .end, configure: (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+        let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).subscribe(startFrom: cursor, options: options)
     }
     
@@ -200,36 +215,42 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
-    ///   - options: Configuration options for the delete operation.
+    ///   - configure: A closure to customize the delete options, defaulting to no modifications.
     /// - Returns: A `Delete.Response` indicating the result.
     /// - Throws: An error if the delete operation fails.
     @discardableResult
-    public func deleteStream(on streamIdentifier: StreamIdentifier, options: Streams<SpecifiedStream>.Delete.Options = .init()) async throws -> Streams<SpecifiedStream>.Delete.Response {
+    public func deleteStream(on streamIdentifier: StreamIdentifier, configure: (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Delete.Response {
+        let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).delete(options: options)
     }
     
-    /// Tombstones a specific stream (marks it as permanently deleted).
+    /// Tombstones a specific stream, marking it as permanently deleted.
     ///
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
-    ///   - options: Configuration options for the tombstone operation.
-    ///   - Returns: A `Tombstone.Response` indicating the result.
+    ///   - configure: A closure to customize the tombstone options, defaulting to no modifications.
+    /// - Returns: A `Tombstone.Response` indicating the result.
     /// - Throws: An error if the tombstone operation fails.
     @discardableResult
-    public func tombstoneStream(on streamIdentifier: StreamIdentifier, options: Streams<SpecifiedStream>.Tombstone.Options = .init()) async throws -> Streams<SpecifiedStream>.Tombstone.Response {
+    public func tombstoneStream(on streamIdentifier: StreamIdentifier, configure: (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Tombstone.Response {
+        let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).tombstone(options: options)
     }
-}
-
-extension KurrentDBClient {
-    public func copyStream(_ fromIdentifier: StreamIdentifier, toNewStream newIdentifier: StreamIdentifier, readOptions: Streams<SpecifiedStream>.Read.Options = .init().resolveLinks(), appendOptions: Streams<SpecifiedStream>.Append.Options = .init().revision(expected: .noStream)) async throws {
-        let readResponses = try await streams(of: .specified(fromIdentifier)).read(options: readOptions)
+    
+    /// Copies events from one stream to a new stream.
+    ///
+    /// - Parameters:
+    ///   - fromIdentifier: The identifier of the source stream.
+    ///   - newIdentifier: The identifier of the destination stream.
+    /// - Throws: An error if the copy operation fails.
+    public func copyStream(_ fromIdentifier: StreamIdentifier, toNewStream newIdentifier: StreamIdentifier) async throws {
+        let readResponses = try await streams(of: .specified(fromIdentifier)).read(options: .init().resolveLinks())
         let events = try await readResponses.reduce(into: [EventData]()) { partialResult, response in
             let recordedEvent = try response.event.record
             let event = EventData(like: recordedEvent)
             partialResult.append(event)
         }
-        try await streams(of: .specified(newIdentifier)).append(events: events, options: appendOptions)
+        try await streams(of: .specified(newIdentifier)).append(events: events, options: .init().revision(expected: .noStream))
     }
 }
 
@@ -241,9 +262,10 @@ extension KurrentDBClient {
     ///   - streamIdentifier: The identifier of the target stream.
     ///   - groupName: The name of the subscription group.
     ///   - cursor: The starting revision for the subscription, defaulting to `.end`.
-    ///   - options: Configuration options for creating the subscription.
+    ///   - configure: A closure to customize the creation options, defaulting to no modifications.
     /// - Throws: An error if the creation fails.
-    public func createPersistentSubscription(to streamIdentifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, options: PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) async throws {
+    public func createPersistentSubscription(to streamIdentifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: (PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options = { $0 }) async throws {
+        let options = configure(.init())
         try await streams(of: .specified(streamIdentifier))
             .persistentSubscriptions(group: groupName)
             .create(startFrom: cursor, options: options)
@@ -253,10 +275,11 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - groupName: The name of the subscription group.
-    ///   - cursor: The starting position for the subscription.
-    ///   - options: Configuration options for creating the subscription.
+    ///   - cursor: The starting position for the subscription, defaulting to `.start`.
+    ///   - configure: A closure to customize the creation options, defaulting to no modifications.
     /// - Throws: An error if the creation fails.
-    public func createPersistentSubscriptionToAllStream(groupName: String, startFrom cursor: PositionCursor = .start, options: PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options = .init()) async throws {
+    public func createPersistentSubscriptionToAllStream(groupName: String, startFrom cursor: PositionCursor = .start, configure: (PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options = { $0 }) async throws {
+        let options = configure(.init())
         try await streams(of: .all)
             .persistentSubscriptions(group: groupName)
             .create(startFrom: cursor, options: options)
@@ -310,17 +333,17 @@ extension KurrentDBClient {
     }
 }
 
-/// Provides methods for projection subsystem operations.
+/// Provides methods for projection operations.
 extension KurrentDBClient {
-    
     /// Creates a continuous projection with a specified name and query.
     ///
     /// - Parameters:
     ///   - name: The name of the projection to create.
     ///   - query: The query defining the projection's logic.
-    ///   - options: Configuration options for creating the continuous projection, defaulting to an empty configuration.
+    ///   - configure: A closure to customize the creation options, defaulting to no modifications.
     /// - Throws: An error if the creation fails.
-    public func createContinuousProjection(name: String, query: String, options: Projections<String>.ContinuousCreate.Options = .init()) async throws {
+    public func createContinuousProjection(name: String, query: String, configure: (Projections<String>.ContinuousCreate.Options) -> Projections<String>.ContinuousCreate.Options = { $0 }) async throws {
+        let options = configure(.init())
         try await projections(name: name).createContinuous(query: query, options: options)
     }
     
@@ -329,9 +352,10 @@ extension KurrentDBClient {
     /// - Parameters:
     ///   - name: The name of the projection to update.
     ///   - query: The updated query for the projection.
-    ///   - options: Configuration options for updating the projection, defaulting to an empty configuration.
+    ///   - configure: A closure to customize the update options, defaulting to no modifications.
     /// - Throws: An error if the update fails.
-    public func updateProjection(name: String, query: String, options: Projections<String>.Update.Options = .init()) async throws {
+    public func updateProjection(name: String, query: String, configure: (Projections<String>.Update.Options) -> Projections<String>.Update.Options = { $0 }) async throws {
+        let options = configure(.init())
         try await projections(name: name).update(query: query, options: options)
     }
     
@@ -355,9 +379,10 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - name: The name of the projection to delete.
-    ///   - options: Configuration options for deleting the projection, defaulting to an empty configuration.
+    ///   - configure: A closure to customize the delete options, defaulting to no modifications.
     /// - Throws: An error if the delete operation fails.
-    public func deleteProjection(name: String, options: Projections<String>.Delete.Options = .init()) async throws {
+    public func deleteProjection(name: String, configure: (Projections<String>.Delete.Options) -> Projections<String>.Delete.Options = { $0 }) async throws {
+        let options = configure(.init())
         try await projections(name: name).delete(options: options)
     }
     
@@ -373,22 +398,24 @@ extension KurrentDBClient {
     ///
     /// - Parameters:
     ///   - name: The name of the projection.
-    ///   - options: Configuration options for retrieving the result, defaulting to an empty configuration.
+    ///   - configure: A closure to customize the result options, defaulting to no modifications.
     /// - Returns: The decoded result of type `T`, or `nil` if no result is available.
     /// - Throws: An error if the retrieval or decoding fails.
-    public func getProjectionResult<T: Decodable>(name: String, options: Projections<String>.Result.Options = .init()) async throws -> T? {
-        try await projections(name: name).result(of: T.self, options: options)
+    public func getProjectionResult<T: Decodable>(name: String, configure: (Projections<String>.Result.Options) -> Projections<String>.Result.Options = { $0 }) async throws -> T? {
+        let options = configure(.init())
+        return try await projections(name: name).result(of: T.self, options: options)
     }
     
     /// Retrieves the state of a projection.
     ///
     /// - Parameters:
     ///   - name: The name of the projection.
-    ///   - options: Configuration options for retrieving the state, defaulting to an empty configuration.
+    ///   - configure: A closure to customize the state options, defaulting to no modifications.
     /// - Returns: The decoded state of type `T`, or `nil` if no state is available.
     /// - Throws: An error if the retrieval or decoding fails.
-    public func getProjectionState<T: Decodable>(name: String, options: Projections<String>.State.Options = .init()) async throws -> T? {
-        try await projections(name: name).state(of: T.self, options: options)
+    public func getProjectionState<T: Decodable>(name: String, configure: (Projections<String>.State.Options) -> Projections<String>.State.Options = { $0 }) async throws -> T? {
+        let options = configure(.init())
+        return try await projections(name: name).state(of: T.self, options: options)
     }
     
     /// Retrieves detailed statistics for a projection.
