@@ -47,14 +47,6 @@ let package = Package(
             dependencies: [
                 "GRPCEncapsulates",
                 .product(name: "Logging", package: "swift-log"),
-            ],
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-warn-long-function-bodies=100",
-                    "-Xfrontend",
-                    "-warn-long-expression-type-checking=100"
-                ]),
             ]
         ),
         .target(
@@ -73,6 +65,14 @@ let package = Package(
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100"
+                ]),
             ]
         ),
         .testTarget(
@@ -83,6 +83,14 @@ let package = Package(
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100"
+                ]),
             ]
         ),
         .testTarget(
@@ -93,6 +101,14 @@ let package = Package(
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100"
+                ]),
             ]),
         .testTarget(
             name: "PersistentSubscriptionsTests",
@@ -102,6 +118,14 @@ let package = Package(
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100"
+                ]),
             ]
         ),
     ]
