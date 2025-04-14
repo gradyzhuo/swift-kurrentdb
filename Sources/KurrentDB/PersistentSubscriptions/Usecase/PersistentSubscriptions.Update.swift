@@ -73,10 +73,10 @@ extension PersistentSubscriptions {
 
 
 extension PersistentSubscriptions.Update{
-    public struct Options: PersistentSubscriptionsCommonOptions {
+    public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        internal var settings: PersistentSubscription.Settings
+        public var settings: PersistentSubscription.Settings
 
         public init() {
             self.settings = .init()

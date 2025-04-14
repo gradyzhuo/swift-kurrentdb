@@ -73,7 +73,7 @@ extension PersistentSubscriptions {
 
 
 extension PersistentSubscriptions.Create {
-    public struct Options: PersistentSubscriptionsCommonOptions {
+    public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.Settings

@@ -8,11 +8,11 @@
 import Foundation
 import GRPCEncapsulates
 
-protocol PersistentSubscriptionsCommonOptions: EventStoreOptions {
+public protocol PersistentSubscriptionsSettingsBuildable: Buildable {
     var settings: PersistentSubscription.Settings { set get }
 }
 
-extension PersistentSubscriptionsCommonOptions {
+extension PersistentSubscriptionsSettingsBuildable {
     @discardableResult
     public func resolveLink() -> Self {
         withCopy { $0.settings.resolveLink = true }
@@ -72,7 +72,7 @@ extension PersistentSubscriptionsCommonOptions {
 }
 
 // MARK: - Deprecated
-extension PersistentSubscriptionsCommonOptions {
+extension PersistentSubscriptionsSettingsBuildable {
     @discardableResult
     @available(*, deprecated)
     public mutating func set(resolveLinks: Bool) -> Self {

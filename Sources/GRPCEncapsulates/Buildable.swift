@@ -8,7 +8,7 @@
 import Foundation
 import SwiftProtobuf
 
-package protocol Buildable: Sendable {}
+public protocol Buildable: Sendable {}
 
 extension Buildable {
     package func withCopy(handler: (_ copied: inout Self) -> Void) -> Self {
