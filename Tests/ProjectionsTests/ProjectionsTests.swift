@@ -134,7 +134,7 @@ fromAll()
         """
         
         try await client.appendStream(on: StreamIdentifier(name: streamName), events: [
-            .init(eventType: "ProjectionEventCreated", payload: ["hello":"world"])
+            .init(eventType: "ProjectionEventCreated", model: ["hello":"world"])
         ])
 
         try await client.createContinuousProjection(name: name, query: js)
@@ -172,7 +172,7 @@ fromAll()
         """
 
         try await client.appendStream(on: StreamIdentifier(name: streamName), events: [
-            .init(eventType: "ProjectionEventCreated", payload: ["hello":"world"])
+            .init(eventType: "ProjectionEventCreated", model: ["hello":"world"])
         ])
         
         try await client.createContinuousProjection(name: name, query: js)

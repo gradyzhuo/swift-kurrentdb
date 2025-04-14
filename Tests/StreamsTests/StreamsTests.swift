@@ -34,8 +34,8 @@ struct StreamTests: Sendable {
 
     @Test("It should succeed when appending events to a stream.", arguments: [
         [
-            EventData(eventType: "AppendEvent-AccountCreated", content: ["Description": "Gears of War 4"]),
-            EventData(eventType: "AppendEvent-AccountDeleted", content: ["Description": "Gears of War 4"]),
+            EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]),
+            EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]),
         ],
     ])
     func testAppendEvent(events: [EventData]) async throws {
@@ -88,7 +88,7 @@ struct StreamTests: Sendable {
         
         let subscription = try await client.subscribeStream(on: streamIdentifier)
         let response = try await client.appendStream(on: streamIdentifier, events: [
-            .init(eventType: "Subscribe-AccountCreated", payload: ["Description": "Gears of War 10"])
+            .init(eventType: "Subscribe-AccountCreated", model: ["Description": "Gears of War 10"])
         ]) {
             $0.revision(expected: .any)
         }
@@ -108,7 +108,7 @@ struct StreamTests: Sendable {
     func testSubscribeAll() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
-            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
+            eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
         let client = KurrentDBClient(settings: .localhost())
         
@@ -136,7 +136,7 @@ struct StreamTests: Sendable {
     func testSubscribeAllWithFilter() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
-            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
+            eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
         let client = KurrentDBClient(settings: .localhost())
         
@@ -164,7 +164,7 @@ struct StreamTests: Sendable {
     func testSubscribeAllExcludeSystemEvents() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
-            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
+            eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
         let client = KurrentDBClient(settings: .localhost())
         
@@ -192,7 +192,7 @@ struct StreamTests: Sendable {
     func testSubscribeFilterOnStreamName() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
-            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
+            eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
         let client = KurrentDBClient(settings: .localhost())
         
@@ -220,7 +220,7 @@ struct StreamTests: Sendable {
     func testSubscribeFilterFailedOnStreamName() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let eventForTesting = EventData(
-            eventType: "SubscribeAll-AccountCreated", payload: ["Description": "Gears of War 10"]
+            eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
         let client = KurrentDBClient(settings: .localhost())
         
@@ -249,7 +249,7 @@ struct StreamTests: Sendable {
     ])
     func testSystemStreamAclEncodeAndDecode(acl: StreamMetadata.Acl, value: String) throws {
         let encoder = JSONEncoder()
-        let encodedData = try #require(try encoder.encode(value))
+        let encodedData = try encoder.encode(value)
 
         #expect(try acl.rawValue == encodedData)
 

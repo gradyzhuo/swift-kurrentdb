@@ -43,7 +43,7 @@ struct PersistentSubscriptionsTests {
         let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
   
         let response = try await client.appendStream(on: streamIdentifier, events: [
-            .init(eventType: "PS-SubscribeToStream-AccountCreated", payload: ["Description": "Gears of War 10"])
+            .init(eventType: "PS-SubscribeToStream-AccountCreated", model: ["Description": "Gears of War 10"])
         ]) {
             $0.revision(expected: .any)
         }
@@ -71,7 +71,7 @@ struct PersistentSubscriptionsTests {
         let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
 
         let event = EventData(
-            eventType: "PS-SubscribeToAll-AccountCreated", payload: ["Description": "Gears of War 10:\(UUID().uuidString)"]
+            eventType: "PS-SubscribeToAll-AccountCreated", model: ["Description": "Gears of War 10:\(UUID().uuidString)"]
         )
 
         let response = try await client.appendStream(on: streamIdentifier, events: [event]) {
