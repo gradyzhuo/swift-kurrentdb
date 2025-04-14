@@ -305,6 +305,20 @@ extension KurrentDBClient {
             .create(startFrom: cursor, options: options)
     }
     
+    public func updatePersistentSubscription(to streamIdentifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: (PersistentSubscriptions<PersistentSubscription.Specified>.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Update.Options = { $0 }) async throws {
+        let options = configure(.init())
+        try await streams(of: .specified(streamIdentifier))
+            .persistentSubscriptions(group: groupName)
+            .update(startFrom: cursor, options: options)
+    }
+    
+    public func updatePersistentSubscriptionToAllStream(groupName: String, startFrom cursor: PositionCursor = .start, configure: (PersistentSubscriptions<PersistentSubscription.AllStream>.Update.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Update.Options = { $0 }) async throws {
+        let options = configure(.init())
+        try await streams(of: .all)
+            .persistentSubscriptions(group: groupName)
+            .update(startFrom: cursor, options: options)
+    }
+    
     public func subscribePersistentSubscription(to streamIdentifier: StreamIdentifier, groupName: String, configure: (PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .specified(streamIdentifier))
