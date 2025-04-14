@@ -87,7 +87,7 @@ extension PersistentSubscriptions.Create {
         }
 
         @discardableResult
-        public func filter(_ value: SubscriptionFilter) -> Self {
+        public func filter(_ filter: SubscriptionFilter) -> Self {
             withCopy { $0.filter = filter }
         }
 
