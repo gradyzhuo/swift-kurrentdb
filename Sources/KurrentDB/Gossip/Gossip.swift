@@ -26,8 +26,10 @@ public struct Gossip: GRPCConcreteService {
 }
 
 extension Gossip {
-    public func read() async throws(KurrentError) -> Read.Response {
+    public func read() async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(settings: settings, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
+            partialResult.append(memberInfo)
+        }
     }
 }
