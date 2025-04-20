@@ -8,6 +8,18 @@
 import Foundation
 
 enum URLScheme: String {
-    case esdb
-    case dnsDiscover = "esdb+discover"
+    case kurrentdb
+    case dnsDiscover
+    
+    init?(rawValue: String) {
+        switch rawValue {
+        case "esdb", "kurrentdb":
+            self = .kurrentdb
+        case "esdb+discover", "kurrentdb+discover":
+            self = .dnsDiscover
+        default:
+            return nil
+        }
+    }
 }
+
