@@ -175,12 +175,7 @@ extension ClientSettings {
         if let connectionName = queryItems["connectionanme"]?.value {
             settings.connectionName = connectionName
         }
-
-        if let tlsItem = queryItems["tls"], tlsItem.value == "false" {
-            settings.tls = false
-        } else {
-            settings.tls = true
-        }
+        
         if let tls: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) {
             settings.tls = tls
         }
@@ -188,10 +183,18 @@ extension ClientSettings {
         if let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) {
             settings.tlsVerifyCert = tlsVerifyCert
         }
+        
+        if let tlsCaFilePath: String = queryItems["tlsCaFile"].flatMap({ $0.value }) {
+            settings.trustRoots = .certificates([
+                .file(path: tlsCaFilePath, format: .pem)
+            ])
+        }
 
         if let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) }}) {
             settings.defaultDeadline = defaultDeadline
         }
+        
+        
         
         return settings
     }
