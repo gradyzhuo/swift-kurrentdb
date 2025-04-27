@@ -29,9 +29,10 @@ extension Users {
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
+                let client = ServiceClient(wrapping: connection)
                 try await client.details(request: request, options: callOptions) {
                     for try await message in $0.messages {
                         let response = try handle(message: message)

@@ -12,15 +12,15 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct Monitoring: GRPCConcreteService {
+public actor Monitoring: GRPCConcreteService {
     package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
 
-    public private(set) var settings: ClientSettings
+    public private(set) var selector: NodeSelector
     public var callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
-    internal init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
-        self.settings = settings
+    internal init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+        self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
     }
@@ -28,7 +28,8 @@ public struct Monitoring: GRPCConcreteService {
 
 extension Monitoring {
     package func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Stats.Responses {
+        let node = try await selector.select()
         let usecase = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(node: node, callOptions: callOptions)
     }
 }

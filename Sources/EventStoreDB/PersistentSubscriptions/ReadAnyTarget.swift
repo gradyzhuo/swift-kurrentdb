@@ -8,6 +8,7 @@
 import Foundation
 import KurrentDB
 import GRPCCore
+import GRPCNIOTransportHTTP2
 import GRPCEncapsulates
 
 extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarget{
@@ -42,8 +43,9 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
                 }
             ]
         }
-
-        package func send(client: UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
+        
+        package func send(connection: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws -> Subscription {
+            let client = ServiceClient(wrapping: connection)
             let responses = AsyncThrowingStream.makeStream(of: ReadResponse.self)
 
             let writer = Subscription.Writer()
@@ -61,5 +63,6 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
             }
             return try await .init(requests: writer, responses: responses.stream)
         }
+
     }
 }

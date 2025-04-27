@@ -10,36 +10,47 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses == AsyncThrowingStream<Response, Error> {
-    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
-        let client = try GRPCClient(settings: settings)
+    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
+        let client = try await node.makeClient()
         Task {
             try await client.runConnections()
         }
         
         return try await withRethrowingError(usage: #function) {
-            let metadata = Metadata(from: settings)
+            let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
-
-            let underlying = ServiceClient(wrapping: client)
-            return try await send(client: underlying, request: request, callOptions: callOptions)
+            return try await send(connection: client, request: request, callOptions: callOptions)
         }
         
+    }
+    
+    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
+        let node = try await selector.select()
+        return try await perform(node: node, callOptions: callOptions)
     }
 }
 
 extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
-    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        let client = try GRPCClient(settings: settings)
+    package func perform(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Responses {
+        let node = try Node(endpoint: endpoint, settings: settings)
+        return try await perform(node: node, callOptions: callOptions)
+    }
+    
+    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses {
+        let node = try await selector.select()
+        return try await perform(node: node, callOptions: callOptions)
+    }
+    
+    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses {
+        let client = try await node.makeClient()
         Task {
             try await client.runConnections()
         }
         
         return try await withRethrowingError(usage: #function) {
-            let metadata = Metadata(from: settings)
+            let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
-
-            let underlying = ServiceClient(wrapping: client)
-            return try await send(client: underlying, request: request, callOptions: callOptions)
+            return try await send(connection: client, request: request, callOptions: callOptions)
         }
         
     }

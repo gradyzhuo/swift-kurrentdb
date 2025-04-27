@@ -44,9 +44,10 @@ extension Streams {
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
             Task {
+                let client = ServiceClient(wrapping: connection)
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {
                         continuation.yield(message)

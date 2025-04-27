@@ -26,8 +26,9 @@ extension Projections {
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             do{
+                let client = ServiceClient(wrapping: connection)
                 return try await client.result(request: request, options: callOptions) {
                     try handle(response: $0)
                 }
@@ -38,7 +39,7 @@ extension Projections {
                 
                 throw KurrentError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
             }catch {
-                throw KurrentError.serverError("Unknown error occurred", cause: error)
+                throw KurrentError.serverError("Unknown error occurred, cause: \(error)")
             }
         }
     }

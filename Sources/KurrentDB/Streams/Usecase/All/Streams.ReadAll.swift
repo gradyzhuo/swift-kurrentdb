@@ -28,8 +28,10 @@ extension Streams where Target == AllStreams {
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            try await withThrowingTaskGroup(of: Void.self) { _ in
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+            
+            return try await withThrowingTaskGroup(of: Void.self) { _ in
+                let client = ServiceClient(wrapping: connection)
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {

@@ -40,8 +40,9 @@ extension PersistentSubscriptions {
             }
         }
 
-        package func send(client: UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> PersistentSubscription.SubscriptionInfo {
-            try await client.getInfo(request: request, options: callOptions) {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> PersistentSubscription.SubscriptionInfo {
+            let client = ServiceClient(wrapping: connection)
+            return try await client.getInfo(request: request, options: callOptions) {
                 try .init(from: $0.message.subscriptionInfo)
             }
         }

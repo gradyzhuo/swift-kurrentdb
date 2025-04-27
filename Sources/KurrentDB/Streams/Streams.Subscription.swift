@@ -79,7 +79,7 @@ extension Streams.Subscription where Target == AllStreams {
                     }
                 }
             }catch{
-                continuation.finish(throwing: KurrentError.subscriptionTerminated(subscriptionId: subscriptionId, origin: error))
+                continuation.finish(throwing: KurrentError.subscriptionTerminated(subscriptionId: subscriptionId))
             }
             
         }

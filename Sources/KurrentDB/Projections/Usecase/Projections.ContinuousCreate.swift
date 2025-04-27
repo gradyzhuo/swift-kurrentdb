@@ -28,18 +28,19 @@ extension Projections {
             }
         }
 
-        package func send(client: ServiceClient, request: GRPCCore.ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws(KurrentError) -> Response {
-            do{
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws(KurrentError) -> Response {
+            let client = ServiceClient(wrapping: connection)
+            do {
                 return try await client.create(request: request, options: callOptions) {
                     try handle(response: $0)
                 }
-            }catch let error as RPCError{
-                if error.message.contains("Conflict"){
+            } catch let error as RPCError {
+                if error.message.contains("Conflict") {
                     throw KurrentError.resourceAlreadyExists
                 }
-                throw .grpc(code: .init(code: error.code, message: error.message, details: []), reason: error.message)
-            }catch {
-                throw .serverError("unexpected error", cause: error)
+                throw .grpcError(cause: error)
+            } catch {
+                throw .serverError("unexpected error, cause: \(error)")
             }
         }
     }

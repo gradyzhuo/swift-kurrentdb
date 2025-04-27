@@ -17,8 +17,9 @@ extension Operations {
 
         public init() {}
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            try await client.shutdown(request: request, options: callOptions) {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            let client = ServiceClient(wrapping: connection)
+            return try await client.shutdown(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }

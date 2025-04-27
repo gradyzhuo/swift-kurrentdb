@@ -1,7 +1,8 @@
 import GRPCEncapsulates
+import Foundation
 
 extension Gossip {
-    public enum VNodeState: Sendable {
+    public enum VNodeState: Sendable, Equatable {
         package typealias UnderlyingMessage = EventStore_Client_Gossip_MemberInfo.VNodeState
 
         case initializing
@@ -60,5 +61,25 @@ extension Gossip {
                 self = .UNRECOGNIZED(enumValue)
             }
         }
+    }
+}
+
+extension Gossip.VNodeState: CaseIterable {
+    public static var allCases: [Self]{
+        [
+            .initializing,
+            .discoverLeader,
+            .unknown,
+            .preReplica,
+            .catchingUp,
+            .clone,
+            .follower,
+            .preLeader,
+            .leader,
+            .manager,
+            .shuttingDown,
+            .shutdown,
+            .readOnlyLeaderless
+        ]
     }
 }

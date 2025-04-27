@@ -10,30 +10,39 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension UnaryUnary where UnderlyingResponse == EventStore_Client_Empty {
-    package func send(client: ServiceClient, metadata: Metadata, callOptions: CallOptions) async throws {
-        _ = try await send(client: client, request: request(metadata: metadata), callOptions: callOptions)
+    package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws {
+        _ = try await send(connection: connection, request: request(metadata: metadata), callOptions: callOptions)
     }
 }
 
 extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
-    package func send(client: ServiceClient, metadata: Metadata, callOptions: CallOptions) async throws -> Response {
-        try await send(client: client, request: request(metadata: metadata), callOptions: callOptions)
+    package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Response {
+        try await send(connection: connection, request: request(metadata: metadata), callOptions: callOptions)
+    }
+    
+    package func perform(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        let node = try Node(endpoint: endpoint, settings: settings)
+        return try await perform(node: node, callOptions: callOptions)
+    }
+    
+    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        let node = try await selector.select()
+        return try await perform(node: node, callOptions: callOptions)
     }
 
-    package func perform(settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Response {
-        let client = try GRPCClient(settings: settings)
-        let metadata = Metadata(from: settings)
-        
+    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        let client = try await node.makeClient()
         return try await withRethrowingError(usage: #function) {
             return try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     try await client.runConnections()
                 }
-                let underlying = ServiceClient(wrapping: client)
-                let response = try await send(client: underlying, metadata: metadata, callOptions: callOptions)
+                let metadata = Metadata(from: node.settings)
+                let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
                 client.beginGracefulShutdown()
                 return response
             }
         }
     }
+    
 }

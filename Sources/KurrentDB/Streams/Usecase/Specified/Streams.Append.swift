@@ -12,7 +12,7 @@ extension Streams {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
-
+        
         public let events: [EventData]
         public let identifier: StreamIdentifier
         public private(set) var options: Options
@@ -50,8 +50,9 @@ extension Streams {
             return messages
         }
 
-        package func send(client: ServiceClient, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            try await client.append(request: request, options: callOptions) {
+        package func send(connection: GRPCClient<Transport>, request: StreamingClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            let client = ServiceClient(wrapping: connection)
+            return try await client.append(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }

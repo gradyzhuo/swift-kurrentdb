@@ -14,9 +14,10 @@ import NIOPosix
 import NIOSSL
 import RegexBuilder
 import GRPCEncapsulates
+import NIOTransportServices
 
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
-public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
+public let DEFAULT_GOSSIP_TIMEOUT: TimeAmount = .seconds(3)
 
 /// `ClientSettings` encapsulates various configuration settings for a client.
 ///
@@ -72,36 +73,33 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeInterval = 3.0
 ///   ```
 
 public struct ClientSettings: Sendable {
-    public var configuration: TLSConfiguration
     public private(set) var clusterMode: TopologyClusterMode
 
     public var trustRoots: TLSConfig.TrustRootsSource?
 
     public private(set) var tls: Bool = false
     public private(set) var tlsVerifyCert: Bool = false
-
+    
     public private(set) var defaultDeadline: Int = .max
     public private(set) var connectionName: String?
 
     public var keepAlive: KeepAlive = .default
     public var authentication: Authentication?
-
-    public init(clusterMode: TopologyClusterMode, configuration: TLSConfiguration) {
+    public var discoveryInterval: TimeAmount = .microseconds(100)
+    public var maxDiscoveryAttempts: UInt16 = 10
+    
+    
+    public init(clusterMode: TopologyClusterMode) {
         self.clusterMode = clusterMode
-        self.configuration = configuration
-    }
-
-    public init(clusterMode: TopologyClusterMode, configure: () -> TLSConfiguration = { .clientDefault }) {
-        self.init(clusterMode: clusterMode, configuration: configure())
     }
 }
 
 extension ClientSettings {
-    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, authentication: Authentication? = nil, trustRoots: NIOSSLTrustRoots? = nil) -> Self {
-        var settings: Self = .init(clusterMode: .singleNode(at: .init(host: "localhost", port: port)))
+    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, authentication: Authentication? = nil, trustRoots: TLSConfig.TrustRootsSource? = nil) -> Self {
+        var settings: Self = .init(clusterMode: .standalone(at: .init(host: "localhost", port: port)))
 
         if let trustRoots {
-            settings.configuration.trustRoots = trustRoots
+            settings.trustRoots = trustRoots
             settings.tls = true
         } else {
             settings.tls = false
@@ -134,31 +132,40 @@ extension ClientSettings {
         })
         
         let clusterMode: TopologyClusterMode
-        if endpoints.count > 1 {
-            // gossip mode
+        guard endpoints.count > 0 else {
+            throw .internalParsingError(reason: "empty endpoint.")
+        }
+        
+        switch scheme {
+        case .esdb:
+            clusterMode = .standalone(at: endpoints[0])
+        case .dnsDiscover:
             let nodePreference = queryItems["nodepreference"]?.value.flatMap {
                 TopologyClusterMode.NodePreference(rawValue: $0)
             } ?? .leader
-            let gossipTimeout: TimeInterval = queryItems["gossiptimeout"].flatMap { $0.value.flatMap { TimeInterval($0) } } ?? DEFAULT_GOSSIP_TIMEOUT
-            clusterMode = .gossipCluster(endpoints: endpoints, nodePreference: nodePreference, timeout: gossipTimeout)
-        } else {
-            let endpoint = endpoints.first!
-            if scheme == .dnsDiscover {
-                // dns discovery mode
-                let maxDiscoverAttempts = queryItems["maxdiscoverattempts"].flatMap { $0.value.flatMap { Int($0) } } ?? 3
-                let discoverInterval = queryItems["discoveryinterval"].flatMap { $0.value.flatMap { TimeInterval($0) } } ?? 0.5
-                clusterMode = .dnsDiscovery(from: endpoint, interval: discoverInterval, maxAttempts: maxDiscoverAttempts)
-            } else {
-                // singleMode
-                clusterMode = .singleNode(at: endpoint)
+            let gossipTimeout: TimeAmount = if let timeout = queryItems["gossiptimeout"].flatMap({ $0.value.flatMap { Int64($0) } }) {
+                .microseconds(timeout)
+            }else{
+                DEFAULT_GOSSIP_TIMEOUT
             }
+            
+            clusterMode = .gossipCluster(seeds: endpoints, nodePreference: nodePreference, timeout: gossipTimeout)
         }
 
         var settings = Self(clusterMode: clusterMode)
+        
+        if let maxDiscoverAttempts = queryItems["maxdiscoverattempts"].flatMap({ $0.value.flatMap { UInt16($0) } }) {
+            settings.maxDiscoveryAttempts = maxDiscoverAttempts
+        }
+        
+        if let discoverInterval = queryItems["discoveryinterval"].flatMap({ $0.value.flatMap { Int64($0) } }){
+            settings.discoveryInterval = .microseconds(discoverInterval)
+        }
+        
         if let authentication = userCredentialParser.parse(connectionString) {
             settings.authentication = authentication
         }
-    
+
         if let keepAliveInterval: TimeInterval = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
            let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
         {
@@ -209,15 +216,6 @@ extension ClientSettings: ExpressibleByStringLiteral {
 
 
 extension ClientSettings: Buildable{
-    
-    
-    @discardableResult
-    public func configuration(_ configuration: TLSConfiguration)->Self{
-        return withCopy {
-            $0.configuration = configuration
-        }
-    }
-    
     
     @discardableResult
     public func clusterMode(_ clusterMode: TopologyClusterMode)->Self{
@@ -275,4 +273,33 @@ extension ClientSettings: Buildable{
         }
     }
     
+    @discardableResult
+    public func discoveryInterval(_ discoveryInterval: TimeAmount)->Self{
+        return withCopy {
+            $0.discoveryInterval = discoveryInterval
+        }
+    }
+
+    @discardableResult
+    public func maxDiscoveryAttempts(_ maxDiscoveryAttempts: UInt16)->Self{
+        return withCopy {
+            $0.maxDiscoveryAttempts = maxDiscoveryAttempts
+        }
+    }
+}
+
+extension ClientSettings {
+    internal var transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity {
+        get {
+            return if tls {
+                .tls { config in
+                    if let trustRoots = trustRoots {
+                        config.trustRoots = trustRoots
+                    }
+                }
+            } else {
+                .plaintext
+            }
+        }
+    }
 }

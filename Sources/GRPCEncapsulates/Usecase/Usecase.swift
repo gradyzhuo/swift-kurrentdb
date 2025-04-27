@@ -7,6 +7,7 @@
 
 import Foundation
 import GRPCCore
+import GRPCNIOTransportHTTP2
 import SwiftProtobuf
 
 package protocol Usecase {

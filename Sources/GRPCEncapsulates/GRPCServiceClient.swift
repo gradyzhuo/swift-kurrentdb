@@ -42,3 +42,7 @@ extension EventStore_Client_Monitoring_Monitoring.Client: GRPCServiceClient {
 extension EventStore_Client_Gossip_Gossip.Client: GRPCServiceClient {
     package typealias UnderlyingService = EventStore_Client_Gossip_Gossip
 }
+
+extension EventStore_Client_ServerFeatures_ServerFeatures.Client: GRPCServiceClient {
+    package typealias UnderlyingService = EventStore_Client_ServerFeatures_ServerFeatures
+}

@@ -12,8 +12,8 @@ import GRPCEncapsulates
 import GRPCProtobuf
 
 public enum KurrentError: Error, Sendable {
-    case serverError(String, cause: any Error)
-    case notLeaderException(endpoint: Endpoint)
+    case serverError(String)
+    case notLeaderException
     case connectionClosed
     case grpc(code: GoogleRPCStatus?, reason: String)
     case grpcError(cause: RPCError)
@@ -26,12 +26,12 @@ public enum KurrentError: Error, Sendable {
     case resourceDeleted
     case unservicableEventLink(link: RecordedEvent)
     case unsupportedFeature
-    case internalClientError(reason: String, cause: (any Error)?)
+    case internalClientError(reason: String)
     case deadlineExceeded
     case initializationError(reason: String)
     case illegalStateError(reason: String)
     case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionOption)
-    case subscriptionTerminated(subscriptionId: String?, origin: (any Error)?)
+    case subscriptionTerminated(subscriptionId: String?)
     case encodingError(message: String, encoding: String.Encoding)
     case decodingError(cause: DecodingError)
 }
@@ -43,10 +43,10 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
 
     public var description: String {
         switch self {
-        case let .serverError(reason, cause):
-            "Server-side \(reason) error: \(cause)"
-        case let .notLeaderException(endpoint):
-            "You tried to execute a command that requires a leader node on a follower node. New leader: \(endpoint.host):\(endpoint.port)"
+        case let .serverError(reason):
+            "Server-side \(reason)"
+        case .notLeaderException:
+            "You tried to execute a command that requires a leader node on a follower node."
         case .connectionClosed:
             "Connection is closed."
         case let .grpc(code, reason):
@@ -71,8 +71,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "The linked event \(link.id) you asked is unservicable, may be because it was deleted."
         case .unsupportedFeature:
             "The operation is unsupported by the server"
-        case .internalClientError(let reason, let cause):
-            "Unexpected internal client error. Please fill an issue on GitHub. reason: \(reason), error: \(String(describing: cause))"
+        case .internalClientError(let reason):
+            "Unexpected internal client error. Please fill an issue on GitHub. reason: \(reason)"
         case .deadlineExceeded:
             "Deadline exceeded"
         case let .initializationError(reason):
@@ -81,12 +81,67 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "Illegal state error: \(reason)"
         case let .wrongExpectedVersion(expected, current):
             "Wrong expected version '\(expected)' but got '\(current)'."
-        case .subscriptionTerminated(let subscriptionId, let originError):
-            "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId)), originError: \(String(describing: originError))"
+        case .subscriptionTerminated(let subscriptionId):
+            "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId))"
         case .encodingError(message: let message, encoding: let encoding):
             "Encoding error \(message) by encoding: \(encoding)"
         case .decodingError(let cause):
             "Decoding error: \(cause)"
+        }
+    }
+}
+
+extension KurrentError: Equatable {
+    public static func == (lhs: KurrentError, rhs: KurrentError) -> Bool {
+        lhs.description == rhs.description
+    }
+    
+    var name: String {
+        return switch self {
+        case .accessDenied:
+            "AccessDenied"
+        case .internalClientError:
+            "InternalClientError"
+        case .connectionClosed:
+            "ConnectionClosed"
+        case .unsupportedFeature:
+            "UnsupportedFeature"
+        case .deadlineExceeded:
+            "DeadlineExceeded"
+        case .decodingError:
+            "DecodingError"
+        case .encodingError:
+            "EncodingError"
+        case .grpc:
+            "GRPC"
+        case .grpcConnectionError:
+            "GRPCConnectionError"
+        case .grpcError:
+            "GRPCError"
+        case .grpcRuntimeError:
+            "GRPCRuntimeError"
+        case .illegalStateError:
+            "IllegalStateError"
+        case .notLeaderException:
+            "NotLeaderException"
+        case .initializationError:
+            "InitializationError"
+        case .internalParsingError:
+            "InternalParsingError"
+        case .resourceAlreadyExists:
+            "ResourceAlreadyExists"
+        case .resourceNotFound:
+            "ResourceNotFound"
+        case .serverError:
+            "ServerError"
+        case .subscriptionTerminated:
+            "SubscriptionTerminated"
+        case .wrongExpectedVersion:
+            "WrongExpectedVersion"
+        case .resourceDeleted:
+            "ResourceDeleted"
+        case .unservicableEventLink:
+            "UnservicableEventLink"
         }
     }
 }
@@ -99,15 +154,15 @@ func withRethrowingError<T>(usage: String, action: () async throws -> T) async t
     } catch let error as RPCError {
         try error.rethrow(usage: usage, origin: error)
     } catch {
-        try error.rethrow(usage: usage)
+        throw .internalClientError(reason: "\(usage) failed.")
     }
-    throw .internalClientError(reason: "\(usage) failed.", cause: nil)
+    throw .internalClientError(reason: "\(usage) failed.")
 }
 
 
-extension Error {
+extension Error where Self: Equatable {
     public func rethrow(usage: String) throws(KurrentError){
-        throw .internalClientError(reason: "\(usage) failed.", cause: self)
+        throw .internalClientError(reason: "\(usage) failed.")
     }
 }
 
@@ -129,7 +184,7 @@ extension IOError {
         case 61:
             throw .grpcConnectionError(cause: origin)
         default:
-            throw .internalClientError(reason: "Unknown \(usage) error", cause: origin)
+            throw .internalClientError(reason: "Unknown \(usage) error")
         }
     }
 }

@@ -11,15 +11,15 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct Gossip: GRPCConcreteService {
+public struct Gossip {
     package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
 
-    public private(set) var settings: ClientSettings
-    public var callOptions: CallOptions
+    internal let node: Node
+    public let callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
-    internal init(settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
-        self.settings = settings
+    internal init(node: Node, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+        self.node = node
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
     }
@@ -28,8 +28,21 @@ public struct Gossip: GRPCConcreteService {
 extension Gossip {
     public func read() async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
-        return try await usecase.perform(settings: settings, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
+        return try await usecase.perform(node: node, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
             partialResult.append(memberInfo)
         }
     }
+    
+//    public func findAll()async throws(KurrentError) -> [MemberInfo]{
+//        if case let .gossipCluster(seeds, nodePreference, timeout, discoveryInterval, maxDiscoveryAttempts) = settings.clusterMode{
+//            
+//        }
+//        try await withThrowingTaskGroup { group in
+//            group.addTask {
+//                return ""
+//            }
+//            
+//            try await group.waitForAll()
+//        }
+//    }
 }

@@ -39,8 +39,9 @@ extension PersistentSubscriptions{
             }
         }
 
-        package func send(client: UnderlyingClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            try await client.delete(request: request, options: callOptions) {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            let client = ServiceClient(wrapping: connection)
+            return try await client.delete(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }

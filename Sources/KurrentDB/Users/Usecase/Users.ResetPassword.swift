@@ -31,8 +31,9 @@ extension Users {
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            try await client.resetPassword(request: request, options: callOptions) {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
+            let client = ServiceClient(wrapping: connection)
+            return try await client.resetPassword(request: request, options: callOptions) {
                 try handle(response: $0)
             }
         }

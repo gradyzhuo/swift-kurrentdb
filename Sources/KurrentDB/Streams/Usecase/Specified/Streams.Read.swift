@@ -31,8 +31,10 @@ extension Streams{
             }
         }
 
-        package func send(client: ServiceClient, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            try await withThrowingTaskGroup(of: Void.self) { _ in
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+            
+            return try await withThrowingTaskGroup(of: Void.self) { _ in
+                let client = ServiceClient(wrapping: connection)
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.read(request: request, options: callOptions) {
                     for try await message in $0.messages {
@@ -52,14 +54,14 @@ extension Streams.Read {
 
         private var cursor: RevisionCursor
         public package(set) var direction: Direction
-        public package(set) var resolveLinksEnabled: Bool
+        public package(set) var resolveLinks: Bool
         public package(set) var limit: UInt64
         public package(set) var uuidOption: UUIDOption
         public package(set) var compatibility: UInt32
         
 
         public init() {
-            self.resolveLinksEnabled = false
+            self.resolveLinks = false
             self.limit = .max
             self.uuidOption = .string
             self.compatibility = 0
@@ -82,7 +84,7 @@ extension Streams.Read {
                 $0.controlOption = .with {
                     $0.compatibility = compatibility
                 }
-                $0.resolveLinks = resolveLinksEnabled
+                $0.resolveLinks = resolveLinks
                 $0.count = limit
                 
                 switch cursor {
@@ -105,9 +107,9 @@ extension Streams.Read {
         }
 
         @discardableResult
-        public func resolveLinks() -> Self {
+        public func resolveLinks(_ value: Bool = true) -> Self {
             withCopy { options in
-                options.resolveLinksEnabled = true
+                options.resolveLinks = value
             }
         }
 
@@ -179,7 +181,7 @@ extension Streams.Read.Options {
     @discardableResult
     public func set(resolveLinks: Bool) -> Self {
         withCopy { options in
-            options.resolveLinksEnabled = resolveLinks
+            options.resolveLinks = resolveLinks
         }
     }
     

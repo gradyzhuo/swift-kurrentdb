@@ -72,7 +72,7 @@ extension PersistentSubscriptions {
                 let messages = try usecase.requestMessages()
                 writer.write(messages: messages)
             } catch {
-                throw .internalClientError(reason: "Ack eventIds:\(eventIds) failed", cause: error)
+                throw .internalClientError(reason: "Ack eventIds:\(eventIds) failed, cause: \(error)")
             }
         }
 
@@ -114,7 +114,7 @@ extension PersistentSubscriptions {
                 let messages = try usecase.requestMessages()
                 writer.write(messages: messages)
             } catch {
-                throw .internalClientError(reason: "Nack eventIds:\(eventIds) failed", cause: error)
+                throw .internalClientError(reason: "Nack eventIds:\(eventIds) failed, cause: \(error)")
             }
             
         }

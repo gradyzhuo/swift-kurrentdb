@@ -18,18 +18,22 @@ struct StreamTests: Sendable {
     let settings: ClientSettings
 
     init() {
-        settings = .localhost()
+        let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
+        settings = .localhost().trustRoots(.certificates([
+            .file(path: caPath!, format: .pem)
+        ])).tls(true).authenticated(.credentials(username: "admin", password: "changeit"))
     }
 
     @Test("Stream should be not found and throw an error.")
     func testStreamNotFound() async throws {
-        let client = KurrentDBClient(settings: .localhost())
-        
-        await #expect(throws: KurrentError.self) {
-            let responses = try await client.readStream(on: StreamIdentifier(name: UUID().uuidString))
+        let client = KurrentDBClient(settings: settings)
+        let streamIdentifier = UUID().uuidString
+        await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamIdentifier)' of streams not found.")) {
+            let responses = try await client.readStream(on: StreamIdentifier(name: streamIdentifier))
             var responsesIterator = responses.makeAsyncIterator()
             _ = try await responsesIterator.next()
         }
+        
     }
 
     @Test("It should succeed when appending events to a stream.", arguments: [
@@ -40,7 +44,7 @@ struct StreamTests: Sendable {
     ])
     func testAppendEvent(events: [EventData]) async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let appendResponse = try await client.appendStream(on: streamIdentifier, events: events) {
             $0.revision(expected: .any)
@@ -72,7 +76,7 @@ struct StreamTests: Sendable {
             .maxAge(.seconds(30))
             .acl(.userStream)
 
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         try await client.setStreamMetadata(on: streamIdentifier, metadata: metadata)
 
@@ -84,7 +88,7 @@ struct StreamTests: Sendable {
     @Test("It should succeed when subscribing to a stream.")
     func testSubscribe() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let subscription = try await client.subscribeStream(on: streamIdentifier)
         let response = try await client.appendStream(on: streamIdentifier, events: [
@@ -110,7 +114,7 @@ struct StreamTests: Sendable {
         let eventForTesting = EventData(
             eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let subscription = try await client.subscribeAllStreams(startFrom: .end){
             $0.filter(.onEventType(regex: "SubscribeAll-AccountCreated"))
@@ -138,7 +142,7 @@ struct StreamTests: Sendable {
         let eventForTesting = EventData(
             eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .onEventType(prefixes: "SubscribeAll-AccountCreated")
         let subscription = try await client.subscribeAllStreams(startFrom: .end) {
@@ -166,7 +170,7 @@ struct StreamTests: Sendable {
         let eventForTesting = EventData(
             eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .excludeSystemEvents()
         let subscription = try await client.subscribeAllStreams(startFrom: .end) {
@@ -194,7 +198,7 @@ struct StreamTests: Sendable {
         let eventForTesting = EventData(
             eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .onStreamName(prefix: streamIdentifier.name)
         let subscription = try await client.subscribeAllStreams(startFrom: .end) {
@@ -222,7 +226,7 @@ struct StreamTests: Sendable {
         let eventForTesting = EventData(
             eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .onStreamName(prefix: "wrong")
         let subscription = try await client.subscribeAllStreams(startFrom: .end) {

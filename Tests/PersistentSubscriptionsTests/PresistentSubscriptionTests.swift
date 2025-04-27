@@ -15,7 +15,11 @@ struct PersistentSubscriptionsTests {
     let settings: ClientSettings
 
     init() {
-        settings = .localhost()
+        let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
+        settings = .localhost(authentication: .credentials(username: "admin", password: "changeit"), trustRoots: .certificates([
+            .file(path: caPath!, format: .pem)
+        ]))
+//        settings = .localhost()
         groupName = "test-for-persistent-subscriptions"
     }
 
@@ -23,7 +27,7 @@ struct PersistentSubscriptionsTests {
     func testCreateToStream() async throws {
         let streamName = "test-persistent-subscription:\(UUID().uuidString)"
         let streamIdentifier = StreamIdentifier(name: streamName)
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 
@@ -36,7 +40,7 @@ struct PersistentSubscriptionsTests {
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToStream() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         
         try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 
@@ -63,7 +67,7 @@ struct PersistentSubscriptionsTests {
 
     @Test("Subscribe PersistentSubscription for All Streams")
     func testSubscribeToAll() async throws {
-        let client = KurrentDBClient(settings: .localhost())
+        let client = KurrentDBClient(settings: settings)
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         
         try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)

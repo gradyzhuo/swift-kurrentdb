@@ -46,13 +46,14 @@ extension PersistentSubscriptions {
             ]
         }
 
-        package func send(client: UnderlyingClient, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
             let responses = AsyncThrowingStream.makeStream(of: Response.self)
 
             let writer = Subscription.Writer()
             let requestMessages = try requestMessages()
             writer.write(messages: requestMessages)
             Task {
+                let client = ServiceClient(wrapping: connection)
                 try await client.read(metadata: metadata, options: callOptions) {
                     try await $0.write(contentsOf: writer.sender)
                 } onResponse: {

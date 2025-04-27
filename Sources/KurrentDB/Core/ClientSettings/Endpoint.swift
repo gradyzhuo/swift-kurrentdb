@@ -5,6 +5,9 @@
 //  Created by Grady Zhuo on 2025/2/7.
 //
 
+import GRPCNIOTransportCore
+import Network
+
 public struct Endpoint: Sendable {
     let host: String
     let port: UInt32
@@ -25,5 +28,19 @@ extension Endpoint: Equatable {
 extension Endpoint: CustomStringConvertible {
     public var description: String {
         "\(Self.self)(\(host):\(port))"
+    }
+}
+
+extension Endpoint {
+    public var target: ResolvableTarget {
+        get throws {
+            return if let _ = IPv4Address(host) {
+                .ipv4(host: host, port: Int(port))
+            } else if let _ = IPv6Address(host) {
+                .ipv6(host: host, port: Int(port))
+            } else {
+                .dns(host: host, port: Int(port))
+            }
+        }
     }
 }

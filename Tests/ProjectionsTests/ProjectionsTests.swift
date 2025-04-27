@@ -19,7 +19,11 @@ struct ProjectionsTests: Sendable {
     let client: KurrentDBClient
 
     init() {
-        client = .init(settings: .localhost())
+        let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
+        let settings = ClientSettings.localhost().trustRoots(.certificates([
+            .file(path: caPath!, format: .pem)
+        ])).tls(true).authenticated(.credentials(username: "admin", password: "changeit"))
+        self.client = .init(settings: settings)
     }
     
     @Test("Testing create a projection")

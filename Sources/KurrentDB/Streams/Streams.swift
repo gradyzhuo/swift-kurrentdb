@@ -55,13 +55,13 @@ import NIO
 /// #### All Streams Operations
 /// - ``read(cursor:options:)-6h8h2``
 /// - ``subscribe(from:options:)-9gq2e``
-public struct Streams<Target: StreamTarget>: GRPCConcreteService {
+public actor Streams<Target: StreamTarget>: GRPCConcreteService {
     
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
 
     /// The client settings required for establishing a gRPC connection.
-    public let settings: ClientSettings
+    public private(set) var selector: NodeSelector
     
     /// The gRPC call options.
     public let callOptions: CallOptions
@@ -79,9 +79,9 @@ public struct Streams<Target: StreamTarget>: GRPCConcreteService {
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
-    internal init(target: Target, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    internal init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.target = target
-        self.settings = settings
+        self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
     }
@@ -111,7 +111,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 model: metadata
             )
         ], options: .init().revision(expected: expectedRevision))
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
     /// Retrieves the metadata associated with the specified stream.
@@ -123,7 +123,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
         let options: Streams.Read.Options = .init().cursor(.end).backward().limit(1)
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
-        let responses = try await usecase.perform(settings: settings, callOptions: callOptions)
+        let responses = try await usecase.perform(selector: selector, callOptions: callOptions)
 
         do{
             return try await responses.first {
@@ -143,7 +143,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 }
             }
         }catch {
-            throw .internalClientError(reason: "\(#function) failed.", cause: error)
+            throw .internalClientError(reason: "\(#function) failed, cause: \(error)")
         }
     }
 
@@ -157,7 +157,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     @discardableResult
     public func append(events: [EventData], options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
         let usecase = Append(to: identifier, events: events, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     /// Appends a variadic list of events to the specified stream.
@@ -181,7 +181,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Throws: An error if the read operation fails.
     public func read(startFrom cursor: RevisionCursor = .start, options: Read.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
         let usecase = Read(from: identifier, options: options.cursor(cursor))
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     /// Subscribes to events from the specified stream.
@@ -193,7 +193,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Throws: An error if the subscription fails.
     public func subscribe(startFrom cursor: RevisionCursor = .end, options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Subscribe(from: identifier, cursor: cursor, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     /// Subscribes to events from the specified stream starting at a given revision.
@@ -215,7 +215,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     @discardableResult
     public func delete(options: Delete.Options = .init()) async throws(KurrentError) -> Delete.Response {
         let usecase = Delete(to: identifier, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
     /// Marks the specified stream as permanently deleted (tombstoned).
@@ -226,7 +226,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     @discardableResult
     public func tombstone(options: Tombstone.Options = .init()) async throws(KurrentError) -> Tombstone.Response {
         let usecase = Tombstone(to: identifier, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
 
@@ -249,7 +249,7 @@ extension Streams where Target == ProjectionStream {
     /// - Throws: An error if the subscription fails.
     public func subscribe(startFrom cursor: RevisionCursor, options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Subscribe(from: identifier, cursor: cursor, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
 }
@@ -267,7 +267,7 @@ extension Streams where Target == AllStreams {
     /// - Throws: An error if the read operation fails.
     public func read(startFrom cursor: PositionCursor = .start, options: ReadAll.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadAll.Response, Error> {
         let usecase = ReadAll(options: options.curosr(cursor))
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
     /// Subscribes to all streams from a specified position.
@@ -279,7 +279,7 @@ extension Streams where Target == AllStreams {
     /// - Throws: An error if the subscription fails.
     public func subscribe(startFrom cursor: PositionCursor = .end, options: SubscribeAll.Options = .init()) async throws(KurrentError) -> Streams.Subscription {
         let usecase = SubscribeAll(cursor: cursor, options: options)
-        return try await usecase.perform(settings: settings, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
 }

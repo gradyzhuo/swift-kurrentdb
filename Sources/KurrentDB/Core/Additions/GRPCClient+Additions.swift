@@ -11,37 +11,22 @@ import GRPCNIOTransportHTTP2
 import NIOCore
 import NIOTransportServices
 
+
+
 extension GRPCClient where Transport == HTTP2ClientTransport.Posix {
     package convenience init(settings: ClientSettings, interceptors: [any ClientInterceptor] = [], eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) throws(KurrentError) {
-        let transportSecurity = if settings.tls {
-            Transport.TransportSecurity.tls { config in
-                if let trustRoots = settings.trustRoots {
-                    config.trustRoots = trustRoots
-                }
-            }
-
-        } else {
-            Transport.TransportSecurity.plaintext
-        }
-
         do{
             let transport: Transport = switch settings.clusterMode {
-            case let .singleNode(endpoint):
+            case let .standalone(endpoint):
                 try .http2NIOPosix(
                     target: .dns(host: endpoint.host, port: Int(endpoint.port)),
-                    transportSecurity: transportSecurity,
-                    eventLoopGroup: eventLoopGroup
-                )
-            case let .dnsDiscovery(endpoint, _, _):
-                try .http2NIOPosix(
-                    target: .dns(host: endpoint.host, port: Int(endpoint.port)),
-                    transportSecurity: transportSecurity,
+                    transportSecurity: settings.transportSecurity,
                     eventLoopGroup: eventLoopGroup
                 )
             case let .gossipCluster(endpoints, _, _):
                 try .http2NIOPosix(
                     target: .dns(host: endpoints.first!.host, port: Int(endpoints.first!.port)),
-                    transportSecurity: transportSecurity,
+                    transportSecurity: settings.transportSecurity,
                     eventLoopGroup: eventLoopGroup
                 )
             }
