@@ -16,10 +16,10 @@ struct PersistentSubscriptionsTests {
 
     init() {
         let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
-        settings = .localhost(authentication: .credentials(username: "admin", password: "changeit"), trustRoots: .certificates([
-            .file(path: caPath!, format: .pem)
-        ]))
-//        settings = .localhost()
+        settings = .localhost()
+                    .tls(true)
+                    .cerificate(path: caPath!)
+                    .authenticated(.credentials(username: "admin", password: "changeit"))
         groupName = "test-for-persistent-subscriptions"
     }
 

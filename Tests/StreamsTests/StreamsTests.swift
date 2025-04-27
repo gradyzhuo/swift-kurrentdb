@@ -19,9 +19,10 @@ struct StreamTests: Sendable {
 
     init() {
         let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
-        settings = .localhost().trustRoots(.certificates([
-            .file(path: caPath!, format: .pem)
-        ])).tls(true).authenticated(.credentials(username: "admin", password: "changeit"))
+        settings = .localhost()
+                    .tls(true)
+                    .cerificate(path: caPath!)
+                    .authenticated(.credentials(username: "admin", password: "changeit"))
     }
 
     @Test("Stream should be not found and throw an error.")

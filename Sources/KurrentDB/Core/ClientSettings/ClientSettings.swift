@@ -75,7 +75,19 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeAmount = .seconds(3)
 public struct ClientSettings: Sendable {
     public private(set) var clusterMode: TopologyClusterMode
 
-    public var trustRoots: TLSConfig.TrustRootsSource?
+    public var cerificates: [TLSConfig.CertificateSource]
+    public var trustRoots: TLSConfig.TrustRootsSource?{
+        get{
+            guard tls else {
+                return nil
+            }
+            return if cerificates.isEmpty {
+                .systemDefault
+            }else{
+                .certificates(cerificates)
+            }
+        }
+    }
 
     public private(set) var tls: Bool = false
     public private(set) var tlsVerifyCert: Bool = false
@@ -91,22 +103,13 @@ public struct ClientSettings: Sendable {
     
     public init(clusterMode: TopologyClusterMode) {
         self.clusterMode = clusterMode
+        self.cerificates = []
     }
 }
 
 extension ClientSettings {
-    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER, authentication: Authentication? = nil, trustRoots: TLSConfig.TrustRootsSource? = nil) -> Self {
-        var settings: Self = .init(clusterMode: .standalone(at: .init(host: "localhost", port: port)))
-
-        if let trustRoots {
-            settings.trustRoots = trustRoots
-            settings.tls = true
-        } else {
-            settings.tls = false
-        }
-
-        settings.authentication = authentication
-        return settings
+    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER) -> Self {
+        return .init(clusterMode: .standalone(at: .init(host: "localhost", port: port)))
     }
 
     public static func parse(connectionString: String) throws(KurrentError) -> Self {
@@ -185,16 +188,12 @@ extension ClientSettings {
         }
         
         if let tlsCaFilePath: String = queryItems["tlsCaFile"].flatMap({ $0.value }) {
-            settings.trustRoots = .certificates([
-                .file(path: tlsCaFilePath, format: .pem)
-            ])
+            settings.cerificate(path: tlsCaFilePath)
         }
 
         if let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) }}) {
             settings.defaultDeadline = defaultDeadline
         }
-        
-        
         
         return settings
     }
@@ -226,11 +225,26 @@ extension ClientSettings: Buildable{
             $0.clusterMode = clusterMode
         }
     }
-
+    
     @discardableResult
-    public func trustRoots(_ trustRoots: TLSConfig.TrustRootsSource)->Self{
+    public func cerificate(source: TLSConfig.CertificateSource)->Self{
         return withCopy {
-            $0.trustRoots = trustRoots
+            $0.cerificates.append(source)
+        }
+    }
+    
+    @discardableResult
+    public func cerificate(path: String)->Self{
+        return withCopy {
+            let tlsCaFileUrl = URL(fileURLWithPath: path)
+            if let tlsCaContent = try? String(contentsOf: tlsCaFileUrl, encoding: .ascii){
+                let format:TLSConfig.SerializationFormat = if tlsCaContent.hasPrefix("-----BEGIN CERTIFICATE-----") {
+                    .pem
+                }else{
+                    .der
+                }
+                $0.cerificates.append(.file(path: path, format: format))
+            }
         }
     }
     
