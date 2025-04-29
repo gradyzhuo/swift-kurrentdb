@@ -187,8 +187,10 @@ extension ClientSettings {
             settings.tlsVerifyCert = tlsVerifyCert
         }
         
-        if let tlsCaFilePath: String = queryItems["tlsCaFile"].flatMap({ $0.value }) {
-            settings.cerificate(path: tlsCaFilePath)
+        if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap({ $0.value }) {
+            if let cerificate = parseCertificate(path: tlsCaFilePath) {
+                settings.cerificates.append(cerificate)
+            }
         }
 
         if let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) }}) {
@@ -196,6 +198,33 @@ extension ClientSettings {
         }
         
         return settings
+    }
+}
+
+extension ClientSettings {
+    public static func parseCertificate(path: String) ->TLSConfig.CertificateSource?{
+        
+        do{
+            let tlsCaFileUrl = URL(fileURLWithPath: path)
+            let tlsCaFileData = try Data(contentsOf: tlsCaFileUrl)
+            guard !tlsCaFileData.isEmpty else {
+                logger.warning("tls ca file is empty.")
+                return nil
+            }
+            
+            let format:TLSConfig.SerializationFormat = if let tlsCaContent = String(data: tlsCaFileData, encoding: .ascii),
+               tlsCaContent.hasPrefix("-----BEGIN CERTIFICATE-----") {
+                .pem
+            }else{
+                .der
+            }
+            
+            return .file(path: path, format: format)
+            
+        } catch {
+            logger.warning("tls ca file is not exist. error: \(error)")
+            return nil
+        }
     }
 }
 
@@ -236,14 +265,8 @@ extension ClientSettings: Buildable{
     @discardableResult
     public func cerificate(path: String)->Self{
         return withCopy {
-            let tlsCaFileUrl = URL(fileURLWithPath: path)
-            if let tlsCaContent = try? String(contentsOf: tlsCaFileUrl, encoding: .ascii){
-                let format:TLSConfig.SerializationFormat = if tlsCaContent.hasPrefix("-----BEGIN CERTIFICATE-----") {
-                    .pem
-                }else{
-                    .der
-                }
-                $0.cerificates.append(.file(path: path, format: format))
+            if let cerificate = Self.parseCertificate(path: path) {
+                $0.cerificates.append(cerificate)
             }
         }
     }
