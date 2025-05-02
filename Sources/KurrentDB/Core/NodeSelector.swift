@@ -54,29 +54,46 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
     }
     
     public func next() async throws(KurrentError) -> Gossip.MemberInfo? {
-        switch settings.clusterMode {
-        case let .standalone(endpoint):
-            return try await discover(seed: endpoint, nodePreference: .leader)
-        case let .gossipCluster(seeds, nodePreference, timeout):
-            for seed in seeds {
-                return try await discover(seed: seed, nodePreference: nodePreference)
+        guard let selectedMember else {
+            switch settings.clusterMode {
+            case let .standalone(endpoint):
+                return try await discover(candidate: endpoint)
+            case let .dns(endpoint):
+                return try await discover(candidate: endpoint)
+            case let .seeds(candidates):
+                for candidate in candidates {
+                    return try await discover(candidate: candidate)
+                }
+                return nil
             }
-            return nil
         }
+        return selectedMember
     }
     
-    func discover(seed: Endpoint, nodePreference: TopologyClusterMode.NodePreference) async throws(KurrentError) ->Gossip.MemberInfo?{
-        let readGossip = Gossip.Read()
-        let memberInfos = try await readGossip.perform(endpoint: seed, settings: settings, callOptions: .defaults)
+    func discover(candidate: Endpoint) async throws(KurrentError) ->Gossip.MemberInfo?{
+    
+        logger.debug("Calling gossip endpoint on: \(candidate)");
+        var callOptions = CallOptions.defaults
+        callOptions.timeout = settings.gossipTimeout
+        
+        let gossipClient = Gossip(endpoint: candidate, settings: settings, callOptions: callOptions)
+        let memberInfos = try await gossipClient.read()
+        
+        logger.debug("Candidate \(candidate) gossip info: \(memberInfos)")
         
         let sortedMembers = memberInfos.sorted { lhs, rhs in
-            nodePreference.priority(state: lhs.state) < nodePreference.priority(state: rhs.state)
+            settings.nodePreference.priority(state: lhs.state) < settings.nodePreference.priority(state: rhs.state)
         }
-        //還要檢查不在previousCandidates裡
-        if let memberInfo = sortedMembers.first(where: { $0.isAlive }) {
-            return memberInfo
+        
+        let notAllowedState: [Gossip.VNodeState] = [.manager, .shuttingDown, .shutdown]
+        let member = sortedMembers.first(where: { member in  member.isAlive && !notAllowedState.contains(member.state) })
+        
+        if let member = member{
+            logger.info( "Discovering: found best choice \(member.httpEndPoint.host):\(member.httpEndPoint.port) (\(member.state)"
+                    )
         }
-        return nil
+        
+        return member
     }
 }
 

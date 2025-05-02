@@ -17,14 +17,13 @@ import GRPCEncapsulates
 import NIOTransportServices
 
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
-public let DEFAULT_GOSSIP_TIMEOUT: TimeAmount = .seconds(3)
 
 /// `ClientSettings` encapsulates various configuration settings for a client.
 ///
 /// - Properties:
 ///   - `configuration`: TLS configuration.
 ///   - `clusterMode`: The cluster topology mode.
-///   - `tls`: Indicates if TLS is enabled (default is false).
+///   - `secure`: Indicates if TLS is enabled (default is false).
 ///   - `tlsVerifyCert`: Indicates if TLS certificate verification is enabled (default is false).
 ///   - `defaultDeadline`: Default deadline for operations (default is `.max`).
 ///   - `connectionName`: Optional connection name.
@@ -73,12 +72,55 @@ public let DEFAULT_GOSSIP_TIMEOUT: TimeAmount = .seconds(3)
 ///   ```
 
 public struct ClientSettings: Sendable {
-    public private(set) var clusterMode: TopologyClusterMode
-
+    public private(set) var endpoints: [Endpoint]
     public var cerificates: [TLSConfig.CertificateSource]
+
+    public private(set) var dnsDiscover: Bool
+    public private(set) var nodePreference: NodePreference
+    public private(set) var gossipTimeout: Duration
+    
+    public private(set) var secure: Bool
+    public private(set) var tlsVerifyCert: Bool
+    
+    
+    public private(set) var defaultDeadline: Int
+    public private(set) var connectionName: String?
+
+    public var keepAlive: KeepAlive
+    public var authentication: Authentication?
+    public var discoveryInterval: TimeAmount
+    public var maxDiscoveryAttempts: UInt16
+    
+    private init(){
+        self.endpoints = []
+        self.cerificates = []
+        self.dnsDiscover = false
+        self.nodePreference = .leader
+        self.gossipTimeout = .seconds(3)
+        self.secure = false
+        self.tlsVerifyCert = false
+        self.defaultDeadline = .max
+        self.keepAlive = .default
+        self.discoveryInterval = .microseconds(100)
+        self.maxDiscoveryAttempts = 10
+    }
+
+}
+
+extension ClientSettings {
+    public var clusterMode: TopologyClusterMode{
+        return if dnsDiscover {
+            .dns(domain: endpoints[0])
+        }else if endpoints.count > 1 {
+            .seeds(endpoints)
+        }else{
+            .standalone(endpoint: endpoints[0])
+        }
+    }
+    
     public var trustRoots: TLSConfig.TrustRootsSource?{
         get{
-            guard tls else {
+            guard secure else {
                 return nil
             }
             return if cerificates.isEmpty {
@@ -88,28 +130,23 @@ public struct ClientSettings: Sendable {
             }
         }
     }
-
-    public private(set) var tls: Bool = false
-    public private(set) var tlsVerifyCert: Bool = false
     
-    public private(set) var defaultDeadline: Int = .max
-    public private(set) var connectionName: String?
-
-    public var keepAlive: KeepAlive = .default
-    public var authentication: Authentication?
-    public var discoveryInterval: TimeAmount = .microseconds(100)
-    public var maxDiscoveryAttempts: UInt16 = 10
-    
-    
-    public init(clusterMode: TopologyClusterMode) {
-        self.clusterMode = clusterMode
-        self.cerificates = []
+    public func httpUri(endpoint: Endpoint) -> URL? {
+        var components = URLComponents()
+        components.scheme = self.secure ? "https" : "http"
+        components.host = endpoint.host
+        components.port = Int(endpoint.port)
+        return components.url
     }
 }
 
 extension ClientSettings {
     public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER) -> Self {
-        return .init(clusterMode: .standalone(at: .init(host: "localhost", port: port)))
+        var settings = Self.init()
+        settings.endpoints = [
+            .init(host: "localhost", port: port)
+        ]
+        return settings
     }
 
     public static func parse(connectionString: String) throws(KurrentError) -> Self {
@@ -122,11 +159,19 @@ extension ClientSettings {
             throw KurrentError.internalParsingError(reason: "Unknown URL scheme: \(connectionString)")
         }
 
+        var settings = Self.init()
+        
         guard let endpoints = endpointParser.parse(connectionString),
               endpoints.count > 0
         else {
             throw KurrentError.internalParsingError(reason: "Connection string doesn't have an host")
         }
+        
+        guard endpoints.count > 0 else {
+            throw .internalParsingError(reason: "empty endpoint.")
+        }
+        
+        settings.endpoints = endpoints
 
         let parsedResult = queryItemParser.parse(connectionString) ?? []
 
@@ -134,28 +179,18 @@ extension ClientSettings {
             ($0.name.lowercased(), $0)
         })
         
-        let clusterMode: TopologyClusterMode
-        guard endpoints.count > 0 else {
-            throw .internalParsingError(reason: "empty endpoint.")
+        settings.dnsDiscover = scheme == .dnsDiscover
+        
+        if let nodePreference = queryItems["nodepreference"]?.value.flatMap({
+            NodePreference(rawValue: $0)
+        }){
+            settings.nodePreference = nodePreference
         }
         
-        switch scheme {
-        case .esdb:
-            clusterMode = .standalone(at: endpoints[0])
-        case .dnsDiscover:
-            let nodePreference = queryItems["nodepreference"]?.value.flatMap {
-                TopologyClusterMode.NodePreference(rawValue: $0)
-            } ?? .leader
-            let gossipTimeout: TimeAmount = if let timeout = queryItems["gossiptimeout"].flatMap({ $0.value.flatMap { Int64($0) } }) {
-                .microseconds(timeout)
-            }else{
-                DEFAULT_GOSSIP_TIMEOUT
-            }
-            
-            clusterMode = .gossipCluster(seeds: endpoints, nodePreference: nodePreference, timeout: gossipTimeout)
+        if let gossipTimeout: Int64 = queryItems["gossiptimeout"].flatMap({ $0.value.flatMap { Int64($0) } }){
+            settings.gossipTimeout = .microseconds(gossipTimeout)
         }
-
-        var settings = Self(clusterMode: clusterMode)
+        
         
         if let maxDiscoverAttempts = queryItems["maxdiscoverattempts"].flatMap({ $0.value.flatMap { UInt16($0) } }) {
             settings.maxDiscoveryAttempts = maxDiscoverAttempts
@@ -169,18 +204,18 @@ extension ClientSettings {
             settings.authentication = authentication
         }
 
-        if let keepAliveInterval: TimeInterval = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
-           let keepAliveTimeout: TimeInterval = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
+        if let keepAliveInterval: UInt64 = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
+           let keepAliveTimeout: UInt64 = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
         {
-            settings.keepAlive = .init(interval: keepAliveInterval, timeout: keepAliveTimeout)
+            settings.keepAlive = .init(intervalMs: keepAliveInterval, timeoutMs: keepAliveTimeout)
         }
 
         if let connectionName = queryItems["connectionanme"]?.value {
             settings.connectionName = connectionName
         }
         
-        if let tls: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) {
-            settings.tls = tls
+        if let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) {
+            settings.secure = secure
         }
 
         if let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) {
@@ -249,13 +284,6 @@ extension ClientSettings: ExpressibleByStringLiteral {
 extension ClientSettings: Buildable{
     
     @discardableResult
-    public func clusterMode(_ clusterMode: TopologyClusterMode)->Self{
-        return withCopy {
-            $0.clusterMode = clusterMode
-        }
-    }
-    
-    @discardableResult
     public func cerificate(source: TLSConfig.CertificateSource)->Self{
         return withCopy {
             $0.cerificates.append(source)
@@ -272,9 +300,9 @@ extension ClientSettings: Buildable{
     }
     
     @discardableResult
-    public func tls(_ tls: Bool)->Self{
+    public func secure(_ secure: Bool)->Self{
         return withCopy {
-            $0.tls = tls
+            $0.secure = secure
         }
     }
     
@@ -328,10 +356,20 @@ extension ClientSettings: Buildable{
     }
 }
 
+
 extension ClientSettings {
+    internal func makeClient(endpoint: Endpoint) throws(KurrentError) ->GRPCClient<HTTP2ClientTransport.Posix>{
+        try withRethrowingError(usage: #function) {
+            let transport: HTTP2ClientTransport.Posix = try .http2NIOPosix(
+                                                            target: endpoint.target,
+                                                            transportSecurity: transportSecurity)
+            return GRPCClient<HTTP2ClientTransport.Posix>(transport: transport)
+        }
+    }
+    
     internal var transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity {
         get {
-            return if tls {
+            return if secure {
                 .tls { config in
                     if let trustRoots = trustRoots {
                         config.trustRoots = trustRoots
