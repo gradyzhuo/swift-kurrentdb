@@ -11,22 +11,17 @@ import GRPCNIOTransportHTTP2
 public actor Node: Sendable{
     package let endpoint: Endpoint
     package let settings: ClientSettings
-    package let nodePreference: TopologyClusterMode.NodePreference?
-    package let timeout: TimeAmount
+    package let serverInfo: ServerFeatures.ServiceInfo
     
-    init (endpoint: Endpoint, settings: ClientSettings, nodePreference: TopologyClusterMode.NodePreference = .leader, timeout: TimeAmount = DEFAULT_GOSSIP_TIMEOUT) throws(KurrentError){
+    init (endpoint: Endpoint, settings: ClientSettings, serverInfo: ServerFeatures.ServiceInfo){
         self.endpoint = endpoint
         self.settings = settings
-        self.nodePreference = nodePreference
-        self.timeout = timeout
+        self.serverInfo = serverInfo
     }
     
     internal func makeClient() throws(KurrentError) -> GRPCClient<HTTP2ClientTransport.Posix> {
         do{
-            let transport: HTTP2ClientTransport.Posix = try .http2NIOPosix(
-                                                            target: endpoint.target,
-                                                            transportSecurity: settings.transportSecurity)
-            return .init(transport: transport)
+            return try settings.makeClient(endpoint: endpoint)
         }catch{
             throw .initializationError(reason: "Failed to initialize GRPCClient in \(Self.self)")
         }

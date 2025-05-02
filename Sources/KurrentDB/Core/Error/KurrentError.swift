@@ -159,6 +159,19 @@ func withRethrowingError<T>(usage: String, action: () async throws -> T) async t
     throw .internalClientError(reason: "\(usage) failed.")
 }
 
+func withRethrowingError<T>(usage: String, action: () throws -> T) throws(KurrentError) -> T{
+    do{
+        return try action()
+    } catch let error as KurrentError{
+        throw error
+    } catch let error as RPCError {
+        try error.rethrow(usage: usage, origin: error)
+    } catch {
+        throw .internalClientError(reason: "\(usage) failed.")
+    }
+    throw .internalClientError(reason: "\(usage) failed.")
+}
+
 
 extension Error where Self: Equatable {
     public func rethrow(usage: String) throws(KurrentError){

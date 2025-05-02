@@ -14,12 +14,14 @@ import NIO
 public struct Gossip {
     package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
 
-    internal let node: Node
+    internal let endpoint: Endpoint
+    internal let settings: ClientSettings
     public let callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
-    internal init(node: Node, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
-        self.node = node
+    internal init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+        self.endpoint = endpoint
+        self.settings = settings
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
     }
@@ -28,7 +30,7 @@ public struct Gossip {
 extension Gossip {
     public func read() async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
-        return try await usecase.perform(node: node, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
+        return try await usecase.perform(endpoint: endpoint, settings: settings, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
             partialResult.append(memberInfo)
         }
     }

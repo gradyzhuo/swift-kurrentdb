@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import GRPCCore
+import GRPCNIOTransportHTTP2
 
 public actor NodeSelector: Sendable {
     
@@ -27,25 +29,33 @@ public actor NodeSelector: Sendable {
             guard let memberInfo = try await self.discover.next() else {
                 throw .notLeaderException
             }
-            let node = try Node(endpoint: memberInfo.httpEndPoint, settings: settings)
+            
+            let serviceFeaturesClient = ServerFeatures(endpoint: memberInfo.httpEndPoint, settings: settings)
+            let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
+            
+            self.previousCandidates.append(memberInfo)
+            let node = Node(endpoint: memberInfo.httpEndPoint, settings: settings, serverInfo: serverInfo)
             self.selectedNode = node
             return node
         }
+        
         return selectedNode
     }
-    
-    package func select<T: Sendable>(perform: @Sendable (_ node: Node) async throws -> T) async throws(KurrentError) -> T {
-        let node = try await self.select()
-        return try await withRethrowingError(usage: #function){
-            try await perform(node)
-        }
-    }
+}
+
+struct NodeInfo{
+    var id: UUID
+    var endpoint: Endpoint?
+    var secure: Bool
+    var connection: GRPCClient<HTTP2ClientTransport.Posix>
+    var serverInfo: ServerFeatures.ServiceInfo
 }
 
 public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
     public typealias Element = Gossip.MemberInfo
     
     let settings: ClientSettings
+    var selectedMember: Gossip.MemberInfo?
     private let previousCandidates: [Gossip.MemberInfo]
     
     init(settings: ClientSettings, previousCandidates: [Gossip.MemberInfo]) {
