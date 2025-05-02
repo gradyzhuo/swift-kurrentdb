@@ -13,9 +13,9 @@ enum URLScheme: String {
     
     init?(rawValue: String) {
         switch rawValue {
-        case "esdb", "kurrentdb":
+        case "esdb", "kurrentdb", "kurrent", "kdb":
             self = .kurrentdb
-        case "esdb+discover", "kurrentdb+discover":
+        case "esdb+discover", "kurrentdb+discover", "kurrent+discover", "kdb+discover":
             self = .dnsDiscover
         default:
             return nil
