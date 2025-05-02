@@ -91,7 +91,7 @@ public struct ClientSettings: Sendable {
     public var discoveryInterval: TimeAmount
     public var maxDiscoveryAttempts: UInt16
     
-    private init(){
+    public init(){
         self.endpoints = []
         self.cerificates = []
         self.dnsDiscover = false
