@@ -75,6 +75,12 @@ let settings: ClientSettings = .localhost(userCredentials: .init(username: "admi
                                                                                            inBundle: .main))
 ```
 
+### ClientSettings + CASource
+
+```swift
+clientSettings.cerificates.append(.crtInBundle("ca")!)
+```
+
 ### Appending Event
 
 ```swift
