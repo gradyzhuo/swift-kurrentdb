@@ -18,7 +18,7 @@ Then, interact with a specific stream by creating a `Streams` client for it.
 
 ### Streams
 ```swift
-let clientSettings: ClientSettings = "esdb://localhost:2113?tls=false" // Initialize with actual settings
+let clientSettings: ClientSettings = "kurrent://localhost:2113?tls=false" // Initialize with actual settings
 let client = KurrentDBClient(settings: clientSettings, numberOfThreads: 2)
 
 // Define the stream identifier (this can be either a specific stream or all streams)

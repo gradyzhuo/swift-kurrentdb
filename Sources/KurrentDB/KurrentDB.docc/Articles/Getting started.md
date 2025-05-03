@@ -77,10 +77,10 @@ let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@l
 
 or you can also build it with a string literal, like:
 ```swift
-let settings: ClientSettings = "esdb://admin:changeit@localhost:2113".parse()
+let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113".parse()
 
 // or using string literal directly.
-let settings: ClientSettings = "esdb://admin:changeit@localhost:2113"
+let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 ```
 
 You can use a convenience static method in development mode to connect to `localhost`.
