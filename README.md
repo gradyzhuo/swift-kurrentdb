@@ -12,64 +12,6 @@ Kurrent is the first and only event-native data platform. It is built to store a
 Swift is a general-purpose programming language that’s approachable for newcomers and powerful for experts.
 It is fast, modern, safe, and a joy to write.
 
-## Implementation Status
-### Client Settings
-|Feature|Implemented|
-|----|----|
-|ConnectionString parsed|✅|
-|Endpoint (ip, port)|✅|
-|UserCredentials ( username, password )|✅|
-|Gossip ClusterMode ||
-
-### Stream
-|Feature|Implemented|
-|----|----|
-|Append|✅|
-|Read|✅|
-|Metadata|✅|
-|Subscribe Specified Stream|✅|
-|Subscribe All Stream|✅|
-|BatchAppend|✅|
-
-### Projection
-|Feature|Implemented|
-|----|----|
-|Create|✅|
-|Update|✅|
-|Result|✅|
-|Delete|✅|
-|Enable|✅|
-|Disable|✅|
-|State|✅|
-|Statistics|✅|
-|Reset|✅|
-|RestartSubsystem|✅|
-
-### PersistentSubscriptions
-|Feature|Implemented|
-|----|----|
-|Create|✅|
-|Delete|✅|
-|GetInfo|✅|
-|List|✅|
-|Read|✅|
-|ReplayParked|✅|
-|RestartSubsystem|✅|
-|Subscribe|✅|
-|Update|✅|
-
-
-### User
-|Feature|Implemented|
-|----|----|
-|Create|✅|
-|Details|✅|
-|Disable|✅|
-|Enable|✅|
-|Update|✅|
-|ChangePassword|✅|
-|ResetPassword|✅|
-
 
 ## Getting the library
 
@@ -107,10 +49,10 @@ import KurrentDB
 let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
 
 // convenience 
-let settings: ClientSettings = "esdb://admin:changeit@localhost:2113".parse()
+let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113".parse()
 
 // using string literal 
-let settings: ClientSettings = "esdb://admin:changeit@localhost:2113"
+let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 
 //using constructor
 let settings: ClientSettings = .localhost()
