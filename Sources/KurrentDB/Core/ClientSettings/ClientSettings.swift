@@ -88,7 +88,7 @@ public struct ClientSettings: Sendable {
 
     public var keepAlive: KeepAlive
     public var authentication: Authentication?
-    public var discoveryInterval: TimeAmount
+    public var discoveryInterval: Duration
     public var maxDiscoveryAttempts: UInt16
     
     public init(){
@@ -342,7 +342,7 @@ extension ClientSettings: Buildable{
     }
     
     @discardableResult
-    public func discoveryInterval(_ discoveryInterval: TimeAmount)->Self{
+    public func discoveryInterval(_ discoveryInterval: Duration)->Self{
         return withCopy {
             $0.discoveryInterval = discoveryInterval
         }

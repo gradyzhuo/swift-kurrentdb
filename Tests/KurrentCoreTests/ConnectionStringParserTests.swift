@@ -11,7 +11,7 @@ import Testing
 @Suite("ConnectionStringParser")
 struct ConnectionStringParser {
     @Test("Test scheme of url should be esdb explicitly", arguments: [
-        ("esdb://localhost:2113?tls=false", URLScheme.esdb),
+        ("esdb://localhost:2113?tls=false", URLScheme.kurrentdb),
         ("esdb+discover://", URLScheme.dnsDiscover),
         ("esd://", nil),
         ("http://", nil),

@@ -31,6 +31,12 @@ extension Endpoint: CustomStringConvertible {
     }
 }
 
+extension Endpoint: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        "\(host):\(port)"
+    }
+}
+
 extension Endpoint {
     public var target: ResolvableTarget {
         get throws {

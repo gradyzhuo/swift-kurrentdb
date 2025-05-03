@@ -146,7 +146,7 @@ extension KurrentError: Equatable {
     }
 }
 
-func withRethrowingError<T>(usage: String, action: () async throws -> T) async throws(KurrentError) -> T{
+func withRethrowingError<T>(usage: String, action: @Sendable () async throws -> T) async throws(KurrentError) -> T{
     do{
         return try await action()
     } catch let error as KurrentError{
@@ -159,7 +159,7 @@ func withRethrowingError<T>(usage: String, action: () async throws -> T) async t
     throw .internalClientError(reason: "\(usage) failed.")
 }
 
-func withRethrowingError<T>(usage: String, action: () throws -> T) throws(KurrentError) -> T{
+func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) throws(KurrentError) -> T{
     do{
         return try action()
     } catch let error as KurrentError{

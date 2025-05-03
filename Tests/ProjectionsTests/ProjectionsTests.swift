@@ -21,7 +21,7 @@ struct ProjectionsTests: Sendable {
     init() {
         let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
         let settings: ClientSettings = .localhost()
-                    .tls(true)
+                    .secure(true)
                     .cerificate(path: caPath!)
                     .authenticated(.credentials(username: "admin", password: "changeit"))
         self.client = .init(settings: settings)

@@ -9,46 +9,62 @@ import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
 
-public actor NodeSelector: Sendable {
-    
+public actor NodeSelector: Sendable {    
     let id: UUID?
     let settings: ClientSettings
-    var previousCandidates: [Gossip.MemberInfo]
     var selectedNode: Node?
     var discover: NodeDiscover
     
     internal init(settings: ClientSettings) {
         self.id = nil
         self.settings = settings
-        self.previousCandidates = []
         self.discover = .init(settings: settings, previousCandidates: [])
     }
     
-    package func select() async throws(KurrentError) -> Node {
+    public func select() async throws(KurrentError) -> Node {
         guard let selectedNode else {
-            guard let memberInfo = try await self.discover.next() else {
-                throw .notLeaderException
+            let node = try await withRethrowingError(usage: "") {
+                guard let node = try await selectNode() else {
+                    throw KurrentError.serverError("Connection node not found.")
+                }
+                return node
             }
-            
-            let serviceFeaturesClient = ServerFeatures(endpoint: memberInfo.httpEndPoint, settings: settings)
-            let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
-            
-            self.previousCandidates.append(memberInfo)
-            let node = Node(endpoint: memberInfo.httpEndPoint, settings: settings, serverInfo: serverInfo)
             self.selectedNode = node
             return node
         }
         
         return selectedNode
     }
-}
-
-struct NodeInfo{
-    var id: UUID
-    var endpoint: Endpoint?
-    var secure: Bool
-    var connection: GRPCClient<HTTP2ClientTransport.Posix>
-    var serverInfo: ServerFeatures.ServiceInfo
+    
+    private func selectNode() async throws -> Node? {
+        var attempts = 0
+        
+        while true {
+            do{
+                guard let memberInfo = try await self.discover.next() else {
+                    throw KurrentError.notLeaderException
+                }
+                
+                var callOptions = CallOptions.defaults
+                callOptions.timeout = settings.gossipTimeout
+                
+                let serviceFeaturesClient = ServerFeatures(endpoint: memberInfo.httpEndPoint, settings: settings, callOptions: callOptions)
+                let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
+                return Node(endpoint: memberInfo.httpEndPoint, settings: settings, serverInfo: serverInfo)
+            }catch{
+                attempts += 1
+                
+                guard attempts < settings.maxDiscoveryAttempts else {
+                    return nil
+                }
+                
+                try await Task.sleep(for: settings.discoveryInterval)
+                logger.debug("Starting new connection attempt")
+                continue
+            }
+        }
+        
+    }
 }
 
 public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
@@ -65,17 +81,19 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
     
     public func next() async throws(KurrentError) -> Gossip.MemberInfo? {
         guard let selectedMember else {
-            switch settings.clusterMode {
+            let candidates = switch settings.clusterMode {
             case let .standalone(endpoint):
-                return try await discover(candidate: endpoint)
+                [endpoint]
             case let .dns(endpoint):
-                return try await discover(candidate: endpoint)
+                [endpoint]
             case let .seeds(candidates):
-                for candidate in candidates {
-                    return try await discover(candidate: candidate)
-                }
-                return nil
+                candidates
             }
+            
+            for candidate in candidates.shuffled() {
+                return try await discover(candidate: candidate)
+            }
+            return nil
         }
         return selectedMember
     }
@@ -87,7 +105,7 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
         callOptions.timeout = settings.gossipTimeout
         
         let gossipClient = Gossip(endpoint: candidate, settings: settings, callOptions: callOptions)
-        let memberInfos = try await gossipClient.read()
+        let memberInfos = try await gossipClient.read(timeout: settings.gossipTimeout)
         
         logger.debug("Candidate \(candidate) gossip info: \(memberInfos)")
         

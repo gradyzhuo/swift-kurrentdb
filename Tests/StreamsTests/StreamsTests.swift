@@ -20,7 +20,7 @@ struct StreamTests: Sendable {
     init() {
         let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
         settings = .localhost()
-                    .tls(true)
+                    .secure(true)
                     .cerificate(path: caPath!)
                     .authenticated(.credentials(username: "admin", password: "changeit"))
     }

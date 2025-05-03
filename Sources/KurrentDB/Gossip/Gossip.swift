@@ -28,7 +28,7 @@ public struct Gossip {
 }
 
 extension Gossip {
-    public func read() async throws(KurrentError) -> [MemberInfo] {
+    public func read(timeout: Duration) async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
         return try await usecase.perform(endpoint: endpoint, settings: settings, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
             partialResult.append(memberInfo)

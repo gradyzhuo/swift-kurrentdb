@@ -19,7 +19,7 @@ extension ServerFeatures {
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.getSupportedMethods(request: request, options: callOptions) {
-                try .init(
+                return try .init(
                     serverVersion: $0.message.eventStoreServerVersion,
                     supportedMethods: $0.message.methods.map{
                         .init(

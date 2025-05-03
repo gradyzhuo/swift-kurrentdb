@@ -8,7 +8,7 @@ import NIO
 import GRPCCore
 import GRPCNIOTransportHTTP2
 
-public actor Node: Sendable{
+public struct Node: Sendable{
     package let endpoint: Endpoint
     package let settings: ClientSettings
     package let serverInfo: ServerFeatures.ServiceInfo
