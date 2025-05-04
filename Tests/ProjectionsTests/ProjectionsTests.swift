@@ -19,11 +19,7 @@ struct ProjectionsTests: Sendable {
     let client: KurrentDBClient
 
     init() {
-        let caPath = Bundle.module.path(forResource: "ca", ofType: "crt")
-        let settings: ClientSettings = .localhost()
-                    .secure(true)
-                    .cerificate(path: caPath!)
-                    .authenticated(.credentials(username: "admin", password: "changeit"))
+        let settings: ClientSettings = .localhost()                    .authenticated(.credentials(username: "admin", password: "changeit"))
         self.client = .init(settings: settings)
     }
     
