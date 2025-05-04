@@ -20,7 +20,7 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
     }
     
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
-        let client = try await node.makeClient()
+        let client = try node.makeClient()
         let metadata = Metadata(from: node.settings)
         return try await perform(client: client, metadata: metadata, callOptions: callOptions)
     }

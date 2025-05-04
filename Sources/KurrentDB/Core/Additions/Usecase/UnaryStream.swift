@@ -11,7 +11,7 @@ import GRPCNIOTransportHTTP2Posix
 
 extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses == AsyncThrowingStream<Response, Error> {
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
-        let client = try await node.makeClient()
+        let client = try node.makeClient()
         Task {
             try await client.runConnections()
         }
@@ -43,7 +43,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
     }
     
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        let client = try await node.makeClient()
+        let client = try node.makeClient()
         let metadata = Metadata(from: node.settings)
         return try await perform(client: client, metadata: metadata, callOptions: callOptions)
     }
