@@ -40,7 +40,22 @@ import KurrentDB
 
 ```swift
 // Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
+let settings: ClientSettings = .parse(connectionString: "kurrent://localhost:2113")
+
+// convenience 
+let settings: ClientSettings = "kurrent://localhost:2113".parse()
+
+// using string literal 
+let settings: ClientSettings = "kurrent://localhost:2113"
+
+//using constructor
+let settings: ClientSettings = .localhost()
+```
+
+### ClientSettings with credentials authentication.
+```swift
+// Using a client settings for a single node configuration by parsing a connection string.
+let settings: ClientSettings = .parse(connectionString: "kurrent://admin:changeit@localhost:2113")
 
 // convenience 
 let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113".parse()
@@ -50,6 +65,26 @@ let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 
 //using constructor
 let settings: ClientSettings = .localhost()
+```
+
+### ClientSettings with CA file.
+```swift
+// parse from connection string
+let caPath = "the path of ca file..."
+let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113?tls=true&tlsCaFile=\(caPath)".parse()
+
+//or construct in coding.
+//settings with credentials with adding ssl file by path
+let settings: ClientSettings = .localhost()
+                               .secure(true) //required
+                               .cerificate(path: caPath!)
+                               .authenticated(.credentials(username: "admin", password: "changeit"))
+
+//or add ssl file with bundle
+let settings: ClientSettings = .localhost()
+                               .secure(true) //required
+                               .cerificate(source: .crtInBundle("ca")!)
+                               .authenticated(.credentials(username: "admin", password: "changeit"))
 ```
 
 ### ClientSettings + CASource
