@@ -3,14 +3,8 @@
 [![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml)
 
 
-
 # KurrentDB 
 This is unofficial [Kurrent](https://www.kurrent.io/) (formerly: EventStore) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK, developing in [Swift language](https://www.swift.org/)
-
-Kurrent is the first and only event-native data platform. It is built to store and stream data as events for use in downstream use cases such as advanced analytics, microservices and AI/ML initiatives.
-
-Swift is a general-purpose programming language that’s approachable for newcomers and powerful for experts.
-It is fast, modern, safe, and a joy to write.
 
 
 ## Getting the library
@@ -56,24 +50,6 @@ let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 
 //using constructor
 let settings: ClientSettings = .localhost()
-
-
-// settings with credentials
-let settings: ClientSettings = .localhost()
-                               .authenticated(.credentials(username: "admin", password: "changeit"))
-
-//settings with credentials with adding ssl file by path
-let caPath = "the path of ca file..."
-let settings: ClientSettings = .localhost()
-                               .secure(true)
-                               .cerificate(path: caPath!)
-                               .authenticated(.credentials(username: "admin", password: "changeit"))
-
-//or add ssl file with bundle
-let settings: ClientSettings = .localhost()
-                               .secure(true)
-                               .cerificate(source: .crtInBundle("ca")!)
-                               .authenticated(.credentials(username: "admin", password: "changeit"))
 ```
 
 ### ClientSettings + CASource
