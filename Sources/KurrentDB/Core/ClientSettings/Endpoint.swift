@@ -6,7 +6,7 @@
 //
 
 import GRPCNIOTransportCore
-import Network
+import NIO
 
 public struct Endpoint: Sendable {
     let host: String
@@ -40,12 +40,18 @@ extension Endpoint: CustomDebugStringConvertible {
 extension Endpoint {
     public var target: ResolvableTarget {
         get throws {
-            return if let _ = IPv4Address(host) {
-                .ipv4(host: host, port: Int(port))
-            } else if let _ = IPv6Address(host) {
-                .ipv6(host: host, port: Int(port))
-            } else {
-                .dns(host: host, port: Int(port))
+            let port = Int(port)
+            guard let resolvedAddress =  try? SocketAddress(ipAddress: host, port: Int(port)) else {
+                return .dns(host: host, port: port)
+            }
+            
+            return switch resolvedAddress {
+            case .v4:
+                .ipv4(host: host, port: port)
+            case .v6:
+                .ipv6(host: host, port: port)
+            default:
+                .dns(host: host, port: port)
             }
         }
     }
