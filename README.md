@@ -59,20 +59,21 @@ let settings: ClientSettings = .localhost()
 
 
 // settings with credentials
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                   password: "changeit")
+let settings: ClientSettings = .localhost()
+                               .authenticated(.credentials(username: "admin", password: "changeit"))
 
 //settings with credentials with adding ssl file by path
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                            password: "changeit"), 
-                                                                 trustRoots: .file("...filePath..."))
+let caPath = "the path of ca file..."
+let settings: ClientSettings = .localhost()
+                               .secure(true)
+                               .cerificate(path: caPath!)
+                               .authenticated(.credentials(username: "admin", password: "changeit"))
 
 //or add ssl file with bundle
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                 password: "changeit"), 
-                                                                 trustRoots: .fileInBundle(forResource: "ca", 
-                                                                                           withExtension: "crt", 
-                                                                                           inBundle: .main))
+let settings: ClientSettings = .localhost()
+                               .secure(true)
+                               .cerificate(source: .crtInBundle("ca")!)
+                               .authenticated(.credentials(username: "admin", password: "changeit"))
 ```
 
 ### ClientSettings + CASource
