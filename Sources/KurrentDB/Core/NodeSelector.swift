@@ -117,7 +117,7 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
         let member = sortedMembers.first(where: { member in  member.isAlive && !notAllowedState.contains(member.state) })
         
         if let member = member{
-            logger.info( "Discovering: found best choice \(member.httpEndPoint.host):\(member.httpEndPoint.port) (\(member.state)"
+            logger.info( "Discovering: found best choice \(member.httpEndPoint.host):\(member.httpEndPoint.port) (\(member.state))"
                     )
         }
         
