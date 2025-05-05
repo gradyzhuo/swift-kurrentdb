@@ -87,12 +87,6 @@ let settings: ClientSettings = .localhost()
                                .authenticated(.credentials(username: "admin", password: "changeit"))
 ```
 
-### ClientSettings + CASource
-
-```swift
-clientSettings.cerificates.append(.crtInBundle("ca")!)
-```
-
 ### Appending Event
 
 ```swift
