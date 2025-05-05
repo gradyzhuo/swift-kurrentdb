@@ -151,10 +151,8 @@ let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 // the group of subscription
 let groupName = "myGroupTest"
 
-let persistentSubscription = client.streams(of: .specified(streamIdentifier)).persistentSubscriptions(group: groupName)
-
-// Create it to specified identifier of streams.
-try await persistentSubscription.create()
+// Create it to specified identifier of stream
+try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
 ```
 
 #### Subscribe
@@ -175,10 +173,8 @@ let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 // the group of subscription
 let groupName = "myGroupTest"
 
-let persistentSubscription = client.streams(of: .specified(streamIdentifier)).persistentSubscriptions(group: groupName)
-
 // Subscribe to stream or all, and get a subscription.
-let subscription = try await persistentSubscription.subscribe()
+let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
 
 // Loop all results by subscription.events
 for try await result in subscription.events {
