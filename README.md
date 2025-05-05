@@ -65,6 +65,7 @@ let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 
 //using constructor
 let settings: ClientSettings = .localhost()
+                               .authenticated(.credentials(username: "admin", password: "changeit"))
 ```
 
 ### ClientSettings with CA file.
