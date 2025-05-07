@@ -14,17 +14,17 @@ import Foundation
 /// A client to encapsulates GRPC usecases to EventStoreDB.
 @available(*, deprecated, message: "Using the new api spec of KurrentDBClient instead.")
 public struct EventStoreDBClient: Sendable {
-    private var client: KurrentDBClient
+    public private(set) var underlyingClient: KurrentDBClient
     
     public var defaultCallOptions: CallOptions{
         get async {
-            await client.defaultCallOptions
+            await underlyingClient.defaultCallOptions
         }
     }
     
     public var settings: ClientSettings{
         get async {
-            await client.settings
+            await underlyingClient.settings
         }
     }
 
@@ -34,7 +34,7 @@ public struct EventStoreDBClient: Sendable {
     ///   - numberOfThreads: the number of threads of `EventLoopGroup` in `NIOChannel`.
     ///   - defaultCallOptions: the default call options for all grpc calls in KurrentDBClient.
     public init(settings: ClientSettings, numberOfThreads: Int = 1, defaultCallOptions: CallOptions = .defaults) {
-        self.client = .init(settings: settings, numberOfThreads: numberOfThreads, defaultCallOptions: defaultCallOptions)
+        self.underlyingClient = .init(settings: settings, numberOfThreads: numberOfThreads, defaultCallOptions: defaultCallOptions)
     }
 }
 
@@ -84,7 +84,7 @@ extension EventStoreDBClient {
     // MARK: Append methods -
     @available(*, deprecated, message: "Please use the new API .streams(of:.specified()).append(events:options:) instead.")
     public func appendStream(to identifier: StreamIdentifier, events: [EventData], configure: @Sendable (_ options: Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options) async throws -> Streams<SpecifiedStream>.Append.Response {
-        return try await client.appendStream(on: identifier, events: events){ _ in
+        return try await underlyingClient.appendStream(on: identifier, events: events){ _ in
             configure(.init())
         }
     }
@@ -117,7 +117,7 @@ extension EventStoreDBClient {
         }
         
         let finalOptions = options
-        return try await client.readAllStreams(startFrom: cursor){ _ in
+        return try await underlyingClient.readAllStreams(startFrom: cursor){ _ in
             finalOptions
         }
     }
@@ -156,7 +156,7 @@ extension EventStoreDBClient {
             }
         }
         let finalOptions = options
-        return try await client.readStream(on: identifier, startFrom: cursor){ _ in
+        return try await underlyingClient.readStream(on: identifier, startFrom: cursor){ _ in
             finalOptions
         }
     }
@@ -182,7 +182,7 @@ extension EventStoreDBClient {
         case .specified(let position):
             .position(commit: position.commit, prepare: position.prepare)
         }
-        return try await client.subscribeAllStreams(startFrom: cursor){ _ in
+        return try await underlyingClient.subscribeAllStreams(startFrom: cursor){ _ in
             options
         }
     }
@@ -199,7 +199,7 @@ extension EventStoreDBClient {
         case .specified(let pointer):
             cursor = .revision(pointer.value)
         }
-        return try await client.subscribeStream(on: identifier, startFrom: cursor){ _ in
+        return try await underlyingClient.subscribeStream(on: identifier, startFrom: cursor){ _ in
             options
         }
     }
@@ -209,7 +209,7 @@ extension EventStoreDBClient {
     @available(*, deprecated)
     @discardableResult
     public func deleteStream(to identifier: StreamIdentifier, configure: @Sendable (_ options: Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options) async throws -> Streams<SpecifiedStream>.Delete.Response {
-        return try await client.deleteStream(on: identifier){ _ in
+        return try await underlyingClient.deleteStream(on: identifier){ _ in
             configure(.init())
         }
     }
@@ -218,7 +218,7 @@ extension EventStoreDBClient {
     @available(*, deprecated)
     @discardableResult
     public func tombstoneStream(to identifier: StreamIdentifier, configure: @Sendable (_ options: Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options) async throws -> Streams<SpecifiedStream>.Tombstone.Response {
-        return try await client.tombstoneStream(on: identifier){ _ in
+        return try await underlyingClient.tombstoneStream(on: identifier){ _ in
             configure(.init())
         }
     }
@@ -228,13 +228,13 @@ extension EventStoreDBClient {
 
 extension EventStoreDBClient {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
-        let node = try await client.selector.select()
-        return try await client.operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
+        let node = try await underlyingClient.selector.select()
+        return try await underlyingClient.operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
 
     public func stopScavenge(scavengeId: String) async throws -> Operations.ScavengeResponse {
-        let node = try await client.selector.select()
-        return try await client.operations.stopScavenge(scavengeId: scavengeId)
+        let node = try await underlyingClient.selector.select()
+        return try await underlyingClient.operations.stopScavenge(scavengeId: scavengeId)
     }
 }
 
@@ -243,14 +243,14 @@ extension EventStoreDBClient {
 extension EventStoreDBClient {
     @available(*, deprecated)
     public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options = { $0 }) async throws {
-        try await client.createPersistentSubscription(to: identifier, groupName: groupName){ _ in
+        try await underlyingClient.createPersistentSubscription(to: identifier, groupName: groupName){ _ in
             configure(.init())
         }
     }
 
     @available(*, deprecated)
     public func createPersistentSubscriptionToAll(groupName: String, startFrom cursor: PositionCursor, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options = { $0 }) async throws {
-        return try await client.createPersistentSubscriptionToAllStream(groupName: groupName){ _ in
+        return try await underlyingClient.createPersistentSubscriptionToAllStream(groupName: groupName){ _ in
             configure(.init())
         }
     }
@@ -261,9 +261,9 @@ extension EventStoreDBClient {
         
         switch streamSelector {
         case .all:
-            try await client.deletePersistentSubscriptionToAllStream(groupName: groupName)
+            try await underlyingClient.deletePersistentSubscriptionToAllStream(groupName: groupName)
         case let .specified(streamIdentifier):
-            try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
+            try await underlyingClient.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
         }
     }
 
@@ -272,25 +272,25 @@ extension EventStoreDBClient {
     public func listPersistentSubscription(streamSelector: StreamSelector<StreamIdentifier>) async throws -> [PersistentSubscription.SubscriptionInfo] {
         switch streamSelector {
         case .all:
-            return try await client.listPersistentSubscriptionsToAllStream()
+            return try await underlyingClient.listPersistentSubscriptionsToAllStream()
         case let .specified(streamIdentifier):
-            return try await client.listPersistentSubscriptions(to: streamIdentifier)
+            return try await underlyingClient.listPersistentSubscriptions(to: streamIdentifier)
         }
     }
 
     // MARK: - Restart Subsystem Action
     @available(*, deprecated)
     public func restartPersistentSubscriptionSubsystem() async throws {
-        try await client.restartPersistentSubscriptionSubsystem()
+        try await underlyingClient.restartPersistentSubscriptionSubsystem()
     }
 
     // MARK: -
     @available(*, deprecated)
     public func subscribePersistentSubscription(to streamSelector: StreamSelector<StreamIdentifier>, groupName: String, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.Subscription {
-        let node = try await client.selector.select()
+        let node = try await underlyingClient.selector.select()
         let options = configure(.init())
         let usecase = PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadAnyTarget(streamSelector: streamSelector, group: groupName, options: options)
-        return try await usecase.perform(node: node, callOptions: client.defaultCallOptions)
+        return try await usecase.perform(node: node, callOptions: underlyingClient.defaultCallOptions)
     }
     
 }
