@@ -99,7 +99,7 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
             }
             
             let endpoint = memberInfo.httpEndPoint
-            let leaderEndpoint = if ["127.0.0.1", "localhost"].contains(endpoint.host) {
+            let leaderEndpoint = if !candidate.isLocalhost && endpoint.isLocalhost {
                 candidate
             }else{
                 endpoint

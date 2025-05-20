@@ -16,6 +16,10 @@ public struct Endpoint: Sendable {
         self.host = host
         self.port = port ?? DEFAULT_PORT_NUMBER
     }
+    
+    public var isLocalhost: Bool {
+        ["127.0.0.1", "localhost"].contains(host)
+    }
 }
 
 extension Endpoint: Equatable {
