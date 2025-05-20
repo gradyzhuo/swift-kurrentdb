@@ -84,10 +84,6 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
             return selectedEndpoint
         }
         
-        if case let .standalone(endpoint) = settings.clusterMode {
-            return endpoint
-        }
-        
         let candidates = switch settings.clusterMode {
         case let .standalone(endpoint):
             [endpoint]
