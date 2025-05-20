@@ -111,7 +111,7 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
             
             logger.info( "Discovering: found best choice \(leaderEndpoint.host):\(leaderEndpoint.port) (\(memberInfo.state))"
                     )
-            return endpoint
+            return leaderEndpoint
         }
         return nil
     }
