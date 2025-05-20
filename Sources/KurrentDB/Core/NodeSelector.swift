@@ -41,16 +41,16 @@ public actor NodeSelector: Sendable {
         
         while true {
             do{
-                guard let memberInfo = try await self.discover.next() else {
+                guard let endpoint = try await self.discover.next() else {
                     throw KurrentError.notLeaderException
                 }
                 
                 var callOptions = CallOptions.defaults
                 callOptions.timeout = settings.gossipTimeout
                 
-                let serviceFeaturesClient = ServerFeatures(endpoint: memberInfo.httpEndPoint, settings: settings, callOptions: callOptions)
+                let serviceFeaturesClient = ServerFeatures(endpoint: endpoint, settings: settings, callOptions: callOptions)
                 let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
-                return Node(endpoint: memberInfo.httpEndPoint, settings: settings, serverInfo: serverInfo)
+                return Node(endpoint: endpoint, settings: settings, serverInfo: serverInfo)
             }catch{
                 attempts += 1
                 
@@ -68,34 +68,52 @@ public actor NodeSelector: Sendable {
 }
 
 public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
-    public typealias Element = Gossip.MemberInfo
+    public typealias Element = Endpoint
     
     let settings: ClientSettings
-    var selectedMember: Gossip.MemberInfo?
-    private let previousCandidates: [Gossip.MemberInfo]
+    var selectedEndpoint: Endpoint?
+    private let previousCandidates: [Endpoint]
     
     init(settings: ClientSettings, previousCandidates: [Gossip.MemberInfo]) {
         self.settings = settings
         self.previousCandidates = []
     }
     
-    public func next() async throws(KurrentError) -> Gossip.MemberInfo? {
-        guard let selectedMember else {
-            let candidates = switch settings.clusterMode {
-            case let .standalone(endpoint):
-                [endpoint]
-            case let .dns(endpoint):
-                [endpoint]
-            case let .seeds(candidates):
-                candidates
+    public func next() async throws(KurrentError) -> Endpoint? {
+        guard selectedEndpoint == nil else {
+            return selectedEndpoint
+        }
+        
+        if case let .standalone(endpoint) = settings.clusterMode {
+            return endpoint
+        }
+        
+        let candidates = switch settings.clusterMode {
+        case let .standalone(endpoint):
+            [endpoint]
+        case let .dns(endpoint):
+            [endpoint]
+        case let .seeds(candidates):
+            candidates
+        }
+        
+        for candidate in candidates.shuffled() {
+            guard let memberInfo = try await discover(candidate: candidate) else {
+                continue
             }
             
-            for candidate in candidates.shuffled() {
-                return try await discover(candidate: candidate)
+            let endpoint = memberInfo.httpEndPoint
+            let leaderEndpoint = if ["127.0.0.1", "localhost"].contains(endpoint.host) {
+                candidate
+            }else{
+                endpoint
             }
-            return nil
+            
+            logger.info( "Discovering: found best choice \(leaderEndpoint.host):\(leaderEndpoint.port) (\(memberInfo.state))"
+                    )
+            return endpoint
         }
-        return selectedMember
+        return nil
     }
     
     func discover(candidate: Endpoint) async throws(KurrentError) ->Gossip.MemberInfo?{
@@ -115,11 +133,6 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable{
         
         let notAllowedState: [Gossip.VNodeState] = [.manager, .shuttingDown, .shutdown]
         let member = sortedMembers.first(where: { member in  member.isAlive && !notAllowedState.contains(member.state) })
-        
-        if let member = member{
-            logger.info( "Discovering: found best choice \(member.httpEndPoint.host):\(member.httpEndPoint.port) (\(member.state))"
-                    )
-        }
         
         return member
     }
