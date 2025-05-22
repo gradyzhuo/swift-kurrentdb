@@ -27,7 +27,7 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         let streamIdentifier = UUID().uuidString
         await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamIdentifier)' of streams not found.")) {
-            let responses = try await client.readStream(on: StreamIdentifier(name: streamIdentifier))
+            let responses = try await client.readStream(StreamIdentifier(name: streamIdentifier))
             var responsesIterator = responses.makeAsyncIterator()
             _ = try await responsesIterator.next()
         }
@@ -44,12 +44,12 @@ struct StreamTests: Sendable {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
         
-        let appendResponse = try await client.appendStream(on: streamIdentifier, events: events) {
+        let appendResponse = try await client.appendStream(streamIdentifier, events: events) {
             $0.revision(expected: .any)
         }
 
         let appendedRevision = try #require(appendResponse.currentRevision)
-        let readResponses = try await client.readStream(on: streamIdentifier, startFrom: .revision(appendedRevision)) {
+        let readResponses = try await client.readStream(streamIdentifier, since: .revision(appendedRevision)) {
             $0.forward()
         }
 
@@ -63,7 +63,7 @@ struct StreamTests: Sendable {
         
         #expect(readPosition == position)
 
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
 
     @Test("It should succeed when setting metadata to a stream.")
@@ -76,11 +76,11 @@ struct StreamTests: Sendable {
 
         let client = KurrentDBClient(settings: settings)
         
-        try await client.setStreamMetadata(on: streamIdentifier, metadata: metadata)
+        try await client.setStreamMetadata(streamIdentifier, metadata: metadata)
 
-        let responseMetadata = try #require(try await client.getStreamMetadata(on: streamIdentifier))
+        let responseMetadata = try #require(try await client.getStreamMetadata(streamIdentifier))
         #expect(metadata == responseMetadata)
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
 
     @Test("It should succeed when subscribing to a stream.")
@@ -88,8 +88,8 @@ struct StreamTests: Sendable {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
         
-        let subscription = try await client.subscribeStream(on: streamIdentifier)
-        let response = try await client.appendStream(on: streamIdentifier, events: [
+        let subscription = try await client.subscribeStream(streamIdentifier)
+        let response = try await client.appendStream(streamIdentifier, events: [
             .init(eventType: "Subscribe-AccountCreated", model: ["Description": "Gears of War 10"])
         ]) {
             $0.revision(expected: .any)
@@ -103,7 +103,7 @@ struct StreamTests: Sendable {
 
         let lastEventRevision = try #require(lastEvent?.record.revision)
         #expect(response.currentRevision == lastEventRevision)
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
 
     @Test("It should succeed when subscribing to all streams.")
@@ -114,10 +114,10 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
         
-        let subscription = try await client.subscribeAllStreams(startFrom: .end){
+        let subscription = try await client.subscribeAllStreams(since: .end){
             $0.filter(.onEventType(regex: "SubscribeAll-AccountCreated"))
         }
-        let response = try await client.appendStream(on: streamIdentifier, events: [eventForTesting]) {
+        let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
             $0.revision(expected: .any)
         }
         
@@ -131,7 +131,7 @@ struct StreamTests: Sendable {
 
         let lastEventPosition = try #require(lastEvent?.record.position)
         #expect(response.position?.commit == lastEventPosition.commit)
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
     
     @Test("It should succeed when subscribing to all streams with an event type filter.")
@@ -143,11 +143,11 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .onEventType(prefixes: "SubscribeAll-AccountCreated")
-        let subscription = try await client.subscribeAllStreams(startFrom: .end) {
+        let subscription = try await client.subscribeAllStreams(since: .end) {
             $0.filter(filter)
         }
         
-        let response = try await client.appendStream(on: streamIdentifier, events: [eventForTesting]) {
+        let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
             $0.revision(expected: .any)
         }
         
@@ -159,7 +159,7 @@ struct StreamTests: Sendable {
 
         let lastEventPosition = try #require(lastEvent?.record.position)
         #expect(response.position?.commit == lastEventPosition.commit)
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
     
     @Test("It should succeed when subscribing to all streams by excluding system events.")
@@ -171,11 +171,11 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .excludeSystemEvents()
-        let subscription = try await client.subscribeAllStreams(startFrom: .end) {
+        let subscription = try await client.subscribeAllStreams(since: .end) {
             $0.filter(filter)
         }
         
-        let response = try await client.appendStream(on: streamIdentifier, events: [eventForTesting]) {
+        let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
             $0.revision(expected: .any)
         }
         
@@ -187,7 +187,7 @@ struct StreamTests: Sendable {
 
         let lastEventPosition = try #require(lastEvent?.record.position)
         #expect(response.position?.commit == lastEventPosition.commit)
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
     
     @Test("It should succeed when subscribing to all streams with a stream name filter.")
@@ -199,11 +199,11 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .onStreamName(prefix: streamIdentifier.name)
-        let subscription = try await client.subscribeAllStreams(startFrom: .end) {
+        let subscription = try await client.subscribeAllStreams(since: .end) {
             $0.filter(filter)
         }
         
-        let response = try await client.appendStream(on: streamIdentifier, events: [eventForTesting]) {
+        let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
             $0.revision(expected: .any)
         }
         
@@ -215,7 +215,7 @@ struct StreamTests: Sendable {
 
         let lastEventPosition = try #require(lastEvent?.record.position)
         #expect(response.position?.commit == lastEventPosition.commit)
-        try await client.deleteStream(on: streamIdentifier)
+        try await client.deleteStream(streamIdentifier)
     }
     
     @Test("It should fail when subscribing to all streams with an incorrect stream name filter.")
@@ -227,11 +227,11 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         
         let filter: SubscriptionFilter = .onStreamName(prefix: "wrong")
-        let subscription = try await client.subscribeAllStreams(startFrom: .end) {
+        let subscription = try await client.subscribeAllStreams(since: .end) {
             $0.filter(filter)
         }
         
-        _ = try await client.appendStream(on: streamIdentifier, events: [eventForTesting]) {
+        _ = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
             $0.revision(expected: .any)
         }
 

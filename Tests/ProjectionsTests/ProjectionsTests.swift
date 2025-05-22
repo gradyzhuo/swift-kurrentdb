@@ -134,7 +134,7 @@ fromAll()
             .outputState();
         """
         
-        try await client.appendStream(on: StreamIdentifier(name: streamName), events: [
+        try await client.appendStream(StreamIdentifier(name: streamName), events: [
             .init(eventType: "ProjectionEventCreated", model: ["hello":"world"])
         ])
 
@@ -145,7 +145,7 @@ fromAll()
         let state = try #require(await client.getProjectionState(of: CountResult.self, name: name))
         #expect(state.count == 1)
         
-        try await client.deleteStream(on: StreamIdentifier(name: streamName))
+        try await client.deleteStream(streamName)
         try await client.disableProjection(name: name)
         try await client.deleteProjection(name: name) {
             $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
@@ -172,7 +172,7 @@ fromAll()
             .outputState();
         """
 
-        try await client.appendStream(on: StreamIdentifier(name: streamName), events: [
+        try await client.appendStream(streamName, events: [
             .init(eventType: "ProjectionEventCreated", model: ["hello":"world"])
         ])
         
@@ -183,7 +183,7 @@ fromAll()
         let result = try #require(await client.getProjectionResult(of: Int.self, name: name))
         #expect(result == 1)
         
-        try await client.deleteStream(on: StreamIdentifier(name: streamName))
+        try await client.deleteStream(streamName)
         try await client.disableProjection(name: name)
         try await client.deleteProjection(name: name) {
             $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)

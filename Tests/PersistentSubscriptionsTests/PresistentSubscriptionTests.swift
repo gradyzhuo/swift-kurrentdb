@@ -26,12 +26,12 @@ struct PersistentSubscriptionsTests {
         let streamIdentifier = StreamIdentifier(name: streamName)
         let client = KurrentDBClient(settings: settings)
         
-        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
+        try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
-        let subscriptions = try await client.listPersistentSubscriptions(to: streamIdentifier)
+        let subscriptions = try await client.listPersistentSubscriptions(stream: streamIdentifier)
         #expect(subscriptions.count == 1)
 
-        try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
+        try await client.deletePersistentSubscription(stream: streamIdentifier, groupName: groupName)
     }
 
     @Test("Subscribe PersistentSubscription for Stream")
@@ -39,11 +39,11 @@ struct PersistentSubscriptionsTests {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
         
-        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
+        try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
-        let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
+        let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
   
-        let response = try await client.appendStream(on: streamIdentifier, events: [
+        let response = try await client.appendStream(streamIdentifier, events: [
             .init(eventType: "PS-SubscribeToStream-AccountCreated", model: ["Description": "Gears of War 10"])
         ]) {
             $0.revision(expected: .any)
@@ -58,8 +58,8 @@ struct PersistentSubscriptionsTests {
 
         #expect(response.currentRevision == lastEventResult?.event.record.revision)
 
-        try await client.deleteStream(on: streamIdentifier)
-        try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
+        try await client.deleteStream(streamIdentifier)
+        try await client.deletePersistentSubscription(stream: streamIdentifier, groupName: groupName)
     }
 
     @Test("Subscribe PersistentSubscription for All Streams")
@@ -67,15 +67,15 @@ struct PersistentSubscriptionsTests {
         let client = KurrentDBClient(settings: settings)
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         
-        try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
+        try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
-        let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
+        let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
         let event = EventData(
             eventType: "PS-SubscribeToAll-AccountCreated", model: ["Description": "Gears of War 10:\(UUID().uuidString)"]
         )
 
-        let response = try await client.appendStream(on: streamIdentifier, events: [event]) {
+        let response = try await client.appendStream(streamIdentifier, events: [event]) {
             $0.revision(expected: .any)
         }
 
@@ -91,7 +91,7 @@ struct PersistentSubscriptionsTests {
 
         #expect(response.position?.commit == lastEventResult?.event.commitPosition?.commit)
 
-        try await client.deleteStream(on: streamIdentifier)
-        try await client.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
+        try await client.deleteStream(streamIdentifier)
+        try await client.deletePersistentSubscription(stream: streamIdentifier, groupName: groupName)
     }
 }

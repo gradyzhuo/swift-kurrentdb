@@ -84,7 +84,7 @@ extension EventStoreDBClient {
     // MARK: Append methods -
     @available(*, deprecated, message: "Please use the new API .streams(of:.specified()).append(events:options:) instead.")
     public func appendStream(to identifier: StreamIdentifier, events: [EventData], configure: @Sendable (_ options: Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options) async throws -> Streams<SpecifiedStream>.Append.Response {
-        return try await underlyingClient.appendStream(on: identifier, events: events){ _ in
+        return try await underlyingClient.appendStream(identifier, events: events){ _ in
             configure(.init())
         }
     }
@@ -117,7 +117,7 @@ extension EventStoreDBClient {
         }
         
         let finalOptions = options
-        return try await underlyingClient.readAllStreams(startFrom: cursor){ _ in
+        return try await underlyingClient.readAllStreams(since: cursor){ _ in
             finalOptions
         }
     }
@@ -156,7 +156,7 @@ extension EventStoreDBClient {
             }
         }
         let finalOptions = options
-        return try await underlyingClient.readStream(on: identifier, startFrom: cursor){ _ in
+        return try await underlyingClient.readStream(identifier, since: cursor){ _ in
             finalOptions
         }
     }
@@ -182,7 +182,7 @@ extension EventStoreDBClient {
         case .specified(let position):
             .position(commit: position.commit, prepare: position.prepare)
         }
-        return try await underlyingClient.subscribeAllStreams(startFrom: cursor){ _ in
+        return try await underlyingClient.subscribeAllStreams(since: cursor){ _ in
             options
         }
     }
@@ -199,7 +199,7 @@ extension EventStoreDBClient {
         case .specified(let pointer):
             cursor = .revision(pointer.value)
         }
-        return try await underlyingClient.subscribeStream(on: identifier, startFrom: cursor){ _ in
+        return try await underlyingClient.subscribeStream(identifier, since: cursor){ _ in
             options
         }
     }
@@ -209,7 +209,7 @@ extension EventStoreDBClient {
     @available(*, deprecated)
     @discardableResult
     public func deleteStream(to identifier: StreamIdentifier, configure: @Sendable (_ options: Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options) async throws -> Streams<SpecifiedStream>.Delete.Response {
-        return try await underlyingClient.deleteStream(on: identifier){ _ in
+        return try await underlyingClient.deleteStream(identifier){ _ in
             configure(.init())
         }
     }
@@ -218,7 +218,7 @@ extension EventStoreDBClient {
     @available(*, deprecated)
     @discardableResult
     public func tombstoneStream(to identifier: StreamIdentifier, configure: @Sendable (_ options: Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options) async throws -> Streams<SpecifiedStream>.Tombstone.Response {
-        return try await underlyingClient.tombstoneStream(on: identifier){ _ in
+        return try await underlyingClient.tombstoneStream(identifier){ _ in
             configure(.init())
         }
     }
@@ -243,7 +243,7 @@ extension EventStoreDBClient {
 extension EventStoreDBClient {
     @available(*, deprecated)
     public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options = { $0 }) async throws {
-        try await underlyingClient.createPersistentSubscription(to: identifier, groupName: groupName){ _ in
+        try await underlyingClient.createPersistentSubscription(stream: identifier, groupName: groupName){ _ in
             configure(.init())
         }
     }
@@ -263,7 +263,7 @@ extension EventStoreDBClient {
         case .all:
             try await underlyingClient.deletePersistentSubscriptionToAllStream(groupName: groupName)
         case let .specified(streamIdentifier):
-            try await underlyingClient.deletePersistentSubscription(to: streamIdentifier, groupName: groupName)
+            try await underlyingClient.deletePersistentSubscription(stream: streamIdentifier, groupName: groupName)
         }
     }
 
@@ -274,7 +274,7 @@ extension EventStoreDBClient {
         case .all:
             return try await underlyingClient.listPersistentSubscriptionsToAllStream()
         case let .specified(streamIdentifier):
-            return try await underlyingClient.listPersistentSubscriptions(to: streamIdentifier)
+            return try await underlyingClient.listPersistentSubscriptions(stream: streamIdentifier)
         }
     }
 

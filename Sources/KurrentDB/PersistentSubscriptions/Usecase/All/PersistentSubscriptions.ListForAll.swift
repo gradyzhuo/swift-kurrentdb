@@ -50,5 +50,9 @@ extension PersistentSubscriptions.ListForAll{
     public enum ListFilter: Sendable{
         case allSubscriptions
         case stream(StreamIdentifier)
+        
+        internal static func stream(_ name: String)->Self{
+            return .stream(.init(name: name))
+        }
     }
 }
