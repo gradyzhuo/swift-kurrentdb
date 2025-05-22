@@ -141,8 +141,6 @@ This check can be used to implement optimistic concurrency. When retrieving a st
 ```swift
 let stream = client.streams(of: .specified("concurrency-stream"))
 
-let readResponses = 
-
 if case let .event(event) = try await client.readStream("concurrency-stream", since: .end).first{ _ in true} {
     let data = TestEvent(
         id: "1",
