@@ -96,12 +96,12 @@ extension KurrentDBClient {
     ///
     /// - Parameter target: The stream target (e.g., `SpecifiedStream`, `AllStreams`, or `ProjectionStream`).
     /// - Returns: A `Streams` instance configured with the client's settings.
-    internal func streams<Target: StreamTarget>(of target: Target) -> Streams<Target> {
+    package func streams<Target: StreamTarget>(of target: Target) -> Streams<Target> {
         return .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
     /// The persistent subscriptions service for all streams.
-    internal var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
+    package var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
         return .init(target: .all, selector: selector, callOptions: defaultCallOptions)
     }
     
@@ -109,7 +109,7 @@ extension KurrentDBClient {
     ///
     /// - Parameter mode: The projection mode (e.g., `ContinuousMode` or `AnyMode`).
     /// - Returns: A `Projections` instance configured with the client's settings.
-    internal func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
+    package func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
         .init(target: .init(mode: mode), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
@@ -117,7 +117,7 @@ extension KurrentDBClient {
     ///
     /// - Parameter name: The name of the projection.
     /// - Returns: A `Projections` instance configured with the client's settings.
-    internal func projections(name: String) -> Projections<String> {
+    package func projections(name: String) -> Projections<String> {
         .init(target: name, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
@@ -125,22 +125,22 @@ extension KurrentDBClient {
     ///
     /// - Parameter predefined: The predefined system projection type (e.g., `.byCategory`).
     /// - Returns: A `Projections` instance configured with the client's settings.
-    internal func projections(system predefined: SystemProjectionTarget.Predefined) -> Projections<SystemProjectionTarget> {
+    package func projections(system predefined: SystemProjectionTarget.Predefined) -> Projections<SystemProjectionTarget> {
         .init(target: .init(predefined: predefined), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
     /// The user management service instance.
-    internal var users: Users {
+    package var users: Users {
         .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
     /// The monitoring service instance.
-    internal var monitoring: Monitoring {
+    package var monitoring: Monitoring {
         .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
     
     /// The operations service instance.
-    internal var operations: Operations {
+    package var operations: Operations {
         .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
     }
 }
