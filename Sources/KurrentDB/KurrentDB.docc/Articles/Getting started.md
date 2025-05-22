@@ -155,9 +155,9 @@ Each event in the database has its own unique identifier (UUID). The database us
 In the snippet below, we append the event to the stream `some-stream`.
 
 ```swift
-let stream = client.streams(of: .specified("some-stream"))
-
-try await stream.append(events: [eventData], options: .init().revision(expected: .any))
+let appendResponse = try await client.appendStream("some-stream", events: [eventData]) {
+    $0.revision(expected: .any)
+}
 ```
 
 Here we are appending events without checking if the stream exists or if the stream version matches the expected event version. See more advanced scenarios in appending [events documentation](https://docs.kurrent.io/clients/grpc/appending-events.html).
@@ -169,10 +169,11 @@ Finally, we can read events back from the `some-stream` stream.
 
 
 ```swift
-let stream = client.streams(of: .specified("some-stream"))
 
 // Read events from stream.
-let responses = try await stream.read(from: .start, options: .init().limit(10))
+let responses = try await client.readStream("some-stream", since: .start) {
+    $0.limit(10)
+}
 
 // loop it.
 for try await response in responses {

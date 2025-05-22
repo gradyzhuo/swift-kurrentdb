@@ -108,6 +108,11 @@ extension KurrentDBClient {
         return try await projections(name: name).detail()
     }
     
+
+    public func listAllProjections() async throws -> [Projections<AllProjectionTarget<AnyMode>>.Statistics.Detail] {
+        try await projections(all: .any ).list()
+    }
+    
     /// Restarts the projection subsystem.
     ///
     /// - Throws: A `KurrentError` if the restart operation fails.

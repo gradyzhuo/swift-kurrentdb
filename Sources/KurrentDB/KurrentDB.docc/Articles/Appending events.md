@@ -18,15 +18,9 @@ let event = EventData(
     payload: data
 )
 
-let stream = client.streams(of: .specified("some-stream"))
-
-let _ = try await stream.append(
-            events: [
-                event
-            ], 
-            options: .init()
-                     .revision(expected: .noStream)
-        )
+try await client.appendStream("some-stream", events: event){
+    $0.revision(expected: .noStream)
+}
 ```
 
 Append to streams takes a collection of `EventData`, which allows you to save more than one event in a single batch.
@@ -57,10 +51,7 @@ let event = EventData(
 
 let copiedEvent = event
 
-let stream = client.streams(of: .specified("some-stream"))
-
-let _ = try await stream.append(
-            events: event, copiedEvent)
+try await client.appendStream("some-stream", events: event, copiedEvent)
 ```
 
 ### type
@@ -76,8 +67,9 @@ The payload in EventData conforms to the Codable protocol, which means you can u
 ```swift
 extension EventData {
     public enum Payload: Sendable {
-        case binary(Data)
+        case data(Data)
         case json(Codable & Sendable)
+        // ...
     }
 }
 ```
@@ -106,10 +98,8 @@ let event = EventData(
     payload: data
 )
 
-let stream = client.streams(of: .specified("same-event-stream"))
-
-try await stream.append(events: event){ options in
-    options.revision(expected: .noStream)
+try await client.appendStream("same-event-stream", events: event){
+    $0.revision(expected: .noStream)
 }
 
 let data2 = TestEvent(
@@ -123,8 +113,8 @@ let event2 = EventData(
     payload: data2
 )
 
-try await stream.append(events: event2){ options in
-    options.revision(expected: .noStream)
+try await client.appendStream("same-event-stream", events: event2){
+    $0.revision(expected: .noStream)
 }
 
 ```
@@ -151,7 +141,9 @@ This check can be used to implement optimistic concurrency. When retrieving a st
 ```swift
 let stream = client.streams(of: .specified("concurrency-stream"))
 
-if case let .event(event) = try await stream.read(cursor: .end).first{ _ in true}{
+let readResponses = 
+
+if case let .event(event) = try await client.readStream("concurrency-stream", since: .end).first{ _ in true} {
     let data = TestEvent(
         id: "1",
         note: "clientOne"
@@ -159,28 +151,28 @@ if case let .event(event) = try await stream.read(cursor: .end).first{ _ in true
 
     let revision = event.record.revision
 
-    _ = try await stream.append(
-                events: [
-                    .init(
-                        id: UUID(),
-                        eventType: "some-event",
-                        payload: data)
-                ], 
-                options: .init().revision(expected: .revision(revision)))
+    try await client.appendStream("concurrency-stream", events: [
+            .init(
+                id: UUID(),
+                eventType: "some-event",
+                payload: data)
+        ]) {
+        $0.revision(expected: .revision(revision))
+    }
     
     let data2 = TestEvent(
         id: "2",
         note: "clientTwo"
     )
 
-    _ = try await stream.append(
-            events: [
-                .init(
-                    id: UUID(),
-                    eventType: "some-event",
-                    payload: data2)
-            ], 
-            options: .init().revision(expected: .revision(revision)))
+    try await client.appendStream("concurrency-stream", events: [
+            .init(
+                id: UUID(),
+                eventType: "some-event",
+                payload: data2)
+        ]) {
+        $0.revision(expected: .revision(revision))
+    }
 }
 ```
 
@@ -192,11 +184,10 @@ let settings:ClientSettings = .localhost().authenticated(.credentials(username: 
 
 let client = KurrentDBClient(settings: settings)
 
-let stream = client.streams(of: .specified("some-stream"))
-
-_ = try await stream.append(
-        events: .init(
+try await client.appendStream("some-stream", events: [
+        .init(
             id: UUID(),
             eventType: "some-event",
-            payload: data2))
+            payload: data2)
+])
 ```

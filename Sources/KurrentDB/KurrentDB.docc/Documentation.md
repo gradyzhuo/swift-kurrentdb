@@ -21,15 +21,9 @@ Then, interact with a specific stream by creating a `Streams` client for it.
 let clientSettings: ClientSettings = "kurrent://localhost:2113?tls=false" // Initialize with actual settings
 let client = KurrentDBClient(settings: clientSettings, numberOfThreads: 2)
 
-// Define the stream identifier (this can be either a specific stream or all streams)
-let streamIdentifier = StreamIdentifier("streamName") // Use a specified stream identifier
-
-// Accessing the 'Streams' client for a specific stream
-let streamsClient = client.streams(of: .specified(streamIdentifier))
-
 // Perform an action like appending events to the stream
-let eventData = EventData(type: "eventType", data: "eventData")
-try await streamsClient.append(events: [eventData])
+try await client.appendStream("streamName", events: eventData)
+
 ```
 
 ### PersistentSubscriptions
@@ -50,13 +44,10 @@ let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 // the group of subscription
 let groupName = "myGroupTest"
 
-let persistentSubscription = client.persistentSubscriptions(of: .specified(streamIdentifier, group: groupName))
+let streamName = UUID().uuidString
+try await client.createPersistentSubscription(stream: streamName, groupName: groupName)
 
-// Create it to specified identifier of streams.
-try await persistentSubscription.create(options: .init())
-
-
-let subscription = try await persistentSubscription.subscribe(options: .init())
+let subscription = try await client.subscribePersistentSubscription(stream: streamName, groupName: groupName)
 
 // Loop all results by subscription.events
 for try await result in subscription.events {
