@@ -77,7 +77,7 @@ public actor KurrentDBClient: Sendable, Buildable {
     /// - Note: This property is read-only and set during initialization.
     public private(set) var settings: ClientSettings
     
-    package let group: EventLoopGroup
+    package let eventLoopGroup: EventLoopGroup
     
     package var selector: NodeSelector
 
@@ -92,14 +92,23 @@ public actor KurrentDBClient: Sendable, Buildable {
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
         self.selector = .init(settings: settings)
-        group = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
+        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
     }
+    
+    public init(settings: ClientSettings, eventLoopGroup: EventLoopGroup, defaultCallOptions: CallOptions = .defaults) {
+        self.defaultCallOptions = defaultCallOptions
+        self.settings = settings
+        self.selector = .init(settings: settings)
+        self.eventLoopGroup = eventLoopGroup
+    }
+    
+    
 }
 
 /// Provides access to core service instances.
 extension KurrentDBClient {
     package func streams<Target: StreamTarget>(of target: Target) -> Streams<Target> {
-        return .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        return .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     package var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
@@ -107,26 +116,26 @@ extension KurrentDBClient {
     }
     
     package func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
-        .init(target: .init(mode: mode), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        .init(target: .init(mode: mode), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     package func projections(name: String) -> Projections<String> {
-        .init(target: name, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        .init(target: name, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     package func projections(system predefined: SystemProjectionTarget.Predefined) -> Projections<SystemProjectionTarget> {
-        .init(target: .init(predefined: predefined), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        .init(target: .init(predefined: predefined), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     package var users: Users {
-        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     package var monitoring: Monitoring {
-        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     package var operations: Operations {
-        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: group)
+        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 }
