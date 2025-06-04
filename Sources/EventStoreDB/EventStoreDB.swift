@@ -94,7 +94,17 @@ extension EventStoreDBClient {
         try await appendStream(to: identifier, events: events, configure: configure)
     }
 
-    // MARK: Read by all streams methods -
+    /// Reads events from all streams starting from the specified cursor position.
+    ///
+    /// The direction of reading (forward or backward) is determined by the cursor value or its associated direction. Returns a sequence of events from all streams, starting at the given position.
+    ///
+    /// - Parameters:
+    ///   - cursor: The position in the event log from which to start reading (start, end, or a specified position).
+    ///   - configure: An optional closure to further configure read options.
+    ///
+    /// - Returns: A sequence of responses containing events from all streams.
+    ///
+    /// - Throws: An error if the read operation fails.
     @available(*, deprecated, message: "Please use the new API .streams(of:.all).append(events:options:) instead.")
     public func readAllStreams(cursor _cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: @Sendable (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
         var options = configure(.init())
@@ -135,7 +145,16 @@ extension EventStoreDBClient {
     ///            - forwardOn(revision): Read the stream from the assigned revision and forward to the end.
     ///            - backwardFrom(revision):  Read the stream from the assigned revision and backward to the start.
     ///   - configure: A closure of building read options.
-    /// - Returns: AsyncStream to Read.Response
+    /// Reads events from a specified stream starting from a given cursor position.
+    ///
+    /// The cursor determines the starting revision and read direction. This method is deprecated; use the corresponding method on `KurrentDBClient` instead.
+    ///
+    /// - Parameters:
+    ///   - identifier: The stream to read from.
+    ///   - cursor: The starting position and direction for reading events.
+    ///   - configure: Optional closure to further configure read options.
+    ///
+    /// - Returns: The responses containing events read from the stream.
     @available(*, deprecated)
     public func readStream(to identifier: StreamIdentifier, cursor _cursor: Cursor<CursorPointer>, configure: @Sendable (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         var options = configure(.init())
@@ -171,7 +190,15 @@ extension EventStoreDBClient {
         )
     }
 
-    // MARK: Subscribe by all streams methods -
+    /// Subscribes to all streams from a specified position cursor.
+    ///
+    /// - Parameters:
+    ///   - _cursor: The starting position for the subscription (start, end, or a specific position).
+    ///   - configure: Optional closure to further configure subscription options.
+    ///
+    /// - Returns: A subscription to all streams, starting from the specified position.
+    ///
+    /// - Note: This method is deprecated. Use the corresponding method on `KurrentDBClient` instead.
     @available(*, deprecated)
     public func subscribeToAll(from _cursor: Cursor<StreamPosition>, configure: @Sendable (_ options: Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
@@ -188,6 +215,16 @@ extension EventStoreDBClient {
         }
     }
 
+    /// Subscribes to a specified stream from a given revision cursor.
+    ///
+    /// - Parameters:
+    ///   - identifier: The stream to subscribe to.
+    ///   - _cursor: The starting revision cursor for the subscription.
+    ///   - configure: Optional closure to further configure subscription options.
+    ///
+    /// - Returns: A subscription to the specified stream starting from the given revision cursor.
+    ///
+    /// - Note: This method is deprecated. Use the corresponding method on `KurrentDBClient` instead.
     @available(*, deprecated)
     public func subscribeTo(stream identifier: StreamIdentifier, from _cursor: Cursor<StreamRevision>, configure: @Sendable (_ options: Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())

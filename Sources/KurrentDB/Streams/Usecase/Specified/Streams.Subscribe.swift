@@ -24,6 +24,10 @@ extension Streams {
             self.options = options
         }
 
+        /// Constructs the underlying gRPC request message for subscribing to a stream.
+        ///
+        /// - Returns: A configured `UnderlyingRequest` with subscription options and stream identifier set.
+        /// - Throws: An error if building the stream identifier fails.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
@@ -127,6 +131,11 @@ extension Streams.Subscribe {
             self.revision = .end
         }
 
+        /// Constructs the underlying gRPC options message for a stream subscription.
+        ///
+        /// Configures the filter, UUID representation, stream revision, link resolution, subscription, and read direction based on the current option settings.
+        ///
+        /// - Returns: A configured `UnderlyingMessage` representing the subscription options.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.noFilter = .init()
@@ -160,6 +169,10 @@ extension Streams.Subscribe {
             }
         }
 
+        /// Returns a copy of the options with the specified UUID option set.
+        ///
+        /// - Parameter uuidOption: The UUID representation to use for events.
+        /// - Returns: A new `Options` instance with the updated UUID option.
         @discardableResult
         public func uuidOption(_ uuidOption: UUIDOption) -> Self {
             withCopy { options in
@@ -167,6 +180,10 @@ extension Streams.Subscribe {
             }
         }
         
+        /// Returns a copy of the options with the revision cursor set to the specified value.
+        ///
+        /// - Parameter cursor: The revision cursor to use for the subscription.
+        /// - Returns: A new `Options` instance with the updated revision.
         @discardableResult
         public func revision(from cursor: RevisionCursor) -> Self{
             withCopy { options in

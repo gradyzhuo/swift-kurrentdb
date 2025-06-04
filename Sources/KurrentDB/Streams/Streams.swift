@@ -118,7 +118,13 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameter cursor: The position in the stream from which to retrieve metadata, defaulting to `.end`.
     /// - Returns: The `StreamMetadata` if available, otherwise `nil`.
-    /// - Throws: An error if the metadata cannot be retrieved or parsed.
+    /// Retrieves the latest metadata for the stream, if available.
+    ///
+    /// Reads the most recent metadata event from the stream's metadata stream (`$$<streamName>`), decodes it as JSON, and returns it as a `StreamMetadata` object. Returns `nil` if no metadata event exists.
+    ///
+    /// - Throws: `KurrentError` if the metadata event is missing, not in JSON format, or if a parsing or client error occurs.
+    ///
+    /// - Returns: The latest `StreamMetadata` for the stream, or `nil` if no metadata is present.
     @discardableResult
     public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
         let options: Streams.Read.Options = .init().revision(from: .end).backward().limit(1)
@@ -178,7 +184,11 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - cursor: The position in the stream from which to read.
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `Read.Response` values.
-    /// - Throws: An error if the read operation fails.
+    /// Reads events from the specified stream as an asynchronous throwing stream.
+    ///
+    /// - Parameter options: Options to configure the read operation, such as revision range or filters.
+    /// - Returns: An asynchronous throwing stream of read responses containing events from the stream.
+    /// - Throws: `KurrentError` if the read operation fails.
     public func read(options: Read.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
         let usecase = Read(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -190,7 +200,11 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - cursor: The position in the stream from which to start subscribing.
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
-    /// - Throws: An error if the subscription fails.
+    /// Subscribes to events from the specified stream.
+    ///
+    /// - Parameter options: Subscription options, such as filters or starting revision.
+    /// - Returns: A subscription to the stream's events.
+    /// - Throws: `KurrentError` if the subscription fails.
     public func subscribe(options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Subscribe(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -235,7 +249,11 @@ extension Streams where Target == ProjectionStream {
     ///   - cursor: The position in the stream from which to start subscribing.
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Subscription` instance for receiving events.
-    /// - Throws: An error if the subscription fails.
+    /// Subscribes to events from the specified stream.
+    ///
+    /// - Parameter options: Subscription options, such as filters or starting revision.
+    /// - Returns: A subscription that receives events from the stream.
+    /// - Throws: `KurrentError` if the subscription cannot be established.
     public func subscribe(options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = Subscribe(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -253,7 +271,11 @@ extension Streams where Target == AllStreams {
     ///   - cursor: The position from which to start reading. default is `.start`.
     ///   - options: The options for reading events. Defaults to an empty configuration.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
-    /// - Throws: An error if the read operation fails.
+    /// Reads events from all streams as an asynchronous throwing stream.
+    ///
+    /// - Parameter options: Options to configure the read operation, such as filters or limits.
+    /// - Returns: An asynchronous throwing stream of read responses containing events from all streams.
+    /// - Throws: `KurrentError` if the read operation fails.
     public func read(options: ReadAll.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadAll.Response, Error> {
         let usecase = ReadAll(options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -265,7 +287,11 @@ extension Streams where Target == AllStreams {
     ///   - cursor: The position from which to start subscribing. default is `.end`
     ///   - options: The options for subscribing. Defaults to an empty configuration.
     /// - Returns: A `Streams.Subscription` instance for receiving events.
-    /// - Throws: An error if the subscription fails.
+    /// Subscribes to all event streams, delivering events as they occur.
+    ///
+    /// - Parameter options: Subscription options, including filters and starting position.
+    /// - Returns: A subscription that receives events from all streams.
+    /// - Throws: `KurrentError` if the subscription fails.
     public func subscribe(options: SubscribeAll.Options = .init()) async throws(KurrentError) -> Streams.Subscription {
         let usecase = SubscribeAll(options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)

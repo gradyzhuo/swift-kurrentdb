@@ -25,6 +25,12 @@ extension PersistentSubscriptions {
             self.options = options
         }
 
+        /// Constructs the underlying gRPC request message for creating a persistent subscription.
+        ///
+        /// Builds the request based on the selected stream(s), group name, and subscription options, including cursor position and optional filters.
+        ///
+        /// - Returns: The constructed gRPC request message.
+        /// - Throws: An error if building the stream identifier fails.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()

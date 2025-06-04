@@ -70,6 +70,9 @@ extension Streams.Read {
         }
 
         
+        /// Constructs and returns the underlying GRPC message for a stream read operation using the current options.
+        ///
+        /// The message includes stream position, read direction, link resolution, event limit, UUID format, and compatibility settings.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.noFilter = .init()
@@ -141,6 +144,7 @@ extension Streams.Read {
             }
         }
         
+        /// Returns a copy of the options with the read direction set to backward.
         @discardableResult
         public func backward() -> Self {
             withCopy{ options in
@@ -148,6 +152,10 @@ extension Streams.Read {
             }
         }
         
+        /// Returns a copy of the options with the specified stream revision and adjusts the read direction if the revision is `.start` (sets to forward) or `.end` (sets to backward).
+        ///
+        /// - Parameter revision: The stream revision to start reading from.
+        /// - Returns: A modified copy of the options with the updated revision and direction.
         @discardableResult
         public func revision(from revision: RevisionCursor) -> Self {
             withCopy{ options in
@@ -163,6 +171,10 @@ extension Streams.Read {
             }
         }
         
+        /// Returns a copy of the options with the stream revision set to the specified value.
+        ///
+        /// - Parameter revision: The stream revision to start reading from.
+        /// - Returns: A new `Options` instance with the updated revision, preserving the current read direction.
         @discardableResult
         public func revision(from revision: UInt64) -> Self {
             withCopy{ options in

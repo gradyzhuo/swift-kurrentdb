@@ -53,7 +53,11 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the read options, defaulting to no modifications.
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
-    /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
+    /// Reads events from all streams asynchronously, allowing customization of read options.
+    ///
+    /// - Parameter configure: A closure to configure read options for the operation.
+    /// - Returns: An asynchronous sequence of read responses containing events from all streams.
+    /// - Throws: An error if the read operation fails.
     public func readAllStreams(configure: @Sendable (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
         let options = configure(.init())
         return try await streams(of: .all).read(options: options)
@@ -67,7 +71,15 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the read options, defaulting to no modifications.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
-    /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
+    /// Reads events from the specified stream asynchronously.
+    ///
+    /// - Parameters:
+    ///   - streamIdentifier: The identifier of the stream to read from.
+    ///   - configure: A closure to customize read options. Defaults to no customization.
+    ///
+    /// - Returns: An asynchronous sequence of read responses containing events from the stream.
+    ///
+    /// - Throws: An error if the read operation fails.
     public func readStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).read(options: options)
@@ -80,7 +92,11 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the subscription options, defaulting to no modifications.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
+    /// Subscribes to all streams and returns a subscription for receiving events asynchronously.
+    ///
+    /// - Parameter configure: An optional closure to customize subscription options.
+    /// - Returns: A subscription instance for receiving events from all streams.
+    /// - Throws: An error if the subscription cannot be established.
     public func subscribeAllStreams( configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
         return try await streams(of: .all).subscribe(options: options)
@@ -94,7 +110,15 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the subscription options, defaulting to no modifications.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
+    /// Subscribes to a specified stream, delivering new events as they are appended.
+    ///
+    /// - Parameters:
+    ///   - streamIdentifier: The identifier of the stream to subscribe to.
+    ///   - configure: A closure to customize subscription options. Defaults to no customization.
+    ///
+    /// - Returns: A subscription instance for receiving events from the specified stream.
+    ///
+    /// - Throws: An error if the subscription cannot be established.
     public func subscribeStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).subscribe(options: options)
@@ -207,7 +231,12 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the read options, defaulting to no modifications.
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
-    /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
+    /// Reads events from the specified stream by name, with customizable read options.
+    ///
+    /// - Parameter streamName: The name of the stream to read from.
+    /// - Parameter configure: A closure to customize read options. Defaults to no customization.
+    /// - Returns: An asynchronous sequence of read responses containing events from the stream.
+    /// - Throws: An error if the read operation fails.
     public func readStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).read(options: options)
@@ -221,7 +250,12 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the subscription options, defaulting to no modifications.
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
-    /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
+    /// Subscribes to a specified stream by name, starting from a configurable revision.
+    ///
+    /// - Parameter streamName: The name of the stream to subscribe to.
+    /// - Parameter configure: A closure to customize subscription options. Defaults to no customization.
+    /// - Returns: A subscription instance for the specified stream.
+    /// - Throws: An error if the subscription cannot be established.
     public func subscribeStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).subscribe(options: options)

@@ -22,6 +22,10 @@ extension Streams where Target == AllStreams {
             self.options = options
         }
 
+        /// Builds the underlying gRPC request message for subscribing to all streams using the configured options.
+        ///
+        /// - Returns: The constructed gRPC request message.
+        /// - Throws: An error if encoding the options fails.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
@@ -127,6 +131,11 @@ extension Streams.SubscribeAll where Target == AllStreams {
             self.position = .end
         }
 
+        /// Builds the underlying gRPC request message for subscribing to all streams using the configured options.
+        ///
+        /// Encodes filter, UUID option, starting position, link resolution, and other subscription parameters into the request message.
+        ///
+        /// - Returns: The constructed gRPC request message reflecting the current subscription options.
         package func build() -> UnderlyingMessage {
             .with {
                 if let filter {
@@ -203,6 +212,10 @@ extension Streams.SubscribeAll where Target == AllStreams {
             }
         }
 
+        /// Returns a copy of the options with the specified UUID representation option set.
+        ///
+        /// - Parameter uuidOption: The UUID representation to use for events in the subscription.
+        /// - Returns: A copy of the options with the updated UUID option.
         @discardableResult
         public func uuidOption(_ uuidOption: UUIDOption) -> Self {
             withCopy { options in
@@ -211,6 +224,10 @@ extension Streams.SubscribeAll where Target == AllStreams {
         }
         
         
+        /// Returns a copy of the options with the starting position set to the specified cursor.
+        ///
+        /// - Parameter cursor: The position cursor to use as the starting point for the subscription.
+        /// - Returns: A new `Options` instance with the updated position.
         @discardableResult
         public func position(from cursor: PositionCursor) -> Self{
             withCopy { options in
