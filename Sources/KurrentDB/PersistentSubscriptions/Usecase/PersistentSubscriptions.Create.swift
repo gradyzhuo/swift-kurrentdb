@@ -37,7 +37,7 @@ extension PersistentSubscriptions {
                             $0.start = .init()
                         case .end:
                             $0.end = .init()
-                        case let .position(commitPosition, preparePosition):
+                        case let .specified(commitPosition, preparePosition):
                             $0.position = .with {
                                 $0.commitPosition = commitPosition
                                 $0.preparePosition = preparePosition
@@ -52,7 +52,7 @@ extension PersistentSubscriptions {
                             $0.start = .init()
                         case .end:
                             $0.end = .init()
-                        case .revision(let revision):
+                        case .specified(let revision):
                             $0.revision = revision
                         }
                     }

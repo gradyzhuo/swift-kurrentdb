@@ -175,7 +175,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
                     $0.all.start = .init()
                 case .end:
                     $0.all.end = .init()
-                case let .position(commitPosition, preparePosition):
+                case let .specified(commitPosition, preparePosition):
                     $0.all.position = .with {
                         $0.commitPosition = commitPosition
                         $0.preparePosition = preparePosition

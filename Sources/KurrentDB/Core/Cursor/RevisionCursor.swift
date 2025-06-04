@@ -8,5 +8,5 @@
 public enum RevisionCursor: Sendable {
     case start
     case end
-    case revision(UInt64)
+    case specified(UInt64)
 }

@@ -92,7 +92,7 @@ extension Streams.Read {
                     $0.stream.start = .init()
                 case .end:
                     $0.stream.end = .init()
-                case let .revision(revision):
+                case let .specified(revision):
                     $0.stream.revision = revision
                 }
                 
@@ -157,9 +157,17 @@ extension Streams.Read {
                     options.direction = .forward
                 case .end:
                     options.direction = .backward
-                case .revision:
+                case .specified:
                     options.direction = options.direction
                 }
+            }
+        }
+        
+        @discardableResult
+        public func revision(from revision: UInt64) -> Self {
+            withCopy{ options in
+                options.revision = .specified(revision)
+                options.direction = options.direction
             }
         }
     }

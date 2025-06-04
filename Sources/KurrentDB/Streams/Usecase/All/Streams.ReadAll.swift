@@ -102,7 +102,7 @@ extension Streams.ReadAll{
                     $0.stream.start = .init()
                 case .end:
                     $0.stream.end = .init()
-                case let .position(commitPosition, preparePosition):
+                case let .specified(commitPosition, preparePosition):
                     $0.all.position = .with {
                         $0.commitPosition = commitPosition
                         $0.preparePosition = preparePosition

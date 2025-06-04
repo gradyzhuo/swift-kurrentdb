@@ -143,7 +143,7 @@ extension Streams.Subscribe {
                     $0.stream.start = .init()
                 case .end:
                     $0.stream.end = .init()
-                case let .revision(revision):
+                case let .specified(revision):
                     $0.stream.revision = revision
                 }
 

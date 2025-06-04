@@ -8,9 +8,9 @@
 public enum PositionCursor: Sendable {
     case start
     case end
-    case position(commit: UInt64, prepare: UInt64)
+    case specified(commit: UInt64, prepare: UInt64)
     
-    public static func position(commit: UInt64) -> Self{
-        return .position(commit: commit, prepare: commit)
+    public static func specified(commit: UInt64) -> Self{
+        return .specified(commit: commit, prepare: commit)
     }
 }

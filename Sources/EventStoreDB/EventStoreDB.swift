@@ -107,7 +107,7 @@ extension EventStoreDBClient {
             options = options.backward()
             cursor = .end
         case .specified(let pointer):
-            cursor = .position(commit: pointer.position.commit, prepare: pointer.position.prepare)
+            cursor = .specified(commit: pointer.position.commit, prepare: pointer.position.prepare)
             switch pointer.direction {
             case .backward:
                 options = options.backward()
@@ -148,7 +148,7 @@ extension EventStoreDBClient {
             cursor = .end
             options = options.backward()
         case .specified(let pointer):
-            cursor = .revision(pointer.revision)
+            cursor = .specified(pointer.revision)
             switch pointer.direction {
             case .backward:
                 options = options.backward()
@@ -181,7 +181,7 @@ extension EventStoreDBClient {
         case .end:
             .end
         case .specified(let position):
-            .position(commit: position.commit, prepare: position.prepare)
+            .specified(commit: position.commit, prepare: position.prepare)
         }
         return try await underlyingClient.subscribeAllStreams{ _ in
             options.position(from: cursor)
@@ -198,7 +198,7 @@ extension EventStoreDBClient {
         case .end:
             cursor = .end
         case .specified(let pointer):
-            cursor = .revision(pointer.value)
+            cursor = .specified(pointer.value)
         }
         return try await underlyingClient.subscribeStream(identifier){ _ in
             options.revision(from: cursor)
