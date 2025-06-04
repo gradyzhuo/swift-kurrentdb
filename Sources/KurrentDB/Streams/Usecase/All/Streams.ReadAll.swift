@@ -64,8 +64,8 @@ extension Streams.ReadAll{
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        private var cursor: PositionCursor
-        public package(set) var direction: Direction
+        public private(set) var position: PositionCursor
+        public private(set) var direction: Direction
         public private(set) var resolveLinksEnabled: Bool
         public private(set) var limit: UInt64
         public private(set) var uuidOption: UUIDOption
@@ -76,7 +76,7 @@ extension Streams.ReadAll{
             self.limit = .max
             self.uuidOption = .string
             self.compatibility = 0
-            self.cursor = .start
+            self.position = .start
             self.direction = .forward
         }
 
@@ -97,7 +97,7 @@ extension Streams.ReadAll{
                 $0.resolveLinks = resolveLinksEnabled
                 $0.count = limit
                 
-                switch cursor {
+                switch position {
                 case .start:
                     $0.stream.start = .init()
                 case .end:
@@ -160,9 +160,9 @@ extension Streams.ReadAll{
         }
         
         @discardableResult
-        internal func curosr(_ cursor: PositionCursor) -> Self {
+        public func position(from cursor: PositionCursor) -> Self {
             withCopy{ options in
-                options.cursor = cursor
+                options.position = cursor
             }
         }
     }

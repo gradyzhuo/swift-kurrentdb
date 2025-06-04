@@ -16,32 +16,15 @@ extension Streams where Target == AllStreams {
         package typealias UnderlyingResponse = ReadAll.UnderlyingResponse
         public typealias Responses = Subscription
 
-        public let cursor: PositionCursor
         public let options: Options
 
-        init(cursor: PositionCursor, options: Options) {
-            self.cursor = cursor
+        init(options: Options) {
             self.options = options
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
-                $0.options.readDirection = .forwards
-                $0.options.subscription = .init()
-                
-                $0.options.readDirection = .forwards
-                switch cursor {
-                case .start:
-                    $0.options.all.start = .init()
-                case .end:
-                    $0.options.all.end = .init()
-                case let .position(commitPosition, preparePosition):
-                    $0.options.all.position = .with {
-                        $0.commitPosition = commitPosition
-                        $0.preparePosition = preparePosition
-                    }
-                }
             }
         }
 
@@ -132,6 +115,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        public private(set) var position: PositionCursor
         public private(set) var resolveLinksEnabled: Bool
         public private(set) var uuidOption: UUIDOption
         public private(set) var filter: SubscriptionFilter?
@@ -140,6 +124,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
             self.resolveLinksEnabled = false
             self.uuidOption = .string
             self.filter = nil
+            self.position = .end
         }
 
         package func build() -> UnderlyingMessage {
@@ -185,7 +170,22 @@ extension Streams.SubscribeAll where Target == AllStreams {
                     $0.uuidOption.string = .init()
                 }
 
+                switch position {
+                case .start:
+                    $0.all.start = .init()
+                case .end:
+                    $0.all.end = .init()
+                case let .position(commitPosition, preparePosition):
+                    $0.all.position = .with {
+                        $0.commitPosition = commitPosition
+                        $0.preparePosition = preparePosition
+                    }
+                }
+                
                 $0.resolveLinks = resolveLinksEnabled
+                $0.readDirection = .forwards
+                $0.subscription = .init()
+                $0.readDirection = .forwards
             }
         }
 
@@ -207,6 +207,14 @@ extension Streams.SubscribeAll where Target == AllStreams {
         public func uuidOption(_ uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
+            }
+        }
+        
+        
+        @discardableResult
+        public func position(from cursor: PositionCursor) -> Self{
+            withCopy { options in
+                options.position =  cursor
             }
         }
     }

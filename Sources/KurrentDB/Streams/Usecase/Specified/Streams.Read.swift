@@ -52,12 +52,12 @@ extension Streams.Read {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        private var cursor: RevisionCursor
-        public package(set) var direction: Direction
-        public package(set) var resolveLinks: Bool
-        public package(set) var limit: UInt64
-        public package(set) var uuidOption: UUIDOption
-        public package(set) var compatibility: UInt32
+        public private(set) var revision: RevisionCursor
+        public private(set) var direction: Direction
+        public private(set) var resolveLinks: Bool
+        public private(set) var limit: UInt64
+        public private(set) var uuidOption: UUIDOption
+        public private(set) var compatibility: UInt32
         
 
         public init() {
@@ -65,7 +65,7 @@ extension Streams.Read {
             self.limit = .max
             self.uuidOption = .string
             self.compatibility = 0
-            self.cursor = .start
+            self.revision = .start
             self.direction = .forward
         }
 
@@ -87,7 +87,7 @@ extension Streams.Read {
                 $0.resolveLinks = resolveLinks
                 $0.count = limit
                 
-                switch cursor {
+                switch revision {
                 case .start:
                     $0.stream.start = .init()
                 case .end:
@@ -149,10 +149,10 @@ extension Streams.Read {
         }
         
         @discardableResult
-        internal func cursor(_ cursor: RevisionCursor) -> Self {
+        public func revision(from revision: RevisionCursor) -> Self {
             withCopy{ options in
-                options.cursor = cursor
-                switch cursor {
+                options.revision = revision
+                switch revision {
                 case .start:
                     options.direction = .forward
                 case .end:

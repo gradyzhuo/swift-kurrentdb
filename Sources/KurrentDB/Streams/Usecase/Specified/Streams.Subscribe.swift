@@ -17,12 +17,10 @@ extension Streams {
         public typealias Responses = Subscription
 
         public let streamIdentifier: StreamIdentifier
-        public let cursor: RevisionCursor
         public let options: Options
 
-        public init(from streamIdentifier: StreamIdentifier, cursor: RevisionCursor, options: Options) {
+        public init(from streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
-            self.cursor = cursor
             self.options = options
         }
 
@@ -30,17 +28,6 @@ extension Streams {
             try .with {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
-                $0.options.subscription = .init()
-
-                $0.options.readDirection = .forwards
-                switch cursor {
-                case .start:
-                    $0.options.stream.start = .init()
-                case .end:
-                    $0.options.stream.end = .init()
-                case let .revision(revision):
-                    $0.options.stream.revision = revision
-                }
             }
         }
 
@@ -130,12 +117,14 @@ extension Streams.Subscribe {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var resolveLinksEnabled: Bool
-        public private(set) var uuidOption: UUIDOption
-
+        package private(set) var resolveLinksEnabled: Bool
+        package private(set) var uuidOption: UUIDOption
+        package private(set) var revsion: RevisionCursor
+        
         public init() {
             self.resolveLinksEnabled = false
             self.uuidOption = .string
+            self.revsion = .end
         }
 
         package func build() -> UnderlyingMessage {
@@ -148,8 +137,19 @@ extension Streams.Subscribe {
                 case .string:
                     $0.uuidOption.string = .init()
                 }
+                
+                switch revsion {
+                case .start:
+                    $0.stream.start = .init()
+                case .end:
+                    $0.stream.end = .init()
+                case let .revision(revision):
+                    $0.stream.revision = revision
+                }
 
                 $0.resolveLinks = resolveLinksEnabled
+                $0.subscription = .init()
+                $0.readDirection = .forwards
             }
         }
 
@@ -164,6 +164,13 @@ extension Streams.Subscribe {
         public func uuidOption(_ uuidOption: UUIDOption) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
+            }
+        }
+        
+        @discardableResult
+        public func revision(from cursor: RevisionCursor) -> Self{
+            withCopy { options in
+                options.revsion =  cursor
             }
         }
     }

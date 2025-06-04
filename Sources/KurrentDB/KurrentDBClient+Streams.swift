@@ -54,9 +54,9 @@ extension KurrentDBClient {
     /// - Returns: An asynchronous stream of `ReadAll.Response` values.
     /// - Throws: An error if the read operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func readAllStreams(since cursor: PositionCursor = .start, configure: @Sendable (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
+    public func readAllStreams(configure: @Sendable (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
         let options = configure(.init())
-        return try await streams(of: .all).read(startFrom: cursor, options: options)
+        return try await streams(of: .all).read(options: options)
     }
     
     /// Reads events from a specific stream.
@@ -68,9 +68,9 @@ extension KurrentDBClient {
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func readStream(_ streamIdentifier: StreamIdentifier, since cursor: RevisionCursor = .start, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
+    public func readStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
-        return try await streams(of: .specified(streamIdentifier)).read(startFrom: cursor, options: options)
+        return try await streams(of: .specified(streamIdentifier)).read(options: options)
     }
     
     /// Subscribes to all streams.
@@ -81,9 +81,9 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribeAllStreams(since cursor: PositionCursor = .start, configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
+    public func subscribeAllStreams( configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
-        return try await streams(of: .all).subscribe(startFrom: cursor, options: options)
+        return try await streams(of: .all).subscribe(options: options)
     }
     
     /// Subscribes to a specific stream.
@@ -95,9 +95,9 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribeStream(_ streamIdentifier: StreamIdentifier, since cursor: RevisionCursor = .end, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeStream(_ streamIdentifier: StreamIdentifier, startingAt cursor: RevisionCursor = .end, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
-        return try await streams(of: .specified(streamIdentifier)).subscribe(startFrom: cursor, options: options)
+        return try await streams(of: .specified(streamIdentifier)).subscribe(options: options)
     }
     
     /// Deletes a specific stream.
@@ -208,9 +208,9 @@ extension KurrentDBClient {
     /// - Returns: An asynchronous stream of `Read.Response` values.
     /// - Throws: An error if the read operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func readStream(_ streamName: String, since cursor: RevisionCursor = .start, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
+    public func readStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
-        return try await streams(of: .specified(streamName)).read(startFrom: cursor, options: options)
+        return try await streams(of: .specified(streamName)).read(options: options)
     }
     
     /// Subscribes to a specific stream using its name.
@@ -222,9 +222,9 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribeStream(_ streamName: String, since cursor: RevisionCursor = .end, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
-        return try await streams(of: .specified(streamName)).subscribe(startFrom: cursor, options: options)
+        return try await streams(of: .specified(streamName)).subscribe(options: options)
     }
     
     /// Deletes a specific stream using its name.
