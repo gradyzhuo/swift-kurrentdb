@@ -95,7 +95,7 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribeStream(_ streamIdentifier: StreamIdentifier, startingAt cursor: RevisionCursor = .end, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).subscribe(options: options)
     }
