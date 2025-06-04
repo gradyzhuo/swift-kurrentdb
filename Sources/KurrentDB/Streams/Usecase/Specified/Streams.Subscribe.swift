@@ -119,12 +119,12 @@ extension Streams.Subscribe {
 
         package private(set) var resolveLinksEnabled: Bool
         package private(set) var uuidOption: UUIDOption
-        package private(set) var revsion: RevisionCursor
+        package private(set) var revision: RevisionCursor
         
         public init() {
             self.resolveLinksEnabled = false
             self.uuidOption = .string
-            self.revsion = .end
+            self.revision = .end
         }
 
         package func build() -> UnderlyingMessage {
@@ -138,7 +138,7 @@ extension Streams.Subscribe {
                     $0.uuidOption.string = .init()
                 }
                 
-                switch revsion {
+                switch revision {
                 case .start:
                     $0.stream.start = .init()
                 case .end:
@@ -170,7 +170,7 @@ extension Streams.Subscribe {
         @discardableResult
         public func revision(from cursor: RevisionCursor) -> Self{
             withCopy { options in
-                options.revsion =  cursor
+                options.revision =  cursor
             }
         }
     }

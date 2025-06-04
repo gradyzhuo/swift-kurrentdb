@@ -117,8 +117,9 @@ extension EventStoreDBClient {
         }
         
         let finalOptions = options
-        return try await underlyingClient.readAllStreams(since: cursor){ _ in
-            finalOptions
+        
+        return try await underlyingClient.readAllStreams{ _ in
+            finalOptions.position(from: cursor)
         }
     }
 
@@ -156,8 +157,8 @@ extension EventStoreDBClient {
             }
         }
         let finalOptions = options
-        return try await underlyingClient.readStream(identifier, since: cursor){ _ in
-            finalOptions
+        return try await underlyingClient.readStream(identifier){ _ in
+            finalOptions.revision(from: cursor)
         }
     }
 
@@ -182,8 +183,8 @@ extension EventStoreDBClient {
         case .specified(let position):
             .position(commit: position.commit, prepare: position.prepare)
         }
-        return try await underlyingClient.subscribeAllStreams(since: cursor){ _ in
-            options
+        return try await underlyingClient.subscribeAllStreams{ _ in
+            options.position(from: cursor)
         }
     }
 
@@ -199,8 +200,8 @@ extension EventStoreDBClient {
         case .specified(let pointer):
             cursor = .revision(pointer.value)
         }
-        return try await underlyingClient.subscribeStream(identifier, since: cursor){ _ in
-            options
+        return try await underlyingClient.subscribeStream(identifier){ _ in
+            options.revision(from: cursor)
         }
     }
 
