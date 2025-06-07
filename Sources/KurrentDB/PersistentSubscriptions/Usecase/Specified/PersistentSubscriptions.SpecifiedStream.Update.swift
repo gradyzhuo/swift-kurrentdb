@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.UpdateToAll.swift
+//  PersistentSubscriptions.SpecifiedStream.Update.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/13.
@@ -20,7 +20,7 @@ extension PersistentSubscriptions.SpecifiedStream {
         public private(set) var group: String
         public private(set) var options: Options
 
-        init(streamIdentifier: StreamIdentifier, group: String, options: Options) {
+        public init(streamIdentifier: StreamIdentifier, group: String, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.group = group
             self.options = options

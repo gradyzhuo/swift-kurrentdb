@@ -80,7 +80,6 @@ extension PersistentSubscriptions.SpecifiedStream.ReplayParked {
         /// - Returns: The configured gRPC options message.
         package func build() -> UnderlyingMessage {
             return .with { 
-                $0.all = .init()
                 switch stopAt {
                 case .noLimit:
                     $0.noLimit = .init()

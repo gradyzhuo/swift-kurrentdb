@@ -103,7 +103,7 @@ let responses = try await client.readStream( "some-stream"){
 let stream = client.streams(of: .specified("some-stream"))
 do{
     let responses = try await client.readStream( "some-stream"){
-    $0.
+    $0
     .startFrom(revision: .specified(10))
 }
     for try await response in responses {
