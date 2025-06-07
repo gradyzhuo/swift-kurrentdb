@@ -23,6 +23,9 @@ extension PersistentSubscriptions.AllStream {
             self.options = options
         }
 
+        /// Constructs the underlying gRPC request message for replaying parked events, setting the group name and options.
+        ///
+        /// - Returns: A configured `UnderlyingRequest` for the replay parked operation.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
@@ -30,6 +33,11 @@ extension PersistentSubscriptions.AllStream {
             }
         }
 
+        /// Sends a replay parked request for a persistent subscription to all streams and processes the response asynchronously.
+        ///
+        /// - Returns: A wrapped response indicating the result of the replay operation.
+        ///
+        /// - Throws: An error if the gRPC call fails or the response cannot be handled.
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.replayParked(request: request, options: callOptions) {
@@ -55,6 +63,10 @@ extension PersistentSubscriptions.AllStream.ReplayParked {
             stopAt = .noLimit
         }
 
+        /// Returns a copy of the options with the specified stopping condition for replaying parked messages.
+        ///
+        /// - Parameter stopAt: The stopping option to apply.
+        /// - Returns: A new `Options` instance with the updated stopping condition.
         @discardableResult
         public func stopAt(_ stopAt: StopAtOption) -> Self {
             return withCopy { options in
@@ -62,6 +74,9 @@ extension PersistentSubscriptions.AllStream.ReplayParked {
             }            
         }
 
+        /// Constructs the underlying gRPC options message for replaying parked events, setting the stopping condition based on the current `stopAt` option.
+        ///
+        /// - Returns: An options message configured with either no limit or a specific stopping position.
         package func build() -> UnderlyingMessage {
             return .with { 
                 $0.all = .init()

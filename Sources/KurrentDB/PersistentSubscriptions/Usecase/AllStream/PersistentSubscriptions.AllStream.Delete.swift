@@ -21,6 +21,10 @@ extension PersistentSubscriptions.AllStream{
             self.groupName = groupName
         }
 
+        /// Constructs the gRPC request message to delete a persistent subscription group on all streams.
+        ///
+        /// - Returns: The underlying request message configured for deleting the specified group.
+        /// - Throws: An error if the request message cannot be constructed.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = .with { 
@@ -31,6 +35,10 @@ extension PersistentSubscriptions.AllStream{
             }
         }
 
+        /// Sends a request to delete a persistent subscription group on all streams.
+        ///
+        /// - Returns: A `DiscardedResponse` indicating the result of the delete operation.
+        /// - Throws: An error if the request fails or the response cannot be handled.
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.delete(request: request, options: callOptions) {

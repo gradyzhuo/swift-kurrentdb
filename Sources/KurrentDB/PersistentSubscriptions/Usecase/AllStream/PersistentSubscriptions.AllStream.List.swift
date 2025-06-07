@@ -17,6 +17,10 @@ extension PersistentSubscriptions.AllStream {
 
         internal init() {}
 
+        /// Constructs a request message to list all persistent subscriptions across all streams.
+        ///
+        /// - Returns: An underlying request configured to retrieve all persistent subscriptions.
+        /// - Throws: An error if the request message cannot be constructed.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = .with {
@@ -25,6 +29,10 @@ extension PersistentSubscriptions.AllStream {
             }
         }
 
+        /// Sends a request to list all persistent subscriptions across streams and returns their information.
+        ///
+        /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` representing all persistent subscriptions.
+        /// - Throws: An error if the request fails or the response cannot be processed.
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.list(request: request, options: callOptions) {

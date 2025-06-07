@@ -25,6 +25,10 @@ extension PersistentSubscriptions.SpecifiedStream {
             self.options = options
         }
         
+        /// Constructs the underlying gRPC request message for replaying parked events on a specified stream.
+        ///
+        /// - Returns: The constructed gRPC request message.
+        /// - Throws: An error if building the stream identifier fails.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
@@ -58,6 +62,10 @@ extension PersistentSubscriptions.SpecifiedStream.ReplayParked {
             stopAt = .noLimit
         }
 
+        /// Returns a copy of the options with the specified stopping position or limit set.
+        ///
+        /// - Parameter stopAt: The stopping position or limit for replaying parked events.
+        /// - Returns: A new `Options` instance with the updated `stopAt` value.
         @discardableResult
         public func stopAt(_ stopAt: StopAtOption) -> Self {
             return withCopy { options in
@@ -65,6 +73,11 @@ extension PersistentSubscriptions.SpecifiedStream.ReplayParked {
             }            
         }
 
+        /// Constructs the underlying gRPC options message for replaying parked events.
+        ///
+        /// Sets the `all` field and configures either `noLimit` or `stopAt` based on the current stop option.
+        ///
+        /// - Returns: The configured gRPC options message.
         package func build() -> UnderlyingMessage {
             return .with { 
                 $0.all = .init()

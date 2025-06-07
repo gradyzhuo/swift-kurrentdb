@@ -155,6 +155,11 @@ extension Streams.Read {
         /// Returns a copy of the options with the specified stream revision and adjusts the read direction if the revision is `.start` (sets to forward) or `.end` (sets to backward).
         ///
         /// - Parameter revision: The stream revision to start reading from.
+        /// Returns a copy of the options with the specified stream revision and adjusts the read direction accordingly.
+        ///
+        /// If the revision is `.start`, the direction is set to forward. If `.end`, the direction is set to backward. For `.specified`, the current direction is retained.
+        ///
+        /// - Parameter revision: The stream revision to start reading from.
         /// - Returns: A modified copy of the options with the updated revision and direction.
         @discardableResult
         public func srartFrom(revision: RevisionCursor) -> Self {

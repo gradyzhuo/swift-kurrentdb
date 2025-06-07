@@ -9,6 +9,12 @@ import Foundation
 import GRPCEncapsulates
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
+    /// Creates a gRPC persistent subscription settings message from the provided create settings.
+    ///
+    /// Maps all relevant properties from `PersistentSubscription.CreateSettings` to the corresponding gRPC fields, including checkpoint and timeout values.
+    ///
+    /// - Parameter settings: The persistent subscription creation settings to convert.
+    /// - Returns: A gRPC `Settings` message populated with the provided settings.
     package static func make(settings: PersistentSubscription.CreateSettings) -> Self {
         .with {
             $0.resolveLinks = settings.resolveLink
@@ -40,6 +46,12 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
+    /// Creates a `Settings` instance for updating a persistent subscription from the provided update settings.
+    ///
+    /// Only fields with non-nil values in `settings` are set in the resulting `Settings` object. This includes options such as link resolution, extra statistics, retry counts, checkpoint counts, subscriber limits, buffer sizes, and timeout values.
+    ///
+    /// - Parameter settings: The update settings to map to the gRPC request settings.
+    /// - Returns: A `Settings` instance populated with the specified update options.
     package static func from(settings: PersistentSubscription.UpdateSettings) -> Self {
         .with {
             if let resolveLink = settings.resolveLink {

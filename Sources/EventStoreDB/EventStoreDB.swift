@@ -105,7 +105,12 @@ extension EventStoreDBClient {
     ///
     /// - Returns: A sequence of responses containing events from all streams.
     ///
-    /// - Throws: An error if the read operation fails.
+    /// Reads events from all streams starting at the specified cursor position.
+    ///
+    /// The read direction is determined by the cursor: `.start` reads forward, `.end` reads backward, and `.specified` uses the direction provided in the pointer.
+    ///
+    /// - Parameter _cursor: The position and direction from which to start reading events across all streams.
+    /// - Returns: A sequence of events read from all streams, starting at the specified cursor position.
     @available(*, deprecated, message: "Please use the new API .streams(of:.all).append(events:options:) instead.")
     public func readAllStreams(cursor _cursor: Cursor<Streams<AllStreams>.ReadAll.CursorPointer>, configure: @Sendable (_ options: Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
         var options = configure(.init())
@@ -155,7 +160,19 @@ extension EventStoreDBClient {
     ///   - cursor: The starting position and direction for reading events.
     ///   - configure: Optional closure to further configure read options.
     ///
-    /// - Returns: The responses containing events read from the stream.
+    /// Reads events from a specified stream starting at a given revision cursor.
+    ///
+    /// The read direction (forward or backward) is determined by the cursor value or specified direction.
+    /// The `configure` closure allows customization of read options before execution.
+    ///
+    /// - Parameters:
+    ///   - identifier: The stream to read from.
+    ///   - _cursor: The starting point and direction for reading events.
+    ///   - configure: Optional closure to further configure read options.
+    ///
+    /// - Returns: A sequence of read responses containing events from the stream.
+    ///
+    /// - Throws: An error if the read operation fails.
     @available(*, deprecated)
     public func readStream(to identifier: StreamIdentifier, cursor _cursor: Cursor<CursorPointer>, configure: @Sendable (_ options: Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         var options = configure(.init())
@@ -199,7 +216,15 @@ extension EventStoreDBClient {
     ///
     /// - Returns: A subscription to all streams, starting from the specified position.
     ///
-    /// - Note: This method is deprecated. Use the corresponding method on `KurrentDBClient` instead.
+    /// Subscribes to all event streams from a specified position cursor.
+    ///
+    /// - Parameters:
+    ///   - from: The starting position cursor for the subscription (start, end, or a specific position).
+    ///   - configure: Optional closure to further configure subscription options.
+    ///
+    /// - Returns: A subscription to all streams, delivering events from the specified position onward.
+    ///
+    /// - Throws: An error if the subscription cannot be established.
     @available(*, deprecated)
     public func subscribeToAll(from _cursor: Cursor<StreamPosition>, configure: @Sendable (_ options: Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
@@ -225,7 +250,16 @@ extension EventStoreDBClient {
     ///
     /// - Returns: A subscription to the specified stream starting from the given revision cursor.
     ///
-    /// - Note: This method is deprecated. Use the corresponding method on `KurrentDBClient` instead.
+    /// Subscribes to a specified stream starting from a given revision cursor.
+    ///
+    /// - Parameters:
+    ///   - identifier: The stream to subscribe to.
+    ///   - _cursor: The revision cursor indicating where to start the subscription (start, end, or a specific revision).
+    ///   - configure: Optional closure to further configure subscription options.
+    ///
+    /// - Returns: A subscription to the specified stream, delivering events from the chosen revision onward.
+    ///
+    /// - Throws: An error if the subscription cannot be established.
     @available(*, deprecated)
     public func subscribeTo(stream identifier: StreamIdentifier, from _cursor: Cursor<StreamRevision>, configure: @Sendable (_ options: Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
@@ -280,6 +314,15 @@ extension EventStoreDBClient {
 // MARK: - PersistentSubscriptions
 
 extension EventStoreDBClient {
+    /// Creates a persistent subscription to a specified stream, starting from the given revision cursor.
+    ///
+    /// - Parameters:
+    ///   - identifier: The stream to subscribe to.
+    ///   - groupName: The name of the persistent subscription group.
+    ///   - cursor: The revision cursor indicating where to start the subscription (default is `.end`).
+    ///   - configure: A closure to configure additional subscription options.
+    ///
+    /// - Throws: An error if the subscription could not be created.
     @available(*, deprecated)
     public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws {
         try await underlyingClient.createPersistentSubscription(stream: identifier, groupName: groupName){ _ in
@@ -287,6 +330,14 @@ extension EventStoreDBClient {
         }
     }
 
+    /// Creates a persistent subscription to all streams from a specified position.
+    ///
+    /// - Parameters:
+    ///   - groupName: The name of the persistent subscription group.
+    ///   - cursor: The position in the stream from which to start the subscription.
+    ///   - configure: An optional closure to configure subscription creation options.
+    ///
+    /// - Throws: An error if the subscription could not be created.
     @available(*, deprecated)
     public func createPersistentSubscriptionToAll(groupName: String, startFrom cursor: PositionCursor, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options = { $0 }) async throws {
         return try await underlyingClient.createPersistentSubscriptionToAllStream(groupName: groupName){ _ in
@@ -323,7 +374,16 @@ extension EventStoreDBClient {
         try await underlyingClient.restartPersistentSubscriptionSubsystem()
     }
 
-    // MARK: -
+    /// Subscribes to a persistent subscription for the specified stream selector and group name.
+    ///
+    /// - Parameters:
+    ///   - streamSelector: Identifies the stream or streams to subscribe to.
+    ///   - groupName: The name of the persistent subscription group.
+    ///   - configure: Optional closure to customize read options.
+    ///
+    /// - Returns: An active persistent subscription for the specified stream and group.
+    ///
+    /// - Throws: An error if the subscription cannot be established.
     @available(*, deprecated)
     public func subscribePersistentSubscription(to streamSelector: StreamSelector<StreamIdentifier>, groupName: String, configure: @Sendable (_ options: ReadOptions) -> ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.Subscription {
         let node = try await underlyingClient.selector.select()
@@ -347,18 +407,29 @@ public struct ReadOptions: EventStoreOptions {
         uuidOption = .string
     }
     
+    /// Returns a copy of the options with the buffer size set to the specified value.
+    ///
+    /// - Parameter bufferSize: The number of events to buffer during subscription reads.
+    /// - Returns: A new `ReadOptions` instance with the updated buffer size.
     public func set(bufferSize: Int32) -> Self {
         withCopy { options in
             options.bufferSize = bufferSize
         }
     }
 
+    /// Returns a copy of the options with the specified UUID encoding option set.
+    ///
+    /// - Parameter uuidOption: The UUID encoding option to use.
+    /// - Returns: A new options instance with the updated UUID option.
     public func set(uuidOption: UUID.Option) -> Self {
         withCopy { options in
             options.uuidOption = uuidOption
         }
     }
 
+    /// Builds and returns the underlying gRPC message with the configured buffer size and UUID option.
+    ///
+    /// - Returns: An `UnderlyingMessage` instance populated with the current buffer size and UUID option settings.
     package func build() -> UnderlyingMessage {
         .with {
             $0.bufferSize = bufferSize

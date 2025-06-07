@@ -28,7 +28,11 @@ extension PersistentSubscriptions.AllStream {
         /// Builds the request based on the selected stream(s), group name, and subscription options, including cursor position and optional filters.
         ///
         /// - Returns: The constructed gRPC request message.
-        /// - Throws: An error if building the stream identifier fails.
+        /// Constructs the gRPC request message for creating a persistent subscription to all streams.
+        ///
+        /// - Throws: An error if building the subscription options fails.
+        ///
+        /// - Returns: The underlying gRPC request message with the configured group name and options.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
@@ -60,11 +64,19 @@ extension PersistentSubscriptions.AllStream.Create {
             self.position = .end
         }
 
+        /// Returns a copy of the options with the specified subscription filter applied.
+        ///
+        /// - Parameter filter: The filter to use for the subscription.
+        /// - Returns: A new options instance with the filter set.
         @discardableResult
         public func filter(_ filter: SubscriptionFilter) -> Self {
             withCopy { $0.filter = filter }
         }
 
+        /// Returns a copy of the options with the starting position for the subscription set to the specified cursor.
+        ///
+        /// - Parameter position: The position in the stream from which to start the subscription.
+        /// - Returns: A modified copy of the options with the updated starting position.
         @discardableResult
         public func startFrom(position: PositionCursor) -> Self {
             withCopy { 
@@ -72,6 +84,11 @@ extension PersistentSubscriptions.AllStream.Create {
             }
         }
 
+        /// Builds the underlying gRPC message for creating a persistent subscription to all streams.
+        ///
+        /// Configures the subscription settings, optional filter, and starting position within the stream.
+        ///
+        /// - Returns: The constructed gRPC request message for creating the persistent subscription.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)

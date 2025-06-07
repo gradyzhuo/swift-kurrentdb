@@ -28,7 +28,11 @@ extension PersistentSubscriptions.AllStream {
         /// Builds the request based on the stream selection (all streams or a specific stream) and the provided cursor position or revision. Throws an error if the stream identifier cannot be built.
         ///
         /// - Throws: An error if building the stream identifier fails.
-        /// - Returns: The constructed gRPC request message for the update operation.
+        /// Constructs the gRPC request message for updating a persistent subscription on all streams.
+        ///
+        /// - Throws: An error if building the options fails, such as when encoding the position cursor.
+        ///
+        /// - Returns: The configured gRPC request message for the update operation.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
@@ -58,6 +62,10 @@ extension PersistentSubscriptions.AllStream.Update{
             self.position = nil
         }
 
+        /// Returns a copy of the options with the starting position set to the specified value.
+        ///
+        /// - Parameter position: The position in the stream from which the subscription should start.
+        /// - Returns: A copy of the options with the updated starting position.
         @discardableResult
         public func startFrom(position: PositionCursor) -> Self {
             withCopy { 
@@ -66,6 +74,11 @@ extension PersistentSubscriptions.AllStream.Update{
         }
 
 
+        /// Constructs the underlying gRPC options message for updating a persistent subscription on all streams.
+        ///
+        /// The message includes the subscription settings and, if specified, the starting position (start, end, or a particular commit and prepare position).
+        ///
+        /// - Returns: The gRPC options message configured with the current settings and position.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .from(settings: settings)

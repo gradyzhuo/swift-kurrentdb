@@ -170,7 +170,10 @@ extension Streams.ReadAll{
         /// Returns a copy of the options with the starting position set to the specified cursor.
         ///
         /// - Parameter cursor: The stream position to use as the starting point for reading.
-        /// - Returns: A new options instance with the updated position.
+        /// Returns a copy of the options with the stream position set to the specified value.
+        ///
+        /// - Parameter position: The stream position cursor to start reading from.
+        /// - Returns: A modified copy of the options with the updated start position.
         @discardableResult
         public func startFrom(position: PositionCursor) -> Self {
             withCopy{ options in

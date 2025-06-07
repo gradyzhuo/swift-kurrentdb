@@ -53,6 +53,10 @@ extension PersistentSubscriptions {
 
 //MARK: - Streams
 extension Streams where Target: SpecifiedStreamTarget{
+    /// Returns a `PersistentSubscriptions` instance for a specified stream and subscription group.
+    ///
+    /// - Parameter group: The name of the persistent subscription group.
+    /// - Returns: A `PersistentSubscriptions` actor scoped to the given stream identifier and group.
     public func persistentSubscriptions(group: String)->PersistentSubscriptions<PersistentSubscription.Specified> {
         let target = PersistentSubscription.Specified(identifier: target.identifier, group: group)
         return .init(target: target, selector: selector, callOptions: callOptions)
@@ -76,11 +80,20 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AllStre
         }
     }
     
+    /// Creates a persistent subscription for all streams with the specified options.
+    ///
+    /// - Parameter options: Configuration options for creating the persistent subscription. Defaults to the standard options.
+    ///
+    /// - Throws: `KurrentError` if the subscription could not be created.
     public func create(options: AllStream.Create.Options = .init()) async throws(KurrentError) {
         let usecase = AllStream.Create(group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Updates the persistent subscription for all streams with the specified options.
+    ///
+    /// - Parameter options: Configuration options for updating the persistent subscription. Defaults to an empty options set.
+    /// - Throws: `KurrentError` if the update operation fails.
     public func update(options: AllStream.Update.Options = .init()) async throws(KurrentError) {
         let usecase = AllStream.Update(group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -88,22 +101,37 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AllStre
     
     /// Deletes a persistent subscription for all streams.
     ///
-    /// - Throws: An error if the deletion fails.
+    /// Deletes the persistent subscription group for all streams.
+    ///
+    /// - Throws: `KurrentError` if the deletion fails.
     public func delete() async throws(KurrentError) {
         let usecase = AllStream.Delete(group: group)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Retrieves information about the persistent subscription group for all streams.
+    ///
+    /// - Returns: Details of the persistent subscription group.
+    /// - Throws: `KurrentError` if the operation fails.
     public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
         let usecase = AllStream.GetInfo(group: group)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Subscribes to a persistent subscription for all streams using the specified options.
+    ///
+    /// - Parameter options: Configuration options for the subscription. Defaults to `.init()`.
+    /// - Returns: A `Subscription` instance representing the active persistent subscription.
+    /// - Throws: `KurrentError` if the subscription could not be established.
     public func subscribe(options: AllStream.Read.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = AllStream.Read(group: group, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Replays parked messages for the persistent subscription group across all streams.
+    ///
+    /// - Parameter options: Configuration options for replaying parked messages. Defaults to `.init()`.
+    /// - Throws: `KurrentError` if the operation fails.
     public func replayParked(options: AllStream.ReplayParked.Options = .init()) async throws(KurrentError) {
         let usecase = AllStream.ReplayParked(group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -121,12 +149,20 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
         }
     }
 
+    /// Creates a persistent subscription for a specified stream with the given options.
+    ///
+    /// - Parameter options: Configuration options for creating the persistent subscription. Defaults to `.init()`.
+    /// - Throws: `KurrentError` if the subscription could not be created.
     public func create(options: SpecifiedStream.Create.Options = .init()) async throws(KurrentError) {
         let usecase = SpecifiedStream.Create(streamIdentifier: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     
+    /// Updates the persistent subscription for the specified stream with the provided options.
+    ///
+    /// - Parameter options: Configuration options for updating the persistent subscription.
+    /// - Throws: `KurrentError` if the update operation fails.
     public func update(options: SpecifiedStream.Update.Options = .init()) async throws(KurrentError) {
         let usecase = SpecifiedStream.Update(streamIdentifier: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -135,22 +171,37 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     
     /// Deletes a persistent subscription for all streams.
     ///
-    /// - Throws: An error if the deletion fails.
+    /// Deletes the persistent subscription for the specified stream and group.
+    ///
+    /// - Throws: `KurrentError` if the deletion fails.
     public func delete() async throws(KurrentError) {
         let usecase = SpecifiedStream.Delete(streamIdentifier: target.identifier, group: target.group)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Retrieves information about the persistent subscription for the specified stream and group.
+    ///
+    /// - Returns: Subscription information for the targeted stream and group.
+    /// - Throws: `KurrentError` if the operation fails.
     public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
         let usecase = SpecifiedStream.GetInfo(stream: target.identifier, group: group)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Subscribes to a persistent subscription on a specified stream.
+    ///
+    /// - Parameter options: Options for configuring the subscription. Defaults to `.init()`.
+    /// - Returns: A `Subscription` representing the active persistent subscription.
+    /// - Throws: `KurrentError` if the subscription could not be established.
     public func subscribe(options: SpecifiedStream.Read.Options = .init()) async throws(KurrentError) -> Subscription {
         let usecase = SpecifiedStream.Read(stream: target.identifier, group: group, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
+    /// Replays parked messages for the specified persistent subscription stream.
+    ///
+    /// - Parameter options: Options to configure the replay operation. Defaults to `.init()`.
+    /// - Throws: `KurrentError` if the replay operation fails.
     public func replayParked(options: SpecifiedStream.ReplayParked.Options = .init()) async throws(KurrentError) {
         let usecase = SpecifiedStream.ReplayParked(stream: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -174,7 +225,10 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     
     /// Restarts the subsystem managing persistent subscriptions.
     ///
-    /// - Throws: An error if the restart operation fails.
+    /// Restarts the persistent subscription subsystem asynchronously.
+    ///
+    /// This operation reinitializes the persistent subscription infrastructure on the server side.
+    /// Throws a `KurrentError` if the restart fails.
     @MainActor
     public func restartSubsystem() async throws(KurrentError) {
         let usecase = RestartSubsystem()

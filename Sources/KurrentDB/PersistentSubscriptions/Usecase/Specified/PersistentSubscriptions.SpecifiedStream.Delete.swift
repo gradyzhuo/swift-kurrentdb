@@ -23,6 +23,11 @@ extension PersistentSubscriptions.SpecifiedStream{
             self.groupName = groupName
         }
 
+        /// Constructs the gRPC request message for deleting a persistent subscription on a specified stream.
+        ///
+        /// - Throws: An error if building the stream identifier fails.
+        ///
+        /// - Returns: The underlying gRPC request message configured with the stream identifier and group name.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = try .with {

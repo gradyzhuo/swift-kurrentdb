@@ -30,7 +30,10 @@ extension PersistentSubscriptions.SpecifiedStream {
         /// Builds the request based on the selected stream(s), group name, and subscription options, including cursor position and optional filters.
         ///
         /// - Returns: The constructed gRPC request message.
+        /// Constructs the gRPC request message for creating a persistent subscription on a specified stream.
+        ///
         /// - Throws: An error if building the stream identifier fails.
+        /// - Returns: The fully constructed gRPC request message for the create persistent subscription operation.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
@@ -39,6 +42,11 @@ extension PersistentSubscriptions.SpecifiedStream {
             }
         }
 
+        /// Sends an asynchronous gRPC request to create a persistent subscription on a specified stream.
+        ///
+        /// - Returns: A response indicating the result of the create operation.
+        ///
+        /// - Throws: An error if the request fails or the response cannot be handled.
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.create(request: request, options: callOptions) {
@@ -61,6 +69,10 @@ extension PersistentSubscriptions.SpecifiedStream.Create {
             self.revision = .end
         }
 
+        /// Returns a copy of the options with the starting revision set to the specified cursor.
+        ///
+        /// - Parameter revision: The revision cursor from which the subscription should start.
+        /// - Returns: A new options instance with the updated starting revision.
         @discardableResult
         public func startFrom(revision: RevisionCursor) -> Self {
             withCopy { 
@@ -68,6 +80,11 @@ extension PersistentSubscriptions.SpecifiedStream.Create {
             }
         }
 
+        /// Builds the gRPC options message for creating a persistent subscription on a specified stream.
+        ///
+        /// Maps the subscription settings and revision cursor to the appropriate fields in the underlying protobuf message.
+        ///
+        /// - Returns: The constructed gRPC options message for the create persistent subscription request.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)

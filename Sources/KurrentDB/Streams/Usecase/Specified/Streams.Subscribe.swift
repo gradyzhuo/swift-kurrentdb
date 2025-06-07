@@ -183,7 +183,10 @@ extension Streams.Subscribe {
         /// Returns a copy of the options with the revision cursor set to the specified value.
         ///
         /// - Parameter cursor: The revision cursor to use for the subscription.
-        /// - Returns: A new `Options` instance with the updated revision.
+        /// Returns a copy of the options with the starting revision set to the specified value.
+        ///
+        /// - Parameter revision: The revision cursor indicating where the subscription should start from.
+        /// - Returns: A new `Options` instance with the updated starting revision.
         @discardableResult
         public func startFrom(revision: RevisionCursor) -> Self{
             withCopy { options in

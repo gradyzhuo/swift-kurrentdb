@@ -124,7 +124,11 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Throws: `KurrentError` if the metadata event is missing, not in JSON format, or if a parsing or client error occurs.
     ///
-    /// - Returns: The latest `StreamMetadata` for the stream, or `nil` if no metadata is present.
+    /// Retrieves the latest metadata for the stream, decoding it as `StreamMetadata`.
+    ///
+    /// Reads the most recent metadata event from the stream's associated metadata stream. Returns the decoded metadata if present, or `nil` if no metadata event exists. Throws an error if the event data is not valid JSON or if a client or parsing error occurs.
+    ///
+    /// - Returns: The latest `StreamMetadata` if available, or `nil` if no metadata event exists.
     @discardableResult
     public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
         let options: Streams.Read.Options = .init().srartFrom(revision: .end).backward().limit(1)

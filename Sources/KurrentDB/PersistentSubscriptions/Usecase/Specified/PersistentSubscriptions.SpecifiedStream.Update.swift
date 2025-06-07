@@ -31,7 +31,10 @@ extension PersistentSubscriptions.SpecifiedStream {
         /// Builds the request based on the stream selection (all streams or a specific stream) and the provided cursor position or revision. Throws an error if the stream identifier cannot be built.
         ///
         /// - Throws: An error if building the stream identifier fails.
-        /// - Returns: The constructed gRPC request message for the update operation.
+        /// Constructs the underlying gRPC request message for updating a persistent subscription on a specified stream.
+        ///
+        /// - Throws: An error if the stream identifier cannot be built.
+        /// - Returns: The fully constructed gRPC request message.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
@@ -40,6 +43,11 @@ extension PersistentSubscriptions.SpecifiedStream {
             }
         }
 
+        /// Sends an update request for a persistent subscription to a specified stream using the underlying gRPC client.
+        ///
+        /// - Returns: A wrapped response indicating the result of the update operation.
+        ///
+        /// - Throws: An error if the request fails or the response cannot be handled.
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.update(request: request, options: callOptions) {
@@ -62,6 +70,10 @@ extension PersistentSubscriptions.SpecifiedStream.Update{
         }
 
 
+        /// Returns a copy of the options with the starting revision set to the specified cursor.
+        ///
+        /// - Parameter revision: The stream revision from which the subscription should start.
+        /// - Returns: A modified copy of the options with the updated starting revision.
         @discardableResult
         public func startFrom(revision: RevisionCursor) -> Self {
             withCopy { 
@@ -69,6 +81,11 @@ extension PersistentSubscriptions.SpecifiedStream.Update{
             }
         }
 
+        /// Constructs the underlying gRPC options message for updating a persistent subscription.
+        ///
+        /// Maps the current settings and revision cursor to the appropriate fields in the gRPC message.
+        ///
+        /// - Returns: The configured gRPC options message for the update request.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .from(settings: settings)

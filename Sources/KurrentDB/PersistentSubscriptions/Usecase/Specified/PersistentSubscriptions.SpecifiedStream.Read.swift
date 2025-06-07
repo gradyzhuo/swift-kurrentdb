@@ -26,6 +26,10 @@ extension PersistentSubscriptions.SpecifiedStream {
             self.options = options
         }
 
+        /// Constructs the underlying gRPC request messages for initiating a persistent subscription read on a specified stream.
+        ///
+        /// - Returns: An array containing the configured request message.
+        /// - Throws: An error if building the stream identifier fails.
         package func requestMessages() throws -> [UnderlyingRequest] {
             try [
                 .with {
@@ -36,6 +40,12 @@ extension PersistentSubscriptions.SpecifiedStream {
             ]
         }
 
+        /// Initiates an asynchronous gRPC streaming read from a persistent subscription on a specified stream.
+        ///
+        /// Sends the configured request messages to the server and returns a stream of subscription responses as they arrive. The returned object provides both the request writer and the asynchronous response stream.
+        ///
+        /// - Returns: An object containing the request writer and an asynchronous stream of subscription responses.
+        /// - Throws: If building the request messages fails or if the gRPC call encounters an error.
         package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
             let responses = AsyncThrowingStream.makeStream(of: Response.self)
 
@@ -70,18 +80,27 @@ extension PersistentSubscriptions.SpecifiedStream.Read {
             uuidOption = .string
         }
 
+        /// Returns a copy of the options with the buffer size set to the specified value.
+        ///
+        /// - Parameter bufferSize: The maximum number of events to buffer in the subscription.
+        /// - Returns: A new `Options` instance with the updated buffer size.
         public func bufferSize(_ bufferSize: Int32) -> Self {
             withCopy { options in
                 options.bufferSize = bufferSize
             }
         }
 
+        /// Returns a copy of the options with the specified UUID representation option set.
+        ///
+        /// - Parameter uuidOption: The UUID representation to use for events.
+        /// - Returns: A new options instance with the updated UUID option.
         public func uuidOption(_ uuidOption: UUID.Option) -> Self {
             withCopy { options in
                 options.uuidOption = uuidOption
             }
         }
 
+        /// Builds and returns the underlying gRPC options message for the persistent subscription read request, configured with the current buffer size and UUID option.
         package func build() -> UnderlyingMessage {
             .with {
                 $0.all = .init()

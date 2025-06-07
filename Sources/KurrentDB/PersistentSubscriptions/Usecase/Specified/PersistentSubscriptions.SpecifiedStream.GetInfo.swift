@@ -23,6 +23,10 @@ extension PersistentSubscriptions.SpecifiedStream {
             self.group = group
         }
 
+        /// Builds and returns the gRPC request message to retrieve persistent subscription information for the specified stream and group.
+        ///
+        /// - Throws: An error if the stream identifier cannot be built.
+        /// - Returns: The constructed gRPC request message.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = try .with { 
