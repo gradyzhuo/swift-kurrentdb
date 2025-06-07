@@ -9,10 +9,11 @@ import Foundation
 import GRPCEncapsulates
 
 public protocol PersistentSubscriptionsSettingsBuildable: Buildable {
-    var settings: PersistentSubscription.Settings { set get }
+    associatedtype SettingsType
+    var settings: SettingsType { set get }
 }
 
-extension PersistentSubscriptionsSettingsBuildable {
+extension PersistentSubscriptionsSettingsBuildable where SettingsType == PersistentSubscription.CreateSettings {
     @discardableResult
     public func resolveLink() -> Self {
         withCopy { $0.settings.resolveLink = true }
@@ -71,8 +72,61 @@ extension PersistentSubscriptionsSettingsBuildable {
     }
 }
 
+extension PersistentSubscriptionsSettingsBuildable where SettingsType == PersistentSubscription.UpdateSettings {
+    @discardableResult
+    public func resolveLink() -> Self {
+        withCopy { $0.settings.resolveLink = true }
+    }
+
+    @discardableResult
+    public func extraStatistics() -> Self {
+        withCopy { $0.settings.extraStatistics = true }
+    }
+
+    @discardableResult
+    public func messageTimeout(_ value: TimeSpan) -> Self {
+        withCopy { $0.settings.messageTimeout = value }
+    }
+
+    @discardableResult
+    public func maxRetryCount(_ value: Int32) -> Self {
+        withCopy { $0.settings.maxRetryCount = value }
+    }
+
+    @discardableResult
+    public func checkpoint(count value: ClosedRange<Int32>) -> Self {
+        withCopy { $0.settings.checkpointCount = value }
+    }
+    
+    @discardableResult
+    public func checkpoint(after value: TimeSpan) -> Self {
+        withCopy { $0.settings.checkpointAfter = value }
+    }
+
+    @discardableResult
+    public func maxSubscriberCount(_ value: Int32) -> Self {
+        withCopy { $0.settings.maxSubscriberCount = value }
+    }
+
+    @discardableResult
+    public func liveBufferSize(_ value: Int32) -> Self {
+        withCopy { $0.settings.liveBufferSize = value }
+    }
+
+    @discardableResult
+    public func readBatchSize(_ value: Int32) -> Self {
+        withCopy { $0.settings.readBatchSize = value }
+    }
+
+    @discardableResult
+    public func historyBufferSize(_ value: Int32) -> Self {
+        withCopy { $0.settings.historyBufferSize = value }
+    }
+
+}
+
 // MARK: - Deprecated
-extension PersistentSubscriptionsSettingsBuildable {
+extension PersistentSubscriptionsSettingsBuildable where SettingsType == PersistentSubscription.CreateSettings {
     @discardableResult
     @available(*, deprecated)
     public mutating func set(resolveLinks: Bool) -> Self {

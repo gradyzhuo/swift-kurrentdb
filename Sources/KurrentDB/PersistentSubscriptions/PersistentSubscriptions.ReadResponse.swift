@@ -9,7 +9,7 @@ import GRPCEncapsulates
 
 extension PersistentSubscriptions {
     public enum ReadResponse: GRPCResponse {
-        package typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_ReadResp
+        package typealias UnderlyingMessage = PersistentSubscriptions.UnderlyingService.Method.Read.Output
 
         case readEvent(event: ReadEvent, retryCount: Int32)
         case confirmation(subscriptionId: String)

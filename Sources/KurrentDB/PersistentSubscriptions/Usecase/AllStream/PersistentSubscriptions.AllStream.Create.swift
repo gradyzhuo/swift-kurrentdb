@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.CreateToAll.swift
+//  PersistentSubscriptions.AllStream.Create.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by 卓俊諺 on 2025/1/12.
@@ -8,19 +8,17 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions {
+extension PersistentSubscriptions.AllStream {
     public struct Create: UnaryUnary {
-        package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = UnderlyingService.Method.Create.Input
-        package typealias UnderlyingResponse = UnderlyingService.Method.Create.Output
+        package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
+        package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Create.Input
+        package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
         
-        let streamSelection: StreamSelection
         let group: String
         let options: Options
 
-        public init(stream streamSelection: StreamSelection, group: String, options: Options) {
-            self.streamSelection = streamSelection
+        public init(group: String, options: Options) {
             self.group = group
             self.options = options
         }
@@ -32,40 +30,9 @@ extension PersistentSubscriptions {
         /// - Returns: The constructed gRPC request message.
         /// - Throws: An error if building the stream identifier fails.
         package func requestMessage() throws -> UnderlyingRequest {
-            try .with {
+            .with {
                 $0.options = options.build()
                 $0.options.groupName = group
-                switch streamSelection {
-                case .all(let cursor):
-                    $0.options.all = .with{
-                        switch cursor {
-                        case .start:
-                            $0.start = .init()
-                        case .end:
-                            $0.end = .init()
-                        case let .specified(commitPosition, preparePosition):
-                            $0.position = .with {
-                                $0.commitPosition = commitPosition
-                                $0.preparePosition = preparePosition
-                            }
-                        }
-                    }
-                case .specified(let identifier, let cursor):
-                    $0.options.stream = try .with{
-                        $0.streamIdentifier = try identifier.build()
-                        switch cursor {
-                        case .start:
-                            $0.start = .init()
-                        case .end:
-                            $0.end = .init()
-                        case .specified(let revision):
-                            $0.revision = revision
-                        }
-                    }
-                    
-                }
-                
-                
             }
         }
 
@@ -79,23 +46,30 @@ extension PersistentSubscriptions {
 }
 
 
-extension PersistentSubscriptions.Create {
+extension PersistentSubscriptions.AllStream.Create {
     public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public var settings: PersistentSubscription.Settings
-        public var filter: SubscriptionFilter?
-        public var cursor: PositionCursor
+        public var settings: PersistentSubscription.CreateSettings
+        public private(set) var filter: SubscriptionFilter?
+        public private(set) var position: PositionCursor
 
         public init() {
             self.settings = .init()
             self.filter = nil
-            self.cursor = .end
+            self.position = .end
         }
 
         @discardableResult
         public func filter(_ filter: SubscriptionFilter) -> Self {
             withCopy { $0.filter = filter }
+        }
+
+        @discardableResult
+        public func startFrom(position: PositionCursor) -> Self {
+            withCopy { 
+                $0.position = position
+            }
         }
 
         package func build() -> UnderlyingMessage {
@@ -106,6 +80,20 @@ extension PersistentSubscriptions.Create {
                     $0.all.filter = .make(with: filter)
                 } else {
                     $0.all.noFilter = .init()
+                }
+
+                $0.all = .with{
+                    switch position {
+                    case .start:
+                        $0.start = .init()
+                    case .end:
+                        $0.end = .init()
+                    case let .specified(commitPosition, preparePosition):
+                        $0.position = .with {
+                            $0.commitPosition = commitPosition
+                            $0.preparePosition = preparePosition
+                        }
+                    }
                 }
             }
         }

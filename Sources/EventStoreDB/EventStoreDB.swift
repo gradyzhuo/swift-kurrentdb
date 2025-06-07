@@ -7,6 +7,7 @@
 
 @_exported import KurrentDB
 import GRPCCore
+import GRPCEncapsulates
 import NIO
 import Foundation
 
@@ -129,7 +130,7 @@ extension EventStoreDBClient {
         let finalOptions = options
         
         return try await underlyingClient.readAllStreams{ _ in
-            finalOptions.position(from: cursor)
+            finalOptions.startFrom(position: cursor)
         }
     }
 
@@ -177,7 +178,7 @@ extension EventStoreDBClient {
         }
         let finalOptions = options
         return try await underlyingClient.readStream(identifier){ _ in
-            finalOptions.revision(from: cursor)
+            finalOptions.srartFrom(revision: cursor)
         }
     }
 
@@ -211,7 +212,7 @@ extension EventStoreDBClient {
             .specified(commit: position.commit, prepare: position.prepare)
         }
         return try await underlyingClient.subscribeAllStreams{ _ in
-            options.position(from: cursor)
+            options.startFrom(position: cursor)
         }
     }
 
@@ -238,7 +239,7 @@ extension EventStoreDBClient {
             cursor = .specified(pointer.value)
         }
         return try await underlyingClient.subscribeStream(identifier){ _ in
-            options.revision(from: cursor)
+            options.startFrom(revision: cursor)
         }
     }
 
@@ -280,14 +281,14 @@ extension EventStoreDBClient {
 
 extension EventStoreDBClient {
     @available(*, deprecated)
-    public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscription(to identifier: StreamIdentifier, groupName: String, startFrom cursor: RevisionCursor = .end, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws {
         try await underlyingClient.createPersistentSubscription(stream: identifier, groupName: groupName){ _ in
             configure(.init())
         }
     }
 
     @available(*, deprecated)
-    public func createPersistentSubscriptionToAll(groupName: String, startFrom cursor: PositionCursor, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscriptionToAll(groupName: String, startFrom cursor: PositionCursor, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options = { $0 }) async throws {
         return try await underlyingClient.createPersistentSubscriptionToAllStream(groupName: groupName){ _ in
             configure(.init())
         }
@@ -324,7 +325,7 @@ extension EventStoreDBClient {
 
     // MARK: -
     @available(*, deprecated)
-    public func subscribePersistentSubscription(to streamSelector: StreamSelector<StreamIdentifier>, groupName: String, configure: @Sendable (_ options: PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.Subscription {
+    public func subscribePersistentSubscription(to streamSelector: StreamSelector<StreamIdentifier>, groupName: String, configure: @Sendable (_ options: ReadOptions) -> ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.Subscription {
         let node = try await underlyingClient.selector.select()
         let options = configure(.init())
         let usecase = PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadAnyTarget(streamSelector: streamSelector, group: groupName, options: options)
@@ -334,3 +335,41 @@ extension EventStoreDBClient {
 }
 
 
+
+public struct ReadOptions: EventStoreOptions {
+    package typealias UnderlyingMessage = PersistentSubscriptions<PersistentSubscription.AnyTarget>.UnderlyingService.Method.Read.Input.Options
+
+    public private(set) var bufferSize: Int32
+    public private(set) var uuidOption: UUID.Option
+
+    public init() {
+        bufferSize = 1000
+        uuidOption = .string
+    }
+    
+    public func set(bufferSize: Int32) -> Self {
+        withCopy { options in
+            options.bufferSize = bufferSize
+        }
+    }
+
+    public func set(uuidOption: UUID.Option) -> Self {
+        withCopy { options in
+            options.uuidOption = uuidOption
+        }
+    }
+
+    package func build() -> UnderlyingMessage {
+        .with {
+            $0.bufferSize = bufferSize
+            switch uuidOption {
+            case .string:
+                $0.uuidOption.string = .init()
+            case .structured:
+                $0.uuidOption.structured = .init()
+            }
+        }
+    }
+    
+    
+}

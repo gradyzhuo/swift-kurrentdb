@@ -8,11 +8,11 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions where Target == PersistentSubscription.AllStream{
-    public struct ListForStream: UnaryUnary {
-        package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = UnderlyingService.Method.List.Input
-        package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
+extension PersistentSubscriptions.SpecifiedStream{
+    public struct List: UnaryUnary {
+        package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
+        package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.List.Input
+        package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
 
         public let streamIdentifier: StreamIdentifier?

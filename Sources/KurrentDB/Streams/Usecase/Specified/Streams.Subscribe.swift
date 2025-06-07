@@ -185,9 +185,9 @@ extension Streams.Subscribe {
         /// - Parameter cursor: The revision cursor to use for the subscription.
         /// - Returns: A new `Options` instance with the updated revision.
         @discardableResult
-        public func revision(from cursor: RevisionCursor) -> Self{
+        public func startFrom(revision: RevisionCursor) -> Self{
             withCopy { options in
-                options.revision =  cursor
+                options.revision = revision
             }
         }
     }

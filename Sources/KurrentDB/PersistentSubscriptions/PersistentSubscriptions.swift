@@ -46,6 +46,11 @@ public actor PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPC
     }
 }
 
+extension PersistentSubscriptions {
+    public struct SpecifiedStream {}
+    public struct AllStream {}
+}
+
 //MARK: - Streams
 extension Streams where Target: SpecifiedStreamTarget{
     public func persistentSubscriptions(group: String)->PersistentSubscriptions<PersistentSubscription.Specified> {
@@ -71,13 +76,13 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AllStre
         }
     }
     
-    public func create(startFrom cursor: PositionCursor = .end, options: Create.Options = .init()) async throws(KurrentError) {
-        let usecase = Create(stream: .all(cursor: cursor), group: group, options: options)
+    public func create(options: AllStream.Create.Options = .init()) async throws(KurrentError) {
+        let usecase = AllStream.Create(group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
-    public func update(startFrom cursor: PositionCursor = .end, options: Update.Options = .init()) async throws(KurrentError) {
-        let usecase = Update(stream: .all(cursor: cursor), group: group, options: options)
+    public func update(options: AllStream.Update.Options = .init()) async throws(KurrentError) {
+        let usecase = AllStream.Update(group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
@@ -85,22 +90,22 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AllStre
     ///
     /// - Throws: An error if the deletion fails.
     public func delete() async throws(KurrentError) {
-        let usecase = Delete(group: group)
+        let usecase = AllStream.Delete(group: group)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
-        let usecase = GetInfo(group: group)
+        let usecase = AllStream.GetInfo(group: group)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
-    public func subscribe(options: ReadOptions = .init()) async throws(KurrentError) -> Subscription {
-        let usecase = Read(group: group, options: options)
+    public func subscribe(options: AllStream.Read.Options = .init()) async throws(KurrentError) -> Subscription {
+        let usecase = AllStream.Read(group: group, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
-    public func replayParked(options: ReplayParked.Options = .init()) async throws(KurrentError) {
-        let usecase = ReplayParked(group: group, options: options)
+    public func replayParked(options: AllStream.ReplayParked.Options = .init()) async throws(KurrentError) {
+        let usecase = AllStream.ReplayParked(group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
@@ -116,14 +121,14 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
         }
     }
 
-    public func create(startFrom cursor: RevisionCursor = .end, options: Create.Options = .init()) async throws(KurrentError) {
-        let usecase = Create(stream: .specified(identifier: target.identifier, cursor: cursor), group: group, options: options)
+    public func create(options: SpecifiedStream.Create.Options = .init()) async throws(KurrentError) {
+        let usecase = SpecifiedStream.Create(streamIdentifier: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     
-    public func update(startFrom cursor: RevisionCursor = .end, options: Update.Options = .init()) async throws(KurrentError) {
-        let usecase = Update(stream: .specified(identifier: target.identifier, cursor: cursor), group: group, options: options)
+    public func update(options: SpecifiedStream.Update.Options = .init()) async throws(KurrentError) {
+        let usecase = SpecifiedStream.Update(streamIdentifier: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
@@ -132,22 +137,22 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
     ///
     /// - Throws: An error if the deletion fails.
     public func delete() async throws(KurrentError) {
-        let usecase = Delete(stream: target.identifier, group: target.group)
+        let usecase = SpecifiedStream.Delete(streamIdentifier: target.identifier, group: target.group)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
     public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
-        let usecase = GetInfo(stream: target.identifier, group: group)
+        let usecase = SpecifiedStream.GetInfo(stream: target.identifier, group: group)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
-    public func subscribe(options: ReadOptions = .init()) async throws(KurrentError) -> Subscription {
-        let usecase = Read(stream: target.identifier, group: group, options: options)
+    public func subscribe(options: SpecifiedStream.Read.Options = .init()) async throws(KurrentError) -> Subscription {
+        let usecase = SpecifiedStream.Read(stream: target.identifier, group: group, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
-    public func replayParked(options: ReplayParked.Options = .init()) async throws(KurrentError) {
-        let usecase = ReplayParked(stream: target.identifier, group: group, options: options)
+    public func replayParked(options: SpecifiedStream.ReplayParked.Options = .init()) async throws(KurrentError) {
+        let usecase = SpecifiedStream.ReplayParked(stream: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
     
@@ -177,3 +182,4 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
     }
 
 }
+

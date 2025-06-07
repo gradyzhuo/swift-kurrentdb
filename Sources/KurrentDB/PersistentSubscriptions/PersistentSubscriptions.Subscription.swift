@@ -20,7 +20,7 @@ extension PersistentSubscriptions {
     /// - Manage subscription lifecycle through a writer for sending requests.
     public final class Subscription: Sendable {
         /// The underlying request type for the subscription.
-        package typealias Request = PersistentSubscriptions.Read.UnderlyingRequest
+        package typealias Request = PersistentSubscriptions.UnderlyingService.Method.Read.Input
 
         /// The writer responsible for sending requests to the subscription service.
         let writer: Writer

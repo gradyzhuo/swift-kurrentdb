@@ -157,7 +157,7 @@ extension Streams.Read {
         /// - Parameter revision: The stream revision to start reading from.
         /// - Returns: A modified copy of the options with the updated revision and direction.
         @discardableResult
-        public func revision(from revision: RevisionCursor) -> Self {
+        public func srartFrom(revision: RevisionCursor) -> Self {
             withCopy{ options in
                 options.revision = revision
                 switch revision {

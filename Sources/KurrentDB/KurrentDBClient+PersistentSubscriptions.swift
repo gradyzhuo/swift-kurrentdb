@@ -12,30 +12,28 @@ extension KurrentDBClient {
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
     ///   - groupName: The name of the subscription group.
-    ///   - cursor: The starting revision for the subscription, defaulting to `.end`.
     ///   - configure: A closure to customize the creation options, defaulting to no modifications.
     /// - Throws: An error if the creation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func createPersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, since cursor: RevisionCursor = .end, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws {
         let options = configure(.init())
         try await streams(of: .specified(streamIdentifier))
             .persistentSubscriptions(group: groupName)
-            .create(startFrom: cursor, options: options)
+            .create(options: options)
     }
     
     /// Creates a persistent subscription to all streams.
     ///
     /// - Parameters:
     ///   - groupName: The name of the subscription group.
-    ///   - cursor: The starting position for the subscription, defaulting to `.start`.
     ///   - configure: A closure to customize the creation options, defaulting to no modifications.
     /// - Throws: An error if the creation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func createPersistentSubscriptionToAllStream(groupName: String, since cursor: PositionCursor = .start, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscriptionToAllStream(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options = { $0 }) async throws {
         let options = configure(.init())
         try await streams(of: .all)
             .persistentSubscriptions(group: groupName)
-            .create(startFrom: cursor, options: options)
+            .create(options: options)
     }
     
     /// Updates a persistent subscription for a specific stream.
@@ -43,15 +41,14 @@ extension KurrentDBClient {
     /// - Parameters:
     ///   - streamIdentifier: The identifier of the target stream.
     ///   - groupName: The name of the subscription group.
-    ///   - cursor: The starting revision for the subscription, defaulting to `.end`.
     ///   - configure: A closure to customize the update options, defaulting to no modifications.
     /// - Throws: An error if the update fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func updatePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, since cursor: RevisionCursor = .end, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Update.Options = { $0 }) async throws {
+    public func updatePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options = { $0 }) async throws {
         let options = configure(.init())
         try await streams(of: .specified(streamIdentifier))
             .persistentSubscriptions(group: groupName)
-            .update(startFrom: cursor, options: options)
+            .update(options: options)
     }
     
     /// Updates a persistent subscription for all streams.
@@ -62,11 +59,11 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the update options, defaulting to no modifications.
     /// - Throws: An error if the update fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func updatePersistentSubscriptionToAllStream(groupName: String, since cursor: PositionCursor = .start, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.Update.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Update.Options = { $0 }) async throws {
+    public func updatePersistentSubscriptionToAllStream(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Update.Options = { $0 }) async throws {
         let options = configure(.init())
         try await streams(of: .all)
             .persistentSubscriptions(group: groupName)
-            .update(startFrom: cursor, options: options)
+            .update(options: options)
     }
     
     /// Subscribes to a persistent subscription for a specific stream.
@@ -78,7 +75,7 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+    public func subscribePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .specified(streamIdentifier))
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
@@ -92,7 +89,7 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.AllStream>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AllStream>.Subscription {
+    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Read.Options = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AllStream>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .all)
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
@@ -167,11 +164,11 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the creation options, defaulting to no modifications.
     /// - Throws: An error if the creation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func createPersistentSubscription(stream streamName: String, groupName: String, since cursor: RevisionCursor = .end, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws {
         let options = configure(.init())
         try await streams(of: .specified(streamName))
             .persistentSubscriptions(group: groupName)
-            .create(startFrom: cursor, options: options)
+            .create(options: options)
     }
     
     /// Updates a persistent subscription for a specific stream using its name.
@@ -183,11 +180,11 @@ extension KurrentDBClient {
     ///   - configure: A closure to customize the update options, defaulting to no modifications.
     /// - Throws: An error if the update fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func updatePersistentSubscription(stream streamName: String, groupName: String, since cursor: RevisionCursor = .end, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.Update.Options = { $0 }) async throws {
+    public func updatePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options = { $0 }) async throws {
         let options = configure(.init())
         try await streams(of: .specified(streamName))
             .persistentSubscriptions(group: groupName)
-            .update(startFrom: cursor, options: options)
+            .update(options: options)
     }
     
     /// Subscribes to a persistent subscription for a specific stream using its name.
@@ -199,7 +196,7 @@ extension KurrentDBClient {
     /// - Returns: A `Subscription` instance for receiving events.
     /// - Throws: An error if the subscription fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func subscribePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions) -> PersistentSubscriptions<PersistentSubscription.Specified>.ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+    public func subscribePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .specified(streamName))
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)

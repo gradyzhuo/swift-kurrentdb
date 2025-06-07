@@ -171,8 +171,10 @@ Finally, we can read events back from the `some-stream` stream.
 ```swift
 
 // Read events from stream.
-let responses = try await client.readStream("some-stream", since: .start) {
-    $0.limit(10)
+let responses = try await client.readStream("some-stream") {
+    $0
+    .startFrom(revision: .end)
+    .limit(10)
 }
 
 // loop it.

@@ -127,7 +127,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: The latest `StreamMetadata` for the stream, or `nil` if no metadata is present.
     @discardableResult
     public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
-        let options: Streams.Read.Options = .init().revision(from: .end).backward().limit(1)
+        let options: Streams.Read.Options = .init().srartFrom(revision: .end).backward().limit(1)
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
         let responses = try await usecase.perform(selector: selector, callOptions: callOptions)
 

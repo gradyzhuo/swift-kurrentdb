@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.ReplayParked.swift
+//  PersistentSubscriptions.SpecifiedStream.ReplayParked.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/11.
@@ -8,14 +8,14 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions {
+extension PersistentSubscriptions.SpecifiedStream {
     public struct ReplayParked: UnaryUnary {
-        package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = UnderlyingService.Method.ReplayParked.Input
-        package typealias UnderlyingResponse = UnderlyingService.Method.ReplayParked.Output
+        package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
+        package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.ReplayParked.Input
+        package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.ReplayParked.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        let streamIdentifier: StreamIdentifier?
+        let streamIdentifier: StreamIdentifier
         let group: String
         let options: Options
         
@@ -25,22 +25,11 @@ extension PersistentSubscriptions {
             self.options = options
         }
         
-        init(group: String, options: Options) {
-            self.streamIdentifier = nil
-            self.group = group
-            self.options = options
-        }
-
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 $0.options = options.build()
                 $0.options.groupName = group
-                
-                if let streamIdentifier {
-                    $0.options.streamIdentifier = try streamIdentifier.build()
-                }else{
-                    $0.options.all = .init()
-                }
+                $0.options.streamIdentifier = try streamIdentifier.build()
             }
         }
 
@@ -54,36 +43,38 @@ extension PersistentSubscriptions {
 }
 
 
-extension PersistentSubscriptions.ReplayParked {
+extension PersistentSubscriptions.SpecifiedStream.ReplayParked {
     public struct Options: EventStoreOptions {
-        public enum StopAtOption {
+        public enum StopAtOption: Sendable {
             case position(position: Int64)
             case noLimit
         }
 
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        var message: UnderlyingMessage
+        public private(set) var stopAt: StopAtOption
 
         public init() {
-            message = .init()
-            stop(at: .noLimit)
+            stopAt = .noLimit
         }
 
         @discardableResult
-        public func stop(at option: StopAtOption) -> Self {
-            withCopy { options in
-                switch option {
-                case let .position(position):
-                    options.message.stopAt = position
-                case .noLimit:
-                    options.message.noLimit = .init()
-                }
-            }
+        public func stopAt(_ stopAt: StopAtOption) -> Self {
+            return withCopy { options in
+                options.stopAt = stopAt
+            }            
         }
 
         package func build() -> UnderlyingMessage {
-            message
+            return .with { 
+                $0.all = .init()
+                switch stopAt {
+                case .noLimit:
+                    $0.noLimit = .init()
+                case let .position(position):
+                    $0.stopAt = position
+                }
+            }
         }
     }
 }

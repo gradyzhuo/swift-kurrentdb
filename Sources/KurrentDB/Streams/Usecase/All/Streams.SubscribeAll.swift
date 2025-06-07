@@ -229,9 +229,9 @@ extension Streams.SubscribeAll where Target == AllStreams {
         /// - Parameter cursor: The position cursor to use as the starting point for the subscription.
         /// - Returns: A new `Options` instance with the updated position.
         @discardableResult
-        public func position(from cursor: PositionCursor) -> Self{
+        public func startFrom(position: PositionCursor) -> Self{
             withCopy { options in
-                options.position =  cursor
+                options.position = position
             }
         }
     }

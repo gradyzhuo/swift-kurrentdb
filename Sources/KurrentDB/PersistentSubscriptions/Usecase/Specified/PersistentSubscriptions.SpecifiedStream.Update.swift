@@ -8,20 +8,20 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions {
+extension PersistentSubscriptions.SpecifiedStream {
     public struct Update: UnaryUnary {
-        package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = UnderlyingService.Method.Update.Input
-        package typealias UnderlyingResponse = UnderlyingService.Method.Update.Output
+        package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
+        package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Update.Input
+        package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
         
 
-        let streamSelection: StreamSelection
+        public private(set) var streamIdentifier: StreamIdentifier
         public private(set) var group: String
         public private(set) var options: Options
 
-        init(stream streamSelection: StreamSelection, group: String, options: Options) {
-            self.streamSelection = streamSelection
+        init(streamIdentifier: StreamIdentifier, group: String, options: Options) {
+            self.streamIdentifier = streamIdentifier
             self.group = group
             self.options = options
         }
@@ -36,36 +36,7 @@ extension PersistentSubscriptions {
             try .with {
                 $0.options = options.build()
                 $0.options.groupName = group
-                switch streamSelection {
-                case .all(let cursor):
-                    $0.options.all = .with{
-                        switch cursor {
-                        case .start:
-                            $0.start = .init()
-                        case .end:
-                            $0.end = .init()
-                        case let .specified(commitPosition, preparePosition):
-                            $0.position = .with {
-                                $0.commitPosition = commitPosition
-                                $0.preparePosition = preparePosition
-                            }
-                        }
-                    }
-                case .specified(let identifier, let cursor):
-                    $0.options.stream = try .with{
-                        $0.streamIdentifier = try identifier.build()
-                        switch cursor {
-                        case .start:
-                            $0.start = .init()
-                        case .end:
-                            $0.end = .init()
-                        case .specified(let revision):
-                            $0.revision = revision
-                        }
-                    }
-                    
-                }
-                
+                $0.options.streamIdentifier = try streamIdentifier.build()
             }
         }
 
@@ -79,19 +50,39 @@ extension PersistentSubscriptions {
 }
 
 
-extension PersistentSubscriptions.Update{
+extension PersistentSubscriptions.SpecifiedStream.Update{
     public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public var settings: PersistentSubscription.Settings
-
+        public var settings: PersistentSubscription.UpdateSettings
+        public private(set) var revision: RevisionCursor?
+        
         public init() {
             self.settings = .init()
+        }
+
+
+        @discardableResult
+        public func startFrom(revision: RevisionCursor) -> Self {
+            withCopy { 
+                $0.revision = revision
+            }
         }
 
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .from(settings: settings)
+                if let revision {
+                    switch revision {
+                    case .start:
+                        $0.stream.start = .init()
+                    case .end:
+                        $0.stream.end = .init()
+                    case .specified(let revision):
+                        $0.stream.revision = revision
+                    }
+                }
+                
             }
         }
     }

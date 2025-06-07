@@ -116,7 +116,7 @@ struct StreamTests: Sendable {
         
         let subscription = try await client.subscribeAllStreams{
             $0.filter(.onEventType(regex: "SubscribeAll-AccountCreated"))
-                .position(from: .end)
+                .startFrom(position: .end)
         }
         let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
             $0.revision(expected: .any)
@@ -145,7 +145,7 @@ struct StreamTests: Sendable {
         
         let filter: SubscriptionFilter = .onEventType(prefixes: "SubscribeAll-AccountCreated")
         let subscription = try await client.subscribeAllStreams {
-            $0.filter(filter).position(from: .end)
+            $0.filter(filter).startFrom(position: .end)
         }
         
         let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
@@ -173,7 +173,7 @@ struct StreamTests: Sendable {
         
         let filter: SubscriptionFilter = .excludeSystemEvents()
         let subscription = try await client.subscribeAllStreams {
-            $0.filter(filter).position(from: .end)
+            $0.filter(filter).startFrom(position: .end)
         }
         
         let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
@@ -201,7 +201,7 @@ struct StreamTests: Sendable {
         
         let filter: SubscriptionFilter = .onStreamName(prefix: streamIdentifier.name)
         let subscription = try await client.subscribeAllStreams {
-            $0.filter(filter).position(from: .end)
+            $0.filter(filter).startFrom(position: .end)
         }
         
         let response = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {
@@ -229,7 +229,7 @@ struct StreamTests: Sendable {
         
         let filter: SubscriptionFilter = .onStreamName(prefix: "wrong")
         let subscription = try await client.subscribeAllStreams {
-            $0.filter(filter).position(from: .end)
+            $0.filter(filter).startFrom(position: .end)
         }
         
         _ = try await client.appendStream(streamIdentifier, events: [eventForTesting]) {

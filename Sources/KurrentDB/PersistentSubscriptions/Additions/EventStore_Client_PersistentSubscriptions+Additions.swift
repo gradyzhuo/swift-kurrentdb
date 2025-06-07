@@ -9,7 +9,7 @@ import Foundation
 import GRPCEncapsulates
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
-    package static func make(settings: PersistentSubscription.Settings) -> Self {
+    package static func make(settings: PersistentSubscription.CreateSettings) -> Self {
         .with {
             $0.resolveLinks = settings.resolveLink
             $0.extraStatistics = settings.extraStatistics
@@ -40,30 +40,52 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
-    package static func from(settings: PersistentSubscription.Settings) -> Self {
+    package static func from(settings: PersistentSubscription.UpdateSettings) -> Self {
         .with {
-            $0.resolveLinks = settings.resolveLink
-            $0.extraStatistics = settings.extraStatistics
-            $0.maxRetryCount = settings.maxRetryCount
-            $0.minCheckpointCount = settings.checkpointCount.lowerBound
-            $0.maxSubscriberCount = settings.checkpointCount.upperBound
-            $0.maxSubscriberCount = settings.maxSubscriberCount
-            $0.liveBufferSize = settings.liveBufferSize
-            $0.readBatchSize = settings.readBatchSize
-            $0.historyBufferSize = settings.historyBufferSize
-
-            switch settings.checkpointAfter {
-            case let .ms(ms):
-                $0.checkpointAfterMs = ms
-            case let .ticks(ticks):
-                $0.checkpointAfterTicks = ticks
+            if let resolveLink = settings.resolveLink {
+                $0.resolveLinks = resolveLink
+            }
+            
+            if let extraStatistics = settings.extraStatistics {
+                $0.extraStatistics = extraStatistics
             }
 
-            switch settings.messageTimeout {
-            case let .ticks(int64):
-                $0.messageTimeoutTicks = int64
-            case let .ms(int32):
-                $0.messageTimeoutMs = int32
+            if let maxRetryCount = settings.maxRetryCount {
+                $0.maxRetryCount = maxRetryCount
+            }
+
+            if let checkpointCount = settings.checkpointCount {
+                $0.minCheckpointCount = checkpointCount.lowerBound
+                $0.maxSubscriberCount = checkpointCount.upperBound
+            }
+
+            if let maxSubscriberCount = settings.maxSubscriberCount {
+                $0.maxSubscriberCount = maxSubscriberCount
+            }
+            if let liveBufferSize = settings.liveBufferSize {
+                $0.liveBufferSize = liveBufferSize
+            }
+            if let readBatchSize = settings.readBatchSize {
+                $0.readBatchSize = readBatchSize
+            }
+            if let historyBufferSize = settings.historyBufferSize {
+                $0.historyBufferSize = historyBufferSize
+            }
+            if let checkpointAfter = settings.checkpointAfter {
+                switch checkpointAfter {
+                case let .ms(ms):
+                    $0.checkpointAfterMs = ms
+                case let .ticks(ticks):
+                    $0.checkpointAfterTicks = ticks
+                }
+            }
+            if let messageTimeout = settings.messageTimeout {
+                switch messageTimeout {
+                case let .ticks(int64):
+                    $0.messageTimeoutTicks = int64
+                case let .ms(int32):
+                    $0.messageTimeoutMs = int32
+                }
             }
         }
     }

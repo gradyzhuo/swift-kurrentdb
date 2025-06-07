@@ -6,7 +6,7 @@
 //
 
 extension PersistentSubscription {
-    public struct Settings: Sendable {
+    public struct CreateSettings: Sendable {
         public var resolveLink: Bool
 
         /// Whether or not in depth latency statistics should be tracked on this
@@ -65,8 +65,40 @@ extension PersistentSubscription {
             self.checkpointAfter = checkpointAfter
             self.consumerStrategy = consumerStrategy
         }
-        
-        
-        
     }
+
+    public struct UpdateSettings: Sendable {
+        public var resolveLink: Bool?
+
+        /// Whether or not in depth latency statistics should be tracked on this
+        /// subscription.
+        public var extraStatistics: Bool?
+
+        /// The amount of time (ms) after which a message should be considered to be
+        /// timeout and retried.
+        public var messageTimeout: TimeSpan?
+
+        /// The maximum number of retries (due to timeout) before a message get
+        /// considered to be parked.
+        public var maxRetryCount: Int32?
+
+        public var checkpointCount: ClosedRange<Int32>?
+
+        public var maxSubscriberCount: Int32?
+
+        /// The size of the buffer listening to live messages as they happen.
+        public var liveBufferSize: Int32?
+
+        /// The number of events read at a time when paging in history.
+        public var readBatchSize: Int32?
+
+        /// The number of events to cache when paging through history.
+        public var historyBufferSize: Int32?
+
+        /// The amount of time (ms) to try checkpoint after.
+        public var checkpointAfter: TimeSpan?
+
+        public init() {}
+    }
+
 }
