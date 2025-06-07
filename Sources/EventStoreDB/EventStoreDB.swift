@@ -195,7 +195,7 @@ extension EventStoreDBClient {
         }
         let finalOptions = options
         return try await underlyingClient.readStream(identifier){ _ in
-            finalOptions.srartFrom(revision: cursor)
+            finalOptions.startFrom(revision: cursor)
         }
     }
 
