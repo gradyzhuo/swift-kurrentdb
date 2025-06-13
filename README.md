@@ -119,8 +119,8 @@ import KurrentDB
 let settings: ClientSettings = .localhost()
 
 // Read responses of event from specified stream.
-let responses = try await client.readStream(on: "stream_for_testing", startFrom: .start){
-    $0.backward()
+let responses = try await client.readStream(on: "stream_for_testing"){
+    $0.backward().startFrom(revision: .start)
 }
 
 // loop it.
@@ -152,7 +152,7 @@ let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 let groupName = "myGroupTest"
 
 // Create it to specified identifier of stream
-try await client.createPersistentSubscription(to: streamIdentifier, groupName: groupName)
+try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 ```
 
 #### Subscribe
@@ -174,7 +174,7 @@ let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 let groupName = "myGroupTest"
 
 // Subscribe to stream or all, and get a subscription.
-let subscription = try await client.subscribePersistentSubscription(to: streamIdentifier, groupName: groupName)
+let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
 // Loop all results by subscription.events
 for try await result in subscription.events {
