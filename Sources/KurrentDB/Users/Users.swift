@@ -36,16 +36,15 @@ import NIO
 ///
 /// - Note: This service is built on top of **gRPC** and requires a valid `ClientSettings` configuration.
 public actor Users: GRPCConcreteService {
-    
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Users_Users.Client<HTTP2ClientTransport.Posix>
 
     /// The client settings required for establishing a gRPC connection.
     public private(set) var selector: NodeSelector
-    
+
     /// The gRPC call options.
     public var callOptions: CallOptions
-    
+
     /// The event loop group handling asynchronous tasks.
     public let eventLoopGroup: EventLoopGroup
 
@@ -55,7 +54,7 @@ public actor Users: GRPCConcreteService {
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
-    internal init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
@@ -78,7 +77,7 @@ extension Users {
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
 
         let responses = try await details(loginName: loginName)
-        do{
+        do {
             return try await responses.first { _ in true }
         } catch {
             throw .serverError("create user with loginName: \(loginName) failed, error: \(error)")
@@ -95,7 +94,7 @@ extension Users {
         let usecase = Details(loginName: loginName)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Enables a user account.
     ///
     /// - Parameter loginName: The username of the account to enable.
@@ -103,7 +102,7 @@ extension Users {
         let usecase = Enable(loginName: loginName)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Disables a user account.
     ///
     /// - Parameter loginName: The username of the account to disable.
@@ -111,7 +110,7 @@ extension Users {
         let usecase = Disable(loginName: loginName)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Updates user information.
     ///
     /// - Parameters:
@@ -122,7 +121,7 @@ extension Users {
         let usecase = Update(loginName: loginName, password: password, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Updates a user's full name.
     ///
     /// - Parameters:
@@ -134,7 +133,7 @@ extension Users {
             .set(fullName: fullName)
         try await update(loginName: loginName, password: password, options: options)
     }
-    
+
     /// Changes a user's password.
     ///
     /// - Parameters:
@@ -145,7 +144,7 @@ extension Users {
         let usecase = ChangePassword(loginName: loginName, currentPassword: currentPassword, newPassword: newPassword)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Resets a user's password.
     ///
     /// - Parameters:

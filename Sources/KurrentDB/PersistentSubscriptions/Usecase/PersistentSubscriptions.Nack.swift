@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Read.Nack.swift
+//  PersistentSubscriptions.Nack.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.
@@ -41,9 +41,8 @@ extension PersistentSubscriptions {
         let action: Nack.Action
         let reason: String
 
-
         init(subscriptionId id: String?, eventIds: [UUID], action: Nack.Action, reason: String) {
-            self.id = id.flatMap{ $0.data(using: .utf8) } ?? .init()
+            self.id = id.flatMap { $0.data(using: .utf8) } ?? .init()
             self.eventIds = eventIds
             self.action = action
             self.reason = reason

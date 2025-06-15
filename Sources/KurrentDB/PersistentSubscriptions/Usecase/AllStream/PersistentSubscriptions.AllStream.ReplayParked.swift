@@ -47,7 +47,6 @@ extension PersistentSubscriptions.AllStream {
     }
 }
 
-
 extension PersistentSubscriptions.AllStream.ReplayParked {
     public struct Options: EventStoreOptions {
         public enum StopAtOption: Sendable {
@@ -69,16 +68,16 @@ extension PersistentSubscriptions.AllStream.ReplayParked {
         /// - Returns: A new `Options` instance with the updated stopping condition.
         @discardableResult
         public func stopAt(_ stopAt: StopAtOption) -> Self {
-            return withCopy { options in
+            withCopy { options in
                 options.stopAt = stopAt
-            }            
+            }
         }
 
         /// Constructs the underlying gRPC options message for replaying parked events, setting the stopping condition based on the current `stopAt` option.
         ///
         /// - Returns: An options message configured with either no limit or a specific stopping position.
         package func build() -> UnderlyingMessage {
-            return .with { 
+            .with {
                 $0.all = .init()
                 switch stopAt {
                 case .noLimit:

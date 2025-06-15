@@ -124,11 +124,11 @@ extension Streams.Subscribe {
         package private(set) var resolveLinksEnabled: Bool
         package private(set) var uuidOption: UUIDOption
         package private(set) var revision: RevisionCursor
-        
+
         public init() {
-            self.resolveLinksEnabled = false
-            self.uuidOption = .string
-            self.revision = .end
+            resolveLinksEnabled = false
+            uuidOption = .string
+            revision = .end
         }
 
         /// Constructs the underlying gRPC options message for a stream subscription.
@@ -146,7 +146,7 @@ extension Streams.Subscribe {
                 case .string:
                     $0.uuidOption.string = .init()
                 }
-                
+
                 switch revision {
                 case .start:
                     $0.stream.start = .init()
@@ -179,7 +179,7 @@ extension Streams.Subscribe {
                 options.uuidOption = uuidOption
             }
         }
-        
+
         /// Returns a copy of the options with the revision cursor set to the specified value.
         ///
         /// - Parameter cursor: The revision cursor to use for the subscription.
@@ -188,7 +188,7 @@ extension Streams.Subscribe {
         /// - Parameter revision: The revision cursor indicating where the subscription should start from.
         /// - Returns: A new `Options` instance with the updated starting revision.
         @discardableResult
-        public func startFrom(revision: RevisionCursor) -> Self{
+        public func startFrom(revision: RevisionCursor) -> Self {
             withCopy { options in
                 options.revision = revision
             }
@@ -196,7 +196,8 @@ extension Streams.Subscribe {
     }
 }
 
-//MARK: - Deprecated
+// MARK: - Deprecated
+
 extension Streams.Subscribe.Options {
     @available(*, deprecated, renamed: "limit")
 
@@ -207,7 +208,7 @@ extension Streams.Subscribe.Options {
             options.resolveLinksEnabled = resolveLinks
         }
     }
-    
+
     @available(*, deprecated, renamed: "uuidOption")
     @discardableResult
     public func set(uuidOption: UUIDOption) -> Self {
@@ -215,5 +216,4 @@ extension Streams.Subscribe.Options {
             options.uuidOption = uuidOption
         }
     }
-    
 }

@@ -23,21 +23,21 @@ extension Projection {
             case aborted = "Aborted"
             case faultedEnabled = "Faulted (Enabled)"
         }
-        
+
         public typealias RawValue = Int
         public let rawValue: Int
-        
-        public init?(name rawValue: String){
+
+        public init?(name rawValue: String) {
             self.init()
             for nameValue in rawValue.split(separator: "/") {
                 guard let name = Name(rawValue: String(nameValue)) else {
                     return nil
                 }
-                self.insert(.init(name: name))
+                insert(.init(name: name))
             }
         }
-        
-        public init(name: Name){
+
+        public init(name: Name) {
             switch name {
             case .running:
                 self = .running
@@ -69,11 +69,11 @@ extension Projection {
                 self = [.faulted, .enabled]
             }
         }
-        
+
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }
-        
+
         public static let running = Status(rawValue: 1 << 0)
         public static let stopped = Status(rawValue: 1 << 1)
         public static let faulted = Status(rawValue: 1 << 2)
@@ -88,5 +88,4 @@ extension Projection {
         public static let aborted = Status(rawValue: 1 << 11)
         public static let enabled = Status(rawValue: 1 << 12)
     }
-    
 }

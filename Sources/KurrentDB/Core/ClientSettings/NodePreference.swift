@@ -5,7 +5,6 @@
 //  Created by Grady Zhuo on 2025/5/3.
 //
 
-
 public enum NodePreference: String, Sendable {
     case leader
     case follower
@@ -14,7 +13,7 @@ public enum NodePreference: String, Sendable {
 }
 
 extension NodePreference {
-    func priority(state: Gossip.VNodeState)->Int{
+    func priority(state: Gossip.VNodeState) -> Int {
         switch self {
         case .leader:
             switch state {
@@ -47,5 +46,4 @@ extension NodePreference {
             0
         }
     }
-
 }

@@ -12,12 +12,12 @@ public struct KeepAlive: Sendable {
 
     var interval: Duration
     var timeout: Duration
-    
+
     init(interval: Duration, timeout: Duration) {
         self.interval = interval
         self.timeout = timeout
     }
-    
+
     init(intervalMs interval: UInt64, timeoutMs timeout: UInt64) {
         self.interval = .microseconds(interval)
         self.timeout = .microseconds(timeout)

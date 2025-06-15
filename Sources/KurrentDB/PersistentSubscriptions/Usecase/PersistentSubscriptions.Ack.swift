@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Read.Ack.swift
+//  PersistentSubscriptions.Ack.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.
@@ -17,7 +17,7 @@ extension PersistentSubscriptions {
         public let eventIds: [UUID]
 
         init(subscriptionId id: String?, eventIds: [UUID]) {
-            self.id = id.flatMap{ $0.data(using: .utf8) } ?? .init()
+            self.id = id.flatMap { $0.data(using: .utf8) } ?? .init()
             self.eventIds = eventIds
         }
 

@@ -46,7 +46,7 @@ extension Projections {
                 if error.message.contains("NotFound") {
                     throw KurrentError.resourceNotFound(reason: "Projection \(name) not found.")
                 }
-                throw KurrentError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
+                throw try KurrentError.grpc(code: error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
             } catch {
                 throw KurrentError.serverError("Unknown error occurred, cause: \(error)")
             }
@@ -62,11 +62,11 @@ extension Projections.Update {
 
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
-        
+
         public var emitOption: EmitOption
 
         public init() {
-            self.emitOption = .noEmit
+            emitOption = .noEmit
         }
 
         package func build() -> UnderlyingMessage {

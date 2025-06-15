@@ -7,8 +7,8 @@
 
 import Foundation
 import GRPCCore
-import GRPCNIOTransportHTTP2Posix
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2Posix
 
 extension Gossip {
     public struct Read: UnaryUnary {
@@ -16,7 +16,7 @@ extension Gossip {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = [MemberInfo]
-        
+
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.read(request: request, options: callOptions) {
@@ -27,4 +27,3 @@ extension Gossip {
         }
     }
 }
-

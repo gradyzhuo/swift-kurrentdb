@@ -49,10 +49,10 @@ public actor Operations: GRPCConcreteService {
 
     /// The settings used for client communication.
     public private(set) var selector: NodeSelector
-    
+
     /// Options to be used for each gRPC service call.
     public var callOptions: CallOptions
-    
+
     /// The event loop group for asynchronous execution.
     public let eventLoopGroup: EventLoopGroup
 
@@ -62,7 +62,7 @@ public actor Operations: GRPCConcreteService {
     ///   - settings: The settings used for client communication.
     ///   - callOptions: Options for the gRPC call, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group for async operations, defaulting to `.singletonMultiThreadedEventLoopGroup`.
-    internal init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup

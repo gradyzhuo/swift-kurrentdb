@@ -6,12 +6,12 @@
 //
 
 import Foundation
-import KurrentDB
 import GRPCCore
-import GRPCNIOTransportHTTP2
 import GRPCEncapsulates
+import GRPCNIOTransportHTTP2
+import KurrentDB
 
-extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarget{
+extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarget {
     @available(*, deprecated, message: "This is only compatible with the original function.")
     public struct ReadAnyTarget: StreamStream {
         package typealias ServiceClient = UnderlyingClient
@@ -19,7 +19,7 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
         package typealias UnderlyingResponse = UnderlyingService.Method.Read.Output
         package typealias Response = ReadResponse
         package typealias Responses = Subscription
-        
+
         public let streamSelector: StreamSelector<StreamIdentifier>
         public let group: String
         public let options: ReadOptions
@@ -31,8 +31,8 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
         }
 
         package func requestMessages() throws -> [UnderlyingRequest] {
-            [
-                try .with {
+            try [
+                .with {
                     switch streamSelector {
                     case let .specified(streamIdentifier):
                         $0.options.streamIdentifier = try streamIdentifier.build()
@@ -40,10 +40,10 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
                         $0.options.all = .init()
                     }
                     $0.options.groupName = group
-                }
+                },
             ]
         }
-        
+
         package func send(connection: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws -> Subscription {
             let client = ServiceClient(wrapping: connection)
             let responses = AsyncThrowingStream.makeStream(of: ReadResponse.self)
@@ -63,6 +63,5 @@ extension PersistentSubscriptions where Target == PersistentSubscription.AnyTarg
             }
             return try await .init(requests: writer, responses: responses.stream)
         }
-
     }
 }

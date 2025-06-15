@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions.AllStream{
+extension PersistentSubscriptions.AllStream {
     public struct Delete: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Delete.Input
@@ -17,7 +17,7 @@ extension PersistentSubscriptions.AllStream{
 
         let groupName: String
 
-        internal init(group groupName: String) {
+        init(group groupName: String) {
             self.groupName = groupName
         }
 
@@ -27,11 +27,10 @@ extension PersistentSubscriptions.AllStream{
         /// - Throws: An error if the request message cannot be constructed.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
-                $0.options = .with { 
+                $0.options = .with {
                     $0.all = .init()
                     $0.groupName = groupName
                 }
-                
             }
         }
 

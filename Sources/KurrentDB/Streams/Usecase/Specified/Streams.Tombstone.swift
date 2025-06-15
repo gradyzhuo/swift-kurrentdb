@@ -16,7 +16,7 @@ extension Streams {
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
-        
+
         init(to streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.options = options
@@ -58,7 +58,7 @@ extension Streams.Tombstone {
     }
 }
 
-extension Streams.Tombstone{
+extension Streams.Tombstone {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 

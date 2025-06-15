@@ -21,7 +21,7 @@ extension PersistentSubscriptions.AllStream {
         public let options: Options
 
         init(group: String, options: Options) {
-            self.streamIdentifier = nil
+            streamIdentifier = nil
             self.group = group
             self.options = options
         }
@@ -48,7 +48,7 @@ extension PersistentSubscriptions.AllStream {
         /// - Throws: An error if request message construction fails or if the streaming call encounters an error.
         package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
             let responses = AsyncThrowingStream.makeStream(of: Response.self)
-            
+
             let writer = PersistentSubscriptions.Subscription.Writer()
             let requestMessages = try requestMessages()
             writer.write(messages: requestMessages)

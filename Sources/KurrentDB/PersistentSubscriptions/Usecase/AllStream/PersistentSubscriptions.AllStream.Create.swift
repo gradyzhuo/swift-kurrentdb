@@ -14,7 +14,7 @@ extension PersistentSubscriptions.AllStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
         let group: String
         let options: Options
 
@@ -49,7 +49,6 @@ extension PersistentSubscriptions.AllStream {
     }
 }
 
-
 extension PersistentSubscriptions.AllStream.Create {
     public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
@@ -59,9 +58,9 @@ extension PersistentSubscriptions.AllStream.Create {
         public private(set) var position: PositionCursor
 
         public init() {
-            self.settings = .init()
-            self.filter = nil
-            self.position = .end
+            settings = .init()
+            filter = nil
+            position = .end
         }
 
         /// Returns a copy of the options with the specified subscription filter applied.
@@ -79,7 +78,7 @@ extension PersistentSubscriptions.AllStream.Create {
         /// - Returns: A modified copy of the options with the updated starting position.
         @discardableResult
         public func startFrom(position: PositionCursor) -> Self {
-            withCopy { 
+            withCopy {
                 $0.position = position
             }
         }
@@ -99,7 +98,7 @@ extension PersistentSubscriptions.AllStream.Create {
                     $0.all.noFilter = .init()
                 }
 
-                $0.all = .with{
+                $0.all = .with {
                     switch position {
                     case .start:
                         $0.start = .init()

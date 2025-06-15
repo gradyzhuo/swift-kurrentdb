@@ -14,7 +14,6 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
 
         public private(set) var streamIdentifier: StreamIdentifier
         public private(set) var group: String
@@ -57,18 +56,16 @@ extension PersistentSubscriptions.SpecifiedStream {
     }
 }
 
-
-extension PersistentSubscriptions.SpecifiedStream.Update{
+extension PersistentSubscriptions.SpecifiedStream.Update {
     public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.UpdateSettings
         public private(set) var revision: RevisionCursor?
-        
-        public init() {
-            self.settings = .init()
-        }
 
+        public init() {
+            settings = .init()
+        }
 
         /// Returns a copy of the options with the starting revision set to the specified cursor.
         ///
@@ -76,7 +73,7 @@ extension PersistentSubscriptions.SpecifiedStream.Update{
         /// - Returns: A modified copy of the options with the updated starting revision.
         @discardableResult
         public func startFrom(revision: RevisionCursor) -> Self {
-            withCopy { 
+            withCopy {
                 $0.revision = revision
             }
         }
@@ -95,11 +92,10 @@ extension PersistentSubscriptions.SpecifiedStream.Update{
                         $0.stream.start = .init()
                     case .end:
                         $0.stream.end = .init()
-                    case .specified(let revision):
+                    case let .specified(revision):
                         $0.stream.revision = revision
                     }
                 }
-                
             }
         }
     }

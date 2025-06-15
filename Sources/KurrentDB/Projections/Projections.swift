@@ -33,7 +33,7 @@ public actor Projections<Target: ProjectionTarget>: GRPCConcreteService {
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The call options for gRPC requests. Defaults to `.defaults`.
     ///   - eventLoopGroup: The event loop group for asynchronous operations. Defaults to a singleton multi-threaded group.
-    internal init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
@@ -69,11 +69,11 @@ extension Projections where Target == AllProjectionTarget<ContinuousMode> {
     public func list() async throws(KurrentError) -> [Statistics.Detail] {
         let usecase = Statistics(options: .listAll(mode: target.mode.mode))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do{
+        do {
             return try await response.reduce(into: .init()) { partialResult, response in
                 partialResult.append(response.detail)
             }
-        }catch {
+        } catch {
             throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
         }
     }
@@ -87,11 +87,11 @@ extension Projections where Target == AllProjectionTarget<AnyMode> {
     public func list() async throws(KurrentError) -> [Statistics.Detail] {
         let usecase = Statistics(options: .listAll(mode: target.mode.mode))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do{
+        do {
             return try await response.reduce(into: .init()) { partialResult, response in
                 partialResult.append(response.detail)
             }
-        }catch{
+        } catch {
             throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
         }
     }
@@ -116,7 +116,7 @@ extension Projections where Target: NameSpecifiable & ProjectionDisable {
         let usecase = Disable(name: name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Aborts the projection without writing a checkpoint.
     ///
     /// - Throws: An error if aborting the projection fails.
@@ -169,10 +169,10 @@ extension Projections where Target: NameSpecifiable & ProjectionDescribable {
     public func detail() async throws(KurrentError) -> Statistics.Detail? {
         let usecase = Statistics(options: .specified(name: name))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do{
+        do {
             let result = try await response.first { _ in true }
             return result?.detail
-        }catch{
+        } catch {
             throw .internalClientError(reason: "The error happened while get the first detail from resposes, cause: \(error)")
         }
     }
@@ -189,15 +189,15 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
     public func result<DecodeType: Decodable>(of _: DecodeType.Type, options: Result.Options = .init()) async throws(KurrentError) -> DecodeType? {
         let usecase = Result(name: name, options: options)
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do{
+        do {
             return try response.decode(to: DecodeType.self)
-        } catch let error as DecodingError{
+        } catch let error as DecodingError {
             throw .decodingError(cause: error)
-        }catch {
+        } catch {
             throw .internalClientError(reason: "Decoding state failed, cause: \(error)")
         }
     }
-    
+
     /// Retrieves the state of the projection decoded to a specified type.
     ///
     /// - Parameters:
@@ -206,15 +206,15 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
     /// - Returns: An optional decoded state of type `DecodeType`, or `nil` if decoding fails.
     /// - Throws: An error if the operation or decoding fails.
     public func state<DecodeType: Decodable>(of _: DecodeType.Type, options: State.Options = .init()) async throws(KurrentError) -> DecodeType? {
-        do{
+        do {
             let usecase = State(name: name, options: options)
             let response = try await usecase.perform(selector: selector, callOptions: callOptions)
             return try response.decode(to: DecodeType.self)
-        }catch let error as KurrentError{
+        } catch let error as KurrentError {
             throw error
-        }catch let error as DecodingError{
+        } catch let error as DecodingError {
             throw .decodingError(cause: error)
-        }catch {
+        } catch {
             throw .internalClientError(reason: "Decoding state failed, cause: \(error)")
         }
     }

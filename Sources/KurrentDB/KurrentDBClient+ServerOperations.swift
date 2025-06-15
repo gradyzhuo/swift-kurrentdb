@@ -16,7 +16,7 @@ extension KurrentDBClient {
     /// - Throws: An error if the scavenge operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations.ScavengeResponse {
-        return try await operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
+        try await operations.startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
 
     /// Stops an ongoing scavenge operation.
@@ -26,6 +26,6 @@ extension KurrentDBClient {
     /// - Throws: An error if the scavenge operation cannot be stopped.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func stopScavenge(scavengeId: String) async throws -> Operations.ScavengeResponse {
-        return try await operations.stopScavenge(scavengeId: scavengeId)
+        try await operations.stopScavenge(scavengeId: scavengeId)
     }
 }

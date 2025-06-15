@@ -27,26 +27,24 @@ public struct EventData: EventStoreEvent {
             "type": eventType,
         ]
     }
-    
+
     @available(*, deprecated)
     public init(id: UUID = .init(), eventType: String, payload: Codable & Sendable, customMetadata: Data? = nil) {
         self.init(id: id, eventType: eventType, payload: .json(payload), contentType: .json, customMetadata: customMetadata)
     }
-    
-    public init(id: UUID = .init(), eventType: String, model: Codable & Sendable, customMetadata: Data? = nil){
+
+    public init(id: UUID = .init(), eventType: String, model: Codable & Sendable, customMetadata: Data? = nil) {
         self.init(id: id, eventType: eventType, payload: .json(model), contentType: .json, customMetadata: customMetadata)
     }
-    
+
     public init(id: UUID = .init(), eventType: String, data: Data, customMetadata: Data? = nil) {
         self.init(id: id, eventType: eventType, payload: .data(data), contentType: .binary, customMetadata: customMetadata)
     }
-    
+
     public init(id: UUID = .init(), eventType: String, bytes: [UInt8], customMetadata: Data? = nil) {
         self.init(id: id, eventType: eventType, payload: .data(.init(bytes)), contentType: .binary, customMetadata: customMetadata)
     }
-    
 }
-
 
 extension EventData {
     public enum Payload: Sendable {
@@ -76,7 +74,7 @@ extension EventData {
 }
 
 extension EventData {
-    public init(id: UUID = .init(), like recordedEvent: RecordedEvent){
+    public init(id: UUID = .init(), like recordedEvent: RecordedEvent) {
         self.init(id: id, eventType: recordedEvent.eventType, data: recordedEvent.data, customMetadata: recordedEvent.customMetadata)
     }
 }

@@ -68,7 +68,7 @@ extension PersistentSubscriptions {
         func ack(eventIds: [UUID]) async throws(KurrentError) {
             let usecase = PersistentSubscriptions.Ack(subscriptionId: subscriptionId, eventIds: eventIds)
 
-            do{
+            do {
                 let messages = try usecase.requestMessages()
                 writer.write(messages: messages)
             } catch {
@@ -110,13 +110,12 @@ extension PersistentSubscriptions {
         /// - Throws: An error if the negative acknowledgment request fails.
         func nack(eventIds: [UUID], action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             let usecase = PersistentSubscriptions.Nack(subscriptionId: subscriptionId, eventIds: eventIds, action: action, reason: reason)
-            do{
+            do {
                 let messages = try usecase.requestMessages()
                 writer.write(messages: messages)
             } catch {
                 throw .internalClientError(reason: "Nack eventIds:\(eventIds) failed, cause: \(error)")
             }
-            
         }
 
         /// Negatively acknowledges a list of read events.

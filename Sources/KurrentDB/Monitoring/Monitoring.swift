@@ -19,7 +19,7 @@ public actor Monitoring: GRPCConcreteService {
     public var callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
-    internal init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup

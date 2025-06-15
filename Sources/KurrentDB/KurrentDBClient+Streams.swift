@@ -28,9 +28,9 @@ extension KurrentDBClient {
     /// - Throws: An error if the metadata cannot be retrieved.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func getStreamMetadata(_ streamIdentifier: StreamIdentifier) async throws -> StreamMetadata? {
-        return try await streams(of: .specified(streamIdentifier)).getMetadata()
+        try await streams(of: .specified(streamIdentifier)).getMetadata()
     }
-    
+
     /// Appends events to a specific stream.
     ///
     /// - Parameters:
@@ -45,7 +45,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).append(events: events, options: options)
     }
-    
+
     /// Reads events from all streams.
     ///
     /// - Parameters:
@@ -62,7 +62,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .all).read(options: options)
     }
-    
+
     /// Reads events from a specific stream.
     ///
     /// - Parameters:
@@ -84,7 +84,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).read(options: options)
     }
-    
+
     /// Subscribes to all streams.
     ///
     /// - Parameters:
@@ -97,11 +97,11 @@ extension KurrentDBClient {
     /// - Parameter configure: An optional closure to customize subscription options.
     /// - Returns: A subscription instance for receiving events from all streams.
     /// - Throws: An error if the subscription cannot be established.
-    public func subscribeAllStreams( configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
+    public func subscribeAllStreams(configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
         return try await streams(of: .all).subscribe(options: options)
     }
-    
+
     /// Subscribes to a specific stream.
     ///
     /// - Parameters:
@@ -123,7 +123,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).subscribe(options: options)
     }
-    
+
     /// Deletes a specific stream.
     ///
     /// - Parameters:
@@ -137,7 +137,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).delete(options: options)
     }
-    
+
     /// Tombstones a specific stream, marking it as permanently deleted.
     ///
     /// - Parameters:
@@ -151,7 +151,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).tombstone(options: options)
     }
-    
+
     /// Copies events from one stream to a new stream.
     ///
     /// - Parameters:
@@ -168,7 +168,7 @@ extension KurrentDBClient {
         }
         try await streams(of: .specified(newIdentifier)).append(events: events, options: .init().revision(expected: .noStream))
     }
-    
+
     /// Sets metadata for a specific stream using its name.
     ///
     /// - Parameters:
@@ -190,9 +190,9 @@ extension KurrentDBClient {
     /// - Throws: An error if the metadata cannot be retrieved.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func getStreamMetadata(_ streamName: String) async throws -> StreamMetadata? {
-        return try await streams(of: .specified(streamName)).getMetadata()
+        try await streams(of: .specified(streamName)).getMetadata()
     }
-    
+
     /// Appends events to a specific stream using its name.
     ///
     /// - Parameters:
@@ -207,7 +207,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).append(events: events, options: options)
     }
-    
+
     /// Appends variadic events to a specific stream using its name.
     ///
     /// - Parameters:
@@ -241,7 +241,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).read(options: options)
     }
-    
+
     /// Subscribes to a specific stream using its name.
     ///
     /// - Parameters:
@@ -260,7 +260,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).subscribe(options: options)
     }
-    
+
     /// Deletes a specific stream using its name.
     ///
     /// - Parameters:
@@ -274,7 +274,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).delete(options: options)
     }
-    
+
     /// Tombstones a specific stream using its name, marking it as permanently deleted.
     ///
     /// - Parameters:

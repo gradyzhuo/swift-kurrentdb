@@ -27,18 +27,18 @@ extension Projections {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
-            do{
+            do {
                 let client = ServiceClient(wrapping: connection)
                 return try await client.result(request: request, options: callOptions) {
                     try handle(response: $0)
                 }
-            }catch let error as RPCError {
-                if error.message.contains("NotFound"){
+            } catch let error as RPCError {
+                if error.message.contains("NotFound") {
                     throw KurrentError.resourceNotFound(reason: "Projection \(name) not found.")
                 }
-                
-                throw KurrentError.grpc(code: try error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
-            }catch {
+
+                throw try KurrentError.grpc(code: error.unpackGoogleRPCStatus(), reason: "Unknown error occurred.")
+            } catch {
                 throw KurrentError.serverError("Unknown error occurred, cause: \(error)")
             }
         }
@@ -60,9 +60,9 @@ extension Projections.Result {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var partition: String?
-        
+
         public init() {
-            self.partition = nil
+            partition = nil
         }
 
         public func partition(_ partition: String) -> Self {

@@ -15,15 +15,14 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses =
         Task {
             try await client.runConnections()
         }
-        
+
         return try await withRethrowingError(usage: #function) {
             let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
             return try await send(connection: client, request: request, callOptions: callOptions)
         }
-        
     }
-    
+
     package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
         let node = try await selector.select()
         return try await perform(node: node, callOptions: callOptions)
@@ -36,23 +35,23 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
         let metadata = Metadata(from: settings)
         return try await perform(client: client, metadata: metadata, callOptions: callOptions)
     }
-    
+
     package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses {
         let node = try await selector.select()
         return try await perform(node: node, callOptions: callOptions)
     }
-    
+
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses {
         let client = try node.makeClient()
         let metadata = Metadata(from: node.settings)
         return try await perform(client: client, metadata: metadata, callOptions: callOptions)
     }
-    
+
     package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws(KurrentError) -> Responses {
         Task {
             try await client.runConnections()
         }
-        
+
         return try await withRethrowingError(usage: #function) {
             let request = try request(metadata: metadata)
             return try await send(connection: client, request: request, callOptions: callOptions)

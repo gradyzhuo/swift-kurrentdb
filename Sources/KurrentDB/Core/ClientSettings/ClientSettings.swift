@@ -7,14 +7,14 @@
 
 import Foundation
 import GRPCCore
+import GRPCEncapsulates
 import GRPCNIOTransportHTTP2
 import Logging
 import NIOCore
 import NIOPosix
 import NIOSSL
-import RegexBuilder
-import GRPCEncapsulates
 import NIOTransportServices
+import RegexBuilder
 
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 
@@ -78,11 +78,10 @@ public struct ClientSettings: Sendable {
     public private(set) var dnsDiscover: Bool
     public private(set) var nodePreference: NodePreference
     public private(set) var gossipTimeout: Duration
-    
+
     public private(set) var secure: Bool
     public private(set) var tlsVerifyCert: Bool
-    
-    
+
     public private(set) var defaultDeadline: Int
     public private(set) var connectionName: String?
 
@@ -90,50 +89,47 @@ public struct ClientSettings: Sendable {
     public var authentication: Authentication?
     public var discoveryInterval: Duration
     public var maxDiscoveryAttempts: UInt16
-    
-    public init(){
-        self.endpoints = []
-        self.cerificates = []
-        self.dnsDiscover = false
-        self.nodePreference = .leader
-        self.gossipTimeout = .seconds(3)
-        self.secure = false
-        self.tlsVerifyCert = false
-        self.defaultDeadline = .max
-        self.keepAlive = .default
-        self.discoveryInterval = .microseconds(100)
-        self.maxDiscoveryAttempts = 10
-    }
 
+    public init() {
+        endpoints = []
+        cerificates = []
+        dnsDiscover = false
+        nodePreference = .leader
+        gossipTimeout = .seconds(3)
+        secure = false
+        tlsVerifyCert = false
+        defaultDeadline = .max
+        keepAlive = .default
+        discoveryInterval = .microseconds(100)
+        maxDiscoveryAttempts = 10
+    }
 }
 
 extension ClientSettings {
-    public var clusterMode: TopologyClusterMode{
-        return if dnsDiscover {
+    public var clusterMode: TopologyClusterMode {
+        if dnsDiscover {
             .dns(domain: endpoints[0])
-        }else if endpoints.count > 1 {
+        } else if endpoints.count > 1 {
             .seeds(endpoints)
-        }else{
+        } else {
             .standalone(endpoint: endpoints[0])
         }
     }
-    
-    public var trustRoots: TLSConfig.TrustRootsSource?{
-        get{
-            guard secure else {
-                return nil
-            }
-            return if cerificates.isEmpty {
-                .systemDefault
-            }else{
-                .certificates(cerificates)
-            }
+
+    public var trustRoots: TLSConfig.TrustRootsSource? {
+        guard secure else {
+            return nil
+        }
+        return if cerificates.isEmpty {
+            .systemDefault
+        } else {
+            .certificates(cerificates)
         }
     }
-    
+
     public func httpUri(endpoint: Endpoint) -> URL? {
         var components = URLComponents()
-        components.scheme = self.secure ? "https" : "http"
+        components.scheme = secure ? "https" : "http"
         components.host = endpoint.host
         components.port = Int(endpoint.port)
         return components.url
@@ -142,9 +138,9 @@ extension ClientSettings {
 
 extension ClientSettings {
     public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER) -> Self {
-        var settings = Self.init()
+        var settings = Self()
         settings.endpoints = [
-            .init(host: "localhost", port: port)
+            .init(host: "localhost", port: port),
         ]
         return settings
     }
@@ -154,23 +150,23 @@ extension ClientSettings {
         let endpointParser = EndpointParser()
         let queryItemParser = QueryItemParser()
         let userCredentialParser = UserCredentialsParser()
-        
+
         guard let scheme = schemeParser.parse(connectionString) else {
             throw KurrentError.internalParsingError(reason: "Unknown URL scheme: \(connectionString)")
         }
 
-        var settings = Self.init()
-        
+        var settings = Self()
+
         guard let endpoints = endpointParser.parse(connectionString),
               endpoints.count > 0
         else {
             throw KurrentError.internalParsingError(reason: "Connection string doesn't have an host")
         }
-        
+
         guard endpoints.count > 0 else {
             throw .internalParsingError(reason: "empty endpoint.")
         }
-        
+
         settings.endpoints = endpoints
 
         let parsedResult = queryItemParser.parse(connectionString) ?? []
@@ -178,28 +174,27 @@ extension ClientSettings {
         let queryItems: [String: URLQueryItem] = .init(uniqueKeysWithValues: parsedResult.map {
             ($0.name.lowercased(), $0)
         })
-        
+
         settings.dnsDiscover = scheme == .dnsDiscover
-        
+
         if let nodePreference = queryItems["nodepreference"]?.value.flatMap({
             NodePreference(rawValue: $0)
-        }){
+        }) {
             settings.nodePreference = nodePreference
         }
-        
-        if let gossipTimeout: Int64 = queryItems["gossiptimeout"].flatMap({ $0.value.flatMap { Int64($0) } }){
+
+        if let gossipTimeout: Int64 = queryItems["gossiptimeout"].flatMap({ $0.value.flatMap { Int64($0) } }) {
             settings.gossipTimeout = .microseconds(gossipTimeout)
         }
-        
-        
+
         if let maxDiscoverAttempts = queryItems["maxdiscoverattempts"].flatMap({ $0.value.flatMap { UInt16($0) } }) {
             settings.maxDiscoveryAttempts = maxDiscoverAttempts
         }
-        
-        if let discoverInterval = queryItems["discoveryinterval"].flatMap({ $0.value.flatMap { Int64($0) } }){
+
+        if let discoverInterval = queryItems["discoveryinterval"].flatMap({ $0.value.flatMap { Int64($0) } }) {
             settings.discoveryInterval = .microseconds(discoverInterval)
         }
-        
+
         if let authentication = userCredentialParser.parse(connectionString) {
             settings.authentication = authentication
         }
@@ -213,7 +208,7 @@ extension ClientSettings {
         if let connectionName = queryItems["connectionanme"]?.value {
             settings.connectionName = connectionName
         }
-        
+
         if let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) {
             settings.secure = secure
         }
@@ -221,8 +216,8 @@ extension ClientSettings {
         if let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) {
             settings.tlsVerifyCert = tlsVerifyCert
         }
-        
-        if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap({ $0.value }) {
+
+        if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap(\.value) {
             if let cerificate = parseCertificate(path: tlsCaFilePath) {
                 settings.cerificates.append(cerificate)
             }
@@ -231,31 +226,31 @@ extension ClientSettings {
         if let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) }}) {
             settings.defaultDeadline = defaultDeadline
         }
-        
+
         return settings
     }
 }
 
 extension ClientSettings {
-    public static func parseCertificate(path: String) ->TLSConfig.CertificateSource?{
-        
-        do{
+    public static func parseCertificate(path: String) -> TLSConfig.CertificateSource? {
+        do {
             let tlsCaFileUrl = URL(fileURLWithPath: path)
             let tlsCaFileData = try Data(contentsOf: tlsCaFileUrl)
             guard !tlsCaFileData.isEmpty else {
                 logger.warning("tls ca file is empty.")
                 return nil
             }
-            
-            let format:TLSConfig.SerializationFormat = if let tlsCaContent = String(data: tlsCaFileData, encoding: .ascii),
-               tlsCaContent.hasPrefix("-----BEGIN CERTIFICATE-----") {
+
+            let format: TLSConfig.SerializationFormat = if let tlsCaContent = String(data: tlsCaFileData, encoding: .ascii),
+                                                           tlsCaContent.hasPrefix("-----BEGIN CERTIFICATE-----")
+            {
                 .pem
-            }else{
+            } else {
                 .der
             }
-            
+
             return .file(path: path, format: format)
-            
+
         } catch {
             logger.warning("tls ca file is not exist. error: \(error)")
             return nil
@@ -280,104 +275,100 @@ extension ClientSettings: ExpressibleByStringLiteral {
     }
 }
 
-
-extension ClientSettings: Buildable{
-    
+extension ClientSettings: Buildable {
     @discardableResult
-    public func cerificate(source: TLSConfig.CertificateSource)->Self{
-        return withCopy {
+    public func cerificate(source: TLSConfig.CertificateSource) -> Self {
+        withCopy {
             $0.cerificates.append(source)
         }
     }
-    
+
     @discardableResult
-    public func cerificate(path: String)->Self{
-        return withCopy {
+    public func cerificate(path: String) -> Self {
+        withCopy {
             if let cerificate = Self.parseCertificate(path: path) {
                 $0.cerificates.append(cerificate)
             }
         }
     }
-    
+
     @discardableResult
-    public func secure(_ secure: Bool)->Self{
-        return withCopy {
+    public func secure(_ secure: Bool) -> Self {
+        withCopy {
             $0.secure = secure
         }
     }
-    
+
     @discardableResult
-    public func tlsVerifyCert(_ tlsVerifyCert: Bool)->Self{
-        return withCopy {
+    public func tlsVerifyCert(_ tlsVerifyCert: Bool) -> Self {
+        withCopy {
             $0.tlsVerifyCert = tlsVerifyCert
         }
     }
-    
+
     @discardableResult
-    public func defaultDeadline(_ defaultDeadline: Int)->Self{
-        return withCopy {
+    public func defaultDeadline(_ defaultDeadline: Int) -> Self {
+        withCopy {
             $0.defaultDeadline = defaultDeadline
         }
     }
-    
+
     @discardableResult
-    public func connectionName(_ connectionName: String)->Self{
-        return withCopy {
+    public func connectionName(_ connectionName: String) -> Self {
+        withCopy {
             $0.connectionName = connectionName
         }
     }
-    
+
     @discardableResult
-    public func keepAlive(_ keepAlive: KeepAlive)->Self{
-        return withCopy {
+    public func keepAlive(_ keepAlive: KeepAlive) -> Self {
+        withCopy {
             $0.keepAlive = keepAlive
         }
     }
-    
+
     @discardableResult
-    public func authenticated(_ authenication: Authentication)->Self{
-        return withCopy {
+    public func authenticated(_ authenication: Authentication) -> Self {
+        withCopy {
             $0.authentication = authenication
         }
     }
-    
+
     @discardableResult
-    public func discoveryInterval(_ discoveryInterval: Duration)->Self{
-        return withCopy {
+    public func discoveryInterval(_ discoveryInterval: Duration) -> Self {
+        withCopy {
             $0.discoveryInterval = discoveryInterval
         }
     }
 
     @discardableResult
-    public func maxDiscoveryAttempts(_ maxDiscoveryAttempts: UInt16)->Self{
-        return withCopy {
+    public func maxDiscoveryAttempts(_ maxDiscoveryAttempts: UInt16) -> Self {
+        withCopy {
             $0.maxDiscoveryAttempts = maxDiscoveryAttempts
         }
     }
 }
 
-
 extension ClientSettings {
-    internal func makeClient(endpoint: Endpoint) throws(KurrentError) ->GRPCClient<HTTP2ClientTransport.Posix>{
+    func makeClient(endpoint: Endpoint) throws(KurrentError) -> GRPCClient<HTTP2ClientTransport.Posix> {
         try withRethrowingError(usage: #function) {
             let transport: HTTP2ClientTransport.Posix = try .http2NIOPosix(
-                                                            target: endpoint.target,
-                                                            transportSecurity: transportSecurity)
+                target: endpoint.target,
+                transportSecurity: transportSecurity
+            )
             return GRPCClient<HTTP2ClientTransport.Posix>(transport: transport)
         }
     }
-    
-    internal var transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity {
-        get {
-            return if secure {
-                .tls { config in
-                    if let trustRoots = trustRoots {
-                        config.trustRoots = trustRoots
-                    }
+
+    var transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity {
+        if secure {
+            .tls { config in
+                if let trustRoots {
+                    config.trustRoots = trustRoots
                 }
-            } else {
-                .plaintext
             }
+        } else {
+            .plaintext
         }
     }
 }

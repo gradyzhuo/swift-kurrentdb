@@ -28,7 +28,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .create(options: options)
     }
-    
+
     /// Creates a persistent subscription to all streams.
     ///
     /// - Parameters:
@@ -48,7 +48,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .create(options: options)
     }
-    
+
     /// Updates a persistent subscription for a specific stream.
     ///
     /// - Parameters:
@@ -68,7 +68,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .update(options: options)
     }
-    
+
     /// Updates a persistent subscription for all streams.
     ///
     /// - Parameters:
@@ -89,7 +89,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .update(options: options)
     }
-    
+
     /// Subscribes to a persistent subscription for a specific stream.
     ///
     /// - Parameters:
@@ -113,7 +113,7 @@ extension KurrentDBClient {
         let stream = streams(of: .specified(streamIdentifier))
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
     }
-    
+
     /// Subscribes to a persistent subscription for all streams.
     ///
     /// - Parameters:
@@ -135,7 +135,7 @@ extension KurrentDBClient {
         let stream = streams(of: .all)
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
     }
-    
+
     /// Deletes a persistent subscription for a specific stream.
     ///
     /// - Parameters:
@@ -148,7 +148,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .delete()
     }
-    
+
     /// Deletes a persistent subscription for all streams.
     ///
     /// - Parameter groupName: The name of the subscription group.
@@ -159,7 +159,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .delete()
     }
-    
+
     /// Lists persistent subscriptions for a specific stream.
     ///
     /// - Parameter streamIdentifier: The identifier of the target stream.
@@ -167,27 +167,27 @@ extension KurrentDBClient {
     /// - Throws: An error if the list operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func listPersistentSubscriptions(stream streamIdentifier: StreamIdentifier) async throws -> [PersistentSubscription.SubscriptionInfo] {
-        return try await persistentSubscriptions.list(for: .stream(streamIdentifier))
+        try await persistentSubscriptions.list(for: .stream(streamIdentifier))
     }
-    
+
     /// Lists persistent subscriptions for all streams.
     ///
     /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
     /// - Throws: An error if the list operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func listPersistentSubscriptionsToAllStream() async throws -> [PersistentSubscription.SubscriptionInfo] {
-        return try await persistentSubscriptions.list(for: .stream(.all))
+        try await persistentSubscriptions.list(for: .stream(.all))
     }
-    
+
     /// Lists all persistent subscriptions in the system.
     ///
     /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
     /// - Throws: An error if the list operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func listAllPersistentSubscription() async throws -> [PersistentSubscription.SubscriptionInfo] {
-        return try await persistentSubscriptions.list(for: .allSubscriptions)
+        try await persistentSubscriptions.list(for: .allSubscriptions)
     }
-    
+
     /// Restarts the persistent subscription subsystem.
     ///
     /// - Throws: An error if the restart operation fails.
@@ -195,7 +195,7 @@ extension KurrentDBClient {
     public func restartPersistentSubscriptionSubsystem() async throws {
         try await persistentSubscriptions.restartSubsystem()
     }
-    
+
     /// Creates a persistent subscription to a specific stream using its name.
     ///
     /// - Parameters:
@@ -218,7 +218,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .create(options: options)
     }
-    
+
     /// Updates a persistent subscription for a specific stream using its name.
     ///
     /// - Parameters:
@@ -241,7 +241,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .update(options: options)
     }
-    
+
     /// Subscribes to a persistent subscription for a specific stream using its name.
     ///
     /// - Parameters:
@@ -278,7 +278,7 @@ extension KurrentDBClient {
             .persistentSubscriptions(group: groupName)
             .delete()
     }
-    
+
     /// Lists persistent subscriptions for a specific stream using its name.
     ///
     /// - Parameter streamName: The name of the target stream.
@@ -286,6 +286,6 @@ extension KurrentDBClient {
     /// - Throws: An error if the list operation fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func listPersistentSubscriptions(stream streamName: String) async throws -> [PersistentSubscription.SubscriptionInfo] {
-        return try await persistentSubscriptions.list(for: .stream(streamName))
+        try await persistentSubscriptions.list(for: .stream(streamName))
     }
 }

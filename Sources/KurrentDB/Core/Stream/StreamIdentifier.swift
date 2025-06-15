@@ -30,7 +30,7 @@ extension StreamIdentifier: ExpressibleByStringLiteral {
 
 extension StreamIdentifier: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.name == rhs.name && lhs.encoding == rhs.encoding
+        lhs.name == rhs.name && lhs.encoding == rhs.encoding
     }
 }
 
@@ -48,8 +48,6 @@ extension StreamIdentifier {
 
 extension StreamIdentifier {
     public static var all: Self {
-        get{
-            .init(name: "$all")
-        }
+        .init(name: "$all")
     }
 }

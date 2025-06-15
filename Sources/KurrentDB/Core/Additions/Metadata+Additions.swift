@@ -9,7 +9,7 @@ import GRPCCore
 extension Metadata {
     package init(from settings: ClientSettings) {
         self.init()
-        
+
         if let authentication = settings.authentication {
             do {
                 try replaceOrAddString(authentication.makeBasicAuthHeader(), forKey: "Authorization")

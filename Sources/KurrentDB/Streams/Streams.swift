@@ -56,19 +56,18 @@ import NIO
 /// - ``read(cursor:options:)-6h8h2``
 /// - ``subscribe(from:options:)-9gq2e``
 public actor Streams<Target: StreamTarget>: GRPCConcreteService {
-    
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
 
     /// The client settings required for establishing a gRPC connection.
     public private(set) var selector: NodeSelector
-    
+
     /// The gRPC call options.
     public let callOptions: CallOptions
-    
+
     /// The event loop group handling asynchronous tasks.
     public let eventLoopGroup: EventLoopGroup
-    
+
     /// The target stream, defining the scope of operations (e.g., specific stream or all streams).
     public let target: Target
 
@@ -79,7 +78,7 @@ public actor Streams<Target: StreamTarget>: GRPCConcreteService {
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
-    internal init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
@@ -88,14 +87,12 @@ public actor Streams<Target: StreamTarget>: GRPCConcreteService {
 }
 
 // MARK: - Specified Stream Operations
+
 /// Provides operations for specific streams conforming to `SpecifiedStreamTarget`.
 extension Streams where Target: SpecifiedStreamTarget {
-    
     /// The identifier of the specific stream.
     public var identifier: StreamIdentifier {
-        get {
-            target.identifier
-        }
+        target.identifier
     }
 
     /// Sets metadata for the specified stream.
@@ -109,7 +106,7 @@ extension Streams where Target: SpecifiedStreamTarget {
             .init(
                 eventType: "$metadata",
                 model: metadata
-            )
+            ),
         ], options: .init().revision(expected: expectedRevision))
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -135,7 +132,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
         let responses = try await usecase.perform(selector: selector, callOptions: callOptions)
 
-        do{
+        do {
             return try await responses.first {
                 if case .event = $0 { return true }
                 return false
@@ -149,10 +146,10 @@ extension Streams where Target: SpecifiedStreamTarget {
                         throw KurrentError.internalParsingError(reason: "The event data could not be parsed. Stream metadata must be encoded in JSON format.")
                     }
                 default:
-                    throw KurrentError.initializationError(reason:  "The metadata event does not exist.")
+                    throw KurrentError.initializationError(reason: "The metadata event does not exist.")
                 }
             }
-        }catch {
+        } catch {
             throw .internalClientError(reason: "\(#function) failed, cause: \(error)")
         }
     }
@@ -169,7 +166,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         let usecase = Append(to: identifier, events: events, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Appends a variadic list of events to the specified stream.
     ///
     /// - Parameters:
@@ -179,7 +176,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Throws: An error if the append operation fails.
     @discardableResult
     public func append(events: EventData..., options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
-        return try await append(events: events, options: options)
+        try await append(events: events, options: options)
     }
 
     /// Reads events from the specified stream.
@@ -197,7 +194,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         let usecase = Read(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Subscribes to events from the specified stream.
     ///
     /// - Parameters:
@@ -239,12 +236,9 @@ extension Streams where Target: SpecifiedStreamTarget {
 
 /// Provides operations for projection streams.
 extension Streams where Target == ProjectionStream {
-    
     /// The identifier of the projection stream.
     public var identifier: StreamIdentifier {
-        get {
-            target.identifier
-        }
+        target.identifier
     }
 
     /// Subscribes to events from the specified stream.
@@ -262,13 +256,12 @@ extension Streams where Target == ProjectionStream {
         let usecase = Subscribe(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-
 }
 
 // MARK: - All Streams Operations
+
 /// Provides operations for all streams.
 extension Streams where Target == AllStreams {
-
     /// Reads events from all available streams.
     ///
     /// - Parameters:
@@ -300,6 +293,4 @@ extension Streams where Target == AllStreams {
         let usecase = SubscribeAll(options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
 }
-

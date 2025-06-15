@@ -37,7 +37,7 @@ extension PersistentSubscription {
     ///
     /// `AnyTarget` is used in generic contexts where a specific subscription target type is not required.
     public struct AnyTarget: PersistentSubscriptionTarget {}
-    
+
     // MARK: - Specified Stream
 
     /// Represents a specific stream target for persistent subscriptions.
@@ -45,13 +45,12 @@ extension PersistentSubscription {
     /// `Specified` is identified by a `StreamIdentifier` and a group name, and can be instantiated
     /// using `PersistentSubscriptionTarget.specified`.
     public struct Specified: PersistentSubscriptionTarget {
-        
         /// The identifier for the stream, represented as a `StreamIdentifier`.
         public private(set) var identifier: StreamIdentifier
-        
+
         /// The group name for the persistent subscription.
         public private(set) var group: String
-        
+
         /// Initializes a `Specified` persistent subscription target instance.
         ///
         /// - Parameters:
@@ -62,12 +61,13 @@ extension PersistentSubscription {
             self.group = group
         }
     }
-    
+
     // MARK: - All Streams
+
     public struct AllStream: PersistentSubscriptionTarget {
         /// The group name for the persistent subscription.
         public private(set) var group: String
-        
+
         /// Initializes an `All` persistent subscription target instance.
         ///
         /// - Parameter group: The group name for the persistent subscription.
@@ -75,15 +75,12 @@ extension PersistentSubscription {
             self.group = group
         }
     }
-    
-    public struct All: PersistentSubscriptionTarget {
-        
-    }
+
+    public struct All: PersistentSubscriptionTarget {}
 }
 
 /// Extension providing static methods to create `Specified` persistent subscription targets.
 extension PersistentSubscriptionTarget where Self == PersistentSubscription.Specified {
-    
     /// Creates a `Specified` target using a `StreamIdentifier`.
     ///
     /// - Parameters:
@@ -91,7 +88,7 @@ extension PersistentSubscriptionTarget where Self == PersistentSubscription.Spec
     ///   - group: The group name for the persistent subscription.
     /// - Returns: A `PersistentSubscription.Specified` instance.
     public static func specified(_ identifier: StreamIdentifier, group: String) -> PersistentSubscription.Specified {
-        return .init(identifier: identifier, group: group)
+        .init(identifier: identifier, group: group)
     }
 
     /// Creates a `Specified` target identified by a name and encoding.
@@ -102,10 +99,9 @@ extension PersistentSubscriptionTarget where Self == PersistentSubscription.Spec
     ///   - group: The group name for the persistent subscription.
     /// - Returns: A `PersistentSubscription.Specified` instance.
     public static func specified(_ name: String, encoding: String.Encoding = .utf8, group: String) -> PersistentSubscription.Specified {
-        return .init(identifier: .init(name: name, encoding: encoding), group: group)
+        .init(identifier: .init(name: name, encoding: encoding), group: group)
     }
 }
-
 
 /// Extension providing a static method to create an `All` persistent subscription target.
 extension PersistentSubscriptionTarget where Self == PersistentSubscription.All {
@@ -114,6 +110,6 @@ extension PersistentSubscriptionTarget where Self == PersistentSubscription.All 
     /// - Parameter group: The group name for the persistent subscription.
     /// - Returns: A `PersistentSubscription.All` instance.
     public static var all: PersistentSubscription.All {
-        return .init()
+        .init()
     }
 }

@@ -1,5 +1,5 @@
-import GRPCEncapsulates
 import Foundation
+import GRPCEncapsulates
 
 extension Gossip {
     public enum VNodeState: Sendable, Equatable {
@@ -65,7 +65,7 @@ extension Gossip {
 }
 
 extension Gossip.VNodeState: CaseIterable {
-    public static var allCases: [Self]{
+    public static var allCases: [Self] {
         [
             .initializing,
             .discoverLeader,
@@ -79,7 +79,7 @@ extension Gossip.VNodeState: CaseIterable {
             .manager,
             .shuttingDown,
             .shutdown,
-            .readOnlyLeaderless
+            .readOnlyLeaderless,
         ]
     }
 }

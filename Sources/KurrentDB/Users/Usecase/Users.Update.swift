@@ -50,22 +50,20 @@ extension Users.Update {
         public fileprivate(set) var fullName: String?
         public fileprivate(set) var groups: [String]?
 
-        public init() {
-            
-        }
+        public init() {}
 
         public func set(fullName: String) -> Self {
             withCopy { options in
                 options.fullName = fullName
             }
         }
-        
+
         public func add(groups: String...) -> Self {
             withCopy { options in
                 options.groups?.append(contentsOf: groups)
             }
         }
-        
+
         public func set(groups: String...) -> Self {
             withCopy { options in
                 options.groups = groups
@@ -73,7 +71,7 @@ extension Users.Update {
         }
 
         package func build() -> UnderlyingMessage {
-            return .with {
+            .with {
                 if let fullName {
                     $0.fullName = fullName
                 }

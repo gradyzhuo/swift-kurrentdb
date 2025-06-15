@@ -39,21 +39,19 @@ public struct SystemProjectionTarget: ProjectionTarget, NameSpecifiable, Project
         /// Represents the `$streams` system projection.
         case streams = "$streams"
     }
-    
+
     /// The predefined system projection type.
-    internal private(set) var predefined: Predefined
-    
+    private(set) var predefined: Predefined
+
     /// The name of the system projection.
     public var name: String {
-        get {
-            predefined.rawValue
-        }
+        predefined.rawValue
     }
-    
+
     /// Initializes a `SystemProjectionTarget` with a predefined system projection.
     ///
     /// - Parameter predefined: The predefined system projection type (e.g., `.byCategory`).
-    internal init(predefined: Predefined) {
+    init(predefined: Predefined) {
         self.predefined = predefined
     }
 }

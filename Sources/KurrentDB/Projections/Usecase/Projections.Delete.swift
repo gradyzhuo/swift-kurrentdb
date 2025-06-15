@@ -18,7 +18,7 @@ extension Projections {
 
         public let name: String
         public let options: Options
-        
+
         init(name: String, options: Options) {
             self.name = name
             self.options = options
@@ -59,9 +59,9 @@ extension Projections.Delete {
         public private(set) var deleteStateStream: Bool
 
         public init() {
-            self.deleteCheckpointStream = false
-            self.deleteEmittedStreams = false
-            self.deleteStateStream = false
+            deleteCheckpointStream = false
+            deleteEmittedStreams = false
+            deleteStateStream = false
         }
 
         package func build() -> UnderlyingMessage {

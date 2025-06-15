@@ -57,7 +57,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
             if let resolveLink = settings.resolveLink {
                 $0.resolveLinks = resolveLink
             }
-            
+
             if let extraStatistics = settings.extraStatistics {
                 $0.extraStatistics = extraStatistics
             }
@@ -116,15 +116,15 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterO
             switch filter.type {
             case .streamName:
                 $0.streamIdentifier = .with {
-                    if let regex = filter.regex{
+                    if let regex = filter.regex {
                         $0.regex = regex
                     }
-                    
+
                     $0.prefix = filter.prefixes
                 }
             case .eventType:
                 $0.eventType = .with {
-                    if let regex = filter.regex{
+                    if let regex = filter.regex {
                         $0.regex = regex
                     }
                     $0.prefix = filter.prefixes

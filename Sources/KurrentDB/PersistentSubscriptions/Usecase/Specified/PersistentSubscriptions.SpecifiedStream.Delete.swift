@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.Delete.swift
+//  PersistentSubscriptions.SpecifiedStream.Delete.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/7.
@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions.SpecifiedStream{
+extension PersistentSubscriptions.SpecifiedStream {
     public struct Delete: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Delete.Input
@@ -18,7 +18,7 @@ extension PersistentSubscriptions.SpecifiedStream{
         let streamIdentifier: StreamIdentifier
         let groupName: String
 
-        internal init(streamIdentifier: StreamIdentifier, group groupName: String) {
+        init(streamIdentifier: StreamIdentifier, group groupName: String) {
             self.streamIdentifier = streamIdentifier
             self.groupName = groupName
         }

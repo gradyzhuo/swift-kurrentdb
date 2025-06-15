@@ -40,7 +40,7 @@ struct ConnectionStringParser {
             #expect(endpoints[0].host == hostName)
         }
     }
-    
+
     @Test("test host should be parsed succeed.", arguments: [
         ("esdb+discover://admin:changeit@node1.dns.name:2113,node2.dns.name:2114,node3.dns.name:2115", [
             ("node1.dns.name", 2113),
@@ -52,7 +52,7 @@ struct ConnectionStringParser {
         let parser = EndpointParser()
         let endpoints = try #require(try parser.parse(connectionString))
 
-        let expectedEndpoints = expected.map{ Endpoint(host: $0.0, port: $0.1) }
+        let expectedEndpoints = expected.map { Endpoint(host: $0.0, port: $0.1) }
         #expect(endpoints == expectedEndpoints)
     }
 }

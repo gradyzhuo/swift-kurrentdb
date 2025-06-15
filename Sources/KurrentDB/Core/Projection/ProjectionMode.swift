@@ -36,7 +36,7 @@ public struct AnyMode: ProjectionMode {
 extension ProjectionMode where Self == ContinuousMode {
     /// A static instance of `ContinuousMode`.
     public static var continuous: Self {
-        return .init()
+        .init()
     }
 }
 
@@ -44,7 +44,7 @@ extension ProjectionMode where Self == ContinuousMode {
 extension ProjectionMode where Self == AnyMode {
     /// A static instance of `AnyMode`.
     public static var any: Self {
-        return .init()
+        .init()
     }
 }
 
@@ -56,13 +56,13 @@ extension Projection {
     public enum Mode: String, Sendable {
         /// Represents a projection with no specific mode constraint.
         case any = "Any"
-        
+
         /// Represents a transient projection (currently unavailable).
         case transient = "Transient"
-        
+
         /// Represents a projection that runs continuously, processing events as they occur.
         case continuous = "Continuous"
-        
+
         /// Represents a projection that runs once and then completes.
         case oneTime = "OneTime"
     }

@@ -1,5 +1,5 @@
 //
-//  CurrentRevisionOption.swift
+//  KurrentError+RevisionOption.swift
 //  KurrentDB-Swift
 //
 //  Created by Grady Zhuo on 2025/4/11.
@@ -10,12 +10,11 @@ extension KurrentError {
         case noStream
         case revision(UInt64)
     }
-    
+
     public enum ExpectedRevisionOption: Sendable {
         case any
         case streamExists
         case noStream
         case revision(UInt64)
     }
-
 }

@@ -12,7 +12,7 @@ extension Streams {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
-        
+
         public let events: [EventData]
         public let identifier: StreamIdentifier
         public private(set) var options: Options
@@ -59,8 +59,6 @@ extension Streams {
     }
 }
 
-
-
 extension Streams.Append {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
@@ -72,7 +70,7 @@ extension Streams.Append {
             self.currentRevision = currentRevision
             self.position = position
         }
-        
+
         package init(from message: UnderlyingMessage) throws(KurrentError) {
             guard let result = message.result else {
                 throw .initializationError(reason: "The result of appending usecase is missing.")

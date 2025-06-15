@@ -100,5 +100,4 @@ extension PersistentSubscription {
 
         public init() {}
     }
-
 }

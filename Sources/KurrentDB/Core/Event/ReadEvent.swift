@@ -18,7 +18,7 @@ public struct ReadEvent: Sendable {
     }
 
     package init(recorded: RecordedEvent, link: RecordedEvent? = nil, commitPosition: StreamPosition? = nil) {
-        self.record = recorded
+        record = recorded
         self.link = link
         self.commitPosition = commitPosition
     }
@@ -26,7 +26,7 @@ public struct ReadEvent: Sendable {
     package init(message: EventStore_Client_Streams_ReadResp.ReadEvent) throws(KurrentError) {
         let recorded: RecordedEvent = try .init(message: message.event)
         let link: RecordedEvent? = try message.hasLink ? .init(message: message.link) : nil
-        
+
         let commitPosition: StreamPosition? = switch message.position {
         case .noPosition:
             nil
@@ -35,7 +35,7 @@ public struct ReadEvent: Sendable {
         case .none:
             nil
         }
-        
+
         self.init(recorded: recorded, link: link, commitPosition: commitPosition)
     }
 }

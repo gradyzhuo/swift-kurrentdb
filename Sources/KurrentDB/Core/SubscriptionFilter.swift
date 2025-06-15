@@ -15,7 +15,6 @@ public struct SubscriptionFilter: Buildable {
     public enum FilterType: Sendable {
         case streamName
         case eventType
-        
     }
 
     public internal(set) var type: FilterType
@@ -54,43 +53,41 @@ public struct SubscriptionFilter: Buildable {
     }
 }
 
-//MARK: - Constructor on StreamName
+// MARK: - Constructor on StreamName
+
 extension SubscriptionFilter {
-    
     public static func onStreamName(regex: String) -> Self {
         .init(type: .streamName, regex: regex)
     }
-    
+
     public static func onStreamName(prefix: String...) -> Self {
         .onStreamName(prefixes: prefix)
     }
-    
+
     public static func onStreamName(prefixes: [String]) -> Self {
         .init(type: .streamName, prefixes: prefixes)
     }
-
 }
 
-//MARK: - Constructor on EventType
+// MARK: - Constructor on EventType
+
 extension SubscriptionFilter {
-    
     public static func onEventType(regex: String) -> Self {
         .init(type: .eventType, regex: regex)
     }
-    
+
     public static func onEventType(prefixes: String...) -> Self {
         .onEventType(prefixes: prefixes)
     }
-    
+
     public static func onEventType(prefixes: [String]) -> Self {
         .init(type: .eventType, prefixes: prefixes)
     }
 }
 
+// MARK: - Constructor with excludeSystemEvents
 
-//MARK: - Constructor with excludeSystemEvents
 extension SubscriptionFilter {
-    
     public static func excludeSystemEvents() -> Self {
         .onStreamName(regex: "^[^\\$].*")
     }

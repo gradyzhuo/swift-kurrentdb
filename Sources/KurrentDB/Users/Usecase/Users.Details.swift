@@ -40,7 +40,7 @@ extension Users {
                     }
                     continuation.finish()
                 }
-                
+
                 return stream
             }
         }

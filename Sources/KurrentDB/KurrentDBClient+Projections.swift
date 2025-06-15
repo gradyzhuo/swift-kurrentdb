@@ -19,7 +19,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         try await projections(name: name).createContinuous(query: query, options: options)
     }
-    
+
     /// Updates an existing projection with a new query.
     ///
     /// - Parameters:
@@ -32,7 +32,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         try await projections(name: name).update(query: query, options: options)
     }
-    
+
     /// Enables a projection.
     ///
     /// - Parameter name: The name of the projection to enable.
@@ -41,7 +41,7 @@ extension KurrentDBClient {
     public func enableProjection(name: String) async throws {
         try await projections(name: name).enable()
     }
-    
+
     /// Disables a projection.
     ///
     /// - Parameter name: The name of the projection to disable.
@@ -50,7 +50,7 @@ extension KurrentDBClient {
     public func disableProjection(name: String) async throws {
         try await projections(name: name).disable()
     }
-    
+
     /// Aborts a projection.
     ///
     /// - Parameter name: The name of the projection to abort.
@@ -59,7 +59,7 @@ extension KurrentDBClient {
     public func abortProjection(name: String) async throws {
         try await projections(name: name).abort()
     }
-    
+
     /// Deletes a projection.
     ///
     /// - Parameters:
@@ -71,7 +71,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         try await projections(name: name).delete(options: options)
     }
-    
+
     /// Resets a projection to its initial state.
     ///
     /// - Parameter name: The name of the projection to reset.
@@ -89,11 +89,11 @@ extension KurrentDBClient {
     /// - Returns: The decoded result of type `T`, or `nil` if no result is available.
     /// - Throws: An error if the retrieval or decoding fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func getProjectionResult<T: Decodable & Sendable>(of: T.Type = T.self, name: String, configure: @Sendable (Projections<String>.Result.Options) -> Projections<String>.Result.Options = { $0 }) async throws -> T? {
+    public func getProjectionResult<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<String>.Result.Options) -> Projections<String>.Result.Options = { $0 }) async throws -> T? {
         let options = configure(.init())
         return try await projections(name: name).result(of: T.self, options: options)
     }
-    
+
     /// Retrieves the state of a projection.
     ///
     /// - Parameters:
@@ -102,11 +102,11 @@ extension KurrentDBClient {
     /// - Returns: The decoded state of type `T`, or `nil` if no state is available.
     /// - Throws: An error if the retrieval or decoding fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
-    public func getProjectionState<T: Decodable & Sendable>(of: T.Type = T.self, name: String, configure: @Sendable (Projections<String>.State.Options) -> Projections<String>.State.Options = { $0 }) async throws -> T? {
+    public func getProjectionState<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<String>.State.Options) -> Projections<String>.State.Options = { $0 }) async throws -> T? {
         let options = configure(.init())
         return try await projections(name: name).state(of: T.self, options: options)
     }
-    
+
     /// Retrieves detailed statistics for a projection.
     ///
     /// - Parameter name: The name of the projection.
@@ -114,14 +114,13 @@ extension KurrentDBClient {
     /// - Throws: An error if the retrieval fails.
     /// - Note: This method must be called with `await` in an asynchronous context due to the `actor` model.
     public func getProjectionDetail(name: String) async throws -> Projections<String>.Statistics.Detail? {
-        return try await projections(name: name).detail()
+        try await projections(name: name).detail()
     }
-    
 
     public func listAllProjections() async throws -> [Projections<AllProjectionTarget<AnyMode>>.Statistics.Detail] {
-        try await projections(all: .any ).list()
+        try await projections(all: .any).list()
     }
-    
+
     /// Restarts the projection subsystem.
     ///
     /// - Throws: A `KurrentError` if the restart operation fails.

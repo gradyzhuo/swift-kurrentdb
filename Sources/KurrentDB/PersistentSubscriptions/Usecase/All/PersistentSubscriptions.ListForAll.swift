@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.List.swift
+//  PersistentSubscriptions.ListForAll.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/11.
@@ -8,15 +8,15 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions where Target == PersistentSubscription.All{
+extension PersistentSubscriptions where Target == PersistentSubscription.All {
     public struct ListForAll: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.List.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
-        
+
         public let filter: ListFilter
-        
+
         package init(filter: ListFilter) {
             self.filter = filter
         }
@@ -26,10 +26,10 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All{
                 switch filter {
                 case .allSubscriptions:
                     $0.options.listAllSubscriptions = .init()
-                case .stream(let streamIdentifier):
+                case let .stream(streamIdentifier):
                     if streamIdentifier == .all {
                         $0.options.listForStream.all = .init()
-                    }else{
+                    } else {
                         $0.options.listForStream.stream = try streamIdentifier.build()
                     }
                 }
@@ -45,14 +45,13 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All{
     }
 }
 
-
-extension PersistentSubscriptions.ListForAll{
-    public enum ListFilter: Sendable{
+extension PersistentSubscriptions.ListForAll {
+    public enum ListFilter: Sendable {
         case allSubscriptions
         case stream(StreamIdentifier)
-        
-        internal static func stream(_ name: String)->Self{
-            return .stream(.init(name: name))
+
+        static func stream(_ name: String) -> Self {
+            .stream(.init(name: name))
         }
     }
 }

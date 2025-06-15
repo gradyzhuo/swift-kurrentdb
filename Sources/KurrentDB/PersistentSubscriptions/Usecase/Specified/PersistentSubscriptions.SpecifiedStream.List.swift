@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.List.swift
+//  PersistentSubscriptions.SpecifiedStream.List.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/11.
@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions.SpecifiedStream{
+extension PersistentSubscriptions.SpecifiedStream {
     public struct List: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.List.Input
@@ -17,19 +17,19 @@ extension PersistentSubscriptions.SpecifiedStream{
 
         public let streamIdentifier: StreamIdentifier?
 
-        internal init(stream streamIdentifier: StreamIdentifier) {
+        init(stream streamIdentifier: StreamIdentifier) {
             self.streamIdentifier = streamIdentifier
         }
-        
-        internal init() {
-            self.streamIdentifier = nil
+
+        init() {
+            streamIdentifier = nil
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
                 if let streamIdentifier {
                     $0.options.listForStream.stream = try streamIdentifier.build()
-                }else{
+                } else {
                     $0.options.listForStream.all = .init()
                 }
             }

@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension Streams{
+extension Streams {
     public struct Delete: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input

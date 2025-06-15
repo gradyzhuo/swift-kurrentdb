@@ -15,7 +15,7 @@ extension PersistentSubscriptions.AllStream {
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
 
-        internal init() {}
+        init() {}
 
         /// Constructs a request message to list all persistent subscriptions across all streams.
         ///

@@ -5,9 +5,9 @@
 //  Created by Grady Zhuo on 2025/3/24.
 //
 
-public enum Authentication: Sendable{
+public enum Authentication: Sendable {
     case credentials(username: String, password: String)
-    
+
     package func makeBasicAuthHeader() throws(KurrentError) -> String {
         switch self {
         case let .credentials(username, password):

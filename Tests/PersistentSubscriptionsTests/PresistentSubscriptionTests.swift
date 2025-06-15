@@ -1,13 +1,13 @@
 //
-//  PersistentSubscriptionTests.swift
+//  PresistentSubscriptionTests.swift
 //  KurrentDB
 //
 //  Created by Grady Zhuo on 2024/3/25.
 //
 
 import Foundation
-import Testing
 @testable import KurrentDB
+import Testing
 
 @Suite("EventStoreDB Persistent Subscription Tests", .serialized)
 struct PersistentSubscriptionsTests {
@@ -16,7 +16,7 @@ struct PersistentSubscriptionsTests {
 
     init() {
         settings = .localhost()
-                    .authenticated(.credentials(username: "admin", password: "changeit"))
+            .authenticated(.credentials(username: "admin", password: "changeit"))
         groupName = "test-for-persistent-subscriptions"
     }
 
@@ -25,7 +25,7 @@ struct PersistentSubscriptionsTests {
         let streamName = "test-persistent-subscription:\(UUID().uuidString)"
         let streamIdentifier = StreamIdentifier(name: streamName)
         let client = KurrentDBClient(settings: settings)
-        
+
         try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
         let subscriptions = try await client.listPersistentSubscriptions(stream: streamIdentifier)
@@ -38,13 +38,13 @@ struct PersistentSubscriptionsTests {
     func testSubscribeToStream() async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
-        
+
         try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
         let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
-  
+
         let response = try await client.appendStream(streamIdentifier, events: [
-            .init(eventType: "PS-SubscribeToStream-AccountCreated", model: ["Description": "Gears of War 10"])
+            .init(eventType: "PS-SubscribeToStream-AccountCreated", model: ["Description": "Gears of War 10"]),
         ]) {
             $0.revision(expected: .any)
         }
@@ -66,7 +66,7 @@ struct PersistentSubscriptionsTests {
     func testSubscribeToAll() async throws {
         let client = KurrentDBClient(settings: settings)
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
-        
+
         try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
 
         let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)

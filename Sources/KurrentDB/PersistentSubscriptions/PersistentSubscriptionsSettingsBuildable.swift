@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptionsCommonOptions.swift
+//  PersistentSubscriptionsSettingsBuildable.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2024/3/22.
@@ -41,7 +41,7 @@ extension PersistentSubscriptionsSettingsBuildable where SettingsType == Persist
     public func checkpoint(count value: ClosedRange<Int32>) -> Self {
         withCopy { $0.settings.checkpointCount = value }
     }
-    
+
     @discardableResult
     public func checkpoint(after value: TimeSpan) -> Self {
         withCopy { $0.settings.checkpointAfter = value }
@@ -66,8 +66,6 @@ extension PersistentSubscriptionsSettingsBuildable where SettingsType == Persist
     public func historyBufferSize(_ value: Int32) -> Self {
         withCopy { $0.settings.historyBufferSize = value }
     }
-
-    
 
     /// Sets the consumer strategy for the persistent subscription.
     ///
@@ -122,7 +120,7 @@ extension PersistentSubscriptionsSettingsBuildable where SettingsType == Persist
     public func checkpoint(count value: ClosedRange<Int32>) -> Self {
         withCopy { $0.settings.checkpointCount = value }
     }
-    
+
     /// Sets the minimum time interval before a checkpoint is written for the persistent subscription.
     ///
     /// - Parameter value: The duration to wait before writing a checkpoint.
@@ -167,10 +165,10 @@ extension PersistentSubscriptionsSettingsBuildable where SettingsType == Persist
     public func historyBufferSize(_ value: Int32) -> Self {
         withCopy { $0.settings.historyBufferSize = value }
     }
-
 }
 
 // MARK: - Deprecated
+
 extension PersistentSubscriptionsSettingsBuildable where SettingsType == PersistentSubscription.CreateSettings {
     /// Sets whether to resolve link events when creating a persistent subscription (deprecated).
     ///

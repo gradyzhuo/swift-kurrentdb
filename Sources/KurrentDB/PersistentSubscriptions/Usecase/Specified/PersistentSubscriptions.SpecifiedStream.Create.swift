@@ -14,7 +14,7 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
         let streamIdentifier: StreamIdentifier
         let group: String
         let options: Options
@@ -56,7 +56,6 @@ extension PersistentSubscriptions.SpecifiedStream {
     }
 }
 
-
 extension PersistentSubscriptions.SpecifiedStream.Create {
     public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
@@ -65,8 +64,8 @@ extension PersistentSubscriptions.SpecifiedStream.Create {
         public private(set) var revision: RevisionCursor
 
         public init() {
-            self.settings = .init()
-            self.revision = .end
+            settings = .init()
+            revision = .end
         }
 
         /// Returns a copy of the options with the starting revision set to the specified cursor.
@@ -75,8 +74,8 @@ extension PersistentSubscriptions.SpecifiedStream.Create {
         /// - Returns: A new options instance with the updated starting revision.
         @discardableResult
         public func startFrom(revision: RevisionCursor) -> Self {
-            withCopy { 
-                $0.revision = revision 
+            withCopy {
+                $0.revision = revision
             }
         }
 
@@ -88,17 +87,16 @@ extension PersistentSubscriptions.SpecifiedStream.Create {
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)
-                $0.stream = .with{
+                $0.stream = .with {
                     switch revision {
                     case .start:
                         $0.start = .init()
                     case .end:
                         $0.end = .init()
-                    case .specified(let revision):
+                    case let .specified(revision):
                         $0.revision = revision
                     }
                 }
-                
             }
         }
     }

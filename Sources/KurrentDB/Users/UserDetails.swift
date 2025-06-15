@@ -23,19 +23,18 @@ import GRPCEncapsulates
 ///
 /// - SeeAlso: `Users` for the service to manage users and their details.
 public struct UserDetails: Sendable {
-
     /// The login name (username) of the user.
     public var loginName: String
-    
+
     /// The full name of the user.
     public var fullName: String
 
     /// The list of groups the user belongs to.
     public var groups: [String]
-    
+
     /// The last updated timestamp of the user’s details.
     public var lastUpdated: Date
-    
+
     /// A flag indicating whether the user’s account is disabled.
     public var disabled: Bool
 
@@ -57,7 +56,6 @@ public struct UserDetails: Sendable {
 }
 
 extension UserDetails {
-
     /// Initializes a `UserDetails` instance from the output of a `Users` service's method.
     ///
     /// This initializer converts the underlying message received from the `Users.UnderlyingClient.UnderlyingService.Method.Details.Output.UserDetails`

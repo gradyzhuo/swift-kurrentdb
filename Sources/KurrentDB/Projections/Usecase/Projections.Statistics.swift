@@ -25,9 +25,9 @@ extension Projections {
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 switch options {
-                case .specified(let name):
+                case let .specified(name):
                     $0.options.name = name
-                case .listAll(let mode):
+                case let .listAll(mode):
                     switch mode {
                     case .any:
                         $0.options.all = .init()
@@ -81,15 +81,15 @@ extension Projections.Statistics {
         public let writePendingEventsBeforeCheckpoint: Int32
         public let writePendingEventsAfterCheckpoint: Int32
 
-        internal init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) throws(KurrentError) {
+        init(coreProcessingTime: Int64, version: Int64, epoch: Int64, effectiveName: String, writesInProgress: Int32, readsInProgress: Int32, partitionsCached: Int32, status: String, stateReason: String, name: String, mode: String, position: String, progress: Float, lastCheckpoint: String, eventsProcessedAfterRestart: Int64, checkpointStatus: String, bufferedEvents: Int64, writePendingEventsBeforeCheckpoint: Int32, writePendingEventsAfterCheckpoint: Int32) throws(KurrentError) {
             guard let mode = Projection.Mode(rawValue: mode) else {
                 throw .initializationError(reason: "Invalid mode \(mode)")
             }
-            
+
             guard let status = Projection.Status(name: status) else {
                 throw .initializationError(reason: "Invalid status \(status)")
             }
-            
+
             self.name = name
             self.mode = mode
             self.coreProcessingTime = coreProcessingTime
@@ -121,7 +121,7 @@ extension Projections.Statistics {
         package init(from message: UnderlyingResponse) throws(KurrentError) {
             let details = message.details
 
-            self.detail = try .init(
+            detail = try .init(
                 coreProcessingTime: details.coreProcessingTime,
                 version: details.version,
                 epoch: details.epoch,
@@ -146,8 +146,8 @@ extension Projections.Statistics {
     }
 }
 
-extension Projections.Statistics{
-    public enum Options : Sendable{
+extension Projections.Statistics {
+    public enum Options: Sendable {
         case specified(name: String)
         case listAll(mode: Projection.Mode)
     }

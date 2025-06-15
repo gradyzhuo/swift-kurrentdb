@@ -1,5 +1,5 @@
 //
-//  PersistentSubscriptions.GetInfo.swift
+//  PersistentSubscriptions.SpecifiedStream.GetInfo.swift
 //  KurrentPersistentSubscriptions
 //
 //  Created by Grady Zhuo on 2023/12/10.
@@ -29,11 +29,10 @@ extension PersistentSubscriptions.SpecifiedStream {
         /// - Returns: The constructed gRPC request message.
         package func requestMessage() throws -> UnderlyingRequest {
             try .with {
-                $0.options = try .with { 
+                $0.options = try .with {
                     $0.streamIdentifier = try streamIdentifier.build()
                     $0.groupName = group
                 }
-                
             }
         }
 

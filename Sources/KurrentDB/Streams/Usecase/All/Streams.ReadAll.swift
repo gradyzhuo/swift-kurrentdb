@@ -29,8 +29,7 @@ extension Streams where Target == AllStreams {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            
-            return try await withThrowingTaskGroup(of: Void.self) { _ in
+            try await withThrowingTaskGroup(of: Void.self) { _ in
                 let client = ServiceClient(wrapping: connection)
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 try await client.read(request: request, options: callOptions) {
@@ -60,7 +59,7 @@ extension Streams.ReadAll where Target == AllStreams {
     }
 }
 
-extension Streams.ReadAll{
+extension Streams.ReadAll {
     public struct Options: EventStoreOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
@@ -72,12 +71,12 @@ extension Streams.ReadAll{
         public private(set) var compatibility: UInt32
 
         public init() {
-            self.resolveLinksEnabled = false
-            self.limit = .max
-            self.uuidOption = .string
-            self.compatibility = 0
-            self.position = .start
-            self.direction = .forward
+            resolveLinksEnabled = false
+            limit = .max
+            uuidOption = .string
+            compatibility = 0
+            position = .start
+            direction = .forward
         }
 
         /// Constructs the underlying gRPC request message for reading all streams using the configured options.
@@ -101,7 +100,7 @@ extension Streams.ReadAll{
                 }
                 $0.resolveLinks = resolveLinksEnabled
                 $0.count = limit
-                
+
                 switch position {
                 case .start:
                     $0.stream.start = .init()
@@ -113,7 +112,7 @@ extension Streams.ReadAll{
                         $0.preparePosition = preparePosition
                     }
                 }
-                
+
                 $0.readDirection = switch direction {
                 case .forward:
                     .forwards
@@ -150,23 +149,24 @@ extension Streams.ReadAll{
                 options.compatibility = compatibility
             }
         }
+
         @discardableResult
         public func forward() -> Self {
-            withCopy{ options in
+            withCopy { options in
                 options.direction = .forward
             }
         }
-        
+
         /// Returns a copy of the options with the read direction set to backward.
         ///
         /// - Returns: A modified copy of the options with backward direction configured.
         @discardableResult
         public func backward() -> Self {
-            withCopy{ options in
+            withCopy { options in
                 options.direction = .backward
             }
         }
-        
+
         /// Returns a copy of the options with the starting position set to the specified cursor.
         ///
         /// - Parameter cursor: The stream position to use as the starting point for reading.
@@ -176,15 +176,15 @@ extension Streams.ReadAll{
         /// - Returns: A modified copy of the options with the updated start position.
         @discardableResult
         public func startFrom(position: PositionCursor) -> Self {
-            withCopy{ options in
+            withCopy { options in
                 options.position = position
             }
         }
     }
 }
 
+// MARK: - Deprecated
 
-//MARK: - Deprecated
 extension Streams.ReadAll.Options {
     @available(*, deprecated, renamed: "limit")
     @discardableResult
@@ -193,7 +193,7 @@ extension Streams.ReadAll.Options {
             options.limit = limit
         }
     }
-    
+
     @available(*, deprecated, renamed: "resolveLinks")
     @discardableResult
     public func set(resolveLinks: Bool) -> Self {
@@ -201,7 +201,7 @@ extension Streams.ReadAll.Options {
             options.resolveLinksEnabled = resolveLinks
         }
     }
-    
+
     @available(*, deprecated, renamed: "uuidOption")
     @discardableResult
     public func set(uuidOption: UUIDOption) -> Self {
@@ -209,8 +209,7 @@ extension Streams.ReadAll.Options {
             options.uuidOption = uuidOption
         }
     }
-    
-    
+
     @available(*, deprecated, renamed: "compatibility")
     @discardableResult
     public func set(compatibility: UInt32) -> Self {
@@ -218,5 +217,4 @@ extension Streams.ReadAll.Options {
             options.compatibility = compatibility
         }
     }
-    
 }

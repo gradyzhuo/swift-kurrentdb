@@ -14,7 +14,7 @@ extension PersistentSubscriptions.AllStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
         public private(set) var group: String
         public private(set) var options: Options
 
@@ -36,7 +36,7 @@ extension PersistentSubscriptions.AllStream {
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = options.build()
-                $0.options.groupName = group             
+                $0.options.groupName = group
             }
         }
 
@@ -49,8 +49,7 @@ extension PersistentSubscriptions.AllStream {
     }
 }
 
-
-extension PersistentSubscriptions.AllStream.Update{
+extension PersistentSubscriptions.AllStream.Update {
     public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
@@ -58,8 +57,8 @@ extension PersistentSubscriptions.AllStream.Update{
         public private(set) var position: PositionCursor?
 
         public init() {
-            self.settings = .init()
-            self.position = nil
+            settings = .init()
+            position = nil
         }
 
         /// Returns a copy of the options with the starting position set to the specified value.
@@ -68,11 +67,10 @@ extension PersistentSubscriptions.AllStream.Update{
         /// - Returns: A copy of the options with the updated starting position.
         @discardableResult
         public func startFrom(position: PositionCursor) -> Self {
-            withCopy { 
+            withCopy {
                 $0.position = position
             }
         }
-
 
         /// Constructs the underlying gRPC options message for updating a persistent subscription on all streams.
         ///
@@ -82,8 +80,8 @@ extension PersistentSubscriptions.AllStream.Update{
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .from(settings: settings)
-                $0.all = .with{
-                    if let position = position {
+                $0.all = .with {
+                    if let position {
                         switch position {
                         case .start:
                             $0.start = .init()

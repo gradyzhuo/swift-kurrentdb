@@ -31,12 +31,12 @@ extension Streams {
     public final class Subscription: Sendable {
         /// An asynchronous stream delivering events or errors from the subscription.
         public let events: AsyncThrowingStream<ReadEvent, Error>
-        
+
         /// The unique identifier of the subscription, if provided by the server.
         public let subscriptionId: String?
-        
+
         public let continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation
-        
+
         /// Initializes a `Subscription` instance with an event stream and subscription ID.
         ///
         /// - Parameters:
@@ -70,30 +70,29 @@ extension Streams.Subscription where Target == AllStreams {
         }
 
         let (stream, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
-        
+
         Task {
-            do{
+            do {
                 while let message = try await iterator.next() {
                     if case let .event(message) = message.content {
                         try continuation.yield(.init(message: message))
                     }
                 }
-            }catch{
+            } catch {
                 continuation.finish(throwing: KurrentError.subscriptionTerminated(subscriptionId: subscriptionId))
             }
-            
         }
         let events = stream
         self.init(events: events, continuation: continuation, subscriptionId: subscriptionId)
     }
-    
+
     public func terminate() {
         continuation.finish()
     }
 }
 
-extension Streams.Subscription{
-    package convenience init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse , any Error>) async throws {
+extension Streams.Subscription {
+    package convenience init(messages: AsyncThrowingStream<Streams.Subscribe.UnderlyingResponse, any Error>) async throws {
         var iterator = messages.makeAsyncIterator()
 
         let subscriptionId: String? = if case let .confirmation(confirmation) = try await iterator.next()?.content {

@@ -26,20 +26,18 @@ public enum Stream {
     public typealias Selector = StreamSelector
 }
 
-
 @available(*, deprecated, message: "The PersistentSubscriptions.Subscription as AsyncSequence is deprecated. Please use PersistentSubscriptions.Subscription.events instead.")
-extension PersistentSubscriptions.Subscription: AsyncSequence{
+extension PersistentSubscriptions.Subscription: AsyncSequence {
     public typealias Element = PersistentSubscription.EventResult
     public typealias AsyncIterator = AsyncThrowingStream<Element, Error>.AsyncIterator
-    
+
     public func makeAsyncIterator() -> AsyncThrowingStream<Element, any Error>.AsyncIterator {
-        return events.makeAsyncIterator()
+        events.makeAsyncIterator()
     }
 }
 
 @available(*, deprecated, message: "The Streams.Subscription as AsyncSequence is deprecated. Please use Streams.Subscription.events instead.")
-extension Streams.Subscription: AsyncSequence{
-    
+extension Streams.Subscription: AsyncSequence {
     @available(*, deprecated, message: "The Streams.Subscription.EventAppeared is deprecated.")
     public struct EventAppeared {
         public let event: ReadEvent
@@ -48,7 +46,7 @@ extension Streams.Subscription: AsyncSequence{
             self.event = event
         }
     }
-    
+
     @available(*, deprecated, message: "The Streams.Subscription.EventIterator is deprecated.")
     public struct AsyncIterator: AsyncIteratorProtocol {
         public typealias Element = EventAppeared
@@ -61,7 +59,7 @@ extension Streams.Subscription: AsyncSequence{
 
         public mutating func next() async throws -> EventAppeared? {
             while true {
-                if let event = try await iterator.next(){
+                if let event = try await iterator.next() {
                     return .init(event: event)
                 }
             }
@@ -72,37 +70,29 @@ extension Streams.Subscription: AsyncSequence{
         let iterator = events.makeAsyncIterator()
         return .init(iterator: iterator)
     }
-    
 }
 
 extension KurrentDB.StreamRevision {
-    public static func revision(_ value: UInt64)->Self{
-        return .at(value)
+    public static func revision(_ value: UInt64) -> Self {
+        .at(value)
     }
 }
 
 extension Streams.ReadResponse {
     @available(*, deprecated, message: "content is unnecessary, handle response content by ReadResponse itself.")
     public var content: Self {
-        get{
-            self
-        }
+        self
     }
 }
 
 extension ReadEvent {
     @available(*, deprecated, renamed: "link")
-    public var linkedRecordedEvent: RecordedEvent?{
-        get{
-            link
-        }
+    public var linkedRecordedEvent: RecordedEvent? {
+        link
     }
-    
+
     @available(*, deprecated, renamed: "event")
-    public var recordedEvent: RecordedEvent{
-        get{
-            record
-        }
+    public var recordedEvent: RecordedEvent {
+        record
     }
 }
-

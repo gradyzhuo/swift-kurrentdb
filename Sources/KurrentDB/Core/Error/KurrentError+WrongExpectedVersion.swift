@@ -12,26 +12,25 @@ extension KurrentError {
         let expectedRevision: ExpectedRevisionOption = wrongResult.expectedRevisionOption.map {
             switch $0 {
             case .expectedAny:
-                    .any
+                .any
             case .expectedNoStream:
-                    .noStream
+                .noStream
             case .expectedStreamExists:
-                    .streamExists
+                .streamExists
             case let .expectedRevision(revision):
-                    .revision(revision)
+                .revision(revision)
             }
         } ?? .any
-        
-        let currentRevision: CurrentRevisionOption = wrongResult.currentRevisionOption.map{
+
+        let currentRevision: CurrentRevisionOption = wrongResult.currentRevisionOption.map {
             switch $0 {
             case .currentNoStream:
-                    .noStream
-            case .currentRevision(let revision):
-                    .revision(revision)
+                .noStream
+            case let .currentRevision(revision):
+                .revision(revision)
             }
         } ?? .noStream
-        
+
         return .wrongExpectedVersion(expected: expectedRevision, current: currentRevision)
     }
 }
-

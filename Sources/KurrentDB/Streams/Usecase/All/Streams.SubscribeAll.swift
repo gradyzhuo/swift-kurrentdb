@@ -1,5 +1,5 @@
 //
-//  Streams.SubscribeToAll.swift
+//  Streams.SubscribeAll.swift
 //  KurrentStreams
 //
 //  Created by Grady Zhuo on 2023/10/21.
@@ -33,7 +33,6 @@ extension Streams where Target == AllStreams {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
-            
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
             Task {
                 let client = ServiceClient(wrapping: connection)
@@ -125,10 +124,10 @@ extension Streams.SubscribeAll where Target == AllStreams {
         public private(set) var filter: SubscriptionFilter?
 
         public init() {
-            self.resolveLinksEnabled = false
-            self.uuidOption = .string
-            self.filter = nil
-            self.position = .end
+            resolveLinksEnabled = false
+            uuidOption = .string
+            filter = nil
+            position = .end
         }
 
         /// Builds the underlying gRPC request message for subscribing to all streams using the configured options.
@@ -190,7 +189,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
                         $0.preparePosition = preparePosition
                     }
                 }
-                
+
                 $0.resolveLinks = resolveLinksEnabled
                 $0.readDirection = .forwards
                 $0.subscription = .init()
@@ -222,8 +221,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
                 options.uuidOption = uuidOption
             }
         }
-        
-        
+
         /// Returns a copy of the options with the starting position set to the specified cursor.
         ///
         /// - Parameter cursor: The position cursor to use as the starting point for the subscription.
@@ -232,7 +230,7 @@ extension Streams.SubscribeAll where Target == AllStreams {
         /// - Parameter position: The position cursor from which to start the subscription.
         /// - Returns: A copy of the options with the updated starting position.
         @discardableResult
-        public func startFrom(position: PositionCursor) -> Self{
+        public func startFrom(position: PositionCursor) -> Self {
             withCopy { options in
                 options.position = position
             }
@@ -240,7 +238,8 @@ extension Streams.SubscribeAll where Target == AllStreams {
     }
 }
 
-//MARK: - Deprecated
+// MARK: - Deprecated
+
 extension Streams.SubscribeAll.Options {
     @available(*, deprecated, renamed: "resolveLinks")
     @discardableResult
@@ -249,7 +248,7 @@ extension Streams.SubscribeAll.Options {
             options.resolveLinksEnabled = resolveLinks
         }
     }
-    
+
     @available(*, deprecated, renamed: "uuidOption")
     @discardableResult
     public func set(uuidOption: UUIDOption) -> Self {
@@ -257,7 +256,7 @@ extension Streams.SubscribeAll.Options {
             options.uuidOption = uuidOption
         }
     }
-    
+
     @available(*, deprecated, renamed: "filter")
     @discardableResult
     public func set(filter: SubscriptionFilter) -> Self {

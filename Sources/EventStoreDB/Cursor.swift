@@ -12,5 +12,3 @@ public enum Cursor<Pointer: Sendable>: Sendable {
     case end
     case specified(Pointer)
 }
-
-

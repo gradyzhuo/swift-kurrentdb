@@ -20,7 +20,7 @@ public struct ServerFeatures: GRPCConcreteService {
     public var callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
-    internal init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.endpoint = endpoint
         self.settings = settings
         self.callOptions = callOptions
@@ -28,7 +28,7 @@ public struct ServerFeatures: GRPCConcreteService {
     }
 }
 
-extension ServerFeatures {    
+extension ServerFeatures {
     public func getSupportedMethods() async throws(KurrentError) -> ServiceInfo {
         let usecase = GetSupportedMethods()
         return try await usecase.perform(endpoint: endpoint, settings: settings, callOptions: callOptions)
