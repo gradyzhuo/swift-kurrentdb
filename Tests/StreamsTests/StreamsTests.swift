@@ -197,9 +197,6 @@ struct StreamTests: Sendable {
             eventType: "SubscribeAll-AccountCreated", model: ["Description": "Gears of War 10"]
         )
         let client = KurrentDBClient(settings: settings)
-        client.readStream("") { options in
-            options.startFrom(revision: <#T##RevisionCursor#>)
-        }
 
         let filter: SubscriptionFilter = .onStreamName(prefix: streamIdentifier.name)
         let subscription = try await client.subscribeAllStreams {
