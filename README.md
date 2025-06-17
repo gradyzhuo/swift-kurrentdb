@@ -104,7 +104,7 @@ let events:[EventData] = [
 
 // Append two events with one response
 let client = KurrentDBClient(settings: .localhost())
-try await client.appendStream(on: "stream_for_testing", events: events){
+try await client.appendStream("stream_for_testing", events: events){
     $0.revision(expected: .any)
 }
 ```
@@ -119,7 +119,7 @@ import KurrentDB
 let settings: ClientSettings = .localhost()
 
 // Read responses of event from specified stream.
-let responses = try await client.readStream(on: "stream_for_testing"){
+let responses = try await client.readStream("stream_for_testing"){
     $0.backward().startFrom(revision: .start)
 }
 
