@@ -31,7 +31,7 @@ dependencies: [
 
 ### The library name to import.
 
-```
+```swift
 import KurrentDB
 ```
 
