@@ -37,8 +37,8 @@ public struct EventData: EventStoreEvent {
         self.init(id: id, eventType: eventType, payload: .json(model), contentType: .json, customMetadata: customMetadata)
     }
 
-    public init(id: UUID = .init(), eventType: String, data: Data, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .data(data), contentType: .binary, customMetadata: customMetadata)
+    public init(id: UUID = .init(), eventType: String, data: Data, contentType: ContentType = .json, customMetadata: Data? = nil) {
+        self.init(id: id, eventType: eventType, payload: .data(data), contentType: contentType, customMetadata: customMetadata)
     }
 
     public init(id: UUID = .init(), eventType: String, bytes: [UInt8], customMetadata: Data? = nil) {
