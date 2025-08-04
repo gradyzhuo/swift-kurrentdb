@@ -16,54 +16,54 @@ public struct EventData: EventStoreEvent {
 
     public private(set) var metadata: [String: String]
 
-    private init(id: UUID = .init(), eventType: String, payload: Payload, contentType _: ContentType, customMetadata: Data? = nil) {
+    private init(id: UUID = .init(), eventType: String, payload: Payload, customMetadata: Data? = nil) {
         self.id = id
         self.eventType = eventType
         self.payload = payload
         self.customMetadata = customMetadata
 
         metadata = [
-            "content-type": payload.contentType,
+            "content-type": payload.contentType.rawValue,
             "type": eventType,
         ]
     }
 
     @available(*, deprecated)
     public init(id: UUID = .init(), eventType: String, payload: Codable & Sendable, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .json(payload), contentType: .json, customMetadata: customMetadata)
+        self.init(id: id, eventType: eventType, payload: .json(payload), customMetadata: customMetadata)
     }
 
     public init(id: UUID = .init(), eventType: String, model: Codable & Sendable, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .json(model), contentType: .json, customMetadata: customMetadata)
+        self.init(id: id, eventType: eventType, payload: .json(model), customMetadata: customMetadata)
     }
 
     public init(id: UUID = .init(), eventType: String, data: Data, contentType: ContentType = .json, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .data(data), contentType: contentType, customMetadata: customMetadata)
+        self.init(id: id, eventType: eventType, payload: .data(data, contentType), customMetadata: customMetadata)
     }
 
-    public init(id: UUID = .init(), eventType: String, bytes: [UInt8], customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .data(.init(bytes)), contentType: .binary, customMetadata: customMetadata)
+    public init(id: UUID = .init(), eventType: String, bytes: [UInt8], contentType: ContentType = .json, customMetadata: Data? = nil) {
+        self.init(id: id, eventType: eventType, payload: .data(.init(bytes), contentType), customMetadata: customMetadata)
     }
 }
 
 extension EventData {
     public enum Payload: Sendable {
-        case data(Data)
+        case data(Data, ContentType)
         case json(Codable & Sendable)
 
-        var contentType: String {
+        var contentType: ContentType {
             switch self {
-            case .data:
-                "application/octet-stream"
+            case let .data(_, contentType):
+                contentType
             case .json:
-                "application/json"
+                ContentType.json
             }
         }
 
         package var data: Data {
             get throws {
                 switch self {
-                case let .data(data):
+                case let .data(data, _):
                     data
                 case let .json(json):
                     try JSONEncoder().encode(json)
