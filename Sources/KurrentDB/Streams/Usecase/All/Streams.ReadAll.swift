@@ -87,7 +87,8 @@ extension Streams.ReadAll {
         package func build() -> UnderlyingMessage {
             .with {
                 $0.noFilter = .init()
-
+                $0.all = .init()
+                
                 switch uuidOption {
                 case .structured:
                     $0.uuidOption.structured = .init()
@@ -103,9 +104,9 @@ extension Streams.ReadAll {
 
                 switch position {
                 case .start:
-                    $0.stream.start = .init()
+                    $0.all.start = .init()
                 case .end:
-                    $0.stream.end = .init()
+                    $0.all.end = .init()
                 case let .specified(commitPosition, preparePosition):
                     $0.all.position = .with {
                         $0.commitPosition = commitPosition
