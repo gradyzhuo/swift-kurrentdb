@@ -16,7 +16,7 @@ public struct EventData: EventStoreEvent {
 
     public private(set) var metadata: [String: String]
 
-    private init(id: UUID = .init(), eventType: String, payload: Payload, customMetadata: Data? = nil) {
+    public init(id: UUID = .init(), eventType: String, payload: Payload, customMetadata: Data? = nil) {
         self.id = id
         self.eventType = eventType
         self.payload = payload
@@ -42,7 +42,7 @@ public struct EventData: EventStoreEvent {
     }
 
     public init(id: UUID = .init(), eventType: String, bytes: [UInt8], contentType: ContentType = .json, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .data(.init(bytes), contentType), customMetadata: customMetadata)
+        self.init(id: id, eventType: eventType, data: .init(bytes), contentType: contentType, customMetadata: customMetadata)
     }
 }
 
@@ -51,16 +51,18 @@ extension EventData {
         case data(Data, ContentType)
         case json(Codable & Sendable)
 
-        var contentType: ContentType {
-            switch self {
-            case let .data(_, contentType):
-                contentType
-            case .json:
-                ContentType.json
+        public var contentType: ContentType {
+            get{
+                switch self {
+                case let .data(_, contentType):
+                    contentType
+                case .json:
+                    .json
+                }
             }
         }
 
-        package var data: Data {
+        public var data: Data {
             get throws {
                 switch self {
                 case let .data(data, _):
