@@ -32,7 +32,7 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
             try await client.runConnections()
         }
 
-        return try await withRethrowingError(usage: #function) {
+        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             try await send(connection: client, metadata: metadata, callOptions: callOptions)
         }
     }

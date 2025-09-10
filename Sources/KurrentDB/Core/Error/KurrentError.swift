@@ -154,7 +154,7 @@ func withRethrowingError<T>(usage: String, action: @Sendable () async throws -> 
     } catch let error as RPCError {
         try error.rethrow(usage: usage, origin: error)
     } catch {
-        throw .internalClientError(reason: "\(usage) failed.")
+        throw .internalClientError(reason: "\(usage) failed. error: \(error)")
     }
     throw .internalClientError(reason: "\(usage) failed.")
 }
@@ -167,7 +167,7 @@ func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) thr
     } catch let error as RPCError {
         try error.rethrow(usage: usage, origin: error)
     } catch {
-        throw .internalClientError(reason: "\(usage) failed.")
+        throw .internalClientError(reason: "\(usage) failed. error: \(error)")
     }
     throw .internalClientError(reason: "\(usage) failed.")
 }

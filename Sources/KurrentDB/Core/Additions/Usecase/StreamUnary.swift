@@ -32,7 +32,7 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
     }
 
     package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws(KurrentError) -> Response {
-        try await withRethrowingError(usage: #function) {
+        try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     try await client.runConnections()

@@ -16,7 +16,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses =
             try await client.runConnections()
         }
 
-        return try await withRethrowingError(usage: #function) {
+        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
             return try await send(connection: client, request: request, callOptions: callOptions)
@@ -52,7 +52,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
             try await client.runConnections()
         }
 
-        return try await withRethrowingError(usage: #function) {
+        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             let request = try request(metadata: metadata)
             return try await send(connection: client, request: request, callOptions: callOptions)
         }
