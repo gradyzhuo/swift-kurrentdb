@@ -154,9 +154,9 @@ func withRethrowingError<T>(usage: String, action: @Sendable () async throws -> 
     } catch let error as RPCError {
         try error.rethrow(usage: usage, origin: error)
     } catch {
-        throw .internalClientError(reason: "\(usage) failed. error: \(error)")
+        throw .internalClientError(reason: "`\(usage)` failed. full error: \(error)")
     }
-    throw .internalClientError(reason: "\(usage) failed.")
+    throw .internalClientError(reason: "`\(usage)` failed.")
 }
 
 func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) throws(KurrentError) -> T {
@@ -167,9 +167,9 @@ func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) thr
     } catch let error as RPCError {
         try error.rethrow(usage: usage, origin: error)
     } catch {
-        throw .internalClientError(reason: "\(usage) failed. error: \(error)")
+        throw .internalClientError(reason: "`\(usage)` failed. full error: \(error)")
     }
-    throw .internalClientError(reason: "\(usage) failed.")
+    throw .internalClientError(reason: "`\(usage)` failed.")
 }
 
 extension Error where Self: Equatable {
@@ -194,7 +194,7 @@ extension IOError {
         case 61:
             throw .grpcConnectionError(cause: origin)
         default:
-            throw .internalClientError(reason: "Unknown \(usage) error")
+            throw .internalClientError(reason: "`\(usage)` failed, full error: \(origin).")
         }
     }
 }
