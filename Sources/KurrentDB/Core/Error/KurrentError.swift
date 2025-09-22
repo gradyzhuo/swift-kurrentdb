@@ -167,7 +167,7 @@ func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) thr
     } catch let error as RPCError {
         try error.rethrow(usage: usage, origin: error)
     } catch {
-        throw .internalClientError(reason: "`\(usage)` failed. full error: \(error)")
+        throw .internalClientError(reason: "`\(usage)` failed. full error: \(error).")
     }
     throw .internalClientError(reason: "`\(usage)` failed.")
 }
