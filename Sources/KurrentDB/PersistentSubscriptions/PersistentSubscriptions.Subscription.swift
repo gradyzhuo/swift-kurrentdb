@@ -24,7 +24,7 @@ extension PersistentSubscriptions {
 
         /// The writer responsible for sending requests to the subscription service.
         let writer: Writer
-
+        
         /// The unique identifier of the subscription, if available.
         ///
         /// This is set during initialization based on the first response from the server.
@@ -39,7 +39,7 @@ extension PersistentSubscriptions {
         ///   - writer: The `Writer` instance used to send requests. Defaults to a new `Writer`.
         ///   - reader: An asynchronous stream of responses from the subscription service.
         /// - Throws: An error if the initialization process fails, such as when the response stream cannot be processed.
-        package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>) async throws {
+        package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>, onTermination: @Sendable @escaping ()->Void) async throws {
             self.writer = writer
 
             var iterator = reader.makeAsyncIterator()
@@ -50,6 +50,9 @@ extension PersistentSubscriptions {
             }
 
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: PersistentSubscription.EventResult.self)
+            continuation.onTermination = { _ in
+                onTermination()
+            }
             Task {
                 while let response = try await iterator.next() {
                     if case let .readEvent(event, retryCount) = response {

@@ -28,7 +28,7 @@ extension Streams where Target == AllStreams {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses {
             try await withThrowingTaskGroup(of: Void.self) { _ in
                 let client = ServiceClient(wrapping: connection)
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
@@ -37,6 +37,7 @@ extension Streams where Target == AllStreams {
                         try continuation.yield(handle(message: message))
                     }
                     continuation.finish()
+                    finished()
                 }
                 return stream
             }

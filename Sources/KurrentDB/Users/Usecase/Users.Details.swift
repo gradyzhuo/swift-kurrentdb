@@ -29,7 +29,7 @@ extension Users {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses {
             try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
                 let client = ServiceClient(wrapping: connection)
@@ -39,6 +39,7 @@ extension Users {
                         continuation.yield(response.userDetails)
                     }
                     continuation.finish()
+                    finished()
                 }
 
                 return stream

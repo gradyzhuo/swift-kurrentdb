@@ -377,23 +377,6 @@ extension EventStoreDBClient {
         try await underlyingClient.restartPersistentSubscriptionSubsystem()
     }
 
-    /// Subscribes to a persistent subscription for the specified stream selector and group name.
-    ///
-    /// - Parameters:
-    ///   - streamSelector: Identifies the stream or streams to subscribe to.
-    ///   - groupName: The name of the persistent subscription group.
-    ///   - configure: Optional closure to customize read options.
-    ///
-    /// - Returns: An active persistent subscription for the specified stream and group.
-    ///
-    /// - Throws: An error if the subscription cannot be established.
-    @available(*, deprecated)
-    public func subscribePersistentSubscription(to streamSelector: StreamSelector<StreamIdentifier>, groupName: String, configure: @Sendable (_ options: ReadOptions) -> ReadOptions = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AnyTarget>.Subscription {
-        let node = try await underlyingClient.selector.select()
-        let options = configure(.init())
-        let usecase = PersistentSubscriptions<PersistentSubscription.AnyTarget>.ReadAnyTarget(streamSelector: streamSelector, group: groupName, options: options)
-        return try await usecase.perform(node: node, callOptions: underlyingClient.defaultCallOptions)
-    }
 }
 
 public struct ReadOptions: EventStoreOptions {

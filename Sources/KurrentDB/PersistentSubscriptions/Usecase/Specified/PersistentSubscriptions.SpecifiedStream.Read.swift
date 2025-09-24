@@ -63,7 +63,9 @@ extension PersistentSubscriptions.SpecifiedStream {
                     }
                 }
             }
-            return try await .init(requests: writer, responses: responses.stream)
+            return try await .init(requests: writer, responses: responses.stream){
+                connection.beginGracefulShutdown()
+            }
         }
     }
 }

@@ -42,7 +42,7 @@ extension Projections {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses {
             try await withThrowingTaskGroup(of: Void.self) { _ in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 let client = ServiceClient(wrapping: connection)
@@ -51,8 +51,8 @@ extension Projections {
                         try continuation.yield(handle(message: message))
                     }
                     continuation.finish()
+                    finished()
                 }
-                continuation.finish()
                 return stream
             }
         }
