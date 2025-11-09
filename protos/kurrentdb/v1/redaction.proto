@@ -2,7 +2,7 @@ syntax = "proto3";
 package event_store.client.redaction;
 option java_package = "com.EventStoreDB.dbclient.proto.redaction";
 
-import "shared.proto";
+import "kurrentdb/v1/shared.proto";
 
 // The intended usage is as follows:
 // 1. Initiate the SwitchChunks() call in order to lock the database for chunk switching.
