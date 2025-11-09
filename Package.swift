@@ -15,12 +15,6 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "EventStoreDB",
-            targets: [
-                "EventStoreDB",
-            ]
-        ),
-        .library(
             name: "KurrentDB",
             targets: [
                 "KurrentDB",
@@ -32,16 +26,11 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "2.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
-        .target(
-            name: "EventStoreDB",
-            dependencies: [
-                "KurrentDB",
-            ]
-        ),
         .target(
             name: "KurrentDB",
             dependencies: [
@@ -54,7 +43,14 @@ let package = Package(
             dependencies: [
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                "Generated"
+            ]
+        ),
+        .target(
+            name: "Generated",
+            dependencies: [
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
+                .product(name: "SwiftProtobuf", package: "swift-protobuf")
             ]
         ),
         .testTarget(

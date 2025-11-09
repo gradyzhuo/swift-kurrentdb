@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Generated
 
 package protocol ExpectedStreamRevisionProtocol {
     static func any(_ value: EventStore_Client_Empty) -> Self
