@@ -30,16 +30,25 @@ extension Monitoring {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?)->Void) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
+            continuation.onTermination = { termination in
+                if case .finished(let error) = termination, let error {
+                    completion(error)
+                }
+                completion(nil)
+            }
             Task {
                 let client = ServiceClient(wrapping: connection)
                 try await client.stats(request: request, options: callOptions) {
-                    for try await message in $0.messages {
-                        try continuation.yield(.init(from: message))
+                    do{
+                        for try await message in $0.messages {
+                            try continuation.yield(.init(from: message))
+                        }
+                        continuation.finish()
+                    }catch{
+                        continuation.finish(throwing: error)
                     }
-                    continuation.finish()
-                    finished()
                 }
             }
             return stream

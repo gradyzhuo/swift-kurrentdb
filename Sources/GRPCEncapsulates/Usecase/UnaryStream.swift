@@ -8,5 +8,5 @@
 import GRPCCore
 
 package protocol UnaryStream: Usecase, UnaryRequestBuildable, StreamResponseHandlable {
-    func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses
+    func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses
 }

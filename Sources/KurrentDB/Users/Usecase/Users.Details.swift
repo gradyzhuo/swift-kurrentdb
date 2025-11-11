@@ -29,21 +29,30 @@ extension Users {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses {
-            try await withThrowingTaskGroup(of: Void.self) { _ in
-                let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?)->Void) async throws -> Responses {
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
+            continuation.onTermination = { termination in
+                if case .finished(let error) = termination, let error {
+                    completion(error)
+                }
+                completion(nil)
+            }
+            Task{
                 let client = ServiceClient(wrapping: connection)
                 try await client.details(request: request, options: callOptions) {
-                    for try await message in $0.messages {
-                        let response = try handle(message: message)
-                        continuation.yield(response.userDetails)
+                    do{
+                        for try await message in $0.messages {
+                            let response = try handle(message: message)
+                            continuation.yield(response.userDetails)
+                        }
+                        continuation.finish()
+                    }catch{
+                        continuation.finish(throwing: error)
                     }
-                    continuation.finish()
-                    finished()
                 }
-
-                return stream
             }
+
+            return stream
         }
     }
 }

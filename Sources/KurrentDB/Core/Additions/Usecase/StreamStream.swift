@@ -33,7 +33,12 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
         }
 
         return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
-            try await send(connection: client, metadata: metadata, callOptions: callOptions)
+            try await send(connection: client, metadata: metadata, callOptions: callOptions){
+                if let error = $0 {
+                    logger.error("The error is thrown in the response of StreamStream: \(error)")
+                }
+                client.beginGracefulShutdown()
+            }
         }
     }
 }

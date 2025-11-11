@@ -46,8 +46,14 @@ extension PersistentSubscriptions.SpecifiedStream {
         ///
         /// - Returns: An object containing the request writer and an asynchronous stream of subscription responses.
         /// - Throws: If building the request messages fails or if the gRPC call encounters an error.
-        package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Responses {
-            let responses = AsyncThrowingStream.makeStream(of: Response.self)
+        package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> Responses {
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
+            continuation.onTermination = { termination in
+                if case .finished(let error) = termination, let error {
+                    completion(error)
+                }
+                completion(nil)
+            }
 
             let writer = PersistentSubscriptions.Subscription.Writer()
             let requestMessages = try requestMessages()
@@ -57,15 +63,18 @@ extension PersistentSubscriptions.SpecifiedStream {
                 try await client.read(metadata: metadata, options: callOptions) {
                     try await $0.write(contentsOf: writer.sender)
                 } onResponse: {
-                    for try await message in $0.messages {
-                        let response = try handle(message: message)
-                        responses.continuation.yield(response)
+                    do{
+                        for try await message in $0.messages {
+                            let response = try handle(message: message)
+                            continuation.yield(response)
+                        }
+                        continuation.finish()
+                    }catch{
+                        continuation.finish(throwing: error)
                     }
                 }
             }
-            return try await .init(requests: writer, responses: responses.stream){
-                connection.beginGracefulShutdown()
-            }
+            return try await .init(requests: writer, responses: stream)
         }
     }
 }

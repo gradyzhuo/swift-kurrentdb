@@ -31,16 +31,27 @@ extension Streams {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, finished: @Sendable @escaping ()->Void) async throws -> Responses {
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?)->Void) async throws -> Responses {
             try await withThrowingTaskGroup(of: Void.self) { _ in
                 let client = ServiceClient(wrapping: connection)
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-                try await client.read(request: request, options: callOptions) {
-                    for try await message in $0.messages {
-                        try continuation.yield(handle(message: message))
+                continuation.onTermination = { termination in
+                    if case .finished(let error) = termination, let error {
+                        completion(error)
                     }
-                    continuation.finish()
-                    finished()
+                    completion(nil)
+                }
+                try await client.read(request: request, options: callOptions) {
+                    do{
+                        for try await message in $0.messages {
+                            try continuation.yield(handle(message: message))
+                        }
+                        continuation.finish()
+                    }catch{
+                        
+                        continuation.finish(throwing: error)
+                    }
+                    
                 }
                 return stream
             }
