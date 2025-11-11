@@ -36,11 +36,13 @@ extension Streams {
                 let client = ServiceClient(wrapping: connection)
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 continuation.onTermination = { termination in
-                    if case .finished(let error) = termination, let error {
+                    if case .finished(let error) = termination{
                         completion(error)
+                    }else{
+                        completion(nil)
                     }
-                    completion(nil)
                 }
+                
                 try await client.read(request: request, options: callOptions) {
                     do{
                         for try await message in $0.messages {

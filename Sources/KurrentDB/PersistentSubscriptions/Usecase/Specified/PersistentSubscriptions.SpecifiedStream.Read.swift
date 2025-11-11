@@ -49,10 +49,11 @@ extension PersistentSubscriptions.SpecifiedStream {
         package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
             continuation.onTermination = { termination in
-                if case .finished(let error) = termination, let error {
+                if case .finished(let error) = termination{
                     completion(error)
+                }else{
+                    completion(nil)
                 }
-                completion(nil)
             }
 
             let writer = PersistentSubscriptions.Subscription.Writer()

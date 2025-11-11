@@ -32,11 +32,13 @@ extension Users {
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?)->Void) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
             continuation.onTermination = { termination in
-                if case .finished(let error) = termination, let error {
+                if case .finished(let error) = termination{
                     completion(error)
+                }else{
+                    completion(nil)
                 }
-                completion(nil)
             }
+            
             Task{
                 let client = ServiceClient(wrapping: connection)
                 try await client.details(request: request, options: callOptions) {
