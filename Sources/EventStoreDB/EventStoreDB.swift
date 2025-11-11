@@ -376,7 +376,6 @@ extension EventStoreDBClient {
     public func restartPersistentSubscriptionSubsystem() async throws {
         try await underlyingClient.restartPersistentSubscriptionSubsystem()
     }
-
 }
 
 public struct ReadOptions: EventStoreOptions {

@@ -49,9 +49,9 @@ extension PersistentSubscriptions.SpecifiedStream {
         package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> Responses {
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
             continuation.onTermination = { termination in
-                if case .finished(let error) = termination{
+                if case let .finished(error) = termination {
                     completion(error)
-                }else{
+                } else {
                     completion(nil)
                 }
             }
@@ -64,13 +64,13 @@ extension PersistentSubscriptions.SpecifiedStream {
                 try await client.read(metadata: metadata, options: callOptions) {
                     try await $0.write(contentsOf: writer.sender)
                 } onResponse: {
-                    do{
+                    do {
                         for try await message in $0.messages {
                             let response = try handle(message: message)
                             continuation.yield(response)
                         }
                         continuation.finish()
-                    }catch{
+                    } catch {
                         continuation.finish(throwing: error)
                     }
                 }

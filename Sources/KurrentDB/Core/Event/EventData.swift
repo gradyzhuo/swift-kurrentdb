@@ -52,13 +52,11 @@ extension EventData {
         case json(Codable & Sendable)
 
         public var contentType: ContentType {
-            get{
-                switch self {
-                case let .data(_, contentType):
-                    contentType
-                case .json:
-                    .json
-                }
+            switch self {
+            case let .data(_, contentType):
+                contentType
+            case .json:
+                .json
             }
         }
 

@@ -24,7 +24,7 @@ extension PersistentSubscriptions {
 
         /// The writer responsible for sending requests to the subscription service.
         let writer: Writer
-        
+
         /// The unique identifier of the subscription, if available.
         ///
         /// This is set during initialization based on the first response from the server.

@@ -19,7 +19,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses =
         return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
-            return try await send(connection: client, request: request, callOptions: callOptions){
+            return try await send(connection: client, request: request, callOptions: callOptions) {
                 if let error = $0 {
                     logger.error("The error is thrown in the response of UnaryStream: \(error)")
                 }
@@ -59,7 +59,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
 
         return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             let request = try request(metadata: metadata)
-            return try await send(connection: client, request: request, callOptions: callOptions){
+            return try await send(connection: client, request: request, callOptions: callOptions) {
                 if let error = $0 {
                     logger.error("The error is thrown in the response of UnaryStream: \(error)")
                 }
