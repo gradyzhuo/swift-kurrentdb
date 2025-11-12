@@ -11,7 +11,7 @@ import SwiftProtobuf
 
 package protocol ResponseHandlable: Sendable {
     associatedtype UnderlyingResponse: Message
-    associatedtype Response
+    associatedtype Response: Sendable
 }
 
 package protocol UnaryResponseHandlable: ResponseHandlable where Self: Usecase {}
@@ -29,5 +29,5 @@ extension UnaryResponseHandlable where Response: GRPCResponse<UnderlyingResponse
 }
 
 package protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Usecase {
-    associatedtype Responses
+    associatedtype Responses: Sendable
 }

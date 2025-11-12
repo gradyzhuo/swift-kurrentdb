@@ -94,13 +94,11 @@ struct StreamTests: Sendable {
             $0.revision(expected: .any)
         }
 
-        var lastEvent: ReadEvent?
-        for try await event in subscription.events {
-            lastEvent = event
-            break
+        let firstEvent: ReadEvent? = try await subscription.events.first { _ in
+            true
         }
 
-        let lastEventRevision = try #require(lastEvent?.record.revision)
+        let lastEventRevision = try #require(firstEvent?.record.revision)
         #expect(response.currentRevision == lastEventRevision)
         try await client.deleteStream(streamIdentifier)
     }
@@ -237,7 +235,7 @@ struct StreamTests: Sendable {
 
         Task {
             try await Task.sleep(for: .microseconds(500))
-            subscription.terminate()
+            subscription.cancel()
         }
 
         for try await _ in subscription.events {

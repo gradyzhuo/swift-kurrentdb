@@ -14,7 +14,7 @@ extension Streams {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = ReadResponse
-        public typealias Responses = AsyncThrowingStream<Response, Error>
+        public typealias Responses = AsyncThrowingStream<Response, any Error>
 
         public let streamIdentifier: StreamIdentifier
         public let options: Options
@@ -31,9 +31,9 @@ extension Streams {
             }
         }
 
-        package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
-            try await withThrowingTaskGroup(of: Void.self) { _ in
-                let client = ServiceClient(wrapping: connection)
+        package func send(connection: GRPCClient<Transport>, request: ClientRequest<ServiceClient.UnderlyingService.Method.Read.Input>, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> AsyncThrowingStream<Response, any Error> {
+            let client = ServiceClient(wrapping: connection)
+            return try await client.read(request: request, options: callOptions) {
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 continuation.onTermination = { termination in
                     if case let .finished(error) = termination {
@@ -42,16 +42,13 @@ extension Streams {
                         completion(nil)
                     }
                 }
-
-                try await client.read(request: request, options: callOptions) {
-                    do {
-                        for try await message in $0.messages {
-                            try continuation.yield(handle(message: message))
-                        }
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
+                do {
+                    for try await message in $0.messages {
+                        try continuation.yield(handle(message: message))
                     }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
                 }
                 return stream
             }

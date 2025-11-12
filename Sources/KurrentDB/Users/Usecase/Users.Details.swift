@@ -30,31 +30,27 @@ extension Users {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
-            continuation.onTermination = { termination in
-                if case let .finished(error) = termination {
-                    completion(error)
-                } else {
-                    completion(nil)
-                }
-            }
-
-            Task {
-                let client = ServiceClient(wrapping: connection)
-                try await client.details(request: request, options: callOptions) {
-                    do {
-                        for try await message in $0.messages {
-                            let response = try handle(message: message)
-                            continuation.yield(response.userDetails)
-                        }
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
+            let client = ServiceClient(wrapping: connection)
+            return try await client.details(request: request, options: callOptions) {
+                let (stream, continuation) = AsyncThrowingStream.makeStream(of: UserDetails.self)
+                continuation.onTermination = { termination in
+                    if case let .finished(error) = termination {
+                        completion(error)
+                    } else {
+                        completion(nil)
                     }
                 }
+                do {
+                    for try await message in $0.messages {
+                        let response = try handle(message: message)
+                        continuation.yield(response.userDetails)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                return stream
             }
-
-            return stream
         }
     }
 }

@@ -33,8 +33,8 @@ extension Streams where Target == AllStreams {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
-            continuation.onTermination = { termination in
+            let responses = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
+            responses.continuation.onTermination = { termination in
                 if case let .finished(error) = termination {
                     completion(error)
                 } else {
@@ -42,20 +42,21 @@ extension Streams where Target == AllStreams {
                 }
             }
 
-            Task {
-                let client = ServiceClient(wrapping: connection)
-                try await client.read(request: request, options: callOptions) {
-                    do {
-                        for try await message in $0.messages {
-                            continuation.yield(message)
+            Task.detached {
+                do {
+                    let client = ServiceClient(wrapping: connection)
+                    try await client.read(request: request, options: callOptions) {
+                        // An infinite loop must be executed inside the `onResponse` closure; if you leave the onResponse closure, the connection will end.
+                        for try await message in $0.messages.cancelOnGracefulShutdown() {
+                            responses.continuation.yield(message)
                         }
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
+                        responses.continuation.finish()
                     }
+                } catch {
+                    responses.continuation.finish(throwing: error)
                 }
             }
-            return try await .init(messages: stream)
+            return try await .init(messages: responses)
         }
     }
 }
@@ -276,5 +277,42 @@ extension Streams.SubscribeAll.Options {
         withCopy { options in
             options.filter = filter
         }
+    }
+}
+
+extension Streams.Subscription where Target == AllStreams {
+    package init(messages: (stream: AsyncThrowingStream<Streams.SubscribeAll.UnderlyingResponse, any Error>, continuation: AsyncThrowingStream<Streams.SubscribeAll.UnderlyingResponse, any Error>.Continuation)) async throws {
+        var iterator = messages.stream.makeAsyncIterator()
+
+        guard case let .confirmation(confirmation) = try await iterator.next()?.content else {
+            throw KurrentError.subscriptionTerminated(subscriptionId: nil)
+        }
+
+        guard case .caughtUp = try await iterator.next()?.content else {
+            throw KurrentError.serverError("the `Caughtup` event from the Server was not received when subscribe.")
+        }
+
+        let (events, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
+        continuation.onTermination = { termination in
+            if case let .finished(error) = termination {
+                messages.continuation.finish(throwing: error)
+            } else {
+                messages.continuation.finish()
+            }
+        }
+
+        Task {
+            do {
+                while let message = try await iterator.next() {
+                    if case let .event(message) = message.content {
+                        try continuation.yield(.init(message: message))
+                    }
+                }
+                continuation.finish()
+            } catch {
+                continuation.finish(throwing: error)
+            }
+        }
+        self.init(events: events, continuation: continuation, subscriptionId: confirmation.subscriptionID)
     }
 }

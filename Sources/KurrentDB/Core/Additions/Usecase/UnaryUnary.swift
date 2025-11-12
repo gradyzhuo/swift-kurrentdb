@@ -40,9 +40,11 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
         try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
+                    logger.info("[\(Self.self)] connection opened by \(#function)")
                     try await client.runConnections()
                 }
                 let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
+                logger.info("[\(Self.self)] connection closed by \(#function)")
                 client.beginGracefulShutdown()
                 return response
             }

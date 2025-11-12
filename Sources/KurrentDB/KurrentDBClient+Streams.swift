@@ -99,7 +99,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).delete(options: options)
     }
-    
+
     /// Hard deletes (tombstones) the specified stream, making the stream identifier unusable.
     ///
     /// - Parameters:

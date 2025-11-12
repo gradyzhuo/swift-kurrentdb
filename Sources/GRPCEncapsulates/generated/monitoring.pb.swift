@@ -15,107 +15,102 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-    typealias Version = _2
+fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+  typealias Version = _2
 }
 
 package struct EventStore_Client_Monitoring_StatsReq: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var useMetadata: Bool = false
+  package var useMetadata: Bool = false
 
-    package var refreshTimePeriodInMs: UInt64 = 0
+  package var refreshTimePeriodInMs: UInt64 = 0
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
 package struct EventStore_Client_Monitoring_StatsResp: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var stats: [String: String] = [:]
+  package var stats: Dictionary<String,String> = [:]
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-private let _protobuf_package = "event_store.client.monitoring"
+fileprivate let _protobuf_package = "event_store.client.monitoring"
 
 extension EventStore_Client_Monitoring_StatsReq: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".StatsReq"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "use_metadata"),
-        4: .standard(proto: "refresh_time_period_in_ms"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".StatsReq"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}use_metadata\0\u{4}\u{3}refresh_time_period_in_ms\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBoolField(value: &useMetadata)
-            case 4: try decoder.decodeSingularUInt64Field(value: &refreshTimePeriodInMs)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBoolField(value: &self.useMetadata) }()
+      case 4: try { try decoder.decodeSingularUInt64Field(value: &self.refreshTimePeriodInMs) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if useMetadata != false {
-            try visitor.visitSingularBoolField(value: useMetadata, fieldNumber: 1)
-        }
-        if refreshTimePeriodInMs != 0 {
-            try visitor.visitSingularUInt64Field(value: refreshTimePeriodInMs, fieldNumber: 4)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.useMetadata != false {
+      try visitor.visitSingularBoolField(value: self.useMetadata, fieldNumber: 1)
     }
+    if self.refreshTimePeriodInMs != 0 {
+      try visitor.visitSingularUInt64Field(value: self.refreshTimePeriodInMs, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Client_Monitoring_StatsReq, rhs: EventStore_Client_Monitoring_StatsReq) -> Bool {
-        if lhs.useMetadata != rhs.useMetadata { return false }
-        if lhs.refreshTimePeriodInMs != rhs.refreshTimePeriodInMs { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Client_Monitoring_StatsReq, rhs: EventStore_Client_Monitoring_StatsReq) -> Bool {
+    if lhs.useMetadata != rhs.useMetadata {return false}
+    if lhs.refreshTimePeriodInMs != rhs.refreshTimePeriodInMs {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Client_Monitoring_StatsResp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".StatsResp"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .same(proto: "stats"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".StatsResp"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}stats\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString, SwiftProtobuf.ProtobufString>.self, value: &stats)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: &self.stats) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !stats.isEmpty {
-            try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString, SwiftProtobuf.ProtobufString>.self, value: stats, fieldNumber: 1)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.stats.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufString>.self, value: self.stats, fieldNumber: 1)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Client_Monitoring_StatsResp, rhs: EventStore_Client_Monitoring_StatsResp) -> Bool {
-        if lhs.stats != rhs.stats { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Client_Monitoring_StatsResp, rhs: EventStore_Client_Monitoring_StatsResp) -> Bool {
+    if lhs.stats != rhs.stats {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }

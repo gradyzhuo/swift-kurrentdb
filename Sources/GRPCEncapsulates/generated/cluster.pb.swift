@@ -16,2533 +16,2331 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-    typealias Version = _2
+fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+  typealias Version = _2
 }
 
 package struct EventStore_Cluster_GossipRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var info: EventStore_Cluster_ClusterInfo {
-        get { _info ?? EventStore_Cluster_ClusterInfo() }
-        set { _info = newValue }
-    }
+  package var info: EventStore_Cluster_ClusterInfo {
+    get {return _info ?? EventStore_Cluster_ClusterInfo()}
+    set {_info = newValue}
+  }
+  /// Returns true if `info` has been explicitly set.
+  package var hasInfo: Bool {return self._info != nil}
+  /// Clears the value of `info`. Subsequent reads from it will return its default value.
+  package mutating func clearInfo() {self._info = nil}
 
-    /// Returns true if `info` has been explicitly set.
-    package var hasInfo: Bool { _info != nil }
-    /// Clears the value of `info`. Subsequent reads from it will return its default value.
-    package mutating func clearInfo() { _info = nil }
+  package var server: EventStore_Cluster_EndPoint {
+    get {return _server ?? EventStore_Cluster_EndPoint()}
+    set {_server = newValue}
+  }
+  /// Returns true if `server` has been explicitly set.
+  package var hasServer: Bool {return self._server != nil}
+  /// Clears the value of `server`. Subsequent reads from it will return its default value.
+  package mutating func clearServer() {self._server = nil}
 
-    package var server: EventStore_Cluster_EndPoint {
-        get { _server ?? EventStore_Cluster_EndPoint() }
-        set { _server = newValue }
-    }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    /// Returns true if `server` has been explicitly set.
-    package var hasServer: Bool { _server != nil }
-    /// Clears the value of `server`. Subsequent reads from it will return its default value.
-    package mutating func clearServer() { _server = nil }
+  package init() {}
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _info: EventStore_Cluster_ClusterInfo? = nil
-    fileprivate var _server: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _info: EventStore_Cluster_ClusterInfo? = nil
+  fileprivate var _server: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_ViewChangeRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var serverID: EventStore_Client_UUID {
-        get { _serverID ?? EventStore_Client_UUID() }
-        set { _serverID = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _serverID ?? EventStore_Client_UUID()}
+    set {_serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return self._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {self._serverID = nil}
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _serverID = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _serverHTTP = newValue }
-    }
+  package var attemptedView: Int32 = 0
 
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _serverHTTP = nil }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package var attemptedView: Int32 = 0
+  package init() {}
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _serverID: EventStore_Client_UUID? = nil
-    fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _serverID: EventStore_Client_UUID? = nil
+  fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_ViewChangeProofRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var serverID: EventStore_Client_UUID {
-        get { _serverID ?? EventStore_Client_UUID() }
-        set { _serverID = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _serverID ?? EventStore_Client_UUID()}
+    set {_serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return self._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {self._serverID = nil}
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _serverID = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _serverHTTP = newValue }
-    }
+  package var installedView: Int32 = 0
 
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _serverHTTP = nil }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package var installedView: Int32 = 0
+  package init() {}
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _serverID: EventStore_Client_UUID? = nil
-    fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _serverID: EventStore_Client_UUID? = nil
+  fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_PrepareRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var serverID: EventStore_Client_UUID {
-        get { _serverID ?? EventStore_Client_UUID() }
-        set { _serverID = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _serverID ?? EventStore_Client_UUID()}
+    set {_serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return self._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {self._serverID = nil}
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _serverID = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _serverHTTP = newValue }
-    }
+  package var view: Int32 = 0
 
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _serverHTTP = nil }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package var view: Int32 = 0
+  package init() {}
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _serverID: EventStore_Client_UUID? = nil
-    fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _serverID: EventStore_Client_UUID? = nil
+  fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_PrepareOkRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var view: Int32 = 0
+  package var view: Int32 = 0
 
-    package var serverID: EventStore_Client_UUID {
-        get { _serverID ?? EventStore_Client_UUID() }
-        set { _serverID = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _serverID ?? EventStore_Client_UUID()}
+    set {_serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return self._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {self._serverID = nil}
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _serverID = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _serverHTTP = newValue }
-    }
+  package var epochNumber: Int32 = 0
 
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _serverHTTP = nil }
+  package var epochPosition: Int64 = 0
 
-    package var epochNumber: Int32 = 0
+  package var epochID: EventStore_Client_UUID {
+    get {return _epochID ?? EventStore_Client_UUID()}
+    set {_epochID = newValue}
+  }
+  /// Returns true if `epochID` has been explicitly set.
+  package var hasEpochID: Bool {return self._epochID != nil}
+  /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
+  package mutating func clearEpochID() {self._epochID = nil}
 
-    package var epochPosition: Int64 = 0
+  package var epochLeaderInstanceID: EventStore_Client_UUID {
+    get {return _epochLeaderInstanceID ?? EventStore_Client_UUID()}
+    set {_epochLeaderInstanceID = newValue}
+  }
+  /// Returns true if `epochLeaderInstanceID` has been explicitly set.
+  package var hasEpochLeaderInstanceID: Bool {return self._epochLeaderInstanceID != nil}
+  /// Clears the value of `epochLeaderInstanceID`. Subsequent reads from it will return its default value.
+  package mutating func clearEpochLeaderInstanceID() {self._epochLeaderInstanceID = nil}
 
-    package var epochID: EventStore_Client_UUID {
-        get { _epochID ?? EventStore_Client_UUID() }
-        set { _epochID = newValue }
-    }
+  package var lastCommitPosition: Int64 = 0
 
-    /// Returns true if `epochID` has been explicitly set.
-    package var hasEpochID: Bool { _epochID != nil }
-    /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
-    package mutating func clearEpochID() { _epochID = nil }
+  package var writerCheckpoint: Int64 = 0
 
-    package var epochLeaderInstanceID: EventStore_Client_UUID {
-        get { _epochLeaderInstanceID ?? EventStore_Client_UUID() }
-        set { _epochLeaderInstanceID = newValue }
-    }
+  package var chaserCheckpoint: Int64 = 0
 
-    /// Returns true if `epochLeaderInstanceID` has been explicitly set.
-    package var hasEpochLeaderInstanceID: Bool { _epochLeaderInstanceID != nil }
-    /// Clears the value of `epochLeaderInstanceID`. Subsequent reads from it will return its default value.
-    package mutating func clearEpochLeaderInstanceID() { _epochLeaderInstanceID = nil }
+  package var nodePriority: Int32 = 0
 
-    package var lastCommitPosition: Int64 = 0
+  package var clusterInfo: EventStore_Cluster_ClusterInfo {
+    get {return _clusterInfo ?? EventStore_Cluster_ClusterInfo()}
+    set {_clusterInfo = newValue}
+  }
+  /// Returns true if `clusterInfo` has been explicitly set.
+  package var hasClusterInfo: Bool {return self._clusterInfo != nil}
+  /// Clears the value of `clusterInfo`. Subsequent reads from it will return its default value.
+  package mutating func clearClusterInfo() {self._clusterInfo = nil}
 
-    package var writerCheckpoint: Int64 = 0
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package var chaserCheckpoint: Int64 = 0
+  package init() {}
 
-    package var nodePriority: Int32 = 0
-
-    package var clusterInfo: EventStore_Cluster_ClusterInfo {
-        get { _clusterInfo ?? EventStore_Cluster_ClusterInfo() }
-        set { _clusterInfo = newValue }
-    }
-
-    /// Returns true if `clusterInfo` has been explicitly set.
-    package var hasClusterInfo: Bool { _clusterInfo != nil }
-    /// Clears the value of `clusterInfo`. Subsequent reads from it will return its default value.
-    package mutating func clearClusterInfo() { _clusterInfo = nil }
-
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _serverID: EventStore_Client_UUID? = nil
-    fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
-    fileprivate var _epochID: EventStore_Client_UUID? = nil
-    fileprivate var _epochLeaderInstanceID: EventStore_Client_UUID? = nil
-    fileprivate var _clusterInfo: EventStore_Cluster_ClusterInfo? = nil
+  fileprivate var _serverID: EventStore_Client_UUID? = nil
+  fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _epochID: EventStore_Client_UUID? = nil
+  fileprivate var _epochLeaderInstanceID: EventStore_Client_UUID? = nil
+  fileprivate var _clusterInfo: EventStore_Cluster_ClusterInfo? = nil
 }
 
 package struct EventStore_Cluster_ProposalRequest: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var serverID: EventStore_Client_UUID {
-        get { _storage._serverID ?? EventStore_Client_UUID() }
-        set { _uniqueStorage()._serverID = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _storage._serverID ?? EventStore_Client_UUID()}
+    set {_uniqueStorage()._serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return _storage._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {_uniqueStorage()._serverID = nil}
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _storage._serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _uniqueStorage()._serverID = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _storage._serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_uniqueStorage()._serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return _storage._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {_uniqueStorage()._serverHTTP = nil}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _storage._serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _uniqueStorage()._serverHTTP = newValue }
-    }
+  package var leaderID: EventStore_Client_UUID {
+    get {return _storage._leaderID ?? EventStore_Client_UUID()}
+    set {_uniqueStorage()._leaderID = newValue}
+  }
+  /// Returns true if `leaderID` has been explicitly set.
+  package var hasLeaderID: Bool {return _storage._leaderID != nil}
+  /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderID() {_uniqueStorage()._leaderID = nil}
 
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _storage._serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _uniqueStorage()._serverHTTP = nil }
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
+    get {return _storage._leaderHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_uniqueStorage()._leaderHTTP = newValue}
+  }
+  /// Returns true if `leaderHTTP` has been explicitly set.
+  package var hasLeaderHTTP: Bool {return _storage._leaderHTTP != nil}
+  /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderHTTP() {_uniqueStorage()._leaderHTTP = nil}
 
-    package var leaderID: EventStore_Client_UUID {
-        get { _storage._leaderID ?? EventStore_Client_UUID() }
-        set { _uniqueStorage()._leaderID = newValue }
-    }
+  package var view: Int32 {
+    get {return _storage._view}
+    set {_uniqueStorage()._view = newValue}
+  }
 
-    /// Returns true if `leaderID` has been explicitly set.
-    package var hasLeaderID: Bool { _storage._leaderID != nil }
-    /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderID() { _uniqueStorage()._leaderID = nil }
+  package var epochNumber: Int32 {
+    get {return _storage._epochNumber}
+    set {_uniqueStorage()._epochNumber = newValue}
+  }
 
-    package var leaderHTTP: EventStore_Cluster_EndPoint {
-        get { _storage._leaderHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _uniqueStorage()._leaderHTTP = newValue }
-    }
+  package var epochPosition: Int64 {
+    get {return _storage._epochPosition}
+    set {_uniqueStorage()._epochPosition = newValue}
+  }
 
-    /// Returns true if `leaderHTTP` has been explicitly set.
-    package var hasLeaderHTTP: Bool { _storage._leaderHTTP != nil }
-    /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderHTTP() { _uniqueStorage()._leaderHTTP = nil }
+  package var epochID: EventStore_Client_UUID {
+    get {return _storage._epochID ?? EventStore_Client_UUID()}
+    set {_uniqueStorage()._epochID = newValue}
+  }
+  /// Returns true if `epochID` has been explicitly set.
+  package var hasEpochID: Bool {return _storage._epochID != nil}
+  /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
+  package mutating func clearEpochID() {_uniqueStorage()._epochID = nil}
 
-    package var view: Int32 {
-        get { _storage._view }
-        set { _uniqueStorage()._view = newValue }
-    }
+  package var epochLeaderInstanceID: EventStore_Client_UUID {
+    get {return _storage._epochLeaderInstanceID ?? EventStore_Client_UUID()}
+    set {_uniqueStorage()._epochLeaderInstanceID = newValue}
+  }
+  /// Returns true if `epochLeaderInstanceID` has been explicitly set.
+  package var hasEpochLeaderInstanceID: Bool {return _storage._epochLeaderInstanceID != nil}
+  /// Clears the value of `epochLeaderInstanceID`. Subsequent reads from it will return its default value.
+  package mutating func clearEpochLeaderInstanceID() {_uniqueStorage()._epochLeaderInstanceID = nil}
 
-    package var epochNumber: Int32 {
-        get { _storage._epochNumber }
-        set { _uniqueStorage()._epochNumber = newValue }
-    }
+  package var lastCommitPosition: Int64 {
+    get {return _storage._lastCommitPosition}
+    set {_uniqueStorage()._lastCommitPosition = newValue}
+  }
 
-    package var epochPosition: Int64 {
-        get { _storage._epochPosition }
-        set { _uniqueStorage()._epochPosition = newValue }
-    }
+  package var writerCheckpoint: Int64 {
+    get {return _storage._writerCheckpoint}
+    set {_uniqueStorage()._writerCheckpoint = newValue}
+  }
 
-    package var epochID: EventStore_Client_UUID {
-        get { _storage._epochID ?? EventStore_Client_UUID() }
-        set { _uniqueStorage()._epochID = newValue }
-    }
+  package var chaserCheckpoint: Int64 {
+    get {return _storage._chaserCheckpoint}
+    set {_uniqueStorage()._chaserCheckpoint = newValue}
+  }
 
-    /// Returns true if `epochID` has been explicitly set.
-    package var hasEpochID: Bool { _storage._epochID != nil }
-    /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
-    package mutating func clearEpochID() { _uniqueStorage()._epochID = nil }
+  package var nodePriority: Int32 {
+    get {return _storage._nodePriority}
+    set {_uniqueStorage()._nodePriority = newValue}
+  }
 
-    package var epochLeaderInstanceID: EventStore_Client_UUID {
-        get { _storage._epochLeaderInstanceID ?? EventStore_Client_UUID() }
-        set { _uniqueStorage()._epochLeaderInstanceID = newValue }
-    }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    /// Returns true if `epochLeaderInstanceID` has been explicitly set.
-    package var hasEpochLeaderInstanceID: Bool { _storage._epochLeaderInstanceID != nil }
-    /// Clears the value of `epochLeaderInstanceID`. Subsequent reads from it will return its default value.
-    package mutating func clearEpochLeaderInstanceID() { _uniqueStorage()._epochLeaderInstanceID = nil }
+  package init() {}
 
-    package var lastCommitPosition: Int64 {
-        get { _storage._lastCommitPosition }
-        set { _uniqueStorage()._lastCommitPosition = newValue }
-    }
-
-    package var writerCheckpoint: Int64 {
-        get { _storage._writerCheckpoint }
-        set { _uniqueStorage()._writerCheckpoint = newValue }
-    }
-
-    package var chaserCheckpoint: Int64 {
-        get { _storage._chaserCheckpoint }
-        set { _uniqueStorage()._chaserCheckpoint = newValue }
-    }
-
-    package var nodePriority: Int32 {
-        get { _storage._nodePriority }
-        set { _uniqueStorage()._nodePriority = newValue }
-    }
-
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _storage = _StorageClass.defaultInstance
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
 package struct EventStore_Cluster_AcceptRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var serverID: EventStore_Client_UUID {
-        get { _serverID ?? EventStore_Client_UUID() }
-        set { _serverID = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _serverID ?? EventStore_Client_UUID()}
+    set {_serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return self._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {self._serverID = nil}
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _serverID = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _serverHTTP = newValue }
-    }
+  package var leaderID: EventStore_Client_UUID {
+    get {return _leaderID ?? EventStore_Client_UUID()}
+    set {_leaderID = newValue}
+  }
+  /// Returns true if `leaderID` has been explicitly set.
+  package var hasLeaderID: Bool {return self._leaderID != nil}
+  /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderID() {self._leaderID = nil}
 
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _serverHTTP = nil }
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
+    get {return _leaderHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_leaderHTTP = newValue}
+  }
+  /// Returns true if `leaderHTTP` has been explicitly set.
+  package var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
+  /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
 
-    package var leaderID: EventStore_Client_UUID {
-        get { _leaderID ?? EventStore_Client_UUID() }
-        set { _leaderID = newValue }
-    }
+  package var view: Int32 = 0
 
-    /// Returns true if `leaderID` has been explicitly set.
-    package var hasLeaderID: Bool { _leaderID != nil }
-    /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderID() { _leaderID = nil }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package var leaderHTTP: EventStore_Cluster_EndPoint {
-        get { _leaderHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _leaderHTTP = newValue }
-    }
+  package init() {}
 
-    /// Returns true if `leaderHTTP` has been explicitly set.
-    package var hasLeaderHTTP: Bool { _leaderHTTP != nil }
-    /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderHTTP() { _leaderHTTP = nil }
-
-    package var view: Int32 = 0
-
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _serverID: EventStore_Client_UUID? = nil
-    fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
-    fileprivate var _leaderID: EventStore_Client_UUID? = nil
-    fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _serverID: EventStore_Client_UUID? = nil
+  fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _leaderID: EventStore_Client_UUID? = nil
+  fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_LeaderIsResigningRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: EventStore_Client_UUID {
-        get { _leaderID ?? EventStore_Client_UUID() }
-        set { _leaderID = newValue }
-    }
+  package var leaderID: EventStore_Client_UUID {
+    get {return _leaderID ?? EventStore_Client_UUID()}
+    set {_leaderID = newValue}
+  }
+  /// Returns true if `leaderID` has been explicitly set.
+  package var hasLeaderID: Bool {return self._leaderID != nil}
+  /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderID() {self._leaderID = nil}
 
-    /// Returns true if `leaderID` has been explicitly set.
-    package var hasLeaderID: Bool { _leaderID != nil }
-    /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderID() { _leaderID = nil }
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
+    get {return _leaderHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_leaderHTTP = newValue}
+  }
+  /// Returns true if `leaderHTTP` has been explicitly set.
+  package var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
+  /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
 
-    package var leaderHTTP: EventStore_Cluster_EndPoint {
-        get { _leaderHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _leaderHTTP = newValue }
-    }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    /// Returns true if `leaderHTTP` has been explicitly set.
-    package var hasLeaderHTTP: Bool { _leaderHTTP != nil }
-    /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderHTTP() { _leaderHTTP = nil }
+  package init() {}
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _leaderID: EventStore_Client_UUID? = nil
-    fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _leaderID: EventStore_Client_UUID? = nil
+  fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_LeaderIsResigningOkRequest: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: EventStore_Client_UUID {
-        get { _leaderID ?? EventStore_Client_UUID() }
-        set { _leaderID = newValue }
-    }
+  package var leaderID: EventStore_Client_UUID {
+    get {return _leaderID ?? EventStore_Client_UUID()}
+    set {_leaderID = newValue}
+  }
+  /// Returns true if `leaderID` has been explicitly set.
+  package var hasLeaderID: Bool {return self._leaderID != nil}
+  /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderID() {self._leaderID = nil}
 
-    /// Returns true if `leaderID` has been explicitly set.
-    package var hasLeaderID: Bool { _leaderID != nil }
-    /// Clears the value of `leaderID`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderID() { _leaderID = nil }
+  package var leaderHTTP: EventStore_Cluster_EndPoint {
+    get {return _leaderHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_leaderHTTP = newValue}
+  }
+  /// Returns true if `leaderHTTP` has been explicitly set.
+  package var hasLeaderHTTP: Bool {return self._leaderHTTP != nil}
+  /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearLeaderHTTP() {self._leaderHTTP = nil}
 
-    package var leaderHTTP: EventStore_Cluster_EndPoint {
-        get { _leaderHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _leaderHTTP = newValue }
-    }
+  package var serverID: EventStore_Client_UUID {
+    get {return _serverID ?? EventStore_Client_UUID()}
+    set {_serverID = newValue}
+  }
+  /// Returns true if `serverID` has been explicitly set.
+  package var hasServerID: Bool {return self._serverID != nil}
+  /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
+  package mutating func clearServerID() {self._serverID = nil}
 
-    /// Returns true if `leaderHTTP` has been explicitly set.
-    package var hasLeaderHTTP: Bool { _leaderHTTP != nil }
-    /// Clears the value of `leaderHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearLeaderHTTP() { _leaderHTTP = nil }
+  package var serverHTTP: EventStore_Cluster_EndPoint {
+    get {return _serverHTTP ?? EventStore_Cluster_EndPoint()}
+    set {_serverHTTP = newValue}
+  }
+  /// Returns true if `serverHTTP` has been explicitly set.
+  package var hasServerHTTP: Bool {return self._serverHTTP != nil}
+  /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
+  package mutating func clearServerHTTP() {self._serverHTTP = nil}
 
-    package var serverID: EventStore_Client_UUID {
-        get { _serverID ?? EventStore_Client_UUID() }
-        set { _serverID = newValue }
-    }
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    /// Returns true if `serverID` has been explicitly set.
-    package var hasServerID: Bool { _serverID != nil }
-    /// Clears the value of `serverID`. Subsequent reads from it will return its default value.
-    package mutating func clearServerID() { _serverID = nil }
+  package init() {}
 
-    package var serverHTTP: EventStore_Cluster_EndPoint {
-        get { _serverHTTP ?? EventStore_Cluster_EndPoint() }
-        set { _serverHTTP = newValue }
-    }
-
-    /// Returns true if `serverHTTP` has been explicitly set.
-    package var hasServerHTTP: Bool { _serverHTTP != nil }
-    /// Clears the value of `serverHTTP`. Subsequent reads from it will return its default value.
-    package mutating func clearServerHTTP() { _serverHTTP = nil }
-
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package init() {}
-
-    fileprivate var _leaderID: EventStore_Client_UUID? = nil
-    fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
-    fileprivate var _serverID: EventStore_Client_UUID? = nil
-    fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _leaderID: EventStore_Client_UUID? = nil
+  fileprivate var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
+  fileprivate var _serverID: EventStore_Client_UUID? = nil
+  fileprivate var _serverHTTP: EventStore_Cluster_EndPoint? = nil
 }
 
 package struct EventStore_Cluster_ClusterInfo: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var members: [EventStore_Cluster_MemberInfo] = []
+  package var members: [EventStore_Cluster_MemberInfo] = []
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
 package struct EventStore_Cluster_EndPoint: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var address: String = .init()
+  package var address: String = String()
 
-    package var port: UInt32 = 0
+  package var port: UInt32 = 0
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
 package struct EventStore_Cluster_MemberInfo: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var instanceID: EventStore_Client_UUID {
-        get { _storage._instanceID ?? EventStore_Client_UUID() }
-        set { _uniqueStorage()._instanceID = newValue }
+  package var instanceID: EventStore_Client_UUID {
+    get {return _storage._instanceID ?? EventStore_Client_UUID()}
+    set {_uniqueStorage()._instanceID = newValue}
+  }
+  /// Returns true if `instanceID` has been explicitly set.
+  package var hasInstanceID: Bool {return _storage._instanceID != nil}
+  /// Clears the value of `instanceID`. Subsequent reads from it will return its default value.
+  package mutating func clearInstanceID() {_uniqueStorage()._instanceID = nil}
+
+  package var timeStamp: Int64 {
+    get {return _storage._timeStamp}
+    set {_uniqueStorage()._timeStamp = newValue}
+  }
+
+  package var state: EventStore_Cluster_MemberInfo.VNodeState {
+    get {return _storage._state}
+    set {_uniqueStorage()._state = newValue}
+  }
+
+  package var isAlive: Bool {
+    get {return _storage._isAlive}
+    set {_uniqueStorage()._isAlive = newValue}
+  }
+
+  package var httpEndPoint: EventStore_Cluster_EndPoint {
+    get {return _storage._httpEndPoint ?? EventStore_Cluster_EndPoint()}
+    set {_uniqueStorage()._httpEndPoint = newValue}
+  }
+  /// Returns true if `httpEndPoint` has been explicitly set.
+  package var hasHTTPEndPoint: Bool {return _storage._httpEndPoint != nil}
+  /// Clears the value of `httpEndPoint`. Subsequent reads from it will return its default value.
+  package mutating func clearHTTPEndPoint() {_uniqueStorage()._httpEndPoint = nil}
+
+  package var internalTcp: EventStore_Cluster_EndPoint {
+    get {return _storage._internalTcp ?? EventStore_Cluster_EndPoint()}
+    set {_uniqueStorage()._internalTcp = newValue}
+  }
+  /// Returns true if `internalTcp` has been explicitly set.
+  package var hasInternalTcp: Bool {return _storage._internalTcp != nil}
+  /// Clears the value of `internalTcp`. Subsequent reads from it will return its default value.
+  package mutating func clearInternalTcp() {_uniqueStorage()._internalTcp = nil}
+
+  package var externalTcp: EventStore_Cluster_EndPoint {
+    get {return _storage._externalTcp ?? EventStore_Cluster_EndPoint()}
+    set {_uniqueStorage()._externalTcp = newValue}
+  }
+  /// Returns true if `externalTcp` has been explicitly set.
+  package var hasExternalTcp: Bool {return _storage._externalTcp != nil}
+  /// Clears the value of `externalTcp`. Subsequent reads from it will return its default value.
+  package mutating func clearExternalTcp() {_uniqueStorage()._externalTcp = nil}
+
+  package var internalTcpUsesTls: Bool {
+    get {return _storage._internalTcpUsesTls}
+    set {_uniqueStorage()._internalTcpUsesTls = newValue}
+  }
+
+  package var externalTcpUsesTls: Bool {
+    get {return _storage._externalTcpUsesTls}
+    set {_uniqueStorage()._externalTcpUsesTls = newValue}
+  }
+
+  package var lastCommitPosition: Int64 {
+    get {return _storage._lastCommitPosition}
+    set {_uniqueStorage()._lastCommitPosition = newValue}
+  }
+
+  package var writerCheckpoint: Int64 {
+    get {return _storage._writerCheckpoint}
+    set {_uniqueStorage()._writerCheckpoint = newValue}
+  }
+
+  package var chaserCheckpoint: Int64 {
+    get {return _storage._chaserCheckpoint}
+    set {_uniqueStorage()._chaserCheckpoint = newValue}
+  }
+
+  package var epochPosition: Int64 {
+    get {return _storage._epochPosition}
+    set {_uniqueStorage()._epochPosition = newValue}
+  }
+
+  package var epochNumber: Int32 {
+    get {return _storage._epochNumber}
+    set {_uniqueStorage()._epochNumber = newValue}
+  }
+
+  package var epochID: EventStore_Client_UUID {
+    get {return _storage._epochID ?? EventStore_Client_UUID()}
+    set {_uniqueStorage()._epochID = newValue}
+  }
+  /// Returns true if `epochID` has been explicitly set.
+  package var hasEpochID: Bool {return _storage._epochID != nil}
+  /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
+  package mutating func clearEpochID() {_uniqueStorage()._epochID = nil}
+
+  package var nodePriority: Int32 {
+    get {return _storage._nodePriority}
+    set {_uniqueStorage()._nodePriority = newValue}
+  }
+
+  package var isReadOnlyReplica: Bool {
+    get {return _storage._isReadOnlyReplica}
+    set {_uniqueStorage()._isReadOnlyReplica = newValue}
+  }
+
+  package var advertiseHostToClientAs: String {
+    get {return _storage._advertiseHostToClientAs}
+    set {_uniqueStorage()._advertiseHostToClientAs = newValue}
+  }
+
+  package var advertiseHTTPPortToClientAs: UInt32 {
+    get {return _storage._advertiseHTTPPortToClientAs}
+    set {_uniqueStorage()._advertiseHTTPPortToClientAs = newValue}
+  }
+
+  package var advertiseTcpPortToClientAs: UInt32 {
+    get {return _storage._advertiseTcpPortToClientAs}
+    set {_uniqueStorage()._advertiseTcpPortToClientAs = newValue}
+  }
+
+  package var esVersion: String {
+    get {return _storage._esVersion}
+    set {_uniqueStorage()._esVersion = newValue}
+  }
+
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  package enum VNodeState: SwiftProtobuf.Enum, Swift.CaseIterable {
+    package typealias RawValue = Int
+    case initializing // = 0
+    case discoverLeader // = 1
+    case unknown // = 2
+    case preReplica // = 3
+    case catchingUp // = 4
+    case clone // = 5
+    case follower // = 6
+    case preLeader // = 7
+    case leader // = 8
+    case manager // = 9
+    case shuttingDown // = 10
+    case shutdown // = 11
+    case readOnlyLeaderless // = 12
+    case preReadOnlyReplica // = 13
+    case readOnlyReplica // = 14
+    case resigningLeader // = 15
+    case UNRECOGNIZED(Int)
+
+    package init() {
+      self = .initializing
     }
 
-    /// Returns true if `instanceID` has been explicitly set.
-    package var hasInstanceID: Bool { _storage._instanceID != nil }
-    /// Clears the value of `instanceID`. Subsequent reads from it will return its default value.
-    package mutating func clearInstanceID() { _uniqueStorage()._instanceID = nil }
-
-    package var timeStamp: Int64 {
-        get { _storage._timeStamp }
-        set { _uniqueStorage()._timeStamp = newValue }
+    package init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .initializing
+      case 1: self = .discoverLeader
+      case 2: self = .unknown
+      case 3: self = .preReplica
+      case 4: self = .catchingUp
+      case 5: self = .clone
+      case 6: self = .follower
+      case 7: self = .preLeader
+      case 8: self = .leader
+      case 9: self = .manager
+      case 10: self = .shuttingDown
+      case 11: self = .shutdown
+      case 12: self = .readOnlyLeaderless
+      case 13: self = .preReadOnlyReplica
+      case 14: self = .readOnlyReplica
+      case 15: self = .resigningLeader
+      default: self = .UNRECOGNIZED(rawValue)
+      }
     }
 
-    package var state: EventStore_Cluster_MemberInfo.VNodeState {
-        get { _storage._state }
-        set { _uniqueStorage()._state = newValue }
+    package var rawValue: Int {
+      switch self {
+      case .initializing: return 0
+      case .discoverLeader: return 1
+      case .unknown: return 2
+      case .preReplica: return 3
+      case .catchingUp: return 4
+      case .clone: return 5
+      case .follower: return 6
+      case .preLeader: return 7
+      case .leader: return 8
+      case .manager: return 9
+      case .shuttingDown: return 10
+      case .shutdown: return 11
+      case .readOnlyLeaderless: return 12
+      case .preReadOnlyReplica: return 13
+      case .readOnlyReplica: return 14
+      case .resigningLeader: return 15
+      case .UNRECOGNIZED(let i): return i
+      }
     }
 
-    package var isAlive: Bool {
-        get { _storage._isAlive }
-        set { _uniqueStorage()._isAlive = newValue }
-    }
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    package static let allCases: [EventStore_Cluster_MemberInfo.VNodeState] = [
+      .initializing,
+      .discoverLeader,
+      .unknown,
+      .preReplica,
+      .catchingUp,
+      .clone,
+      .follower,
+      .preLeader,
+      .leader,
+      .manager,
+      .shuttingDown,
+      .shutdown,
+      .readOnlyLeaderless,
+      .preReadOnlyReplica,
+      .readOnlyReplica,
+      .resigningLeader,
+    ]
 
-    package var httpEndPoint: EventStore_Cluster_EndPoint {
-        get { _storage._httpEndPoint ?? EventStore_Cluster_EndPoint() }
-        set { _uniqueStorage()._httpEndPoint = newValue }
-    }
+  }
 
-    /// Returns true if `httpEndPoint` has been explicitly set.
-    package var hasHTTPEndPoint: Bool { _storage._httpEndPoint != nil }
-    /// Clears the value of `httpEndPoint`. Subsequent reads from it will return its default value.
-    package mutating func clearHTTPEndPoint() { _uniqueStorage()._httpEndPoint = nil }
+  package init() {}
 
-    package var internalTcp: EventStore_Cluster_EndPoint {
-        get { _storage._internalTcp ?? EventStore_Cluster_EndPoint() }
-        set { _uniqueStorage()._internalTcp = newValue }
-    }
-
-    /// Returns true if `internalTcp` has been explicitly set.
-    package var hasInternalTcp: Bool { _storage._internalTcp != nil }
-    /// Clears the value of `internalTcp`. Subsequent reads from it will return its default value.
-    package mutating func clearInternalTcp() { _uniqueStorage()._internalTcp = nil }
-
-    package var externalTcp: EventStore_Cluster_EndPoint {
-        get { _storage._externalTcp ?? EventStore_Cluster_EndPoint() }
-        set { _uniqueStorage()._externalTcp = newValue }
-    }
-
-    /// Returns true if `externalTcp` has been explicitly set.
-    package var hasExternalTcp: Bool { _storage._externalTcp != nil }
-    /// Clears the value of `externalTcp`. Subsequent reads from it will return its default value.
-    package mutating func clearExternalTcp() { _uniqueStorage()._externalTcp = nil }
-
-    package var internalTcpUsesTls: Bool {
-        get { _storage._internalTcpUsesTls }
-        set { _uniqueStorage()._internalTcpUsesTls = newValue }
-    }
-
-    package var externalTcpUsesTls: Bool {
-        get { _storage._externalTcpUsesTls }
-        set { _uniqueStorage()._externalTcpUsesTls = newValue }
-    }
-
-    package var lastCommitPosition: Int64 {
-        get { _storage._lastCommitPosition }
-        set { _uniqueStorage()._lastCommitPosition = newValue }
-    }
-
-    package var writerCheckpoint: Int64 {
-        get { _storage._writerCheckpoint }
-        set { _uniqueStorage()._writerCheckpoint = newValue }
-    }
-
-    package var chaserCheckpoint: Int64 {
-        get { _storage._chaserCheckpoint }
-        set { _uniqueStorage()._chaserCheckpoint = newValue }
-    }
-
-    package var epochPosition: Int64 {
-        get { _storage._epochPosition }
-        set { _uniqueStorage()._epochPosition = newValue }
-    }
-
-    package var epochNumber: Int32 {
-        get { _storage._epochNumber }
-        set { _uniqueStorage()._epochNumber = newValue }
-    }
-
-    package var epochID: EventStore_Client_UUID {
-        get { _storage._epochID ?? EventStore_Client_UUID() }
-        set { _uniqueStorage()._epochID = newValue }
-    }
-
-    /// Returns true if `epochID` has been explicitly set.
-    package var hasEpochID: Bool { _storage._epochID != nil }
-    /// Clears the value of `epochID`. Subsequent reads from it will return its default value.
-    package mutating func clearEpochID() { _uniqueStorage()._epochID = nil }
-
-    package var nodePriority: Int32 {
-        get { _storage._nodePriority }
-        set { _uniqueStorage()._nodePriority = newValue }
-    }
-
-    package var isReadOnlyReplica: Bool {
-        get { _storage._isReadOnlyReplica }
-        set { _uniqueStorage()._isReadOnlyReplica = newValue }
-    }
-
-    package var advertiseHostToClientAs: String {
-        get { _storage._advertiseHostToClientAs }
-        set { _uniqueStorage()._advertiseHostToClientAs = newValue }
-    }
-
-    package var advertiseHTTPPortToClientAs: UInt32 {
-        get { _storage._advertiseHTTPPortToClientAs }
-        set { _uniqueStorage()._advertiseHTTPPortToClientAs = newValue }
-    }
-
-    package var advertiseTcpPortToClientAs: UInt32 {
-        get { _storage._advertiseTcpPortToClientAs }
-        set { _uniqueStorage()._advertiseTcpPortToClientAs = newValue }
-    }
-
-    package var esVersion: String {
-        get { _storage._esVersion }
-        set { _uniqueStorage()._esVersion = newValue }
-    }
-
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    package enum VNodeState: SwiftProtobuf.Enum, Swift.CaseIterable {
-        package typealias RawValue = Int
-        case initializing // = 0
-        case discoverLeader // = 1
-        case unknown // = 2
-        case preReplica // = 3
-        case catchingUp // = 4
-        case clone // = 5
-        case follower // = 6
-        case preLeader // = 7
-        case leader // = 8
-        case manager // = 9
-        case shuttingDown // = 10
-        case shutdown // = 11
-        case readOnlyLeaderless // = 12
-        case preReadOnlyReplica // = 13
-        case readOnlyReplica // = 14
-        case resigningLeader // = 15
-        case UNRECOGNIZED(Int)
-
-        package init() {
-            self = .initializing
-        }
-
-        package init?(rawValue: Int) {
-            switch rawValue {
-            case 0: self = .initializing
-            case 1: self = .discoverLeader
-            case 2: self = .unknown
-            case 3: self = .preReplica
-            case 4: self = .catchingUp
-            case 5: self = .clone
-            case 6: self = .follower
-            case 7: self = .preLeader
-            case 8: self = .leader
-            case 9: self = .manager
-            case 10: self = .shuttingDown
-            case 11: self = .shutdown
-            case 12: self = .readOnlyLeaderless
-            case 13: self = .preReadOnlyReplica
-            case 14: self = .readOnlyReplica
-            case 15: self = .resigningLeader
-            default: self = .UNRECOGNIZED(rawValue)
-            }
-        }
-
-        package var rawValue: Int {
-            switch self {
-            case .initializing: 0
-            case .discoverLeader: 1
-            case .unknown: 2
-            case .preReplica: 3
-            case .catchingUp: 4
-            case .clone: 5
-            case .follower: 6
-            case .preLeader: 7
-            case .leader: 8
-            case .manager: 9
-            case .shuttingDown: 10
-            case .shutdown: 11
-            case .readOnlyLeaderless: 12
-            case .preReadOnlyReplica: 13
-            case .readOnlyReplica: 14
-            case .resigningLeader: 15
-            case let .UNRECOGNIZED(i): i
-            }
-        }
-
-        // The compiler won't synthesize support with the UNRECOGNIZED case.
-        package static let allCases: [EventStore_Cluster_MemberInfo.VNodeState] = [
-            .initializing,
-            .discoverLeader,
-            .unknown,
-            .preReplica,
-            .catchingUp,
-            .clone,
-            .follower,
-            .preLeader,
-            .leader,
-            .manager,
-            .shuttingDown,
-            .shutdown,
-            .readOnlyLeaderless,
-            .preReadOnlyReplica,
-            .readOnlyReplica,
-            .resigningLeader,
-        ]
-    }
-
-    package init() {}
-
-    fileprivate var _storage = _StorageClass.defaultInstance
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-package struct EventStore_Cluster_ReplicaLogWrite: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_ReplicaLogWrite: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var logPosition: Int64 = 0
+  package var logPosition: Int64 = 0
 
-    package var replicaID: Data = .init()
+  package var replicaID: Data = Data()
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
 package struct EventStore_Cluster_ReplicatedTo: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var logPosition: Int64 = 0
+  package var logPosition: Int64 = 0
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_Epoch: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_Epoch: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var epochPosition: Int64 = 0
+  package var epochPosition: Int64 = 0
 
-    package var epochNumber: Int32 = 0
+  package var epochNumber: Int32 = 0
 
-    package var epochID: Data = .init()
+  package var epochID: Data = Data()
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_SubscribeReplica: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_SubscribeReplica: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var logPosition: Int64 = 0
+  package var logPosition: Int64 = 0
 
-    package var chunkID: Data = .init()
+  package var chunkID: Data = Data()
 
-    package var lastEpochs: [EventStore_Cluster_Epoch] = []
+  package var lastEpochs: [EventStore_Cluster_Epoch] = []
 
-    package var ip: Data = .init()
+  package var ip: Data = Data()
 
-    package var port: Int32 = 0
+  package var port: Int32 = 0
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var isPromotable: Bool = false
+  package var isPromotable: Bool = false
 
-    package var version: Int32 = 0
+  package var version: Int32 = 0
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_ReplicaSubscriptionRetry: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_ReplicaSubscriptionRetry: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_ReplicaSubscribed: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_ReplicaSubscribed: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var subscriptionPosition: Int64 = 0
+  package var subscriptionPosition: Int64 = 0
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_ReplicaLogPositionAck: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_ReplicaLogPositionAck: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var replicationLogPosition: Int64 = 0
+  package var replicationLogPosition: Int64 = 0
 
-    package var writerLogPosition: Int64 = 0
+  package var writerLogPosition: Int64 = 0
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_CreateChunk: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_CreateChunk: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var chunkHeaderBytes: Data = .init()
+  package var chunkHeaderBytes: Data = Data()
 
-    package var fileSize: Int32 = 0
+  package var fileSize: Int32 = 0
 
-    package var isCompletedChunk: Bool = false
+  package var isCompletedChunk: Bool = false
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_RawChunkBulk: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_RawChunkBulk: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var chunkStartNumber: Int32 = 0
+  package var chunkStartNumber: Int32 = 0
 
-    package var chunkEndNumber: Int32 = 0
+  package var chunkEndNumber: Int32 = 0
 
-    package var rawPosition: Int32 = 0
+  package var rawPosition: Int32 = 0
 
-    package var rawBytes: Data = .init()
+  package var rawBytes: Data = Data()
 
-    package var completeChunk: Bool = false
+  package var completeChunk: Bool = false
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_DataChunkBulk: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_DataChunkBulk: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var chunkStartNumber: Int32 = 0
+  package var chunkStartNumber: Int32 = 0
 
-    package var chunkEndNumber: Int32 = 0
+  package var chunkEndNumber: Int32 = 0
 
-    package var subscriptionPosition: Int64 = 0
+  package var subscriptionPosition: Int64 = 0
 
-    package var dataBytes: Data = .init()
+  package var dataBytes: Data = Data()
 
-    package var completeChunk: Bool = false
+  package var completeChunk: Bool = false
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_FollowerAssignment: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_FollowerAssignment: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_CloneAssignment: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_CloneAssignment: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
-package struct EventStore_Cluster_DropSubscription: @unchecked Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
+package struct EventStore_Cluster_DropSubscription: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
-    package var leaderID: Data = .init()
+  package var leaderID: Data = Data()
 
-    package var subscriptionID: Data = .init()
+  package var subscriptionID: Data = Data()
 
-    package var unknownFields = SwiftProtobuf.UnknownStorage()
+  package var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    package init() {}
+  package init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-private let _protobuf_package = "event_store.cluster"
+fileprivate let _protobuf_package = "event_store.cluster"
 
 extension EventStore_Cluster_GossipRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".GossipRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .same(proto: "info"),
-        2: .same(proto: "server"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".GossipRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}info\0\u{1}server\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_info)
-            case 2: try decoder.decodeSingularMessageField(value: &_server)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._info) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._server) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _info {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._server {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        try unknownFields.traverse(visitor: &visitor)
-    }
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._info {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._server {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_GossipRequest, rhs: EventStore_Cluster_GossipRequest) -> Bool {
-        if lhs._info != rhs._info { return false }
-        if lhs._server != rhs._server { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_GossipRequest, rhs: EventStore_Cluster_GossipRequest) -> Bool {
+    if lhs._info != rhs._info {return false}
+    if lhs._server != rhs._server {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ViewChangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ViewChangeRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "server_id"),
-        2: .standard(proto: "server_http"),
-        3: .standard(proto: "attempted_view"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ViewChangeRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}server_id\0\u{3}server_http\0\u{3}attempted_view\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_serverID)
-            case 2: try decoder.decodeSingularMessageField(value: &_serverHTTP)
-            case 3: try decoder.decodeSingularInt32Field(value: &attemptedView)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._serverID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._serverHTTP) }()
+      case 3: try { try decoder.decodeSingularInt32Field(value: &self.attemptedView) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _serverID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._serverHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        if attemptedView != 0 {
-            try visitor.visitSingularInt32Field(value: attemptedView, fieldNumber: 3)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._serverID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._serverHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    if self.attemptedView != 0 {
+      try visitor.visitSingularInt32Field(value: self.attemptedView, fieldNumber: 3)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ViewChangeRequest, rhs: EventStore_Cluster_ViewChangeRequest) -> Bool {
-        if lhs._serverID != rhs._serverID { return false }
-        if lhs._serverHTTP != rhs._serverHTTP { return false }
-        if lhs.attemptedView != rhs.attemptedView { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ViewChangeRequest, rhs: EventStore_Cluster_ViewChangeRequest) -> Bool {
+    if lhs._serverID != rhs._serverID {return false}
+    if lhs._serverHTTP != rhs._serverHTTP {return false}
+    if lhs.attemptedView != rhs.attemptedView {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ViewChangeProofRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ViewChangeProofRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "server_id"),
-        2: .standard(proto: "server_http"),
-        3: .standard(proto: "installed_view"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ViewChangeProofRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}server_id\0\u{3}server_http\0\u{3}installed_view\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_serverID)
-            case 2: try decoder.decodeSingularMessageField(value: &_serverHTTP)
-            case 3: try decoder.decodeSingularInt32Field(value: &installedView)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._serverID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._serverHTTP) }()
+      case 3: try { try decoder.decodeSingularInt32Field(value: &self.installedView) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _serverID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._serverHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        if installedView != 0 {
-            try visitor.visitSingularInt32Field(value: installedView, fieldNumber: 3)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._serverID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._serverHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    if self.installedView != 0 {
+      try visitor.visitSingularInt32Field(value: self.installedView, fieldNumber: 3)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ViewChangeProofRequest, rhs: EventStore_Cluster_ViewChangeProofRequest) -> Bool {
-        if lhs._serverID != rhs._serverID { return false }
-        if lhs._serverHTTP != rhs._serverHTTP { return false }
-        if lhs.installedView != rhs.installedView { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ViewChangeProofRequest, rhs: EventStore_Cluster_ViewChangeProofRequest) -> Bool {
+    if lhs._serverID != rhs._serverID {return false}
+    if lhs._serverHTTP != rhs._serverHTTP {return false}
+    if lhs.installedView != rhs.installedView {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_PrepareRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".PrepareRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "server_id"),
-        2: .standard(proto: "server_http"),
-        3: .same(proto: "view"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".PrepareRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}server_id\0\u{3}server_http\0\u{1}view\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_serverID)
-            case 2: try decoder.decodeSingularMessageField(value: &_serverHTTP)
-            case 3: try decoder.decodeSingularInt32Field(value: &view)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._serverID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._serverHTTP) }()
+      case 3: try { try decoder.decodeSingularInt32Field(value: &self.view) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _serverID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._serverHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        if view != 0 {
-            try visitor.visitSingularInt32Field(value: view, fieldNumber: 3)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._serverID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._serverHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    if self.view != 0 {
+      try visitor.visitSingularInt32Field(value: self.view, fieldNumber: 3)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_PrepareRequest, rhs: EventStore_Cluster_PrepareRequest) -> Bool {
-        if lhs._serverID != rhs._serverID { return false }
-        if lhs._serverHTTP != rhs._serverHTTP { return false }
-        if lhs.view != rhs.view { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_PrepareRequest, rhs: EventStore_Cluster_PrepareRequest) -> Bool {
+    if lhs._serverID != rhs._serverID {return false}
+    if lhs._serverHTTP != rhs._serverHTTP {return false}
+    if lhs.view != rhs.view {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_PrepareOkRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".PrepareOkRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .same(proto: "view"),
-        2: .standard(proto: "server_id"),
-        3: .standard(proto: "server_http"),
-        4: .standard(proto: "epoch_number"),
-        5: .standard(proto: "epoch_position"),
-        6: .standard(proto: "epoch_id"),
-        7: .standard(proto: "epoch_leader_instance_id"),
-        8: .standard(proto: "last_commit_position"),
-        9: .standard(proto: "writer_checkpoint"),
-        10: .standard(proto: "chaser_checkpoint"),
-        11: .standard(proto: "node_priority"),
-        12: .standard(proto: "cluster_info"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".PrepareOkRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}view\0\u{3}server_id\0\u{3}server_http\0\u{3}epoch_number\0\u{3}epoch_position\0\u{3}epoch_id\0\u{3}epoch_leader_instance_id\0\u{3}last_commit_position\0\u{3}writer_checkpoint\0\u{3}chaser_checkpoint\0\u{3}node_priority\0\u{3}cluster_info\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularInt32Field(value: &view)
-            case 2: try decoder.decodeSingularMessageField(value: &_serverID)
-            case 3: try decoder.decodeSingularMessageField(value: &_serverHTTP)
-            case 4: try decoder.decodeSingularInt32Field(value: &epochNumber)
-            case 5: try decoder.decodeSingularInt64Field(value: &epochPosition)
-            case 6: try decoder.decodeSingularMessageField(value: &_epochID)
-            case 7: try decoder.decodeSingularMessageField(value: &_epochLeaderInstanceID)
-            case 8: try decoder.decodeSingularInt64Field(value: &lastCommitPosition)
-            case 9: try decoder.decodeSingularInt64Field(value: &writerCheckpoint)
-            case 10: try decoder.decodeSingularInt64Field(value: &chaserCheckpoint)
-            case 11: try decoder.decodeSingularInt32Field(value: &nodePriority)
-            case 12: try decoder.decodeSingularMessageField(value: &_clusterInfo)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt32Field(value: &self.view) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._serverID) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._serverHTTP) }()
+      case 4: try { try decoder.decodeSingularInt32Field(value: &self.epochNumber) }()
+      case 5: try { try decoder.decodeSingularInt64Field(value: &self.epochPosition) }()
+      case 6: try { try decoder.decodeSingularMessageField(value: &self._epochID) }()
+      case 7: try { try decoder.decodeSingularMessageField(value: &self._epochLeaderInstanceID) }()
+      case 8: try { try decoder.decodeSingularInt64Field(value: &self.lastCommitPosition) }()
+      case 9: try { try decoder.decodeSingularInt64Field(value: &self.writerCheckpoint) }()
+      case 10: try { try decoder.decodeSingularInt64Field(value: &self.chaserCheckpoint) }()
+      case 11: try { try decoder.decodeSingularInt32Field(value: &self.nodePriority) }()
+      case 12: try { try decoder.decodeSingularMessageField(value: &self._clusterInfo) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if view != 0 {
-            try visitor.visitSingularInt32Field(value: view, fieldNumber: 1)
-        }
-        try { if let v = self._serverID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        try { if let v = self._serverHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-        } }()
-        if epochNumber != 0 {
-            try visitor.visitSingularInt32Field(value: epochNumber, fieldNumber: 4)
-        }
-        if epochPosition != 0 {
-            try visitor.visitSingularInt64Field(value: epochPosition, fieldNumber: 5)
-        }
-        try { if let v = self._epochID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-        } }()
-        try { if let v = self._epochLeaderInstanceID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-        } }()
-        if lastCommitPosition != 0 {
-            try visitor.visitSingularInt64Field(value: lastCommitPosition, fieldNumber: 8)
-        }
-        if writerCheckpoint != 0 {
-            try visitor.visitSingularInt64Field(value: writerCheckpoint, fieldNumber: 9)
-        }
-        if chaserCheckpoint != 0 {
-            try visitor.visitSingularInt64Field(value: chaserCheckpoint, fieldNumber: 10)
-        }
-        if nodePriority != 0 {
-            try visitor.visitSingularInt32Field(value: nodePriority, fieldNumber: 11)
-        }
-        try { if let v = self._clusterInfo {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 12)
-        } }()
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.view != 0 {
+      try visitor.visitSingularInt32Field(value: self.view, fieldNumber: 1)
     }
+    try { if let v = self._serverID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._serverHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    if self.epochNumber != 0 {
+      try visitor.visitSingularInt32Field(value: self.epochNumber, fieldNumber: 4)
+    }
+    if self.epochPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.epochPosition, fieldNumber: 5)
+    }
+    try { if let v = self._epochID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+    } }()
+    try { if let v = self._epochLeaderInstanceID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+    } }()
+    if self.lastCommitPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.lastCommitPosition, fieldNumber: 8)
+    }
+    if self.writerCheckpoint != 0 {
+      try visitor.visitSingularInt64Field(value: self.writerCheckpoint, fieldNumber: 9)
+    }
+    if self.chaserCheckpoint != 0 {
+      try visitor.visitSingularInt64Field(value: self.chaserCheckpoint, fieldNumber: 10)
+    }
+    if self.nodePriority != 0 {
+      try visitor.visitSingularInt32Field(value: self.nodePriority, fieldNumber: 11)
+    }
+    try { if let v = self._clusterInfo {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 12)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_PrepareOkRequest, rhs: EventStore_Cluster_PrepareOkRequest) -> Bool {
-        if lhs.view != rhs.view { return false }
-        if lhs._serverID != rhs._serverID { return false }
-        if lhs._serverHTTP != rhs._serverHTTP { return false }
-        if lhs.epochNumber != rhs.epochNumber { return false }
-        if lhs.epochPosition != rhs.epochPosition { return false }
-        if lhs._epochID != rhs._epochID { return false }
-        if lhs._epochLeaderInstanceID != rhs._epochLeaderInstanceID { return false }
-        if lhs.lastCommitPosition != rhs.lastCommitPosition { return false }
-        if lhs.writerCheckpoint != rhs.writerCheckpoint { return false }
-        if lhs.chaserCheckpoint != rhs.chaserCheckpoint { return false }
-        if lhs.nodePriority != rhs.nodePriority { return false }
-        if lhs._clusterInfo != rhs._clusterInfo { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_PrepareOkRequest, rhs: EventStore_Cluster_PrepareOkRequest) -> Bool {
+    if lhs.view != rhs.view {return false}
+    if lhs._serverID != rhs._serverID {return false}
+    if lhs._serverHTTP != rhs._serverHTTP {return false}
+    if lhs.epochNumber != rhs.epochNumber {return false}
+    if lhs.epochPosition != rhs.epochPosition {return false}
+    if lhs._epochID != rhs._epochID {return false}
+    if lhs._epochLeaderInstanceID != rhs._epochLeaderInstanceID {return false}
+    if lhs.lastCommitPosition != rhs.lastCommitPosition {return false}
+    if lhs.writerCheckpoint != rhs.writerCheckpoint {return false}
+    if lhs.chaserCheckpoint != rhs.chaserCheckpoint {return false}
+    if lhs.nodePriority != rhs.nodePriority {return false}
+    if lhs._clusterInfo != rhs._clusterInfo {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ProposalRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ProposalRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "server_id"),
-        2: .standard(proto: "server_http"),
-        3: .standard(proto: "leader_id"),
-        4: .standard(proto: "leader_http"),
-        5: .same(proto: "view"),
-        6: .standard(proto: "epoch_number"),
-        7: .standard(proto: "epoch_position"),
-        8: .standard(proto: "epoch_id"),
-        9: .standard(proto: "epoch_leader_instance_id"),
-        10: .standard(proto: "last_commit_position"),
-        11: .standard(proto: "writer_checkpoint"),
-        12: .standard(proto: "chaser_checkpoint"),
-        13: .standard(proto: "node_priority"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ProposalRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}server_id\0\u{3}server_http\0\u{3}leader_id\0\u{3}leader_http\0\u{1}view\0\u{3}epoch_number\0\u{3}epoch_position\0\u{3}epoch_id\0\u{3}epoch_leader_instance_id\0\u{3}last_commit_position\0\u{3}writer_checkpoint\0\u{3}chaser_checkpoint\0\u{3}node_priority\0")
 
-    fileprivate class _StorageClass {
-        var _serverID: EventStore_Client_UUID?
-        var _serverHTTP: EventStore_Cluster_EndPoint?
-        var _leaderID: EventStore_Client_UUID?
-        var _leaderHTTP: EventStore_Cluster_EndPoint?
-        var _view: Int32 = 0
-        var _epochNumber: Int32 = 0
-        var _epochPosition: Int64 = 0
-        var _epochID: EventStore_Client_UUID?
-        var _epochLeaderInstanceID: EventStore_Client_UUID?
-        var _lastCommitPosition: Int64 = 0
-        var _writerCheckpoint: Int64 = 0
-        var _chaserCheckpoint: Int64 = 0
-        var _nodePriority: Int32 = 0
+  fileprivate class _StorageClass {
+    var _serverID: EventStore_Client_UUID? = nil
+    var _serverHTTP: EventStore_Cluster_EndPoint? = nil
+    var _leaderID: EventStore_Client_UUID? = nil
+    var _leaderHTTP: EventStore_Cluster_EndPoint? = nil
+    var _view: Int32 = 0
+    var _epochNumber: Int32 = 0
+    var _epochPosition: Int64 = 0
+    var _epochID: EventStore_Client_UUID? = nil
+    var _epochLeaderInstanceID: EventStore_Client_UUID? = nil
+    var _lastCommitPosition: Int64 = 0
+    var _writerCheckpoint: Int64 = 0
+    var _chaserCheckpoint: Int64 = 0
+    var _nodePriority: Int32 = 0
 
-        #if swift(>=5.10)
-            // This property is used as the initial default value for new instances of the type.
-            // The type itself is protecting the reference to its storage via CoW semantics.
-            // This will force a copy to be made of this reference when the first mutation occurs;
-            // hence, it is safe to mark this as `nonisolated(unsafe)`.
-            nonisolated(unsafe) static let defaultInstance = _StorageClass()
-        #else
-            static let defaultInstance = _StorageClass()
-        #endif
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
 
-        private init() {}
+    private init() {}
 
-        init(copying source: _StorageClass) {
-            _serverID = source._serverID
-            _serverHTTP = source._serverHTTP
-            _leaderID = source._leaderID
-            _leaderHTTP = source._leaderHTTP
-            _view = source._view
-            _epochNumber = source._epochNumber
-            _epochPosition = source._epochPosition
-            _epochID = source._epochID
-            _epochLeaderInstanceID = source._epochLeaderInstanceID
-            _lastCommitPosition = source._lastCommitPosition
-            _writerCheckpoint = source._writerCheckpoint
-            _chaserCheckpoint = source._chaserCheckpoint
-            _nodePriority = source._nodePriority
-        }
+    init(copying source: _StorageClass) {
+      _serverID = source._serverID
+      _serverHTTP = source._serverHTTP
+      _leaderID = source._leaderID
+      _leaderHTTP = source._leaderHTTP
+      _view = source._view
+      _epochNumber = source._epochNumber
+      _epochPosition = source._epochPosition
+      _epochID = source._epochID
+      _epochLeaderInstanceID = source._epochLeaderInstanceID
+      _lastCommitPosition = source._lastCommitPosition
+      _writerCheckpoint = source._writerCheckpoint
+      _chaserCheckpoint = source._chaserCheckpoint
+      _nodePriority = source._nodePriority
     }
+  }
 
-    fileprivate mutating func _uniqueStorage() -> _StorageClass {
-        if !isKnownUniquelyReferenced(&_storage) {
-            _storage = _StorageClass(copying: _storage)
-        }
-        return _storage
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
     }
+    return _storage
+  }
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        _ = _uniqueStorage()
-        try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-            while let fieldNumber = try decoder.nextFieldNumber() {
-                // The use of inline closures is to circumvent an issue where the compiler
-                // allocates stack space for every case branch when no optimizations are
-                // enabled. https://github.com/apple/swift-protobuf/issues/1034
-                switch fieldNumber {
-                case 1: try decoder.decodeSingularMessageField(value: &_storage._serverID)
-                case 2: try decoder.decodeSingularMessageField(value: &_storage._serverHTTP)
-                case 3: try decoder.decodeSingularMessageField(value: &_storage._leaderID)
-                case 4: try decoder.decodeSingularMessageField(value: &_storage._leaderHTTP)
-                case 5: try decoder.decodeSingularInt32Field(value: &_storage._view)
-                case 6: try decoder.decodeSingularInt32Field(value: &_storage._epochNumber)
-                case 7: try decoder.decodeSingularInt64Field(value: &_storage._epochPosition)
-                case 8: try decoder.decodeSingularMessageField(value: &_storage._epochID)
-                case 9: try decoder.decodeSingularMessageField(value: &_storage._epochLeaderInstanceID)
-                case 10: try decoder.decodeSingularInt64Field(value: &_storage._lastCommitPosition)
-                case 11: try decoder.decodeSingularInt64Field(value: &_storage._writerCheckpoint)
-                case 12: try decoder.decodeSingularInt64Field(value: &_storage._chaserCheckpoint)
-                case 13: try decoder.decodeSingularInt32Field(value: &_storage._nodePriority)
-                default: break
-                }
-            }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._serverID) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._serverHTTP) }()
+        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._leaderID) }()
+        case 4: try { try decoder.decodeSingularMessageField(value: &_storage._leaderHTTP) }()
+        case 5: try { try decoder.decodeSingularInt32Field(value: &_storage._view) }()
+        case 6: try { try decoder.decodeSingularInt32Field(value: &_storage._epochNumber) }()
+        case 7: try { try decoder.decodeSingularInt64Field(value: &_storage._epochPosition) }()
+        case 8: try { try decoder.decodeSingularMessageField(value: &_storage._epochID) }()
+        case 9: try { try decoder.decodeSingularMessageField(value: &_storage._epochLeaderInstanceID) }()
+        case 10: try { try decoder.decodeSingularInt64Field(value: &_storage._lastCommitPosition) }()
+        case 11: try { try decoder.decodeSingularInt64Field(value: &_storage._writerCheckpoint) }()
+        case 12: try { try decoder.decodeSingularInt64Field(value: &_storage._chaserCheckpoint) }()
+        case 13: try { try decoder.decodeSingularInt32Field(value: &_storage._nodePriority) }()
+        default: break
         }
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every if/case branch local when no optimizations
-            // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-            // https://github.com/apple/swift-protobuf/issues/1182
-            try { if let v = _storage._serverID {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-            } }()
-            try { if let v = _storage._serverHTTP {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-            } }()
-            try { if let v = _storage._leaderID {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-            } }()
-            try { if let v = _storage._leaderHTTP {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-            } }()
-            if _storage._view != 0 {
-                try visitor.visitSingularInt32Field(value: _storage._view, fieldNumber: 5)
-            }
-            if _storage._epochNumber != 0 {
-                try visitor.visitSingularInt32Field(value: _storage._epochNumber, fieldNumber: 6)
-            }
-            if _storage._epochPosition != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._epochPosition, fieldNumber: 7)
-            }
-            try { if let v = _storage._epochID {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-            } }()
-            try { if let v = _storage._epochLeaderInstanceID {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
-            } }()
-            if _storage._lastCommitPosition != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._lastCommitPosition, fieldNumber: 10)
-            }
-            if _storage._writerCheckpoint != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._writerCheckpoint, fieldNumber: 11)
-            }
-            if _storage._chaserCheckpoint != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._chaserCheckpoint, fieldNumber: 12)
-            }
-            if _storage._nodePriority != 0 {
-                try visitor.visitSingularInt32Field(value: _storage._nodePriority, fieldNumber: 13)
-            }
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._serverID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      try { if let v = _storage._serverHTTP {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      } }()
+      try { if let v = _storage._leaderID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+      } }()
+      try { if let v = _storage._leaderHTTP {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+      } }()
+      if _storage._view != 0 {
+        try visitor.visitSingularInt32Field(value: _storage._view, fieldNumber: 5)
+      }
+      if _storage._epochNumber != 0 {
+        try visitor.visitSingularInt32Field(value: _storage._epochNumber, fieldNumber: 6)
+      }
+      if _storage._epochPosition != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._epochPosition, fieldNumber: 7)
+      }
+      try { if let v = _storage._epochID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      } }()
+      try { if let v = _storage._epochLeaderInstanceID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+      } }()
+      if _storage._lastCommitPosition != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._lastCommitPosition, fieldNumber: 10)
+      }
+      if _storage._writerCheckpoint != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._writerCheckpoint, fieldNumber: 11)
+      }
+      if _storage._chaserCheckpoint != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._chaserCheckpoint, fieldNumber: 12)
+      }
+      if _storage._nodePriority != 0 {
+        try visitor.visitSingularInt32Field(value: _storage._nodePriority, fieldNumber: 13)
+      }
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ProposalRequest, rhs: EventStore_Cluster_ProposalRequest) -> Bool {
-        if lhs._storage !== rhs._storage {
-            let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-                let _storage = _args.0
-                let rhs_storage = _args.1
-                if _storage._serverID != rhs_storage._serverID { return false }
-                if _storage._serverHTTP != rhs_storage._serverHTTP { return false }
-                if _storage._leaderID != rhs_storage._leaderID { return false }
-                if _storage._leaderHTTP != rhs_storage._leaderHTTP { return false }
-                if _storage._view != rhs_storage._view { return false }
-                if _storage._epochNumber != rhs_storage._epochNumber { return false }
-                if _storage._epochPosition != rhs_storage._epochPosition { return false }
-                if _storage._epochID != rhs_storage._epochID { return false }
-                if _storage._epochLeaderInstanceID != rhs_storage._epochLeaderInstanceID { return false }
-                if _storage._lastCommitPosition != rhs_storage._lastCommitPosition { return false }
-                if _storage._writerCheckpoint != rhs_storage._writerCheckpoint { return false }
-                if _storage._chaserCheckpoint != rhs_storage._chaserCheckpoint { return false }
-                if _storage._nodePriority != rhs_storage._nodePriority { return false }
-                return true
-            }
-            if !storagesAreEqual { return false }
-        }
-        if lhs.unknownFields != rhs.unknownFields { return false }
+  package static func ==(lhs: EventStore_Cluster_ProposalRequest, rhs: EventStore_Cluster_ProposalRequest) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._serverID != rhs_storage._serverID {return false}
+        if _storage._serverHTTP != rhs_storage._serverHTTP {return false}
+        if _storage._leaderID != rhs_storage._leaderID {return false}
+        if _storage._leaderHTTP != rhs_storage._leaderHTTP {return false}
+        if _storage._view != rhs_storage._view {return false}
+        if _storage._epochNumber != rhs_storage._epochNumber {return false}
+        if _storage._epochPosition != rhs_storage._epochPosition {return false}
+        if _storage._epochID != rhs_storage._epochID {return false}
+        if _storage._epochLeaderInstanceID != rhs_storage._epochLeaderInstanceID {return false}
+        if _storage._lastCommitPosition != rhs_storage._lastCommitPosition {return false}
+        if _storage._writerCheckpoint != rhs_storage._writerCheckpoint {return false}
+        if _storage._chaserCheckpoint != rhs_storage._chaserCheckpoint {return false}
+        if _storage._nodePriority != rhs_storage._nodePriority {return false}
         return true
+      }
+      if !storagesAreEqual {return false}
     }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_AcceptRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".AcceptRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "server_id"),
-        2: .standard(proto: "server_http"),
-        3: .standard(proto: "leader_id"),
-        4: .standard(proto: "leader_http"),
-        5: .same(proto: "view"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".AcceptRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}server_id\0\u{3}server_http\0\u{3}leader_id\0\u{3}leader_http\0\u{1}view\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_serverID)
-            case 2: try decoder.decodeSingularMessageField(value: &_serverHTTP)
-            case 3: try decoder.decodeSingularMessageField(value: &_leaderID)
-            case 4: try decoder.decodeSingularMessageField(value: &_leaderHTTP)
-            case 5: try decoder.decodeSingularInt32Field(value: &view)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._serverID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._serverHTTP) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._leaderID) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._leaderHTTP) }()
+      case 5: try { try decoder.decodeSingularInt32Field(value: &self.view) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _serverID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._serverHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        try { if let v = self._leaderID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-        } }()
-        try { if let v = self._leaderHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-        } }()
-        if view != 0 {
-            try visitor.visitSingularInt32Field(value: view, fieldNumber: 5)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._serverID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._serverHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._leaderID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._leaderHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
+    if self.view != 0 {
+      try visitor.visitSingularInt32Field(value: self.view, fieldNumber: 5)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_AcceptRequest, rhs: EventStore_Cluster_AcceptRequest) -> Bool {
-        if lhs._serverID != rhs._serverID { return false }
-        if lhs._serverHTTP != rhs._serverHTTP { return false }
-        if lhs._leaderID != rhs._leaderID { return false }
-        if lhs._leaderHTTP != rhs._leaderHTTP { return false }
-        if lhs.view != rhs.view { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_AcceptRequest, rhs: EventStore_Cluster_AcceptRequest) -> Bool {
+    if lhs._serverID != rhs._serverID {return false}
+    if lhs._serverHTTP != rhs._serverHTTP {return false}
+    if lhs._leaderID != rhs._leaderID {return false}
+    if lhs._leaderHTTP != rhs._leaderHTTP {return false}
+    if lhs.view != rhs.view {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_LeaderIsResigningRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "leader_http"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}leader_http\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_leaderID)
-            case 2: try decoder.decodeSingularMessageField(value: &_leaderHTTP)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._leaderID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._leaderHTTP) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _leaderID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._leaderHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        try unknownFields.traverse(visitor: &visitor)
-    }
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._leaderID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._leaderHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_LeaderIsResigningRequest, rhs: EventStore_Cluster_LeaderIsResigningRequest) -> Bool {
-        if lhs._leaderID != rhs._leaderID { return false }
-        if lhs._leaderHTTP != rhs._leaderHTTP { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_LeaderIsResigningRequest, rhs: EventStore_Cluster_LeaderIsResigningRequest) -> Bool {
+    if lhs._leaderID != rhs._leaderID {return false}
+    if lhs._leaderHTTP != rhs._leaderHTTP {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_LeaderIsResigningOkRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningOkRequest"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "leader_http"),
-        3: .standard(proto: "server_id"),
-        4: .standard(proto: "server_http"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".LeaderIsResigningOkRequest"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}leader_http\0\u{3}server_id\0\u{3}server_http\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularMessageField(value: &_leaderID)
-            case 2: try decoder.decodeSingularMessageField(value: &_leaderHTTP)
-            case 3: try decoder.decodeSingularMessageField(value: &_serverID)
-            case 4: try decoder.decodeSingularMessageField(value: &_serverHTTP)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._leaderID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._leaderHTTP) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._serverID) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._serverHTTP) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every if/case branch local when no optimizations
-        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-        // https://github.com/apple/swift-protobuf/issues/1182
-        if let v = _leaderID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-        }
-        try { if let v = self._leaderHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-        } }()
-        try { if let v = self._serverID {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-        } }()
-        try { if let v = self._serverHTTP {
-            try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-        } }()
-        try unknownFields.traverse(visitor: &visitor)
-    }
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._leaderID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._leaderHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._serverID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._serverHTTP {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_LeaderIsResigningOkRequest, rhs: EventStore_Cluster_LeaderIsResigningOkRequest) -> Bool {
-        if lhs._leaderID != rhs._leaderID { return false }
-        if lhs._leaderHTTP != rhs._leaderHTTP { return false }
-        if lhs._serverID != rhs._serverID { return false }
-        if lhs._serverHTTP != rhs._serverHTTP { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_LeaderIsResigningOkRequest, rhs: EventStore_Cluster_LeaderIsResigningOkRequest) -> Bool {
+    if lhs._leaderID != rhs._leaderID {return false}
+    if lhs._leaderHTTP != rhs._leaderHTTP {return false}
+    if lhs._serverID != rhs._serverID {return false}
+    if lhs._serverHTTP != rhs._serverHTTP {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ClusterInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ClusterInfo"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .same(proto: "members"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ClusterInfo"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}members\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeRepeatedMessageField(value: &members)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.members) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !members.isEmpty {
-            try visitor.visitRepeatedMessageField(value: members, fieldNumber: 1)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.members.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.members, fieldNumber: 1)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ClusterInfo, rhs: EventStore_Cluster_ClusterInfo) -> Bool {
-        if lhs.members != rhs.members { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ClusterInfo, rhs: EventStore_Cluster_ClusterInfo) -> Bool {
+    if lhs.members != rhs.members {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_EndPoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".EndPoint"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .same(proto: "address"),
-        2: .same(proto: "port"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".EndPoint"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}address\0\u{1}port\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularStringField(value: &address)
-            case 2: try decoder.decodeSingularUInt32Field(value: &port)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.address) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.port) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !address.isEmpty {
-            try visitor.visitSingularStringField(value: address, fieldNumber: 1)
-        }
-        if port != 0 {
-            try visitor.visitSingularUInt32Field(value: port, fieldNumber: 2)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.address.isEmpty {
+      try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
     }
+    if self.port != 0 {
+      try visitor.visitSingularUInt32Field(value: self.port, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_EndPoint, rhs: EventStore_Cluster_EndPoint) -> Bool {
-        if lhs.address != rhs.address { return false }
-        if lhs.port != rhs.port { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_EndPoint, rhs: EventStore_Cluster_EndPoint) -> Bool {
+    if lhs.address != rhs.address {return false}
+    if lhs.port != rhs.port {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_MemberInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".MemberInfo"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "instance_id"),
-        2: .standard(proto: "time_stamp"),
-        3: .same(proto: "state"),
-        4: .standard(proto: "is_alive"),
-        5: .standard(proto: "http_end_point"),
-        6: .standard(proto: "internal_tcp"),
-        7: .standard(proto: "external_tcp"),
-        8: .standard(proto: "internal_tcp_uses_tls"),
-        9: .standard(proto: "external_tcp_uses_tls"),
-        10: .standard(proto: "last_commit_position"),
-        11: .standard(proto: "writer_checkpoint"),
-        12: .standard(proto: "chaser_checkpoint"),
-        13: .standard(proto: "epoch_position"),
-        14: .standard(proto: "epoch_number"),
-        15: .standard(proto: "epoch_id"),
-        16: .standard(proto: "node_priority"),
-        17: .standard(proto: "is_read_only_replica"),
-        18: .standard(proto: "advertise_host_to_client_as"),
-        19: .standard(proto: "advertise_http_port_to_client_as"),
-        20: .standard(proto: "advertise_tcp_port_to_client_as"),
-        21: .standard(proto: "es_version"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".MemberInfo"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}instance_id\0\u{3}time_stamp\0\u{1}state\0\u{3}is_alive\0\u{3}http_end_point\0\u{3}internal_tcp\0\u{3}external_tcp\0\u{3}internal_tcp_uses_tls\0\u{3}external_tcp_uses_tls\0\u{3}last_commit_position\0\u{3}writer_checkpoint\0\u{3}chaser_checkpoint\0\u{3}epoch_position\0\u{3}epoch_number\0\u{3}epoch_id\0\u{3}node_priority\0\u{3}is_read_only_replica\0\u{3}advertise_host_to_client_as\0\u{3}advertise_http_port_to_client_as\0\u{3}advertise_tcp_port_to_client_as\0\u{3}es_version\0")
 
-    fileprivate class _StorageClass {
-        var _instanceID: EventStore_Client_UUID?
-        var _timeStamp: Int64 = 0
-        var _state: EventStore_Cluster_MemberInfo.VNodeState = .initializing
-        var _isAlive: Bool = false
-        var _httpEndPoint: EventStore_Cluster_EndPoint?
-        var _internalTcp: EventStore_Cluster_EndPoint?
-        var _externalTcp: EventStore_Cluster_EndPoint?
-        var _internalTcpUsesTls: Bool = false
-        var _externalTcpUsesTls: Bool = false
-        var _lastCommitPosition: Int64 = 0
-        var _writerCheckpoint: Int64 = 0
-        var _chaserCheckpoint: Int64 = 0
-        var _epochPosition: Int64 = 0
-        var _epochNumber: Int32 = 0
-        var _epochID: EventStore_Client_UUID?
-        var _nodePriority: Int32 = 0
-        var _isReadOnlyReplica: Bool = false
-        var _advertiseHostToClientAs: String = .init()
-        var _advertiseHTTPPortToClientAs: UInt32 = 0
-        var _advertiseTcpPortToClientAs: UInt32 = 0
-        var _esVersion: String = .init()
+  fileprivate class _StorageClass {
+    var _instanceID: EventStore_Client_UUID? = nil
+    var _timeStamp: Int64 = 0
+    var _state: EventStore_Cluster_MemberInfo.VNodeState = .initializing
+    var _isAlive: Bool = false
+    var _httpEndPoint: EventStore_Cluster_EndPoint? = nil
+    var _internalTcp: EventStore_Cluster_EndPoint? = nil
+    var _externalTcp: EventStore_Cluster_EndPoint? = nil
+    var _internalTcpUsesTls: Bool = false
+    var _externalTcpUsesTls: Bool = false
+    var _lastCommitPosition: Int64 = 0
+    var _writerCheckpoint: Int64 = 0
+    var _chaserCheckpoint: Int64 = 0
+    var _epochPosition: Int64 = 0
+    var _epochNumber: Int32 = 0
+    var _epochID: EventStore_Client_UUID? = nil
+    var _nodePriority: Int32 = 0
+    var _isReadOnlyReplica: Bool = false
+    var _advertiseHostToClientAs: String = String()
+    var _advertiseHTTPPortToClientAs: UInt32 = 0
+    var _advertiseTcpPortToClientAs: UInt32 = 0
+    var _esVersion: String = String()
 
-        #if swift(>=5.10)
-            // This property is used as the initial default value for new instances of the type.
-            // The type itself is protecting the reference to its storage via CoW semantics.
-            // This will force a copy to be made of this reference when the first mutation occurs;
-            // hence, it is safe to mark this as `nonisolated(unsafe)`.
-            nonisolated(unsafe) static let defaultInstance = _StorageClass()
-        #else
-            static let defaultInstance = _StorageClass()
-        #endif
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
 
-        private init() {}
+    private init() {}
 
-        init(copying source: _StorageClass) {
-            _instanceID = source._instanceID
-            _timeStamp = source._timeStamp
-            _state = source._state
-            _isAlive = source._isAlive
-            _httpEndPoint = source._httpEndPoint
-            _internalTcp = source._internalTcp
-            _externalTcp = source._externalTcp
-            _internalTcpUsesTls = source._internalTcpUsesTls
-            _externalTcpUsesTls = source._externalTcpUsesTls
-            _lastCommitPosition = source._lastCommitPosition
-            _writerCheckpoint = source._writerCheckpoint
-            _chaserCheckpoint = source._chaserCheckpoint
-            _epochPosition = source._epochPosition
-            _epochNumber = source._epochNumber
-            _epochID = source._epochID
-            _nodePriority = source._nodePriority
-            _isReadOnlyReplica = source._isReadOnlyReplica
-            _advertiseHostToClientAs = source._advertiseHostToClientAs
-            _advertiseHTTPPortToClientAs = source._advertiseHTTPPortToClientAs
-            _advertiseTcpPortToClientAs = source._advertiseTcpPortToClientAs
-            _esVersion = source._esVersion
-        }
+    init(copying source: _StorageClass) {
+      _instanceID = source._instanceID
+      _timeStamp = source._timeStamp
+      _state = source._state
+      _isAlive = source._isAlive
+      _httpEndPoint = source._httpEndPoint
+      _internalTcp = source._internalTcp
+      _externalTcp = source._externalTcp
+      _internalTcpUsesTls = source._internalTcpUsesTls
+      _externalTcpUsesTls = source._externalTcpUsesTls
+      _lastCommitPosition = source._lastCommitPosition
+      _writerCheckpoint = source._writerCheckpoint
+      _chaserCheckpoint = source._chaserCheckpoint
+      _epochPosition = source._epochPosition
+      _epochNumber = source._epochNumber
+      _epochID = source._epochID
+      _nodePriority = source._nodePriority
+      _isReadOnlyReplica = source._isReadOnlyReplica
+      _advertiseHostToClientAs = source._advertiseHostToClientAs
+      _advertiseHTTPPortToClientAs = source._advertiseHTTPPortToClientAs
+      _advertiseTcpPortToClientAs = source._advertiseTcpPortToClientAs
+      _esVersion = source._esVersion
     }
+  }
 
-    fileprivate mutating func _uniqueStorage() -> _StorageClass {
-        if !isKnownUniquelyReferenced(&_storage) {
-            _storage = _StorageClass(copying: _storage)
-        }
-        return _storage
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
     }
+    return _storage
+  }
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        _ = _uniqueStorage()
-        try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-            while let fieldNumber = try decoder.nextFieldNumber() {
-                // The use of inline closures is to circumvent an issue where the compiler
-                // allocates stack space for every case branch when no optimizations are
-                // enabled. https://github.com/apple/swift-protobuf/issues/1034
-                switch fieldNumber {
-                case 1: try decoder.decodeSingularMessageField(value: &_storage._instanceID)
-                case 2: try decoder.decodeSingularInt64Field(value: &_storage._timeStamp)
-                case 3: try decoder.decodeSingularEnumField(value: &_storage._state)
-                case 4: try decoder.decodeSingularBoolField(value: &_storage._isAlive)
-                case 5: try decoder.decodeSingularMessageField(value: &_storage._httpEndPoint)
-                case 6: try decoder.decodeSingularMessageField(value: &_storage._internalTcp)
-                case 7: try decoder.decodeSingularMessageField(value: &_storage._externalTcp)
-                case 8: try decoder.decodeSingularBoolField(value: &_storage._internalTcpUsesTls)
-                case 9: try decoder.decodeSingularBoolField(value: &_storage._externalTcpUsesTls)
-                case 10: try decoder.decodeSingularInt64Field(value: &_storage._lastCommitPosition)
-                case 11: try decoder.decodeSingularInt64Field(value: &_storage._writerCheckpoint)
-                case 12: try decoder.decodeSingularInt64Field(value: &_storage._chaserCheckpoint)
-                case 13: try decoder.decodeSingularInt64Field(value: &_storage._epochPosition)
-                case 14: try decoder.decodeSingularInt32Field(value: &_storage._epochNumber)
-                case 15: try decoder.decodeSingularMessageField(value: &_storage._epochID)
-                case 16: try decoder.decodeSingularInt32Field(value: &_storage._nodePriority)
-                case 17: try decoder.decodeSingularBoolField(value: &_storage._isReadOnlyReplica)
-                case 18: try decoder.decodeSingularStringField(value: &_storage._advertiseHostToClientAs)
-                case 19: try decoder.decodeSingularUInt32Field(value: &_storage._advertiseHTTPPortToClientAs)
-                case 20: try decoder.decodeSingularUInt32Field(value: &_storage._advertiseTcpPortToClientAs)
-                case 21: try decoder.decodeSingularStringField(value: &_storage._esVersion)
-                default: break
-                }
-            }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._instanceID) }()
+        case 2: try { try decoder.decodeSingularInt64Field(value: &_storage._timeStamp) }()
+        case 3: try { try decoder.decodeSingularEnumField(value: &_storage._state) }()
+        case 4: try { try decoder.decodeSingularBoolField(value: &_storage._isAlive) }()
+        case 5: try { try decoder.decodeSingularMessageField(value: &_storage._httpEndPoint) }()
+        case 6: try { try decoder.decodeSingularMessageField(value: &_storage._internalTcp) }()
+        case 7: try { try decoder.decodeSingularMessageField(value: &_storage._externalTcp) }()
+        case 8: try { try decoder.decodeSingularBoolField(value: &_storage._internalTcpUsesTls) }()
+        case 9: try { try decoder.decodeSingularBoolField(value: &_storage._externalTcpUsesTls) }()
+        case 10: try { try decoder.decodeSingularInt64Field(value: &_storage._lastCommitPosition) }()
+        case 11: try { try decoder.decodeSingularInt64Field(value: &_storage._writerCheckpoint) }()
+        case 12: try { try decoder.decodeSingularInt64Field(value: &_storage._chaserCheckpoint) }()
+        case 13: try { try decoder.decodeSingularInt64Field(value: &_storage._epochPosition) }()
+        case 14: try { try decoder.decodeSingularInt32Field(value: &_storage._epochNumber) }()
+        case 15: try { try decoder.decodeSingularMessageField(value: &_storage._epochID) }()
+        case 16: try { try decoder.decodeSingularInt32Field(value: &_storage._nodePriority) }()
+        case 17: try { try decoder.decodeSingularBoolField(value: &_storage._isReadOnlyReplica) }()
+        case 18: try { try decoder.decodeSingularStringField(value: &_storage._advertiseHostToClientAs) }()
+        case 19: try { try decoder.decodeSingularUInt32Field(value: &_storage._advertiseHTTPPortToClientAs) }()
+        case 20: try { try decoder.decodeSingularUInt32Field(value: &_storage._advertiseTcpPortToClientAs) }()
+        case 21: try { try decoder.decodeSingularStringField(value: &_storage._esVersion) }()
+        default: break
         }
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every if/case branch local when no optimizations
-            // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-            // https://github.com/apple/swift-protobuf/issues/1182
-            try { if let v = _storage._instanceID {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-            } }()
-            if _storage._timeStamp != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._timeStamp, fieldNumber: 2)
-            }
-            if _storage._state != .initializing {
-                try visitor.visitSingularEnumField(value: _storage._state, fieldNumber: 3)
-            }
-            if _storage._isAlive != false {
-                try visitor.visitSingularBoolField(value: _storage._isAlive, fieldNumber: 4)
-            }
-            try { if let v = _storage._httpEndPoint {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-            } }()
-            try { if let v = _storage._internalTcp {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-            } }()
-            try { if let v = _storage._externalTcp {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-            } }()
-            if _storage._internalTcpUsesTls != false {
-                try visitor.visitSingularBoolField(value: _storage._internalTcpUsesTls, fieldNumber: 8)
-            }
-            if _storage._externalTcpUsesTls != false {
-                try visitor.visitSingularBoolField(value: _storage._externalTcpUsesTls, fieldNumber: 9)
-            }
-            if _storage._lastCommitPosition != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._lastCommitPosition, fieldNumber: 10)
-            }
-            if _storage._writerCheckpoint != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._writerCheckpoint, fieldNumber: 11)
-            }
-            if _storage._chaserCheckpoint != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._chaserCheckpoint, fieldNumber: 12)
-            }
-            if _storage._epochPosition != 0 {
-                try visitor.visitSingularInt64Field(value: _storage._epochPosition, fieldNumber: 13)
-            }
-            if _storage._epochNumber != 0 {
-                try visitor.visitSingularInt32Field(value: _storage._epochNumber, fieldNumber: 14)
-            }
-            try { if let v = _storage._epochID {
-                try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
-            } }()
-            if _storage._nodePriority != 0 {
-                try visitor.visitSingularInt32Field(value: _storage._nodePriority, fieldNumber: 16)
-            }
-            if _storage._isReadOnlyReplica != false {
-                try visitor.visitSingularBoolField(value: _storage._isReadOnlyReplica, fieldNumber: 17)
-            }
-            if !_storage._advertiseHostToClientAs.isEmpty {
-                try visitor.visitSingularStringField(value: _storage._advertiseHostToClientAs, fieldNumber: 18)
-            }
-            if _storage._advertiseHTTPPortToClientAs != 0 {
-                try visitor.visitSingularUInt32Field(value: _storage._advertiseHTTPPortToClientAs, fieldNumber: 19)
-            }
-            if _storage._advertiseTcpPortToClientAs != 0 {
-                try visitor.visitSingularUInt32Field(value: _storage._advertiseTcpPortToClientAs, fieldNumber: 20)
-            }
-            if !_storage._esVersion.isEmpty {
-                try visitor.visitSingularStringField(value: _storage._esVersion, fieldNumber: 21)
-            }
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._instanceID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      if _storage._timeStamp != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._timeStamp, fieldNumber: 2)
+      }
+      if _storage._state != .initializing {
+        try visitor.visitSingularEnumField(value: _storage._state, fieldNumber: 3)
+      }
+      if _storage._isAlive != false {
+        try visitor.visitSingularBoolField(value: _storage._isAlive, fieldNumber: 4)
+      }
+      try { if let v = _storage._httpEndPoint {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      } }()
+      try { if let v = _storage._internalTcp {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      } }()
+      try { if let v = _storage._externalTcp {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      } }()
+      if _storage._internalTcpUsesTls != false {
+        try visitor.visitSingularBoolField(value: _storage._internalTcpUsesTls, fieldNumber: 8)
+      }
+      if _storage._externalTcpUsesTls != false {
+        try visitor.visitSingularBoolField(value: _storage._externalTcpUsesTls, fieldNumber: 9)
+      }
+      if _storage._lastCommitPosition != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._lastCommitPosition, fieldNumber: 10)
+      }
+      if _storage._writerCheckpoint != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._writerCheckpoint, fieldNumber: 11)
+      }
+      if _storage._chaserCheckpoint != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._chaserCheckpoint, fieldNumber: 12)
+      }
+      if _storage._epochPosition != 0 {
+        try visitor.visitSingularInt64Field(value: _storage._epochPosition, fieldNumber: 13)
+      }
+      if _storage._epochNumber != 0 {
+        try visitor.visitSingularInt32Field(value: _storage._epochNumber, fieldNumber: 14)
+      }
+      try { if let v = _storage._epochID {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
+      } }()
+      if _storage._nodePriority != 0 {
+        try visitor.visitSingularInt32Field(value: _storage._nodePriority, fieldNumber: 16)
+      }
+      if _storage._isReadOnlyReplica != false {
+        try visitor.visitSingularBoolField(value: _storage._isReadOnlyReplica, fieldNumber: 17)
+      }
+      if !_storage._advertiseHostToClientAs.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._advertiseHostToClientAs, fieldNumber: 18)
+      }
+      if _storage._advertiseHTTPPortToClientAs != 0 {
+        try visitor.visitSingularUInt32Field(value: _storage._advertiseHTTPPortToClientAs, fieldNumber: 19)
+      }
+      if _storage._advertiseTcpPortToClientAs != 0 {
+        try visitor.visitSingularUInt32Field(value: _storage._advertiseTcpPortToClientAs, fieldNumber: 20)
+      }
+      if !_storage._esVersion.isEmpty {
+        try visitor.visitSingularStringField(value: _storage._esVersion, fieldNumber: 21)
+      }
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_MemberInfo, rhs: EventStore_Cluster_MemberInfo) -> Bool {
-        if lhs._storage !== rhs._storage {
-            let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-                let _storage = _args.0
-                let rhs_storage = _args.1
-                if _storage._instanceID != rhs_storage._instanceID { return false }
-                if _storage._timeStamp != rhs_storage._timeStamp { return false }
-                if _storage._state != rhs_storage._state { return false }
-                if _storage._isAlive != rhs_storage._isAlive { return false }
-                if _storage._httpEndPoint != rhs_storage._httpEndPoint { return false }
-                if _storage._internalTcp != rhs_storage._internalTcp { return false }
-                if _storage._externalTcp != rhs_storage._externalTcp { return false }
-                if _storage._internalTcpUsesTls != rhs_storage._internalTcpUsesTls { return false }
-                if _storage._externalTcpUsesTls != rhs_storage._externalTcpUsesTls { return false }
-                if _storage._lastCommitPosition != rhs_storage._lastCommitPosition { return false }
-                if _storage._writerCheckpoint != rhs_storage._writerCheckpoint { return false }
-                if _storage._chaserCheckpoint != rhs_storage._chaserCheckpoint { return false }
-                if _storage._epochPosition != rhs_storage._epochPosition { return false }
-                if _storage._epochNumber != rhs_storage._epochNumber { return false }
-                if _storage._epochID != rhs_storage._epochID { return false }
-                if _storage._nodePriority != rhs_storage._nodePriority { return false }
-                if _storage._isReadOnlyReplica != rhs_storage._isReadOnlyReplica { return false }
-                if _storage._advertiseHostToClientAs != rhs_storage._advertiseHostToClientAs { return false }
-                if _storage._advertiseHTTPPortToClientAs != rhs_storage._advertiseHTTPPortToClientAs { return false }
-                if _storage._advertiseTcpPortToClientAs != rhs_storage._advertiseTcpPortToClientAs { return false }
-                if _storage._esVersion != rhs_storage._esVersion { return false }
-                return true
-            }
-            if !storagesAreEqual { return false }
-        }
-        if lhs.unknownFields != rhs.unknownFields { return false }
+  package static func ==(lhs: EventStore_Cluster_MemberInfo, rhs: EventStore_Cluster_MemberInfo) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._instanceID != rhs_storage._instanceID {return false}
+        if _storage._timeStamp != rhs_storage._timeStamp {return false}
+        if _storage._state != rhs_storage._state {return false}
+        if _storage._isAlive != rhs_storage._isAlive {return false}
+        if _storage._httpEndPoint != rhs_storage._httpEndPoint {return false}
+        if _storage._internalTcp != rhs_storage._internalTcp {return false}
+        if _storage._externalTcp != rhs_storage._externalTcp {return false}
+        if _storage._internalTcpUsesTls != rhs_storage._internalTcpUsesTls {return false}
+        if _storage._externalTcpUsesTls != rhs_storage._externalTcpUsesTls {return false}
+        if _storage._lastCommitPosition != rhs_storage._lastCommitPosition {return false}
+        if _storage._writerCheckpoint != rhs_storage._writerCheckpoint {return false}
+        if _storage._chaserCheckpoint != rhs_storage._chaserCheckpoint {return false}
+        if _storage._epochPosition != rhs_storage._epochPosition {return false}
+        if _storage._epochNumber != rhs_storage._epochNumber {return false}
+        if _storage._epochID != rhs_storage._epochID {return false}
+        if _storage._nodePriority != rhs_storage._nodePriority {return false}
+        if _storage._isReadOnlyReplica != rhs_storage._isReadOnlyReplica {return false}
+        if _storage._advertiseHostToClientAs != rhs_storage._advertiseHostToClientAs {return false}
+        if _storage._advertiseHTTPPortToClientAs != rhs_storage._advertiseHTTPPortToClientAs {return false}
+        if _storage._advertiseTcpPortToClientAs != rhs_storage._advertiseTcpPortToClientAs {return false}
+        if _storage._esVersion != rhs_storage._esVersion {return false}
         return true
+      }
+      if !storagesAreEqual {return false}
     }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_MemberInfo.VNodeState: SwiftProtobuf._ProtoNameProviding {
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        0: .same(proto: "Initializing"),
-        1: .same(proto: "DiscoverLeader"),
-        2: .same(proto: "Unknown"),
-        3: .same(proto: "PreReplica"),
-        4: .same(proto: "CatchingUp"),
-        5: .same(proto: "Clone"),
-        6: .same(proto: "Follower"),
-        7: .same(proto: "PreLeader"),
-        8: .same(proto: "Leader"),
-        9: .same(proto: "Manager"),
-        10: .same(proto: "ShuttingDown"),
-        11: .same(proto: "Shutdown"),
-        12: .same(proto: "ReadOnlyLeaderless"),
-        13: .same(proto: "PreReadOnlyReplica"),
-        14: .same(proto: "ReadOnlyReplica"),
-        15: .same(proto: "ResigningLeader"),
-    ]
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0Initializing\0\u{1}DiscoverLeader\0\u{1}Unknown\0\u{1}PreReplica\0\u{1}CatchingUp\0\u{1}Clone\0\u{1}Follower\0\u{1}PreLeader\0\u{1}Leader\0\u{1}Manager\0\u{1}ShuttingDown\0\u{1}Shutdown\0\u{1}ReadOnlyLeaderless\0\u{1}PreReadOnlyReplica\0\u{1}ReadOnlyReplica\0\u{1}ResigningLeader\0")
 }
 
 extension EventStore_Cluster_ReplicaLogWrite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ReplicaLogWrite"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "log_position"),
-        2: .standard(proto: "replica_id"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaLogWrite"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}log_position\0\u{3}replica_id\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularInt64Field(value: &logPosition)
-            case 2: try decoder.decodeSingularBytesField(value: &replicaID)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.logPosition) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.replicaID) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if logPosition != 0 {
-            try visitor.visitSingularInt64Field(value: logPosition, fieldNumber: 1)
-        }
-        if !replicaID.isEmpty {
-            try visitor.visitSingularBytesField(value: replicaID, fieldNumber: 2)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.logPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.logPosition, fieldNumber: 1)
     }
+    if !self.replicaID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.replicaID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ReplicaLogWrite, rhs: EventStore_Cluster_ReplicaLogWrite) -> Bool {
-        if lhs.logPosition != rhs.logPosition { return false }
-        if lhs.replicaID != rhs.replicaID { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ReplicaLogWrite, rhs: EventStore_Cluster_ReplicaLogWrite) -> Bool {
+    if lhs.logPosition != rhs.logPosition {return false}
+    if lhs.replicaID != rhs.replicaID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ReplicatedTo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ReplicatedTo"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "log_position"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ReplicatedTo"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}log_position\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularInt64Field(value: &logPosition)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.logPosition) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if logPosition != 0 {
-            try visitor.visitSingularInt64Field(value: logPosition, fieldNumber: 1)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.logPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.logPosition, fieldNumber: 1)
     }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ReplicatedTo, rhs: EventStore_Cluster_ReplicatedTo) -> Bool {
-        if lhs.logPosition != rhs.logPosition { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ReplicatedTo, rhs: EventStore_Cluster_ReplicatedTo) -> Bool {
+    if lhs.logPosition != rhs.logPosition {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_Epoch: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".Epoch"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "epoch_position"),
-        2: .standard(proto: "epoch_number"),
-        3: .standard(proto: "epoch_id"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".Epoch"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}epoch_position\0\u{3}epoch_number\0\u{3}epoch_id\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularInt64Field(value: &epochPosition)
-            case 2: try decoder.decodeSingularInt32Field(value: &epochNumber)
-            case 3: try decoder.decodeSingularBytesField(value: &epochID)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.epochPosition) }()
+      case 2: try { try decoder.decodeSingularInt32Field(value: &self.epochNumber) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.epochID) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if epochPosition != 0 {
-            try visitor.visitSingularInt64Field(value: epochPosition, fieldNumber: 1)
-        }
-        if epochNumber != 0 {
-            try visitor.visitSingularInt32Field(value: epochNumber, fieldNumber: 2)
-        }
-        if !epochID.isEmpty {
-            try visitor.visitSingularBytesField(value: epochID, fieldNumber: 3)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.epochPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.epochPosition, fieldNumber: 1)
     }
+    if self.epochNumber != 0 {
+      try visitor.visitSingularInt32Field(value: self.epochNumber, fieldNumber: 2)
+    }
+    if !self.epochID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.epochID, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_Epoch, rhs: EventStore_Cluster_Epoch) -> Bool {
-        if lhs.epochPosition != rhs.epochPosition { return false }
-        if lhs.epochNumber != rhs.epochNumber { return false }
-        if lhs.epochID != rhs.epochID { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_Epoch, rhs: EventStore_Cluster_Epoch) -> Bool {
+    if lhs.epochPosition != rhs.epochPosition {return false}
+    if lhs.epochNumber != rhs.epochNumber {return false}
+    if lhs.epochID != rhs.epochID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_SubscribeReplica: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".SubscribeReplica"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "log_position"),
-        2: .standard(proto: "chunk_id"),
-        3: .same(proto: "LastEpochs"),
-        4: .same(proto: "ip"),
-        5: .same(proto: "port"),
-        6: .standard(proto: "leader_id"),
-        7: .standard(proto: "subscription_id"),
-        8: .standard(proto: "is_promotable"),
-        9: .same(proto: "version"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".SubscribeReplica"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}log_position\0\u{3}chunk_id\0\u{1}LastEpochs\0\u{1}ip\0\u{1}port\0\u{3}leader_id\0\u{3}subscription_id\0\u{3}is_promotable\0\u{1}version\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularInt64Field(value: &logPosition)
-            case 2: try decoder.decodeSingularBytesField(value: &chunkID)
-            case 3: try decoder.decodeRepeatedMessageField(value: &lastEpochs)
-            case 4: try decoder.decodeSingularBytesField(value: &ip)
-            case 5: try decoder.decodeSingularInt32Field(value: &port)
-            case 6: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 7: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            case 8: try decoder.decodeSingularBoolField(value: &isPromotable)
-            case 9: try decoder.decodeSingularInt32Field(value: &version)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.logPosition) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.chunkID) }()
+      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.lastEpochs) }()
+      case 4: try { try decoder.decodeSingularBytesField(value: &self.ip) }()
+      case 5: try { try decoder.decodeSingularInt32Field(value: &self.port) }()
+      case 6: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 7: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      case 8: try { try decoder.decodeSingularBoolField(value: &self.isPromotable) }()
+      case 9: try { try decoder.decodeSingularInt32Field(value: &self.version) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if logPosition != 0 {
-            try visitor.visitSingularInt64Field(value: logPosition, fieldNumber: 1)
-        }
-        if !chunkID.isEmpty {
-            try visitor.visitSingularBytesField(value: chunkID, fieldNumber: 2)
-        }
-        if !lastEpochs.isEmpty {
-            try visitor.visitRepeatedMessageField(value: lastEpochs, fieldNumber: 3)
-        }
-        if !ip.isEmpty {
-            try visitor.visitSingularBytesField(value: ip, fieldNumber: 4)
-        }
-        if port != 0 {
-            try visitor.visitSingularInt32Field(value: port, fieldNumber: 5)
-        }
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 6)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 7)
-        }
-        if isPromotable != false {
-            try visitor.visitSingularBoolField(value: isPromotable, fieldNumber: 8)
-        }
-        if version != 0 {
-            try visitor.visitSingularInt32Field(value: version, fieldNumber: 9)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.logPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.logPosition, fieldNumber: 1)
     }
+    if !self.chunkID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.chunkID, fieldNumber: 2)
+    }
+    if !self.lastEpochs.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.lastEpochs, fieldNumber: 3)
+    }
+    if !self.ip.isEmpty {
+      try visitor.visitSingularBytesField(value: self.ip, fieldNumber: 4)
+    }
+    if self.port != 0 {
+      try visitor.visitSingularInt32Field(value: self.port, fieldNumber: 5)
+    }
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 6)
+    }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 7)
+    }
+    if self.isPromotable != false {
+      try visitor.visitSingularBoolField(value: self.isPromotable, fieldNumber: 8)
+    }
+    if self.version != 0 {
+      try visitor.visitSingularInt32Field(value: self.version, fieldNumber: 9)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_SubscribeReplica, rhs: EventStore_Cluster_SubscribeReplica) -> Bool {
-        if lhs.logPosition != rhs.logPosition { return false }
-        if lhs.chunkID != rhs.chunkID { return false }
-        if lhs.lastEpochs != rhs.lastEpochs { return false }
-        if lhs.ip != rhs.ip { return false }
-        if lhs.port != rhs.port { return false }
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.isPromotable != rhs.isPromotable { return false }
-        if lhs.version != rhs.version { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_SubscribeReplica, rhs: EventStore_Cluster_SubscribeReplica) -> Bool {
+    if lhs.logPosition != rhs.logPosition {return false}
+    if lhs.chunkID != rhs.chunkID {return false}
+    if lhs.lastEpochs != rhs.lastEpochs {return false}
+    if lhs.ip != rhs.ip {return false}
+    if lhs.port != rhs.port {return false}
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.isPromotable != rhs.isPromotable {return false}
+    if lhs.version != rhs.version {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ReplicaSubscriptionRetry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ReplicaSubscriptionRetry"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaSubscriptionRetry"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ReplicaSubscriptionRetry, rhs: EventStore_Cluster_ReplicaSubscriptionRetry) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ReplicaSubscriptionRetry, rhs: EventStore_Cluster_ReplicaSubscriptionRetry) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ReplicaSubscribed: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ReplicaSubscribed"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-        3: .standard(proto: "subscription_position"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaSubscribed"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0\u{3}subscription_position\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            case 3: try decoder.decodeSingularInt64Field(value: &subscriptionPosition)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.subscriptionPosition) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        if subscriptionPosition != 0 {
-            try visitor.visitSingularInt64Field(value: subscriptionPosition, fieldNumber: 3)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    if self.subscriptionPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.subscriptionPosition, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ReplicaSubscribed, rhs: EventStore_Cluster_ReplicaSubscribed) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.subscriptionPosition != rhs.subscriptionPosition { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ReplicaSubscribed, rhs: EventStore_Cluster_ReplicaSubscribed) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.subscriptionPosition != rhs.subscriptionPosition {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_ReplicaLogPositionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".ReplicaLogPositionAck"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "subscription_id"),
-        2: .standard(proto: "replication_log_position"),
-        3: .standard(proto: "writer_log_position"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".ReplicaLogPositionAck"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}subscription_id\0\u{3}replication_log_position\0\u{3}writer_log_position\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            case 2: try decoder.decodeSingularInt64Field(value: &replicationLogPosition)
-            case 3: try decoder.decodeSingularInt64Field(value: &writerLogPosition)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.replicationLogPosition) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.writerLogPosition) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 1)
-        }
-        if replicationLogPosition != 0 {
-            try visitor.visitSingularInt64Field(value: replicationLogPosition, fieldNumber: 2)
-        }
-        if writerLogPosition != 0 {
-            try visitor.visitSingularInt64Field(value: writerLogPosition, fieldNumber: 3)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 1)
     }
+    if self.replicationLogPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.replicationLogPosition, fieldNumber: 2)
+    }
+    if self.writerLogPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.writerLogPosition, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_ReplicaLogPositionAck, rhs: EventStore_Cluster_ReplicaLogPositionAck) -> Bool {
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.replicationLogPosition != rhs.replicationLogPosition { return false }
-        if lhs.writerLogPosition != rhs.writerLogPosition { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_ReplicaLogPositionAck, rhs: EventStore_Cluster_ReplicaLogPositionAck) -> Bool {
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.replicationLogPosition != rhs.replicationLogPosition {return false}
+    if lhs.writerLogPosition != rhs.writerLogPosition {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_CreateChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".CreateChunk"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-        3: .standard(proto: "chunk_header_bytes"),
-        4: .standard(proto: "file_size"),
-        5: .standard(proto: "is_completed_chunk"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".CreateChunk"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0\u{3}chunk_header_bytes\0\u{3}file_size\0\u{3}is_completed_chunk\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            case 3: try decoder.decodeSingularBytesField(value: &chunkHeaderBytes)
-            case 4: try decoder.decodeSingularInt32Field(value: &fileSize)
-            case 5: try decoder.decodeSingularBoolField(value: &isCompletedChunk)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.chunkHeaderBytes) }()
+      case 4: try { try decoder.decodeSingularInt32Field(value: &self.fileSize) }()
+      case 5: try { try decoder.decodeSingularBoolField(value: &self.isCompletedChunk) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        if !chunkHeaderBytes.isEmpty {
-            try visitor.visitSingularBytesField(value: chunkHeaderBytes, fieldNumber: 3)
-        }
-        if fileSize != 0 {
-            try visitor.visitSingularInt32Field(value: fileSize, fieldNumber: 4)
-        }
-        if isCompletedChunk != false {
-            try visitor.visitSingularBoolField(value: isCompletedChunk, fieldNumber: 5)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    if !self.chunkHeaderBytes.isEmpty {
+      try visitor.visitSingularBytesField(value: self.chunkHeaderBytes, fieldNumber: 3)
+    }
+    if self.fileSize != 0 {
+      try visitor.visitSingularInt32Field(value: self.fileSize, fieldNumber: 4)
+    }
+    if self.isCompletedChunk != false {
+      try visitor.visitSingularBoolField(value: self.isCompletedChunk, fieldNumber: 5)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_CreateChunk, rhs: EventStore_Cluster_CreateChunk) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.chunkHeaderBytes != rhs.chunkHeaderBytes { return false }
-        if lhs.fileSize != rhs.fileSize { return false }
-        if lhs.isCompletedChunk != rhs.isCompletedChunk { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_CreateChunk, rhs: EventStore_Cluster_CreateChunk) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.chunkHeaderBytes != rhs.chunkHeaderBytes {return false}
+    if lhs.fileSize != rhs.fileSize {return false}
+    if lhs.isCompletedChunk != rhs.isCompletedChunk {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_RawChunkBulk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".RawChunkBulk"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-        3: .standard(proto: "chunk_start_number"),
-        4: .standard(proto: "chunk_end_number"),
-        5: .standard(proto: "raw_position"),
-        6: .standard(proto: "raw_bytes"),
-        7: .standard(proto: "complete_chunk"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".RawChunkBulk"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0\u{3}chunk_start_number\0\u{3}chunk_end_number\0\u{3}raw_position\0\u{3}raw_bytes\0\u{3}complete_chunk\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            case 3: try decoder.decodeSingularInt32Field(value: &chunkStartNumber)
-            case 4: try decoder.decodeSingularInt32Field(value: &chunkEndNumber)
-            case 5: try decoder.decodeSingularInt32Field(value: &rawPosition)
-            case 6: try decoder.decodeSingularBytesField(value: &rawBytes)
-            case 7: try decoder.decodeSingularBoolField(value: &completeChunk)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      case 3: try { try decoder.decodeSingularInt32Field(value: &self.chunkStartNumber) }()
+      case 4: try { try decoder.decodeSingularInt32Field(value: &self.chunkEndNumber) }()
+      case 5: try { try decoder.decodeSingularInt32Field(value: &self.rawPosition) }()
+      case 6: try { try decoder.decodeSingularBytesField(value: &self.rawBytes) }()
+      case 7: try { try decoder.decodeSingularBoolField(value: &self.completeChunk) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        if chunkStartNumber != 0 {
-            try visitor.visitSingularInt32Field(value: chunkStartNumber, fieldNumber: 3)
-        }
-        if chunkEndNumber != 0 {
-            try visitor.visitSingularInt32Field(value: chunkEndNumber, fieldNumber: 4)
-        }
-        if rawPosition != 0 {
-            try visitor.visitSingularInt32Field(value: rawPosition, fieldNumber: 5)
-        }
-        if !rawBytes.isEmpty {
-            try visitor.visitSingularBytesField(value: rawBytes, fieldNumber: 6)
-        }
-        if completeChunk != false {
-            try visitor.visitSingularBoolField(value: completeChunk, fieldNumber: 7)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    if self.chunkStartNumber != 0 {
+      try visitor.visitSingularInt32Field(value: self.chunkStartNumber, fieldNumber: 3)
+    }
+    if self.chunkEndNumber != 0 {
+      try visitor.visitSingularInt32Field(value: self.chunkEndNumber, fieldNumber: 4)
+    }
+    if self.rawPosition != 0 {
+      try visitor.visitSingularInt32Field(value: self.rawPosition, fieldNumber: 5)
+    }
+    if !self.rawBytes.isEmpty {
+      try visitor.visitSingularBytesField(value: self.rawBytes, fieldNumber: 6)
+    }
+    if self.completeChunk != false {
+      try visitor.visitSingularBoolField(value: self.completeChunk, fieldNumber: 7)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_RawChunkBulk, rhs: EventStore_Cluster_RawChunkBulk) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.chunkStartNumber != rhs.chunkStartNumber { return false }
-        if lhs.chunkEndNumber != rhs.chunkEndNumber { return false }
-        if lhs.rawPosition != rhs.rawPosition { return false }
-        if lhs.rawBytes != rhs.rawBytes { return false }
-        if lhs.completeChunk != rhs.completeChunk { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_RawChunkBulk, rhs: EventStore_Cluster_RawChunkBulk) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.chunkStartNumber != rhs.chunkStartNumber {return false}
+    if lhs.chunkEndNumber != rhs.chunkEndNumber {return false}
+    if lhs.rawPosition != rhs.rawPosition {return false}
+    if lhs.rawBytes != rhs.rawBytes {return false}
+    if lhs.completeChunk != rhs.completeChunk {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_DataChunkBulk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".DataChunkBulk"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-        3: .standard(proto: "chunk_start_number"),
-        4: .standard(proto: "chunk_end_number"),
-        5: .standard(proto: "subscription_position"),
-        6: .standard(proto: "data_bytes"),
-        7: .standard(proto: "complete_chunk"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".DataChunkBulk"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0\u{3}chunk_start_number\0\u{3}chunk_end_number\0\u{3}subscription_position\0\u{3}data_bytes\0\u{3}complete_chunk\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            case 3: try decoder.decodeSingularInt32Field(value: &chunkStartNumber)
-            case 4: try decoder.decodeSingularInt32Field(value: &chunkEndNumber)
-            case 5: try decoder.decodeSingularInt64Field(value: &subscriptionPosition)
-            case 6: try decoder.decodeSingularBytesField(value: &dataBytes)
-            case 7: try decoder.decodeSingularBoolField(value: &completeChunk)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      case 3: try { try decoder.decodeSingularInt32Field(value: &self.chunkStartNumber) }()
+      case 4: try { try decoder.decodeSingularInt32Field(value: &self.chunkEndNumber) }()
+      case 5: try { try decoder.decodeSingularInt64Field(value: &self.subscriptionPosition) }()
+      case 6: try { try decoder.decodeSingularBytesField(value: &self.dataBytes) }()
+      case 7: try { try decoder.decodeSingularBoolField(value: &self.completeChunk) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        if chunkStartNumber != 0 {
-            try visitor.visitSingularInt32Field(value: chunkStartNumber, fieldNumber: 3)
-        }
-        if chunkEndNumber != 0 {
-            try visitor.visitSingularInt32Field(value: chunkEndNumber, fieldNumber: 4)
-        }
-        if subscriptionPosition != 0 {
-            try visitor.visitSingularInt64Field(value: subscriptionPosition, fieldNumber: 5)
-        }
-        if !dataBytes.isEmpty {
-            try visitor.visitSingularBytesField(value: dataBytes, fieldNumber: 6)
-        }
-        if completeChunk != false {
-            try visitor.visitSingularBoolField(value: completeChunk, fieldNumber: 7)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    if self.chunkStartNumber != 0 {
+      try visitor.visitSingularInt32Field(value: self.chunkStartNumber, fieldNumber: 3)
+    }
+    if self.chunkEndNumber != 0 {
+      try visitor.visitSingularInt32Field(value: self.chunkEndNumber, fieldNumber: 4)
+    }
+    if self.subscriptionPosition != 0 {
+      try visitor.visitSingularInt64Field(value: self.subscriptionPosition, fieldNumber: 5)
+    }
+    if !self.dataBytes.isEmpty {
+      try visitor.visitSingularBytesField(value: self.dataBytes, fieldNumber: 6)
+    }
+    if self.completeChunk != false {
+      try visitor.visitSingularBoolField(value: self.completeChunk, fieldNumber: 7)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_DataChunkBulk, rhs: EventStore_Cluster_DataChunkBulk) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.chunkStartNumber != rhs.chunkStartNumber { return false }
-        if lhs.chunkEndNumber != rhs.chunkEndNumber { return false }
-        if lhs.subscriptionPosition != rhs.subscriptionPosition { return false }
-        if lhs.dataBytes != rhs.dataBytes { return false }
-        if lhs.completeChunk != rhs.completeChunk { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_DataChunkBulk, rhs: EventStore_Cluster_DataChunkBulk) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.chunkStartNumber != rhs.chunkStartNumber {return false}
+    if lhs.chunkEndNumber != rhs.chunkEndNumber {return false}
+    if lhs.subscriptionPosition != rhs.subscriptionPosition {return false}
+    if lhs.dataBytes != rhs.dataBytes {return false}
+    if lhs.completeChunk != rhs.completeChunk {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_FollowerAssignment: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".FollowerAssignment"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".FollowerAssignment"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_FollowerAssignment, rhs: EventStore_Cluster_FollowerAssignment) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_FollowerAssignment, rhs: EventStore_Cluster_FollowerAssignment) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_CloneAssignment: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".CloneAssignment"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".CloneAssignment"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_CloneAssignment, rhs: EventStore_Cluster_CloneAssignment) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_CloneAssignment, rhs: EventStore_Cluster_CloneAssignment) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension EventStore_Cluster_DropSubscription: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    package static let protoMessageName: String = _protobuf_package + ".DropSubscription"
-    package static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .standard(proto: "leader_id"),
-        2: .standard(proto: "subscription_id"),
-    ]
+  package static let protoMessageName: String = _protobuf_package + ".DropSubscription"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}leader_id\0\u{3}subscription_id\0")
 
-    package mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
-        while let fieldNumber = try decoder.nextFieldNumber() {
-            // The use of inline closures is to circumvent an issue where the compiler
-            // allocates stack space for every case branch when no optimizations are
-            // enabled. https://github.com/apple/swift-protobuf/issues/1034
-            switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &leaderID)
-            case 2: try decoder.decodeSingularBytesField(value: &subscriptionID)
-            default: break
-            }
-        }
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.leaderID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.subscriptionID) }()
+      default: break
+      }
     }
+  }
 
-    package func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
-        if !leaderID.isEmpty {
-            try visitor.visitSingularBytesField(value: leaderID, fieldNumber: 1)
-        }
-        if !subscriptionID.isEmpty {
-            try visitor.visitSingularBytesField(value: subscriptionID, fieldNumber: 2)
-        }
-        try unknownFields.traverse(visitor: &visitor)
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.leaderID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.leaderID, fieldNumber: 1)
     }
+    if !self.subscriptionID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.subscriptionID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-    package static func == (lhs: EventStore_Cluster_DropSubscription, rhs: EventStore_Cluster_DropSubscription) -> Bool {
-        if lhs.leaderID != rhs.leaderID { return false }
-        if lhs.subscriptionID != rhs.subscriptionID { return false }
-        if lhs.unknownFields != rhs.unknownFields { return false }
-        return true
-    }
+  package static func ==(lhs: EventStore_Cluster_DropSubscription, rhs: EventStore_Cluster_DropSubscription) -> Bool {
+    if lhs.leaderID != rhs.leaderID {return false}
+    if lhs.subscriptionID != rhs.subscriptionID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }

@@ -128,7 +128,7 @@ extension String: SpecifiedStreamTarget {
 /// Represents a projection stream that conforms to `StreamTarget`.
 ///
 /// `ProjectionStream` is identified by a `StreamIdentifier` and can be instantiated using specific projection methods.
-public struct ProjectionStream: StreamTarget {
+public struct ProjectionStream: SpecifiedStreamTarget {
     /// The identifier for the stream, represented as a `StreamIdentifier`.
     public private(set) var identifier: StreamIdentifier
 

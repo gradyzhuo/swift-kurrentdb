@@ -36,42 +36,6 @@ extension PersistentSubscriptions.Subscription: AsyncSequence {
     }
 }
 
-@available(*, deprecated, message: "The Streams.Subscription as AsyncSequence is deprecated. Please use Streams.Subscription.events instead.")
-extension Streams.Subscription: AsyncSequence {
-    @available(*, deprecated, message: "The Streams.Subscription.EventAppeared is deprecated.")
-    public struct EventAppeared {
-        public let event: ReadEvent
-
-        init(event: ReadEvent) {
-            self.event = event
-        }
-    }
-
-    @available(*, deprecated, message: "The Streams.Subscription.EventIterator is deprecated.")
-    public struct AsyncIterator: AsyncIteratorProtocol {
-        public typealias Element = EventAppeared
-
-        var iterator: AsyncThrowingStream<ReadEvent, Error>.AsyncIterator
-
-        init(iterator: AsyncThrowingStream<ReadEvent, Error>.AsyncIterator) {
-            self.iterator = iterator
-        }
-
-        public mutating func next() async throws -> EventAppeared? {
-            while true {
-                if let event = try await iterator.next() {
-                    return .init(event: event)
-                }
-            }
-        }
-    }
-
-    public func makeAsyncIterator() -> AsyncIterator {
-        let iterator = events.makeAsyncIterator()
-        return .init(iterator: iterator)
-    }
-}
-
 extension KurrentDB.StreamRevision {
     public static func revision(_ value: UInt64) -> Self {
         .at(value)
