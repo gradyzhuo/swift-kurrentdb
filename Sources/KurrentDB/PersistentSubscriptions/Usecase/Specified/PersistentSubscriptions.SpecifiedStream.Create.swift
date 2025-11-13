@@ -14,7 +14,13 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        package static var name: String{
+            get{
+                "PersistentSubscriptions.\(Self.self)"
+            }
+        }
+        
         let streamIdentifier: StreamIdentifier
         let group: String
         let options: Options

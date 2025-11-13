@@ -14,7 +14,13 @@ extension Operations {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.SetNodePriority.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.SetNodePriority.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        package static var name: String{
+            get{
+                "Operations.\(Self.self)"
+            }
+        }
+        
         public let priority: Int32
 
         public init(priority: Int32) {

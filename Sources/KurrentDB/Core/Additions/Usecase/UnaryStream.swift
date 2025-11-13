@@ -54,7 +54,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
 
     package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws(KurrentError) -> Responses {
         Task {
-            logger.info("[\(Self.self)] connection opened by \(#function)")
+            logger.debug("[\(Self.name)] Opening connection...")
             try await client.runConnections()
         }
 
@@ -64,7 +64,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
                 if let error = $0 {
                     logger.error("The error is thrown in the response of UnaryStream: \(error)")
                 }
-                logger.info("[\(Self.self)] connection closed by \(#function)")
+                logger.debug("[\(Self.name)] Closing connection...")
                 client.beginGracefulShutdown()
             }
         }

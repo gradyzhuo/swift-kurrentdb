@@ -35,11 +35,11 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
         try await withRethrowingError(usage: "\(Self.self)\(#function)") {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
-                    logger.info("[\(Self.self)] connection opened by \(#function)")
+                    logger.debug("[\(Self.name)] Opening connection...")
                     try await client.runConnections()
                 }
                 let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
-                logger.info("[\(Self.self)] connection closed by \(#function)")
+                logger.debug("[\(Self.name)] Closing connection...")
                 client.beginGracefulShutdown()
                 return response
             }

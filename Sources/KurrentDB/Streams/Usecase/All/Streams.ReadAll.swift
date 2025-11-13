@@ -15,7 +15,13 @@ extension Streams where Target == AllStreams {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = ReadResponse
         public typealias Responses = AsyncThrowingStream<Response, Error>
-
+        
+        package static var name: String{
+            get{
+                "Streams.\(Self.self)"
+            }
+        }
+        
         public let options: Options
 
         init(options: Options) {

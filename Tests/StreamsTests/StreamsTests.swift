@@ -8,6 +8,7 @@
 import Foundation
 @testable import KurrentDB
 import Testing
+import Logging
 
 package enum TestingError: Error {
     case exception(String)
@@ -20,6 +21,9 @@ struct StreamTests: Sendable {
     init() {
         settings = .localhost()
             .authenticated(.credentials(username: "admin", password: "changeit"))
+        
+        
+
     }
 
     @Test("Stream should be not found and throw an error.")

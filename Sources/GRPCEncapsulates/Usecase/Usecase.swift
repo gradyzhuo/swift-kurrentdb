@@ -13,4 +13,6 @@ import SwiftProtobuf
 package protocol Usecase {
     associatedtype ServiceClient: GRPCServiceClient where ServiceClient.Transport == Transport
     associatedtype Transport: ClientTransport where Transport == ServiceClient.Transport
+    
+    static var name: String { get }
 }

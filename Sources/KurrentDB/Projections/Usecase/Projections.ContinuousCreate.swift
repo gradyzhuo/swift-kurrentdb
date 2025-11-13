@@ -15,7 +15,13 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        package static var name: String{
+            get{
+                "Projections.\(Self.self)"
+            }
+        }
+        
         public let name: String
         public let query: String
         public let options: Options

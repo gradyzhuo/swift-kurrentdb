@@ -14,7 +14,13 @@ extension PersistentSubscriptions.AllStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        package static var name: String{
+            get{
+                "PersistentSubscriptions.\(Self.self)"
+            }
+        }
+        
         let group: String
         let options: Options
 

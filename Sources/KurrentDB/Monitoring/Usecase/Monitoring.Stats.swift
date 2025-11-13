@@ -14,7 +14,13 @@ extension Monitoring {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Stats.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Stats.Output
         package typealias Responses = AsyncThrowingStream<Response, any Error>
-
+        
+        package static var name: String{
+            get{
+                "Monitoring.\(Self.self)"
+            }
+        }
+        
         public let useMetadata: Bool
         public let refreshTimePeriodInMs: UInt64
 

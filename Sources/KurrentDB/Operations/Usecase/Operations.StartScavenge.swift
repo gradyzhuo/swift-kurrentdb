@@ -15,6 +15,12 @@ extension Operations {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StartScavenge.Output
         public typealias Response = ScavengeResponse
 
+        package static var name: String{
+            get{
+                "Operations.\(Self.self)"
+            }
+        }
+        
         public let threadCount: Int32
         public let startFromChunk: Int32
 

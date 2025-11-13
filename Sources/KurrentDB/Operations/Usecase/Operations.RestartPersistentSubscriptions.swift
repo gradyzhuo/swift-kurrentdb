@@ -15,6 +15,12 @@ extension Operations {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.RestartPersistentSubscriptions.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
+        package static var name: String{
+            get{
+                "Operations.\(Self.self)"
+            }
+        }
+        
         public init() {}
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {

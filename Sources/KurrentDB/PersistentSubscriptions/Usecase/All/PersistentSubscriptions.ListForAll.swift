@@ -14,7 +14,13 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
         package typealias UnderlyingRequest = UnderlyingService.Method.List.Input
         package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
-
+        
+        package static var name: String{
+            get{
+                "PersistentSubscriptions.\(Self.self)"
+            }
+        }
+        
         public let filter: ListFilter
 
         package init(filter: ListFilter) {

@@ -15,7 +15,13 @@ extension Streams where Target: SpecifiedStreamTarget {
         package typealias UnderlyingRequest = Read.UnderlyingRequest
         package typealias UnderlyingResponse = Read.UnderlyingResponse
         public typealias Responses = Subscription
-
+        
+        package static var name: String{
+            get{
+                "Streams.\(Self.self)"
+            }
+        }
+        
         public let streamIdentifier: StreamIdentifier
         public let options: Options
 

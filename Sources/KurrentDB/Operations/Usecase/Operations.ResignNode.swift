@@ -14,6 +14,12 @@ extension Operations {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.ResignNode.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.ResignNode.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
+        
+        package static var name: String{
+            get{
+                "Operations.\(Self.self)"
+            }
+        }
 
         public init() {}
 

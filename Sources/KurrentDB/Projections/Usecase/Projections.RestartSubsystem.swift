@@ -15,7 +15,13 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.RestartSubsystem.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.RestartSubsystem.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        package static var name: String{
+            get{
+                "Projections.\(Self.self)"
+            }
+        }
+        
         package func requestMessage() throws -> UnderlyingRequest {
             .init()
         }

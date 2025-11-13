@@ -16,7 +16,13 @@ extension Users {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Details.Output
         package typealias Responses = AsyncThrowingStream<UserDetails, any Error>
-
+        
+        package static var name: String{
+            get{
+                "Users.\(Self.self)"
+            }
+        }
+        
         public let loginName: String
 
         public init(loginName: String) {

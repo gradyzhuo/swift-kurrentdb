@@ -12,7 +12,13 @@ extension Streams {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
-
+        
+        package static var name: String{
+            get{
+                "Streams.\(Self.self)"
+            }
+        }
+        
         public let events: [EventData]
         public let identifier: StreamIdentifier
         public private(set) var options: Options

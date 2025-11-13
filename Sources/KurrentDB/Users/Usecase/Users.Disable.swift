@@ -16,7 +16,13 @@ extension Users {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Disable.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Disable.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-
+        
+        package static var name: String{
+            get{
+                "Users.\(Self.self)"
+            }
+        }
+        
         public let loginName: String
 
         public init(loginName: String) {

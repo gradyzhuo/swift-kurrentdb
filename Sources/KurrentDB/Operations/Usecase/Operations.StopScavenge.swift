@@ -14,7 +14,13 @@ extension Operations {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StopScavenge.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StopScavenge.Output
         public typealias Response = ScavengeResponse
-
+        
+        package static var name: String{
+            get{
+                "Operations.\(Self.self)"
+            }
+        }
+        
         let scavengeId: String
 
         public init(scavengeId: String) {
