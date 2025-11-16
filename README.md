@@ -14,7 +14,7 @@
 
 Built with ❤️ for Server-Side Swift and Event Sourcing
 
-[📚 Documentation](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb) • [🚀 Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/1.11.2/documentation/kurrentdb/getting-started)
+[📚 Documentation](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb) • [🚀 Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/1.11.2/documentation/kurrentdb/getting-started) • [💬 Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions)
 
 </div>
 
@@ -122,6 +122,7 @@ Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
 
 - 💭 [GitHub Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions) - Ask questions, share ideas
 - 🐛 [Issues](https://github.com/gradyzhuo/KurrentDB-Swift/issues) - Report bugs
+- 💬 [Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions)
 - 🐦 [Dev.to](https://dev.to/gradyzhuo) - Follow for updates
 
 ## 📄 License
