@@ -27,10 +27,10 @@ extension PersistentSubscriptions.AllStream {
             self.group = group
         }
 
-        /// Constructs a request message to retrieve persistent subscription information for the specified group on the all-stream.
+        /// Constructs a request message to retrieve persistent subscription information for the specified group on the `$all` stream.
         ///
         /// - Throws: An error if the request message cannot be constructed.
-        /// - Returns: The underlying gRPC request message targeting the all-stream and the specified group.
+        /// - Returns: The underlying gRPC request message targeting the `$all` stream and the specified group.
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
                 $0.options = .with {
@@ -40,7 +40,7 @@ extension PersistentSubscriptions.AllStream {
             }
         }
 
-        /// Sends a gRPC request to retrieve subscription information for the specified group on the all-stream persistent subscription.
+        /// Sends a gRPC request to retrieve subscription information for the specified group on the `$all` persistent subscription.
         ///
         /// - Returns: The subscription information for the requested group.
         ///

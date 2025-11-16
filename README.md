@@ -1,189 +1,138 @@
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2FKurrentDB-Swift%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2FKurrentDB-Swift%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
-[![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/KurrentDB-Swift/actions/workflows/swift-build-testing.yml)
+# KurrentDB-Swift
 
+[![Swift Version](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey.svg)](https://swift.org)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
 
-# KurrentDB 
-This is unofficial [Kurrent](https://www.kurrent.io/) (formerly: EventStore) Database [gRPC](https://github.com/grpc/grpc-swift.git) Client SDK, developing in [Swift language](https://www.swift.org/)
+**A modern, type-safe Swift client for Kurrent (formerly EventStoreDB)**
 
+Built with ❤️ for Server-Side Swift and Event Sourcing
 
-## Getting the library
+[📚 Documentation](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb) • [🚀 Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/1.11.2/documentation/kurrentdb/getting-started) • [💬 Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions)
 
-### Swift Package Manager
+</div>
 
-The Swift Package Manager is the preferred way to get KurrentDB. Simply add the package dependency to your Package.swift:
+---
+
+## ✨ Why KurrentDB-Swift?
+
+Event Sourcing is a powerful pattern for building scalable, auditable systems. KurrentDB-Swift brings this capability to the Swift ecosystem with a modern, type-safe client.
+
+- 🎯 **Native Swift** - Designed for Swift from the ground up, not a wrapper
+- ⚡ **Modern Concurrency** - Full async/await support with Swift 6 compatibility
+- 🔒 **Type-Safe** - Leverages Swift's type system for compile-time safety
+- 🚀 **Production-Ready** - Over 1 year of development, 425+ commits, 46 releases
+- 📖 **Well-Documented** - Comprehensive guides on [Swift Package Index](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb)
+- 🔧 **Actively Maintained** - Regular updates and responsive to issues
+
+## 🎬 Quick Start
+
+### Installation
+
+Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/gradyzhuo/KurrentDB-Swift.git", from: "1.0.0")
-]
-```
-...and depend on "KurrentDB" in the necessary targets:
-
-```swift
-.target(
-  name: ...,
-  dependencies: [.product(name: "KurrentDB", package: "KurrentDB-Swift")]
+    .package(url: "https://github.com/gradyzhuo/KurrentDB-Swift.git", from: "1.11.2")
 ]
 ```
 
-## Examples
-
-### The library name to import.
+### Your First Event
 
 ```swift
 import KurrentDB
-```
 
-
-### ClientSettings
-
-```swift
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .parse(connectionString: "kurrent://localhost:2113")
-
-// convenience 
-let settings: ClientSettings = "kurrent://localhost:2113".parse()
-
-// using string literal 
-let settings: ClientSettings = "kurrent://localhost:2113"
-
-//using constructor
-let settings: ClientSettings = .localhost()
-```
-
-### ClientSettings with credentials authentication.
-```swift
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .parse(connectionString: "kurrent://admin:changeit@localhost:2113")
-
-// convenience 
-let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113".parse()
-
-// using string literal 
-let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
-
-//using constructor
-let settings: ClientSettings = .localhost()
-                               .authenticated(.credentials(username: "admin", password: "changeit"))
-```
-
-### ClientSettings with CA file.
-```swift
-// parse from connection string
-let caPath = "the path of ca file..."
-let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113?tls=true&tlsCaFile=\(caPath)".parse()
-
-//or construct in coding.
-//settings with credentials with adding ssl file by path
-let settings: ClientSettings = .localhost()
-                               .secure(true) //required
-                               .cerificate(path: caPath!)
-                               .authenticated(.credentials(username: "admin", password: "changeit"))
-
-//or add ssl file with bundle
-let settings: ClientSettings = .localhost()
-                               .secure(true) //required
-                               .cerificate(source: .crtInBundle("ca")!)
-                               .authenticated(.credentials(username: "admin", password: "changeit"))
-```
-
-### Appending Event
-
-```swift
-// Import packages of KurrentDB.
-import KurrentDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
-
-// Create the data array of events.
-let events:[EventData] = [
-    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1164")!, eventType: "ItemAdded", model: ["Description": "Xbox One S 1TB (Console)"]),
-    .init(id: .init(uuidString: "b989fe21-9469-4017-8d71-9820b8dd1174")!, eventType: "ItemAdded", model: "Gears of War 4")]
-
-// Append two events with one response
+// 1. Connect to Kurrent
 let client = KurrentDBClient(settings: .localhost())
-try await client.appendStream("stream_for_testing", events: events){
+
+// 2. Create an event
+let event = EventData(
+    eventType: "OrderPlaced",
+    model: ["orderId": "order-123", "total": 99.99] // or any Codable instance.
+)
+
+// 3. Append to stream
+try await client.appendStream("orders", events: [event]) {
     $0.revision(expected: .any)
 }
-```
 
-### Read Event
-
-```swift
-// Import packages of EventStoreDB.
-import KurrentDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
-
-// Read responses of event from specified stream.
-let responses = try await client.readStream("stream_for_testing"){
+// 4. Read events back
+let events = try await client.readStream("orders") {
     $0.backward().startFrom(revision: .start)
 }
 
-// loop it.
-for try await response in responses {
-    //handle response
-    if let readEvent = try response.event {
-        //handle event
+for try await response in events {
+    if let event = try response.event {
+        print("Event: \(event.eventType)")
     }
 }
 ```
 
-### PersistentSubscriptions
-#### Create
+**That's it!** You're now using Event Sourcing in Swift. 🎉
 
-```swift
-// Import packages of EventStoreDB.
-import KurrentDB
+## 📖 Learn More
 
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
+Check out our comprehensive documentation on Swift Package Index:
 
-// Build a persistentSubscriptions client.
-let client = KurrentDBClient(settings: settings)
+- 📘 [Getting Started Guide](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/getting-started)
+- ✍️ [Appending Events](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/appending-events)
+- 📖 [Reading Events](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/reading-events)
+- 🔄 [Working with Projections](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/projections)
+- 📚 [Full API Reference](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb)
 
-// the stream identifier to subscribe.
-let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+## 🎯 Features
 
-// the group of subscription
-let groupName = "myGroupTest"
+- ✅ Stream operations (append, read, delete)
+- ✅ Subscriptions (catch-up and persistent)
+- ✅ Projections management
+- ✅ Optimistic concurrency control
+- ✅ TLS/SSL support
+- ✅ Cluster configuration
+- ✅ Connection management with auto-reconnection
+- ✅ Swift 6 ready (zero data-race safety)
 
-// Create it to specified identifier of stream
-try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
-```
+## 📦 Requirements
 
-#### Subscribe
+- Swift 6.0 or later
+- macOS 15+ / iOS 18+ / Linux
+- Kurrent 24.2+ (or EventStoreDB 23.10+)
 
-```swift
-// Import packages of EventStoreDB.
-import KurrentDB
+## 🏗️ Used in Production?
 
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
+We'd love to hear about your experience! Share your story in [Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions) or add your project to our showcase.
 
-// Build a persistentSubscriptions client.
-let client = KurrentDBClient(settings: settings)
+## 🤝 Contributing
 
-// the stream identifier to subscribe.
-let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+Contributions are welcome! Whether it's:
 
-// the group of subscription
-let groupName = "myGroupTest"
+- 🐛 Bug reports
+- 💡 Feature requests  
+- 📖 Documentation improvements
+- 🔧 Code contributions
 
-// Subscribe to stream or all, and get a subscription.
-let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
+Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
 
-// Loop all results by subscription.events
-for try await result in subscription.events {
-    //handle result
-    // ...
-    
-    // ack the readEvent if succeed
-    try await subscription.ack(readEvents: result.event)
-    // else nack thr readEvent if not succeed.
-    // try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
-}
-```
+## 💬 Community
+
+- 💭 [GitHub Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions) - Ask questions, share ideas
+- 🐛 [Issues](https://github.com/gradyzhuo/KurrentDB-Swift/issues) - Report bugs
+- 🐦 [Twitter/X](https://twitter.com/gradyzhuo) - Follow for updates
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+Built with these excellent libraries:
+- [grpc-swift](https://github.com/grpc/grpc-swift) - Swift gRPC implementation
+- [swift-nio](https://github.com/apple/swift-nio) - Non-blocking I/O
+
+Inspired by official Kurrent/EventStoreDB clients.
+
+---
+
+**⭐ If you find KurrentDB-Swift useful, please consider giving it a star! ⭐**
+
+Made with ❤️ by [Grady Zhuo](https://github.com/gradyzhuo) and [contributors](https://github.com/gradyzhuo/KurrentDB-Swift/graphs/contributors)

@@ -20,7 +20,7 @@ extension KurrentDBClient {
             .create(options: options)
     }
 
-    /// Creates a persistent subscription for the all-stream.
+    /// Creates a persistent subscription for the `$all` stream.
     ///
     /// - Parameters:
     ///   - groupName: The name of the subscription group.
@@ -47,7 +47,7 @@ extension KurrentDBClient {
             .update(options: options)
     }
 
-    /// Updates an existing persistent subscription for the all-stream.
+    /// Updates an existing persistent subscription for the `$all` stream.
     ///
     /// - Parameters:
     ///   - groupName: The name of the subscription group.
@@ -74,7 +74,7 @@ extension KurrentDBClient {
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
     }
 
-    /// Subscribes to a persistent subscription for the all-stream.
+    /// Subscribes to a persistent subscription for the `$all` stream.
     ///
     /// - Parameters:
     ///   - groupName: The name of the subscription group.
@@ -99,7 +99,7 @@ extension KurrentDBClient {
             .delete()
     }
 
-    /// Deletes a persistent subscription for the all-stream.
+    /// Deletes a persistent subscription for the `$all` stream.
     ///
     /// - Parameters:
     ///   - groupName: The name of the subscription group.
@@ -120,7 +120,7 @@ extension KurrentDBClient {
         try await persistentSubscriptions.list(for: .stream(streamIdentifier))
     }
 
-    /// Lists persistent subscriptions for the all-stream.
+    /// Lists persistent subscriptions for the `$all` stream.
     ///
     /// - Returns: An array of subscription information.
     /// - Throws: An error if listing fails.

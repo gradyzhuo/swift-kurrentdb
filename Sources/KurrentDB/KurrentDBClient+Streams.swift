@@ -43,7 +43,7 @@ extension KurrentDBClient {
         return try await streams(of: .specified(streamIdentifier)).append(events: events, options: options)
     }
 
-    /// Reads all events from the "all-stream" starting from the specified position.
+    /// Reads all events from the `$all` stream starting from the specified position.
     ///
     /// - Parameter configure: A closure to configure the read options. Defaults to no configuration.
     /// - Returns: The responses containing the read events.
@@ -65,10 +65,10 @@ extension KurrentDBClient {
         return try await streams(of: .specified(streamIdentifier)).read(options: options)
     }
 
-    /// Subscribes to events from the "all-stream" starting from the specified position.
+    /// Subscribes to events from the `$all` stream starting from the specified position.
     ///
     /// - Parameter configure: A closure to configure the subscription options. Defaults to no configuration.
-    /// - Returns: The subscription to the "all-stream".
+    /// - Returns: The subscription to the `$all` stream.
     /// - Throws: An error if the operation fails.
     public func subscribeAllStreams(configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
