@@ -7,7 +7,8 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2FKurrentDB-Swift%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
 [![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/KurrentDB-Swift/actions/workflows/swift-build-testing.yml)
 
-<div align=center> ![icon](Assets/kurrent-swift-icon.png)
+<div align=center>
+<img src="Assets/kurrent-swift-icon.png" height="256px" width="256px" >
 
 **A modern, type-safe Swift client for Kurrent (formerly EventStoreDB)**
 
