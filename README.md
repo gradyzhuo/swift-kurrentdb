@@ -122,7 +122,7 @@ Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
 
 - 💭 [GitHub Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions) - Ask questions, share ideas
 - 🐛 [Issues](https://github.com/gradyzhuo/KurrentDB-Swift/issues) - Report bugs
-- 🐦 [Twitter/X](https://twitter.com/gradyzhuo) - Follow for updates
+- 🐦 [Dev.to](https://dev.to/gradyzhuo) - Follow for updates
 
 ## 📄 License
 
