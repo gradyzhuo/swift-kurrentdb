@@ -127,7 +127,7 @@ Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](Licence) for details.
 
 ## 🙏 Acknowledgments
 
