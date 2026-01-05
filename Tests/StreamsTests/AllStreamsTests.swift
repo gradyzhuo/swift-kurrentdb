@@ -10,8 +10,8 @@ import Foundation
 import Testing
 import Logging
 
-@Suite(.serialized)
-struct `All Stream Tests`: Sendable {
+@Suite("The tests of AllStream", .serialized)
+struct AllStreamsTests: Sendable {
     let settings: ClientSettings
 
     init() {
@@ -19,17 +19,17 @@ struct `All Stream Tests`: Sendable {
             .authenticated(.credentials(username: "admin", password: "changeit"))
     }
 
-    @Test(arguments: [
+    @Test("It should succeed when read events from all streams without configuation.", arguments: [
         [
             EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]),
             EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]),
         ],
     ])
-    func `"It should succeed when read events from all streams without configuation."`(events: [EventData]) async throws {
+    func testReadWithoutConfiguration(events: [EventData]) async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
         
-        let appendResponse = try await client.appendStream(streamIdentifier, events: events) {
+        let _ = try await client.appendStream(streamIdentifier, events: events) {
             $0.revision(expected: .any)
         }
         
@@ -53,13 +53,13 @@ struct `All Stream Tests`: Sendable {
         try await client.deleteStream(streamIdentifier)
     }
     
-    @Test(arguments: [
+    @Test("It should succeed when read events from all streams start from appended position.", arguments: [
         [
             EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]),
             EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]),
         ],
     ])
-    func `It should succeed when read events from all streams start from appended position.`(events: [EventData]) async throws {
+    func testReadAllFromAppendedPosition(events: [EventData]) async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
         
