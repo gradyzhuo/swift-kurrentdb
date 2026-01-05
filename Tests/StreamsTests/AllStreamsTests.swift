@@ -10,8 +10,8 @@ import Foundation
 import Testing
 import Logging
 
-@Suite("EventStoreDB Stream Tests", .serialized)
-struct AllStreamTests: Sendable {
+@Suite(.serialized)
+struct `All Stream Tests`: Sendable {
     let settings: ClientSettings
 
     init() {
@@ -59,17 +59,17 @@ struct AllStreamTests: Sendable {
             EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]),
         ],
     ])
-    func `"It should succeed when read events from all streams start from appended position."`(events: [EventData]) async throws {
+    func `It should succeed when read events from all streams start from appended position.`(events: [EventData]) async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
         
         let appendResponse = try await client.appendStream(streamIdentifier, events: events) {
             $0.revision(expected: .any)
         }
-        
+
         let appendedPosition = try #require(appendResponse.position)
         let responses = try await client.readAllStreams(){
-            $0.limit(2).backward().startFrom(position: .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare + 1))
+            $0.limit(1).forward().startFrom(position: .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare))
         }
         
         let allEvents = try await responses.reduce(into: [RecordedEvent]()){

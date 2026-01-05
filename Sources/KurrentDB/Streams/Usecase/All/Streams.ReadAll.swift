@@ -45,12 +45,16 @@ extension Streams where Target == AllStreams {
                         completion(nil)
                     }
                 }
-                do {
+                do{
                     for try await message in $0.messages {
-                        try continuation.yield(handle(message: message))
+                        do{
+                            try continuation.yield(handle(message: message))
+                        }catch {
+                            continuation.finish(throwing: error)
+                        }
                     }
                     continuation.finish()
-                } catch {
+                }catch {
                     continuation.finish(throwing: error)
                 }
                 return stream
