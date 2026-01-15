@@ -139,4 +139,4 @@ Inspired by official Kurrent/EventStoreDB clients.
 
 **⭐ If you find KurrentDB-Swift useful, please consider giving it a star! ⭐**
 
-Made with ❤️ by [Grady Zhuo](https://github.com/gradyzhuo) and [contributors](https://github.com/gradyzhuo/KurrentDB-Swift/graphs/contributors)
+Made with ❤️ by [Grady Zhuo](https://github.com/gradyzhuo)
