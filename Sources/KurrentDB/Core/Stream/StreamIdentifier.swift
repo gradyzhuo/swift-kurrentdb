@@ -7,6 +7,7 @@
 
 import Foundation
 import GRPCEncapsulates
+import RegexBuilder
 
 public struct StreamIdentifier: Sendable {
     package typealias UnderlyingMessage = EventStore_Client_StreamIdentifier
@@ -17,6 +18,22 @@ public struct StreamIdentifier: Sendable {
     public init(name: String, encoding: String.Encoding = .utf8) {
         self.name = name
         self.encoding = encoding
+    }
+}
+
+extension StreamIdentifier {
+    public var category: String? {
+        get{
+            let _category = Reference<String>()
+            return name.prefixMatch(of: Regex{
+                Capture(as: _category) {
+                    OneOrMore(.word)
+                } transform: {
+                    String($0)
+                }
+                "-"
+            })?.output.1
+        }
     }
 }
 

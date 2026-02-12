@@ -82,7 +82,7 @@ extension EventData {
 
 
 extension EventRecord {
-    public convenience init(eventData: EventData) throws {
+    public init(eventData: EventData) throws {
         let payload: Payload = switch eventData.payload {
         case let .data(data, contentType):
             .data(data, contentType)

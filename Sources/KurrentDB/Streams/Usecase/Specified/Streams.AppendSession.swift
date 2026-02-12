@@ -64,30 +64,43 @@ extension Streams {
         }
     }
 }
+extension Streams.AppendSession.Response {
+    public struct AppendedResult: Sendable{
+        let streamIdentifier: StreamIdentifier
+        let currentRevision: UInt64
+        let position: StreamPosition?
+        
+        fileprivate init(streamIdentifier: StreamIdentifier, currentRevision: UInt64, position: StreamPosition?) {
+            self.streamIdentifier = streamIdentifier
+            self.currentRevision = currentRevision
+            self.position = position
+        }
+    }
+}
+
 
 extension Streams.AppendSession {
     public struct Response: GRPCResponse {
-        public struct Output: Sendable{
-            let stream: String
-            let revision: UInt64
-            let position: StreamPosition
-        }
+        
         package typealias UnderlyingMessage = UnderlyingResponse
 
-        public let output: [Output]?
-        public let position: StreamPosition?
+        public let results: [AppendedResult]
+        public let position: StreamPosition
 
-        init(output: [Output], position: StreamPosition?) {
-            self.output = output
+        init(results: [AppendedResult], position: StreamPosition) {
+            self.results = results
             self.position = position
         }
 
         package init(from message: UnderlyingMessage) throws(KurrentError) {
-            let output: [Output] = message.output.map{
-                .init(stream: $0.stream, revision: UInt64($0.streamRevision), position: .at(commitPosition: UInt64($0.position)))
+            let results: [AppendedResult] = message.output.map{
+                .init(
+                    streamIdentifier: .init(name: $0.stream),
+                    currentRevision: UInt64($0.streamRevision),
+                    position: $0.hasPosition ?.at(commitPosition: UInt64($0.position)) : nil)
             }
             
-            self.init(output: output, position: .at(commitPosition: UInt64(message.position)))
+            self.init(results: results, position: .at(commitPosition: UInt64(message.position)))
         }
     }
 }

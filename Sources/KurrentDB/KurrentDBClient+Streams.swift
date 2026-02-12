@@ -57,32 +57,6 @@ extension KurrentDBClient {
         return try await streams(of: .specified(streamIdentifier)).append(events: events, options: options)
     }
     
-    /// Appends a batch of events to a specified stream (deprecated).
-    ///
-    /// - Important: This method has been deprecated. Use `appendToStream(_:events:configure:)` instead.
-    ///   The behavior is identical; only the name has changed for clarity.
-    ///
-    /// - Parameters:
-    ///   - streamIdentifier: The unique identifier of the target stream to which the events will be appended.
-    ///   - events: An array of `EventData` instances to append in order. The order of events in this
-    ///     array is preserved during the append operation.
-    ///   - configure: An optional closure that receives the default `Streams<SpecifiedStream>.Append.Options`
-    ///     and returns a customized options value. Use this to set expected revision, credentials,
-    ///     and other append preferences. Defaults to a no-op that returns the provided options unchanged.
-    ///
-    /// - Returns: A `Streams<SpecifiedStream>.Append.Response` containing the outcome of the append operation,
-    ///   including the next expected revision and any server-assigned positions if available.
-    ///
-    /// - Throws: An error if the append fails due to revision conflicts, connectivity issues, permission
-    ///   errors, or other server-side failures.
-    ///
-    /// - SeeAlso: ``appendToStream(_:events:configure:)``
-    @available(*, deprecated, renamed: "appendToStream")
-    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response{
-        return try await appendToStream(streamIdentifier, events: events, configure: configure)
-    }
-    
-    
     /// Appends multiple events to their respective streams in a single batch operation. (KurrentDB > 25.1)
     ///
     /// This convenience method targets the `$all` stream context and appends a collection
@@ -100,8 +74,8 @@ extension KurrentDBClient {
     ///   of batch append sessions for the `$all` stream. Check server-side configuration
     ///   and documentation for transactional behavior and concurrency semantics.
     @discardableResult
-    public func appendToStreams(_ streamEvents: [StreamEvent]) async throws -> Streams<MultiStreams>.AppendSession.Response {
-        return try await streams(of: .multiple).append(events: streamEvents)
+    public func appendToStreams(events: [StreamEvent]) async throws -> Streams<MultiStreams>.AppendSession.Response {
+        return try await streams(of: .multiple).append(events: events)
     }
 
     /// Reads all events from the `$all` stream starting from the specified position.
@@ -196,30 +170,78 @@ extension KurrentDBClient {
         try await streams(of: .specified(streamName)).getMetadata()
     }
 
-    /// Appends events to the specified stream using the stream name.
+    /// Appends multiple events to a specific stream identified by name.
+    ///
+    /// This method writes an array of `EventData` to the stream specified by `streamName`.
+    /// You can optionally configure append options such as expected revision for optimistic
+    /// concurrency control, credentials, and request deadlines using the `configure` closure.
     ///
     /// - Parameters:
-    ///   - streamName: The name of the stream to append events to.
-    ///   - events: The events to append to the stream.
-    ///   - configure: A closure to configure the append options. Defaults to no configuration.
-    /// - Returns: The response from appending the events to the stream.
-    /// - Throws: An error if the operation fails.
+    ///   - streamName: The name of the target stream to which events will be appended.
+    ///   - events: An array of `EventData` to append. Events are written in the order provided.
+    ///   - configure: An optional closure that receives the default `Streams<SpecifiedStream>.Append.Options`
+    ///     and returns a customized options instance. Use this to set the expected revision, provide
+    ///     specific credentials, adjust deadlines, or modify other append behaviors. Defaults to a
+    ///     pass-through closure that returns the options unchanged.
+    /// - Returns: A `Streams<SpecifiedStream>.Append.Response` containing the result of the append
+    ///   operation, including the next expected revision and the server-assigned log position when available.
+    /// - Throws: An error if the append fails due to:
+    ///   - Revision conflicts when using optimistic concurrency control
+    ///   - Permission or authentication issues
+    ///   - Network connectivity problems
+    ///   - Other server-side errors
+    ///
+    /// ## Discussion
+    ///
+    /// This is an asynchronous method that suspends execution while communicating with the server.
+    /// Always use `await` when calling from an async context.
+    ///
+    /// To enforce optimistic concurrency and prevent race conditions when multiple writers target
+    /// the same stream, configure the expected revision in the options closure:
+    ///
+    /// ```swift
+    /// let response = try await client.appendToStream("inventory-001", events: events) {
+    ///     $0.revision(expected: .streamExists)
+    /// }
+    /// ```
+    ///
+    /// - SeeAlso: `Streams<SpecifiedStream>.Append.Options`
+    /// - SeeAlso: `Streams<SpecifiedStream>.Append.Response`
+    /// - SeeAlso: `EventData`
     @discardableResult
-    public func appendStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendToStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).append(events: events, options: options)
     }
-
-    /// Appends events to the specified stream using the stream name, with variadic event input.
+    
+    /// Appends one or more events to a specific stream by name.
+    ///
+    /// This convenience overload accepts a variadic list of `EventData`, making it
+    /// ergonomic to append a handful of events without building an array explicitly.
+    /// The append is performed against the specified stream using the provided
+    /// configuration to control options such as expected revision (optimistic
+    /// concurrency), credentials, and deadlines.
     ///
     /// - Parameters:
-    ///   - streamName: The name of the stream to append events to.
-    ///   - events: The events to append to the stream, passed as variadic parameters.
-    ///   - configure: A closure to configure the append options. Defaults to no configuration.
-    /// - Returns: The response from appending the events to the stream.
-    /// - Throws: An error if the operation fails.
+    ///   - streamName: The name of the target stream to which the events will be appended.
+    ///   - events: A variadic list of `EventData` values to append in order.
+    ///   - configure: An optional closure that receives the default
+    ///     `Streams<SpecifiedStream>.Append.Options` and returns a customized options
+    ///     value (e.g., to set the expected revision, credentials, or deadline).
+    ///     Defaults to a no-op that returns the provided options unchanged.
+    /// - Returns: A `Streams<SpecifiedStream>.Append.Response` describing the result
+    ///   of the append, including the next expected revision and, when available,
+    ///   the server-assigned log position.
+    /// - Throws: An error if the append fails due to revision conflicts (e.g.,
+    ///   optimistic concurrency), permission issues, connectivity problems, or other
+    ///   server-side errors.
+    /// - Note: This method is `async` and may suspend while communicating with the server.
+    ///   Consider setting an expected revision in the options to enforce optimistic
+    ///   concurrency when multiple writers may target the same stream.
+    /// - SeeAlso: `Streams<SpecifiedStream>.Append.Options`, `Streams<SpecifiedStream>.Append.Response`,
+    ///   `appendToStream(_:events:configure:)` (array-based overload)
     @discardableResult
-    public func appendStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendToStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).append(events: events, options: options)
     }
@@ -231,6 +253,7 @@ extension KurrentDBClient {
     ///   - configure: A closure to configure the read options. Defaults to no configuration.
     /// - Returns: The responses containing the read events.
     /// - Throws: An error if the operation fails.
+    @available(*, deprecated, renamed: "appendToStream")
     public func readStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).read(options: options)

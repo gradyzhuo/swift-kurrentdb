@@ -45,8 +45,50 @@ public struct StreamEvent: Sendable {
         self.records = records
         self.expectedRevision = expectedRevision
     }
+    
+    
+    
+    public init(stream streamName: String, records: [EventRecord], expectedRevision: StreamRevision = .any) {
+        self.streamIdentifier = .init(name: streamName)
+        self.records = records
+        self.expectedRevision = expectedRevision
+    }
+    
+    
 }
 
 
+extension StreamEvent {
+    
+    public init(stream streamIdentifier: StreamIdentifier, records: EventRecord..., expectedRevision: StreamRevision = .any) {
+        self.streamIdentifier = streamIdentifier
+        self.records = records
+        self.expectedRevision = expectedRevision
+    }
+    
+    public init(stream streamName: String, records: EventRecord..., expectedRevision: StreamRevision = .any) {
+        self.streamIdentifier = .init(name: streamName)
+        self.records = records
+        self.expectedRevision = expectedRevision
+    }
+}
 
+extension StreamEvent {
+    
+    public init(stream streamIdentifier: StreamIdentifier, eventData: EventData..., expectedRevision: StreamRevision = .any) throws {
+        self.streamIdentifier = streamIdentifier
+        self.records = try eventData.map{
+            try .init(eventData: $0)
+        }
+        self.expectedRevision = expectedRevision
+    }
+    
+    public init(stream streamName: String, eventData: EventData..., expectedRevision: StreamRevision = .any) throws {
+        self.streamIdentifier = .init(name: streamName)
+        self.records = try eventData.map{
+            try .init(eventData: $0)
+        }
+        self.expectedRevision = expectedRevision
+    }
+}
 
