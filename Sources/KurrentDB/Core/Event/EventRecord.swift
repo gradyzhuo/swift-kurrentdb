@@ -113,7 +113,7 @@ extension EventRecord {
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data? = nil) throws {
         let schema = Schema(format: payload.format, name: eventType)
         let properties = try customMetadata.flatMap{
-            try JSONSerialization.jsonObject(with: $0, options: .topLevelDictionaryAssumed) as? [String: Codable & Sendable]
+            try JSONSerialization.jsonObject(with: $0) as? [String: Codable & Sendable]
         } ?? [:]
         try self.init(id: id, data: payload.data, schema: schema, properties: properties)
     }

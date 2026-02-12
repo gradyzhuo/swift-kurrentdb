@@ -297,12 +297,3 @@ extension KurrentDBClient {
         return try await streams(of: .specified(streamName)).tombstone(options: options)
     }
 }
-
-
-extension KurrentDBClient {
-    
-    public func listStreams(category: String?){
-        streams(of: .specified("$"))
-    }
-    
-}
