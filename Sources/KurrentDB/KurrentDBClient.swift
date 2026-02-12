@@ -67,21 +67,21 @@ extension KurrentDBClient {
     /// Creates a projections interface for the given projection mode across every projection.
     ///
     /// - Parameter mode: The desired projection mode (continuous, transient, etc.).
-    package func projections<Mode: ProjectionMode>(all mode: Mode) -> Projections<AllProjectionTarget<Mode>> {
-        .init(target: .init(mode: mode), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+    package func projections() -> Projections<AnyTarget> {
+        .init(target: .init(), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
-
-    /// Creates a projections interface scoped to a named projection.
+    
+    /// Creates a projections interface for the given projection mode across every projection.
     ///
-    /// - Parameter name: The projection identifier.
-    package func projections(name: String) -> Projections<String> {
-        .init(target: name, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+    /// - Parameter mode: The desired projection mode (continuous, transient, etc.).
+    package func projections<Target: ProjectionTarget>(of target: Target) -> Projections<Target> {
+        .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 
     /// Creates a projections interface aimed at a predefined system projection.
     ///
     /// - Parameter predefined: The predefined system projection target, such as `$by_category`.
-    package func projections(system predefined: SystemProjectionTarget.Predefined) -> Projections<SystemProjectionTarget> {
+    package func projections(system predefined: NameTarget.Predefined) -> Projections<NameTarget> {
         .init(target: .init(predefined: predefined), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 

@@ -25,6 +25,8 @@ public actor Projections<Target: ProjectionTarget>: GRPCConcreteService {
     var callOptions: CallOptions
     let eventLoopGroup: EventLoopGroup
     private(set) var target: Target
+    
+    package let serviceName: String = "event_store.client.projections.projections"
 
     /// Initializes a new `Projections` instance with the specified target and settings.
     ///
@@ -41,79 +43,25 @@ public actor Projections<Target: ProjectionTarget>: GRPCConcreteService {
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionCreatable {
-    /// Creates a continuous projection with the specified query and options.
-    ///
-    /// - Parameters:
-    ///   - query: The query string defining the projection.
-    ///   - options: The options for creating the projection. Defaults to an empty configuration.
-    /// - Throws: An error if the creation process fails.
-    public func createContinuous(query: String, options: ContinuousCreate.Options = .init()) async throws(KurrentError) {
-        let usecase = ContinuousCreate(name: target.name, query: query, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
-    }
-}
-
-extension Projections where Target: NameSpecifiable {
-    /// The name of the projection target.
-    var name: String {
-        target.name
-    }
-}
-
-extension Projections where Target == AllProjectionTarget<ContinuousMode> {
-    /// Retrieves a list of all continuous projection statistics.
-    ///
-    /// - Returns: An array of `Statistics.Detail` containing projection statistics.
-    /// - Throws: An error if the operation fails.
-    public func list() async throws(KurrentError) -> [Statistics.Detail] {
-        let usecase = Statistics(options: .listAll(mode: target.mode.mode))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do {
-            return try await response.reduce(into: .init()) { partialResult, response in
-                partialResult.append(response.detail)
-            }
-        } catch {
-            throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
-        }
-    }
-}
-
-extension Projections where Target == AllProjectionTarget<AnyMode> {
-    /// Retrieves a list of all projection statistics for any mode.
-    ///
-    /// - Returns: An array of `Statistics.Detail` containing projection statistics.
-    /// - Throws: An error if the operation fails.
-    public func list() async throws(KurrentError) -> [Statistics.Detail] {
-        let usecase = Statistics(options: .listAll(mode: target.mode.mode))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do {
-            return try await response.reduce(into: .init()) { partialResult, response in
-                partialResult.append(response.detail)
-            }
-        } catch {
-            throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
-        }
-    }
-}
-
-extension Projections where Target: NameSpecifiable & ProjectionEnable {
+//MARK: - enable
+extension Projections where Target == NameTarget {
     /// Enables the projection.
     ///
     /// - Throws: An error if enabling the projection fails.
     public func enable() async throws(KurrentError) {
-        let usecase = Enable(name: name, options: .init())
+        let usecase = Enable(name: target.name, options: .init())
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionDisable {
+//MARK: - disable / abort
+extension Projections where Target == NameTarget {
     /// Disables the projection and writes a checkpoint.
     ///
     /// - Throws: An error if disabling the projection fails.
     public func disable() async throws(KurrentError) {
         let options = Disable.Options().writeCheckpoint(enabled: true)
-        let usecase = Disable(name: name, options: options)
+        let usecase = Disable(name: target.name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
@@ -122,33 +70,36 @@ extension Projections where Target: NameSpecifiable & ProjectionDisable {
     /// - Throws: An error if aborting the projection fails.
     public func abort() async throws(KurrentError) {
         let options = Disable.Options().writeCheckpoint(enabled: false)
-        let usecase = Disable(name: name, options: options)
+        let usecase = Disable(name: target.name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionResetable {
+//MARK: - reset
+extension Projections where Target == NameTarget {
     /// Resets the projection to its initial state.
     ///
     /// - Throws: An error if resetting the projection fails.
     public func reset() async throws(KurrentError) {
-        let usecase = Reset(name: name, options: .init())
+        let usecase = Reset(name: target.name, options: .init())
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionDeletable {
+//MARK: - delete
+extension Projections where Target == NameTarget {
     /// Deletes the projection with the specified options.
     ///
     /// - Parameter options: The options for deleting the projection. Defaults to an empty configuration.
     /// - Throws: An error if deletion fails.
     public func delete(options: Delete.Options = .init()) async throws(KurrentError) {
-        let usecase = Delete(name: name, options: options)
+        let usecase = Delete(name: target.name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionUpdatable {
+//MARK: - update
+extension Projections where Target == NameTarget {
     /// Updates the projection with an optional query and options.
     ///
     /// - Parameters:
@@ -156,18 +107,19 @@ extension Projections where Target: NameSpecifiable & ProjectionUpdatable {
     ///   - options: The options for updating the projection. Defaults to an empty configuration.
     /// - Throws: An error if updating fails.
     public func update(query: String?, options: Update.Options = .init()) async throws(KurrentError) {
-        let usecase = Update(name: name, query: query, options: options)
+        let usecase = Update(name: target.name, query: query, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionDescribable {
+//MARK: - detail
+extension Projections where Target == NameTarget {
     /// Retrieves detailed statistics for the projection.
     ///
     /// - Returns: An optional `Statistics.Detail` containing the projection's details, or `nil` if none exist.
     /// - Throws: An error if retrieving details fails.
     public func detail() async throws(KurrentError) -> Statistics.Detail? {
-        let usecase = Statistics(options: .specified(name: name))
+        let usecase = Statistics(options: .specified(name: target.name))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {
             let result = try await response.first { _ in true }
@@ -178,7 +130,8 @@ extension Projections where Target: NameSpecifiable & ProjectionDescribable {
     }
 }
 
-extension Projections where Target: NameSpecifiable & ProjectionResulable {
+//MARK: - get result / state
+extension Projections where Target == NameTarget {
     /// Retrieves the result of the projection decoded to a specified type.
     ///
     /// - Parameters:
@@ -187,7 +140,7 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
     /// - Returns: An optional decoded result of type `DecodeType`, or `nil` if decoding fails.
     /// - Throws: An error if the operation or decoding fails.
     public func result<DecodeType: Decodable>(of _: DecodeType.Type, options: Result.Options = .init()) async throws(KurrentError) -> DecodeType? {
-        let usecase = Result(name: name, options: options)
+        let usecase = Result(name: target.name, options: options)
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {
             return try response.decode(to: DecodeType.self)
@@ -207,7 +160,7 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
     /// - Throws: An error if the operation or decoding fails.
     public func state<DecodeType: Decodable>(of _: DecodeType.Type, options: State.Options = .init()) async throws(KurrentError) -> DecodeType? {
         do {
-            let usecase = State(name: name, options: options)
+            let usecase = State(name: target.name, options: options)
             let response = try await usecase.perform(selector: selector, callOptions: callOptions)
             return try response.decode(to: DecodeType.self)
         } catch let error as KurrentError {
@@ -216,6 +169,43 @@ extension Projections where Target: NameSpecifiable & ProjectionResulable {
             throw .decodingError(cause: error)
         } catch {
             throw .internalClientError(reason: "Decoding state failed, cause: \(error)")
+        }
+    }
+}
+
+extension Projections{
+    /// Retrieves a list of all continuous projection statistics.
+    ///
+    /// - Returns: An array of `Statistics.Detail` containing projection statistics.
+    /// - Throws: An error if the operation fails.
+    public func list(mode: Projection.Mode) async throws(KurrentError) -> [Statistics.Detail] {
+        let usecase = Statistics(options: .listAll(mode: mode))
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+        do {
+            return try await response.reduce(into: .init()) { partialResult, response in
+                partialResult.append(response.detail)
+            }
+        } catch {
+            throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
+        }
+    }
+}
+
+
+extension Projections {
+    /// Retrieves a list of all projection statistics for any mode.
+    ///
+    /// - Returns: An array of `Statistics.Detail` containing projection statistics.
+    /// - Throws: An error if the operation fails.
+    public func list<Mode: ProjectionMode>(for mode: Mode) async throws(KurrentError) -> [Statistics.Detail] {
+        let usecase = Statistics(options: .listAll(mode: mode.mode))
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+        do {
+            return try await response.reduce(into: .init()) { partialResult, response in
+                partialResult.append(response.detail)
+            }
+        } catch {
+            throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
         }
     }
 }

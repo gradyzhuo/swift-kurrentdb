@@ -15,6 +15,12 @@ extension Operations {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.RestartPersistentSubscriptions.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.RestartPersistentSubscriptions.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Operations.\(Self.self)"

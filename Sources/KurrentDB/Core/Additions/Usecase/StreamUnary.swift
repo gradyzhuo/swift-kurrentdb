@@ -20,6 +20,9 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
     }
 
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        guard node.serverInfo.isSupported(method: methodDescriptor) else {
+            throw .unsupportedFeature(methodDescriptor)
+        }
         let client = try node.makeClient()
         let metadata = Metadata(from: node.settings)
         return try await perform(client: client, metadata: metadata, callOptions: callOptions)

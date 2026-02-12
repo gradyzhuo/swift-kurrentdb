@@ -15,7 +15,13 @@ extension Users {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Update.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Users.\(Self.self)"
@@ -50,7 +56,7 @@ extension Users {
 }
 
 extension Users.Update {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public fileprivate(set) var fullName: String?

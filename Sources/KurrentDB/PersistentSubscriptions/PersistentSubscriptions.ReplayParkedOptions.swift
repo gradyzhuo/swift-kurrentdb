@@ -8,7 +8,7 @@
 import GRPCEncapsulates
 
 extension PersistentSubscriptions {
-    public struct ReplayParkedOptions: EventStoreOptions {
+    public struct ReplayParkedOptions: CommandOptions {
         public enum StopAtOption {
             case position(position: Int64)
             case noLimit

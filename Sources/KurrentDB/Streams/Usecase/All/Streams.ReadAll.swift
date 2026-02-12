@@ -15,7 +15,13 @@ extension Streams where Target == AllStreams {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = ReadResponse
         public typealias Responses = AsyncThrowingStream<Response, Error>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Read.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Streams.\(Self.self)"
@@ -79,7 +85,7 @@ extension Streams.ReadAll where Target == AllStreams {
 }
 
 extension Streams.ReadAll {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var position: PositionCursor

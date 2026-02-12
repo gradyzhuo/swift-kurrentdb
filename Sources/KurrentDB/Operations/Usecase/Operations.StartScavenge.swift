@@ -15,6 +15,12 @@ extension Operations {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.StartScavenge.Output
         public typealias Response = ScavengeResponse
 
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.StartScavenge.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Operations.\(Self.self)"

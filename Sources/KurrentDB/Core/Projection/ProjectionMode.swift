@@ -17,11 +17,21 @@ public protocol ProjectionMode: Sendable {
 }
 
 /// A mode indicating a continuous projection.
-///
-/// `ContinuousMode` represents a projection that runs continuously, processing events as they occur.
 public struct ContinuousMode: ProjectionMode {
     /// The mode of the projection, fixed to `.continuous`.
     public let mode: Projection.Mode = .continuous
+}
+
+/// A mode indicating a onetime projection.
+public struct OneTimeMode: ProjectionMode {
+    /// The mode of the projection, fixed to `.continuous`.
+    public let mode: Projection.Mode = .oneTime
+}
+
+/// A mode indicating a transient projection.
+public struct TransientMode: ProjectionMode {
+    /// The mode of the projection, fixed to `.continuous`.
+    public let mode: Projection.Mode = .transient
 }
 
 /// A mode indicating any projection type.
@@ -36,6 +46,22 @@ public struct AnyMode: ProjectionMode {
 extension ProjectionMode where Self == ContinuousMode {
     /// A static instance of `ContinuousMode`.
     public static var continuous: Self {
+        .init()
+    }
+}
+
+/// Provides a static property for creating a `OneTimeMode` instance.
+extension ProjectionMode where Self == OneTimeMode {
+    /// A static instance of `ContinuousMode`.
+    public static var oneTime: Self {
+        .init()
+    }
+}
+
+/// Provides a static property for creating a `TransientMode` instance.
+extension ProjectionMode where Self == TransientMode {
+    /// A static instance of `ContinuousMode`.
+    public static var transient: Self {
         .init()
     }
 }

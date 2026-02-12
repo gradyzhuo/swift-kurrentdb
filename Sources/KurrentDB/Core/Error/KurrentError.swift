@@ -25,7 +25,7 @@ public enum KurrentError: Error, Sendable {
     case resourceNotFound(reason: String)
     case resourceDeleted
     case unservicableEventLink(link: RecordedEvent)
-    case unsupportedFeature
+    case unsupportedFeature(GRPCCore.MethodDescriptor)
     case internalClientError(reason: String)
     case deadlineExceeded
     case initializationError(reason: String)
@@ -69,8 +69,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "The resource you asked for was deleted"
         case let .unservicableEventLink(link):
             "The linked event \(link.id) you asked is unservicable, may be because it was deleted."
-        case .unsupportedFeature:
-            "The operation is unsupported by the server"
+        case let .unsupportedFeature(methodDescriptor):
+            "The operation \(methodDescriptor.fullyQualifiedMethod) is unsupported by the server."
         case let .internalClientError(reason):
             "Unexpected internal client error. Please fill an issue on GitHub. reason: \(reason)"
         case .deadlineExceeded:

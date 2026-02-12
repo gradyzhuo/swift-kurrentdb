@@ -15,7 +15,13 @@ extension Projections {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Result.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Result.Output
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Result.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Projections.\(Self.self)"
@@ -62,7 +68,7 @@ extension Projections.Result {
         }
     }
 
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var partition: String?

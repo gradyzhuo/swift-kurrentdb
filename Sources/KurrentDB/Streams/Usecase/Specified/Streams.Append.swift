@@ -12,7 +12,13 @@ extension Streams {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Append.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Streams.\(Self.self)"
@@ -116,7 +122,7 @@ extension Streams.Append {
 }
 
 extension Streams.Append {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public fileprivate(set) var expectedRevision: StreamRevision

@@ -15,7 +15,13 @@ extension Users {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Create.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Users.\(Self.self)"

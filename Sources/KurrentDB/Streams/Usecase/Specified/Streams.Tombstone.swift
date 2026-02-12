@@ -13,7 +13,13 @@ extension Streams {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Tombstone.Output
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Tombstone.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Streams.\(Self.self)"
@@ -65,7 +71,7 @@ extension Streams.Tombstone {
 }
 
 extension Streams.Tombstone {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var expectedRevision: StreamRevision

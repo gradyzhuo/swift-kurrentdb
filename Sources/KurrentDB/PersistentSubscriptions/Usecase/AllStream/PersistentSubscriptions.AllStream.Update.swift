@@ -14,7 +14,13 @@ extension PersistentSubscriptions.AllStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Update.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "PersistentSubscriptions.\(Self.self)"
@@ -56,7 +62,7 @@ extension PersistentSubscriptions.AllStream {
 }
 
 extension PersistentSubscriptions.AllStream.Update {
-    public struct Options: EventStoreOptions, PersistentSubscriptionsSettingsBuildable {
+    public struct Options: CommandOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.UpdateSettings

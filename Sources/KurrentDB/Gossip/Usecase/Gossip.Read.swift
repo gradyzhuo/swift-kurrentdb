@@ -16,7 +16,13 @@ extension Gossip {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = [MemberInfo]
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Read.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Gossip.\(Self.self)"

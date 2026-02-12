@@ -26,6 +26,9 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
     }
 
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        guard node.serverInfo.isSupported(method: methodDescriptor) else {
+            throw .unsupportedFeature(methodDescriptor)
+        }
         let client = try node.makeClient()
         return try await perform(client: client, metadata: Metadata(from: node.settings), callOptions: callOptions)
     }

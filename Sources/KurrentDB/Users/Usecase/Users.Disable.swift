@@ -16,7 +16,13 @@ extension Users {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Disable.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Disable.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Disable.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Users.\(Self.self)"

@@ -15,7 +15,13 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Update.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Projections.\(Self.self)"
@@ -66,7 +72,7 @@ extension Projections.Update {
         case enable(Bool)
     }
 
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var emitOption: EmitOption

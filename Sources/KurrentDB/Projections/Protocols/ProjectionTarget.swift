@@ -13,20 +13,7 @@
 /// - Note: Implementations include `SystemProjectionTarget`, `String`, and `AllProjectionTarget`.
 public protocol ProjectionTarget: Sendable {}
 
-/// A protocol for projection targets that have a specific name.
-///
-/// Conforming types must provide a `name` property to identify the projection.
-public protocol NameSpecifiable {
-    /// The name of the projection target.
-    var name: String { get }
-}
-
-/// A predefined system projection target in an EventStore system.
-///
-/// `SystemProjectionTarget` represents built-in projections provided by EventStore, such as `$by_category`
-/// or `$streams`. It supports enabling, disabling, resetting, describing, and retrieving results.
-public struct SystemProjectionTarget: ProjectionTarget, NameSpecifiable, ProjectionEnable, ProjectionDisable, ProjectionResetable, ProjectionDescribable, ProjectionResulable {
-    /// Predefined system projection types supported by EventStore.
+public struct NameTarget: ProjectionTarget {
     public enum Predefined: String, Sendable {
         /// Represents the `$by_category` system projection.
         case byCategory = "$by_category"
@@ -39,47 +26,26 @@ public struct SystemProjectionTarget: ProjectionTarget, NameSpecifiable, Project
         /// Represents the `$streams` system projection.
         case streams = "$streams"
     }
-
-    /// The predefined system projection type.
-    private(set) var predefined: Predefined
-
-    /// The name of the system projection.
-    public var name: String {
-        predefined.rawValue
+    
+    public let name: String
+    
+    public init(name: String){
+        self.name = name
+    }
+    
+    public init(predefined: Predefined){
+        self.name = predefined.rawValue
     }
 
-    /// Initializes a `SystemProjectionTarget` with a predefined system projection.
-    ///
-    /// - Parameter predefined: The predefined system projection type (e.g., `.byCategory`).
-    init(predefined: Predefined) {
-        self.predefined = predefined
-    }
 }
 
-/// Extends `String` to act as a custom projection target.
-///
-/// When used as a `String`, it represents a user-defined projection name and supports operations
-/// like creation, updating, deletion, enabling, disabling, resetting, describing, and retrieving results.
-extension String: ProjectionCreatable, ProjectionTarget, NameSpecifiable, ProjectionEnable, ProjectionDisable, ProjectionResetable, ProjectionDescribable, ProjectionResulable, ProjectionUpdatable, ProjectionDeletable {
-    /// The name of the projection, represented by the string value.
-    public var name: String {
-        self
-    }
-}
 
-/// A protocol for projection targets that apply to all projections with a specific mode.
+/// A generic target representing all projections.
 ///
-/// Conforming types must specify an associated `Mode` that conforms to `ProjectionTargetMode`.
-public protocol AllProjectionTargetProtocol {
-    /// The mode type associated with the projection target.
-    associatedtype Mode: ProjectionMode
-}
-
-/// A generic target representing all projections with a specific mode.
-///
-/// `AllProjectionTarget` is used to perform operations on all projections, with the behavior determined
-/// by the associated `Mode` type conforming to `ProjectionTargetMode`.
-public struct AllProjectionTarget<Mode: ProjectionMode>: ProjectionTarget, AllProjectionTargetProtocol {
+/// `AnyTarget` is used to perform operations on all projections, with the behavior determined
+public struct AnyTarget: ProjectionTarget {
     /// The mode defining the behavior of the all-projection target.
-    let mode: Mode
+
 }
+
+

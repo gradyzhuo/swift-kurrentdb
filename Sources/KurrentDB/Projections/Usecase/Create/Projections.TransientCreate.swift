@@ -1,8 +1,8 @@
 //
-//  Projections.Enable.swift
+//  Projections.ContinuousCreate.swift
 //  KurrentProjections
 //
-//  Created by Grady Zhuo on 2023/11/27.
+//  Created by Grady Zhuo on 2023/11/22.
 //
 
 import Foundation
@@ -10,15 +10,15 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Projections {
-    public struct Enable: UnaryUnary {
+    public struct TransientCreate: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
-        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
-        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Enable.Output
+        package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
+        package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
         package var methodDescriptor: GRPCCore.MethodDescriptor{
             get{
-                ServiceClient.UnderlyingService.Method.Enable.descriptor
+                ServiceClient.UnderlyingService.Method.Create.descriptor
             }
         }
 
@@ -29,41 +29,33 @@ extension Projections {
         }
         
         public let name: String
-        public let options: Options
+        public let query: String
 
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
-                $0.options = options.build()
-                $0.options.name = name
+                $0.options = .with{
+                    $0.transient = .with{
+                        $0.name = name
+                    }
+                    $0.query = query
+                }
             }
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws(KurrentError) -> Response {
             let client = ServiceClient(wrapping: connection)
             do {
-                return try await client.enable(request: request, options: callOptions) {
+                return try await client.create(request: request, options: callOptions) {
                     try handle(response: $0)
                 }
             } catch let error as RPCError {
-                if error.message.contains("NotFound") {
-                    throw .resourceNotFound(reason: "Projection \(name) not found.")
+                if error.message.contains("Conflict") {
+                    throw KurrentError.resourceAlreadyExists
                 }
                 throw .grpcError(cause: error)
             } catch {
-                throw .serverError("Unknown error occurred, cause: \(error)")
+                throw .serverError("unexpected error, cause: \(error)")
             }
-        }
-    }
-}
-
-extension Projections.Enable {
-    public struct Options: CommandOptions {
-        package typealias UnderlyingMessage = UnderlyingRequest.Options
-
-        public init() {}
-
-        package func build() -> UnderlyingMessage {
-            .init()
         }
     }
 }

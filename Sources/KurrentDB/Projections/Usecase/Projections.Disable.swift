@@ -15,7 +15,13 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Disable.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Disable.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Disable.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Projections.\(Self.self)"
@@ -51,7 +57,7 @@ extension Projections {
 }
 
 extension Projections.Disable {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         var writeCheckpoint: Bool

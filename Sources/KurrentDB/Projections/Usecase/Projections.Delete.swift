@@ -15,7 +15,13 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Delete.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Projections.\(Self.self)"
@@ -57,45 +63,45 @@ extension Projections {
 }
 
 extension Projections.Delete {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var deleteCheckpointStream: Bool
-        public private(set) var deleteEmittedStreams: Bool
-        public private(set) var deleteStateStream: Bool
+        private var _deleteCheckpointStream: Bool
+        private var _deleteEmittedStreams: Bool
+        private var _deleteStateStream: Bool
 
         public init() {
-            deleteCheckpointStream = false
-            deleteEmittedStreams = false
-            deleteStateStream = false
+            _deleteCheckpointStream = false
+            _deleteEmittedStreams = false
+            _deleteStateStream = false
         }
 
         package func build() -> UnderlyingMessage {
-            .with { message in
-                message.deleteStateStream = deleteStateStream
-                message.deleteEmittedStreams = deleteEmittedStreams
-                message.deleteCheckpointStream = deleteCheckpointStream
+            .with {
+                $0.deleteStateStream = _deleteStateStream
+                $0.deleteEmittedStreams = _deleteEmittedStreams
+                $0.deleteCheckpointStream = _deleteCheckpointStream
             }
         }
 
         @discardableResult
-        public func delete(emittedStreams enabled: Bool) -> Self {
+        public func deleteEmittedStreams() -> Self {
             withCopy { options in
-                options.deleteEmittedStreams = enabled
+                options._deleteEmittedStreams = true
             }
         }
 
         @discardableResult
-        public func delete(stateStream enabled: Bool) -> Self {
+        public func deleteStateStream() -> Self {
             withCopy { options in
-                options.deleteStateStream = enabled
+                options._deleteStateStream = true
             }
         }
 
         @discardableResult
-        public func delete(checkpointStream enabled: Bool) -> Self {
+        public func deleteCheckpointStream() -> Self {
             withCopy { options in
-                options.deleteCheckpointStream = enabled
+                options._deleteCheckpointStream = true
             }
         }
     }

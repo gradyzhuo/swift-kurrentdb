@@ -15,7 +15,13 @@ extension Streams where Target: SpecifiedStreamTarget {
         package typealias UnderlyingRequest = Read.UnderlyingRequest
         package typealias UnderlyingResponse = Read.UnderlyingResponse
         public typealias Responses = Subscription
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Read.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Streams.\(Self.self)"
@@ -131,14 +137,14 @@ extension Streams.Subscribe {
                 let streamName = String(data: errorMessage.streamIdentifier.streamName, encoding: .utf8) ?? ""
                 throw KurrentError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
             default:
-                throw KurrentError.unsupportedFeature
+                throw KurrentError.internalParsingError(reason: "The content of the ReadEvent, should be either 'confirmation', 'event', 'firstStreamPosition', 'lastStreamPosition', or 'lastAllStreamPosition'.")
             }
         }
     }
 }
 
 extension Streams.Subscribe {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         package private(set) var resolveLinksEnabled: Bool

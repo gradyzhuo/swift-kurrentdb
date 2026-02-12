@@ -23,8 +23,8 @@ struct ProjectionsTests: Sendable {
         client = .init(settings: settings)
     }
 
-    @Test("Testing create a projection")
-    func createProjection() async throws {
+    @Test("Testing create a continuous projection")
+    func createContinuousProjection() async throws {
         let name = "test_countEvents_Create_\(UUID())"
         let js = """
         fromAll()
@@ -49,8 +49,32 @@ struct ProjectionsTests: Sendable {
 
         try await client.disableProjection(name: name)
         try await client.deleteProjection(name: name) {
-            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
+    }
+    
+    @Test("Testing create a onetime projection")
+    func createOneTimeProjection() async throws {
+        let originOneTimeProjections = try await client.listAllProjections(mode: .oneTime)
+        let js = """
+        fromAll()
+            .when({
+                $init: function() {
+                    return {
+                        count: 0
+                    };
+                },
+                $any: function(s, e) {
+                    s.count += 1;
+                }
+            })
+            .outputState();
+        """
+
+        try await client.createOneTimeProjection(query: js)
+
+        let projections = try await client.listAllProjections(mode: .oneTime)
+        #expect(projections.count == (originOneTimeProjections.count + 1))
     }
 
     @Test("Disable a projection")
@@ -64,7 +88,7 @@ struct ProjectionsTests: Sendable {
         #expect(details.status.contains(.stopped))
 
         try await client.deleteProjection(name: projectionName) {
-            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
     }
 
@@ -81,11 +105,11 @@ struct ProjectionsTests: Sendable {
         try await client.enableProjection(name: projectionName)
 
         let enabledDetails = try #require(await client.getProjectionDetail(name: projectionName))
-        #expect(enabledDetails.status == .running)
+        #expect(enabledDetails.status.contains(.running))
 
         try await client.disableProjection(name: projectionName)
         try await client.deleteProjection(name: projectionName) {
-            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
     }
 
@@ -102,16 +126,16 @@ struct ProjectionsTests: Sendable {
         try await client.resetProjection(name: projectionName)
 
         let enabledDetails = try #require(await client.getProjectionDetail(name: projectionName))
-        #expect(enabledDetails.status == .stopped)
+        #expect(enabledDetails.status.contains(.stopped))
 
         try await client.deleteProjection(name: projectionName) {
-            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
     }
 
     @Test("Get projection status for a system projection")
     func getStatusExample() async throws {
-        let detail = try #require(await client.getProjectionDetail(name: SystemProjectionTarget.Predefined.byCategory.rawValue))
+        let detail = try #require(await client.getProjectionDetail(name: NameTarget.Predefined.byCategory.rawValue))
         print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
     }
 
@@ -148,7 +172,7 @@ struct ProjectionsTests: Sendable {
         try await client.deleteStream(streamName)
         try await client.disableProjection(name: name)
         try await client.deleteProjection(name: name) {
-            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
     }
 
@@ -186,17 +210,16 @@ struct ProjectionsTests: Sendable {
         try await client.deleteStream(streamName)
         try await client.disableProjection(name: name)
         try await client.deleteProjection(name: name) {
-            $0.delete(checkpointStream: true).delete(stateStream: true).delete(emittedStreams: true)
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
     }
 
     @Test("Status parsing from string", arguments: [
-        ("Aborted/Stopped", Projection.Status([Projection.Status.aborted, Projection.Status.stopped])),
-        ("Stopped/Faulted", Projection.Status([Projection.Status.stopped, Projection.Status.faulted])),
-        ("Stopped", Projection.Status.stopped),
+        ("Aborted/Stopped", [Projection.Status.Name.aborted, Projection.Status.Name.stopped]),
+        ("Stopped/Faulted", [Projection.Status.Name.stopped, Projection.Status.Name.faulted]),
+        ("Stopped", [Projection.Status.Name.stopped]),
     ])
-    func multistatus(name: String, status _: Projection.Status) async throws {
-        let status = try #require(Projection.Status(name: name))
-        #expect(status.contains(status))
+    func multistatus(status: String, names: [Projection.Status.Name]) async throws {
+        #expect(Projection.Status(rawValue: status).contains(names))
     }
 }

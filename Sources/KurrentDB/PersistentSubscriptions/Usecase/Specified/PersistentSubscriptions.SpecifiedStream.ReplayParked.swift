@@ -14,7 +14,13 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.ReplayParked.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.ReplayParked.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.ReplayParked.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "PersistentSubscriptions.\(Self.self)"
@@ -53,7 +59,7 @@ extension PersistentSubscriptions.SpecifiedStream {
 }
 
 extension PersistentSubscriptions.SpecifiedStream.ReplayParked {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         public enum StopAtOption: Sendable {
             case position(position: Int64)
             case noLimit

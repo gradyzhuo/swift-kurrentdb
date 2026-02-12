@@ -14,7 +14,13 @@ extension Operations {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Shutdown.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Shutdown.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Shutdown.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Operations.\(Self.self)"

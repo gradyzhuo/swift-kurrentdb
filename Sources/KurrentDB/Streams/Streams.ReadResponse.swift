@@ -36,7 +36,7 @@ extension Streams {
                 let streamName = String(data: errorMessage.streamIdentifier.streamName, encoding: .utf8) ?? ""
                 throw KurrentError.resourceNotFound(reason: "The name '\(String(describing: streamName))' of streams not found.")
             default:
-                throw KurrentError.unsupportedFeature
+                throw KurrentError.internalParsingError(reason: "The content of the ReadEvent, should be .event or .streamNotFound.")
             }
         }
     }

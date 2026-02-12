@@ -15,7 +15,13 @@ extension PersistentSubscriptions.AllStream {
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Read.Output
         package typealias Response = PersistentSubscriptions.ReadResponse
         package typealias Responses = PersistentSubscriptions.Subscription
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Read.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "PersistentSubscriptions.\(Self.self)"
@@ -87,7 +93,7 @@ extension PersistentSubscriptions.AllStream {
 }
 
 extension PersistentSubscriptions.AllStream.Read {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var bufferSize: Int32

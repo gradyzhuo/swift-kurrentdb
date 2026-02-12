@@ -83,6 +83,15 @@ extension StreamTarget where Self == SpecifiedStream {
     }
 }
 
+// MARK: - MultiStreams
+public struct MultiStreams: StreamTarget {}
+extension StreamTarget where Self == MultiStreams{
+    public static var multiple: MultiStreams {
+        .init()
+    }
+}
+
+
 // MARK: - All Streams
 
 /// Represents a placeholder for all streams that conform to `StreamTarget`.

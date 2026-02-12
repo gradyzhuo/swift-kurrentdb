@@ -78,3 +78,17 @@ extension EventData {
         self.init(id: id, eventType: recordedEvent.eventType, data: recordedEvent.data, customMetadata: recordedEvent.customMetadata)
     }
 }
+
+
+
+extension EventRecord {
+    public convenience init(eventData: EventData) throws {
+        let payload: Payload = switch eventData.payload {
+        case let .data(data, contentType):
+            .data(data, contentType)
+        case let .json(model):
+            .json(model)
+        }
+        try self.init(id: eventData.id, eventType: eventData.eventType, payload: payload, customMetadata: eventData.customMetadata)
+    }
+}

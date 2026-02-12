@@ -11,6 +11,9 @@ import GRPCNIOTransportHTTP2Posix
 
 extension StreamStream where Transport == HTTP2ClientTransport.Posix {
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses {
+        guard node.serverInfo.isSupported(method: methodDescriptor) else {
+            throw .unsupportedFeature(methodDescriptor)
+        }
         let client = try node.makeClient()
         let metadata = Metadata(from: node.settings)
         return try await perform(client: client, metadata: metadata, callOptions: callOptions)
@@ -28,6 +31,7 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
     }
 
     package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws(KurrentError) -> Responses {
+        
         Task {
             logger.debug("[\(Self.name)] Opening connection...")
             try await client.runConnections()

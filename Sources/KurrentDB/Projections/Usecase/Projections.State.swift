@@ -16,6 +16,12 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.State.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.State.Output
         
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.State.descriptor
+            }
+        }
+        
         package static var name: String{
             get{
                 "Projections.\(Self.self)"
@@ -67,7 +73,7 @@ extension Projections.State {
         }
     }
 
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var partition: String?

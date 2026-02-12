@@ -13,7 +13,13 @@ extension Streams {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.Delete.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "Streams.\(Self.self)"
@@ -64,7 +70,7 @@ extension Streams.Delete {
 }
 
 extension Streams.Delete {
-    public struct Options: EventStoreOptions {
+    public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public private(set) var expectedRevision: StreamRevision

@@ -15,7 +15,13 @@ extension ServerFeatures {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.GetSupportedMethods.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.GetSupportedMethods.Output
         public typealias Response = ServiceInfo
-        
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor{
+            get{
+                ServiceClient.UnderlyingService.Method.GetSupportedMethods.descriptor
+            }
+        }
+
         package static var name: String{
             get{
                 "ServerFeatures.\(Self.self)"

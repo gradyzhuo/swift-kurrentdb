@@ -18,6 +18,6 @@ extension Buildable {
     }
 }
 
-package protocol EventStoreOptions: GRPCBridge, Buildable {
+package protocol CommandOptions: GRPCBridge, Buildable {
     func build() throws -> UnderlyingMessage
 }

@@ -16,8 +16,13 @@ public protocol GRPCServiceClient {
     init(wrapping: GRPCClient<Transport>)
 }
 
+
 extension EventStore_Client_Streams_Streams.Client: GRPCServiceClient {
     package typealias UnderlyingService = EventStore_Client_Streams_Streams
+}
+
+extension Kurrentdb_Protocol_V2_Streams_StreamsService.Client: GRPCServiceClient{
+    package typealias UnderlyingService = Kurrentdb_Protocol_V2_Streams_StreamsService
 }
 
 extension EventStore_Client_Users_Users.Client: GRPCServiceClient {

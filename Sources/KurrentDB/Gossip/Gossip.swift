@@ -34,17 +34,4 @@ extension Gossip {
             partialResult.append(memberInfo)
         }
     }
-
-//    public func findAll()async throws(KurrentError) -> [MemberInfo]{
-//        if case let .gossipCluster(seeds, nodePreference, timeout, discoveryInterval, maxDiscoveryAttempts) = settings.clusterMode{
-//
-//        }
-//        try await withThrowingTaskGroup { group in
-//            group.addTask {
-//                return ""
-//            }
-//
-//            try await group.waitForAll()
-//        }
-//    }
 }
