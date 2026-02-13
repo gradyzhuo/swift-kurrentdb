@@ -9,14 +9,14 @@ extension KurrentDBClient {
     /// Creates a projections interface for the given projection mode across every projection.
     ///
     /// - Parameter mode: The desired projection mode (continuous, transient, etc.).
-    package func projections() -> Projections<AnyProjectionTarget> {
+    package func projections() -> Projections<AnyProjectionsTarget> {
         .init(target: .init(), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
     
     /// Creates a projections interface for the given projection mode across every projection.
     ///
     /// - Parameter mode: The desired projection mode (continuous, transient, etc.).
-    package func projections<Target: ProjectionTarget>(of target: Target) -> Projections<Target> {
+    package func projections<Target: ProjectionsTarget>(of target: Target) -> Projections<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 
@@ -30,7 +30,7 @@ extension KurrentDBClient {
 
 
 extension KurrentDBClient {
-    var anyProjection: Projections<AnyProjectionTarget>{
+    var anyProjection: Projections<AnyProjectionsTarget>{
         get{
             return projections(of: .any)
         }
@@ -187,7 +187,7 @@ extension KurrentDBClient {
     ///
     /// - Returns: An array of detailed statistics for all projections.
     /// - Throws: An error if listing fails.
-    public func listAllProjections<Mode: ProjectionMode>(mode: Mode) async throws -> [Projections<AnyProjectionTarget>.Statistics.Detail] {
+    public func listAllProjections<Mode: ProjectionMode>(mode: Mode) async throws -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
         try await projections().list(for: mode)
     }
 
@@ -195,7 +195,7 @@ extension KurrentDBClient {
     ///
     /// - Throws: An error if restarting fails.
     public func restartProjectionSubsystem() async throws(KurrentError) {
-        let usecase = Projections<AnyProjectionTarget>.RestartSubsystem()
+        let usecase = Projections<AnyProjectionsTarget>.RestartSubsystem()
         _ = try await usecase.perform(selector: selector, callOptions: defaultCallOptions)
     }
 }
