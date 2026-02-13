@@ -20,7 +20,7 @@ extension Streams {
     ///
     /// Subscribing to all streams and processing events:
     /// ```swift
-    /// let streams = Streams(target: StreamTarget.all, settings: .localhost())
+    /// let streams = Streams(target: StreamsTarget.all, settings: .localhost())
     /// let subscription = try await streams.subscribe(from: .start)
     /// for try await event in subscription.events {
     ///     print("Received event: \(event)")
