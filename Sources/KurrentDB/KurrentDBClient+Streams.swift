@@ -5,6 +5,34 @@
 //  Created by Grady Zhuo on 2025/5/23.
 //
 
+extension KurrentDBClient {
+    /// Creates a strongly typed streams facade for the given target kind (specified stream or `$all`).
+    ///
+    /// - Parameter target: The stream target to operate on.
+    /// - Returns: A `Streams` helper scoped to the target.
+    public func streams<Target: StreamsTarget>(of target: Target) -> Streams<Target> {
+        .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+    }
+}
+
+extension KurrentDBClient {
+    public func streams(specified name: String) -> Streams<SpecifiedStream> {
+        return streams(of: .specified(name))
+    }
+    
+    public var multiStreams: Streams<MultiStreams> {
+        get{
+            streams(of: .multiple)
+        }
+    }
+    
+    public var allStreams: Streams<AllStreams> {
+        get{
+            streams(of: .all)
+        }
+    }
+}
+
 /// Provides convenience methods for stream operations.
 extension KurrentDBClient {
     /// Sets the metadata for the specified stream.

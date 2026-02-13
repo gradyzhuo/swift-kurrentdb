@@ -1,5 +1,5 @@
 //
-//  StreamTarget.swift
+//  StreamsTarget.swift
 //  KurrentDB
 //
 //  Created by Grady Zhuo on 2025/3/6.
@@ -7,9 +7,9 @@
 
 import Foundation
 
-/// Represents a stream target that can be sent (`StreamTarget`).
+/// Represents a stream target that can be sent (`StreamsTarget`).
 ///
-/// `StreamTarget` is a protocol that allows concrete types (such as `SpecifiedStream` and `AllStreams`)
+/// `StreamsTarget` is a protocol that allows concrete types (such as `SpecifiedStream` and `AllStreams`)
 /// to be used as stream targets.
 ///
 /// ## Usage
@@ -18,9 +18,9 @@ import Foundation
 /// representing all available streams:
 ///
 /// ```swift
-/// let specificStream = StreamTarget.specified("log.txt") // Specify by name
-/// let specificStreamByIdentifier = StreamTarget.specified(StreamIdentifier(name: "log.txt", encoding: .utf8)) // Specify by identifier
-/// let allStreams = StreamTarget.all // Represents all streams
+/// let specificStream = StreamsTarget.specified("log.txt") // Specify by name
+/// let specificStreamByIdentifier = StreamsTarget.specified(StreamIdentifier(name: "log.txt", encoding: .utf8)) // Specify by identifier
+/// let allStreams = StreamsTarget.all // Represents all streams
 /// ```
 ///
 /// - Note: This protocol is marked as `Sendable`, ensuring it can be safely used across concurrency contexts.
@@ -30,26 +30,26 @@ import Foundation
 /// - ``SpecifiedStream``: Represents a specific stream and provides static methods for instantiation.
 /// - ``AllStreams``: Represents a placeholder for all streams.
 /// - ``AnyStreamTarget``: A generic stream target used when the type is not specified.
-public protocol StreamTarget: Sendable {}
+public protocol StreamsTarget: Sendable {}
 
-/// Represents a generic stream target that conforms to `StreamTarget`.
+/// Represents a generic stream target that conforms to `StreamsTarget`.
 ///
 /// `AnyStreamTarget` is used in generic contexts where a specific stream type is not required.
-public struct AnyStreamTarget: StreamTarget {}
+public struct AnyStreamTarget: StreamsTarget {}
 
 /// A protocol for stream targets that have a specific identifier.
 ///
 /// Conforming types must provide a `StreamIdentifier` to uniquely identify the stream.
-public protocol SpecifiedStreamTarget: StreamTarget {
+public protocol SpecifiedStreamTarget: StreamsTarget {
     /// The identifier for the stream.
     var identifier: StreamIdentifier { get }
 }
 
 // MARK: - Specified Stream
 
-/// Represents a specific stream that conforms to `StreamTarget`.
+/// Represents a specific stream that conforms to `StreamsTarget`.
 ///
-/// `SpecifiedStream` is identified by a `StreamIdentifier` and can be instantiated using `StreamTarget.specified`.
+/// `SpecifiedStream` is identified by a `StreamIdentifier` and can be instantiated using `StreamsTarget.specified`.
 public struct SpecifiedStream: SpecifiedStreamTarget {
     /// The identifier for the stream, represented as a `StreamIdentifier`.
     public private(set) var identifier: StreamIdentifier
@@ -63,7 +63,7 @@ public struct SpecifiedStream: SpecifiedStreamTarget {
 }
 
 /// Extension providing static methods to create `SpecifiedStream` instances.
-extension StreamTarget where Self == SpecifiedStream {
+extension StreamsTarget where Self == SpecifiedStream {
     /// Creates a `SpecifiedStream` using a `StreamIdentifier`.
     ///
     /// - Parameter identifier: The identifier for the stream.
@@ -84,8 +84,8 @@ extension StreamTarget where Self == SpecifiedStream {
 }
 
 // MARK: - MultiStreams
-public struct MultiStreams: StreamTarget {}
-extension StreamTarget where Self == MultiStreams{
+public struct MultiStreams: StreamsTarget {}
+extension StreamsTarget where Self == MultiStreams{
     public static var multiple: MultiStreams {
         .init()
     }
@@ -94,14 +94,14 @@ extension StreamTarget where Self == MultiStreams{
 
 // MARK: - All Streams
 
-/// Represents a placeholder for all streams that conform to `StreamTarget`.
+/// Represents a placeholder for all streams that conform to `StreamsTarget`.
 ///
 /// `AllStreams` is a type that represents all available stream targets
-/// and can be accessed using `StreamTarget.all`.
-public struct AllStreams: StreamTarget {}
+/// and can be accessed using `StreamsTarget.all`.
+public struct AllStreams: StreamsTarget {}
 
 /// Extension providing a static property to access an `AllStreams` instance.
-extension StreamTarget where Self == AllStreams {
+extension StreamsTarget where Self == AllStreams {
     /// Provides an instance representing all streams.
     ///
     /// - Returns: An `AllStreams` instance.
@@ -134,7 +134,7 @@ extension String: SpecifiedStreamTarget {
 
 // MARK: - Projection Stream
 
-/// Represents a projection stream that conforms to `StreamTarget`.
+/// Represents a projection stream that conforms to `StreamsTarget`.
 ///
 /// `ProjectionStream` is identified by a `StreamIdentifier` and can be instantiated using specific projection methods.
 public struct ProjectionStream: SpecifiedStreamTarget {
@@ -150,7 +150,7 @@ public struct ProjectionStream: SpecifiedStreamTarget {
 }
 
 /// Extension providing static methods to create `ProjectionStream` instances.
-extension StreamTarget where Self == ProjectionStream {
+extension StreamsTarget where Self == ProjectionStream {
     /// Creates a `ProjectionStream` based on an event type.
     ///
     /// - Parameter eventType: The event type to project, prefixed with "$et-".
