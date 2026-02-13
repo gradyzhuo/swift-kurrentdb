@@ -16,8 +16,8 @@ import NIO
 /// This struct provides methods to manage projections, such as creating, updating, deleting, and retrieving
 /// details or results, depending on the capabilities of the `Target` type.
 ///
-/// - Parameter Target: The type conforming to `ProjectionTarget` that defines the projection's behavior.
-public actor Projections<Target: ProjectionTarget>: GRPCConcreteService {
+/// - Parameter Target: The type conforming to `ProjectionsTarget` that defines the projection's behavior.
+public actor Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     /// The underlying gRPC client type used for communication.
     package typealias UnderlyingClient = EventStore_Client_Projections_Projections.Client<HTTP2ClientTransport.Posix>
 
@@ -44,7 +44,7 @@ public actor Projections<Target: ProjectionTarget>: GRPCConcreteService {
 }
 
 //MARK: - enable
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Enables the projection.
     ///
     /// - Throws: An error if enabling the projection fails.
@@ -55,7 +55,7 @@ extension Projections where Target == NameTarget {
 }
 
 //MARK: - disable / abort
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Disables the projection and writes a checkpoint.
     ///
     /// - Throws: An error if disabling the projection fails.
@@ -76,7 +76,7 @@ extension Projections where Target == NameTarget {
 }
 
 //MARK: - reset
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Resets the projection to its initial state.
     ///
     /// - Throws: An error if resetting the projection fails.
@@ -87,7 +87,7 @@ extension Projections where Target == NameTarget {
 }
 
 //MARK: - delete
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Deletes the projection with the specified options.
     ///
     /// - Parameter options: The options for deleting the projection. Defaults to an empty configuration.
@@ -99,7 +99,7 @@ extension Projections where Target == NameTarget {
 }
 
 //MARK: - update
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Updates the projection with an optional query and options.
     ///
     /// - Parameters:
@@ -113,7 +113,7 @@ extension Projections where Target == NameTarget {
 }
 
 //MARK: - detail
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Retrieves detailed statistics for the projection.
     ///
     /// - Returns: An optional `Statistics.Detail` containing the projection's details, or `nil` if none exist.
@@ -131,7 +131,7 @@ extension Projections where Target == NameTarget {
 }
 
 //MARK: - get result / state
-extension Projections where Target == NameTarget {
+extension Projections where Target: ProjectionControlable {
     /// Retrieves the result of the projection decoded to a specified type.
     ///
     /// - Parameters:
