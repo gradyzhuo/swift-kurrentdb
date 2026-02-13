@@ -24,13 +24,13 @@ import NIO
 ///
 /// Creating a client for a specified stream and appending events:
 /// ```swift
-/// let specifiedStream = Streams(target: StreamTarget.specified("log.txt"), settings: clientSettings)
+/// let specifiedStream = Streams(target: StreamsTarget.specified("log.txt"), settings: clientSettings)
 /// try await specifiedStream.append(events: [event])
 /// ```
 ///
 /// Reading from all streams:
 /// ```swift
-/// let allStreams = Streams(target: StreamTarget.all, settings: clientSettings)
+/// let allStreams = Streams(target: StreamsTarget.all, settings: clientSettings)
 /// let responses = try await allStreams.read(cursor: .start)
 /// for try await response in responses {
 ///     print(response)
@@ -55,7 +55,7 @@ import NIO
 /// #### All Streams Operations
 /// - ``read(cursor:options:)-6h8h2``
 /// - ``subscribe(from:options:)-9gq2e``
-public actor Streams<Target: StreamTarget>: GRPCConcreteService {
+public actor Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
 
