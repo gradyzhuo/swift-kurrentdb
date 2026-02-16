@@ -13,7 +13,8 @@
       "Bash(git reset:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(swiftformat:*)"
+      "Bash(swiftformat:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
