@@ -120,7 +120,7 @@ extension Users where Target: UserCreatable {
     /// - Throws: `KurrentError.alreadyExists` if a user with the login name already exists.
     ///   `KurrentError.accessDenied` if the caller lacks user creation permissions.
     ///   `KurrentError.invalidArgument` if the login name or password is invalid.
-    public func create(loginName: String, password: String, fullName: String, groups: [String]) async throws(KurrentError) -> UserDetails? {
+    public func create(loginName: String, password: String, fullName: String, groups: [UserGroup]) async throws(KurrentError) -> UserDetails? {
         let usecase = Create(loginName: loginName, password: password, fullName: fullName, groups: groups)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
 
@@ -148,7 +148,7 @@ extension Users where Target: UserCreatable {
     /// - Returns: The created user's details if successful, or `nil` if retrieval fails.
     ///
     /// - Throws: `KurrentError.alreadyExists`, `KurrentError.accessDenied`, `KurrentError.invalidArgument`
-    public func create(loginName: String, password: String, fullName: String, groups: String...) async throws(KurrentError) -> UserDetails? {
+    public func create(loginName: String, password: String, fullName: String, groups: UserGroup...) async throws(KurrentError) -> UserDetails? {
         try await create(loginName: loginName, password: password, fullName: fullName, groups: groups)
     }
 }

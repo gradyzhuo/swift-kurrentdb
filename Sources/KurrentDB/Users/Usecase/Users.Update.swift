@@ -56,7 +56,7 @@ extension Users.Update {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public fileprivate(set) var fullName: String?
-        public fileprivate(set) var groups: [String]?
+        public fileprivate(set) var groups: [UserGroup]?
 
         public init() {}
 
@@ -66,13 +66,13 @@ extension Users.Update {
             }
         }
 
-        public func add(groups: String...) -> Self {
+        public func add(groups: UserGroup...) -> Self {
             withCopy { options in
                 options.groups?.append(contentsOf: groups)
             }
         }
 
-        public func set(groups: String...) -> Self {
+        public func set(groups: UserGroup...) -> Self {
             withCopy { options in
                 options.groups = groups
             }
@@ -84,7 +84,7 @@ extension Users.Update {
                     $0.fullName = fullName
                 }
                 if let groups {
-                    $0.groups = groups
+                    $0.groups = groups.map(\.rawValue)
                 }
             }
         }

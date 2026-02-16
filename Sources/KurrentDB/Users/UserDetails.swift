@@ -30,7 +30,7 @@ public struct UserDetails: Sendable {
     public var fullName: String
 
     /// The list of groups the user belongs to.
-    public var groups: [String]
+    public var groups: [UserGroup]
 
     /// The last updated timestamp of the user’s details.
     public var lastUpdated: Date
@@ -46,7 +46,7 @@ public struct UserDetails: Sendable {
     ///   - groups: The groups the user belongs to.
     ///   - lastUpdated: The date when the user’s details were last updated.
     ///   - disabled: A flag indicating whether the user’s account is disabled.
-    public init(loginName: String, fullName: String, groups: [String], lastUpdated: Date, disabled: Bool) {
+    public init(loginName: String, fullName: String, groups: [UserGroup], lastUpdated: Date, disabled: Bool) {
         self.loginName = loginName
         self.fullName = fullName
         self.groups = groups
@@ -68,7 +68,7 @@ extension UserDetails {
         self.init(
             loginName: message.loginName,
             fullName: message.fullName,
-            groups: message.groups,
+            groups: message.groups.map { .init(rawValue: $0) },
             lastUpdated: .init(timeIntervalSince1970: .init(message.lastUpdated.ticksSinceEpoch)),
             disabled: message.disabled
         )
