@@ -302,6 +302,10 @@ print(result)
 |Version|This is used internally, the version is increased when the projection is edited or reset.|
 |Epoch|This is used internally, the epoch is increased when the projection is reset.|
 
+## Architecture
+
+For details on the target-based design of the Projections API, see <doc:ProjectionsTarget-design>.
+
 
 The Status string is a combination of the following values. The first 3 are the most common one, as the other one are transient values while the projection is initialised or stopped.
 |Value|Description|
