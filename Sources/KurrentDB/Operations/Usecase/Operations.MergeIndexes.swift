@@ -15,18 +15,14 @@ extension Operations {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.MergeIndexes.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.MergeIndexes.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.MergeIndexes.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Operations.\(Self.self)"
-            }
+        package static var name: String {
+            "Operations.\(Self.self)"
         }
-        
+
         public init() {}
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {

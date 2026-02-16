@@ -18,4 +18,3 @@ package protocol Usecase {
 
     var methodDescriptor: GRPCCore.MethodDescriptor { get }
 }
-

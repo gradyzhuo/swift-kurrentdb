@@ -16,18 +16,14 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Result.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Result.Output
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Result.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Result.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Projections.\(Self.self)"
-            }
+        package static var name: String {
+            "Projections.\(Self.self)"
         }
-        
+
         public let name: String
         public let options: Options
 

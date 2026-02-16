@@ -1,5 +1,5 @@
 //
-//  Projections.ContinuousCreate.swift
+//  Projections.TransientCreate.swift
 //  KurrentProjections
 //
 //  Created by Grady Zhuo on 2023/11/22.
@@ -16,25 +16,21 @@ extension Projections {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Create.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Create.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Projections.\(Self.self)"
-            }
+        package static var name: String {
+            "Projections.\(Self.self)"
         }
-        
+
         public let name: String
         public let query: String
 
         package func requestMessage() throws -> UnderlyingRequest {
             .with {
-                $0.options = .with{
-                    $0.transient = .with{
+                $0.options = .with {
+                    $0.transient = .with {
                         $0.name = name
                     }
                     $0.query = query

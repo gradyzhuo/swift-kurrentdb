@@ -12,224 +12,171 @@ package protocol GoogleProtobufValueProtocol {
 
 extension Bool: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(boolValue: self)
-        }
+        .init(boolValue: self)
     }
 }
 
 extension Int: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension Int8: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension Int16: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension Int32: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension Int64: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension Int128: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension UInt: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
-
 
 extension UInt8: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
-
 extension UInt16: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension UInt32: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension UInt64: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
 extension UInt128: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
-
-
 extension Double: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: self)
-        }
+        .init(numberValue: self)
     }
 }
 
 extension Float: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
-
 
 extension Float16: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(numberValue: Double(self))
-        }
+        .init(numberValue: Double(self))
     }
 }
 
-
-
 extension String: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(stringValue: self)
-        }
+        .init(stringValue: self)
     }
 }
 
 extension Optional: GoogleProtobufValueProtocol where Wrapped: GoogleProtobufValueProtocol {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return switch self {
-            case .none:
-                .init(nilLiteral: ())
-            case .some(let value):
-                value.protobufValue
-            }
+        switch self {
+        case .none:
+            .init(nilLiteral: ())
+        case let .some(value):
+            value.protobufValue
         }
     }
 }
 
 extension Array: GoogleProtobufValueProtocol where Element: Any {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            let values = self.map{
-                return switch $0{
-                case let stringValue as String:
-                    stringValue.protobufValue
-                case let doubleValue as Double:
-                    doubleValue.protobufValue
-                case let intValue as Int:
-                    intValue.protobufValue
-                case let floatValue as Float:
-                    floatValue.protobufValue
-                case let boolValue as Bool:
-                    boolValue.protobufValue
-                case let dictionaryValue as [String: Any]:
-                    dictionaryValue.protobufValue
-                case let arrayValue as [Any]:
-                    arrayValue.protobufValue
-                default:
-                    Google_Protobuf_Value.init(nilLiteral: ())
-                }
+        let values = map {
+            switch $0 {
+            case let stringValue as String:
+                stringValue.protobufValue
+            case let doubleValue as Double:
+                doubleValue.protobufValue
+            case let intValue as Int:
+                intValue.protobufValue
+            case let floatValue as Float:
+                floatValue.protobufValue
+            case let boolValue as Bool:
+                boolValue.protobufValue
+            case let dictionaryValue as [String: Any]:
+                dictionaryValue.protobufValue
+            case let arrayValue as [Any]:
+                arrayValue.protobufValue
+            default:
+                Google_Protobuf_Value(nilLiteral: ())
             }
-            return .init(listValue: .init(values: values))
         }
+        return .init(listValue: .init(values: values))
     }
 }
 
 extension Dictionary: GoogleProtobufValueProtocol where Key == String, Value: Any {
     package var protobufValue: Google_Protobuf_Value {
-        get {
-            return .init(structValue: structValue)
-        }
+        .init(structValue: structValue)
     }
-    
+
     package var structValue: Google_Protobuf_Struct {
-        get {
-            let items = self.map{
-                let value = switch $0.value{
-                case let stringValue as String:
-                    stringValue.protobufValue
-                case let doubleValue as Double:
-                    doubleValue.protobufValue
-                case let intValue as Int:
-                    intValue.protobufValue
-                case let floatValue as Float:
-                    floatValue.protobufValue
-                case let boolValue as Bool:
-                    boolValue.protobufValue
-                case let arrayValue as [Any]:
-                    arrayValue.protobufValue
-                case let dictionaryValue as [String: Any]:
-                    dictionaryValue.protobufValue
-                default:
-                    Google_Protobuf_Value.init(nilLiteral: ())
-                }
-                return ($0.key, value)
+        let items = map {
+            let value = switch $0.value {
+            case let stringValue as String:
+                stringValue.protobufValue
+            case let doubleValue as Double:
+                doubleValue.protobufValue
+            case let intValue as Int:
+                intValue.protobufValue
+            case let floatValue as Float:
+                floatValue.protobufValue
+            case let boolValue as Bool:
+                boolValue.protobufValue
+            case let arrayValue as [Any]:
+                arrayValue.protobufValue
+            case let dictionaryValue as [String: Any]:
+                dictionaryValue.protobufValue
+            default:
+                Google_Protobuf_Value(nilLiteral: ())
             }
-            let fields = [Key: Google_Protobuf_Value].init(uniqueKeysWithValues: items)
-            return .init(fields: fields)
+            return ($0.key, value)
         }
+        let fields = [Key: Google_Protobuf_Value](uniqueKeysWithValues: items)
+        return .init(fields: fields)
     }
-    
-    
 }
-
-

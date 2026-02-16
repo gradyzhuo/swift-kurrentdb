@@ -15,18 +15,14 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Update.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Update.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Update.descriptor
         }
 
-        package static var name: String{
-            get{
-                "PersistentSubscriptions.\(Self.self)"
-            }
+        package static var name: String {
+            "PersistentSubscriptions.\(Self.self)"
         }
-        
+
         public private(set) var streamIdentifier: StreamIdentifier
         public private(set) var group: String
         public private(set) var options: Options

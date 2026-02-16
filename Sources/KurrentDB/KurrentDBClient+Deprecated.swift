@@ -1,5 +1,5 @@
 //
-//  KurrentDBClient+Streams.swift
+//  KurrentDBClient+Deprecated.swift
 //  KurrentDB-Swift
 //
 //  Created by Grady Zhuo on 2025/5/23.
@@ -28,10 +28,10 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: ``appendToStream(_:events:configure:)``
     @available(*, deprecated, renamed: "appendToStream")
-    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response{
-        return try await appendToStream(streamIdentifier, events: events, configure: configure)
+    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+        try await appendToStream(streamIdentifier, events: events, configure: configure)
     }
-    
+
     /// Appends a batch of events to a stream identified by name (deprecated).
     ///
     /// - Important: This method has been deprecated. Use `appendToStream(_:events:configure:)` instead.
@@ -57,7 +57,7 @@ extension KurrentDBClient {
     public func appendStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
         try await appendToStream(streamName, events: events, configure: configure)
     }
-    
+
     /// Appends one or more events to a stream identified by name using variadic parameters (deprecated).
     ///
     /// - Important: This method has been deprecated. Use `appendToStream(_:events:configure:)` instead.

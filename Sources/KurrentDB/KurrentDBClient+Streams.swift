@@ -58,7 +58,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `streams(of:)`, `SpecifiedStream`
     public func streams(specified name: String) -> Streams<SpecifiedStream> {
-        return streams(of: .specified(name))
+        streams(of: .specified(name))
     }
 
     /// Accesses the multi-streams interface for batch operations across multiple streams.
@@ -74,9 +74,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `appendToStreams(events:)`, `MultiStreams`
     public var multiStreams: Streams<MultiStreams> {
-        get{
-            streams(of: .multiple)
-        }
+        streams(of: .multiple)
     }
 
     /// Accesses the `$all` stream for global event log operations.
@@ -100,9 +98,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `readAllStreams(configure:)`, `subscribeAllStreams(configure:)`
     public var allStreams: Streams<AllStreams> {
-        get{
-            streams(of: .all)
-        }
+        streams(of: .all)
     }
 }
 
@@ -178,7 +174,6 @@ extension KurrentDBClient {
 // MARK: - Stream Append Operations
 
 extension KurrentDBClient {
-
     /// Appends events to a stream identified by its StreamIdentifier.
     ///
     /// This is the primary method for writing events to KurrentDB. Events are written atomically
@@ -287,7 +282,7 @@ extension KurrentDBClient {
     /// - SeeAlso: `StreamEvent`, `EventRecord`, `MultiStreams`
     @discardableResult
     public func appendToStreams(events: [StreamEvent]) async throws -> Streams<MultiStreams>.AppendSession.Response {
-        return try await streams(of: .multiple).append(events: events)
+        try await streams(of: .multiple).append(events: events)
     }
 }
 

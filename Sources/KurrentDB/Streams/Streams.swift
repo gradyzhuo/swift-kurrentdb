@@ -178,7 +178,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     public func append(events: EventData..., options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
         try await append(events: events, options: options)
     }
-    
+
     /// Reads events from the specified stream.
     ///
     /// - Parameters:
@@ -260,8 +260,7 @@ extension Streams where Target == ProjectionStream {
 
 // MARK: - Multiple Streams Operations
 
-extension Streams where Target == MultiStreams{
-    
+extension Streams where Target == MultiStreams {
     /// Appends a batch of pre-constructed stream events using an append session. (KurrentDB > 25.1)
     ///
     /// Use this when you already have fully-formed `StreamEvent` values (including
@@ -280,7 +279,7 @@ extension Streams where Target == MultiStreams{
         let usecase = AppendSession(streamEvents: events)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
-    
+
     /// Appends a variadic list of pre-constructed stream events in a single append session.  (KurrentDB > 25.1)
     ///
     /// Use this when you already have fully formed `StreamEvent` values (including IDs,

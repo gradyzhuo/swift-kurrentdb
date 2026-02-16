@@ -15,18 +15,14 @@ extension Monitoring {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Stats.Output
         package typealias Responses = AsyncThrowingStream<Response, any Error>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Stats.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Stats.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Monitoring.\(Self.self)"
-            }
+        package static var name: String {
+            "Monitoring.\(Self.self)"
         }
-        
+
         public let useMetadata: Bool
         public let refreshTimePeriodInMs: UInt64
 

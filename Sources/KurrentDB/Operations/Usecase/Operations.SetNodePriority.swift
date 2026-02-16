@@ -15,18 +15,14 @@ extension Operations {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.SetNodePriority.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.SetNodePriority.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.SetNodePriority.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Operations.\(Self.self)"
-            }
+        package static var name: String {
+            "Operations.\(Self.self)"
         }
-        
+
         public let priority: Int32
 
         public init(priority: Int32) {

@@ -15,18 +15,14 @@ extension PersistentSubscriptions {
         package typealias UnderlyingResponse = UnderlyingService.Method.RestartSubsystem.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.RestartSubsystem.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.RestartSubsystem.descriptor
         }
 
-        package static var name: String{
-            get{
-                "PersistentSubscriptions.\(Self.self)"
-            }
+        package static var name: String {
+            "PersistentSubscriptions.\(Self.self)"
         }
-        
+
         package func requestMessage() throws -> UnderlyingRequest {
             .init()
         }

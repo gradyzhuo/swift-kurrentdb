@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import Generated
 import GRPCCore
 import SwiftProtobuf
-import Generated
 
 package protocol RequestBuildable {
     associatedtype UnderlyingRequest: Message
