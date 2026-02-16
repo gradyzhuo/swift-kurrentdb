@@ -12,7 +12,15 @@ The Kurrent Database Client SDK connected by `gRPC`.
 - <doc:Reading-events>
 - <doc:Projections>
 - <doc:User-management>
+- <doc:Persistent-subscriptions>
+- <doc:Server-operations>
 
+## Architecture
+- <doc:StreamsTarget-design>
+- <doc:ProjectionsTarget-design>
+- <doc:PersistentSubscriptionTarget-design>
+- <doc:UsersTarget-design>
+- <doc:OperationsTarget-design>
 
 ## Usage
 
