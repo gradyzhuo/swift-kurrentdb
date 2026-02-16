@@ -1,6 +1,6 @@
 version: 1
 builder:
   configs:
-    - documentation_targets: [KurrentDB, EventStoreDB]
+    - documentation_targets: [KurrentDB]
       swift_version: 6.0
       custom_documentation_parameters: [--exclude-extended-types]
