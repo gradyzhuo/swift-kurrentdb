@@ -95,33 +95,22 @@ public protocol ProjectionsTarget: Sendable {}
 /// Extension providing static methods to create `ProjectionStream` instances.
 extension ProjectionsTarget {
     public static func named(_ name: String) -> NameTarget {
-        return .init(name: name)
+        .init(name: name)
     }
 
-    public static func continuous(name: String) -> ContinuousTarget{
-        return .init(name: name)
+    public static func continuous(name: String) -> ContinuousTarget {
+        .init(name: name)
     }
 
-    public static var onetime: OneTimeTarget{
-        get{
-            .init()
-        }
+    public static var onetime: OneTimeTarget {
+        .init()
     }
 
-    public static func transient(name: String) -> TransientTarget{
-        return .init(name: name)
+    public static func transient(name: String) -> TransientTarget {
+        .init(name: name)
     }
 
-    public static var any: AnyProjectionsTarget{
-        get{
-            .init()
-        }
+    public static var any: AnyProjectionsTarget {
+        .init()
     }
-
 }
-
-
-
-
-
-

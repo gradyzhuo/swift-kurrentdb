@@ -15,19 +15,15 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Reset.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Reset.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Reset.descriptor
-            }
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Reset.descriptor
         }
-        
-        package static var name: String{
-            get{
-                "Projections.\(Self.self)"
-            }
+
+        package static var name: String {
+            "Projections.\(Self.self)"
         }
-        
+
         let name: String
         let options: Options
 

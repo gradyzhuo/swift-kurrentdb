@@ -16,18 +16,14 @@ extension Streams where Target == AllStreams {
         public typealias Response = ReadResponse
         public typealias Responses = AsyncThrowingStream<Response, Error>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Read.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Read.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Streams.\(Self.self)"
-            }
+        package static var name: String {
+            "Streams.\(Self.self)"
         }
-        
+
         public let options: Options
 
         init(options: Options) {
@@ -51,16 +47,16 @@ extension Streams where Target == AllStreams {
                         completion(nil)
                     }
                 }
-                do{
+                do {
                     for try await message in $0.messages {
-                        do{
+                        do {
                             try continuation.yield(handle(message: message))
-                        }catch {
+                        } catch {
                             continuation.finish(throwing: error)
                         }
                     }
                     continuation.finish()
-                }catch {
+                } catch {
                     continuation.finish(throwing: error)
                 }
                 return stream

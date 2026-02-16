@@ -17,8 +17,6 @@ extension KurrentDBClient {
     package func users<Target: UsersTarget>(of target: Target) -> Users<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
-    
-    
 }
 
 // MARK: - User Management Operations

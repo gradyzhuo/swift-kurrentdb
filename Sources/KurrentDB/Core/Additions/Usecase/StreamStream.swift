@@ -32,7 +32,7 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
                 if let error {
                     logger.error("The error is thrown in the response of StreamStream: \(error)")
                 }
-                
+
                 logger.debug("[\(Self.name)] Closing connection...")
                 client.beginGracefulShutdown()
             }

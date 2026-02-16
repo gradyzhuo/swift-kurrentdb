@@ -7,8 +7,8 @@
 
 import Foundation
 @testable import KurrentDB
-import Testing
 import Logging
+import Testing
 
 package enum TestingError: Error {
     case exception(String)
@@ -65,19 +65,19 @@ struct StreamTests: Sendable {
 
         try await client.deleteStream(streamIdentifier)
     }
-    
-    @Test("It should succeed when appending events to streams.", arguments: [
+
+    @Testtry ("It should succeed when appending events to streams.", arguments: [
         [
-            try StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
-            
-            try StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]), expectedRevision: .any)
+            StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
+
+            StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
         ],
     ])
     func testAppendToStreams(events: [StreamEvent]) async throws {
         let client = KurrentDBClient(settings: settings)
 
         let appendResponse = try await client.appendToStreams(events: events)
-        
+
         let positions = try await withThrowingTaskGroup(of: (StreamPosition, StreamPosition?).self, returning: [(StreamPosition, StreamPosition?)].self) { group in
             for event in events {
                 group.addTask {
@@ -85,33 +85,32 @@ struct StreamTests: Sendable {
                         $0.streamIdentifier == event.streamIdentifier
                     })
                     let appendedRevision = result.currentRevision
-                    
+
                     let readResponses = try await client.readStream(event.streamIdentifier) {
                         $0.forward().revision(from: appendedRevision)
                     }
-                    
+
                     let firstResponse = try await readResponses.first { _ in true }
                     guard case let .event(readEvent) = firstResponse,
                           let readPosition = readEvent.commitPosition
                     else {
                         throw TestingError.exception("readResponse.content or appendResponse.position is not Event or Position")
                     }
-                    
+
                     try await client.deleteStream(event.streamIdentifier)
                     return (readPosition, result.position)
                 }
             }
-            
+
             return try await group.reduce(into: .init()) { partialResult, item in
                 partialResult.append(item)
             }
         }
-        
-        let maxPosition = positions.max{
+
+        let maxPosition = positions.max {
             $0.0.commit < $1.0.commit
-        }.flatMap{ $0.0.commit }
-        
-        
+        }.flatMap(\.0.commit)
+
         #expect(maxPosition == appendResponse.position.commit)
     }
 

@@ -1,5 +1,5 @@
 //
-//  ProjectionsTarget+OneTime.swift
+//  ProjectionTarget+Continuous.swift
 //  KurrentDB-Swift
 //
 //  Created by Grady Zhuo on 2026/2/5.
@@ -11,4 +11,3 @@
 public struct ContinuousTarget: ProjectionsTarget, ProjectionControlable {
     public let name: String
 }
-

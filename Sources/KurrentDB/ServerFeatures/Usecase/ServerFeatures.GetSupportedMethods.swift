@@ -16,18 +16,14 @@ extension ServerFeatures {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.GetSupportedMethods.Output
         public typealias Response = ServiceInfo
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.GetSupportedMethods.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.GetSupportedMethods.descriptor
         }
 
-        package static var name: String{
-            get{
-                "ServerFeatures.\(Self.self)"
-            }
+        package static var name: String {
+            "ServerFeatures.\(Self.self)"
         }
-        
+
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.getSupportedMethods(request: request, options: callOptions) {

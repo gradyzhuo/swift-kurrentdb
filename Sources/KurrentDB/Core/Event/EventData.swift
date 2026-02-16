@@ -79,8 +79,6 @@ extension EventData {
     }
 }
 
-
-
 extension EventRecord {
     public init(eventData: EventData) throws {
         let payload: Payload = switch eventData.payload {

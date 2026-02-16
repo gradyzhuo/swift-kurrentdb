@@ -4,6 +4,7 @@
 //
 //  Created by Grady Zhuo on 2025/5/23.
 //
+
 // MARK: - Internal Projection Factory Methods
 
 extension KurrentDBClient {
@@ -120,7 +121,7 @@ extension KurrentDBClient {
     public func createOneTimeProjection(query: String) async throws {
         try await projections(of: .onetime).create(query: query)
     }
-    
+
     /// Creates a continuous projection that processes events in real-time as they are appended.
     ///
     /// Continuous projections are the most common projection type in event-sourced systems. They
@@ -207,7 +208,7 @@ extension KurrentDBClient {
         let options = configure(.init())
         try await projections(of: .continuous(name: name)).create(query: query, options: options)
     }
-    
+
     /// Creates a transient projection that runs in memory without persisting state to disk.
     ///
     /// Transient projections are useful for temporary queries, development testing, or scenarios where
@@ -999,7 +1000,7 @@ extension KurrentDBClient {
     ///   with `$`) such as `$by_category` and `$by_event_type`.
     ///
     /// - SeeAlso: `getProjectionDetail(name:)`, `Projection.Mode`
-    public func listAllProjections<Mode: ProjectionMode>(mode: Mode) async throws -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
+    public func listAllProjections(mode: some ProjectionMode) async throws -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
         try await projections().list(for: mode)
     }
 

@@ -18,7 +18,7 @@ extension Projections where Target == TransientTarget {
     ///   - query: The query string defining the projection.
     ///   - options: The options for creating the projection. Defaults to an empty configuration.
     /// - Throws: An error if the creation process fails.
-    public func create(query: String, options: ContinuousCreate.Options = .init()) async throws(KurrentError) {
+    public func create(query: String, options _: ContinuousCreate.Options = .init()) async throws(KurrentError) {
         let usecase = TransientCreate(name: target.name, query: query)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }

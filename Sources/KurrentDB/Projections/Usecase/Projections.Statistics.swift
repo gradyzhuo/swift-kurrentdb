@@ -15,19 +15,15 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
         public typealias Responses = AsyncThrowingStream<Response, any Error>
-        
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Statistics.descriptor
-            }
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Statistics.descriptor
         }
-        
-        package static var name: String{
-            get{
-                "Projections.\(Self.self)"
-            }
+
+        package static var name: String {
+            "Projections.\(Self.self)"
         }
-        
+
         public let options: Options
 
         public init(options: Options) {
@@ -105,7 +101,7 @@ extension Projections.Statistics {
             guard let mode = Projection.Mode(rawValue: mode) else {
                 throw .initializationError(reason: "Invalid mode \(mode)")
             }
-            
+
             self.name = name
             self.mode = mode
             self.coreProcessingTime = coreProcessingTime

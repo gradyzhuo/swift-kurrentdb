@@ -16,18 +16,14 @@ extension Streams where Target == AllStreams {
         package typealias UnderlyingResponse = ReadAll.UnderlyingResponse
         public typealias Responses = Subscription
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Read.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Read.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Streams.\(Self.self)"
-            }
+        package static var name: String {
+            "Streams.\(Self.self)"
         }
-        
+
         public let options: Options
 
         init(options: Options) {

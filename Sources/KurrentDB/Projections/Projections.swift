@@ -25,7 +25,7 @@ public actor Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     var callOptions: CallOptions
     let eventLoopGroup: EventLoopGroup
     private(set) var target: Target
-    
+
     package let serviceName: String = "event_store.client.projections.projections"
 
     /// Initializes a new `Projections` instance with the specified target and settings.
@@ -43,7 +43,8 @@ public actor Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     }
 }
 
-//MARK: - enable
+// MARK: - enable
+
 extension Projections where Target: ProjectionControlable {
     /// Enables the projection.
     ///
@@ -54,7 +55,8 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-//MARK: - disable / abort
+// MARK: - disable / abort
+
 extension Projections where Target: ProjectionControlable {
     /// Disables the projection and writes a checkpoint.
     ///
@@ -75,7 +77,8 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-//MARK: - reset
+// MARK: - reset
+
 extension Projections where Target: ProjectionControlable {
     /// Resets the projection to its initial state.
     ///
@@ -86,7 +89,8 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-//MARK: - delete
+// MARK: - delete
+
 extension Projections where Target: ProjectionControlable {
     /// Deletes the projection with the specified options.
     ///
@@ -98,7 +102,8 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-//MARK: - update
+// MARK: - update
+
 extension Projections where Target: ProjectionControlable {
     /// Updates the projection with an optional query and options.
     ///
@@ -112,7 +117,8 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-//MARK: - detail
+// MARK: - detail
+
 extension Projections where Target: ProjectionControlable {
     /// Retrieves detailed statistics for the projection.
     ///
@@ -130,7 +136,8 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-//MARK: - get result / state
+// MARK: - get result / state
+
 extension Projections where Target: ProjectionControlable {
     /// Retrieves the result of the projection decoded to a specified type.
     ///
@@ -173,7 +180,7 @@ extension Projections where Target: ProjectionControlable {
     }
 }
 
-extension Projections{
+extension Projections {
     /// Retrieves a list of all continuous projection statistics.
     ///
     /// - Returns: An array of `Statistics.Detail` containing projection statistics.
@@ -191,13 +198,12 @@ extension Projections{
     }
 }
 
-
 extension Projections {
     /// Retrieves a list of all projection statistics for any mode.
     ///
     /// - Returns: An array of `Statistics.Detail` containing projection statistics.
     /// - Throws: An error if the operation fails.
-    public func list<Mode: ProjectionMode>(for mode: Mode) async throws(KurrentError) -> [Statistics.Detail] {
+    public func list(for mode: some ProjectionMode) async throws(KurrentError) -> [Statistics.Detail] {
         let usecase = Statistics(options: .listAll(mode: mode.mode))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {

@@ -15,19 +15,15 @@ extension Projections {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Create.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
-        
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Create.descriptor
-            }
+
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Create.descriptor
         }
-        
-        package static var name: String{
-            get{
-                "Projections.\(Self.self)"
-            }
+
+        package static var name: String {
+            "Projections.\(Self.self)"
         }
-        
+
         public let name: String
         public let query: String
         public let options: Options
@@ -41,7 +37,6 @@ extension Projections {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws(KurrentError) -> Response {
-            
             let client = ServiceClient(wrapping: connection)
             do {
                 return try await client.create(request: request, options: callOptions) {

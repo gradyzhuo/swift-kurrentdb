@@ -10,17 +10,15 @@ extension Projection {
         public typealias RawValue = String
         public let rawValue: String
 
-        public var names: [Name]{
-            get{
-                return rawValue.replacing(" results", with: "")
-                        .split(separator: "/")
-                        .compactMap{
-                            Name(rawValue: String($0))
-                        }
-            }
+        public var names: [Name] {
+            rawValue.replacing(" results", with: "")
+                .split(separator: "/")
+                .compactMap {
+                    Name(rawValue: String($0))
+                }
         }
-        
-        public init(rawValue: String){
+
+        public init(rawValue: String) {
             self.rawValue = rawValue
         }
     }
@@ -45,15 +43,12 @@ extension Projection.Status {
         case aborted = "Aborted"
         case faultedEnabled = "Faulted (Enabled)"
     }
-    
-    
+
     func contains(_ status: Name) -> Bool {
-        return contains([status])
+        contains([status])
     }
-    
+
     func contains(_ statuses: [Name]) -> Bool {
-        return Set<Name>.init(names).isSuperset(of: statuses)
+        Set<Name>(names).isSuperset(of: statuses)
     }
-
 }
-

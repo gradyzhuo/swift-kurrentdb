@@ -52,7 +52,7 @@ struct ProjectionsTests: Sendable {
             $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
         }
     }
-    
+
     @Test("Testing create a onetime projection")
     func createOneTimeProjection() async throws {
         let originOneTimeProjections = try await client.listAllProjections(mode: .oneTime)

@@ -11,14 +11,14 @@ public struct EventRecord: Sendable {
     /// Unique identifier for this record (must be a valid UUID/GUID).
     /// If not provided, the server will generate a new one.
     public let id: UUID?
-    
+
     /// The record payload as raw bytes.
     /// The format specified in SchemaInfo determines how to interpret these bytes.
     public let data: Data
-    
+
     /// Schema information for this record.
     public let schema: Schema
-    
+
     /// A collection of properties providing additional information about the
     /// record. Can contain user-defined or system propreties.
     /// System keys will be prefixed with "$" (e.g., "$timestamp").
@@ -35,8 +35,7 @@ public struct EventRecord: Sendable {
     ///     - "$span-id": "00f067aa0ba902b7"                   // OpenTelemetry span ID
     ///     - "$timestamp": "2025-01-15T10:30:00.000Z"         // ISO 8601 timestamp
     public var properties: [String: Codable & Sendable]
-    
-    
+
     /// Initializes a new event record with an optional identifier, raw payload data,
     /// schema metadata, and associated properties.
     ///
@@ -64,7 +63,7 @@ public struct EventRecord: Sendable {
     ///   with user-defined keys.
     ///
     /// - SeeAlso: `EventRecord.SchemaInfo`, `EventRecord.SchemaInfo.SchemaFormat`
-    public init(id: UUID? = nil, data: Data, schema: Schema, properties: [String : Codable & Sendable] = [:]) {
+    public init(id: UUID? = nil, data: Data, schema: Schema, properties: [String: Codable & Sendable] = [:]) {
         self.id = id
         self.data = data
         self.schema = schema
@@ -72,7 +71,7 @@ public struct EventRecord: Sendable {
     }
 }
 
-extension EventRecord {    
+extension EventRecord {
     /// Convenience initializer to create an EventRecord from a semantic event type, a typed payload,
     /// and optional custom metadata bytes.
     ///
@@ -112,7 +111,7 @@ extension EventRecord {
     ///   let record = try EventRecord(eventType: "order-placed", payload: payload, customMetadata: meta)
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data? = nil) throws {
         let schema = Schema(format: payload.format, name: eventType)
-        let properties = try customMetadata.flatMap{
+        let properties = try customMetadata.flatMap {
             try JSONSerialization.jsonObject(with: $0) as? [String: Codable & Sendable]
         } ?? [:]
         try self.init(id: id, data: payload.data, schema: schema, properties: properties)
@@ -121,28 +120,28 @@ extension EventRecord {
 
 extension EventRecord: Buildable {
     /// OpenTelemetry trace ID
-    public func traceId(_ value: String) -> Self{
-        return withCopy {
+    public func traceId(_ value: String) -> Self {
+        withCopy {
             $0.properties["$trace-id"] = value
         }
     }
-    
+
     /// OpenTelemetry span ID
-    public func spanId(_ value: String) -> Self{
-        return withCopy {
+    public func spanId(_ value: String) -> Self {
+        withCopy {
             $0.properties["$span-id"] = value
         }
     }
-    
+
     /// ISO 8601 timestamp
-    public func timestamp(_ value: String) -> Self{
-        return withCopy {
+    public func timestamp(_ value: String) -> Self {
+        withCopy {
             $0.properties["$timestamp"] = value
         }
     }
-    
-    public func setValue(_ value: Codable & Sendable, forKey key: String)->Self{
-        return withCopy {
+
+    public func setValue(_ value: Codable & Sendable, forKey key: String) -> Self {
+        withCopy {
             $0.properties[key] = value
         }
     }
@@ -217,15 +216,13 @@ extension EventRecord {
                 }
             }
         }
-        
-        public var format: Schema.Format{
-            get{
-                return switch self {
-                case .data:
-                    .bytes
-                case .json:
-                    .json
-                }
+
+        public var format: Schema.Format {
+            switch self {
+            case .data:
+                .bytes
+            case .json:
+                .json
             }
         }
     }
@@ -233,7 +230,7 @@ extension EventRecord {
 
 extension EventRecord.Schema {
     /// Represents the encoding format of an event record's payload.
-    /// 
+    ///
     /// Use this to indicate how the raw bytes in the associated data should be
     /// interpreted for serialization and deserialization. Choosing the correct
     /// format enables downstream systems to parse, validate, and evolve event
@@ -264,13 +261,12 @@ extension EventRecord.Schema {
     ///   to ensure consistent interpretation across producers and consumers.
     public enum Format: Int, Sendable {
         case unspecified = 0
-        case json        = 1
-        case protobuf    = 2
-        case avro        = 3
-        case bytes       = 4
+        case json = 1
+        case protobuf = 2
+        case avro = 3
+        case bytes = 4
     }
 }
-
 
 extension EventRecord {
     /// Encapsulates schema metadata for an event record's payload.
@@ -318,7 +314,7 @@ extension EventRecord {
         /// The format of the data payload.
         /// Determines how the bytes in AppendRecord.data should be interpreted.
         public let format: Format
-        
+
         /// The schema name (replaces the legacy "event type" concept).
         /// Identifies what kind of data this record contains.
         ///
@@ -328,12 +324,12 @@ extension EventRecord {
         ///   - Dotted namespace: "Teams.Player.V1", "Orders.OrderPlaced.V2"
         ///   - Reverse domain: "com.acme.orders.placed"
         public let name: String
-        
+
         /// The identifier of the specific version of the schema that the record payload
         /// conforms to. This should match a registered schema version in the system.
         /// Not necessary when not enforcing schema validation.
         public let id: String?
-        
+
         public init(format: Format, name: String, id: String? = nil) {
             self.format = format
             self.name = name

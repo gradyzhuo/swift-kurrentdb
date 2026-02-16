@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(while read file)",
+      "Bash(do if ! grep -q \"var method: GRPCCore.MethodDescriptor\" \"$file\")",
+      "Bash(then echo \"$file\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(swift build:*)",
+      "Bash(do sed -i '' 's/var method: GRPCCore\\.MethodDescriptor/var methodDescriptor: GRPCCore.MethodDescriptor/g' \"$file\" done)",
+      "Bash(swift test:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(swiftformat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

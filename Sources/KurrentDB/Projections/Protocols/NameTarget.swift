@@ -5,8 +5,6 @@
 //  Created by Grady Zhuo on 2026/2/13.
 //
 
-
-
 public struct NameTarget: ProjectionsTarget, ProjectionControlable {
     public enum Predefined: String, Sendable {
         /// Represents the `$by_category` system projection.
@@ -20,15 +18,14 @@ public struct NameTarget: ProjectionsTarget, ProjectionControlable {
         /// Represents the `$streams` system projection.
         case streams = "$streams"
     }
-    
+
     public let name: String
-    
-    public init(name: String){
+
+    public init(name: String) {
         self.name = name
     }
-    
-    public init(predefined: Predefined){
-        self.name = predefined.rawValue
-    }
 
+    public init(predefined: Predefined) {
+        name = predefined.rawValue
+    }
 }

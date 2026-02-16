@@ -131,13 +131,13 @@ extension StreamsTarget where Self == SpecifiedStream {
 }
 
 // MARK: - MultiStreams
+
 public struct MultiStreams: StreamsTarget {}
-extension StreamsTarget where Self == MultiStreams{
+extension StreamsTarget where Self == MultiStreams {
     public static var multiple: MultiStreams {
         .init()
     }
 }
-
 
 // MARK: - All Streams
 
