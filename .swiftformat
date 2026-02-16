@@ -1,4 +1,4 @@
---swiftversion 5.9 # 照你的 Swift 版本
+--swiftversion 6.0 # 照你的 Swift 版本
 #--enable andOperator # 示範只開啟一個規則
 --extensionacl on-declarations
 --disable redundantExtensionACL
