@@ -7,32 +7,52 @@
 
 import Foundation
 @testable import KurrentDB
-import NIO
 import Testing
 
-@Suite("Gossip Tests")
-struct GossipTests {
-    @Test func connection() async throws {
-        let address = try SocketAddress(ipAddress: "fd28:8756:87af:2:488:e1f2:820:e7d1", port: 80)
-        print(address)
-//        let path = Bundle.module.path(forResource: "ca", ofType: "crt")!
-//        var clientSettings = try "esdb+discover://localhost:2113?tls=true&tlsCaFile=\(path)".parse()
-//        print(clientSettings)
-//        clientSettings.cerificate(source: .crtInBundle("ca")!)
+@Suite("Gossip Tests", .serialized)
+struct GossipTests: Sendable {
+    let settings: ClientSettings
 
-//        let features = ServerFeatures(node: try .init(endpoint: .init(host: "localhost", port: 2111), settings: clientSettings))
-//        let serviceInfo = try await features.getSupportedMethods()
-//        print(serviceInfo)
-//
-//
-//        let client = KurrentDBClient(settings: clientSettings)
-//        try await client.test()
+    init() {
+        settings = .localhost()
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+    }
 
-//        let gossipClient = Gossip(settings: clientSettings)
-//        let members = try await gossipClient.read()
-//        print("done")
-//        print(members)
+    @Test("It should read gossip and return cluster member info.")
+    func testReadGossip() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let members = try await client.readGossip()
 
-//        ServerFeatures(node: .init(endpoint: <#T##Endpoint#>, settings: <#T##ClientSettings#>))
+        #expect(!members.isEmpty)
+
+        for member in members {
+            #expect(member.isAlive)
+            #expect(!member.httpEndPoint.host.isEmpty)
+            #expect(member.httpEndPoint.port > 0)
+        }
+    }
+
+    @Test("It should find at least one node with a known state.")
+    func testReadGossipNodeStates() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let members = try await client.readGossip()
+
+        let knownStates: [Gossip.VNodeState] = [
+            .leader, .follower, .readOnlyReplica, .clone,
+            .catchingUp, .preLeader, .preReplica, .manager,
+        ]
+
+        let hasKnownState = members.contains { member in
+            knownStates.contains(member.state)
+        }
+        #expect(hasKnownState)
+    }
+
+    @Test("It should read gossip with custom timeout.")
+    func testReadGossipWithTimeout() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let members = try await client.readGossip(timeout: .seconds(10))
+
+        #expect(!members.isEmpty)
     }
 }

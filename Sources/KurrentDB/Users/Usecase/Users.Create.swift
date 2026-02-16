@@ -27,9 +27,9 @@ extension Users {
         let loginName: String
         let password: String
         let fullName: String
-        let groups: [String]
+        let groups: [UserGroup]
 
-        public init(loginName: String, password: String, fullName: String, groups: [String] = []) {
+        public init(loginName: String, password: String, fullName: String, groups: [UserGroup] = []) {
             self.loginName = loginName
             self.password = password
             self.fullName = fullName
@@ -41,7 +41,7 @@ extension Users {
                 $0.options.loginName = loginName
                 $0.options.password = password
                 $0.options.fullName = fullName
-                $0.options.groups = groups
+                $0.options.groups = groups.map(\.rawValue)
             }
         }
 
