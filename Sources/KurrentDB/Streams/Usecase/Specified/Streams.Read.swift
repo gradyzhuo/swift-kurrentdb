@@ -16,18 +16,14 @@ extension Streams {
         public typealias Response = ReadResponse
         public typealias Responses = AsyncThrowingStream<Response, any Error>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Read.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Read.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Streams.\(Self.self)"
-            }
+        package static var name: String {
+            "Streams.\(Self.self)"
         }
-        
+
         public let streamIdentifier: StreamIdentifier
         public let options: Options
 

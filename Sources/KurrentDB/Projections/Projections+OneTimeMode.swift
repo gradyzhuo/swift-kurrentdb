@@ -19,12 +19,11 @@ extension Projections where Target == OneTimeTarget {
     ///   - options: The options for creating the projection. Defaults to an empty configuration.
     /// - Throws: An error if the creation process fails.
     public func create(query: String) async throws(KurrentError) {
-        do{
+        do {
             let usecase = OneTimeCreate(query: query)
             _ = try await usecase.perform(selector: selector, callOptions: callOptions)
-        }catch{
+        } catch {
             print(error)
         }
-        
     }
 }

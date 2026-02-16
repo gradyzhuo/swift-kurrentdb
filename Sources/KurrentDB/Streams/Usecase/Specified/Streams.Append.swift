@@ -13,18 +13,14 @@ extension Streams {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Append.Output
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Append.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Append.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Streams.\(Self.self)"
-            }
+        package static var name: String {
+            "Streams.\(Self.self)"
         }
-        
+
         public let events: [EventData]
         public let identifier: StreamIdentifier
         public private(set) var options: Options

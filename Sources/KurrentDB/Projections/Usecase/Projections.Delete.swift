@@ -16,18 +16,14 @@ extension Projections {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Delete.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Delete.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Projections.\(Self.self)"
-            }
+        package static var name: String {
+            "Projections.\(Self.self)"
         }
-        
+
         public let name: String
         public let options: Options
 

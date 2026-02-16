@@ -13,10 +13,10 @@ extension ServerFeatures {
     public struct ServiceInfo: Sendable {
         public let serverVersion: String
         public let supportedMethods: [SupportedMethod]
-        
-        internal func isSupported(method: GRPCCore.MethodDescriptor)->Bool{
-            return supportedMethods.contains {
-                return $0.serviceName.lowercased() == method.service.fullyQualifiedService.lowercased()
+
+        func isSupported(method: GRPCCore.MethodDescriptor) -> Bool {
+            supportedMethods.contains {
+                $0.serviceName.lowercased() == method.service.fullyQualifiedService.lowercased()
                     && $0.methodName.lowercased() == method.method.lowercased()
             }
         }

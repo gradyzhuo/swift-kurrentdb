@@ -15,18 +15,14 @@ extension PersistentSubscriptions where Target == PersistentSubscription.All {
         package typealias UnderlyingResponse = UnderlyingService.Method.List.Output
         package typealias Response = [PersistentSubscription.SubscriptionInfo]
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.List.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.List.descriptor
         }
 
-        package static var name: String{
-            get{
-                "PersistentSubscriptions.\(Self.self)"
-            }
+        package static var name: String {
+            "PersistentSubscriptions.\(Self.self)"
         }
-        
+
         public let filter: ListFilter
 
         package init(filter: ListFilter) {

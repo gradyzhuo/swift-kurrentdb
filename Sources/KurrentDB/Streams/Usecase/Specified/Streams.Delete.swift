@@ -14,18 +14,14 @@ extension Streams {
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Delete.Output
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Delete.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Delete.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Streams.\(Self.self)"
-            }
+        package static var name: String {
+            "Streams.\(Self.self)"
         }
-        
+
         public let streamIdentifier: StreamIdentifier
         public let options: Options
 

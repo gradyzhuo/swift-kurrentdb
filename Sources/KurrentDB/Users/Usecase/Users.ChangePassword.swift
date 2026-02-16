@@ -16,18 +16,14 @@ extension Users {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.ChangePassword.Output
         package typealias Response = DiscardedResponse<UnderlyingResponse>
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.ChangePassword.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.ChangePassword.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Users.\(Self.self)"
-            }
+        package static var name: String {
+            "Users.\(Self.self)"
         }
-        
+
         public let loginName: String
         private let currentPassword: String
         private let newPassword: String

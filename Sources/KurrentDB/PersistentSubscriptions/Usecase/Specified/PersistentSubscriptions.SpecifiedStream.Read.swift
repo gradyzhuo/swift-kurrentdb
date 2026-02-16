@@ -16,18 +16,14 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias Response = PersistentSubscriptions.ReadResponse
         package typealias Responses = PersistentSubscriptions.Subscription
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Read.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Read.descriptor
         }
 
-        package static var name: String{
-            get{
-                "PersistentSubscriptions.\(Self.self)"
-            }
+        package static var name: String {
+            "PersistentSubscriptions.\(Self.self)"
         }
-        
+
         public let streamIdentifier: StreamIdentifier
         public let group: String
         public let options: Options

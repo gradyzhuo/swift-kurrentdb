@@ -17,18 +17,14 @@ extension Gossip {
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
         public typealias Response = [MemberInfo]
 
-        package var methodDescriptor: GRPCCore.MethodDescriptor{
-            get{
-                ServiceClient.UnderlyingService.Method.Read.descriptor
-            }
+        package var methodDescriptor: GRPCCore.MethodDescriptor {
+            ServiceClient.UnderlyingService.Method.Read.descriptor
         }
 
-        package static var name: String{
-            get{
-                "Gossip.\(Self.self)"
-            }
+        package static var name: String {
+            "Gossip.\(Self.self)"
         }
-        
+
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
             return try await client.read(request: request, options: callOptions) {

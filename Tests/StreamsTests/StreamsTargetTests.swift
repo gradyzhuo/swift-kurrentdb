@@ -11,7 +11,6 @@ import Testing
 
 @Suite("StreamsTarget Tests", .serialized)
 struct StreamsTargetTests: Sendable {
-
     // MARK: - SpecifiedStream Tests
 
     @Test("SpecifiedStream should be created with StreamIdentifier")
@@ -194,7 +193,7 @@ struct StreamsTargetTests: Sendable {
     func testSpecifiedStreamTargetIdentifiers() {
         let specified: SpecifiedStream = .specified("test")
         let projection: ProjectionStream = .byEventType("Event")
-        let string: String = "string-stream"
+        let string = "string-stream"
 
         // All should have valid identifiers
         #expect(specified.identifier.name == "test")

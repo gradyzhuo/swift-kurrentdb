@@ -136,7 +136,6 @@ public actor KurrentDBClient: Sendable, Buildable {
 
 /// Provides access to core service instances.
 extension KurrentDBClient {
-
     /// Accesses the cluster monitoring service for health checks and status information.
     ///
     /// The monitoring service provides real-time information about the KurrentDB cluster,

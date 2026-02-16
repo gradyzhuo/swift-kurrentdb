@@ -23,17 +23,15 @@ public struct StreamIdentifier: Sendable {
 
 extension StreamIdentifier {
     public var category: String? {
-        get{
-            let _category = Reference<String>()
-            return name.prefixMatch(of: Regex{
-                Capture(as: _category) {
-                    OneOrMore(.word)
-                } transform: {
-                    String($0)
-                }
-                "-"
-            })?.output.1
-        }
+        let _category = Reference<String>()
+        return name.prefixMatch(of: Regex {
+            Capture(as: _category) {
+                OneOrMore(.word)
+            } transform: {
+                String($0)
+            }
+            "-"
+        })?.output.1
     }
 }
 
