@@ -7,29 +7,76 @@
 
 import Foundation
 
-/// Represents a stream target that can be sent (`StreamsTarget`).
+/// A protocol representing a target for stream operations in KurrentDB.
 ///
-/// `StreamsTarget` is a protocol that allows concrete types (such as `SpecifiedStream` and `AllStreams`)
-/// to be used as stream targets.
+/// A **target** serves two key purposes in the Streams API:
+///
+/// ## 1. Specifies the Operation Scope (Where)
+///
+/// The target identifies which streams the operation applies to:
+/// - `SpecifiedStream`: Operates on a specific named stream
+/// - `AllStreams`: Operates on the global `$all` stream containing all events
+/// - `MultiStreams`: Operates on multiple streams simultaneously
+/// - `ProjectionStream`: Operates on system projection streams
+///
+/// ## 2. Constrains Available Operations (What)
+///
+/// Through protocol composition, different target types enable different capabilities:
+/// - Targets conforming to `SpecifiedStreamTarget` support append, read, delete, and subscription operations
+/// - `AllStreams` only supports read and subscription operations (cannot append to `$all`)
+/// - `MultiStreams` only supports batch append operations
+/// - The type system prevents invalid operations at compile time
+///
+/// ## Type Safety
+///
+/// This design provides compile-time guarantees that operations are only performed on appropriate stream types:
+///
+/// ```swift
+/// // Target specifies: operate on "orders" stream (where)
+/// // Target constrains: can append, read, delete (what)
+/// let stream = Streams(target: .specified("orders"), ...)
+/// try await stream.append(events: [...])     // ✓ Allowed
+/// try await stream.readStream()              // ✓ Allowed
+///
+/// // Target specifies: operate on $all (where)
+/// // Target constrains: can only read/subscribe (what)
+/// let allStreams = Streams(target: .all, ...)
+/// try await allStreams.readStream()          // ✓ Allowed
+/// try await allStreams.append(events: [...]) // ✗ Compile error - no such method
+///
+/// // Target specifies: multiple streams (where)
+/// // Target constrains: only batch append (what)
+/// let multiStreams = Streams(target: .multiple, ...)
+/// try await multiStreams.append(events: [...])  // ✓ Allowed (batch)
+/// try await multiStreams.readStream()           // ✗ Compile error - no such method
+/// ```
 ///
 /// ## Usage
 ///
-/// You can use `specified(_:)` to create a specific stream or use `all` to get a predefined instance
-/// representing all available streams:
+/// Create targets using static factory methods:
 ///
 /// ```swift
-/// let specificStream = StreamsTarget.specified("log.txt") // Specify by name
-/// let specificStreamByIdentifier = StreamsTarget.specified(StreamIdentifier(name: "log.txt", encoding: .utf8)) // Specify by identifier
-/// let allStreams = StreamsTarget.all // Represents all streams
+/// // Specific stream by name
+/// let orders = StreamsTarget.specified("orders")
+///
+/// // Specific stream by identifier
+/// let identifier = StreamIdentifier(name: "orders", encoding: .utf8)
+/// let ordersById = StreamsTarget.specified(identifier)
+///
+/// // All streams
+/// let all = StreamsTarget.all
+///
+/// // Multiple streams
+/// let multi = StreamsTarget.multiple
+///
+/// // Projection streams
+/// let byType = StreamsTarget.byEventType("OrderCreated")
+/// let byPrefix = StreamsTarget.byStream(prefix: "order")
 /// ```
 ///
 /// - Note: This protocol is marked as `Sendable`, ensuring it can be safely used across concurrency contexts.
 ///
-/// ### Topics
-/// #### Extensions
-/// - ``SpecifiedStream``: Represents a specific stream and provides static methods for instantiation.
-/// - ``AllStreams``: Represents a placeholder for all streams.
-/// - ``AnyStreamTarget``: A generic stream target used when the type is not specified.
+/// - SeeAlso: `SpecifiedStreamTarget`, `AllStreams`, `MultiStreams`, `ProjectionStream`
 public protocol StreamsTarget: Sendable {}
 
 /// Represents a generic stream target that conforms to `StreamsTarget`.
