@@ -11,6 +11,7 @@ The Kurrent Database Client SDK connected by `gRPC`.
 - <doc:Appending-events>
 - <doc:Reading-events>
 - <doc:Projections>
+- <doc:User-management>
 
 
 ## Usage

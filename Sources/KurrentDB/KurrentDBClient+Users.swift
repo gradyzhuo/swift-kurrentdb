@@ -8,14 +8,40 @@
 // MARK: - Internal User Management Factory Methods
 
 extension KurrentDBClient {
-    /// Returns a users interface for all-user operations (creation).
-    package func users() -> Users<AllUsersTarget> {
-        .init(target: AllUsersTarget(), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+    /// Accesses the user management service for creating new users.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let user = try await client.users.create(
+    ///     loginName: "jane_doe",
+    ///     password: "secure_password",
+    ///     fullName: "Jane Doe",
+    ///     groups: ["$ops"]
+    /// )
+    /// ```
+    ///
+    /// - SeeAlso: `user(_:)`
+    public var users: Users<AllUsersTarget> {
+        .init(target: .all, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 
-    /// Returns a users interface for a specific target type.
-    package func users<Target: UsersTarget>(of target: Target) -> Users<Target> {
-        .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+    /// Returns a users interface for a specific user by login name.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// try await client.user("jane_doe").enable()
+    /// try await client.user("jane_doe").details()
+    /// ```
+    ///
+    /// - Parameter loginName: The unique login name of the target user.
+    ///
+    /// - Returns: A configured `Users<SpecifiedUserTarget>` instance for the specified user.
+    ///
+    /// - SeeAlso: `users`
+    public func user(_ loginName: String) -> Users<SpecifiedUserTarget> {
+        .init(target: .specified(loginName), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 }
 
@@ -84,8 +110,8 @@ extension KurrentDBClient {
     ///   configurations thoroughly before deploying to production.
     ///
     /// - SeeAlso: `getUserDetails(loginName:)`, `updateUser(loginName:password:options:)`
-    public func createUser(loginName: String, password: String, fullName: String, groups: [String]) async throws -> UserDetails? {
-        try await users().create(loginName: loginName, password: password, fullName: fullName, groups: groups)
+    public func createUser(loginName: String, password: String, fullName: String, groups: [UserGroup]) async throws -> UserDetails? {
+        try await users.create(loginName: loginName, password: password, fullName: fullName, groups: groups)
     }
 
     /// Creates a new user account with variadic group parameters.
@@ -96,12 +122,12 @@ extension KurrentDBClient {
     ///   - loginName: Unique username for the new account.
     ///   - password: Password for the account.
     ///   - fullName: Full display name for the user.
-    ///   - groups: Variadic list of group names to assign the user to.
+    ///   - groups: Variadic list of groups to assign the user to.
     ///
     /// - Returns: The created user's details if successful, or `nil` if retrieval fails.
     ///
     /// - Throws: `KurrentError.alreadyExists`, `KurrentError.accessDenied`, `KurrentError.invalidArgument`
-    public func createUser(loginName: String, password: String, fullName: String, groups: String...) async throws -> UserDetails? {
+    public func createUser(loginName: String, password: String, fullName: String, groups: UserGroup...) async throws -> UserDetails? {
         try await createUser(loginName: loginName, password: password, fullName: fullName, groups: groups)
     }
 
@@ -131,7 +157,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `createUser(loginName:password:fullName:groups:)`
     public func getUserDetails(loginName: String) async throws -> AsyncThrowingStream<UserDetails, Error> {
-        try await users(of: .specified(loginName)).details()
+        try await user(loginName).details()
     }
 
     /// Enables a user account, allowing authentication and access.
@@ -152,7 +178,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `disableUser(loginName:)`
     public func enableUser(loginName: String) async throws {
-        try await users(of: .specified(loginName)).enable()
+        try await user(loginName).enable()
     }
 
     /// Disables a user account, preventing authentication and access.
@@ -176,7 +202,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `enableUser(loginName:)`
     public func disableUser(loginName: String) async throws {
-        try await users(of: .specified(loginName)).disable()
+        try await user(loginName).disable()
     }
 
     /// Updates a user's information with the specified options.
@@ -209,7 +235,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `updateUserFullName(fullName:loginName:password:)`
     public func updateUser(loginName: String, password: String, options: Users<SpecifiedUserTarget>.Update.Options) async throws {
-        try await users(of: .specified(loginName)).update(password: password, options: options)
+        try await user(loginName).update(password: password, options: options)
     }
 
     /// Updates a user's full name.
@@ -235,7 +261,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `updateUser(loginName:password:options:)`
     public func updateUserFullName(fullName: String, loginName: String, password: String) async throws {
-        try await users(of: .specified(loginName)).update(fullName: fullName, with: password)
+        try await user(loginName).update(fullName: fullName, with: password)
     }
 
     /// Changes a user's password.
@@ -265,7 +291,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `resetUserPassword(loginName:newPassword:)`
     public func changeUserPassword(loginName: String, currentPassword: String, newPassword: String) async throws {
-        try await users(of: .specified(loginName)).change(password: newPassword, origin: currentPassword)
+        try await user(loginName).change(password: newPassword, origin: currentPassword)
     }
 
     /// Resets a user's password without requiring the current password.
@@ -296,6 +322,6 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `changeUserPassword(loginName:currentPassword:newPassword:)`
     public func resetUserPassword(loginName: String, newPassword: String) async throws {
-        try await users(of: .specified(loginName)).reset(password: newPassword)
+        try await user(loginName).reset(password: newPassword)
     }
 }
