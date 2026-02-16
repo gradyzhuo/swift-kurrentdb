@@ -66,11 +66,11 @@ struct StreamTests: Sendable {
         try await client.deleteStream(streamIdentifier)
     }
 
-    @Testtry ("It should succeed when appending events to streams.", arguments: [
+    @Test("It should succeed when appending events to streams.", arguments: [
         [
-            StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
+            try StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
 
-            StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
+            try StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
         ],
     ])
     func testAppendToStreams(events: [StreamEvent]) async throws {
