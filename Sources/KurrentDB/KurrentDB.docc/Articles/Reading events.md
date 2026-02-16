@@ -212,3 +212,7 @@ for try await response in responses {
     print("Event>", readEvent.record)
 }
 ```
+
+## Architecture
+
+For details on the target-based design of the Streams API, see <doc:StreamsTarget-design>.

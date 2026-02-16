@@ -189,3 +189,7 @@ try await client.appendStream("some-stream", events: [
             payload: data2)
 ])
 ```
+
+## Architecture
+
+For details on the target-based design of the Streams API, see <doc:StreamsTarget-design>.

@@ -160,3 +160,7 @@ try await client.user("user").details()    // ✓ Allowed
 try await client.user("user").enable()     // ✓ Allowed
 try await client.user("user").create(...)  // ✗ Compile error
 ```
+
+## Architecture
+
+For details on the target-based design of the Users API, see <doc:UsersTarget-design>.
