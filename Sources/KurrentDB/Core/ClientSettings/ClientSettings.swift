@@ -90,19 +90,50 @@ public struct ClientSettings: Sendable {
     public var discoveryInterval: Duration
     public var maxDiscoveryAttempts: UInt16
 
-    public init() {
-        endpoints = []
-        cerificates = []
-        dnsDiscover = false
-        nodePreference = .leader
-        gossipTimeout = .seconds(3)
-        secure = false
-        tlsVerifyCert = false
-        defaultDeadline = .max
-        keepAlive = .default
-        discoveryInterval = .microseconds(100)
-        maxDiscoveryAttempts = 10
+    public init(
+        clusterMode: TopologyClusterMode? = nil,
+        cerificates: [TLSConfig.CertificateSource] = [],
+        nodePreference: NodePreference = .leader,
+        gossipTimeout: Duration = .seconds(3),
+        secure: Bool = false,
+        tlsVerifyCert: Bool = false,
+        defaultDeadline: Int = .max,
+        connectionName: String? = nil,
+        keepAlive: KeepAlive = .default,
+        authentication: Authentication? = nil,
+        discoveryInterval: Duration = .microseconds(100),
+        maxDiscoveryAttempts: UInt16 = 10
+    ) {
+        self.cerificates = cerificates
+        self.nodePreference = nodePreference
+        self.gossipTimeout = gossipTimeout
+        self.secure = secure
+        self.tlsVerifyCert = tlsVerifyCert
+        self.defaultDeadline = defaultDeadline
+        self.connectionName = connectionName
+        self.keepAlive = keepAlive
+        self.authentication = authentication
+        self.discoveryInterval = discoveryInterval
+        self.maxDiscoveryAttempts = maxDiscoveryAttempts
+
+        if let clusterMode {
+            switch clusterMode {
+            case let .dns(domain):
+                self.endpoints = [domain]
+                self.dnsDiscover = true
+            case let .seeds(endpoints):
+                self.endpoints = endpoints
+                self.dnsDiscover = false
+            case let .standalone(endpoint):
+                self.endpoints = [endpoint]
+                self.dnsDiscover = false
+            }
+        } else {
+            self.endpoints = []
+            self.dnsDiscover = false
+        }
     }
+    
 }
 
 extension ClientSettings {
@@ -137,12 +168,18 @@ extension ClientSettings {
 }
 
 extension ClientSettings {
-    public static func localhost(port: UInt32 = DEFAULT_PORT_NUMBER) -> Self {
-        var settings = Self()
-        settings.endpoints = [
-            .init(host: "localhost", port: port),
-        ]
-        return settings
+    public static func localhost() -> Self {
+        localhost(ports: DEFAULT_PORT_NUMBER)
+    }
+
+    public static func localhost(ports: UInt32...) -> Self {
+        let endpoints = ports.map { Endpoint(host: "localhost", port: $0) }
+        let clusterMode: TopologyClusterMode = if endpoints.count == 1 {
+            .standalone(endpoint: endpoints[0])
+        } else {
+            .seeds(endpoints)
+        }
+        return Self(clusterMode: clusterMode)
     }
 
     public static func parse(connectionString: String) throws(KurrentError) -> Self {
@@ -155,19 +192,11 @@ extension ClientSettings {
             throw KurrentError.internalParsingError(reason: "Unknown URL scheme: \(connectionString)")
         }
 
-        var settings = Self()
-
         guard let endpoints = endpointParser.parse(connectionString),
               endpoints.count > 0
         else {
             throw KurrentError.internalParsingError(reason: "Connection string doesn't have an host")
         }
-
-        guard endpoints.count > 0 else {
-            throw .internalParsingError(reason: "empty endpoint.")
-        }
-
-        settings.endpoints = endpoints
 
         let parsedResult = queryItemParser.parse(connectionString) ?? []
 
@@ -175,59 +204,68 @@ extension ClientSettings {
             ($0.name.lowercased(), $0)
         })
 
-        settings.dnsDiscover = scheme == .dnsDiscover
+        let clusterMode: TopologyClusterMode = if scheme == .dnsDiscover {
+            .dns(domain: endpoints[0])
+        } else if endpoints.count > 1 {
+            .seeds(endpoints)
+        } else {
+            .standalone(endpoint: endpoints[0])
+        }
 
-        if let nodePreference = queryItems["nodepreference"]?.value.flatMap({
+        let nodePreference = queryItems["nodepreference"]?.value.flatMap {
             NodePreference(rawValue: $0)
-        }) {
-            settings.nodePreference = nodePreference
-        }
+        } ?? .leader
 
-        if let gossipTimeout: Int64 = queryItems["gossiptimeout"].flatMap({ $0.value.flatMap { Int64($0) } }) {
-            settings.gossipTimeout = .microseconds(gossipTimeout)
-        }
+        let gossipTimeout: Duration = queryItems["gossiptimeout"]
+            .flatMap({ $0.value.flatMap { Int64($0) } })
+            .map { .microseconds($0) } ?? .seconds(3)
 
-        if let maxDiscoverAttempts = queryItems["maxdiscoverattempts"].flatMap({ $0.value.flatMap { UInt16($0) } }) {
-            settings.maxDiscoveryAttempts = maxDiscoverAttempts
-        }
+        let maxDiscoveryAttempts: UInt16 = queryItems["maxdiscoverattempts"]
+            .flatMap({ $0.value.flatMap { UInt16($0) } }) ?? 10
 
-        if let discoverInterval = queryItems["discoveryinterval"].flatMap({ $0.value.flatMap { Int64($0) } }) {
-            settings.discoveryInterval = .microseconds(discoverInterval)
-        }
+        let discoveryInterval: Duration = queryItems["discoveryinterval"]
+            .flatMap({ $0.value.flatMap { Int64($0) } })
+            .map { .microseconds($0) } ?? .microseconds(100)
 
-        if let authentication = userCredentialParser.parse(connectionString) {
-            settings.authentication = authentication
-        }
+        let authentication = userCredentialParser.parse(connectionString)
 
-        if let keepAliveInterval: UInt64 = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
-           let keepAliveTimeout: UInt64 = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
+        let keepAlive: KeepAlive = if let keepAliveInterval: UInt64 = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
+                                      let keepAliveTimeout: UInt64 = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
         {
-            settings.keepAlive = .init(intervalMs: keepAliveInterval, timeoutMs: keepAliveTimeout)
+            .init(intervalMs: keepAliveInterval, timeoutMs: keepAliveTimeout)
+        } else {
+            .default
         }
 
-        if let connectionName = queryItems["connectionanme"]?.value {
-            settings.connectionName = connectionName
-        }
+        let connectionName = queryItems["connectionanme"]?.value
 
-        if let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) {
-            settings.secure = secure
-        }
+        let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
 
-        if let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) {
-            settings.tlsVerifyCert = tlsVerifyCert
-        }
+        let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
 
+        var cerificates: [TLSConfig.CertificateSource] = []
         if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap(\.value) {
             if let cerificate = parseCertificate(path: tlsCaFilePath) {
-                settings.cerificates.append(cerificate)
+                cerificates.append(cerificate)
             }
         }
 
-        if let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) }}) {
-            settings.defaultDeadline = defaultDeadline
-        }
+        let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) } }) ?? .max
 
-        return settings
+        return Self(
+            clusterMode: clusterMode,
+            cerificates: cerificates,
+            nodePreference: nodePreference,
+            gossipTimeout: gossipTimeout,
+            secure: secure,
+            tlsVerifyCert: tlsVerifyCert,
+            defaultDeadline: defaultDeadline,
+            connectionName: connectionName,
+            keepAlive: keepAlive,
+            authentication: authentication,
+            discoveryInterval: discoveryInterval,
+            maxDiscoveryAttempts: maxDiscoveryAttempts
+        )
     }
 }
 

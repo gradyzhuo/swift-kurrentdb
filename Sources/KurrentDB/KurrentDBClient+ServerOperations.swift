@@ -149,7 +149,7 @@ extension KurrentDBClient {
     ///   database in an inconsistent state. Always stop the scavenge gracefully first.
     ///
     /// - SeeAlso: `stopScavenge(scavengeId:)`
-    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws -> Operations<ScavengeOperations>.ScavengeResponse {
+    public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws(KurrentError) -> Operations<ScavengeOperations>.ScavengeResponse {
         try await operations(of: .scavenge).startScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
     }
 
@@ -217,7 +217,7 @@ extension KurrentDBClient {
     ///   been scavenged remain in their compacted state.
     ///
     /// - SeeAlso: `startScavenge(threadCount:startFromChunk:)`
-    public func stopScavenge(scavengeId: String) async throws -> Operations<ActiveScavenge>.ScavengeResponse {
+    public func stopScavenge(scavengeId: String) async throws(KurrentError) -> Operations<ActiveScavenge>.ScavengeResponse {
         try await operations(of: .activeScavenge(scavengeId: scavengeId)).stopScavenge()
     }
 }
@@ -242,7 +242,7 @@ extension KurrentDBClient {
     /// - Note: Only users in the `$admins` or `$ops` groups can perform this operation.
     ///
     /// - SeeAlso: `shutdown()`, `restartPersistentSubscriptions()`
-    public func mergeIndexes() async throws {
+    public func mergeIndexes() async throws(KurrentError) {
         try await operations(of: .system).mergeIndexes()
     }
 
@@ -263,7 +263,7 @@ extension KurrentDBClient {
     /// - Note: Only users in the `$admins` or `$ops` groups can perform this operation.
     ///
     /// - SeeAlso: `mergeIndexes()`, `shutdown()`
-    public func restartPersistentSubscriptions() async throws {
+    public func restartPersistentSubscriptions() async throws(KurrentError) {
         try await operations(of: .system).restartPersistentSubscriptions()
     }
 
@@ -284,7 +284,7 @@ extension KurrentDBClient {
     ///   for disconnection before calling this method.
     ///
     /// - SeeAlso: `mergeIndexes()`, `restartPersistentSubscriptions()`
-    public func shutdown() async throws {
+    public func shutdown() async throws(KurrentError) {
         try await operations(of: .system).shutdown()
     }
 }
@@ -307,7 +307,7 @@ extension KurrentDBClient {
     ///   `KurrentError.unavailable` if the operation cannot be performed.
     ///
     /// - SeeAlso: `setNodePriority(priority:)`
-    public func resignNode() async throws {
+    public func resignNode() async throws(KurrentError) {
         try await operations(of: .node).resignNode()
     }
 
@@ -328,7 +328,7 @@ extension KurrentDBClient {
     ///   `KurrentError.invalidArgument` if the priority value is invalid.
     ///
     /// - SeeAlso: `resignNode()`
-    public func setNodePriority(priority: Int32) async throws {
+    public func setNodePriority(priority: Int32) async throws(KurrentError) {
         try await operations(of: .node).setNodePriority(priority: priority)
     }
 }

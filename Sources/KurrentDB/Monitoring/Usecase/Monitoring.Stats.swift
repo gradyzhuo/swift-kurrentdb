@@ -13,7 +13,7 @@ extension Monitoring {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Stats.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Stats.Output
-        package typealias Responses = AsyncThrowingStream<Response, any Error>
+        public typealias Responses = AsyncThrowingStream<Response, any Error>
 
         package var methodDescriptor: GRPCCore.MethodDescriptor {
             ServiceClient.UnderlyingService.Method.Stats.descriptor
@@ -40,25 +40,29 @@ extension Monitoring {
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
             let client = ServiceClient(wrapping: connection)
-            return try await client.stats(request: request, options: callOptions) {
-                let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-                continuation.onTermination = { termination in
-                    if case let .finished(error) = termination {
-                        completion(error)
-                    } else {
-                        completion(nil)
-                    }
+            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
+            
+            continuation.onTermination = { termination in
+                if case let .finished(error) = termination {
+                    completion(error)
+                } else {
+                    completion(nil)
                 }
-                do {
-                    for try await message in $0.messages {
-                        try continuation.yield(handle(message: message))
-                    }
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-                return stream
             }
+            
+            Task.detached {
+                try await client.stats(request: request, options: callOptions) {
+                    do {
+                        for try await message in $0.messages {
+                            try continuation.yield(handle(message: message))
+                        }
+                        continuation.finish()
+                    } catch {
+                        continuation.finish(throwing: error)
+                    }
+                }
+            }
+            return stream
         }
     }
 }
@@ -67,7 +71,7 @@ extension Monitoring.Stats {
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
-        var stats: [String: String]
+        public var stats: [String: String]
 
         package init(from message: UnderlyingMessage) throws {
             stats = message.stats

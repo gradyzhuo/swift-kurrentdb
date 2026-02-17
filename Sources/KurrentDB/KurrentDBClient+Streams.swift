@@ -148,7 +148,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `StreamMetadata`, `StreamRevision`, `getStreamMetadata(_:)`
     @discardableResult
-    public func setStreamMetadata(_ streamIdentifier: StreamIdentifier, metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func setStreamMetadata(_ streamIdentifier: StreamIdentifier, metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         try await streams(of: .specified(streamIdentifier)).setMetadata(metadata: metadata, expectedRevision: expectedRevision)
     }
 
@@ -166,7 +166,7 @@ extension KurrentDBClient {
     ///   found, or network errors.
     ///
     /// - SeeAlso: `StreamMetadata`, `setStreamMetadata(_:metadata:expectedRevision:)`
-    public func getStreamMetadata(_ streamIdentifier: StreamIdentifier) async throws -> StreamMetadata? {
+    public func getStreamMetadata(_ streamIdentifier: StreamIdentifier) async throws(KurrentError) -> StreamMetadata? {
         try await streams(of: .specified(streamIdentifier)).getMetadata()
     }
 }
@@ -224,7 +224,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `EventData`, `StreamRevision`, `Streams.Append.Options`
     @discardableResult
-    public func appendToStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendToStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).append(events: events, options: options)
     }
@@ -281,7 +281,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `StreamEvent`, `EventRecord`, `MultiStreams`
     @discardableResult
-    public func appendToStreams(events: [StreamEvent]) async throws -> Streams<MultiStreams>.AppendSession.Response {
+    public func appendToStreams(events: [StreamEvent]) async throws(KurrentError) -> Streams<MultiStreams>.AppendSession.Response {
         try await streams(of: .multiple).append(events: events)
     }
 }
@@ -332,7 +332,7 @@ extension KurrentDBClient {
     ///   Always use filtering and pagination for production use.
     ///
     /// - SeeAlso: `Streams.ReadAll.Options`, `ReadEvent`, `StreamPosition`
-    public func readAllStreams(configure: @Sendable (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws -> Streams<AllStreams>.ReadAll.Responses {
+    public func readAllStreams(configure: @Sendable (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.ReadAll.Responses {
         let options = configure(.init())
         return try await streams(of: .all).read(options: options)
     }
@@ -382,7 +382,7 @@ extension KurrentDBClient {
     ///   - `.accessDenied`: Insufficient permissions to read the stream
     ///
     /// - SeeAlso: `Streams.Read.Options`, `ReadEvent`, `StreamRevision`
-    public func readStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
+    public func readStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).read(options: options)
     }
@@ -430,7 +430,7 @@ extension KurrentDBClient {
     ///   on the subscription when done to release server resources.
     ///
     /// - SeeAlso: `Streams.SubscribeAll.Options`, `Streams.Subscription`
-    public func subscribeAllStreams(configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws -> Streams<AllStreams>.Subscription {
+    public func subscribeAllStreams(configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.Subscription {
         let options = configure(.init())
         return try await streams(of: .all).subscribe(options: options)
     }
@@ -479,7 +479,7 @@ extension KurrentDBClient {
     /// - Note: Subscriptions automatically recover from transient network failures.
     ///
     /// - SeeAlso: `Streams.Subscribe.Options`, `Streams.Subscription`
-    public func subscribeStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).subscribe(options: options)
     }
@@ -525,7 +525,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `tombstoneStream(_:configure:)`, `Streams.Delete.Options`
     @discardableResult
-    public func deleteStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Delete.Response {
+    public func deleteStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Delete.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).delete(options: options)
     }
@@ -569,7 +569,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `deleteStream(_:configure:)`, `Streams.Tombstone.Options`
     @discardableResult
-    public func tombstoneStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Tombstone.Response {
+    public func tombstoneStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Tombstone.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamIdentifier)).tombstone(options: options)
     }
@@ -595,7 +595,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `setStreamMetadata(_:metadata:expectedRevision:)`, `StreamMetadata`
     @discardableResult
-    public func setStreamMetadata(_ streamName: String, metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func setStreamMetadata(_ streamName: String, metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         try await streams(of: .specified(streamName)).setMetadata(metadata: metadata, expectedRevision: expectedRevision)
     }
 
@@ -612,7 +612,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError` if the operation fails.
     ///
     /// - SeeAlso: `getStreamMetadata(_:)`, `StreamMetadata`
-    public func getStreamMetadata(_ streamName: String) async throws -> StreamMetadata? {
+    public func getStreamMetadata(_ streamName: String) async throws(KurrentError) -> StreamMetadata? {
         try await streams(of: .specified(streamName)).getMetadata()
     }
 
@@ -645,7 +645,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `appendToStream(_:events:configure:)`, `EventData`
     @discardableResult
-    public func appendToStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendToStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).append(events: events, options: options)
     }
@@ -678,7 +678,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `appendToStream(_:events:configure:)`, `EventData`
     @discardableResult
-    public func appendToStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendToStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).append(events: events, options: options)
     }
@@ -698,7 +698,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `readStream(_:configure:)`, `Streams.Read.Options`
     @available(*, deprecated, renamed: "readStream")
-    public func readStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Read.Responses {
+    public func readStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Read.Responses {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).read(options: options)
     }
@@ -717,7 +717,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError` if the operation fails.
     ///
     /// - SeeAlso: `subscribeStream(_:configure:)`, `Streams.Subscribe.Options`
-    public func subscribeStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Subscription {
+    public func subscribeStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Subscription {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).subscribe(options: options)
     }
@@ -738,7 +738,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `deleteStream(_:configure:)`, `Streams.Delete.Options`
     @discardableResult
-    public func deleteStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Delete.Response {
+    public func deleteStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Delete.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).delete(options: options)
     }
@@ -761,7 +761,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `tombstoneStream(_:configure:)`, `Streams.Tombstone.Options`
     @discardableResult
-    public func tombstoneStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Tombstone.Response {
+    public func tombstoneStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Tombstone.Response {
         let options = configure(.init())
         return try await streams(of: .specified(streamName)).tombstone(options: options)
     }
