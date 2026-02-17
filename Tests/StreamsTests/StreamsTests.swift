@@ -19,8 +19,11 @@ struct StreamTests: Sendable {
     let settings: ClientSettings
 
     init() {
-        settings = .localhost()
+        settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
     }
 
     @Test("Stream should be not found and throw an error.")

@@ -15,8 +15,11 @@ struct PersistentSubscriptionsTests {
     let settings: ClientSettings
 
     init() {
-        settings = .localhost()
+        settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         groupName = "test-for-persistent-subscriptions"
     }
 

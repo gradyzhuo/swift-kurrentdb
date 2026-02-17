@@ -19,7 +19,11 @@ struct ProjectionsTests: Sendable {
     let client: KurrentDBClient
 
     init() {
-        let settings: ClientSettings = .localhost().authenticated(.credentials(username: "admin", password: "changeit"))
+        let settings: ClientSettings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         client = .init(settings: settings)
     }
 

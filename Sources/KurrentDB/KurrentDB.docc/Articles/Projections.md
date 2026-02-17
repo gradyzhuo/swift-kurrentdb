@@ -6,8 +6,8 @@ The various gRPC client APIs include dedicated clients that allow you to manage 
 Projection management operations are exposed through a dedicated client.
 
 ```swift
-let settings: ClientSettings = .localhost()
-                                    .defaultUserCredentials(.init(username: "admin", password: "changeit"))
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "changeit"))
 let client = KurrentDBClient(settings: settings)
 ```
 
