@@ -11,7 +11,32 @@ The monitoring API provides access to runtime statistics from KurrentDB nodes, i
 Monitoring operations work with any valid client configuration.
 
 ```swift
-let settings: ClientSettings = .localhost()
+let settings = ClientSettings.localhost()
+let client = KurrentDBClient(settings: settings)
+```
+
+For TLS-enabled or multi-node clusters:
+
+```swift
+// Multi-node localhost with TLS
+let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+    .secure(true)
+    .tlsVerifyCert(false)
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+let client = KurrentDBClient(settings: settings)
+
+// Remote cluster (secure: true by default)
+let settings = ClientSettings.remote(
+    "node1.example.com:2113",
+    "node2.example.com:2113",
+    "node3.example.com:2113"
+).authenticated(.credentials(username: "admin", password: "changeit"))
+let client = KurrentDBClient(settings: settings)
+
+// Remote without TLS
+let settings = ClientSettings.remote(
+    "node1.example.com:2113", secure: false
+).authenticated(.credentials(username: "admin", password: "changeit"))
 let client = KurrentDBClient(settings: settings)
 ```
 

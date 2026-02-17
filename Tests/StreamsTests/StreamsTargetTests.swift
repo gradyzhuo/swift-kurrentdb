@@ -107,7 +107,11 @@ struct StreamsTargetTests: Sendable {
 
     @Test("KurrentDBClient should accept SpecifiedStream target")
     func testClientWithSpecifiedStream() async {
-        let settings = ClientSettings.localhost()
+        let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: .specified("test-stream"))
@@ -117,7 +121,11 @@ struct StreamsTargetTests: Sendable {
 
     @Test("KurrentDBClient should accept AllStreams target")
     func testClientWithAllStreams() async {
-        let settings = ClientSettings.localhost()
+        let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: AllStreams.all)
@@ -128,7 +136,11 @@ struct StreamsTargetTests: Sendable {
 
     @Test("KurrentDBClient should accept MultiStreams target")
     func testClientWithMultiStreams() async {
-        let settings = ClientSettings.localhost()
+        let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: MultiStreams.multiple)
@@ -139,7 +151,11 @@ struct StreamsTargetTests: Sendable {
 
     @Test("KurrentDBClient should accept ProjectionStream target by event type")
     func testClientWithProjectionStreamByEventType() async {
-        let settings = ClientSettings.localhost()
+        let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: ProjectionStream.byEventType("OrderPlaced"))
@@ -149,7 +165,11 @@ struct StreamsTargetTests: Sendable {
 
     @Test("KurrentDBClient should accept ProjectionStream target by stream prefix")
     func testClientWithProjectionStreamByPrefix() async {
-        let settings = ClientSettings.localhost()
+        let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: ProjectionStream.byStream(prefix: "order"))
@@ -159,7 +179,11 @@ struct StreamsTargetTests: Sendable {
 
     @Test("KurrentDBClient convenience methods should work with stream names")
     func testClientConvenienceMethods() async {
-        let settings = ClientSettings.localhost()
+        let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         // Test specified stream convenience method

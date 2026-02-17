@@ -69,46 +69,126 @@ When connecting to an insecure instance, specify `tls=false` parameter. For exam
 
 ## Client Settings
 
-You can build a client settings for a single node configuration by parsing a connection string.
+### Connection string
+
+You can build client settings by parsing a connection string.
 
 ```swift
-let settings: ClientSettings = .parse(connectionString: "esdb://admin:changeit@localhost:2113")
+let settings: ClientSettings = try .parse(connectionString: "esdb://admin:changeit@localhost:2113")
 ```
 
-or you can also build it with a string literal, like:
-```swift
-let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113".parse()
+Or you can use a string literal directly:
 
-// or using string literal directly.
+```swift
 let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 ```
 
-You can use a convenience static method in development mode to connect to `localhost`.
+### Localhost (development)
+
+Use the `localhost()` factory method for local development. You can specify one or more ports for multi-node local clusters:
 
 ```swift
-// settings with credentials
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                   password: "changeit")
+// Single node on default port (2113)
+let settings = ClientSettings.localhost()
 
-//settings with credentials with adding ssl file by path
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                            password: "changeit"), 
-                                                                 trustRoots: .file("...filePath..."))
+// Single node on custom port
+let settings = ClientSettings.localhost(ports: 2114)
 
-//or add ssl file with bundle
-let settings: ClientSettings = .localhost(userCredentials: .init(username: "admin", 
-                                                                 password: "changeit"), 
-                                                                 trustRoots: .fileInBundle(forResource: "ca", 
-                                                                                           withExtension: "crt", 
-                                                                                        inBundle: .main))
+// Multi-node local cluster
+let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
 ```
+
+### Remote endpoints
+
+Use `remote()` for production deployments. TLS is enabled by default via the `secure` parameter:
+
+```swift
+// Single remote node (secure by default)
+let settings = ClientSettings.remote(.init(host: "db.example.com", port: 2113))
+
+// Multi-node cluster
+let settings = ClientSettings.remote(
+    .init(host: "node1.example.com", port: 2113),
+    .init(host: "node2.example.com", port: 2113),
+    .init(host: "node3.example.com", port: 2113)
+)
+
+// Explicitly disable TLS for insecure remote connections
+let settings = ClientSettings.remote("db.example.com:2113", secure: false)
+```
+
+### Endpoint string literals
+
+``Endpoint`` conforms to `ExpressibleByStringLiteral`, so you can use string literals in `"host:port"` format:
+
+```swift
+let settings = ClientSettings.remote("db.example.com:2113")
+
+// Port defaults to 2113 if omitted
+let settings = ClientSettings.remote("db.example.com")
+```
+
+### Fluent configuration
+
+``ClientSettings`` uses a builder pattern for additional configuration. Chain methods to customize TLS, authentication, certificates, and other options:
+
+```swift
+let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+    .secure(true)
+    .tlsVerifyCert(false)
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+    .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+```
+
+Available builder methods:
+
+| Method | Description |
+|--------|-------------|
+| `.secure(_:)` | Enable or disable TLS |
+| `.tlsVerifyCert(_:)` | Enable or disable TLS certificate verification |
+| `.authenticated(_:)` | Set authentication credentials |
+| `.cerificate(source:)` | Add a TLS certificate source |
+| `.cerificate(path:)` | Add a TLS certificate from a file path |
+| `.connectionName(_:)` | Set a connection name |
+| `.defaultDeadline(_:)` | Set default operation timeout |
+| `.keepAlive(_:)` | Configure keep-alive settings |
+| `.discoveryInterval(_:)` | Set cluster discovery polling interval |
+| `.maxDiscoveryAttempts(_:)` | Set maximum cluster discovery attempts |
+
+### Parameterized initialization
+
+You can also configure all options at initialization time:
+
+```swift
+let settings = ClientSettings(
+    clusterMode: .seeds([
+        .init(host: "node1.example.com", port: 2113),
+        .init(host: "node2.example.com", port: 2113)
+    ]),
+    secure: true,
+    tlsVerifyCert: false,
+    nodePreference: .leader,
+    gossipTimeout: .seconds(5),
+    keepAlive: .init(intervalMs: 10000, timeoutMs: 10000),
+    authentication: .credentials(username: "admin", password: "changeit")
+)
+```
+
+### Cluster modes
+
+| Mode | Description |
+|------|-------------|
+| `.standalone(endpoint)` | Single node connection |
+| `.dns(domain)` | DNS-based cluster discovery |
+| `.seeds([endpoints])` | Gossip-based cluster discovery with seed nodes |
 
 
 ## Creating a client
 First, create a client and get it connected to the database.
 
 ```swift
-let settings: ClientSettings = .localhost()
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "changeit"))
 let client = KurrentDBClient(settings: settings)
 ```
 

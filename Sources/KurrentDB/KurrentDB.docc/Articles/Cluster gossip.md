@@ -13,7 +13,32 @@ This is especially useful when you only know one node's address and need to disc
 Gossip operations work with any valid client configuration — standalone, DNS, or seed-based.
 
 ```swift
-let settings: ClientSettings = .localhost()
+let settings = ClientSettings.localhost()
+let client = KurrentDBClient(settings: settings)
+```
+
+For multi-node or TLS-enabled clusters:
+
+```swift
+// Multi-node localhost with TLS
+let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+    .secure(true)
+    .tlsVerifyCert(false)
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+let client = KurrentDBClient(settings: settings)
+
+// Remote cluster (secure: true by default)
+let settings = ClientSettings.remote(
+    "node1.example.com:2113",
+    "node2.example.com:2113",
+    "node3.example.com:2113"
+).authenticated(.credentials(username: "admin", password: "changeit"))
+let client = KurrentDBClient(settings: settings)
+
+// Remote without TLS
+let settings = ClientSettings.remote(
+    "node1.example.com:2113", secure: false
+).authenticated(.credentials(username: "admin", password: "changeit"))
 let client = KurrentDBClient(settings: settings)
 ```
 
@@ -43,10 +68,8 @@ The gossip query is sent directly to the cluster endpoints defined in your ``Cli
 When using seed-based discovery, the client iterates through each candidate endpoint. As soon as one responds with a non-empty member list, that result is returned. This means you can **discover the entire cluster topology by querying any single node**.
 
 ```swift
-// Connect to just one known node
-let settings: ClientSettings = .init(clusterMode: .seeds([
-    .init(host: "node1.example.com", port: 2113)
-]))
+// Connect to just one known node — Endpoint supports string literals
+let settings = ClientSettings.remote("node1.example.com:2113")
 let client = KurrentDBClient(settings: settings)
 
 // Discover ALL nodes in the cluster from that single endpoint

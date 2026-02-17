@@ -130,6 +130,10 @@ let package = Package(
             dependencies: [
                 "KurrentDB",
             ],
+            resources: [
+                .copy("Resources/ca.crt"),
+                .copy("Resources/multiple-events.json"),
+            ],
             swiftSettings: [
                 .unsafeFlags([
                     "-Xfrontend",
@@ -143,6 +147,10 @@ let package = Package(
             name: "GossipTests",
             dependencies: [
                 "KurrentDB",
+            ],
+            resources: [
+                .copy("Resources/ca.crt"),
+                .copy("Resources/multiple-events.json"),
             ],
             swiftSettings: [
                 .unsafeFlags([
