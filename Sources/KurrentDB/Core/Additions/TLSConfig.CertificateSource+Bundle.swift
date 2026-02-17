@@ -10,17 +10,16 @@ import GRPCNIOTransportCore
 
 extension TLSConfig.CertificateSource {
     static func fileInBundle(forResource resourceName: String, withExtension extenionName: String, format: TLSConfig.SerializationFormat, inDirectory directory: String? = nil, inBundle bundle: Bundle = .main) -> Self? {
-        guard let resourcePath = bundle.path(forResource: resourceName, ofType: extenionName, inDirectory: directory) else {
-            return nil
+        return bundle.path(forResource: resourceName, ofType: extenionName, inDirectory: directory).map{
+            .file(path: $0, format: format)
         }
-        return .file(path: resourcePath, format: format)
     }
 
-    public static func crtInBundle(_ fileName: String, inDirectory directory: String? = nil, inBundle bundle: Bundle = .main) -> Self? {
-        .fileInBundle(forResource: fileName, withExtension: "crt", format: .pem, inDirectory: directory, inBundle: bundle)
+    public static func crtInBundle(_ fileName: String, format: TLSConfig.SerializationFormat = .pem, inDirectory directory: String? = nil, inBundle bundle: Bundle = .main) -> Self? {
+        .fileInBundle(forResource: fileName, withExtension: "crt", format: format, inDirectory: directory, inBundle: bundle)
     }
 
-    public static func pemInBundle(_ fileName: String, inDirectory directory: String? = nil, inBundle bundle: Bundle = .main) -> Self? {
-        .fileInBundle(forResource: fileName, withExtension: "pem", format: .pem, inDirectory: directory, inBundle: bundle)
+    public static func pemInBundle(_ fileName: String, format: TLSConfig.SerializationFormat = .pem, inDirectory directory: String? = nil, inBundle bundle: Bundle = .main) -> Self? {
+        .fileInBundle(forResource: fileName, withExtension: "pem", format: format, inDirectory: directory, inBundle: bundle)
     }
 }

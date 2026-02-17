@@ -7,7 +7,7 @@
 [![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/KurrentDB-Swift/actions/workflows/swift-build-testing.yml)
 
 <div align=center>
-<img src="Assets/kurrent-swift-icon.png" height="200px" width="200px" >
+<img src="assets/kurrent-swift-icon.png" height="200px" width="200px" >
 
 **A modern, type-safe Swift client for Kurrent (formerly EventStoreDB)**
 
