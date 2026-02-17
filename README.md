@@ -192,7 +192,7 @@ try await client.setNodePriority(priority: 10)
 
 ```swift
 // Discover all nodes from a single endpoint
-let members = try await client.readGossip()
+let members = try await client.readCluster()
 
 for member in members {
     print("\(member.httpEndPoint.host):\(member.httpEndPoint.port) — \(member.state)")

@@ -130,7 +130,7 @@ For a comprehensive cluster overview, combine monitoring stats with gossip data:
 
 ```swift
 // Get cluster topology
-let members = try await client.readGossip()
+let members = try await client.readCluster()
 let aliveCount = members.filter(\.isAlive).count
 let leader = members.first(where: { $0.state == .leader })
 
