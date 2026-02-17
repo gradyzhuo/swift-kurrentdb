@@ -26,7 +26,7 @@ extension KurrentDBClient {
     /// ## Example
     ///
     /// ```swift
-    /// let members = try await client.readGossip()
+    /// let members = try await client.readCluster()
     /// for member in members {
     ///     print("Node \(member.instanceId): \(member.state), alive: \(member.isAlive)")
     ///     print("  Endpoint: \(member.httpEndPoint.host):\(member.httpEndPoint.port)")
@@ -46,7 +46,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError` if the gossip request fails or all endpoints are unreachable.
     ///
     /// - SeeAlso: `Gossip.MemberInfo`, `Gossip.VNodeState`
-    public func readGossip(timeout: Duration? = nil) async throws(KurrentError) -> [Gossip.MemberInfo] {
+    public func readCluster(timeout: Duration? = nil) async throws(KurrentError) -> [Gossip.MemberInfo] {
         let candidates = switch settings.clusterMode {
         case let .standalone(endpoint):
             [endpoint]
