@@ -153,5 +153,23 @@ let package = Package(
                 ]),
             ]
         ),
+        .testTarget(
+            name: "MonitoringTests",
+            dependencies: [
+                "KurrentDB",
+            ],
+            resources: [
+                .copy("Resources/ca.crt"),
+                .copy("Resources/multiple-events.json"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100",
+                ]),
+            ]
+        ),
     ]
 )

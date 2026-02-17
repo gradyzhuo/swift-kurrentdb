@@ -110,7 +110,7 @@ extension KurrentDBClient {
     ///   configurations thoroughly before deploying to production.
     ///
     /// - SeeAlso: `getUserDetails(loginName:)`, `updateUser(loginName:password:options:)`
-    public func createUser(loginName: String, password: String, fullName: String, groups: [UserGroup]) async throws -> UserDetails? {
+    public func createUser(loginName: String, password: String, fullName: String, groups: [UserGroup]) async throws(KurrentError) -> UserDetails? {
         try await users.create(loginName: loginName, password: password, fullName: fullName, groups: groups)
     }
 
@@ -127,7 +127,7 @@ extension KurrentDBClient {
     /// - Returns: The created user's details if successful, or `nil` if retrieval fails.
     ///
     /// - Throws: `KurrentError.alreadyExists`, `KurrentError.accessDenied`, `KurrentError.invalidArgument`
-    public func createUser(loginName: String, password: String, fullName: String, groups: UserGroup...) async throws -> UserDetails? {
+    public func createUser(loginName: String, password: String, fullName: String, groups: UserGroup...) async throws(KurrentError) -> UserDetails? {
         try await createUser(loginName: loginName, password: password, fullName: fullName, groups: groups)
     }
 
@@ -156,7 +156,7 @@ extension KurrentDBClient {
     ///   `KurrentError.accessDenied` if the caller lacks permissions to view user details.
     ///
     /// - SeeAlso: `createUser(loginName:password:fullName:groups:)`
-    public func getUserDetails(loginName: String) async throws -> AsyncThrowingStream<UserDetails, Error> {
+    public func getUserDetails(loginName: String) async throws(KurrentError) -> AsyncThrowingStream<UserDetails, Error> {
         try await user(loginName).details()
     }
 
@@ -177,7 +177,7 @@ extension KurrentDBClient {
     ///   `KurrentError.accessDenied` if the caller lacks user management permissions.
     ///
     /// - SeeAlso: `disableUser(loginName:)`
-    public func enableUser(loginName: String) async throws {
+    public func enableUser(loginName: String) async throws(KurrentError) {
         try await user(loginName).enable()
     }
 
@@ -201,7 +201,7 @@ extension KurrentDBClient {
     ///   action before proceeding.
     ///
     /// - SeeAlso: `enableUser(loginName:)`
-    public func disableUser(loginName: String) async throws {
+    public func disableUser(loginName: String) async throws(KurrentError) {
         try await user(loginName).disable()
     }
 
@@ -234,7 +234,7 @@ extension KurrentDBClient {
     ///   `KurrentError.invalidArgument` if the update options are invalid.
     ///
     /// - SeeAlso: `updateUserFullName(fullName:loginName:password:)`
-    public func updateUser(loginName: String, password: String, options: Users<SpecifiedUserTarget>.Update.Options) async throws {
+    public func updateUser(loginName: String, password: String, options: Users<SpecifiedUserTarget>.Update.Options) async throws(KurrentError) {
         try await user(loginName).update(password: password, options: options)
     }
 
@@ -260,7 +260,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.notFound`, `KurrentError.accessDenied`, `KurrentError.invalidArgument`
     ///
     /// - SeeAlso: `updateUser(loginName:password:options:)`
-    public func updateUserFullName(fullName: String, loginName: String, password: String) async throws {
+    public func updateUserFullName(fullName: String, loginName: String, password: String) async throws(KurrentError) {
         try await user(loginName).update(fullName: fullName, with: password)
     }
 
@@ -290,7 +290,7 @@ extension KurrentDBClient {
     ///   `KurrentError.invalidArgument` if the new password doesn't meet requirements.
     ///
     /// - SeeAlso: `resetUserPassword(loginName:newPassword:)`
-    public func changeUserPassword(loginName: String, currentPassword: String, newPassword: String) async throws {
+    public func changeUserPassword(loginName: String, currentPassword: String, newPassword: String) async throws(KurrentError) {
         try await user(loginName).change(password: newPassword, origin: currentPassword)
     }
 
@@ -321,7 +321,7 @@ extension KurrentDBClient {
     ///   privileges. Use only for legitimate account recovery scenarios.
     ///
     /// - SeeAlso: `changeUserPassword(loginName:currentPassword:newPassword:)`
-    public func resetUserPassword(loginName: String, newPassword: String) async throws {
+    public func resetUserPassword(loginName: String, newPassword: String) async throws(KurrentError) {
         try await user(loginName).reset(password: newPassword)
     }
 }
