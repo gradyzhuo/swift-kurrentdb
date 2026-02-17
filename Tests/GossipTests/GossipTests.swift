@@ -24,7 +24,7 @@ struct GossipTests: Sendable {
     @Test("It should read gossip and return cluster member info.")
     func testReadGossip() async throws {
         let client = KurrentDBClient(settings: settings)
-        let members = try await client.readGossip()
+        let members = try await client.readCluster()
 
         #expect(!members.isEmpty)
 
@@ -38,7 +38,7 @@ struct GossipTests: Sendable {
     @Test("It should find at least one node with a known state.")
     func testReadGossipNodeStates() async throws {
         let client = KurrentDBClient(settings: settings)
-        let members = try await client.readGossip()
+        let members = try await client.readCluster()
 
         let knownStates: [Gossip.VNodeState] = [
             .leader, .follower, .readOnlyReplica, .clone,
@@ -54,7 +54,7 @@ struct GossipTests: Sendable {
     @Test("It should read gossip with custom timeout.")
     func testReadGossipWithTimeout() async throws {
         let client = KurrentDBClient(settings: settings)
-        let members = try await client.readGossip(timeout: .seconds(10))
+        let members = try await client.readCluster(timeout: .seconds(10))
 
         #expect(!members.isEmpty)
     }

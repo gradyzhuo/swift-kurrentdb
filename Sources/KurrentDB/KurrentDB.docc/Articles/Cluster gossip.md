@@ -44,10 +44,10 @@ let client = KurrentDBClient(settings: settings)
 
 ## Read cluster members
 
-The `readGossip()` method queries the cluster endpoints configured in your client settings and returns information about all known cluster members.
+The `readCluster()` method queries the cluster endpoints configured in your client settings and returns information about all known cluster members.
 
 ```swift
-let members = try await client.readGossip()
+let members = try await client.readCluster()
 
 for member in members {
     print("Node \(member.instanceId): \(member.state), alive: \(member.isAlive)")
@@ -73,7 +73,7 @@ let settings = ClientSettings.remote("node1.example.com:2113")
 let client = KurrentDBClient(settings: settings)
 
 // Discover ALL nodes in the cluster from that single endpoint
-let members = try await client.readGossip()
+let members = try await client.readCluster()
 print("Discovered \(members.count) nodes in the cluster")
 
 for member in members {
@@ -86,7 +86,7 @@ for member in members {
 You can specify a custom timeout for the gossip query. If not provided, the client's configured gossip timeout is used.
 
 ```swift
-let members = try await client.readGossip(timeout: .seconds(5))
+let members = try await client.readCluster(timeout: .seconds(5))
 ```
 
 ## Find the leader node
@@ -94,7 +94,7 @@ let members = try await client.readGossip(timeout: .seconds(5))
 A common use case is locating the current cluster leader for write operations.
 
 ```swift
-let members = try await client.readGossip()
+let members = try await client.readCluster()
 
 if let leader = members.first(where: { $0.state == .leader && $0.isAlive }) {
     print("Leader: \(leader.httpEndPoint.host):\(leader.httpEndPoint.port)")
@@ -106,7 +106,7 @@ if let leader = members.first(where: { $0.state == .leader && $0.isAlive }) {
 Use gossip to build health checks or monitoring dashboards.
 
 ```swift
-let members = try await client.readGossip()
+let members = try await client.readCluster()
 
 let alive = members.filter(\.isAlive)
 let dead = members.filter { !$0.isAlive }
