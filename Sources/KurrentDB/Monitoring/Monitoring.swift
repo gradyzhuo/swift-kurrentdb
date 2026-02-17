@@ -27,7 +27,7 @@ public actor Monitoring: GRPCConcreteService {
 }
 
 extension Monitoring {
-    package func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Stats.Responses {
+    public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Stats.Responses {
         let node = try await selector.select()
         let usecase = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
         return try await usecase.perform(node: node, callOptions: callOptions)

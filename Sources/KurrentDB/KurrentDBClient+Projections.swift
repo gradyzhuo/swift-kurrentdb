@@ -118,7 +118,7 @@ extension KurrentDBClient {
     ///   with smaller datasets before running against production data.
     ///
     /// - SeeAlso: `createContinuousProjection(name:query:configure:)`, `createTransientProjection(name:query:)`
-    public func createOneTimeProjection(query: String) async throws {
+    public func createOneTimeProjection(query: String) async throws(KurrentError) {
         try await projections(of: .onetime).create(query: query)
     }
 
@@ -204,7 +204,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `enableProjection(name:)`, `updateProjection(name:query:configure:)`,
     ///   `getProjectionState(of:name:configure:)`
-    public func createContinuousProjection(name: String, query: String, configure: @Sendable (Projections<ContinuousTarget>.ContinuousCreate.Options) -> Projections<ContinuousTarget>.ContinuousCreate.Options = { $0 }) async throws {
+    public func createContinuousProjection(name: String, query: String, configure: @Sendable (Projections<ContinuousTarget>.ContinuousCreate.Options) -> Projections<ContinuousTarget>.ContinuousCreate.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await projections(of: .continuous(name: name)).create(query: query, options: options)
     }
@@ -286,7 +286,7 @@ extension KurrentDBClient {
     ///   projection is deleted. Do not rely on transient projections for critical business data.
     ///
     /// - SeeAlso: `createContinuousProjection(name:query:configure:)`, `deleteProjection(name:configure:)`
-    public func createTransientProjection(name: String, query: String) async throws {
+    public func createTransientProjection(name: String, query: String) async throws(KurrentError) {
         try await projections(of: .transient(name: name)).create(query: query)
     }
 
@@ -376,7 +376,7 @@ extension KurrentDBClient {
     ///   updating it, resetting if needed, and then re-enabling.
     ///
     /// - SeeAlso: `resetProjection(name:)`, `disableProjection(name:)`, `enableProjection(name:)`
-    public func updateProjection(name: String, query: String, configure: @Sendable (Projections<NameTarget>.Update.Options) -> Projections<NameTarget>.Update.Options = { $0 }) async throws {
+    public func updateProjection(name: String, query: String, configure: @Sendable (Projections<NameTarget>.Update.Options) -> Projections<NameTarget>.Update.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await projections(of: NameTarget(name: name)).update(query: query, options: options)
     }
@@ -429,7 +429,7 @@ extension KurrentDBClient {
     /// - Note: Enabling an already-enabled projection is a no-op and will not throw an error.
     ///
     /// - SeeAlso: `disableProjection(name:)`, `createContinuousProjection(name:query:configure:)`
-    public func enableProjection(name: String) async throws {
+    public func enableProjection(name: String) async throws(KurrentError) {
         try await projections(of: NameTarget(name: name)).enable()
     }
 
@@ -486,7 +486,7 @@ extension KurrentDBClient {
     ///   are not processed. Re-enable promptly to maintain data freshness.
     ///
     /// - SeeAlso: `enableProjection(name:)`, `abortProjection(name:)`, `updateProjection(name:query:configure:)`
-    public func disableProjection(name: String) async throws {
+    public func disableProjection(name: String) async throws(KurrentError) {
         try await projections(of: NameTarget(name: name)).disable()
     }
 
@@ -543,7 +543,7 @@ extension KurrentDBClient {
     ///   inconsistent state. Use `disableProjection()` for graceful shutdown instead.
     ///
     /// - SeeAlso: `disableProjection(name:)`, `resetProjection(name:)`
-    public func abortProjection(name: String) async throws {
+    public func abortProjection(name: String) async throws(KurrentError) {
         try await projections(of: NameTarget(name: name)).abort()
     }
 
@@ -603,7 +603,7 @@ extension KurrentDBClient {
     ///   calls. Only use this option if you're certain the emitted data is no longer needed.
     ///
     /// - SeeAlso: `disableProjection(name:)`, `resetProjection(name:)`
-    public func deleteProjection(name: String, configure: @Sendable (Projections<NameTarget>.Delete.Options) -> Projections<NameTarget>.Delete.Options = { $0 }) async throws {
+    public func deleteProjection(name: String, configure: @Sendable (Projections<NameTarget>.Delete.Options) -> Projections<NameTarget>.Delete.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await projections(of: NameTarget(name: name)).delete(options: options)
     }
@@ -678,7 +678,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `updateProjection(name:query:configure:)`, `enableProjection(name:)`,
     ///   `getProjectionDetail(name:)`
-    public func resetProjection(name: String) async throws {
+    public func resetProjection(name: String) async throws(KurrentError) {
         try await projections(of: NameTarget(name: name)).reset()
     }
 
@@ -756,7 +756,7 @@ extension KurrentDBClient {
     ///   logic (e.g., `outputState()` or `emit()`) before expecting results.
     ///
     /// - SeeAlso: `getProjectionState(of:name:configure:)`, `getProjectionDetail(name:)`
-    public func getProjectionResult<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<NameTarget>.Result.Options) -> Projections<NameTarget>.Result.Options = { $0 }) async throws -> T? {
+    public func getProjectionResult<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<NameTarget>.Result.Options) -> Projections<NameTarget>.Result.Options = { $0 }) async throws(KurrentError) -> T? {
         let options = configure(.init())
         return try await projections(of: NameTarget(name: name)).result(of: T.self, options: options)
     }
@@ -848,7 +848,7 @@ extension KurrentDBClient {
     ///   represents a snapshot at query time and may be outdated immediately.
     ///
     /// - SeeAlso: `getProjectionResult(of:name:configure:)`, `getProjectionDetail(name:)`
-    public func getProjectionState<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<NameTarget>.State.Options) -> Projections<NameTarget>.State.Options = { $0 }) async throws -> T? {
+    public func getProjectionState<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<NameTarget>.State.Options) -> Projections<NameTarget>.State.Options = { $0 }) async throws(KurrentError) -> T? {
         let options = configure(.init())
         return try await projections(of: NameTarget(name: name)).state(of: T.self, options: options)
     }
@@ -919,7 +919,7 @@ extension KurrentDBClient {
     ///   may return `nil` if statistics have not been calculated yet.
     ///
     /// - SeeAlso: `listAllProjections(mode:)`, `getProjectionState(of:name:configure:)`
-    public func getProjectionDetail(name: String) async throws -> Projections<NameTarget>.Statistics.Detail? {
+    public func getProjectionDetail(name: String) async throws(KurrentError) -> Projections<NameTarget>.Statistics.Detail? {
         try await projections(of: NameTarget(name: name)).detail()
     }
 
@@ -1000,7 +1000,7 @@ extension KurrentDBClient {
     ///   with `$`) such as `$by_category` and `$by_event_type`.
     ///
     /// - SeeAlso: `getProjectionDetail(name:)`, `Projection.Mode`
-    public func listAllProjections(mode: some ProjectionMode) async throws -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
+    public func listAllProjections(mode: some ProjectionMode) async throws(KurrentError) -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
         try await projections().list(for: mode)
     }
 

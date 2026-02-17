@@ -112,7 +112,7 @@ extension KurrentDBClient {
     /// - SeeAlso: `subscribePersistentSubscription(stream:groupName:configure:)`,
     ///   `updatePersistentSubscription(stream:groupName:configure:)`,
     ///   `deletePersistentSubscription(stream:groupName:)`
-    public func createPersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await streams(of: .specified(streamIdentifier))
             .persistentSubscriptions(group: groupName)
@@ -187,7 +187,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `subscribePersistentSubscriptionToAllStreams(groupName:configure:)`,
     ///   `updatePersistentSubscriptionToAllStream(groupName:configure:)`
-    public func createPersistentSubscriptionToAllStream(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscriptionToAllStream(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Create.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await streams(of: .all)
             .persistentSubscriptions(group: groupName)
@@ -263,7 +263,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `createPersistentSubscription(stream:groupName:configure:)`,
     ///   `deletePersistentSubscription(stream:groupName:)`
-    public func updatePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options = { $0 }) async throws {
+    public func updatePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await streams(of: .specified(streamIdentifier))
             .persistentSubscriptions(group: groupName)
@@ -307,7 +307,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `createPersistentSubscriptionToAllStream(groupName:configure:)`,
     ///   `deletePersistentSubscriptionToAllStream(groupName:)`
-    public func updatePersistentSubscriptionToAllStream(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Update.Options = { $0 }) async throws {
+    public func updatePersistentSubscriptionToAllStream(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Update.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await streams(of: .all)
             .persistentSubscriptions(group: groupName)
@@ -407,7 +407,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `createPersistentSubscription(stream:groupName:configure:)`,
     ///   `PersistentSubscription.acknowledge(_:)`, `PersistentSubscription.nack(_:action:)`
-    public func subscribePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+    public func subscribePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .specified(streamIdentifier))
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
@@ -462,7 +462,7 @@ extension KurrentDBClient {
     ///   can handle the expected throughput or configure appropriate filters on the subscription group.
     ///
     /// - SeeAlso: `createPersistentSubscriptionToAllStream(groupName:configure:)`
-    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Read.Options = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.AllStream>.Subscription {
+    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.AllStream>.AllStream.Read.Options = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .all)
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
@@ -532,7 +532,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `createPersistentSubscription(stream:groupName:configure:)`,
     ///   `listPersistentSubscriptions(stream:)`
-    public func deletePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String) async throws {
+    public func deletePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String) async throws(KurrentError) {
         try await streams(of: .specified(streamIdentifier))
             .persistentSubscriptions(group: groupName)
             .delete()
@@ -561,7 +561,7 @@ extension KurrentDBClient {
     ///   store are lost and cannot be recovered.
     ///
     /// - SeeAlso: `createPersistentSubscriptionToAllStream(groupName:configure:)`
-    public func deletePersistentSubscriptionToAllStream(groupName: String) async throws {
+    public func deletePersistentSubscriptionToAllStream(groupName: String) async throws(KurrentError) {
         try await streams(of: .all)
             .persistentSubscriptions(group: groupName)
             .delete()
@@ -621,7 +621,7 @@ extension KurrentDBClient {
     ///   `KurrentError.notFound` if the specified stream does not exist (depending on server configuration).
     ///
     /// - SeeAlso: `listAllPersistentSubscription()`, `PersistentSubscription.SubscriptionInfo`
-    public func listPersistentSubscriptions(stream streamIdentifier: StreamIdentifier) async throws -> [PersistentSubscription.SubscriptionInfo] {
+    public func listPersistentSubscriptions(stream streamIdentifier: StreamIdentifier) async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         try await persistentSubscriptions.list(for: .stream(streamIdentifier))
     }
 
@@ -647,7 +647,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.accessDenied` if the user lacks subscription read permissions.
     ///
     /// - SeeAlso: `listAllPersistentSubscription()`, `createPersistentSubscriptionToAllStream(groupName:configure:)`
-    public func listPersistentSubscriptionsToAllStream() async throws -> [PersistentSubscription.SubscriptionInfo] {
+    public func listPersistentSubscriptionsToAllStream() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         try await persistentSubscriptions.list(for: .stream(.all))
     }
 
@@ -697,7 +697,7 @@ extension KurrentDBClient {
     ///   in systems with many subscription groups.
     ///
     /// - SeeAlso: `listPersistentSubscriptions(stream:)`, `listPersistentSubscriptionsToAllStream()`
-    public func listAllPersistentSubscription() async throws -> [PersistentSubscription.SubscriptionInfo] {
+    public func listAllPersistentSubscription() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         try await persistentSubscriptions.list(for: .allSubscriptions)
     }
 
@@ -762,7 +762,7 @@ extension KurrentDBClient {
     ///   operators and automated recovery systems.
     ///
     /// - SeeAlso: `listAllPersistentSubscription()`
-    public func restartPersistentSubscriptionSubsystem() async throws {
+    public func restartPersistentSubscriptionSubsystem() async throws(KurrentError) {
         try await persistentSubscriptions.restartSubsystem()
     }
 
@@ -782,7 +782,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.alreadyExists`, `KurrentError.accessDenied`, `KurrentError.invalidArgument`
     ///
     /// - SeeAlso: `createPersistentSubscription(stream:groupName:configure:)`
-    public func createPersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws {
+    public func createPersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Create.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await streams(of: .specified(streamName))
             .persistentSubscriptions(group: groupName)
@@ -803,7 +803,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.notFound`, `KurrentError.accessDenied`, `KurrentError.invalidArgument`
     ///
     /// - SeeAlso: `updatePersistentSubscription(stream:groupName:configure:)`
-    public func updatePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options = { $0 }) async throws {
+    public func updatePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await streams(of: .specified(streamName))
             .persistentSubscriptions(group: groupName)
@@ -826,7 +826,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.notFound`, `KurrentError.accessDenied`, `KurrentError.maximumSubscribersReached`
     ///
     /// - SeeAlso: `subscribePersistentSubscription(stream:groupName:configure:)`
-    public func subscribePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options = { $0 }) async throws -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+    public func subscribePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options) -> PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Read.Options = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
         let options = configure(.init())
         let stream = streams(of: .specified(streamName))
         return try await stream.persistentSubscriptions(group: groupName).subscribe(options: options)
@@ -847,7 +847,7 @@ extension KurrentDBClient {
     /// - Warning: Deletion is permanent and cannot be undone.
     ///
     /// - SeeAlso: `deletePersistentSubscription(stream:groupName:)`
-    public func deletePersistentSubscription(stream streamName: String, groupName: String) async throws {
+    public func deletePersistentSubscription(stream streamName: String, groupName: String) async throws(KurrentError) {
         try await streams(of: .specified(streamName))
             .persistentSubscriptions(group: groupName)
             .delete()
@@ -866,7 +866,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.accessDenied`, `KurrentError.notFound`
     ///
     /// - SeeAlso: `listPersistentSubscriptions(stream:)`
-    public func listPersistentSubscriptions(stream streamName: String) async throws -> [PersistentSubscription.SubscriptionInfo] {
+    public func listPersistentSubscriptions(stream streamName: String) async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         try await persistentSubscriptions.list(for: .stream(streamName))
     }
 }

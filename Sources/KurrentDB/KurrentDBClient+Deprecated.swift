@@ -28,7 +28,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: ``appendToStream(_:events:configure:)``
     @available(*, deprecated, renamed: "appendToStream")
-    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         try await appendToStream(streamIdentifier, events: events, configure: configure)
     }
 
@@ -54,7 +54,7 @@ extension KurrentDBClient {
     /// - SeeAlso: ``appendToStream(_:events:configure:)``
     @available(*, deprecated, renamed: "appendToStream")
     @discardableResult
-    public func appendStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         try await appendToStream(streamName, events: events, configure: configure)
     }
 
@@ -80,7 +80,7 @@ extension KurrentDBClient {
     /// - SeeAlso: ``appendToStream(_:events:configure:)``
     @available(*, deprecated, renamed: "appendToStream")
     @discardableResult
-    public func appendStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws -> Streams<SpecifiedStream>.Append.Response {
+    public func appendStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
         try await appendToStream(streamName, events: events, configure: configure)
     }
 }
