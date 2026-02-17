@@ -173,13 +173,22 @@ extension ClientSettings {
     }
 
     public static func localhost(ports: UInt32...) -> Self {
-        let endpoints = ports.map { Endpoint(host: "localhost", port: $0) }
+        let endpoints: [Endpoint] = ports.map { .init(host: "localhost", port: $0) }
         let clusterMode: TopologyClusterMode = if endpoints.count == 1 {
             .standalone(endpoint: endpoints[0])
         } else {
             .seeds(endpoints)
         }
         return Self(clusterMode: clusterMode)
+    }
+
+    public static func remote(_ endpoints: Endpoint..., secure: Bool = true) -> Self {
+        let clusterMode: TopologyClusterMode = if endpoints.count == 1 {
+            .standalone(endpoint: endpoints[0])
+        } else {
+            .seeds(endpoints)
+        }
+        return Self(clusterMode: clusterMode, secure: secure)
     }
 
     public static func parse(connectionString: String) throws(KurrentError) -> Self {

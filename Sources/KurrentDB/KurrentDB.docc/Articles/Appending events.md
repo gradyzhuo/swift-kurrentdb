@@ -178,7 +178,8 @@ if case let .event(event) = try await client.readStream("concurrency-stream"){ $
 You can provide user credentials to append the data as follows. This will override the default credentials set on the connection.
 
 ```swift
-let settings:ClientSettings = .localhost().authenticated(.credentials(username: "admin", password: "changeit"))
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "changeit"))
 
 let client = KurrentDBClient(settings: settings)
 
@@ -188,6 +189,30 @@ try await client.appendStream("some-stream", events: [
             eventType: "some-event",
             payload: data2)
 ])
+```
+
+For TLS-enabled or remote connections:
+
+```swift
+// Multi-node localhost with TLS
+let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+    .secure(true)
+    .tlsVerifyCert(false)
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+    .cerificate(path: "/path/to/ca.crt")
+let client = KurrentDBClient(settings: settings)
+
+// Remote cluster (secure: true by default)
+let settings = ClientSettings.remote("db.example.com:2113")
+    .tlsVerifyCert(false)
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+    .cerificate(path: "/path/to/ca.crt")
+let client = KurrentDBClient(settings: settings)
+
+// Remote without TLS
+let settings = ClientSettings.remote("db.example.com:2113", secure: false)
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+let client = KurrentDBClient(settings: settings)
 ```
 
 ## Architecture

@@ -14,13 +14,11 @@ struct MonitoringTests: Sendable {
     let settings: ClientSettings
 
     init() throws {
-        let caFile = Bundle.module.path(forResource: "ca", ofType: "crt")!
-        
-        ClientSettings
-        
-        settings = try "kurrentdb://localhost:2111,localhost:2112,localhost:2113?tls=true&tlsVerifyCert=false&tlsCaFile=\(caFile)".parse()
-//            .authenticated(.credentials(username: "admin", password: "changeit"))
-//            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+        settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .authenticated(.credentials(username: "admin", password: "changeit"))
+            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
     }
 
     // MARK: - Stats

@@ -46,7 +46,8 @@ You can use the configureOperationOptions argument to provide a function that wi
 The userCredentials argument is optional. It is used to override the default credentials specified when creating the client instance.
 
 ```swift
-let settings:ClientSettings = .localhost().authenticated(.credentials(username: "admin", password: "changeit"))
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "changeit"))
 
 let client = KurrentDBClient(settings: settings)
 
@@ -170,9 +171,11 @@ This argument is generic setting class for all operations that can be set on all
 The userCredentials argument is optional. It is used to override the default credentials specified when creating the client instance.
 
 ```swift
-let settings:ClientSettings = "esdb://localhost:2113?tls=false"
+let settings: ClientSettings = "esdb://localhost:2113?tls=false"
 
-let client = KurrentDBClient(settings: settings .authenticated(.credentials(username: "admin", password: "changeit")))
+let client = KurrentDBClient(
+    settings: settings.authenticated(.credentials(username: "admin", password: "changeit"))
+)
 
 let responses = try await client.readAllStream(){
     $0
