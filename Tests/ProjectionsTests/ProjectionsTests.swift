@@ -218,6 +218,29 @@ struct ProjectionsTests: Sendable {
         }
     }
 
+    @Test("List continuous projections via UnspecifiedContinuousProjectionTarget")
+    func listContinuousProjections() async throws {
+        let name = "test_listContinuous_\(UUID())"
+        try await client.createContinuousProjection(name: name, query: "fromAll().outputState()")
+
+        let projections = try await client.projections(of: .continuous).list()
+        #expect(projections.contains { $0.name == name })
+
+        try await client.disableProjection(name: name)
+        try await client.deleteProjection(name: name) {
+            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
+        }
+    }
+
+    @Test("List transient projections via UnspecifiedTransientProjectionTarget")
+    func listTransientProjections() async throws {
+        let name = "test_listTransient_\(UUID())"
+        try await client.createTransientProjection(name: name, query: "fromAll().outputState()")
+
+        let projections = try await client.projections(of: .transient).list()
+        #expect(projections.contains { $0.name == name })
+    }
+
     @Test("Status parsing from string", arguments: [
         ("Aborted/Stopped", [Projection.Status.Name.aborted, Projection.Status.Name.stopped]),
         ("Stopped/Faulted", [Projection.Status.Name.stopped, Projection.Status.Name.faulted]),
