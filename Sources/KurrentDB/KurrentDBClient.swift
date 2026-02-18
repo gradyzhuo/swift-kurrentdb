@@ -101,8 +101,8 @@ public actor KurrentDBClient: Sendable, Buildable {
     public init(settings: ClientSettings, numberOfThreads: Int = 1, defaultCallOptions: CallOptions = .defaults) {
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
-        selector = .init(settings: settings)
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
+        self.selector = .init(settings: settings)
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
     }
 
     /// Creates a new client instance using an externally managed event loop group.
@@ -126,10 +126,10 @@ public actor KurrentDBClient: Sendable, Buildable {
     ///   cause all pending operations to fail.
     ///
     /// - SeeAlso: `ClientSettings`, `CallOptions`, `EventLoopGroup`
-    public init(settings: ClientSettings, eventLoopGroup: EventLoopGroup, defaultCallOptions: CallOptions = .defaults) {
+    private init(settings: ClientSettings, eventLoopGroup: EventLoopGroup, defaultCallOptions: CallOptions = .defaults) {
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
-        selector = .init(settings: settings)
+        self.selector = .init(settings: settings)
         self.eventLoopGroup = eventLoopGroup
     }
 }
