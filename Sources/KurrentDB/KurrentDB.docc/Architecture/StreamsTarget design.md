@@ -93,7 +93,7 @@ try await client.streams(of: .multiple).read(configure: { $0.forward() })
 | Concept | StreamsTarget | UsersTarget | ProjectionsTarget | OperationsTarget |
 |---------|--------------|-------------|-------------------|------------------|
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` |
-| Creation Target | — | `AllUsersTarget` | `ContinuousTarget`, `OneTimeTarget`, `TransientTarget` | `ScavengeOperations` |
+| Creation Target | — | `AllUsersTarget` | `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget` | `ScavengeOperations` |
 | Control Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` |
 | System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` |
 | Batch Target | `MultiStreams` | — | — | — |

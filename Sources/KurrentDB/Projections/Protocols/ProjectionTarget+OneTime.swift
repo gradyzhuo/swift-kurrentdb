@@ -7,5 +7,5 @@
 
 /// A generic target representing one time projections.
 ///
-/// `OneTimeTarget` is used to perform operations on all projections, with the behavior determined
-public struct OneTimeTarget: ProjectionsTarget {}
+/// `OneTimeProjectionTarget` is used to perform operations on all projections, with the behavior determined
+public struct OneTimeProjectionTarget: ProjectionsTarget {}
