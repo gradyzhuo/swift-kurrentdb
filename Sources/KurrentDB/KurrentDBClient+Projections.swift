@@ -9,18 +9,41 @@
 
 extension KurrentDBClient {
     /// Creates a projections interface targeting all projections.
-    package func projections() -> Projections<AnyProjectionsTarget> {
-        .init(target: .init(), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+    package var projections: Projections<AnyProjectionsTarget> {
+        get{
+            .init(
+                target: .init(),
+                selector: selector,
+                callOptions: defaultCallOptions,
+                eventLoopGroup: eventLoopGroup)
+        }
     }
 
     /// Creates a projections interface for a specific target type.
     package func projections<Target: ProjectionsTarget>(of target: Target) -> Projections<Target> {
-        .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+        .init(
+            target: target,
+            selector: selector,
+            callOptions: defaultCallOptions,
+            eventLoopGroup: eventLoopGroup)
+    }
+    
+    /// Creates a projections interface for a predefined system projection.
+    package func projection(name: String) -> Projections<NameTarget> {
+        .init(
+            target: .init(name: name),
+            selector: selector,
+            callOptions: defaultCallOptions,
+            eventLoopGroup: eventLoopGroup)
     }
 
     /// Creates a projections interface for a predefined system projection.
     package func projections(system predefined: NameTarget.Predefined) -> Projections<NameTarget> {
-        .init(target: .init(predefined: predefined), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+        .init(
+            target: .init(predefined: predefined),
+            selector: selector,
+            callOptions: defaultCallOptions,
+            eventLoopGroup: eventLoopGroup)
     }
 }
 
@@ -33,17 +56,17 @@ extension KurrentDBClient {
     }
 
     /// Returns a projections interface for a continuous projection with the specified name.
-    func continuousProjection(name: String) -> Projections<ContinuousTarget> {
+    func continuousProjection(name: String) -> Projections<SpecifiedContinuousProjectionTarget> {
         projections(of: .continuous(name: name))
     }
 
     /// Returns a projections interface for one-time projections.
-    var oneTimeProjection: Projections<OneTimeTarget> {
+    var oneTimeProjection: Projections<OneTimeProjectionTarget> {
         projections(of: .onetime)
     }
 
     /// Returns a projections interface for a transient projection with the specified name.
-    func transientProjection(name: String) -> Projections<TransientTarget> {
+    func transientProjection(name: String) -> Projections<SpecifiedTransientProjectionTarget> {
         projections(of: .transient(name: name))
     }
 
@@ -204,7 +227,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `enableProjection(name:)`, `updateProjection(name:query:configure:)`,
     ///   `getProjectionState(of:name:configure:)`
-    public func createContinuousProjection(name: String, query: String, configure: @Sendable (Projections<ContinuousTarget>.ContinuousCreate.Options) -> Projections<ContinuousTarget>.ContinuousCreate.Options = { $0 }) async throws(KurrentError) {
+    public func createContinuousProjection(name: String, query: String, configure: @Sendable (Projections<SpecifiedContinuousProjectionTarget>.ContinuousCreate.Options) -> Projections<SpecifiedContinuousProjectionTarget>.ContinuousCreate.Options = { $0 }) async throws(KurrentError) {
         let options = configure(.init())
         try await projections(of: .continuous(name: name)).create(query: query, options: options)
     }
@@ -1001,7 +1024,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `getProjectionDetail(name:)`, `Projection.Mode`
     public func listAllProjections(mode: some ProjectionMode) async throws(KurrentError) -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
-        try await projections().list(for: mode)
+        try await projections.list(for: mode)
     }
 
     /// Restarts the entire projection subsystem across the cluster.

@@ -7,7 +7,7 @@
 
 /// A generic target representing continuous projections.
 ///
-/// `ContinuousTarget` is used to perform operations on all projections, with the behavior determined
-public struct ContinuousTarget: ProjectionsTarget, ProjectionControlable {
+/// `SpecifiedContinuousProjectionTarget` is used to perform operations on all projections, with the behavior determined
+public struct SpecifiedContinuousProjectionTarget: ProjectionsTarget, ProjectionControlable {
     public let name: String
 }
