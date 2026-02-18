@@ -13,16 +13,16 @@
 ///
 /// The target identifies which projection(s) the operation applies to:
 /// - `NameTarget`: Operates on a specific named projection
-/// - `ContinuousTarget`: Operates on a continuous projection with specific name
-/// - `OneTimeTarget`: Operates on one-time projections (scope is execution-based)
-/// - `TransientTarget`: Operates on a transient projection with specific name
+/// - `SpecifiedContinuousProjectionTarget`: Operates on a continuous projection with specific name
+/// - `OneTimeProjectionTarget`: Operates on one-time projections (scope is execution-based)
+/// - `SpecifiedTransientProjectionTarget`: Operates on a transient projection with specific name
 /// - `AnyProjectionsTarget`: Operates across all projections
 ///
 /// ## 2. Constrains Available Operations (What)
 ///
 /// Through protocol composition, different target types enable different capabilities:
 /// - Targets conforming to `ProjectionControllable` support enable, disable, update, delete, reset operations
-/// - `OneTimeTarget` only supports creation (one-time projections don't persist for control operations)
+/// - `OneTimeProjectionTarget` only supports creation (one-time projections don't persist for control operations)
 /// - `AnyProjectionsTarget` supports listing and subsystem restart operations
 /// - The type system prevents invalid operations at compile time
 ///
@@ -89,7 +89,7 @@
 ///
 /// - Note: This protocol is marked as `Sendable`, ensuring it can be safely used across concurrency contexts.
 ///
-/// - SeeAlso: `ProjectionControllable`, `NameTarget`, `ContinuousTarget`, `OneTimeTarget`, `TransientTarget`, `AnyProjectionsTarget`
+/// - SeeAlso: `ProjectionControllable`, `NameTarget`, `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget`, `AnyProjectionsTarget`
 public protocol ProjectionsTarget: Sendable {}
 
 /// Extension providing static methods to create `ProjectionStream` instances.
@@ -98,15 +98,15 @@ extension ProjectionsTarget {
         .init(name: name)
     }
 
-    public static func continuous(name: String) -> ContinuousTarget {
+    public static func continuous(name: String) -> SpecifiedContinuousProjectionTarget {
         .init(name: name)
     }
 
-    public static var onetime: OneTimeTarget {
+    public static var onetime: OneTimeProjectionTarget {
         .init()
     }
 
-    public static func transient(name: String) -> TransientTarget {
+    public static func transient(name: String) -> SpecifiedTransientProjectionTarget {
         .init(name: name)
     }
 
