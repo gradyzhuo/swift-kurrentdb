@@ -102,12 +102,20 @@ extension ProjectionsTarget {
         .init(name: name)
     }
 
+    public static var continuous: UnspecifiedContinuousProjectionTarget {
+        .init()
+    }
+
     public static var onetime: OneTimeProjectionTarget {
         .init()
     }
 
     public static func transient(name: String) -> SpecifiedTransientProjectionTarget {
         .init(name: name)
+    }
+
+    public static var transient: UnspecifiedTransientProjectionTarget {
+        .init()
     }
 
     public static var any: AnyProjectionsTarget {

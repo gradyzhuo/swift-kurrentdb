@@ -179,39 +179,3 @@ extension Projections where Target: ProjectionControlable {
         }
     }
 }
-
-extension Projections {
-    /// Retrieves a list of all continuous projection statistics.
-    ///
-    /// - Returns: An array of `Statistics.Detail` containing projection statistics.
-    /// - Throws: An error if the operation fails.
-    public func list(mode: Projection.Mode) async throws(KurrentError) -> [Statistics.Detail] {
-        let usecase = Statistics(options: .listAll(mode: mode))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do {
-            return try await response.reduce(into: .init()) { partialResult, response in
-                partialResult.append(response.detail)
-            }
-        } catch {
-            throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
-        }
-    }
-}
-
-extension Projections {
-    /// Retrieves a list of all projection statistics for any mode.
-    ///
-    /// - Returns: An array of `Statistics.Detail` containing projection statistics.
-    /// - Throws: An error if the operation fails.
-    public func list(for mode: some ProjectionMode) async throws(KurrentError) -> [Statistics.Detail] {
-        let usecase = Statistics(options: .listAll(mode: mode.mode))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
-        do {
-            return try await response.reduce(into: .init()) { partialResult, response in
-                partialResult.append(response.detail)
-            }
-        } catch {
-            throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
-        }
-    }
-}
