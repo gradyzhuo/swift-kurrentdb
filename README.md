@@ -121,7 +121,9 @@ let byCategory = client.streams(of: .byStream(prefix: "order"))
 #### Projections
 
 ```swift
-// Create projections by mode
+// --- Convenience API ---
+
+// Create projections
 try await client.createContinuousProjection(name: "order-count", query: js)
 try await client.createOneTimeProjection(query: js)
 try await client.createTransientProjection(name: "temp", query: js)
@@ -131,19 +133,45 @@ try await client.enableProjection(name: "order-count")
 try await client.disableProjection(name: "order-count")
 try await client.deleteProjection(name: "order-count")
 
-// Get projection state and result
+// Query projection state and result
 let state = try await client.getProjectionState(of: CountResult.self, name: "order-count")
 let result = try await client.getProjectionResult(of: Int.self, name: "order-count")
 
-// List projections
-let all = try await client.listAllProjections()
+// List projections by mode
 let continuous = try await client.listAllProjections(mode: .continuous)
+let transient  = try await client.listAllProjections(mode: .transient)
+let all        = try await client.listAllProjections(mode: .any)
 
-// Target-based API
+// --- Target-based API ---
+
+// .continuous(name:) — create + full control on a named continuous projection
 let projection = client.projections(of: .continuous(name: "order-count"))
+try await projection.create(query: js)
 try await projection.enable()
 try await projection.disable()
-try await projection.state(as: CountResult.self)
+try await projection.reset()
+let detail = try await projection.detail()
+
+// .continuous — list all continuous projections (no name required)
+let details: [ProjectionDetail] = try await client.projections(of: .continuous).list()
+
+// .transient(name:) — create + control on a named transient projection
+let transientProjection = client.projections(of: .transient(name: "temp"))
+try await transientProjection.create(query: js)
+
+// .transient — list all transient projections
+let transientDetails: [ProjectionDetail] = try await client.projections(of: .transient).list()
+
+// .onetime — create a one-time projection
+try await client.projections(of: .onetime).create(query: js)
+
+// .any — list all projections regardless of mode
+let allDetails: [ProjectionDetail] = try await client.projections(of: .any).list()
+
+// named("...") — control an existing projection by name (any mode)
+let named = client.projections(of: .named("order-count"))
+try await named.enable()
+let state2 = try await named.state(of: CountResult.self)
 ```
 
 #### Persistent Subscriptions

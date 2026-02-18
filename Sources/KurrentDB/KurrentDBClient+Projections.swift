@@ -1023,8 +1023,17 @@ extension KurrentDBClient {
     ///   with `$`) such as `$by_category` and `$by_event_type`.
     ///
     /// - SeeAlso: `getProjectionDetail(name:)`, `Projection.Mode`
-    public func listAllProjections(mode: some ProjectionMode) async throws(KurrentError) -> [Projections<AnyProjectionsTarget>.Statistics.Detail] {
-        try await projections.list(for: mode)
+    public func listAllProjections(mode: some ProjectionMode) async throws(KurrentError) -> [ProjectionDetail] {
+        return switch mode.mode {
+        case .continuous:
+            try await projections(of: UnspecifiedContinuousProjectionTarget()).list()
+        case .transient:
+            try await projections(of: UnspecifiedTransientProjectionTarget()).list()
+        case .oneTime:
+            try await projections(of: OneTimeProjectionTarget()).list()
+        case .any:
+            try await projections(of: AnyProjectionsTarget()).list()
+        }
     }
 
     /// Restarts the entire projection subsystem across the cluster.
