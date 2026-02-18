@@ -121,15 +121,29 @@ let byCategory = client.streams(of: .byStream(prefix: "order"))
 #### Projections
 
 ```swift
-// Create a continuous projection
+// Create projections by mode
 try await client.createContinuousProjection(name: "order-count", query: js)
+try await client.createOneTimeProjection(query: js)
+try await client.createTransientProjection(name: "temp", query: js)
 
-// Control projections
+// Control a named projection
 try await client.enableProjection(name: "order-count")
 try await client.disableProjection(name: "order-count")
+try await client.deleteProjection(name: "order-count")
 
-// Get projection state
+// Get projection state and result
 let state = try await client.getProjectionState(of: CountResult.self, name: "order-count")
+let result = try await client.getProjectionResult(of: Int.self, name: "order-count")
+
+// List projections
+let all = try await client.listAllProjections()
+let continuous = try await client.listAllProjections(mode: .continuous)
+
+// Target-based API
+let projection = client.projections(of: .continuous(name: "order-count"))
+try await projection.enable()
+try await projection.disable()
+try await projection.state(as: CountResult.self)
 ```
 
 #### Persistent Subscriptions

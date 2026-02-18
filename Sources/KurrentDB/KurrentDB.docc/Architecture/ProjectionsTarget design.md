@@ -12,9 +12,9 @@ The Projections API uses a target-based design pattern, consistent with ``Stream
 ProjectionsTarget (Protocol)
 ├── ProjectionControlable (Protocol)
 │   ├── NameTarget (Struct)
-│   ├── ContinuousTarget (Struct)
-│   └── TransientTarget (Struct)
-├── OneTimeTarget (Struct)
+│   ├── SpecifiedContinuousProjectionTarget (Struct)
+│   └── SpecifiedTransientProjectionTarget (Struct)
+├── OneTimeProjectionTarget (Struct)
 └── AnyProjectionsTarget (Struct)
 ```
 
@@ -25,9 +25,9 @@ Each target type represents a different scope and mode of projection operations:
 | Target | Purpose | Operations |
 |--------|---------|------------|
 | ``NameTarget`` | Control a specific named projection (any mode) | `enable()`, `disable()`, `update(query:)`, `delete()`, `reset()`, `result()`, `state()`, `statistics()` |
-| ``ContinuousTarget`` | Create and control a continuous projection | `create(query:)` + all ``NameTarget`` operations |
-| ``OneTimeTarget`` | Create a one-time projection | `create(query:)` |
-| ``TransientTarget`` | Create and control a transient projection | `create(query:)` + all ``NameTarget`` operations |
+| ``SpecifiedContinuousProjectionTarget`` | Create and control a continuous projection | `create(query:)` + all ``NameTarget`` operations |
+| ``OneTimeProjectionTarget`` | Create a one-time projection | `create(query:)` |
+| ``SpecifiedTransientProjectionTarget`` | Create and control a transient projection | `create(query:)` + all ``NameTarget`` operations |
 | ``AnyProjectionsTarget`` | System-wide projection operations | `list(for:)`, `restartSubsystem()` |
 
 ## Design decisions
@@ -36,9 +36,9 @@ Each target type represents a different scope and mode of projection operations:
 
 KurrentDB projections have three distinct modes with different lifecycle semantics:
 
-1. **ContinuousTarget** — Projections that run indefinitely, processing new events as they arrive. Can be controlled (enabled, disabled, updated, deleted) after creation.
-2. **OneTimeTarget** — Projections that run once and produce a result. Cannot be controlled after creation because they complete immediately.
-3. **TransientTarget** — Projections that run while a client is connected. Can be controlled during the session.
+1. **SpecifiedContinuousProjectionTarget** — Projections that run indefinitely, processing new events as they arrive. Can be controlled (enabled, disabled, updated, deleted) after creation.
+2. **OneTimeProjectionTarget** — Projections that run once and produce a result. Cannot be controlled after creation because they complete immediately.
+3. **SpecifiedTransientProjectionTarget** — Projections that run while a client is connected. Can be controlled during the session.
 
 Separating them ensures you cannot call `enable()` on a one-time projection (which has no persistent state to enable), while allowing it on continuous and transient projections.
 
@@ -48,7 +48,7 @@ Separating them ensures you cannot call `enable()` on a one-time projection (whi
 
 ### Why ProjectionControlable?
 
-The ``ProjectionControlable`` protocol marks targets that support control operations (enable, disable, update, delete, reset). It requires a `name` property, ensuring the target can identify which projection to control. ``OneTimeTarget`` and ``AnyProjectionsTarget`` do not conform because they don't support individual projection control.
+The ``ProjectionControlable`` protocol marks targets that support control operations (enable, disable, update, delete, reset). It requires a `name` property, ensuring the target can identify which projection to control. ``OneTimeProjectionTarget`` and ``AnyProjectionsTarget`` do not conform because they don't support individual projection control.
 
 ## Static factory methods
 
@@ -56,9 +56,9 @@ Each target has a static factory method on ``ProjectionsTarget``:
 
 ```swift
 client.projections(name: "my-projection")       // NameTarget (via convenience)
-client.projections(of: .continuous(name: "stats"))   // ContinuousTarget
-client.projections(of: .onetime)                     // OneTimeTarget
-client.projections(of: .transient(name: "temp"))     // TransientTarget
+client.projections(of: .continuous(name: "stats"))   // SpecifiedContinuousProjectionTarget
+client.projections(of: .onetime)                     // OneTimeProjectionTarget
+client.projections(of: .transient(name: "temp"))     // SpecifiedTransientProjectionTarget
 client.projections(of: .any)                         // AnyProjectionsTarget
 ```
 
@@ -94,7 +94,7 @@ try await client.listAllProjections(mode: .continuous)
 | Concept | StreamsTarget | UsersTarget | ProjectionsTarget | OperationsTarget |
 |---------|--------------|-------------|-------------------|------------------|
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` |
-| Creation Target | — | `AllUsersTarget` | `ContinuousTarget`, `OneTimeTarget`, `TransientTarget` | `ScavengeOperations` |
+| Creation Target | — | `AllUsersTarget` | `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget` | `ScavengeOperations` |
 | Control Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` |
 | System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` |
 | Service Actor | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |

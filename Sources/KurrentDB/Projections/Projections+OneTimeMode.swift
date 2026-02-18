@@ -11,7 +11,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-extension Projections where Target == OneTimeTarget {
+extension Projections where Target == OneTimeProjectionTarget {
     /// Creates a continuous projection with the specified query and options.
     ///
     /// - Parameters:

@@ -7,7 +7,7 @@
 
 /// A generic target representing transient projections.
 ///
-/// `TransientTarget` is used to perform operations on all projections, with the behavior determined
-public struct TransientTarget: ProjectionsTarget, ProjectionControlable {
+/// `SpecifiedTransientProjectionTarget` is used to perform operations on all projections, with the behavior determined
+public struct SpecifiedTransientProjectionTarget: ProjectionsTarget, ProjectionControlable {
     public let name: String
 }
