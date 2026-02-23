@@ -51,8 +51,8 @@ extension KurrentDBClient {
 
 extension KurrentDBClient {
     /// Returns a projections interface targeting all projections.
-    var anyProjection: Projections<AnyProjectionsTarget> {
-        projections(of: .any)
+    var anyMode: Projections<AnyProjectionsTarget> {
+        projections(of: .anyMode)
     }
 
     /// Returns a projections interface for a continuous projection with the specified name.
@@ -942,7 +942,7 @@ extension KurrentDBClient {
     ///   may return `nil` if statistics have not been calculated yet.
     ///
     /// - SeeAlso: `listAllProjections(mode:)`, `getProjectionState(of:name:configure:)`
-    public func getProjectionDetail(name: String) async throws(KurrentError) -> Projections<NameTarget>.Statistics.Detail? {
+    public func getProjectionDetail(name: String) async throws(KurrentError) -> Projection.Detail? {
         try await projections(of: NameTarget(name: name)).detail()
     }
 
@@ -1023,8 +1023,8 @@ extension KurrentDBClient {
     ///   with `$`) such as `$by_category` and `$by_event_type`.
     ///
     /// - SeeAlso: `getProjectionDetail(name:)`, `Projection.Mode`
-    public func listAllProjections(mode: some ProjectionMode) async throws(KurrentError) -> [ProjectionDetail] {
-        return switch mode.mode {
+    public func listAllProjections(mode: Projection.Mode) async throws(KurrentError) -> [Projection.Detail] {
+        return switch mode {
         case .continuous:
             try await projections(of: UnspecifiedContinuousProjectionTarget()).list()
         case .transient:

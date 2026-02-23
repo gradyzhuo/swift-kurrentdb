@@ -37,7 +37,7 @@ extension Projections where Target == UnspecifiedTransientProjectionTarget {
     ///           aggregating the response stream.
     /// - Note: Internally, this performs a list-all operation scoped to the transient projection mode
     ///         and reduces the streamed responses into a single result set.
-    public func list() async throws(KurrentError) -> [Statistics.Detail] {
+    public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .transient))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {
