@@ -33,7 +33,7 @@
 /// ```swift
 /// // Target specifies: specific projection "order-analytics" (where)
 /// // Target constrains: can control this projection (what)
-/// let projection = Projections(target: .named("order-analytics"), ...)
+/// let projection = Projections(target: .anyMode(name: "order-analytics"), ...)
 /// try await projection.enable()                   // ✓ Allowed
 /// try await projection.disable()                  // ✓ Allowed
 /// try await projection.update(query: newQuery)    // ✓ Allowed
@@ -63,7 +63,7 @@
 ///
 /// ```swift
 /// // Named projection (any mode)
-/// let named = ProjectionsTarget.named("my-projection")
+/// let named = ProjectionsTarget.anyMode(name: "my-projection")
 ///
 /// // Continuous projection
 /// let continuous = ProjectionsTarget.continuous(name: "order-stats")
@@ -92,17 +92,34 @@
 /// - SeeAlso: `ProjectionControllable`, `NameTarget`, `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget`, `AnyProjectionsTarget`
 public protocol ProjectionsTarget: Sendable {}
 
-/// Extension providing static methods to create `ProjectionStream` instances.
-extension ProjectionsTarget {
-    public static func named(_ name: String) -> NameTarget {
+extension ProjectionsTarget where Self == NameTarget {
+    /// Creates a target for a specific projection identified by name, regardless of its mode.
+    ///
+    /// Use this when you want to address a projection by name without constraining it to a
+    /// particular type (continuous, transient, etc.). This target is typically used for
+    /// control operations (enable, disable, update, delete, reset) that apply to a named
+    /// projection.
+    ///
+    /// Example:
+    /// ```swift
+    /// let target = ProjectionsTarget.anyMode(name: "order-analytics")
+    /// // Can be used with APIs that operate on a specific named projection
+    /// ```
+    ///
+    /// - Parameter name: The unique name of the projection to target.
+    /// - Returns: A `NameTarget` representing the specified projection.
+    public static func anyMode(name: String) -> Self {
         .init(name: name)
     }
+}
 
+/// Extension providing static methods to create `ProjectionStream` instances.
+extension ProjectionsTarget {
     public static func continuous(name: String) -> SpecifiedContinuousProjectionTarget {
         .init(name: name)
     }
 
-    public static var continuous: UnspecifiedContinuousProjectionTarget {
+    public static var anyContinuous: UnspecifiedContinuousProjectionTarget {
         .init()
     }
 
@@ -114,11 +131,11 @@ extension ProjectionsTarget {
         .init(name: name)
     }
 
-    public static var transient: UnspecifiedTransientProjectionTarget {
+    public static var anyTransient: UnspecifiedTransientProjectionTarget {
         .init()
     }
 
-    public static var any: AnyProjectionsTarget {
+    public static var anyMode: AnyProjectionsTarget {
         .init()
     }
 }

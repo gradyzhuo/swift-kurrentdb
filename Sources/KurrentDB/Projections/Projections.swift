@@ -124,7 +124,7 @@ extension Projections where Target: ProjectionControlable {
     ///
     /// - Returns: An optional `Statistics.Detail` containing the projection's details, or `nil` if none exist.
     /// - Throws: An error if retrieving details fails.
-    public func detail() async throws(KurrentError) -> Statistics.Detail? {
+    public func detail() async throws(KurrentError) -> Projection.Detail? {
         let usecase = Statistics(options: .specified(name: target.name))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {

@@ -39,7 +39,7 @@ extension Projections where Target == AnyProjectionsTarget {
     ///   configured on the `Projections` instance, as well as a functioning GRPC transport.
     ///
     /// - SeeAlso: `Statistics`, `Statistics.Options.listAll(mode:)`, `Statistics.Detail`
-    public func list() async throws(KurrentError) -> [Statistics.Detail] {
+    public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .any))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {

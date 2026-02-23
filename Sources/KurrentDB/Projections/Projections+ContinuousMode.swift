@@ -47,7 +47,7 @@ extension Projections where Target == UnspecifiedContinuousProjectionTarget {
     ///
     /// - Note: The results are derived from a streamed response; if any element in the stream
     ///   fails to decode or process, the entire operation throws.
-    public func list() async throws(KurrentError) -> [Statistics.Detail] {
+    public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .continuous))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {

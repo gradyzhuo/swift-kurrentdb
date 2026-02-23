@@ -46,7 +46,6 @@ struct ProjectionsTests: Sendable {
         """
 
         try await client.createContinuousProjection(name: name, query: js)
-
         let details = try #require(await client.getProjectionDetail(name: name))
         #expect(details.name == name)
         #expect(details.mode == .continuous)
@@ -223,7 +222,7 @@ struct ProjectionsTests: Sendable {
         let name = "test_listContinuous_\(UUID())"
         try await client.createContinuousProjection(name: name, query: "fromAll().outputState()")
 
-        let projections = try await client.projections(of: .continuous).list()
+        let projections = try await client.projections(of: .anyContinuous).list()
         #expect(projections.contains { $0.name == name })
 
         try await client.disableProjection(name: name)
@@ -237,7 +236,7 @@ struct ProjectionsTests: Sendable {
         let name = "test_listTransient_\(UUID())"
         try await client.createTransientProjection(name: name, query: "fromAll().outputState()")
 
-        let projections = try await client.projections(of: .transient).list()
+        let projections = try await client.projections(of: .anyTransient).list()
         #expect(projections.contains { $0.name == name })
     }
 
