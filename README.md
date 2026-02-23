@@ -152,24 +152,24 @@ try await projection.disable()
 try await projection.reset()
 let detail = try await projection.detail()
 
-// .continuous — list all continuous projections (no name required)
-let details: [ProjectionDetail] = try await client.projections(of: .continuous).list()
+// .anyContinuous — list all continuous projections (no name required)
+let details: [Projection.Detail] = try await client.projections(of: .anyContinuous).list()
 
 // .transient(name:) — create + control on a named transient projection
 let transientProjection = client.projections(of: .transient(name: "temp"))
 try await transientProjection.create(query: js)
 
-// .transient — list all transient projections
-let transientDetails: [ProjectionDetail] = try await client.projections(of: .transient).list()
+// .anyTransient — list all transient projections
+let transientDetails: [Projection.Detail] = try await client.projections(of: .anyTransient).list()
 
 // .onetime — create a one-time projection
 try await client.projections(of: .onetime).create(query: js)
 
-// .any — list all projections regardless of mode
-let allDetails: [ProjectionDetail] = try await client.projections(of: .any).list()
+// .anyMode — list all projections regardless of mode
+let allDetails: [Projection.Detail] = try await client.projections(of: .anyMode).list()
 
 // named("...") — control an existing projection by name (any mode)
-let named = client.projections(of: .named("order-count"))
+let named = client.projections(of: .anyMode(name: "order-count"))
 try await named.enable()
 let state2 = try await named.state(of: CountResult.self)
 ```
