@@ -49,7 +49,7 @@ extension Projections where Target == OneTimeProjectionTarget {
     /// - Note: This method is available when `Projections.Target` is `OneTimeProjectionTarget`.
     ///
     /// - SeeAlso: `Statistics`, `Statistics.Detail`, `OneTimeProjectionTarget`
-    public func list() async throws(KurrentError) -> [Statistics.Detail] {
+    public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .oneTime))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {
