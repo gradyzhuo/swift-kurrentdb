@@ -23,6 +23,9 @@ jobs:
            swift-version: ${{ matrix.swift }}
       - run: ulimit -n 10000
 
+      - name: Install libjemalloc-dev
+        run: sudo apt-get install -y libjemalloc-dev
+
       - name: Start KurrentDB cluster
         run: docker compose -f server/docker-compose.yaml up -d
 
