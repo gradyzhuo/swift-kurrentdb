@@ -1,6 +1,6 @@
 //
 //  Direction.swift
-//  KurrentDB-Swift
+//  swift-kurrentdb
 //
 //  Created by Grady Zhuo on 2025/3/25.
 //
