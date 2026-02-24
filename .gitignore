@@ -7,3 +7,4 @@ DerivedData/
 .swiftpm/xcode/
 .netrc
 Package.resolved
+.claude/
