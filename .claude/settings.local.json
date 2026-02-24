@@ -14,7 +14,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(swiftformat:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cd \"/Users/gradyzhuo/Dropbox/Work/mendesky/development/Swift Package Index \\(1\\)/KurrentDB\" && wc -l Sources/KurrentDB/KurrentDBClient.swift Sources/KurrentDB/KurrentDBClient+*.swift | tail -1)"
     ],
     "deny": [],
     "ask": []
