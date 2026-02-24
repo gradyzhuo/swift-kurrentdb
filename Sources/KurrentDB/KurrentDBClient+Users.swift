@@ -1,6 +1,6 @@
 //
 //  KurrentDBClient+Users.swift
-//  KurrentDB-Swift
+//  swift-kurrentdb
 //
 //  Created by Grady Zhuo on 2026/2/13.
 //

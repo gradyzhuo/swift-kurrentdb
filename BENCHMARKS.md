@@ -1,6 +1,6 @@
 # Benchmarks
 
-Offline benchmarks for KurrentDB-Swift covering client-side code paths that require no server connection.
+Offline benchmarks for swift-kurrentdb covering client-side code paths that require no server connection.
 All benchmarks use [ordo-one/package-benchmark](https://github.com/ordo-one/package-benchmark) and are run in **release mode**.
 
 ## Environment

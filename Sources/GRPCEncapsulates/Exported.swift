@@ -1,6 +1,6 @@
 //
 //  Exported.swift
-//  KurrentDB-Swift
+//  swift-kurrentdb
 //
 //  Created by Grady Zhuo on 2025/11/10.
 //
