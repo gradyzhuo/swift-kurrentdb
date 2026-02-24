@@ -57,13 +57,78 @@ import NIOSSL
 ///
 /// - SeeAlso: `ClientSettings`, `NodeSelector`, `Streams`, `Projections`
 public actor KurrentDBClient: Sendable, Buildable {
-    /// The default call options applied to all RPC operations unless overridden.
+    
+    /// Default gRPC call options applied to all client operations.
     ///
-    /// These options control behavior such as request timeouts, metadata headers,
-    /// and compression settings for all gRPC calls made by this client.
+    /// These options control the behavior of gRPC calls made by the client, including timeouts,
+    /// custom metadata, compression settings, and other request-level configurations. All operations
+    /// performed through this client instance will use these options unless explicitly overridden
+    /// on a per-call basis.
+    ///
+    /// ## Common Use Cases
+    ///
+    /// - Setting request timeouts to prevent indefinite blocking
+    /// - Adding custom metadata headers for authentication or tracing
+    /// - Configuring compression for network efficiency
+    /// - Enabling or disabling specific gRPC features
+    ///
+    /// ## Modifying Call Options
+    ///
+    /// While `defaultCallOptions` can be updated, it's recommended to configure them during
+    /// client initialization for consistency:
+    ///
+    /// ```swift
+    /// var callOptions = CallOptions.defaults
+    /// callOptions.timeLimit = .timeout(.seconds(30))
+    ///
+    /// let client = KurrentDBClient(
+    ///     settings: settings,
+    ///     defaultCallOptions: callOptions
+    /// )
+    /// ```
+    ///
+    /// - Note: Changes to this property affect all subsequent operations but do not impact
+    ///   requests that are already in flight.
+    ///
+    /// - SeeAlso: `CallOptions` from GRPCCore for available configuration options
     public private(set) var defaultCallOptions: CallOptions
 
-    /// The connection settings defining cluster endpoints, credentials, and TLS configuration.
+    
+    /// The configuration settings that define how the client connects to and interacts with the KurrentDB cluster.
+    ///
+    /// This property contains all connection parameters including cluster endpoints, authentication
+    /// credentials, TLS configuration, and discovery mechanisms. The settings are established during
+    /// client initialization and remain immutable throughout the client's lifetime to ensure consistent
+    /// behavior.
+    ///
+    /// ## Key Configuration Areas
+    ///
+    /// - **Connection Endpoints**: Single-node address or cluster discovery configuration
+    /// - **Authentication**: Credentials or token-based authentication settings
+    /// - **TLS/SSL**: Certificate validation and secure connection options
+    /// - **Node Preferences**: Whether to prefer leaders, followers, or random nodes for operations
+    /// - **Timeouts and Retry Policies**: Request-level behavior configuration
+    ///
+    /// ## Access Pattern
+    ///
+    /// While this property is publicly readable, it is privately settable to prevent runtime
+    /// configuration changes that could lead to inconsistent client behavior. To modify settings,
+    /// create a new client instance with the desired configuration.
+    ///
+    /// ## Usage Example
+    ///
+    /// ```swift
+    /// // Access current settings
+    /// let currentEndpoints = client.settings.endpoints
+    /// let authMode = client.settings.authentication
+    ///
+    /// // To change settings, create a new client
+    /// let newSettings = ClientSettings.cluster(["node1:2113", "node2:2113"])
+    ///     .authenticated(.credentials(username: "admin", password: "changeit"))
+    /// let newClient = KurrentDBClient(settings: newSettings)
+    /// ```
+    ///
+    /// - SeeAlso: `ClientSettings` for available configuration options and factory methods
     public private(set) var settings: ClientSettings
 
     /// The event loop group used for asynchronous I/O operations.
