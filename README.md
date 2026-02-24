@@ -1,10 +1,10 @@
-# KurrentDB-Swift
+# swift-kurrentdb
 
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2FKurrentDB-Swift%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2FKurrentDB-Swift%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift)
-[![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/KurrentDB-Swift/actions/workflows/swift-build-testing.yml)
+[![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
+[![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/swift-kurrentdb/actions/workflows/swift-build-testing.yml)
 
 <div align=center>
 <img src="assets/kurrent-swift-icon.png" height="200px" width="200px" >
@@ -13,21 +13,21 @@
 
 Built for Server-Side Swift and Event Sourcing
 
-[Documentation](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions)
+[Documentation](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions)
 
 </div>
 
 ---
 
-## Why KurrentDB-Swift?
+## Why swift-kurrentdb?
 
-Event Sourcing is a powerful pattern for building scalable, auditable systems. KurrentDB-Swift brings this capability to the Swift ecosystem with a modern, type-safe client.
+Event Sourcing is a powerful pattern for building scalable, auditable systems. swift-kurrentdb brings this capability to the Swift ecosystem with a modern, type-safe client.
 
 - **Native Swift** — Designed for Swift from the ground up, not a wrapper
 - **Modern Concurrency** — Full async/await with Swift 6 data-race safety
 - **Type-Safe** — Target-based API design with compile-time guarantees
 - **Cluster-Ready** — First-class support for multi-node TLS clusters
-- **Well-Documented** — Comprehensive guides on [Swift Package Index](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb)
+- **Well-Documented** — Comprehensive guides on [Swift Package Index](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb)
 - **Typed Errors** — All operations throw `KurrentError` for precise error handling
 
 ## Quick Start
@@ -38,7 +38,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/KurrentDB-Swift.git", from: "2.0.0-beta.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0-beta.0")
 ]
 ```
 
@@ -102,7 +102,7 @@ for try await response in events {
 
 ### Target-Based API
 
-KurrentDB-Swift 2.0 introduces a target-based API design that provides compile-time type safety. Each resource scope exposes only the operations relevant to that target.
+swift-kurrentdb 2.0 introduces a target-based API design that provides compile-time type safety. Each resource scope exposes only the operations relevant to that target.
 
 #### Streams
 
@@ -312,14 +312,14 @@ docker run --rm -d -p 2113:2113 \
 | [Cluster Gossip](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/cluster-gossip) | Cluster discovery, node health monitoring |
 | [Monitoring](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/monitoring) | Real-time server statistics |
 | [Server Operations](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/server-operations) | Scavenge, index merge, shutdown, node management |
-| [Full API Reference](https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb) | Complete API documentation |
+| [Full API Reference](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | Complete API documentation |
 
 ## Contributing
 
 Contributions are welcome! Whether it's bug reports, feature requests, documentation improvements, or code contributions.
 
-- [GitHub Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions) — Ask questions, share ideas
-- [Issues](https://github.com/gradyzhuo/KurrentDB-Swift/issues) — Report bugs
+- [GitHub Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions) — Ask questions, share ideas
+- [Issues](https://github.com/gradyzhuo/swift-kurrentdb/issues) — Report bugs
 - [Contributing Guide](CONTRIBUTING.md) — Get started contributing
 
 ## License

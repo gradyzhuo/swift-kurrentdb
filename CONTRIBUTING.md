@@ -1,8 +1,8 @@
-# Contributing to KurrentDB-Swift
+# Contributing to swift-kurrentdb
 
-First off, thank you for considering contributing to KurrentDB-Swift! 🎉
+First off, thank you for considering contributing to swift-kurrentdb! 🎉
 
-It's people like you that make KurrentDB-Swift a great tool for the Swift community. We welcome contributions from everyone, whether you're fixing a typo, reporting a bug, or implementing a major feature.
+It's people like you that make swift-kurrentdb a great tool for the Swift community. We welcome contributions from everyone, whether you're fixing a typo, reporting a bug, or implementing a major feature.
 
 ## 📋 Table of Contents
 
@@ -27,7 +27,7 @@ This project and everyone participating in it is governed by our commitment to p
 
 ## 🎯 How Can I Contribute?
 
-There are many ways to contribute to KurrentDB-Swift:
+There are many ways to contribute to swift-kurrentdb:
 
 ### 🐛 Reporting Bugs
 
@@ -56,7 +56,7 @@ What you expected to happen.
 What actually happened.
 
 **Environment:**
-- KurrentDB-Swift version:
+- swift-kurrentdb version:
 - Swift version:
 - OS: 
 - Kurrent/EventStoreDB version:
@@ -123,13 +123,13 @@ We love code contributions! Here's how to get started.
 1. **Fork the repository**
    ```bash
    # Click "Fork" on GitHub, then clone your fork
-   git clone https://github.com/YOUR-USERNAME/KurrentDB-Swift.git
-   cd KurrentDB-Swift
+   git clone https://github.com/YOUR-USERNAME/swift-kurrentdb.git
+   cd swift-kurrentdb
    ```
 
 2. **Add upstream remote**
    ```bash
-   git remote add upstream https://github.com/gradyzhuo/KurrentDB-Swift.git
+   git remote add upstream https://github.com/gradyzhuo/swift-kurrentdb.git
    ```
 
 3. **Install dependencies**
@@ -158,7 +158,7 @@ We love code contributions! Here's how to get started.
 ### Project Structure
 
 ```
-KurrentDB-Swift/
+swift-kurrentdb/
 ├── Sources/
 │   └── KurrentDB/
 │       ├── Client/          # Client implementation
@@ -443,8 +443,8 @@ swift test --enable-code-coverage
 
 ### Getting Help
 
-- 💭 [GitHub Discussions](https://github.com/gradyzhuo/KurrentDB-Swift/discussions) - Ask questions
-- 🐛 [Issues](https://github.com/gradyzhuo/KurrentDB-Swift/issues) - Report bugs
+- 💭 [GitHub Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions) - Ask questions
+- 🐛 [Issues](https://github.com/gradyzhuo/swift-kurrentdb/issues) - Report bugs
 - 📧 Email: [your-email@example.com] - Direct contact
 
 ### Staying Updated
@@ -469,7 +469,7 @@ Don't hesitate to ask questions! You can:
 
 ## 🙏 Thank You!
 
-Your contributions, no matter how small, are valued and appreciated. Thank you for helping make KurrentDB-Swift better for everyone! 🚀
+Your contributions, no matter how small, are valued and appreciated. Thank you for helping make swift-kurrentdb better for everyone! 🚀
 
 ---
 

@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KurrentDB-Swift is a modern, type-safe Swift client for Kurrent (formerly EventStoreDB), designed for Event Sourcing applications in Server-Side Swift. The package is built on top of grpc-swift 2.x and uses Swift Concurrency (async/await) with full Swift 6 data-race safety compliance.
+swift-kurrentdb is a modern, type-safe Swift client for Kurrent (formerly EventStoreDB), designed for Event Sourcing applications in Server-Side Swift. The package is built on top of grpc-swift 2.x and uses Swift Concurrency (async/await) with full Swift 6 data-race safety compliance.
 
 **Key Links:**
-- Documentation: https://swiftpackageindex.com/gradyzhuo/KurrentDB-Swift/documentation/kurrentdb
-- GitHub: https://github.com/gradyzhuo/KurrentDB-Swift
+- Documentation: https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb
+- GitHub: https://github.com/gradyzhuo/swift-kurrentdb
 
 ## Build & Testing Commands
 
