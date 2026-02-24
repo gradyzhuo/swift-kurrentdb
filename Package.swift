@@ -27,6 +27,7 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
+        .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.22.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -51,6 +52,17 @@ let package = Package(
             dependencies: [
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ]
+        ),
+        .executableTarget(
+            name: "OfflineBenchmarks",
+            dependencies: [
+                "KurrentDB",
+                .product(name: "Benchmark", package: "package-benchmark"),
+            ],
+            path: "Benchmarks/OfflineBenchmarks",
+            plugins: [
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
             ]
         ),
         .testTarget(
