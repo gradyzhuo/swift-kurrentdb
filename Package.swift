@@ -27,8 +27,13 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
-        .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.22.0"),
-    ],
+    ] + {
+        #if os(macOS)
+        return [Package.Dependency.package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.22.0")]
+        #else
+        return []
+        #endif
+    }(),
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
@@ -54,7 +59,11 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ]
         ),
-        .executableTarget(
+        // Benchmarks are macOS-only — package-benchmark requires jemalloc on Linux.
+        // Use the dedicated benchmark workflow to run these locally or on macOS CI.
+    ] + {
+        #if os(macOS)
+        return [Target.executableTarget(
             name: "OfflineBenchmarks",
             dependencies: [
                 "KurrentDB",
@@ -64,7 +73,11 @@ let package = Package(
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
             ]
-        ),
+        )]
+        #else
+        return []
+        #endif
+    }() + [
         .testTarget(
             name: "KurrentCoreTests",
             dependencies: [
@@ -193,3 +206,4 @@ let package = Package(
         ),
     ]
 )
+
