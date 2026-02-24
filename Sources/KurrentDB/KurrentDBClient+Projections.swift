@@ -946,83 +946,91 @@ extension KurrentDBClient {
         try await projections(of: NameTarget(name: name)).detail()
     }
 
-    /// Lists all projections of a specific mode with their detailed statistics.
+    
+    /// Lists all projections of a specified mode across the cluster.
     ///
-    /// Retrieves comprehensive information about all projections matching the specified mode
-    /// (continuous, transient, or one-time). This is useful for management dashboards, health
-    /// monitoring, and discovering available projections in the system.
+    /// Retrieves comprehensive details for all projections matching the specified mode filter.
+    /// This returns an array of `Projection.Detail` instances containing status, progress,
+    /// performance metrics, and configuration for each projection. Use this to build management
+    /// dashboards, monitor projection health, or audit active projections in the system.
     ///
     /// ## Projection Modes
     ///
-    /// Filter projections by mode:
-    /// - **Continuous**: Long-running projections that persist state and process new events continuously
-    /// - **Transient**: In-memory projections without persistent state
-    /// - **OneTime**: Ad-hoc projections that run once and stop
-    /// - **All**: Returns projections of all modes
+    /// The `mode` parameter filters projections by their operational mode:
+    /// - **`.continuous`**: Long-running projections that process events indefinitely
+    /// - **`.transient`**: Temporary projections that exist only while connected
+    /// - **`.oneTime`**: Single-execution projections that run once and complete
+    /// - **`.any`**: All projections regardless of mode (no filtering)
     ///
-    /// ## Statistics Information
+    /// ## Returned Information
     ///
-    /// Each projection in the list includes:
-    /// - Name and mode
-    /// - Current status (Running, Stopped, Faulted)
-    /// - Processing progress percentage
-    /// - Events processed count
-    /// - Checkpoint positions
-    /// - Performance metrics
+    /// Each `Projection.Detail` includes:
+    /// - **Name and Mode**: Projection identifier and type
+    /// - **Status**: Current state (Running, Stopped, Faulted, etc.)
+    /// - **Progress**: Processing completion percentage
+    /// - **Checkpoint Position**: Last persisted event position
+    /// - **Performance Metrics**: Events processed, processing rate, core time
+    /// - **Configuration**: Emit settings, tracking options
     ///
     /// ## Use Cases
     ///
     /// - Building projection management dashboards
-    /// - Monitoring overall projection health
-    /// - Discovering available projections
-    /// - Auditing projection configuration
-    /// - Capacity planning and resource allocation
-    /// - Detecting failed or stalled projections
+    /// - Monitoring projection health across the cluster
+    /// - Auditing active projections for compliance
+    /// - Discovering projections by mode for batch operations
+    /// - Performance analysis and capacity planning
+    /// - Troubleshooting projection issues
     ///
     /// ## Example
     ///
     /// ```swift
     /// // List all continuous projections
-    /// let continuousProjections = try await client.listAllProjections(
-    ///     mode: Projection.Mode.continuous
-    /// )
+    /// let continuous = try await client.listAllProjections(mode: .continuous)
     ///
-    /// for projection in continuousProjections {
+    /// for projection in continuous {
     ///     print("\(projection.name): \(projection.status)")
+    ///     print("  Progress: \(projection.progress)%")
+    ///     print("  Events/sec: \(projection.eventsPerSecond)")
     ///
-    ///     if projection.status == "Faulted" {
-    ///         print("  ERROR: \(projection.stateReason)")
-    ///     } else {
-    ///         print("  Progress: \(projection.progress)%")
-    ///         print("  Rate: \(projection.eventsPerSecond) events/sec")
+    ///     // Alert on faulted projections
+    ///     if projection.status.contains(.faulted) {
+    ///         print("  ⚠️ FAULTED: \(projection.stateReason)")
     ///     }
     /// }
     ///
-    /// // Find slow projections
-    /// let slowProjections = continuousProjections.filter {
-    ///     $0.progress < 100 && $0.eventsPerSecond < 100
-    /// }
+    /// // List all transient projections
+    /// let transient = try await client.listAllProjections(mode: .transient)
+    /// print("Active transient projections: \(transient.count)")
     ///
-    /// // List all projection types
-    /// let allProjections = try await client.listAllProjections(
-    ///     mode: Projection.Mode.all
-    /// )
-    /// print("Total projections: \(allProjections.count)")
+    /// // List all projections regardless of mode
+    /// let all = try await client.listAllProjections(mode: .any)
+    /// print("Total projections: \(all.count)")
+    ///
+    /// // Find projections by status
+    /// let running = all.filter { $0.status.contains(.running) }
+    /// let stopped = all.filter { $0.status.contains(.stopped) }
+    /// print("Running: \(running.count), Stopped: \(stopped.count)")
     /// ```
     ///
-    /// - Parameter mode: The projection mode to filter by. Use specific modes to narrow results
-    ///   or `.all` to retrieve every projection in the system.
+    /// - Parameter mode: The projection mode to filter by. Use `.continuous` for long-running
+    ///   projections, `.transient` for temporary projections, `.oneTime` for single-execution
+    ///   projections, or `.any` to retrieve all projections regardless of mode.
     ///
-    /// - Returns: An array of detailed statistics for all matching projections. Returns an empty
-    ///   array if no projections match the mode filter.
+    /// - Returns: An array of `Projection.Detail` instances representing all projections
+    ///   matching the specified mode. Returns an empty array if no projections exist for
+    ///   the given mode.
     ///
     /// - Throws: `KurrentError.accessDenied` if the user lacks projection read permissions.
     ///   `KurrentError.unavailable` if the projection subsystem is not running.
     ///
-    /// - Note: The list includes both user-defined projections and system projections (prefixed
-    ///   with `$`) such as `$by_category` and `$by_event_type`.
+    /// - Note: System projections (prefixed with `$`) are included in the results. These are
+    ///   managed by KurrentDB and cannot be deleted, though they can be enabled or disabled.
     ///
-    /// - SeeAlso: `getProjectionDetail(name:)`, `Projection.Mode`
+    /// - Note: The returned array represents a snapshot at query time. Projection states may
+    ///   change immediately after retrieval as events are processed or control operations occur.
+    ///
+    /// - SeeAlso: `getProjectionDetail(name:)`, `createContinuousProjection(name:query:configure:)`,
+    ///   `Projection.Detail`, `Projection.Mode`
     public func listAllProjections(mode: Projection.Mode) async throws(KurrentError) -> [Projection.Detail] {
         return switch mode {
         case .continuous:
