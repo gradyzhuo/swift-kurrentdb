@@ -8,7 +8,6 @@
 import Foundation
 import GRPCCore
 @testable import KurrentDB
-import KurrentDB_V1
 import Testing
 
 struct CountResult: Codable {
@@ -46,20 +45,21 @@ struct ProjectionsTests: Sendable {
             .outputState();
         """
 
-        try await client.createContinuousProjection(name: name, query: js)
-        let details = try #require(await client.getProjectionDetail(name: name))
+        try await client.projections(of: .continuous(name: name)).create(query: js)
+        let details = try #require(try await client.projections(of: NameTarget(name: name)).detail())
         #expect(details.name == name)
         #expect(details.mode == .continuous)
 
-        try await client.disableProjection(name: name)
-        try await client.deleteProjection(name: name) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.projections(of: NameTarget(name: name)).disable()
+        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("Testing create a onetime projection")
     func createOneTimeProjection() async throws {
-        let originOneTimeProjections = try await client.listAllProjections(mode: .oneTime)
+        let originOneTimeProjections = try await client.projections(of: .onetime).list()
         let js = """
         fromAll()
             .when({
@@ -75,71 +75,74 @@ struct ProjectionsTests: Sendable {
             .outputState();
         """
 
-        try await client.createOneTimeProjection(query: js)
+        try await client.projections(of: .onetime).create(query: js)
 
-        let projections = try await client.listAllProjections(mode: .oneTime)
+        let projections = try await client.projections(of: .onetime).list()
         #expect(projections.count == (originOneTimeProjections.count + 1))
     }
 
     @Test("Disable a projection")
     func disableProjection() async throws {
         let projectionName = "testDisableProjection_\(UUID())"
-        try await client.createContinuousProjection(name: projectionName, query: "fromAll().outputState()")
+        try await client.projections(of: .continuous(name: projectionName)).create(query: "fromAll().outputState()")
 
-        try await client.disableProjection(name: projectionName)
+        try await client.projections(of: NameTarget(name: projectionName)).disable()
 
-        let details = try #require(await client.getProjectionDetail(name: projectionName))
+        let details = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(details.status.contains(.stopped))
 
-        try await client.deleteProjection(name: projectionName) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.projections(of: NameTarget(name: projectionName)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("Enable a projection")
     func enableProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
-        try await client.createContinuousProjection(name: projectionName, query: "fromAll().outputState()")
+        try await client.projections(of: .continuous(name: projectionName)).create(query: "fromAll().outputState()")
 
-        try await client.disableProjection(name: projectionName)
+        try await client.projections(of: NameTarget(name: projectionName)).disable()
 
-        let details = try #require(await client.getProjectionDetail(name: projectionName))
+        let details = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(details.status.contains(.stopped))
 
-        try await client.enableProjection(name: projectionName)
+        try await client.projections(of: NameTarget(name: projectionName)).enable()
 
-        let enabledDetails = try #require(await client.getProjectionDetail(name: projectionName))
+        let enabledDetails = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(enabledDetails.status.contains(.running))
 
-        try await client.disableProjection(name: projectionName)
-        try await client.deleteProjection(name: projectionName) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.projections(of: NameTarget(name: projectionName)).disable()
+        try await client.projections(of: NameTarget(name: projectionName)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("Abort a projection")
     func abortProjection() async throws {
         let projectionName = "testEnableProjection_\(UUID())"
-        try await client.createContinuousProjection(name: projectionName, query: "fromAll().outputState()")
+        try await client.projections(of: .continuous(name: projectionName)).create(query: "fromAll().outputState()")
 
-        try await client.abortProjection(name: projectionName)
+        try await client.projections(of: NameTarget(name: projectionName)).abort()
 
-        let details = try #require(await client.getProjectionDetail(name: projectionName))
+        let details = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(details.status.contains(.aborted))
 
-        try await client.resetProjection(name: projectionName)
+        try await client.projections(of: NameTarget(name: projectionName)).reset()
 
-        let enabledDetails = try #require(await client.getProjectionDetail(name: projectionName))
+        let enabledDetails = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(enabledDetails.status.contains(.stopped))
 
-        try await client.deleteProjection(name: projectionName) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.projections(of: NameTarget(name: projectionName)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("Get projection status for a system projection")
     func getStatusExample() async throws {
-        let detail = try #require(await client.getProjectionDetail(name: NameTarget.Predefined.byCategory.rawValue))
+        let detail = try #require(try await client.projections(of: NameTarget(predefined: .byCategory)).detail())
         print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
     }
 
@@ -162,22 +165,23 @@ struct ProjectionsTests: Sendable {
             .outputState();
         """
 
-        try await client.appendStream(StreamIdentifier(name: streamName), events: [
+        try await client.streams(specified: streamName).append(events: [
             .init(eventType: "ProjectionEventCreated", model: ["hello": "world"]),
-        ])
+        ], options: .init().revision(expected: .any))
 
-        try await client.createContinuousProjection(name: name, query: js)
+        try await client.projections(of: .continuous(name: name)).create(query: js)
 
         try await Task.sleep(for: .microseconds(500)) // Give it some time to process and have a state.
 
-        let state = try #require(await client.getProjectionState(of: CountResult.self, name: name))
+        let state = try #require(try await client.projections(of: NameTarget(name: name)).state(of: CountResult.self))
         #expect(state.count == 1)
 
-        try await client.deleteStream(streamName)
-        try await client.disableProjection(name: name)
-        try await client.deleteProjection(name: name) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.streams(specified: streamName).delete()
+        try await client.projections(of: NameTarget(name: name)).disable()
+        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("Get projection result")
@@ -200,42 +204,44 @@ struct ProjectionsTests: Sendable {
             .outputState();
         """
 
-        try await client.appendStream(streamName, events: [
+        try await client.streams(specified: streamName).append(events: [
             .init(eventType: "ProjectionEventCreated", model: ["hello": "world"]),
-        ])
+        ], options: .init().revision(expected: .any))
 
-        try await client.createContinuousProjection(name: name, query: js)
+        try await client.projections(of: .continuous(name: name)).create(query: js)
 
         try await Task.sleep(for: .microseconds(500)) // Give it some time to process and have a result.
 
-        let result = try #require(await client.getProjectionResult(of: Int.self, name: name))
+        let result = try #require(try await client.projections(of: NameTarget(name: name)).result(of: Int.self))
         #expect(result == 1)
 
-        try await client.deleteStream(streamName)
-        try await client.disableProjection(name: name)
-        try await client.deleteProjection(name: name) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.streams(specified: streamName).delete()
+        try await client.projections(of: NameTarget(name: name)).disable()
+        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("List continuous projections via UnspecifiedContinuousProjectionTarget")
     func listContinuousProjections() async throws {
         let name = "test_listContinuous_\(UUID())"
-        try await client.createContinuousProjection(name: name, query: "fromAll().outputState()")
+        try await client.projections(of: .continuous(name: name)).create(query: "fromAll().outputState()")
 
         let projections = try await client.projections(of: .anyContinuous).list()
         #expect(projections.contains { $0.name == name })
 
-        try await client.disableProjection(name: name)
-        try await client.deleteProjection(name: name) {
-            $0.deleteStateStream().deleteEmittedStreams().deleteCheckpointStream()
-        }
+        try await client.projections(of: NameTarget(name: name)).disable()
+        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
+            .deleteStateStream()
+            .deleteEmittedStreams()
+            .deleteCheckpointStream())
     }
 
     @Test("List transient projections via UnspecifiedTransientProjectionTarget")
     func listTransientProjections() async throws {
         let name = "test_listTransient_\(UUID())"
-        try await client.createTransientProjection(name: name, query: "fromAll().outputState()")
+        try await client.projections(of: .transient(name: name)).create(query: "fromAll().outputState()")
 
         let projections = try await client.projections(of: .anyTransient).list()
         #expect(projections.contains { $0.name == name })
