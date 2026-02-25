@@ -50,4 +50,12 @@ extension Projections where Target == AnyProjectionsTarget {
             throw .internalClientError(reason: "The error happened while get the list of projections, cause: \(error)")
         }
     }
+
+    /// Restarts the projection subsystem.
+    ///
+    /// - Throws: `KurrentError` if the restart fails.
+    public func restartSubsystem() async throws(KurrentError) {
+        let usecase = RestartSubsystem()
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+    }
 }

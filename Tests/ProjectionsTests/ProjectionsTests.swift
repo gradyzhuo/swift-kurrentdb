@@ -8,6 +8,7 @@
 import Foundation
 import GRPCCore
 @testable import KurrentDB
+import KurrentDB_V1
 import Testing
 
 struct CountResult: Codable {

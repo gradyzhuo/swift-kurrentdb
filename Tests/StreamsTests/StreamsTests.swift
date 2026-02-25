@@ -7,6 +7,7 @@
 
 import Foundation
 @testable import KurrentDB
+import KurrentDB_V1
 import Logging
 import Testing
 
