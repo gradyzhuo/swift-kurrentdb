@@ -5,11 +5,11 @@
 //  Created by Grady Zhuo on 2025/5/23.
 //
 
-// MARK: - Internal Projection Factory Methods
+// MARK: - Projection Factory Methods
 
 extension KurrentDBClient {
     /// Creates a projections interface targeting all projections.
-    package var projections: Projections<AnyProjectionsTarget> {
+    public var projections: Projections<AnyProjectionsTarget> {
         get{
             .init(
                 target: .init(),
@@ -20,7 +20,7 @@ extension KurrentDBClient {
     }
 
     /// Creates a projections interface for a specific target type.
-    package func projections<Target: ProjectionsTarget>(of target: Target) -> Projections<Target> {
+    public func projections<Target: ProjectionsTarget>(of target: Target) -> Projections<Target> {
         .init(
             target: target,
             selector: selector,
@@ -29,7 +29,7 @@ extension KurrentDBClient {
     }
 
     /// Creates a projections interface for a predefined system projection.
-    package func projection(name: String) -> Projections<NameTarget> {
+    public func projection(name: String) -> Projections<NameTarget> {
         .init(
             target: .init(name: name),
             selector: selector,
@@ -38,7 +38,7 @@ extension KurrentDBClient {
     }
 
     /// Creates a projections interface for a predefined system projection.
-    package func projections(system predefined: NameTarget.Predefined) -> Projections<NameTarget> {
+    public func projections(system predefined: NameTarget.Predefined) -> Projections<NameTarget> {
         .init(
             target: .init(predefined: predefined),
             selector: selector,
@@ -47,31 +47,31 @@ extension KurrentDBClient {
     }
 }
 
-// MARK: - Internal Projection Accessors
+// MARK: - Projection Accessors
 
 extension KurrentDBClient {
     /// Returns a projections interface targeting all projections.
-    var anyMode: Projections<AnyProjectionsTarget> {
+    public var anyMode: Projections<AnyProjectionsTarget> {
         projections(of: .anyMode)
     }
 
     /// Returns a projections interface for a continuous projection with the specified name.
-    func continuousProjection(name: String) -> Projections<SpecifiedContinuousProjectionTarget> {
+    public func continuousProjection(name: String) -> Projections<SpecifiedContinuousProjectionTarget> {
         projections(of: .continuous(name: name))
     }
 
     /// Returns a projections interface for one-time projections.
-    var oneTimeProjection: Projections<OneTimeProjectionTarget> {
+    public var oneTimeProjection: Projections<OneTimeProjectionTarget> {
         projections(of: .onetime)
     }
 
     /// Returns a projections interface for a transient projection with the specified name.
-    func transientProjection(name: String) -> Projections<SpecifiedTransientProjectionTarget> {
+    public func transientProjection(name: String) -> Projections<SpecifiedTransientProjectionTarget> {
         projections(of: .transient(name: name))
     }
 
     /// Returns a projections interface for a predefined system projection.
-    func systemProjection(predefined: NameTarget.Predefined) -> Projections<NameTarget> {
+    public func systemProjection(predefined: NameTarget.Predefined) -> Projections<NameTarget> {
         projections(system: predefined)
     }
 }
