@@ -19,4 +19,6 @@ public struct SpecifiedContinuousProjectionTarget: ProjectionsTarget, Projection
 /// by passing the name directly to `create(name:query:)` rather than at target construction.
 /// This target does not conform to `ProjectionControlable` — use ``SpecifiedContinuousProjectionTarget``
 /// or ``NameTarget`` for control operations.
-public struct UnspecifiedContinuousProjectionTarget: ProjectionsTarget {}
+public struct UnspecifiedContinuousProjectionTarget: ProjectionsTarget {
+    public init() {}
+}
