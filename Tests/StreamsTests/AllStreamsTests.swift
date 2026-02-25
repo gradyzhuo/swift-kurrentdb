@@ -32,11 +32,10 @@ struct AllStreamsTests: Sendable {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
 
-        let _ = try await client.appendStream(streamIdentifier, events: events) {
-            $0.revision(expected: .any)
-        }
+        _ = try await client.streams(specified: streamIdentifier.name)
+            .append(events: events, options: .init().revision(expected: .any))
 
-        let responses = try await client.readAllStreams()
+        let responses = try await client.allStreams.read()
 
         let allEvents = try await responses.reduce(into: [RecordedEvent]()) {
             guard try !($1.event.record).eventType.hasPrefix("$") else {
@@ -53,7 +52,7 @@ struct AllStreamsTests: Sendable {
 
         #expect(allSatisfy)
 
-        try await client.deleteStream(streamIdentifier)
+        try await client.streams(specified: streamIdentifier.name).delete()
     }
 
     @Test("It should succeed when read events from all streams start from appended position.", arguments: [
@@ -66,14 +65,14 @@ struct AllStreamsTests: Sendable {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
 
-        let appendResponse = try await client.appendStream(streamIdentifier, events: events) {
-            $0.revision(expected: .any)
-        }
+        let appendResponse = try await client.streams(specified: streamIdentifier.name)
+            .append(events: events, options: .init().revision(expected: .any))
 
         let appendedPosition = try #require(appendResponse.position)
-        let responses = try await client.readAllStreams {
-            $0.limit(1).forward().startFrom(position: .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare))
-        }
+        let responses = try await client.allStreams.read(options: .init()
+            .limit(1)
+            .forward()
+            .startFrom(position: .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare)))
 
         let allEvents = try await responses.reduce(into: [RecordedEvent]()) {
             guard try !($1.event.record).eventType.hasPrefix("$") else {
@@ -88,6 +87,6 @@ struct AllStreamsTests: Sendable {
             testEventIds.contains($0.id)
         }))
 
-        try await client.deleteStream(streamIdentifier)
+        try await client.streams(specified: streamIdentifier.name).delete()
     }
 }

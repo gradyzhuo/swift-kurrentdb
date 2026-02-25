@@ -115,7 +115,6 @@ let package = Package(
             name: "StreamsTests",
             dependencies: [
                 "KurrentDB",
-                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -134,7 +133,6 @@ let package = Package(
             name: "ProjectionsTests",
             dependencies: [
                 "KurrentDB",
-                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -153,7 +151,6 @@ let package = Package(
             name: "PersistentSubscriptionsTests",
             dependencies: [
                 "KurrentDB",
-                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -172,7 +169,6 @@ let package = Package(
             name: "UsersTests",
             dependencies: [
                 "KurrentDB",
-                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
