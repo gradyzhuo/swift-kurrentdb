@@ -9,8 +9,24 @@
 
 extension KurrentDBClient {
     /// Returns a persistent subscriptions interface for cluster-wide operations.
-    package var persistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
+    public var allPersistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
         .init(target: .all, selector: selector, callOptions: defaultCallOptions)
+    }
+   
+    public func persistentSubscriptions<Target: PersistentSubscriptionTarget>(of target: Target) -> PersistentSubscriptions<Target> {
+        .init(target: target, selector: selector, callOptions: defaultCallOptions)
+    }
+    
+    public func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<PersistentSubscription.Specified> {
+        .init(target: .specified(stream: stream, group: group), selector: selector, callOptions: defaultCallOptions)
+    }
+    
+    public func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<PersistentSubscription.AllStream> {
+        .init(target: .allStreams(group: groupName), selector: selector, callOptions: defaultCallOptions)
+    }
+    
+    public func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<PersistentSubscription.FilterStream> {
+        .init(target: .filter(stream: stream), selector: selector, callOptions: defaultCallOptions)
     }
 }
 
@@ -622,7 +638,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `listAllPersistentSubscription()`, `PersistentSubscription.SubscriptionInfo`
     public func listPersistentSubscriptions(stream streamIdentifier: StreamIdentifier) async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
-        try await persistentSubscriptions.list(for: .stream(streamIdentifier))
+        try await persistentSubscriptions(of: .filter(stream: streamIdentifier.name)).list()
     }
 
     /// Lists all persistent subscription groups configured for the `$all` stream.
@@ -648,7 +664,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `listAllPersistentSubscription()`, `createPersistentSubscriptionToAllStream(groupName:configure:)`
     public func listPersistentSubscriptionsToAllStream() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
-        try await persistentSubscriptions.list(for: .stream(.all))
+        try await persistentSubscriptions(of: .all).list()
     }
 
     /// Lists all persistent subscription groups across all streams in the event store.
@@ -698,7 +714,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `listPersistentSubscriptions(stream:)`, `listPersistentSubscriptionsToAllStream()`
     public func listAllPersistentSubscription() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
-        try await persistentSubscriptions.list(for: .allSubscriptions)
+        try await persistentSubscriptions(of: .all).list()
     }
 
     /// Restarts the entire persistent subscription subsystem across the cluster.
@@ -763,7 +779,7 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `listAllPersistentSubscription()`
     public func restartPersistentSubscriptionSubsystem() async throws(KurrentError) {
-        try await persistentSubscriptions.restartSubsystem()
+        try await persistentSubscriptions(of: .all).restartSubsystem()
     }
 
     // MARK: - Convenience Overloads (String Stream Names)
@@ -867,6 +883,6 @@ extension KurrentDBClient {
     ///
     /// - SeeAlso: `listPersistentSubscriptions(stream:)`
     public func listPersistentSubscriptions(stream streamName: String) async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
-        try await persistentSubscriptions.list(for: .stream(streamName))
+        try await persistentSubscriptions(of: .all).list()
     }
 }
