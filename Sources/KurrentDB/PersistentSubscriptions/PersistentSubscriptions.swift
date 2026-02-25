@@ -205,16 +205,21 @@ extension PersistentSubscriptions where Target == PersistentSubscription.Specifi
 // MARK: - Generic Operations
 
 /// Provides general operations for persistent subscriptions with an unspecified target.
-extension PersistentSubscriptions where Target == PersistentSubscription.All {
-    /// Lists all persistent subscriptions in the system.
-    ///
-    /// - Returns: An array of `PersistentSubscription.SubscriptionInfo` objects.
-    /// - Throws: An error if the list operation fails.
-    public func list(for filter: PersistentSubscriptions.ListForAll.ListFilter = .allSubscriptions) async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
-        let usecase = ListForAll(filter: filter)
+extension PersistentSubscriptions where Target == PersistentSubscription.FilterStream {
+    public func list() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
+        let usecase = ListForAll(filter: .stream(target.stream))
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
+}
 
+/// Provides general operations for persistent subscriptions with an unspecified target.
+extension PersistentSubscriptions where Target == PersistentSubscription.All {
+    
+    public func list() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
+        let usecase = ListForAll(filter: .stream(.all))
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
+    }
+    
     /// Restarts the subsystem managing persistent subscriptions.
     ///
     /// Restarts the persistent subscription subsystem asynchronously.

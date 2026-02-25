@@ -76,21 +76,19 @@ extension PersistentSubscription {
         }
     }
 
-    public struct All: PersistentSubscriptionTarget {}
+    public struct FilterStream: PersistentSubscriptionTarget {
+        let stream: String
+        
+        public init(stream: String) {
+            self.stream = stream
+        }
+    }
+    
+    public struct All: PersistentSubscriptionTarget { }
 }
 
 /// Extension providing static methods to create `Specified` persistent subscription targets.
-extension PersistentSubscriptionTarget where Self == PersistentSubscription.Specified {
-    /// Creates a `Specified` target using a `StreamIdentifier`.
-    ///
-    /// - Parameters:
-    ///   - identifier: The identifier for the stream.
-    ///   - group: The group name for the persistent subscription.
-    /// - Returns: A `PersistentSubscription.Specified` instance.
-    public static func specified(_ identifier: StreamIdentifier, group: String) -> PersistentSubscription.Specified {
-        .init(identifier: identifier, group: group)
-    }
-
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.Specified{
     /// Creates a `Specified` target identified by a name and encoding.
     ///
     /// - Parameters:
@@ -98,13 +96,30 @@ extension PersistentSubscriptionTarget where Self == PersistentSubscription.Spec
     ///   - encoding: The encoding format of the stream, defaulting to `.utf8`.
     ///   - group: The group name for the persistent subscription.
     /// - Returns: A `PersistentSubscription.Specified` instance.
-    public static func specified(_ name: String, encoding: String.Encoding = .utf8, group: String) -> PersistentSubscription.Specified {
+    public static func specified(stream name: String, encoding: String.Encoding = .utf8, group: String) -> PersistentSubscription.Specified {
         .init(identifier: .init(name: name, encoding: encoding), group: group)
+    }
+    
+}
+
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.AllStream{
+
+    public static func allStreams(group: String) -> PersistentSubscription.AllStream {
+        .init(group: group)
     }
 }
 
 /// Extension providing a static method to create an `All` persistent subscription target.
-extension PersistentSubscriptionTarget where Self == PersistentSubscription.All {
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.FilterStream{
+    
+    public static func filter(stream: String) -> PersistentSubscription.FilterStream {
+        .init(stream: stream)
+    }
+}
+
+
+/// Extension providing a static method to create an `All` persistent subscription target.
+extension PersistentSubscriptionTarget where Self == PersistentSubscription.All{
     /// Creates an `All` target representing all streams for a persistent subscription.
     ///
     /// - Parameter group: The group name for the persistent subscription.
