@@ -24,7 +24,7 @@ struct StreamTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
     }
 
     @Test("Stream should be not found and throw an error.")

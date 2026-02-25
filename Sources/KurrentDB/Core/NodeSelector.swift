@@ -13,6 +13,7 @@ public actor NodeSelector: Sendable {
     let id: UUID?
     let settings: ClientSettings
     var selectedNode: Node?
+    var selectedNodeExpiry: Date?
     var discover: NodeDiscover
 
     init(settings: ClientSettings) {
@@ -22,18 +23,18 @@ public actor NodeSelector: Sendable {
     }
 
     public func select() async throws(KurrentError) -> Node {
-        guard let selectedNode else {
-            let node = try await withRethrowingError(usage: "") {
-                guard let node = try await selectNode() else {
-                    throw KurrentError.serverError("Connection node not found.")
-                }
-                return node
-            }
-            self.selectedNode = node
+        if let node = selectedNode, let expiry = selectedNodeExpiry, Date.now < expiry {
             return node
         }
-
-        return selectedNode
+        let node = try await withRethrowingError(usage: "") {
+            guard let node = try await selectNode() else {
+                throw KurrentError.serverError("Connection node not found.")
+            }
+            return node
+        }
+        self.selectedNode = node
+        self.selectedNodeExpiry = Date.now.addingTimeInterval(30)
+        return node
     }
 
     private func selectNode() async throws -> Node? {
