@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "swift-kurrentdb",
+    // Platform minimums are set to the first OS versions that shipped Swift 6 concurrency
+    // features required by this package (structured concurrency, typed throws, ~Copyable).
+    // macOS 15, iOS 18, tvOS 18, watchOS 11, visionOS 2.
     platforms: [
         .macOS(.v15),
         .iOS(.v18),

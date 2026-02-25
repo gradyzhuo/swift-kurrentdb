@@ -137,7 +137,7 @@ let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
     .secure(true)
     .tlsVerifyCert(false)
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+    .certificate(source: .crtInBundle("ca", inBundle: .module)!)
 ```
 
 Available builder methods:
@@ -147,8 +147,8 @@ Available builder methods:
 | `.secure(_:)` | Enable or disable TLS |
 | `.tlsVerifyCert(_:)` | Enable or disable TLS certificate verification |
 | `.authenticated(_:)` | Set authentication credentials |
-| `.cerificate(source:)` | Add a TLS certificate source |
-| `.cerificate(path:)` | Add a TLS certificate from a file path |
+| `.certificate(source:)` | Add a TLS certificate source |
+| `.certificate(path:)` | Add a TLS certificate from a file path |
 | `.connectionName(_:)` | Set a connection name |
 | `.defaultDeadline(_:)` | Set default operation timeout |
 | `.keepAlive(_:)` | Configure keep-alive settings |

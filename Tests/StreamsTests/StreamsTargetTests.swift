@@ -111,7 +111,7 @@ struct StreamsTargetTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: .specified("test-stream"))
@@ -125,7 +125,7 @@ struct StreamsTargetTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: AllStreams.all)
@@ -140,7 +140,7 @@ struct StreamsTargetTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: MultiStreams.multiple)
@@ -155,7 +155,7 @@ struct StreamsTargetTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: ProjectionStream.byEventType("OrderPlaced"))
@@ -169,7 +169,7 @@ struct StreamsTargetTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         let streams = await client.streams(of: ProjectionStream.byStream(prefix: "order"))
@@ -183,7 +183,7 @@ struct StreamsTargetTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
         // Test specified stream convenience method

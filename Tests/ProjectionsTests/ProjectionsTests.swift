@@ -24,7 +24,7 @@ struct ProjectionsTests: Sendable {
             .secure(true)
             .tlsVerifyCert(false)
             .authenticated(.credentials(username: "admin", password: "changeit"))
-            .cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         client = .init(settings: settings)
     }
 
