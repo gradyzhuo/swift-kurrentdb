@@ -10,4 +10,5 @@
 /// `AnyTarget` is used to perform operations on all projections, with the behavior determined
 public struct AnyProjectionsTarget: ProjectionsTarget {
     /// The mode defining the behavior of the all-projection target.
+    public init() {}
 }

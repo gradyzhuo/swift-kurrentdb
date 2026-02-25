@@ -19,4 +19,6 @@ public struct SpecifiedTransientProjectionTarget: ProjectionsTarget, ProjectionC
 /// by passing the name directly to `create(name:query:)` rather than at target construction.
 /// This target does not conform to `ProjectionControlable` — use ``SpecifiedTransientProjectionTarget``
 /// or ``NameTarget`` for control operations.
-public struct UnspecifiedTransientProjectionTarget: ProjectionsTarget {}
+public struct UnspecifiedTransientProjectionTarget: ProjectionsTarget {
+    public init() {}
+}

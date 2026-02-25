@@ -20,6 +20,12 @@ let package = Package(
                 "KurrentDB",
             ]
         ),
+        .library(
+            name: "KurrentDB_V1",
+            targets: [
+                "KurrentDB_V1",
+            ]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.0.0"),
@@ -42,6 +48,12 @@ let package = Package(
             dependencies: [
                 "GRPCEncapsulates",
                 .product(name: "Logging", package: "swift-log"),
+            ]
+        ),
+        .target(
+            name: "KurrentDB_V1",
+            dependencies: [
+                "KurrentDB",
             ]
         ),
         .target(
@@ -100,6 +112,7 @@ let package = Package(
             name: "StreamsTests",
             dependencies: [
                 "KurrentDB",
+                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -118,6 +131,7 @@ let package = Package(
             name: "ProjectionsTests",
             dependencies: [
                 "KurrentDB",
+                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -136,6 +150,7 @@ let package = Package(
             name: "PersistentSubscriptionsTests",
             dependencies: [
                 "KurrentDB",
+                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -154,6 +169,7 @@ let package = Package(
             name: "UsersTests",
             dependencies: [
                 "KurrentDB",
+                "KurrentDB_V1",
             ],
             resources: [
                 .copy("Resources/ca.crt"),

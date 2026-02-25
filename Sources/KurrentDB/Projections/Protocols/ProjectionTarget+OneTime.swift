@@ -8,4 +8,6 @@
 /// A generic target representing one time projections.
 ///
 /// `OneTimeProjectionTarget` is used to perform operations on all projections, with the behavior determined
-public struct OneTimeProjectionTarget: ProjectionsTarget {}
+public struct OneTimeProjectionTarget: ProjectionsTarget {
+    public init() {}
+}
