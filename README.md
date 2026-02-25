@@ -56,7 +56,7 @@ let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
     .secure(true)
     .tlsVerifyCert(false)
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .cerificate(path: "/path/to/ca.crt")
+    .certificate(path: "/path/to/ca.crt")
 
 // Production — remote cluster (TLS enabled by default)
 let settings = ClientSettings.remote(

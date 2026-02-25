@@ -73,7 +73,7 @@ public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 
 public struct ClientSettings: Sendable {
     public private(set) var endpoints: [Endpoint]
-    public var cerificates: [TLSConfig.CertificateSource]
+    public var certificates: [TLSConfig.CertificateSource]
 
     public private(set) var dnsDiscover: Bool
     public private(set) var nodePreference: NodePreference
@@ -92,7 +92,7 @@ public struct ClientSettings: Sendable {
 
     public init(
         clusterMode: TopologyClusterMode? = nil,
-        cerificates: [TLSConfig.CertificateSource] = [],
+        certificates: [TLSConfig.CertificateSource] = [],
         nodePreference: NodePreference = .leader,
         gossipTimeout: Duration = .seconds(3),
         secure: Bool = false,
@@ -104,7 +104,7 @@ public struct ClientSettings: Sendable {
         discoveryInterval: Duration = .microseconds(100),
         maxDiscoveryAttempts: UInt16 = 10
     ) {
-        self.cerificates = cerificates
+        self.certificates = certificates
         self.nodePreference = nodePreference
         self.gossipTimeout = gossipTimeout
         self.secure = secure
@@ -151,10 +151,10 @@ extension ClientSettings {
         guard secure else {
             return nil
         }
-        return if cerificates.isEmpty {
+        return if certificates.isEmpty {
             .systemDefault
         } else {
-            .certificates(cerificates)
+            .certificates(certificates)
         }
     }
 
@@ -252,10 +252,10 @@ extension ClientSettings {
 
         let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
 
-        var cerificates: [TLSConfig.CertificateSource] = []
+        var certificates: [TLSConfig.CertificateSource] = []
         if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap(\.value) {
-            if let cerificate = parseCertificate(path: tlsCaFilePath) {
-                cerificates.append(cerificate)
+            if let certificate = parseCertificate(path: tlsCaFilePath) {
+                certificates.append(certificate)
             }
         }
 
@@ -263,7 +263,7 @@ extension ClientSettings {
 
         return Self(
             clusterMode: clusterMode,
-            cerificates: cerificates,
+            certificates: certificates,
             nodePreference: nodePreference,
             gossipTimeout: gossipTimeout,
             secure: secure,
@@ -324,19 +324,37 @@ extension ClientSettings: ExpressibleByStringLiteral {
 
 extension ClientSettings: Buildable {
     @discardableResult
-    public func cerificate(source: TLSConfig.CertificateSource) -> Self {
+    public func certificate(source: TLSConfig.CertificateSource) -> Self {
         withCopy {
-            $0.cerificates.append(source)
+            $0.certificates.append(source)
         }
     }
 
     @discardableResult
-    public func cerificate(path: String) -> Self {
+    public func certificate(path: String) -> Self {
         withCopy {
-            if let cerificate = Self.parseCertificate(path: path) {
-                $0.cerificates.append(cerificate)
+            if let certificate = Self.parseCertificate(path: path) {
+                $0.certificates.append(certificate)
             }
         }
+    }
+
+    @available(*, deprecated, renamed: "certificates")
+    public var cerificates: [TLSConfig.CertificateSource] {
+        get { certificates }
+        set { certificates = newValue }
+    }
+
+    @available(*, deprecated, renamed: "certificate(source:)")
+    @discardableResult
+    public func cerificate(source: TLSConfig.CertificateSource) -> Self {
+        certificate(source: source)
+    }
+
+    @available(*, deprecated, renamed: "certificate(path:)")
+    @discardableResult
+    public func cerificate(path: String) -> Self {
+        certificate(path: path)
     }
 
     @discardableResult
