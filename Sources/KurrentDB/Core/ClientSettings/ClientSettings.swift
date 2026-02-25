@@ -89,6 +89,9 @@ public struct ClientSettings: Sendable {
     public var authentication: Authentication?
     public var discoveryInterval: Duration
     public var maxDiscoveryAttempts: UInt16
+    /// How long a successfully-discovered node endpoint is cached before the next
+    /// gossip discovery is triggered. Defaults to 30 seconds.
+    public var nodeSelectionCacheDuration: Duration
 
     public init(
         clusterMode: TopologyClusterMode? = nil,
@@ -102,7 +105,8 @@ public struct ClientSettings: Sendable {
         keepAlive: KeepAlive = .default,
         authentication: Authentication? = nil,
         discoveryInterval: Duration = .microseconds(100),
-        maxDiscoveryAttempts: UInt16 = 10
+        maxDiscoveryAttempts: UInt16 = 10,
+        nodeSelectionCacheDuration: Duration = .seconds(30)
     ) {
         self.certificates = certificates
         self.nodePreference = nodePreference
@@ -115,6 +119,7 @@ public struct ClientSettings: Sendable {
         self.authentication = authentication
         self.discoveryInterval = discoveryInterval
         self.maxDiscoveryAttempts = maxDiscoveryAttempts
+        self.nodeSelectionCacheDuration = nodeSelectionCacheDuration
 
         if let clusterMode {
             switch clusterMode {
@@ -246,7 +251,7 @@ extension ClientSettings {
             .default
         }
 
-        let connectionName = queryItems["connectionanme"]?.value
+        let connectionName = queryItems["connectionname"]?.value
 
         let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
 
@@ -410,6 +415,13 @@ extension ClientSettings: Buildable {
     public func maxDiscoveryAttempts(_ maxDiscoveryAttempts: UInt16) -> Self {
         withCopy {
             $0.maxDiscoveryAttempts = maxDiscoveryAttempts
+        }
+    }
+
+    @discardableResult
+    public func nodeSelectionCacheDuration(_ duration: Duration) -> Self {
+        withCopy {
+            $0.nodeSelectionCacheDuration = duration
         }
     }
 }

@@ -33,7 +33,7 @@ public actor NodeSelector: Sendable {
             return node
         }
         self.selectedNode = node
-        self.selectedNodeExpiry = Date.now.addingTimeInterval(30)
+        self.selectedNodeExpiry = Date.now.addingTimeInterval(settings.nodeSelectionCacheDuration.timeInterval)
         return node
     }
 
