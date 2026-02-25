@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension PersistentSubscriptions where Target == PersistentSubscription.All {
+extension PersistentSubscriptions{
     public struct ListForAll: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = UnderlyingService.Method.List.Input

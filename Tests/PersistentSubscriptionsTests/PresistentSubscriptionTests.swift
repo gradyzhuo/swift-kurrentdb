@@ -28,9 +28,9 @@ struct PersistentSubscriptionsTests {
         let streamName = "test-persistent-subscription:\(UUID().uuidString)"
         let streamIdentifier = StreamIdentifier(name: streamName)
         let client = KurrentDBClient(settings: settings)
-
-        try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
-
+        
+        try await client.persistentSubscriptions(of: .specified(stream: streamName, group: groupName)).create()
+        
         let subscriptions = try await client.listPersistentSubscriptions(stream: streamIdentifier)
         #expect(subscriptions.count == 1)
 
@@ -39,18 +39,18 @@ struct PersistentSubscriptionsTests {
 
     @Test("Subscribe PersistentSubscription for Stream")
     func testSubscribeToStream() async throws {
-        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+        let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
+        
+        let persistentSubscription = client.persistentSubscriptions(stream: streamName, group: groupName)
+        try await persistentSubscription.create()
+        
+        
+        let subscription = try await persistentSubscription.subscribe()
 
-        try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
-
-        let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
-
-        let response = try await client.appendStream(streamIdentifier, events: [
-            .init(eventType: "PS-SubscribeToStream-AccountCreated", model: ["Description": "Gears of War 10"]),
-        ]) {
-            $0.revision(expected: .any)
-        }
+        let response = try await client.streams(specified: streamName).append(events: [
+            .init(eventType: "PS-SubscribeToStream-AccountCreated", model: ["Description": "Gears of War 10"])
+        ], options: .init().revision(expected: .any))
 
         var lastEventResult: PersistentSubscription.EventResult?
         for try await result in subscription.events {
@@ -61,24 +61,26 @@ struct PersistentSubscriptionsTests {
 
         #expect(response.currentRevision == lastEventResult?.event.record.revision)
 
-        try await client.deleteStream(streamIdentifier)
-        try await client.deletePersistentSubscription(stream: streamIdentifier, groupName: groupName)
+        try await client.deleteStream(streamName)
+        try await persistentSubscription.delete()
     }
 
     @Test("Subscribe PersistentSubscription for All Streams")
     func testSubscribeToAll() async throws {
         let client = KurrentDBClient(settings: settings)
-        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+        let streamName = UUID().uuidString
 
-        try await client.createPersistentSubscription(stream: streamIdentifier, groupName: groupName)
+        let persistentSubscription = client.persistentSubscriptions(of: .allStreams(group: groupName))
+        try await persistentSubscription.create()
 
-        let subscription = try await client.subscribePersistentSubscription(stream: streamIdentifier, groupName: groupName)
+        
+        let subscription = try await persistentSubscription.subscribe()
 
         let event = EventData(
             eventType: "PS-SubscribeToAll-AccountCreated", model: ["Description": "Gears of War 10:\(UUID().uuidString)"]
         )
 
-        let response = try await client.appendStream(streamIdentifier, events: [event]) {
+        let response = try await client.appendToStream(streamName, events: [event]) {
             $0.revision(expected: .any)
         }
 
@@ -94,7 +96,7 @@ struct PersistentSubscriptionsTests {
 
         #expect(response.position?.commit == lastEventResult?.event.commitPosition?.commit)
 
-        try await client.deleteStream(streamIdentifier)
-        try await client.deletePersistentSubscription(stream: streamIdentifier, groupName: groupName)
+        try await client.deleteStream(streamName)
+        try await persistentSubscription.delete()
     }
 }

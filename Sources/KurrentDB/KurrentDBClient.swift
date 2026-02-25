@@ -56,7 +56,7 @@ import NIOSSL
 /// ```
 ///
 /// - SeeAlso: `ClientSettings`, `NodeSelector`, `Streams`, `Projections`
-public actor KurrentDBClient: Sendable, Buildable {
+public struct KurrentDBClient: Sendable, Buildable {
     
     /// Default gRPC call options applied to all client operations.
     ///
@@ -91,7 +91,7 @@ public actor KurrentDBClient: Sendable, Buildable {
     ///   requests that are already in flight.
     ///
     /// - SeeAlso: `CallOptions` from GRPCCore for available configuration options
-    public private(set) var defaultCallOptions: CallOptions
+    public let defaultCallOptions: CallOptions
 
     
     /// The configuration settings that define how the client connects to and interacts with the KurrentDB cluster.
@@ -129,7 +129,7 @@ public actor KurrentDBClient: Sendable, Buildable {
     /// ```
     ///
     /// - SeeAlso: `ClientSettings` for available configuration options and factory methods
-    public private(set) var settings: ClientSettings
+    public let settings: ClientSettings
 
     /// The event loop group used for asynchronous I/O operations.
     ///
@@ -141,7 +141,7 @@ public actor KurrentDBClient: Sendable, Buildable {
     ///
     /// Handles routing requests to appropriate cluster nodes based on node preference
     /// (leader, follower, or random) and maintains connection health.
-    package var selector: NodeSelector
+    package let selector: NodeSelector
 
     /// Creates a new client instance with an internally managed event loop group.
     ///

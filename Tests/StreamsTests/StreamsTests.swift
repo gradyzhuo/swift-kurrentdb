@@ -46,7 +46,7 @@ struct StreamTests: Sendable {
     func testAppendEvent(events: [EventData]) async throws {
         let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
         let client = KurrentDBClient(settings: settings)
-
+        
         let appendResponse = try await client.appendToStream(streamIdentifier, events: events) {
             $0.revision(expected: .any)
         }
