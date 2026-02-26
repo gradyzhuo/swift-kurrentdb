@@ -12,7 +12,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public actor Monitoring: GRPCConcreteService {
+public struct Monitoring: GRPCConcreteService {
     package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
 
     public private(set) var selector: NodeSelector

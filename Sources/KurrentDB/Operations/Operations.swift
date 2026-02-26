@@ -46,7 +46,7 @@ import NIO
 /// ```
 ///
 /// - Note: This service relies on **gRPC** and requires proper authentication.
-public actor Operations<Target: OperationsTarget>: GRPCConcreteService {
+public struct Operations<Target: OperationsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Operations_Operations.Client<HTTP2ClientTransport.Posix>
 

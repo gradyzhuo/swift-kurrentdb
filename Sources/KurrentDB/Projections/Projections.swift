@@ -17,7 +17,7 @@ import NIO
 /// details or results, depending on the capabilities of the `Target` type.
 ///
 /// - Parameter Target: The type conforming to `ProjectionsTarget` that defines the projection's behavior.
-public actor Projections<Target: ProjectionsTarget>: GRPCConcreteService {
+public struct Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     /// The underlying gRPC client type used for communication.
     package typealias UnderlyingClient = EventStore_Client_Projections_Projections.Client<HTTP2ClientTransport.Posix>
 
