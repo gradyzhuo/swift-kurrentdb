@@ -16,9 +16,10 @@ extension KurrentDBClient {
     }
 
     /// Creates a continuous projection that processes events in real-time as they are appended.
-    public func createContinuousProjection(name: String, query: String, configure: @Sendable (Projections<SpecifiedContinuousProjectionTarget>.ContinuousCreate.Options) -> Projections<SpecifiedContinuousProjectionTarget>.ContinuousCreate.Options = { $0 }) async throws(KurrentError) {
-        let options = configure(.init())
-        try await projections(of: .continuous(name: name)).create(query: query, options: options)
+    public func createContinuousProjection(name: String, query: String, configure: @Sendable (ProjectionsContinuousCreateOptions) -> ProjectionsContinuousCreateOptions = { $0 }) async throws(KurrentError) {
+        try await projections(of: .continuous(name: name)).create(query: query) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Creates a transient projection that runs in memory without persisting state to disk.
@@ -27,9 +28,10 @@ extension KurrentDBClient {
     }
 
     /// Updates an existing projection's query definition.
-    public func updateProjection(name: String, query: String, configure: @Sendable (Projections<NameTarget>.Update.Options) -> Projections<NameTarget>.Update.Options = { $0 }) async throws(KurrentError) {
-        let options = configure(.init())
-        try await projections(of: NameTarget(name: name)).update(query: query, options: options)
+    public func updateProjection(name: String, query: String, configure: @Sendable (ProjectionsUpdateOptions) -> ProjectionsUpdateOptions = { $0 }) async throws(KurrentError) {
+        try await projections(of: NameTarget(name: name)).update(query: query) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Enables a projection to begin processing events from its last checkpoint position.
@@ -48,9 +50,10 @@ extension KurrentDBClient {
     }
 
     /// Deletes a projection and optionally removes all streams it emitted.
-    public func deleteProjection(name: String, configure: @Sendable (Projections<NameTarget>.Delete.Options) -> Projections<NameTarget>.Delete.Options = { $0 }) async throws(KurrentError) {
-        let options = configure(.init())
-        try await projections(of: NameTarget(name: name)).delete(options: options)
+    public func deleteProjection(name: String, configure: @Sendable (ProjectionsDeleteOptions) -> ProjectionsDeleteOptions = { $0 }) async throws(KurrentError) {
+        try await projections(of: NameTarget(name: name)).delete {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Resets a projection to its initial state, clearing all state and checkpoint data.
@@ -59,15 +62,17 @@ extension KurrentDBClient {
     }
 
     /// Retrieves the result output of a projection, decoded to the specified Swift type.
-    public func getProjectionResult<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<NameTarget>.Result.Options) -> Projections<NameTarget>.Result.Options = { $0 }) async throws(KurrentError) -> T? {
-        let options = configure(.init())
-        return try await projections(of: NameTarget(name: name)).result(of: T.self, options: options)
+    public func getProjectionResult<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (ProjectionsResultOptions) -> ProjectionsResultOptions = { $0 }) async throws(KurrentError) -> T? {
+        try await projections(of: NameTarget(name: name)).result(of: T.self) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Retrieves the current internal state of a projection, decoded to the specified Swift type.
-    public func getProjectionState<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (Projections<NameTarget>.State.Options) -> Projections<NameTarget>.State.Options = { $0 }) async throws(KurrentError) -> T? {
-        let options = configure(.init())
-        return try await projections(of: NameTarget(name: name)).state(of: T.self, options: options)
+    public func getProjectionState<T: Decodable & Sendable>(of _: T.Type = T.self, name: String, configure: @Sendable (ProjectionsStateOptions) -> ProjectionsStateOptions = { $0 }) async throws(KurrentError) -> T? {
+        try await projections(of: NameTarget(name: name)).state(of: T.self) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Retrieves comprehensive statistics and metadata for a specific projection.

@@ -62,33 +62,13 @@ extension PersistentSubscriptions.AllStream.Create {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.CreateSettings
-        public private(set) var filter: SubscriptionFilter?
-        public private(set) var position: PositionCursor
+        public var filter: SubscriptionFilter?
+        public var position: PositionCursor
 
         public init() {
             settings = .init()
             filter = nil
             position = .end
-        }
-
-        /// Returns a copy of the options with the specified subscription filter applied.
-        ///
-        /// - Parameter filter: The filter to use for the subscription.
-        /// - Returns: A new options instance with the filter set.
-        @discardableResult
-        public func filter(_ filter: SubscriptionFilter) -> Self {
-            withCopy { $0.filter = filter }
-        }
-
-        /// Returns a copy of the options with the starting position for the subscription set to the specified cursor.
-        ///
-        /// - Parameter position: The position in the stream from which to start the subscription.
-        /// - Returns: A modified copy of the options with the updated starting position.
-        @discardableResult
-        public func startFrom(position: PositionCursor) -> Self {
-            withCopy {
-                $0.position = position
-            }
         }
 
         /// Builds the underlying gRPC message for creating a persistent subscription to all streams.
