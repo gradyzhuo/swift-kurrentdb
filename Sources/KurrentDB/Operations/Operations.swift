@@ -46,21 +46,21 @@ import NIO
 /// ```
 ///
 /// - Note: This service relies on **gRPC** and requires proper authentication.
-public struct Operations<Target: OperationsTarget>: GRPCConcreteService {
+public final class Operations<Target: OperationsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Operations_Operations.Client<HTTP2ClientTransport.Posix>
 
     /// The node selector for routing requests to cluster nodes.
-    public private(set) var selector: NodeSelector
+    internal let selector: NodeSelector
 
     /// Options to be used for each gRPC service call.
-    public var callOptions: CallOptions
+    internal let callOptions: CallOptions
 
     /// The event loop group for asynchronous execution.
-    public let eventLoopGroup: EventLoopGroup
+    internal let eventLoopGroup: EventLoopGroup
 
     /// The target specifying which operations this service can perform.
-    private(set) var target: Target
+    public let target: Target
 
     /// Initializes an `Operations` instance with a specific target.
     ///

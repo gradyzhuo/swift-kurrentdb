@@ -56,7 +56,7 @@ import NIOSSL
 /// ```
 ///
 /// - SeeAlso: `ClientSettings`, `NodeSelector`, `Streams`, `Projections`
-public struct KurrentDBClient: Sendable, Buildable {
+public final class KurrentDBClient: Sendable, Buildable {
     
     /// Default gRPC call options applied to all client operations.
     ///

@@ -185,11 +185,8 @@ extension RPCError {
         let exception = metadata.first(where: { $0.key == "exception" })?.value
         switch exception {
         case "stream-deleted":
-            if let streamName = metadata.first(where: { $0.key == "stream-name" })?.value {
-                throw .resourceDeleted(resource: streamName.description)
-            }else{
-                throw .grpcError(cause: self)
-            }
+            let streamName = metadata.first(where: { $0.key == "stream-name" })?.value.encoded() ?? "unknown"
+            throw .resourceDeleted(resource: streamName)
         default:
             if let cause = cause as? NIOCore.IOError {
                 try cause.rethrow(usage: usage, origin: self)
