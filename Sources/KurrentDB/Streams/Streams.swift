@@ -158,11 +158,13 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - events: An array of events to append.
-    ///   - options: The options for appending events. Defaults to an empty configuration.
+    ///   - configure: A closure to configure append options. Defaults to no-op.
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the append operation fails.
     @discardableResult
-    public func append(events: [EventData], options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
+    public func append(events: [EventData], configure: @Sendable (inout Append.Options) -> Void = { _ in }) async throws(KurrentError) -> Append.Response {
+        var options = Append.Options()
+        configure(&options)
         let usecase = Append(to: identifier, events: events, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -171,64 +173,60 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameters:
     ///   - events: A variadic list of events to append.
-    ///   - options: The options for appending events. Defaults to an empty configuration.
+    ///   - configure: A closure to configure append options. Defaults to no-op.
     /// - Returns: An `Append.Response` indicating the result of the operation.
     /// - Throws: An error if the append operation fails.
     @discardableResult
-    public func append(events: EventData..., options: Append.Options = .init()) async throws(KurrentError) -> Append.Response {
-        try await append(events: events, options: options)
+    public func append(events: EventData..., configure: @Sendable (inout Append.Options) -> Void = { _ in }) async throws(KurrentError) -> Append.Response {
+        try await append(events: events, configure: configure)
     }
 
     /// Reads events from the specified stream.
     ///
-    /// - Parameters:
-    ///   - cursor: The position in the stream from which to read.
-    ///   - options: The options for reading events. Defaults to an empty configuration.
-    /// - Returns: An asynchronous stream of `Read.Response` values.
-    /// Reads events from the specified stream as an asynchronous throwing stream.
-    ///
-    /// - Parameter options: Options to configure the read operation, such as revision range or filters.
+    /// - Parameter configure: A closure to configure read options, such as revision range or direction. Defaults to no-op.
     /// - Returns: An asynchronous throwing stream of read responses containing events from the stream.
     /// - Throws: `KurrentError` if the read operation fails.
-    public func read(options: Read.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
+    public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
+        var options = Read.Options()
+        configure(&options)
         let usecase = Read(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
     /// Subscribes to events from the specified stream.
     ///
-    /// - Parameters:
-    ///   - cursor: The position in the stream from which to start subscribing.
-    ///   - options: The options for subscribing. Defaults to an empty configuration.
-    /// - Returns: A `Subscription` instance for receiving events.
-    /// Subscribes to events from the specified stream.
-    ///
-    /// - Parameter options: Subscription options, such as filters or starting revision.
+    /// - Parameter configure: A closure to configure subscription options. Defaults to no-op.
     /// - Returns: A subscription to the stream's events.
     /// - Throws: `KurrentError` if the subscription fails.
-    public func subscribe(options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
+    public func subscribe(configure: @Sendable (inout Subscribe.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {
+        var options = Subscribe.Options()
+        configure(&options)
         let usecase = Subscribe(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
     /// Deletes the specified stream.
     ///
-    /// - Parameter options: The options for deleting the stream. Defaults to an empty configuration.
+    /// - Parameter configure: A closure to configure delete options. Defaults to no-op.
     /// - Returns: A `Delete.Response` indicating the result of the operation.
     /// - Throws: An error if the delete operation fails.
     @discardableResult
-    public func delete(options: Delete.Options = .init()) async throws(KurrentError) -> Delete.Response {
+    public func delete(configure: @Sendable (inout Delete.Options) -> Void = { _ in }) async throws(KurrentError) -> Delete.Response {
+        var options = Delete.Options()
+        configure(&options)
         let usecase = Delete(to: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
     /// Marks the specified stream as permanently deleted (tombstoned).
     ///
-    /// - Parameter options: The options for tombstoning the stream. Defaults to an empty configuration.
+    /// - Parameter configure: A closure to configure tombstone options. Defaults to no-op.
     /// - Returns: A `Tombstone.Response` indicating the result of the operation.
     /// - Throws: An error if the tombstone operation fails.
     @discardableResult
-    public func tombstone(options: Tombstone.Options = .init()) async throws(KurrentError) -> Tombstone.Response {
+    public func tombstone(configure: @Sendable (inout Tombstone.Options) -> Void = { _ in }) async throws(KurrentError) -> Tombstone.Response {
+        var options = Tombstone.Options()
+        configure(&options)
         let usecase = Tombstone(to: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -241,18 +239,14 @@ extension Streams where Target == ProjectionStream {
         target.identifier
     }
 
-    /// Subscribes to events from the specified stream.
+    /// Subscribes to events from the specified projection stream.
     ///
-    /// - Parameters:
-    ///   - cursor: The position in the stream from which to start subscribing.
-    ///   - options: The options for subscribing. Defaults to an empty configuration.
-    /// - Returns: A `Subscription` instance for receiving events.
-    /// Subscribes to events from the specified stream.
-    ///
-    /// - Parameter options: Subscription options, such as filters or starting revision.
+    /// - Parameter configure: A closure to configure subscription options. Defaults to no-op.
     /// - Returns: A subscription that receives events from the stream.
     /// - Throws: `KurrentError` if the subscription cannot be established.
-    public func subscribe(options: Subscribe.Options = .init()) async throws(KurrentError) -> Subscription {
+    public func subscribe(configure: @Sendable (inout Subscribe.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {
+        var options = Subscribe.Options()
+        configure(&options)
         let usecase = Subscribe(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -307,32 +301,24 @@ extension Streams where Target == MultiStreams {
 extension Streams where Target == AllStreams {
     /// Reads events from all available streams.
     ///
-    /// - Parameters:
-    ///   - cursor: The position from which to start reading. default is `.start`.
-    ///   - options: The options for reading events. Defaults to an empty configuration.
-    /// - Returns: An asynchronous stream of `ReadAll.Response` values.
-    /// Reads events from all streams as an asynchronous throwing stream.
-    ///
-    /// - Parameter options: Options to configure the read operation, such as filters or limits.
+    /// - Parameter configure: A closure to configure the read operation, such as filters or limits. Defaults to no-op.
     /// - Returns: An asynchronous throwing stream of read responses containing events from all streams.
     /// - Throws: `KurrentError` if the read operation fails.
-    public func read(options: ReadAll.Options = .init()) async throws(KurrentError) -> AsyncThrowingStream<ReadAll.Response, Error> {
+    public func read(configure: @Sendable (inout ReadAll.Options) -> Void = { _ in }) async throws(KurrentError) -> AsyncThrowingStream<ReadAll.Response, Error> {
+        var options = ReadAll.Options()
+        configure(&options)
         let usecase = ReadAll(options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Subscribes to all streams from a specified position.
-    ///
-    /// - Parameters:
-    ///   - cursor: The position from which to start subscribing. default is `.end`
-    ///   - options: The options for subscribing. Defaults to an empty configuration.
-    /// - Returns: A `Streams.Subscription` instance for receiving events.
     /// Subscribes to all event streams, delivering events as they occur.
     ///
-    /// - Parameter options: Subscription options, including filters and starting position.
+    /// - Parameter configure: A closure to configure subscription options, including filters and starting position. Defaults to no-op.
     /// - Returns: A subscription that receives events from all streams.
     /// - Throws: `KurrentError` if the subscription fails.
-    public func subscribe(options: SubscribeAll.Options = .init()) async throws(KurrentError) -> Streams.Subscription {
+    public func subscribe(configure: @Sendable (inout SubscribeAll.Options) -> Void = { _ in }) async throws(KurrentError) -> Streams.Subscription {
+        var options = SubscribeAll.Options()
+        configure(&options)
         let usecase = SubscribeAll(options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
