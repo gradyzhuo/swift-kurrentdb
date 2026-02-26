@@ -121,16 +121,10 @@ extension Streams.Append {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public fileprivate(set) var expectedRevision: StreamRevision
+        public var expectedRevision: StreamRevision
 
         public init() {
             expectedRevision = .any
-        }
-
-        public func revision(expected: StreamRevision) -> Self {
-            withCopy { options in
-                options.expectedRevision = expected
-            }
         }
 
         package func build() -> UnderlyingMessage {
