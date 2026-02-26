@@ -17,14 +17,14 @@ import NIO
 /// details or results, depending on the capabilities of the `Target` type.
 ///
 /// - Parameter Target: The type conforming to `ProjectionsTarget` that defines the projection's behavior.
-public struct Projections<Target: ProjectionsTarget>: GRPCConcreteService {
+public final class Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     /// The underlying gRPC client type used for communication.
     package typealias UnderlyingClient = EventStore_Client_Projections_Projections.Client<HTTP2ClientTransport.Posix>
 
-    private(set) var selector: NodeSelector
-    var callOptions: CallOptions
-    let eventLoopGroup: EventLoopGroup
-    private(set) var target: Target
+    internal let selector: NodeSelector
+    internal let callOptions: CallOptions
+    internal let eventLoopGroup: EventLoopGroup
+    public let target: Target
 
     package let serviceName: String = "event_store.client.projections.projections"
 

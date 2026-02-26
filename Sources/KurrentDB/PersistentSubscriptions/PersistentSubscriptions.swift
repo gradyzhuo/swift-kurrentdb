@@ -12,7 +12,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
+public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
     /// The underlying gRPC service type.
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
 
@@ -20,13 +20,13 @@ public struct PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRP
     package typealias UnderlyingClient = UnderlyingService.Client<HTTP2ClientTransport.Posix>
 
     /// The settings used for client communication.
-    public private(set) var selector: NodeSelector
+    internal let selector: NodeSelector
 
     /// Options to be used for each gRPC service call.
-    public var callOptions: CallOptions
+    internal let callOptions: CallOptions
 
     /// The event loop group for asynchronous execution.
-    public let eventLoopGroup: EventLoopGroup
+    internal let eventLoopGroup: EventLoopGroup
 
     /// The target stream for the subscription (e.g., specific stream, all streams, or generic).
     public let target: Target
