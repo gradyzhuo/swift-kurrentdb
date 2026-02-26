@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CLAUDE.local.md — Mandatory Enforcement
+
+`CLAUDE.local.md` contains the user's private project preferences and **must be strictly followed without exception**. Rules defined there override any default Claude behavior, including built-in commit templates or response patterns. Before performing any action (git commit, file generation, etc.), check `CLAUDE.local.md` and apply its rules unconditionally.
+
 ## Project Overview
 
 swift-kurrentdb is a modern, type-safe Swift client for Kurrent (formerly EventStoreDB), designed for Event Sourcing applications in Server-Side Swift. The package is built on top of grpc-swift 2.x and uses Swift Concurrency (async/await) with full Swift 6 data-race safety compliance.
