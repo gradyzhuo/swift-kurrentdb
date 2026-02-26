@@ -10,7 +10,7 @@ public struct AnyProjectionsTarget: ProjectionsTarget {
     public init() {}
 }
 
-extension ProjectionsTarget {
+extension ProjectionsTarget where Self == AnyProjectionsTarget{
     /// Returns a target representing all projections in any mode.
     public static var anyMode: AnyProjectionsTarget {
         .init()

@@ -96,6 +96,6 @@ extension KurrentDBClient {
 
     /// Restarts the entire projection subsystem across the cluster.
     public func restartProjectionSubsystem() async throws(KurrentError) {
-        try await projections.restartSubsystem()
+        try await projections(of: .anyMode).restartSubsystem()
     }
 }

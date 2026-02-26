@@ -11,7 +11,7 @@ public struct UnspecifiedTransientProjectionTarget: ProjectionsTarget {
     public init() {}
 }
 
-extension ProjectionsTarget {
+extension ProjectionsTarget where Self == UnspecifiedTransientProjectionTarget{
     /// Returns a target for creating transient projections without a pre-specified name.
     public static var anyTransient: UnspecifiedTransientProjectionTarget {
         .init()

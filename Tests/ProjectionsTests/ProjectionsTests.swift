@@ -60,7 +60,8 @@ struct ProjectionsTests: Sendable {
 
     @Test("Testing create a onetime projection")
     func createOneTimeProjection() async throws {
-        let originOneTimeProjections = try await client.projections(of: .onetime).list()
+        let projection = client.projections(of: .onetime)
+        let originOneTimeProjections = try await projection.list()
         let js = """
         fromAll()
             .when({
@@ -76,9 +77,9 @@ struct ProjectionsTests: Sendable {
             .outputState();
         """
 
-        try await client.projections(of: .onetime).create(query: js)
+        try await projection.create(query: js)
 
-        let projections = try await client.projections(of: .onetime).list()
+        let projections = try await projection.list()
         #expect(projections.count == (originOneTimeProjections.count + 1))
     }
 

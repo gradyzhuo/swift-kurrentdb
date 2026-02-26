@@ -8,15 +8,6 @@
 // MARK: - Projection Factory Methods
 
 extension KurrentDBClient {
-    /// Creates a projections interface targeting all projections.
-    public var projections: Projections<AnyProjectionsTarget> {
-        .init(
-            target: .init(),
-            selector: selector,
-            callOptions: defaultCallOptions,
-            eventLoopGroup: eventLoopGroup)
-    }
-
     /// Creates a projections interface for a specific target type.
     public func projections<Target: ProjectionsTarget>(of target: Target) -> Projections<Target> {
         .init(
@@ -27,7 +18,7 @@ extension KurrentDBClient {
     }
 
     /// Creates a projections interface for a named projection.
-    public func projection(name: String) -> Projections<NameTarget> {
+    public func projections(name: String) -> Projections<NameTarget> {
         .init(
             target: .init(name: name),
             selector: selector,
