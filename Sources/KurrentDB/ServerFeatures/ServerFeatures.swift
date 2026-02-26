@@ -12,13 +12,13 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct ServerFeatures: GRPCConcreteService {
+public final class ServerFeatures: GRPCConcreteService {
     package typealias UnderlyingClient = EventStore_Client_ServerFeatures_ServerFeatures.Client<HTTP2ClientTransport.Posix>
 
-    public private(set) var endpoint: Endpoint
-    public private(set) var settings: ClientSettings
-    public var callOptions: CallOptions
-    public let eventLoopGroup: EventLoopGroup
+    internal let endpoint: Endpoint
+    internal let settings: ClientSettings
+    internal let callOptions: CallOptions
+    internal let eventLoopGroup: EventLoopGroup
 
     init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.endpoint = endpoint
