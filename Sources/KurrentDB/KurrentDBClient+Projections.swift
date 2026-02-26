@@ -10,6 +10,7 @@
 extension KurrentDBClient {
     /// Creates a projections interface targeting all projections.
     public var projections: Projections<AnyProjectionsTarget> {
+<<<<<<< HEAD
         get{
             .init(
                 target: .init(),
@@ -17,6 +18,13 @@ extension KurrentDBClient {
                 callOptions: defaultCallOptions,
                 eventLoopGroup: eventLoopGroup)
         }
+=======
+        .init(
+            target: .init(),
+            selector: selector,
+            callOptions: defaultCallOptions,
+            eventLoopGroup: eventLoopGroup)
+>>>>>>> 6d1df011 ([REFACTOR] Split Target types into per-file Target/ folders; fix docs sample code)
     }
 
     /// Creates a projections interface for a specific target type.
@@ -28,7 +36,11 @@ extension KurrentDBClient {
             eventLoopGroup: eventLoopGroup)
     }
 
+<<<<<<< HEAD
     /// Creates a projections interface for a predefined system projection.
+=======
+    /// Creates a projections interface for a named projection.
+>>>>>>> 6d1df011 ([REFACTOR] Split Target types into per-file Target/ folders; fix docs sample code)
     public func projection(name: String) -> Projections<NameTarget> {
         .init(
             target: .init(name: name),
@@ -46,6 +58,7 @@ extension KurrentDBClient {
             eventLoopGroup: eventLoopGroup)
     }
 }
+<<<<<<< HEAD
 
 // MARK: - Projection Accessors
 
@@ -75,3 +88,5 @@ extension KurrentDBClient {
         projections(system: predefined)
     }
 }
+=======
+>>>>>>> 6d1df011 ([REFACTOR] Split Target types into per-file Target/ folders; fix docs sample code)

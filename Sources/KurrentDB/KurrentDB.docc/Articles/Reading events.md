@@ -132,7 +132,7 @@ Reading from the `$all` stream is similar to reading from an individual stream, 
 The simplest way to read the `$all` stream forwards is to supply a read direction and the transaction log position from which you want to start. The transaction log postion can either be a stream position `Start` or a big int (unsigned 64-bit integer):
 
 ```swift
-let responses = try await client.readAllStream(){
+let responses = try await client.readAllStreams(){
     $0
     .startFrom(position: .start)
 }
@@ -155,7 +155,7 @@ Passing in the max count will limit the number of events returned.
 When using projections to create new events, you can set whether the generated events are pointers to existing events. Setting this value to `true` tells KurrentDB to return the event as well as the event linking to it.
 
 ```swift
-let responses = try await client.readAllStream(){
+let responses = try await client.readAllStreams(){
     $0
     .startFrom(position: .start)
     .resolveLinks()
@@ -177,7 +177,7 @@ let client = KurrentDBClient(
     settings: settings.authenticated(.credentials(username: "admin", password: "changeit"))
 )
 
-let responses = try await client.readAllStream(){
+let responses = try await client.readAllStreams(){
     $0
     .startFrom(position: .specified(commit: 1110, prepare: 1110))
 }
@@ -187,7 +187,7 @@ let responses = try await client.readAllStream(){
 In addition to reading the `$all` stream forwards, it can be read backwards. To read all the events backwards, set the _position_ to the end:
 
 ```swift
-let responses = try await client.readAllStream(){
+let responses = try await client.readAllStreams(){
     $0
     .startFrom(position: .end)
 }
@@ -202,7 +202,7 @@ KurrentDB will also return system events when reading from the `$all` stream. In
 All system events begin with `$` or `$$` and can be easily ignored by checking the `EventType` property.
 
 ```swift
-let responses = try await client.readAllStream(){
+let responses = try await client.readAllStreams(){
     $0
     .startFrom(position: .start)
 }
