@@ -10,7 +10,7 @@ public struct SpecifiedContinuousProjectionTarget: ProjectionsTarget, Projection
     public let name: String
 }
 
-extension ProjectionsTarget {
+extension ProjectionsTarget where Self == SpecifiedContinuousProjectionTarget{
     /// Creates a target for a continuous projection with the given name.
     public static func continuous(name: String) -> SpecifiedContinuousProjectionTarget {
         .init(name: name)
