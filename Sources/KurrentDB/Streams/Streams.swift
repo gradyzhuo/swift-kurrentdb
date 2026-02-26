@@ -55,7 +55,7 @@ import NIO
 /// #### All Streams Operations
 /// - ``read(cursor:options:)-6h8h2``
 /// - ``subscribe(from:options:)-9gq2e``
-public actor Streams<Target: StreamsTarget>: GRPCConcreteService {
+public struct Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
 
