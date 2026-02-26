@@ -79,14 +79,13 @@ extension PersistentSubscriptions.AllStream.Create {
         package func build() -> UnderlyingMessage {
             .with {
                 $0.settings = .make(settings: settings)
-
-                if let filter {
-                    $0.all.filter = .make(with: filter)
-                } else {
-                    $0.all.noFilter = .init()
-                }
-
                 $0.all = .with {
+                    if let filter {
+                        $0.filter = .make(with: filter)
+                    } else {
+                        $0.noFilter = .init()
+                    }
+                    
                     switch position {
                     case .start:
                         $0.start = .init()
