@@ -157,7 +157,7 @@ struct StreamsReadTests: Sendable {
 
         try await client.streams(specified: streamName).tombstone()
 
-        await #expect(throws: KurrentError.resourceDeleted) {
+        await #expect(throws: KurrentError.resourceDeleted(resource: streamName)) {
             try await client.streams(specified: streamName)
                 .append(events: [EventData(eventType: "AfterTombstone", data: Data(), contentType: .json)]) {
                     $0.expectedRevision = .any

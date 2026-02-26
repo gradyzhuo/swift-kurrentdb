@@ -11,7 +11,7 @@ public struct UnspecifiedContinuousProjectionTarget: ProjectionsTarget {
     public init() {}
 }
 
-extension ProjectionsTarget {
+extension ProjectionsTarget where Self == UnspecifiedContinuousProjectionTarget{
     /// Returns a target for creating continuous projections without a pre-specified name.
     public static var anyContinuous: UnspecifiedContinuousProjectionTarget {
         .init()

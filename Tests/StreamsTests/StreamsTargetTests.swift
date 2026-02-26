@@ -114,9 +114,9 @@ struct StreamsTargetTests: Sendable {
             .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
-        let streams = await client.streams(of: .specified("test-stream"))
+        let streams = client.streams(of: .specified("test-stream"))
 
-        await #expect(streams.target.identifier.name == "test-stream")
+        #expect(streams.target.identifier.name == "test-stream")
     }
 
     @Test("KurrentDBClient should accept AllStreams target")
@@ -128,10 +128,10 @@ struct StreamsTargetTests: Sendable {
             .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
-        let streams = await client.streams(of: AllStreams.all)
+        let streams = client.streams(of: .all)
 
         // Verify the target type
-        await #expect(type(of: streams.target) == AllStreams.self)
+        #expect(type(of: streams.target) == AllStreams.self)
     }
 
     @Test("KurrentDBClient should accept MultiStreams target")
@@ -143,10 +143,10 @@ struct StreamsTargetTests: Sendable {
             .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
-        let streams = await client.streams(of: MultiStreams.multiple)
+        let streams = client.streams(of: .multiple)
 
         // Verify the target type
-        await #expect(type(of: streams.target) == MultiStreams.self)
+        #expect(type(of: streams.target) == MultiStreams.self)
     }
 
     @Test("KurrentDBClient should accept ProjectionStream target by event type")
@@ -158,9 +158,9 @@ struct StreamsTargetTests: Sendable {
             .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
-        let streams = await client.streams(of: ProjectionStream.byEventType("OrderPlaced"))
+        let streams = client.streams(of: .byEventType("OrderPlaced"))
 
-        await #expect(streams.target.identifier.name == "$et-OrderPlaced")
+        #expect(streams.target.identifier.name == "$et-OrderPlaced")
     }
 
     @Test("KurrentDBClient should accept ProjectionStream target by stream prefix")
@@ -172,9 +172,9 @@ struct StreamsTargetTests: Sendable {
             .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: settings)
 
-        let streams = await client.streams(of: ProjectionStream.byStream(prefix: "order"))
+        let streams = client.streams(of: .byStream(prefix: "order"))
 
-        await #expect(streams.target.identifier.name == "$ce-order")
+        #expect(streams.target.identifier.name == "$ce-order")
     }
 
     @Test("KurrentDBClient convenience methods should work with stream names")
@@ -187,16 +187,16 @@ struct StreamsTargetTests: Sendable {
         let client = KurrentDBClient(settings: settings)
 
         // Test specified stream convenience method
-        let specifiedStreams = await client.streams(specified: "my-stream")
-        await #expect(specifiedStreams.target.identifier.name == "my-stream")
+        let specifiedStreams = client.streams(specified: "my-stream")
+        #expect(specifiedStreams.target.identifier.name == "my-stream")
 
         // Test allStreams convenience property
-        let allStreams = await client.allStreams
-        await #expect(type(of: allStreams.target) == AllStreams.self)
+        let allStreams = client.allStreams
+        #expect(type(of: allStreams.target) == AllStreams.self)
 
         // Test multiStreams convenience property
-        let multiStreams = await client.multiStreams
-        await #expect(type(of: multiStreams.target) == MultiStreams.self)
+        let multiStreams = client.multiStreams
+        #expect(type(of: multiStreams.target) == MultiStreams.self)
     }
 
     // MARK: - Type Safety Tests

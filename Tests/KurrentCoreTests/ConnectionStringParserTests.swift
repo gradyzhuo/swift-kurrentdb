@@ -34,7 +34,7 @@ struct ConnectionStringParser {
     ])
     func test(connectionString: String, hostName: String?) throws {
         let parser = EndpointParser()
-        let endpoints = try #require(try parser.parse(connectionString))
+        let endpoints = try #require(parser.parse(connectionString))
 
         if endpoints.count > 0 {
             #expect(endpoints[0].host == hostName)
@@ -50,7 +50,7 @@ struct ConnectionStringParser {
     ])
     func test(connectionString: String, expected: [(String, UInt32)]) throws {
         let parser = EndpointParser()
-        let endpoints = try #require(try parser.parse(connectionString))
+        let endpoints = try #require(parser.parse(connectionString))
 
         let expectedEndpoints = expected.map { Endpoint(host: $0.0, port: $0.1) }
         #expect(endpoints == expectedEndpoints)

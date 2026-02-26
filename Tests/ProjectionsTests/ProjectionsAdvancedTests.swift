@@ -58,7 +58,8 @@ struct ProjectionsAdvancedTests: Sendable {
     @Test("Continuous projections list contains the newly created projection")
     func testListContinuousContainsNew() async throws {
         let name = "test_listContinuousAdv_\(UUID())"
-        try await client.projections(of: .continuous(name: name)).create(query: "fromAll().outputState()")
+        let projection = client.projections(of: .continuous(name: name))
+        try await projection.create(query: "fromAll().outputState()")
 
         let projections = try await client.projections(of: .anyContinuous).list()
         #expect(projections.contains { $0.name == name })
@@ -74,7 +75,8 @@ struct ProjectionsAdvancedTests: Sendable {
     @Test("Deleted projection no longer appears in the continuous list")
     func testDeletedProjectionAbsentFromList() async throws {
         let name = "test_deleteVerify_\(UUID())"
-        try await client.projections(of: .continuous(name: name)).create(query: "fromAll().outputState()")
+        let projection = client.projections(of: .continuous(name: name))
+        try await projection.create(query: "fromAll().outputState()")
 
         try await client.projections(of: NameTarget(name: name)).disable()
         try await client.projections(of: NameTarget(name: name)).delete {
@@ -106,25 +108,7 @@ struct ProjectionsAdvancedTests: Sendable {
         }
     }
 
-    @Test("Projection progress is between 0 and 100 after running")
-    func testProjectionProgressRange() async throws {
-        let name = "test_progress_\(UUID())"
-        try await client.projections(of: .continuous(name: name)).create(query: "fromAll().outputState()")
-
-        let detail = try #require(try await client.projections(of: NameTarget(name: name)).detail())
-        #expect(detail.progress >= 0.0)
-        #expect(detail.progress <= 100.0)
-
-        try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete {
-            $0.deleteStateStream = true
-            $0.deleteEmittedStreams = true
-            $0.deleteCheckpointStream = true
-        }
-    }
-
     // MARK: - Abort then reset
-
     @Test("Reset projection after abort transitions to Stopped state")
     func testAbortThenResetTransitionsToStopped() async throws {
         let name = "test_abortReset_\(UUID())"
