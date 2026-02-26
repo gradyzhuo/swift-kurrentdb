@@ -32,11 +32,11 @@ struct StreamsReadTests: Sendable {
         let events = eventTypes.map { EventData(eventType: $0, model: ["n": $0]) }
 
         try await client.streams(specified: streamName)
-            .append(events: events, options: .init().revision(expected: .any))
+            .append(events: events) { $0.expectedRevision = .any }
 
         var readTypes: [String] = []
         let responses = try await client.streams(specified: streamName)
-            .read(options: .init().forward().startFrom(revision: .start))
+            .read { $0.direction = .forward; $0.revision = .start }
         for try await response in responses {
             if case let .event(event) = response {
                 readTypes.append(event.record.eventType)
@@ -57,11 +57,11 @@ struct StreamsReadTests: Sendable {
         let events = eventTypes.map { EventData(eventType: $0, model: ["n": $0]) }
 
         try await client.streams(specified: streamName)
-            .append(events: events, options: .init().revision(expected: .any))
+            .append(events: events) { $0.expectedRevision = .any }
 
         var readTypes: [String] = []
         let responses = try await client.streams(specified: streamName)
-            .read(options: .init().backward().startFrom(revision: .end))
+            .read { $0.direction = .backward; $0.revision = .end }
         for try await response in responses {
             if case let .event(event) = response {
                 readTypes.append(event.record.eventType)
@@ -81,11 +81,11 @@ struct StreamsReadTests: Sendable {
         let events = (1...5).map { EventData(eventType: "ReadLimit-\($0)", model: ["n": $0]) }
 
         try await client.streams(specified: streamName)
-            .append(events: events, options: .init().revision(expected: .any))
+            .append(events: events) { $0.expectedRevision = .any }
 
         var count = 0
         let responses = try await client.streams(specified: streamName)
-            .read(options: .init().forward().startFrom(revision: .start).limit(3))
+            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 }
         for try await response in responses {
             if case .event = response { count += 1 }
         }
@@ -103,13 +103,13 @@ struct StreamsReadTests: Sendable {
         let events = (0..<5).map { EventData(eventType: "ReadRev-\($0)", model: ["i": $0]) }
 
         let appendResponse = try await client.streams(specified: streamName)
-            .append(events: events, options: .init().revision(expected: .any))
+            .append(events: events) { $0.expectedRevision = .any }
         let lastRevision = try #require(appendResponse.currentRevision)
 
         // Read from revision 2 → should get events at revisions 2, 3, 4
         var readRevisions: [UInt64] = []
         let responses = try await client.streams(specified: streamName)
-            .read(options: .init().forward().revision(from: 2))
+            .read { $0.direction = .forward; $0.revision = .specified(2) }
         for try await response in responses {
             if case let .event(event) = response {
                 readRevisions.append(event.record.revision)
@@ -130,10 +130,9 @@ struct StreamsReadTests: Sendable {
         let client = KurrentDBClient(settings: settings)
 
         try await client.streams(specified: streamName)
-            .append(
-                events: [EventData(eventType: "Delete-Event", data: Data(), contentType: .json)],
-                options: .init().revision(expected: .any)
-            )
+            .append(events: [EventData(eventType: "Delete-Event", data: Data(), contentType: .json)]) {
+                $0.expectedRevision = .any
+            }
 
         try await client.streams(specified: streamName).delete()
 
@@ -152,19 +151,17 @@ struct StreamsReadTests: Sendable {
         let client = KurrentDBClient(settings: settings)
 
         try await client.streams(specified: streamName)
-            .append(
-                events: [EventData(eventType: "Tombstone-Event", data: Data(), contentType: .json)],
-                options: .init().revision(expected: .any)
-            )
+            .append(events: [EventData(eventType: "Tombstone-Event", data: Data(), contentType: .json)]) {
+                $0.expectedRevision = .any
+            }
 
         try await client.streams(specified: streamName).tombstone()
 
         await #expect(throws: KurrentError.resourceDeleted) {
             try await client.streams(specified: streamName)
-                .append(
-                    events: [EventData(eventType: "AfterTombstone", data: Data(), contentType: .json)],
-                    options: .init().revision(expected: .any)
-                )
+                .append(events: [EventData(eventType: "AfterTombstone", data: Data(), contentType: .json)]) {
+                    $0.expectedRevision = .any
+                }
         }
     }
 }
