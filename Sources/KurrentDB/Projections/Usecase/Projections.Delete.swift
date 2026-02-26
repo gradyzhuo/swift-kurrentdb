@@ -62,42 +62,21 @@ extension Projections.Delete {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        private var _deleteCheckpointStream: Bool
-        private var _deleteEmittedStreams: Bool
-        private var _deleteStateStream: Bool
+        public var deleteCheckpointStream: Bool
+        public var deleteEmittedStreams: Bool
+        public var deleteStateStream: Bool
 
         public init() {
-            _deleteCheckpointStream = false
-            _deleteEmittedStreams = false
-            _deleteStateStream = false
+            deleteCheckpointStream = false
+            deleteEmittedStreams = false
+            deleteStateStream = false
         }
 
         package func build() -> UnderlyingMessage {
             .with {
-                $0.deleteStateStream = _deleteStateStream
-                $0.deleteEmittedStreams = _deleteEmittedStreams
-                $0.deleteCheckpointStream = _deleteCheckpointStream
-            }
-        }
-
-        @discardableResult
-        public func deleteEmittedStreams() -> Self {
-            withCopy { options in
-                options._deleteEmittedStreams = true
-            }
-        }
-
-        @discardableResult
-        public func deleteStateStream() -> Self {
-            withCopy { options in
-                options._deleteStateStream = true
-            }
-        }
-
-        @discardableResult
-        public func deleteCheckpointStream() -> Self {
-            withCopy { options in
-                options._deleteCheckpointStream = true
+                $0.deleteStateStream = deleteStateStream
+                $0.deleteEmittedStreams = deleteEmittedStreams
+                $0.deleteCheckpointStream = deleteCheckpointStream
             }
         }
     }

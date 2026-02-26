@@ -60,8 +60,8 @@ extension Projections.ContinuousCreate {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var emitEnabled: Bool
-        public private(set) var trackEmittedStreams: Bool
+        public var emitEnabled: Bool
+        public var trackEmittedStreams: Bool
 
         public init(emitEnabled: Bool = true, trackEmittedStreams: Bool = true) {
             self.emitEnabled = emitEnabled
@@ -74,20 +74,6 @@ extension Projections.ContinuousCreate {
                     $0.emitEnabled = emitEnabled
                     $0.trackEmittedStreams = trackEmittedStreams
                 }
-            }
-        }
-
-        @discardableResult
-        public func emit(enabled: Bool) -> Self {
-            withCopy { options in
-                options.emitEnabled = enabled
-            }
-        }
-
-        @discardableResult
-        public func trackEmittedStreams(_ trackEmittedStreams: Bool) -> Self {
-            withCopy { options in
-                options.trackEmittedStreams = trackEmittedStreams
             }
         }
     }

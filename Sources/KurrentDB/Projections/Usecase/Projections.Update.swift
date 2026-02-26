@@ -87,19 +87,5 @@ extension Projections.Update {
                 }
             }
         }
-
-        @discardableResult
-        public func noEmit() -> Self {
-            withCopy { options in
-                options.emitOption = .noEmit
-            }
-        }
-
-        @discardableResult
-        public func emit(enabled: Bool) -> Self {
-            withCopy { options in
-                options.emitOption = .enable(enabled)
-            }
-        }
     }
 }
