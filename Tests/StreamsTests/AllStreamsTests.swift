@@ -33,7 +33,7 @@ struct AllStreamsTests: Sendable {
         let client = KurrentDBClient(settings: settings)
 
         _ = try await client.streams(specified: streamIdentifier.name)
-            .append(events: events, options: .init().revision(expected: .any))
+            .append(events: events) { $0.expectedRevision = .any }
 
         let responses = try await client.allStreams.read()
 
@@ -66,13 +66,14 @@ struct AllStreamsTests: Sendable {
         let client = KurrentDBClient(settings: settings)
 
         let appendResponse = try await client.streams(specified: streamIdentifier.name)
-            .append(events: events, options: .init().revision(expected: .any))
+            .append(events: events) { $0.expectedRevision = .any }
 
         let appendedPosition = try #require(appendResponse.position)
-        let responses = try await client.allStreams.read(options: .init()
-            .limit(1)
-            .forward()
-            .startFrom(position: .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare)))
+        let responses = try await client.allStreams.read {
+            $0.limit = 1
+            $0.direction = .forward
+            $0.position = .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare)
+        }
 
         let allEvents = try await responses.reduce(into: [RecordedEvent]()) {
             guard try !($1.event.record).eventType.hasPrefix("$") else {
