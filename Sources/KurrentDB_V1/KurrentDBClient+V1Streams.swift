@@ -40,8 +40,10 @@ extension KurrentDBClient {
 
     /// Appends events to a stream identified by its StreamIdentifier.
     @discardableResult
-    public func appendToStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
-        try await streams(of: .specified(streamIdentifier)).append(events: events) { $0 = configure($0) }
+    public func appendToStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (StreamsAppendOptions) -> StreamsAppendOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamIdentifier)).append(events: events) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Appends events to multiple streams in a single batch operation.
@@ -52,75 +54,99 @@ extension KurrentDBClient {
 
     /// Appends events to a stream identified by name.
     @discardableResult
-    public func appendToStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
-        try await streams(of: .specified(streamName)).append(events: events) { $0 = configure($0) }
+    public func appendToStream(_ streamName: String, events: [EventData], configure: @Sendable (StreamsAppendOptions) -> StreamsAppendOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamName)).append(events: events) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Appends one or more events to a stream using variadic parameters.
     @discardableResult
-    public func appendToStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
-        try await streams(of: .specified(streamName)).append(events: events) { $0 = configure($0) }
+    public func appendToStream(_ streamName: String, events: EventData..., configure: @Sendable (StreamsAppendOptions) -> StreamsAppendOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamName)).append(events: events) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     // MARK: - Stream Read Operations
 
     /// Reads events from the `$all` stream (global event log).
-    public func readAllStreams(configure: @Sendable (Streams<AllStreams>.ReadAll.Options) -> Streams<AllStreams>.ReadAll.Options = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.ReadAll.Responses {
-        try await streams(of: .all).read { $0 = configure($0) }
+    public func readAllStreams(configure: @Sendable (StreamsReadAllOptions) -> StreamsReadAllOptions = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.ReadAll.Responses {
+        try await streams(of: .all).read {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Reads events from a specific stream identified by its StreamIdentifier.
-    public func readStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Read.Responses {
-        try await streams(of: .specified(streamIdentifier)).read { $0 = configure($0) }
+    public func readStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (StreamsReadOptions) -> StreamsReadOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Read.Responses {
+        try await streams(of: .specified(streamIdentifier)).read {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Reads events from a stream identified by name.
     @available(*, deprecated, renamed: "readStream")
-    public func readStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Read.Options) -> Streams<SpecifiedStream>.Read.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Read.Responses {
-        try await streams(of: .specified(streamName)).read { $0 = configure($0) }
+    public func readStream(_ streamName: String, configure: @Sendable (StreamsReadOptions) -> StreamsReadOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Read.Responses {
+        try await streams(of: .specified(streamName)).read {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     // MARK: - Stream Subscription Operations
 
     /// Creates a real-time subscription to the `$all` stream.
-    public func subscribeAllStreams(configure: @Sendable (Streams<AllStreams>.SubscribeAll.Options) -> Streams<AllStreams>.SubscribeAll.Options = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.Subscription {
-        try await streams(of: .all).subscribe { $0 = configure($0) }
+    public func subscribeAllStreams(configure: @Sendable (StreamsSubscribeAllOptions) -> StreamsSubscribeAllOptions = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.Subscription {
+        try await streams(of: .all).subscribe {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Creates a real-time subscription to a specific stream identified by its StreamIdentifier.
-    public func subscribeStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Subscription {
-        try await streams(of: .specified(streamIdentifier)).subscribe { $0 = configure($0) }
+    public func subscribeStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (StreamsSubscribeOptions) -> StreamsSubscribeOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Subscription {
+        try await streams(of: .specified(streamIdentifier)).subscribe {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Creates a real-time subscription to a stream identified by name.
-    public func subscribeStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Subscribe.Options) -> Streams<SpecifiedStream>.Subscribe.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Subscription {
-        try await streams(of: .specified(streamName)).subscribe { $0 = configure($0) }
+    public func subscribeStream(_ streamName: String, configure: @Sendable (StreamsSubscribeOptions) -> StreamsSubscribeOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Subscription {
+        try await streams(of: .specified(streamName)).subscribe {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     // MARK: - Stream Deletion Operations
 
     /// Soft deletes a stream identified by its StreamIdentifier.
     @discardableResult
-    public func deleteStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Delete.Response {
-        try await streams(of: .specified(streamIdentifier)).delete { $0 = configure($0) }
+    public func deleteStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (StreamsDeleteOptions) -> StreamsDeleteOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Delete.Response {
+        try await streams(of: .specified(streamIdentifier)).delete {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Hard deletes (tombstones) a stream identified by its StreamIdentifier.
     @discardableResult
-    public func tombstoneStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Tombstone.Response {
-        try await streams(of: .specified(streamIdentifier)).tombstone { $0 = configure($0) }
+    public func tombstoneStream(_ streamIdentifier: StreamIdentifier, configure: @Sendable (StreamsTombstoneOptions) -> StreamsTombstoneOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Tombstone.Response {
+        try await streams(of: .specified(streamIdentifier)).tombstone {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Soft deletes a stream identified by name.
     @discardableResult
-    public func deleteStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Delete.Options) -> Streams<SpecifiedStream>.Delete.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Delete.Response {
-        try await streams(of: .specified(streamName)).delete { $0 = configure($0) }
+    public func deleteStream(_ streamName: String, configure: @Sendable (StreamsDeleteOptions) -> StreamsDeleteOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Delete.Response {
+        try await streams(of: .specified(streamName)).delete {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Hard deletes (tombstones) a stream identified by name.
     @discardableResult
-    public func tombstoneStream(_ streamName: String, configure: @Sendable (Streams<SpecifiedStream>.Tombstone.Options) -> Streams<SpecifiedStream>.Tombstone.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Tombstone.Response {
-        try await streams(of: .specified(streamName)).tombstone { $0 = configure($0) }
+    public func tombstoneStream(_ streamName: String, configure: @Sendable (StreamsTombstoneOptions) -> StreamsTombstoneOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Tombstone.Response {
+        try await streams(of: .specified(streamName)).tombstone {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     // MARK: - Deprecated (from KurrentDBClient+Deprecated.swift)
@@ -128,21 +154,27 @@ extension KurrentDBClient {
     /// Appends a batch of events to a specified stream (deprecated).
     @available(*, deprecated, renamed: "appendToStream")
     @discardableResult
-    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
-        try await streams(of: .specified(streamIdentifier)).append(events: events) { $0 = configure($0) }
+    public func appendStream(_ streamIdentifier: StreamIdentifier, events: [EventData], configure: @Sendable (StreamsAppendOptions) -> StreamsAppendOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamIdentifier)).append(events: events) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Appends a batch of events to a stream identified by name (deprecated).
     @available(*, deprecated, renamed: "appendToStream")
     @discardableResult
-    public func appendStream(_ streamName: String, events: [EventData], configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
-        try await streams(of: .specified(streamName)).append(events: events) { $0 = configure($0) }
+    public func appendStream(_ streamName: String, events: [EventData], configure: @Sendable (StreamsAppendOptions) -> StreamsAppendOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamName)).append(events: events) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 
     /// Appends one or more events to a stream identified by name using variadic parameters (deprecated).
     @available(*, deprecated, renamed: "appendToStream")
     @discardableResult
-    public func appendStream(_ streamName: String, events: EventData..., configure: @Sendable (Streams<SpecifiedStream>.Append.Options) -> Streams<SpecifiedStream>.Append.Options = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
-        try await streams(of: .specified(streamName)).append(events: events) { $0 = configure($0) }
+    public func appendStream(_ streamName: String, events: EventData..., configure: @Sendable (StreamsAppendOptions) -> StreamsAppendOptions = { $0 }) async throws(KurrentError) -> Streams<SpecifiedStream>.Append.Response {
+        try await streams(of: .specified(streamName)).append(events: events) {
+            $0 = .init(from: configure(.init()))
+        }
     }
 }

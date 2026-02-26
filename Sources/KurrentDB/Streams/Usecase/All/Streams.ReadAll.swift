@@ -84,12 +84,12 @@ extension Streams.ReadAll {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var position: PositionCursor
-        public private(set) var direction: Direction
-        public private(set) var resolveLinksEnabled: Bool
-        public private(set) var limit: UInt64
-        public private(set) var uuidOption: UUIDOption
-        public private(set) var compatibility: UInt32
+        public var position: PositionCursor
+        public var direction: Direction
+        public var resolveLinksEnabled: Bool
+        public var limit: UInt64
+        public var uuidOption: UUIDOption
+        public var compatibility: UInt32
 
         public init() {
             resolveLinksEnabled = false
@@ -142,101 +142,6 @@ extension Streams.ReadAll {
                     .backwards
                 }
             }
-        }
-
-        @discardableResult
-        public func resolveLinks() -> Self {
-            withCopy { options in
-                options.resolveLinksEnabled = true
-            }
-        }
-
-        @discardableResult
-        public func limit(_ limit: UInt64) -> Self {
-            withCopy { options in
-                options.limit = limit
-            }
-        }
-
-        @discardableResult
-        public func uuidOption(_ uuidOption: UUIDOption) -> Self {
-            withCopy { options in
-                options.uuidOption = uuidOption
-            }
-        }
-
-        @discardableResult
-        public func compatibility(_ compatibility: UInt32) -> Self {
-            withCopy { options in
-                options.compatibility = compatibility
-            }
-        }
-
-        @discardableResult
-        public func forward() -> Self {
-            withCopy { options in
-                options.direction = .forward
-            }
-        }
-
-        /// Returns a copy of the options with the read direction set to backward.
-        ///
-        /// - Returns: A modified copy of the options with backward direction configured.
-        @discardableResult
-        public func backward() -> Self {
-            withCopy { options in
-                options.direction = .backward
-            }
-        }
-
-        /// Returns a copy of the options with the starting position set to the specified cursor.
-        ///
-        /// - Parameter cursor: The stream position to use as the starting point for reading.
-        /// Returns a copy of the options with the stream position set to the specified value.
-        ///
-        /// - Parameter position: The stream position cursor to start reading from.
-        /// - Returns: A modified copy of the options with the updated start position.
-        @discardableResult
-        public func startFrom(position: PositionCursor) -> Self {
-            withCopy { options in
-                options.position = position
-            }
-        }
-    }
-}
-
-// MARK: - Deprecated
-
-extension Streams.ReadAll.Options {
-    @available(*, deprecated, renamed: "limit")
-    @discardableResult
-    public func set(limit: UInt64) -> Self {
-        withCopy { options in
-            options.limit = limit
-        }
-    }
-
-    @available(*, deprecated, renamed: "resolveLinks")
-    @discardableResult
-    public func set(resolveLinks: Bool) -> Self {
-        withCopy { options in
-            options.resolveLinksEnabled = resolveLinks
-        }
-    }
-
-    @available(*, deprecated, renamed: "uuidOption")
-    @discardableResult
-    public func set(uuidOption: UUIDOption) -> Self {
-        withCopy { options in
-            options.uuidOption = uuidOption
-        }
-    }
-
-    @available(*, deprecated, renamed: "compatibility")
-    @discardableResult
-    public func set(compatibility: UInt32) -> Self {
-        withCopy { options in
-            options.compatibility = compatibility
         }
     }
 }

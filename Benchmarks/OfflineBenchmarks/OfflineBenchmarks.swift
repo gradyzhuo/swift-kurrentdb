@@ -122,14 +122,15 @@ let benchmarks: @Sendable () -> Void = {
         }
     }
 
-    // MARK: Streams.Append.Options — builder with revision
+    // MARK: Streams.Append.Options — with revision
 
     Benchmark("Streams.Append.Options/with-revision") { benchmark in
         for _ in benchmark.scaledIterations {
-            blackHole(
-                Streams<SpecifiedStream>.Append.Options()
-                    .revision(expected: .streamExists)
-            )
+            blackHole({
+                var options = Streams<SpecifiedStream>.Append.Options()
+                options.expectedRevision = .streamExists
+                return options
+            }())
         }
     }
 
@@ -141,17 +142,18 @@ let benchmarks: @Sendable () -> Void = {
         }
     }
 
-    // MARK: Streams.Read.Options — builder chain
+    // MARK: Streams.Read.Options — configure chain
 
-    Benchmark("Streams.Read.Options/builder-chain") { benchmark in
+    Benchmark("Streams.Read.Options/configure-chain") { benchmark in
         for _ in benchmark.scaledIterations {
-            blackHole(
-                Streams<SpecifiedStream>.Read.Options()
-                    .backward()
-                    .startFrom(revision: .end)
-                    .limit(100)
-                    .resolveLinks(true)
-            )
+            blackHole({
+                var options = Streams<SpecifiedStream>.Read.Options()
+                options.direction = .backward
+                options.revision = .end
+                options.limit = 100
+                options.resolveLinks = true
+                return options
+            }())
         }
     }
 

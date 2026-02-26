@@ -143,9 +143,9 @@ extension Streams.Subscribe {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        package private(set) var resolveLinksEnabled: Bool
-        package private(set) var uuidOption: UUIDOption
-        package private(set) var revision: RevisionCursor
+        public var resolveLinksEnabled: Bool
+        public var uuidOption: UUIDOption
+        public var revision: RevisionCursor
 
         public init() {
             resolveLinksEnabled = false
@@ -182,60 +182,6 @@ extension Streams.Subscribe {
                 $0.subscription = .init()
                 $0.readDirection = .forwards
             }
-        }
-
-        @discardableResult
-        public func resolveLinks() -> Self {
-            withCopy { options in
-                options.resolveLinksEnabled = true
-            }
-        }
-
-        /// Returns a copy of the options with the specified UUID option set.
-        ///
-        /// - Parameter uuidOption: The UUID representation to use for events.
-        /// - Returns: A new `Options` instance with the updated UUID option.
-        @discardableResult
-        public func uuidOption(_ uuidOption: UUIDOption) -> Self {
-            withCopy { options in
-                options.uuidOption = uuidOption
-            }
-        }
-
-        /// Returns a copy of the options with the revision cursor set to the specified value.
-        ///
-        /// - Parameter cursor: The revision cursor to use for the subscription.
-        /// Returns a copy of the options with the starting revision set to the specified value.
-        ///
-        /// - Parameter revision: The revision cursor indicating where the subscription should start from.
-        /// - Returns: A new `Options` instance with the updated starting revision.
-        @discardableResult
-        public func startFrom(revision: RevisionCursor) -> Self {
-            withCopy { options in
-                options.revision = revision
-            }
-        }
-    }
-}
-
-// MARK: - Deprecated
-
-extension Streams.Subscribe.Options {
-    @available(*, deprecated, renamed: "limit")
-
-    @available(*, deprecated, renamed: "resolveLinks")
-    @discardableResult
-    public func set(resolveLinks: Bool) -> Self {
-        withCopy { options in
-            options.resolveLinksEnabled = resolveLinks
-        }
-    }
-
-    @available(*, deprecated, renamed: "uuidOption")
-    @discardableResult
-    public func set(uuidOption: UUIDOption) -> Self {
-        withCopy { options in
-            options.uuidOption = uuidOption
         }
     }
 }
