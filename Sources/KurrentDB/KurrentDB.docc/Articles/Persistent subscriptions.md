@@ -270,27 +270,29 @@ Persistent subscriptions use a target-based API accessed through the ``Streams``
 
 | Target | Scope | Operations |
 |--------|-------|------------|
-| `PersistentSubscription.Specified` | Specific stream + group | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
-| `PersistentSubscription.AllStream` | `$all` stream + group | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
-| `PersistentSubscription.All` | Cluster-wide | `list(for:)`, `restartSubsystem()` |
+| `SpecifiedPersistentSubscriptionTarget` | Specific stream + group | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
+| `AllStreamPersistentSubscriptionTarget` | `$all` stream + group | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
+| `AllPersistentSubscriptionTarget` | Cluster-wide | `list()`, `restartSubsystem()` |
 
 ### Using the target API directly
 
 ```swift
-// Via Streams — specific stream
-let ps = client.streams(of: .specified("orders"))
-    .persistentSubscriptions(group: "order-workers")
+// Specific stream + group
+let ps = client.persistentSubscriptions(stream: "orders", group: "order-workers")
 
 try await ps.create()
 let subscription = try await ps.subscribe()
 try await ps.delete()
 
-// Via Streams — $all stream
-let allPs = client.streams(of: .all)
-    .persistentSubscriptions(group: "audit-logger")
+// $all stream + group
+let allPs = client.persistentSubscriptions(filterGroup: "audit-logger")
 
 try await allPs.create()
 let allSubscription = try await allPs.subscribe()
+
+// Cluster-wide operations
+try await client.allPersistentSubscriptions.restartSubsystem()
+let allSubs = try await client.allPersistentSubscriptions.list()
 ```
 
 ## Architecture

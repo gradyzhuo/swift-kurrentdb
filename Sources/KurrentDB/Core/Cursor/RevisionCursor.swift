@@ -9,4 +9,8 @@ public enum RevisionCursor: Sendable {
     case start
     case end
     case specified(UInt64)
+    
+    public static func from(_ revision: UInt64) -> RevisionCursor {
+        .specified(revision)
+    }
 }

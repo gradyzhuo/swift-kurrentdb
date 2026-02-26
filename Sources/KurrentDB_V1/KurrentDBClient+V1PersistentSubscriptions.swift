@@ -50,7 +50,7 @@ extension KurrentDBClient {
     }
 
     /// Subscribes a consumer to a persistent subscription group.
-    public func subscribePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptionsReadOptions) -> PersistentSubscriptionsReadOptions = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+    public func subscribePersistentSubscription(stream streamIdentifier: StreamIdentifier, groupName: String, configure: @Sendable (PersistentSubscriptionsReadOptions) -> PersistentSubscriptionsReadOptions = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget>.Subscription {
         let stream = streams(of: .specified(streamIdentifier))
         return try await stream.persistentSubscriptions(group: groupName).subscribe {
             $0 = .init(from: configure(.init()))
@@ -58,7 +58,7 @@ extension KurrentDBClient {
     }
 
     /// Subscribes a consumer to a persistent subscription group on the `$all` stream.
-    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: @Sendable (PersistentSubscriptionsAllStreamReadOptions) -> PersistentSubscriptionsAllStreamReadOptions = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<PersistentSubscription.AllStream>.Subscription {
+    public func subscribePersistentSubscriptionToAllStreams(groupName: String, configure: @Sendable (PersistentSubscriptionsAllStreamReadOptions) -> PersistentSubscriptionsAllStreamReadOptions = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget>.Subscription {
         let stream = streams(of: .all)
         return try await stream.persistentSubscriptions(group: groupName).subscribe {
             $0 = .init(from: configure(.init()))
@@ -120,7 +120,7 @@ extension KurrentDBClient {
     }
 
     /// Subscribes to a persistent subscription group on a stream identified by name.
-    public func subscribePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptionsReadOptions) -> PersistentSubscriptionsReadOptions = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<PersistentSubscription.Specified>.Subscription {
+    public func subscribePersistentSubscription(stream streamName: String, groupName: String, configure: @Sendable (PersistentSubscriptionsReadOptions) -> PersistentSubscriptionsReadOptions = { $0 }) async throws(KurrentError) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget>.Subscription {
         let stream = streams(of: .specified(streamName))
         return try await stream.persistentSubscriptions(group: groupName).subscribe {
             $0 = .init(from: configure(.init()))

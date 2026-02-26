@@ -134,7 +134,7 @@ Updates user profile information such as full name and group memberships.
 try await client.user("jane_doe")
     .update(fullName: "Jane Smith", with: "current_password")
 
-// Update with options
+// Update full name and groups together
 let options = Users<SpecifiedUserTarget>.Update.Options()
     .set(fullName: "Jane Smith")
     .set(groups: .admins, .custom("developers"))

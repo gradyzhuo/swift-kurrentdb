@@ -54,7 +54,7 @@ It is possible to restart the entire projection subsystem using the projections 
 
 
 ```swift
-try await client.restartSubsystem()
+try await client.restartProjectionSubsystem()
 ```
 
 ## Enable a projection
@@ -199,10 +199,9 @@ do{
 Returns a list of all projections, user defined & system projections. See the projection details section for an explanation of the returned values.
 
 ```swift
-let details = try await client.listAllProjections()
+let details = try await client.listAllProjections(mode: .any)
 
-
-for try await detail in details {
+for detail in details {
     print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
 }
 ```
@@ -212,7 +211,7 @@ for try await detail in details {
 Gets the status of a named projection. See the projection details section for an explanation of the returned values.
 
 ```swift
-let detail = try await client.getProjectionDetail("$by_category")
+let detail = try await client.getProjectionDetail(name: "$by_category")
 
 print("\(detail?.name), \(detail?.status), \(detail?.checkpointStatus), \(detail?.mode), \(detail?.progress)")
 ```
