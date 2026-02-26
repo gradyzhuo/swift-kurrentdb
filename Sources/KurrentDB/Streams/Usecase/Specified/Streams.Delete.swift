@@ -69,7 +69,7 @@ extension Streams.Delete {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var expectedRevision: StreamRevision
+        public var expectedRevision: StreamRevision
 
         public init() {
             expectedRevision = .streamExists
@@ -87,13 +87,6 @@ extension Streams.Delete {
                 case let .at(revision):
                     $0.revision = revision
                 }
-            }
-        }
-
-        @discardableResult
-        public func revision(expected: StreamRevision) -> Self {
-            withCopy { options in
-                options.expectedRevision = expected
             }
         }
     }

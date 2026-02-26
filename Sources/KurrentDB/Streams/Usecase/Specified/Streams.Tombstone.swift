@@ -70,7 +70,7 @@ extension Streams.Tombstone {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var expectedRevision: StreamRevision
+        public var expectedRevision: StreamRevision
 
         public init(expectedRevision: StreamRevision = .streamExists) {
             self.expectedRevision = expectedRevision
@@ -88,13 +88,6 @@ extension Streams.Tombstone {
                 case let .at(revision):
                     $0.revision = revision
                 }
-            }
-        }
-
-        @discardableResult
-        public func revision(expected expectedRevision: StreamRevision) -> Self {
-            withCopy { options in
-                options.expectedRevision = expectedRevision
             }
         }
     }
