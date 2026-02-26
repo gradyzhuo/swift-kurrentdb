@@ -12,7 +12,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public actor PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
+public struct PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
     /// The underlying gRPC service type.
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
 
