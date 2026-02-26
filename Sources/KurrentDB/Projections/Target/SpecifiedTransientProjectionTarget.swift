@@ -10,7 +10,7 @@ public struct SpecifiedTransientProjectionTarget: ProjectionsTarget, ProjectionC
     public let name: String
 }
 
-extension ProjectionsTarget {
+extension ProjectionsTarget where Self == SpecifiedTransientProjectionTarget{
     /// Creates a target for a transient projection with the given name.
     public static func transient(name: String) -> SpecifiedTransientProjectionTarget {
         .init(name: name)

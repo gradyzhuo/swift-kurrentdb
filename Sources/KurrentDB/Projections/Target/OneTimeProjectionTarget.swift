@@ -8,7 +8,7 @@ public struct OneTimeProjectionTarget: ProjectionsTarget {
     public init() {}
 }
 
-extension ProjectionsTarget {
+extension ProjectionsTarget where Self == OneTimeProjectionTarget {
     /// Returns a target for one-time projections.
     public static var onetime: OneTimeProjectionTarget {
         .init()
