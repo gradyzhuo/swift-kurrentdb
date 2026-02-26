@@ -69,22 +69,11 @@ extension PersistentSubscriptions.SpecifiedStream.Create {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.CreateSettings
-        public private(set) var revision: RevisionCursor
+        public var revision: RevisionCursor
 
         public init() {
             settings = .init()
             revision = .end
-        }
-
-        /// Returns a copy of the options with the starting revision set to the specified cursor.
-        ///
-        /// - Parameter revision: The revision cursor from which the subscription should start.
-        /// - Returns: A new options instance with the updated starting revision.
-        @discardableResult
-        public func startFrom(revision: RevisionCursor) -> Self {
-            withCopy {
-                $0.revision = revision
-            }
         }
 
         /// Builds the gRPC options message for creating a persistent subscription on a specified stream.

@@ -92,32 +92,12 @@ extension PersistentSubscriptions.AllStream.Read {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var bufferSize: Int32
-        public private(set) var uuidOption: UUID.Option
+        public var bufferSize: Int32
+        public var uuidOption: UUID.Option
 
         public init() {
             bufferSize = 1000
             uuidOption = .string
-        }
-
-        /// Returns a copy of the options with the buffer size set to the specified value.
-        ///
-        /// - Parameter bufferSize: The desired buffer size for the subscription read.
-        /// - Returns: A new `Options` instance with the updated buffer size.
-        public func bufferSize(_ bufferSize: Int32) -> Self {
-            withCopy { options in
-                options.bufferSize = bufferSize
-            }
-        }
-
-        /// Returns a copy of the options with the specified UUID representation option set.
-        ///
-        /// - Parameter uuidOption: The desired UUID representation format.
-        /// - Returns: A new `Options` instance with the updated UUID option.
-        public func uuidOption(_ uuidOption: UUID.Option) -> Self {
-            withCopy { options in
-                options.uuidOption = uuidOption
-            }
         }
 
         /// Builds and returns the underlying gRPC message representing the subscription read options for all streams.

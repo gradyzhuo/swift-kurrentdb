@@ -96,7 +96,9 @@ extension Projections where Target: ProjectionControlable {
     ///
     /// - Parameter options: The options for deleting the projection. Defaults to an empty configuration.
     /// - Throws: An error if deletion fails.
-    public func delete(options: Delete.Options = .init()) async throws(KurrentError) {
+    public func delete(configure: @Sendable (inout Delete.Options) -> Void = { _ in }) async throws(KurrentError) {
+        var options = Delete.Options()
+        configure(&options)
         let usecase = Delete(name: target.name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -111,7 +113,9 @@ extension Projections where Target: ProjectionControlable {
     ///   - query: An optional query string to update the projection. If `nil`, the query remains unchanged.
     ///   - options: The options for updating the projection. Defaults to an empty configuration.
     /// - Throws: An error if updating fails.
-    public func update(query: String?, options: Update.Options = .init()) async throws(KurrentError) {
+    public func update(query: String?, configure: @Sendable (inout Update.Options) -> Void = { _ in }) async throws(KurrentError) {
+        var options = Update.Options()
+        configure(&options)
         let usecase = Update(name: target.name, query: query, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -146,7 +150,9 @@ extension Projections where Target: ProjectionControlable {
     ///   - options: The options for retrieving the result. Defaults to an empty configuration.
     /// - Returns: An optional decoded result of type `DecodeType`, or `nil` if decoding fails.
     /// - Throws: An error if the operation or decoding fails.
-    public func result<DecodeType: Decodable>(of _: DecodeType.Type, options: Result.Options = .init()) async throws(KurrentError) -> DecodeType? {
+    public func result<DecodeType: Decodable>(of _: DecodeType.Type, configure: @Sendable (inout Result.Options) -> Void = { _ in }) async throws(KurrentError) -> DecodeType? {
+        var options = Result.Options()
+        configure(&options)
         let usecase = Result(name: target.name, options: options)
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
         do {
@@ -165,7 +171,9 @@ extension Projections where Target: ProjectionControlable {
     ///   - options: The options for retrieving the state. Defaults to an empty configuration.
     /// - Returns: An optional decoded state of type `DecodeType`, or `nil` if decoding fails.
     /// - Throws: An error if the operation or decoding fails.
-    public func state<DecodeType: Decodable>(of _: DecodeType.Type, options: State.Options = .init()) async throws(KurrentError) -> DecodeType? {
+    public func state<DecodeType: Decodable>(of _: DecodeType.Type, configure: @Sendable (inout State.Options) -> Void = { _ in }) async throws(KurrentError) -> DecodeType? {
+        var options = State.Options()
+        configure(&options)
         do {
             let usecase = State(name: target.name, options: options)
             let response = try await usecase.perform(selector: selector, callOptions: callOptions)

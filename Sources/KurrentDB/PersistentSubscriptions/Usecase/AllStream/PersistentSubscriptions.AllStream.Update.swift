@@ -62,22 +62,11 @@ extension PersistentSubscriptions.AllStream.Update {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
         public var settings: PersistentSubscription.UpdateSettings
-        public private(set) var position: PositionCursor?
+        public var position: PositionCursor?
 
         public init() {
             settings = .init()
             position = nil
-        }
-
-        /// Returns a copy of the options with the starting position set to the specified value.
-        ///
-        /// - Parameter position: The position in the stream from which the subscription should start.
-        /// - Returns: A copy of the options with the updated starting position.
-        @discardableResult
-        public func startFrom(position: PositionCursor) -> Self {
-            withCopy {
-                $0.position = position
-            }
         }
 
         /// Constructs the underlying gRPC options message for updating a persistent subscription on all streams.
