@@ -51,10 +51,11 @@ struct ProjectionsTests: Sendable {
         #expect(details.mode == .continuous)
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Testing create a onetime projection")
@@ -91,10 +92,11 @@ struct ProjectionsTests: Sendable {
         let details = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(details.status.contains(.stopped))
 
-        try await client.projections(of: NameTarget(name: projectionName)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: projectionName)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Enable a projection")
@@ -113,10 +115,11 @@ struct ProjectionsTests: Sendable {
         #expect(enabledDetails.status.contains(.running))
 
         try await client.projections(of: NameTarget(name: projectionName)).disable()
-        try await client.projections(of: NameTarget(name: projectionName)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: projectionName)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Abort a projection")
@@ -134,10 +137,11 @@ struct ProjectionsTests: Sendable {
         let enabledDetails = try #require(try await client.projections(of: NameTarget(name: projectionName)).detail())
         #expect(enabledDetails.status.contains(.stopped))
 
-        try await client.projections(of: NameTarget(name: projectionName)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: projectionName)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Get projection status for a system projection")
@@ -167,7 +171,7 @@ struct ProjectionsTests: Sendable {
 
         try await client.streams(specified: streamName).append(events: [
             .init(eventType: "ProjectionEventCreated", model: ["hello": "world"]),
-        ], options: .init().revision(expected: .any))
+        ]) { $0.expectedRevision = .any }
 
         try await client.projections(of: .continuous(name: name)).create(query: js)
 
@@ -178,10 +182,11 @@ struct ProjectionsTests: Sendable {
 
         try await client.streams(specified: streamName).delete()
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Get projection result")
@@ -206,7 +211,7 @@ struct ProjectionsTests: Sendable {
 
         try await client.streams(specified: streamName).append(events: [
             .init(eventType: "ProjectionEventCreated", model: ["hello": "world"]),
-        ], options: .init().revision(expected: .any))
+        ]) { $0.expectedRevision = .any }
 
         try await client.projections(of: .continuous(name: name)).create(query: js)
 
@@ -217,10 +222,11 @@ struct ProjectionsTests: Sendable {
 
         try await client.streams(specified: streamName).delete()
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("List continuous projections via UnspecifiedContinuousProjectionTarget")
@@ -232,10 +238,11 @@ struct ProjectionsTests: Sendable {
         #expect(projections.contains { $0.name == name })
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("List transient projections via UnspecifiedTransientProjectionTarget")
