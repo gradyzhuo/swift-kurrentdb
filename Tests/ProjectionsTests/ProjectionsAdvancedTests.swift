@@ -46,10 +46,11 @@ struct ProjectionsAdvancedTests: Sendable {
         let detail = try #require(try await client.projections(of: NameTarget(name: name)).detail())
         #expect(detail.name == name)
 
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     // MARK: - Listing
@@ -63,10 +64,11 @@ struct ProjectionsAdvancedTests: Sendable {
         #expect(projections.contains { $0.name == name })
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Deleted projection no longer appears in the continuous list")
@@ -75,10 +77,11 @@ struct ProjectionsAdvancedTests: Sendable {
         try await client.projections(of: .continuous(name: name)).create(query: "fromAll().outputState()")
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
 
         let projections = try await client.projections(of: .anyContinuous).list()
         #expect(!projections.contains { $0.name == name })
@@ -96,10 +99,11 @@ struct ProjectionsAdvancedTests: Sendable {
         #expect(detail.mode == .continuous)
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     @Test("Projection progress is between 0 and 100 after running")
@@ -112,10 +116,11 @@ struct ProjectionsAdvancedTests: Sendable {
         #expect(detail.progress <= 100.0)
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 
     // MARK: - Abort then reset
@@ -135,9 +140,10 @@ struct ProjectionsAdvancedTests: Sendable {
         #expect(resetDetail.status.contains(.stopped) || resetDetail.status.contains(.running))
 
         try await client.projections(of: NameTarget(name: name)).disable()
-        try await client.projections(of: NameTarget(name: name)).delete(options: .init()
-            .deleteStateStream()
-            .deleteEmittedStreams()
-            .deleteCheckpointStream())
+        try await client.projections(of: NameTarget(name: name)).delete {
+            $0.deleteStateStream = true
+            $0.deleteEmittedStreams = true
+            $0.deleteCheckpointStream = true
+        }
     }
 }

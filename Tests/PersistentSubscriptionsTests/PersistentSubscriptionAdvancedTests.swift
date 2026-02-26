@@ -37,8 +37,7 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
 
         try await client.streams(specified: streamName)
             .append(
-                events: [EventData(eventType: "PS-Nack-Event", model: ["x": 1])],
-                options: .init().revision(expected: .any)
+                events: [EventData(eventType: "PS-Nack-Event", model: ["x": 1])]
             )
 
         var received: PersistentSubscription.EventResult?
@@ -63,10 +62,9 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
         let subscription = try await ps.subscribe()
 
         try await client.streams(specified: streamName)
-            .append(
-                events: [EventData(eventType: "PS-NackRetry-Event", model: ["x": 2])],
-                options: .init().revision(expected: .any)
-            )
+            .append(events: [EventData(eventType: "PS-NackRetry-Event", model: ["x": 2])]) {
+                $0.expectedRevision = .any
+            }
 
         // Receive once and NACK with retry, then ACK on retry delivery
         var deliveries = 0
@@ -126,9 +124,7 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
 
         try await ps.create()
 
-        var updateOptions = PersistentSubscriptions<PersistentSubscription.Specified>.SpecifiedStream.Update.Options()
-        updateOptions.settings.maxRetryCount = 5
-        try await ps.update(options: updateOptions)
+        try await ps.update { $0.settings.maxRetryCount = 5 }
 
         // getInfo to confirm the setting was applied
         let info = try await ps.getInfo()
@@ -178,10 +174,9 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
         let subscription = try await ps.subscribe()
 
         try await client.streams(specified: streamName)
-            .append(
-                events: [EventData(eventType: "PS-ReplayParked", model: ["x": 3])],
-                options: .init().revision(expected: .any)
-            )
+            .append(events: [EventData(eventType: "PS-ReplayParked", model: ["x": 3])]) {
+                $0.expectedRevision = .any
+            }
 
         // Park the event
         for try await result in subscription.events {
