@@ -50,19 +50,19 @@ public protocol KurrentDBClientProtocol: Sendable {
     // MARK: - Persistent Subscription Factories
 
     /// Returns a persistent subscriptions interface for cluster-wide operations.
-    var allPersistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> { get }
+    var allPersistentSubscriptions: PersistentSubscriptions<AllPersistentSubscriptionTarget> { get }
 
     /// Creates a persistent subscriptions interface for a specific target type.
     func persistentSubscriptions<Target: PersistentSubscriptionTarget>(of target: Target) -> PersistentSubscriptions<Target>
 
     /// Creates a persistent subscriptions interface for a specific stream and group.
-    func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<PersistentSubscription.Specified>
+    func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget>
 
     /// Creates a persistent subscriptions interface filtered by group name across all streams.
-    func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<PersistentSubscription.AllStream>
+    func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget>
 
     /// Creates a persistent subscriptions interface filtered by stream name.
-    func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<PersistentSubscription.FilterStream>
+    func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<FilterStreamPersistentSubscriptionTarget>
 
     // MARK: - User Management
 
