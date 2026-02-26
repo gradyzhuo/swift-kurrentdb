@@ -102,12 +102,14 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Throws: An error if the operation fails.
     @discardableResult
     public func setMetadata(metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Append.Response {
+        var options = Append.Options()
+        options.expectedRevision = expectedRevision
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
                 model: metadata
             ),
-        ], options: .init().revision(expected: expectedRevision))
+        ], options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
@@ -128,7 +130,10 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: The latest `StreamMetadata` if available, or `nil` if no metadata event exists.
     @discardableResult
     public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
-        let options: Streams.Read.Options = .init().startFrom(revision: .end).backward().limit(1)
+        var options = Streams.Read.Options()
+        options.revision = .end
+        options.direction = .backward
+        options.limit = 1
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
         let responses = try await usecase.perform(selector: selector, callOptions: callOptions)
 
