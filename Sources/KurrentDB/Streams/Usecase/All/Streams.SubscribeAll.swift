@@ -140,10 +140,10 @@ extension Streams.SubscribeAll where Target == AllStreams {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var position: PositionCursor
-        public private(set) var resolveLinksEnabled: Bool
-        public private(set) var uuidOption: UUIDOption
-        public private(set) var filter: SubscriptionFilter?
+        public var position: PositionCursor
+        public var resolveLinksEnabled: Bool
+        public var uuidOption: UUIDOption
+        public var filter: SubscriptionFilter?
 
         public init() {
             resolveLinksEnabled = false
@@ -217,73 +217,6 @@ extension Streams.SubscribeAll where Target == AllStreams {
                 $0.subscription = .init()
                 $0.readDirection = .forwards
             }
-        }
-
-        @discardableResult
-        public func resolveLinks() -> Self {
-            withCopy { options in
-                options.resolveLinksEnabled = true
-            }
-        }
-
-        @discardableResult
-        public func filter(_ filter: SubscriptionFilter) -> Self {
-            withCopy { options in
-                options.filter = filter
-            }
-        }
-
-        /// Returns a copy of the options with the specified UUID representation option set.
-        ///
-        /// - Parameter uuidOption: The UUID representation to use for events in the subscription.
-        /// - Returns: A copy of the options with the updated UUID option.
-        @discardableResult
-        public func uuidOption(_ uuidOption: UUIDOption) -> Self {
-            withCopy { options in
-                options.uuidOption = uuidOption
-            }
-        }
-
-        /// Returns a copy of the options with the starting position set to the specified cursor.
-        ///
-        /// - Parameter cursor: The position cursor to use as the starting point for the subscription.
-        /// Returns a copy of the options with the starting position set to the specified cursor.
-        ///
-        /// - Parameter position: The position cursor from which to start the subscription.
-        /// - Returns: A copy of the options with the updated starting position.
-        @discardableResult
-        public func startFrom(position: PositionCursor) -> Self {
-            withCopy { options in
-                options.position = position
-            }
-        }
-    }
-}
-
-// MARK: - Deprecated
-
-extension Streams.SubscribeAll.Options {
-    @available(*, deprecated, renamed: "resolveLinks")
-    @discardableResult
-    public func set(resolveLinks: Bool) -> Self {
-        withCopy { options in
-            options.resolveLinksEnabled = resolveLinks
-        }
-    }
-
-    @available(*, deprecated, renamed: "uuidOption")
-    @discardableResult
-    public func set(uuidOption: UUIDOption) -> Self {
-        withCopy { options in
-            options.uuidOption = uuidOption
-        }
-    }
-
-    @available(*, deprecated, renamed: "filter")
-    @discardableResult
-    public func set(filter: SubscriptionFilter) -> Self {
-        withCopy { options in
-            options.filter = filter
         }
     }
 }

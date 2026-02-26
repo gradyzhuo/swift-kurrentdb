@@ -68,12 +68,12 @@ extension Streams.Read {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var revision: RevisionCursor
-        public private(set) var direction: Direction
-        public private(set) var resolveLinks: Bool
-        public private(set) var limit: UInt64
-        public private(set) var uuidOption: UUIDOption
-        public private(set) var compatibility: UInt32
+        public var revision: RevisionCursor
+        public var direction: Direction
+        public var resolveLinks: Bool
+        public var limit: UInt64
+        public var uuidOption: UUIDOption
+        public var compatibility: UInt32
 
         public init() {
             resolveLinks = false
@@ -120,121 +120,6 @@ extension Streams.Read {
                     .backwards
                 }
             }
-        }
-
-        @discardableResult
-        public func resolveLinks(_ value: Bool = true) -> Self {
-            withCopy { options in
-                options.resolveLinks = value
-            }
-        }
-
-        @discardableResult
-        public func limit(_ limit: UInt64) -> Self {
-            withCopy { options in
-                options.limit = limit
-            }
-        }
-
-        @discardableResult
-        public func uuidOption(_ uuidOption: UUIDOption) -> Self {
-            withCopy { options in
-                options.uuidOption = uuidOption
-            }
-        }
-
-        @discardableResult
-        public func compatibility(_ compatibility: UInt32) -> Self {
-            withCopy { options in
-                options.compatibility = compatibility
-            }
-        }
-
-        @discardableResult
-        public func forward() -> Self {
-            withCopy { options in
-                options.direction = .forward
-            }
-        }
-
-        /// Returns a copy of the options with the read direction set to backward.
-        @discardableResult
-        public func backward() -> Self {
-            withCopy { options in
-                options.direction = .backward
-            }
-        }
-
-        /// Returns a copy of the options with the specified stream revision and adjusts the read direction if the revision is `.start` (sets to forward) or `.end` (sets to backward).
-        ///
-        /// - Parameter revision: The stream revision to start reading from.
-        /// Returns a copy of the options with the specified stream revision and adjusts the read direction accordingly.
-        ///
-        /// If the revision is `.start`, the direction is set to forward. If `.end`, the direction is set to backward. For `.specified`, the current direction is retained.
-        ///
-        /// - Parameter revision: The stream revision to start reading from.
-        /// - Returns: A modified copy of the options with the updated revision and direction.
-        @discardableResult
-        public func startFrom(revision: RevisionCursor) -> Self {
-            withCopy { options in
-                options.revision = revision
-                switch revision {
-                case .start:
-                    options.direction = .forward
-                case .end:
-                    options.direction = .backward
-                case .specified:
-                    options.direction = options.direction
-                }
-            }
-        }
-
-        /// Returns a copy of the options with the stream revision set to the specified value.
-        ///
-        /// - Parameter revision: The stream revision to start reading from.
-        /// - Returns: A new `Options` instance with the updated revision, preserving the current read direction.
-        @discardableResult
-        public func revision(from revision: UInt64) -> Self {
-            withCopy { options in
-                options.revision = .specified(revision)
-                options.direction = options.direction
-            }
-        }
-    }
-}
-
-// MARK: - Deprecated
-
-extension Streams.Read.Options {
-    @available(*, deprecated, renamed: "limit")
-    @discardableResult
-    public func set(limit: UInt64) -> Self {
-        withCopy { options in
-            options.limit = limit
-        }
-    }
-
-    @available(*, deprecated, renamed: "resolveLinks")
-    @discardableResult
-    public func set(resolveLinks: Bool) -> Self {
-        withCopy { options in
-            options.resolveLinks = resolveLinks
-        }
-    }
-
-    @available(*, deprecated, renamed: "uuidOption")
-    @discardableResult
-    public func set(uuidOption: UUIDOption) -> Self {
-        withCopy { options in
-            options.uuidOption = uuidOption
-        }
-    }
-
-    @available(*, deprecated, renamed: "compatibility")
-    @discardableResult
-    public func set(compatibility: UInt32) -> Self {
-        withCopy { options in
-            options.compatibility = compatibility
         }
     }
 }
