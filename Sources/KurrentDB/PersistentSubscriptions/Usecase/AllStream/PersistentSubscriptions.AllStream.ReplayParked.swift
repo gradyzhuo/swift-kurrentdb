@@ -64,21 +64,10 @@ extension PersistentSubscriptions.AllStream.ReplayParked {
 
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var stopAt: StopAtOption
+        public var stopAt: StopAtOption
 
         public init() {
             stopAt = .noLimit
-        }
-
-        /// Returns a copy of the options with the specified stopping condition for replaying parked messages.
-        ///
-        /// - Parameter stopAt: The stopping option to apply.
-        /// - Returns: A new `Options` instance with the updated stopping condition.
-        @discardableResult
-        public func stopAt(_ stopAt: StopAtOption) -> Self {
-            withCopy { options in
-                options.stopAt = stopAt
-            }
         }
 
         /// Constructs the underlying gRPC options message for replaying parked events, setting the stopping condition based on the current `stopAt` option.
