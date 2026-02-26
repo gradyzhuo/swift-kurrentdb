@@ -56,7 +56,7 @@ extension Projections.Disable {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        var writeCheckpoint: Bool
+        public var writeCheckpoint: Bool
 
         public init(writeCheckpoint: Bool = false) {
             self.writeCheckpoint = writeCheckpoint
@@ -65,13 +65,6 @@ extension Projections.Disable {
         package func build() -> UnderlyingMessage {
             .with {
                 $0.writeCheckpoint = writeCheckpoint
-            }
-        }
-
-        @discardableResult
-        public func writeCheckpoint(enabled: Bool) -> Self {
-            withCopy { options in
-                options.writeCheckpoint = enabled
             }
         }
     }

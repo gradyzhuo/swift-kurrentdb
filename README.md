@@ -84,16 +84,16 @@ let event = EventData(
 )
 
 // Append to stream
-try await client.appendStream("orders", events: [event]) {
+try await client.appendToStream("orders", events: [event]) {
     $0.revision(expected: .any)
 }
 
-// Read events
-let events = try await client.readStream("orders") {
+// Read events (target-based)
+let responses = try await client.streams(of: .specified("orders")).read {
     $0.startFrom(revision: .start)
 }
 
-for try await response in events {
+for try await response in responses {
     if let event = try response.event {
         print("Event: \(event.record.eventType)")
     }
