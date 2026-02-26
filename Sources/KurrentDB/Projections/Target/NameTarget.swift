@@ -1,10 +1,12 @@
 //
 //  NameTarget.swift
-//  swift-kurrentdb
-//
-//  Created by Grady Zhuo on 2026/2/13.
+//  KurrentDB
 //
 
+/// A target for a specific named projection, regardless of its mode.
+///
+/// Use this when you want to address a projection by name for control operations
+/// (enable, disable, update, delete, reset) without constraining it to a particular type.
 public struct NameTarget: ProjectionsTarget, ProjectionControlable {
     public enum Predefined: String, Sendable {
         /// Represents the `$by_category` system projection.
@@ -27,5 +29,12 @@ public struct NameTarget: ProjectionsTarget, ProjectionControlable {
 
     public init(predefined: Predefined) {
         name = predefined.rawValue
+    }
+}
+
+extension ProjectionsTarget where Self == NameTarget {
+    /// Creates a target for a specific projection identified by name, regardless of its mode.
+    public static func anyMode(name: String) -> Self {
+        .init(name: name)
     }
 }
