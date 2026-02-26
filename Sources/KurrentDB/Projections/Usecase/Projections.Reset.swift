@@ -62,16 +62,10 @@ extension Projections.Reset {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var writeCheckpoint: Bool
+        public var writeCheckpoint: Bool
 
         public init() {
             writeCheckpoint = true
-        }
-
-        public func writeCheckpoint(enable: Bool) -> Self {
-            withCopy { options in
-                options.writeCheckpoint = enable
-            }
         }
 
         package func build() -> UnderlyingRequest.Options {

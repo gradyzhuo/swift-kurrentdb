@@ -9,7 +9,7 @@
 
 extension KurrentDBClient {
     /// Returns a persistent subscriptions interface for cluster-wide operations.
-    public var allPersistentSubscriptions: PersistentSubscriptions<PersistentSubscription.All> {
+    public var allPersistentSubscriptions: PersistentSubscriptions<AllPersistentSubscriptionTarget> {
         .init(target: .all, selector: selector, callOptions: defaultCallOptions)
     }
 
@@ -19,17 +19,17 @@ extension KurrentDBClient {
     }
 
     /// Creates a persistent subscriptions interface for a specific stream and group.
-    public func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<PersistentSubscription.Specified> {
+    public func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget> {
         .init(target: .specified(stream: stream, group: group), selector: selector, callOptions: defaultCallOptions)
     }
 
     /// Creates a persistent subscriptions interface filtered by group name across all streams.
-    public func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<PersistentSubscription.AllStream> {
+    public func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget> {
         .init(target: .allStreams(group: groupName), selector: selector, callOptions: defaultCallOptions)
     }
 
     /// Creates a persistent subscriptions interface filtered by stream name.
-    public func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<PersistentSubscription.FilterStream> {
+    public func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<FilterStreamPersistentSubscriptionTarget> {
         .init(target: .filter(stream: stream), selector: selector, callOptions: defaultCallOptions)
     }
 }

@@ -62,7 +62,8 @@ extension Projections where Target: ProjectionControlable {
     ///
     /// - Throws: An error if disabling the projection fails.
     public func disable() async throws(KurrentError) {
-        let options = Disable.Options().writeCheckpoint(enabled: true)
+        var options = Disable.Options()
+        options.writeCheckpoint = true
         let usecase = Disable(name: target.name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
@@ -71,7 +72,8 @@ extension Projections where Target: ProjectionControlable {
     ///
     /// - Throws: An error if aborting the projection fails.
     public func abort() async throws(KurrentError) {
-        let options = Disable.Options().writeCheckpoint(enabled: false)
+        var options = Disable.Options()
+        options.writeCheckpoint = false
         let usecase = Disable(name: target.name, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
