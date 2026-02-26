@@ -67,16 +67,10 @@ extension Projections.Result {
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
-        public private(set) var partition: String?
+        public var partition: String?
 
         public init() {
             partition = nil
-        }
-
-        public func partition(_ partition: String) -> Self {
-            withCopy { options in
-                options.partition = partition
-            }
         }
 
         package func build() -> UnderlyingMessage {
