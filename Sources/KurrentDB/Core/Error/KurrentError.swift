@@ -23,7 +23,7 @@ public enum KurrentError: Error, Sendable {
     case accessDenied
     case resourceAlreadyExists
     case resourceNotFound(reason: String)
-    case resourceDeleted
+    case resourceDeleted(resource: String)
     case unservicableEventLink(link: RecordedEvent)
     case unsupportedFeature(GRPCCore.MethodDescriptor)
     case internalClientError(reason: String)
@@ -65,8 +65,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "The resource you tried to create already exists"
         case let .resourceNotFound(reason):
             "The resource you asked for doesn't exist, reason: \(reason)"
-        case .resourceDeleted:
-            "The resource you asked for was deleted"
+        case let .resourceDeleted(resource):
+            "The resource \(resource) you asked for was deleted"
         case let .unservicableEventLink(link):
             "The linked event \(link.id) you asked is unservicable, may be because it was deleted."
         case let .unsupportedFeature(methodDescriptor):
@@ -152,7 +152,7 @@ func withRethrowingError<T>(usage: String, action: @Sendable () async throws -> 
     } catch let error as KurrentError {
         throw error
     } catch let error as RPCError {
-        try error.rethrow(usage: usage, origin: error)
+        try error.rethrow(usage: usage)
     } catch {
         throw .internalClientError(reason: "`\(usage)` failed. full error: \(error)")
     }
@@ -165,7 +165,7 @@ func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) thr
     } catch let error as KurrentError {
         throw error
     } catch let error as RPCError {
-        try error.rethrow(usage: usage, origin: error)
+        try error.rethrow(usage: usage)
     } catch {
         throw .internalClientError(reason: "`\(usage)` failed. full error: \(error).")
     }
@@ -179,11 +179,23 @@ extension Error where Self: Equatable {
 }
 
 extension RPCError {
-    func rethrow(usage: String, origin _: any Error) throws(KurrentError) {
-        if let cause = cause as? NIOCore.IOError {
-            try cause.rethrow(usage: usage, origin: self)
-        } else {
-            throw .grpcError(cause: self)
+    
+    func rethrow(usage: String) throws(KurrentError) {
+        
+        let exception = metadata.first(where: { $0.key == "exception" })?.value
+        switch exception {
+        case "stream-deleted":
+            if let streamName = metadata.first(where: { $0.key == "stream-name" })?.value {
+                throw .resourceDeleted(resource: streamName.description)
+            }else{
+                throw .grpcError(cause: self)
+            }
+        default:
+            if let cause = cause as? NIOCore.IOError {
+                try cause.rethrow(usage: usage, origin: self)
+            } else {
+                throw .grpcError(cause: self)
+            }
         }
     }
 }

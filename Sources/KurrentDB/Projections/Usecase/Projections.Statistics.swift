@@ -83,7 +83,7 @@ extension Projections.Statistics {
         package init(from message: UnderlyingResponse) throws(KurrentError) {
             let details = message.details
 
-            detail = try .init(
+            self.detail = try .init(
                 coreProcessingTime: details.coreProcessingTime,
                 version: details.version,
                 epoch: details.epoch,
