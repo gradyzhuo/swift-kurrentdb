@@ -12,12 +12,12 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct Monitoring: GRPCConcreteService {
+public final class Monitoring: GRPCConcreteService {
     package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
 
-    public private(set) var selector: NodeSelector
-    public var callOptions: CallOptions
-    public let eventLoopGroup: EventLoopGroup
+    internal let selector: NodeSelector
+    internal let callOptions: CallOptions
+    internal let eventLoopGroup: EventLoopGroup
 
     init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.selector = selector

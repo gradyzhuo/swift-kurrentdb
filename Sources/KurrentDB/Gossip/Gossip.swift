@@ -11,13 +11,13 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct Gossip: Sendable{
+public final class Gossip: Sendable {
     package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
 
-    public let endpoint: Endpoint
-    public let settings: ClientSettings
-    public let callOptions: CallOptions
-    public let eventLoopGroup: EventLoopGroup
+    internal let endpoint: Endpoint
+    internal let settings: ClientSettings
+    internal let callOptions: CallOptions
+    internal let eventLoopGroup: EventLoopGroup
 
     init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.endpoint = endpoint
