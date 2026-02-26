@@ -55,18 +55,18 @@ import NIO
 /// #### All Streams Operations
 /// - ``read(cursor:options:)-6h8h2``
 /// - ``subscribe(from:options:)-9gq2e``
-public struct Streams<Target: StreamsTarget>: GRPCConcreteService {
+public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
 
     /// The client settings required for establishing a gRPC connection.
-    public private(set) var selector: NodeSelector
+    internal let selector: NodeSelector
 
     /// The gRPC call options.
-    public let callOptions: CallOptions
+    internal let callOptions: CallOptions
 
     /// The event loop group handling asynchronous tasks.
-    public let eventLoopGroup: EventLoopGroup
+    internal let eventLoopGroup: EventLoopGroup
 
     /// The target stream, defining the scope of operations (e.g., specific stream or all streams).
     public let target: Target
