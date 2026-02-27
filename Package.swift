@@ -8,6 +8,12 @@ let package = Package(
     // Platform minimums are set to the first OS versions that shipped Swift 6 concurrency
     // features required by this package (structured concurrency, typed throws, ~Copyable).
     // macOS 15, iOS 18, tvOS 18, watchOS 11, visionOS 2.
+    //
+    // Linux is supported on Swift 6.0+ without any OS-version restriction.
+    // Swift Package Manager does not accept a `.linux` entry here; Linux support
+    // is implicit when no Apple-only frameworks are used. All imports in this
+    // package (Foundation, GRPCNIOTransportHTTP2Posix, Synchronization, NIO)
+    // are available on Linux.
     platforms: [
         .macOS(.v15),
         .iOS(.v18),
@@ -209,6 +215,22 @@ let package = Package(
             resources: [
                 .copy("Resources/ca.crt"),
                 .copy("Resources/multiple-events.json"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100",
+                ]),
+            ]
+        ),
+        // MockClientTests: offline unit tests using MockKurrentDBClient.
+        // No live server required — only factory call patterns are verified.
+        .testTarget(
+            name: "MockClientTests",
+            dependencies: [
+                "KurrentDB",
             ],
             swiftSettings: [
                 .unsafeFlags([
