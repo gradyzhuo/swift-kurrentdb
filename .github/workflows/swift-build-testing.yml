@@ -64,8 +64,10 @@ jobs:
           files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
 
   # Offline build + MockClientTests on additional Linux distributions.
-  # These jobs use the official Swift Docker images (Swift pre-installed),
-  # so no KurrentDB cluster setup is needed.
+  # Uses `docker run` instead of the `container:` directive so that
+  # actions/checkout@v4 (Node.js 20, requires GLIBC_2.27) runs on the Ubuntu
+  # host, while the actual build and tests run inside the target container
+  # where the Swift toolchain is pre-installed.
   build-linux-distros:
     name: Build on ${{ matrix.image }}
     strategy:
@@ -74,11 +76,12 @@ jobs:
           - "swift:6.2-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
           - "swift:6.2-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
     runs-on: ubuntu-latest
-    container:
-      image: ${{ matrix.image }}
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: swift build --build-tests
-      - name: Offline Tests (MockClientTests)
-        run: swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests
+      - name: Build and Offline Tests (MockClientTests)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            ${{ matrix.image }} \
+            bash -c "swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
