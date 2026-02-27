@@ -9,6 +9,7 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # Full integration test suite (Ubuntu + KurrentDB cluster)
   build:
     name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
     strategy:
@@ -61,3 +62,23 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
+
+  # Offline build + MockClientTests on additional Linux distributions.
+  # These jobs use the official Swift Docker images (Swift pre-installed),
+  # so no KurrentDB cluster setup is needed.
+  build-linux-distros:
+    name: Build on ${{ matrix.image }}
+    strategy:
+      matrix:
+        image:
+          - "swift:6.2-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
+          - "swift:6.2-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build --build-tests
+      - name: Offline Tests (MockClientTests)
+        run: swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests
