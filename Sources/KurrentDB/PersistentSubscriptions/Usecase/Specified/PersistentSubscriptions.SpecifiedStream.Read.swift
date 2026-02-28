@@ -65,11 +65,11 @@ extension PersistentSubscriptions.SpecifiedStream {
             }
 
             let writer = PersistentSubscriptions.Subscription.Writer()
-            let requestMessages = try requestMessages()
-            writer.write(messages: requestMessages)
             Task {
                 let client = ServiceClient(wrapping: connection)
                 try await client.read(metadata: metadata, options: callOptions) {
+                    let requestMessages = try requestMessages()
+                    try await $0.write(contentsOf: requestMessages)
                     try await $0.write(contentsOf: writer.sender)
                 } onResponse: {
                     do {
@@ -83,7 +83,7 @@ extension PersistentSubscriptions.SpecifiedStream {
                     }
                 }
             }
-            return try await .init(requests: writer, responses: stream)
+            return try await .init(writer: writer, responses: stream)
         }
     }
 }

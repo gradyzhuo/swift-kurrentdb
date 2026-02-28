@@ -21,7 +21,7 @@ extension EventStore_Client_PersistentSubscriptions_CreateReq.Settings {
             $0.extraStatistics = settings.extraStatistics
             $0.maxRetryCount = settings.maxRetryCount
             $0.minCheckpointCount = settings.checkpointCount.lowerBound
-            $0.maxSubscriberCount = settings.checkpointCount.upperBound
+            $0.maxCheckpointCount = settings.checkpointCount.upperBound
             $0.maxSubscriberCount = settings.maxSubscriberCount
             $0.liveBufferSize = settings.liveBufferSize
             $0.readBatchSize = settings.readBatchSize
