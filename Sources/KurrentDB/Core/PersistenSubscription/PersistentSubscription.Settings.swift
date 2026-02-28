@@ -98,6 +98,19 @@ extension PersistentSubscription {
         /// The amount of time (ms) to try checkpoint after.
         public var checkpointAfter: TimeSpan?
 
-        public init() {}
+        package init(){ }
+        
+        mutating func update(from info: PersistentSubscription.SubscriptionInfo) {
+            self.resolveLink = info.resolveLinkTos
+            self.extraStatistics = info.extraStatistics
+            self.messageTimeout = .ms(Int32(info.messageTimeoutMilliseconds))
+            self.maxRetryCount = info.maxRetryCount
+            self.checkpointCount = info.minCheckPointCount ... info.maxCheckPointCount
+            self.maxSubscriberCount = info.maxSubscriberCount
+            self.liveBufferSize = info.liveBufferSize
+            self.readBatchSize = info.readBatchSize
+            self.historyBufferSize = info.bufferSize
+            self.checkpointAfter = .ms(Int32(info.checkPointAfterMilliseconds))
+        }
     }
 }

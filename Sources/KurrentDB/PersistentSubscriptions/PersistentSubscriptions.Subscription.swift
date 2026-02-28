@@ -39,7 +39,7 @@ extension PersistentSubscriptions {
         ///   - writer: The `Writer` instance used to send requests. Defaults to a new `Writer`.
         ///   - reader: An asynchronous stream of responses from the subscription service.
         /// - Throws: An error if the initialization process fails, such as when the response stream cannot be processed.
-        package init(requests writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>) async throws {
+        package init(writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>) async throws {
             self.writer = writer
 
             var iterator = reader.makeAsyncIterator()

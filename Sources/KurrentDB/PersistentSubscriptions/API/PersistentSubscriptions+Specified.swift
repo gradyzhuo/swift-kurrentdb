@@ -28,6 +28,8 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
     /// - Throws: `KurrentError` if the update operation fails.
     public func update(configure: @Sendable (inout SpecifiedStream.Update.Options) -> Void = { _ in }) async throws(KurrentError) {
         var options = SpecifiedStream.Update.Options()
+        let originInfo = try await getInfo()
+        options.settings.update(from: originInfo)
         configure(&options)
         let usecase = SpecifiedStream.Update(streamIdentifier: target.identifier, group: group, options: options)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)

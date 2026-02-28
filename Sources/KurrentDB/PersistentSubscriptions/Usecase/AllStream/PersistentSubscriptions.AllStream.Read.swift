@@ -83,7 +83,7 @@ extension PersistentSubscriptions.AllStream {
                     }
                 }
             }
-            return try await .init(requests: writer, responses: stream)
+            return try await .init(writer: writer, responses: stream)
         }
     }
 }

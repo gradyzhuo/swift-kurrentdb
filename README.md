@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/swift-kurrentdb/actions/workflows/swift-build-testing.yml)
+[![codecov](https://codecov.io/gh/gradyzhuo/swift-kurrentdb/graph/badge.svg)](https://codecov.io/gh/gradyzhuo/swift-kurrentdb)
 
 <div align=center>
 <img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg" height="200px" width="200px" >
@@ -269,6 +270,63 @@ for try await snapshot in stats {
 | **Gossip** | Cluster discovery, node health, leader detection |
 | **Monitoring** | Real-time server statistics |
 | **Connection** | TLS/SSL, cluster gossip discovery, auto-reconnection, keep-alive |
+
+## Test Coverage
+
+**75% line coverage** across the `KurrentDB` module, measured by running all 174 tests against a live 3-node TLS KurrentDB cluster.
+
+### Coverage by Subsystem
+
+| Subsystem | Line Coverage | Lines |
+|-----------|:------------:|------:|
+| Monitoring | 88.4% | 95 |
+| ServerFeatures | 90.2% | 61 |
+| Users | 87.6% | 403 |
+| Streams | 86.1% | 1,560 |
+| Operations | 83.0% | 235 |
+| Projections | 77.3% | 865 |
+| PersistentSubscriptions | 71.9% | 1,555 |
+| Gossip | 66.9% | 142 |
+| Core | 66.8% | 2,650 |
+| **KurrentDB (total)** | **75.0%** | **7,581** |
+
+### Test Suites
+
+174 tests across 9 integration suites and 2 unit/mock suites. All integration tests run against a live 3-node TLS KurrentDB cluster.
+
+| Suite | Tests | Type | Key Scenarios |
+|-------|------:|------|---------------|
+| **StreamsTests** | 35 | Integration | Append, read (forward/backward/limit/revision), subscribe, metadata, optimistic concurrency, delete, tombstone |
+| **ProjectionsTests** | 16 | Integration | Create (continuous/one-time/transient), enable/disable, abort, reset, state/result query, list |
+| **PersistentSubscriptionsTests** | 11 | Integration | Create, subscribe, ACK, NACK (park/retry), getInfo, update settings, list, delete, replay parked |
+| **UsersTests** | 7 | Integration | Create, enable/disable, update, change/reset password |
+| **OperationsTests** | 6 | Integration | Scavenge (start/stop), merge indexes, restart persistent subscriptions, node priority, resign |
+| **GossipTests** | 3 | Integration | Read cluster members, node state, custom timeout |
+| **MonitoringTests** | 3 | Integration | Server stats, refresh interval, metadata flag |
+| **KurrentCoreTests** | 67 | Unit | Connection string parsing, `EventData`, projection status, stream identifiers, metadata, subscription filters |
+| **MockClientTests** | 26 | Mock/DI | `KurrentDBClientProtocol` conformance, all factory call patterns, 5 domain service scenarios |
+| **Total** | **174** | | 0 commented-out tests |
+
+### Optimistic Concurrency
+
+Streams write-side error paths are explicitly covered:
+
+| Scenario | Expected Error |
+|----------|---------------|
+| Append at stale revision (`.at(99)`, stream at 0) | `wrongExpectedVersion` |
+| Append with `.noStream` to an existing stream | `wrongExpectedVersion` |
+| Two concurrent writers at the same revision | One succeeds, one `wrongExpectedVersion` |
+
+### Persistent Subscription Lifecycle
+
+| Scenario | Verified |
+|----------|---------|
+| Create → subscribe → append → ACK | ✓ |
+| NACK with park (dead-letter queue) | ✓ |
+| NACK with retry (re-delivery, deliveries == 2) | ✓ |
+| getInfo (groupName, eventSource, $all) | ✓ |
+| Update settings → getInfo confirms change | ✓ |
+| park → replayParked → re-delivered → ACK | ✓ |
 
 ## Requirements
 
