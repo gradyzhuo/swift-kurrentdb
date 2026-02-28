@@ -225,6 +225,23 @@ let package = Package(
                 ]),
             ]
         ),
+        .testTarget(
+            name: "OperationsTests",
+            dependencies: [
+                "KurrentDB",
+            ],
+            resources: [
+                .copy("Resources/ca.crt"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100",
+                ]),
+            ]
+        ),
         // MockClientTests: offline unit tests using MockKurrentDBClient.
         // No live server required — only factory call patterns are verified.
         .testTarget(
