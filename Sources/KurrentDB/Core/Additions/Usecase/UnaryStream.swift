@@ -16,17 +16,19 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
     }
     
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses{
+        
+        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
+        
+        Task {
+            logger.debug("[\(Self.name)] Opening connection...")
+            try await client.runConnections()
+        }
+        
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
-            Task.detached {
-                logger.debug("[\(Self.name)] Opening connection...")
-                try await client.runConnections()
-            }
-            
             let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
-            return try await send(connection: client, request: request, callOptions: callOptions) {
-                if let error = $0 {
+            return try await send(connection: client, request: request, callOptions: callOptions) { error in
+                if let error {
                     logger.error("The error is thrown in the response of UnaryStream: \(error)")
                 }
                 client.beginGracefulShutdown()

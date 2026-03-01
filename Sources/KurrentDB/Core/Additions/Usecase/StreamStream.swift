@@ -20,16 +20,16 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
             throw .unsupportedFeature(methodDescriptor)
         }
         
+        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
+        Task {
+            logger.debug("[\(Self.name)] Opening connection...")
+            try await client.runConnections()
+        }
+        
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
-            Task.detached {
-                logger.debug("[\(Self.name)] Opening connection...")
-                try await client.runConnections()
-            }
-            
             let metadata = Metadata(from: node.settings)
-            return try await send(connection: client, metadata: metadata, callOptions: callOptions) {
-                if let error = $0 {
+            return try await send(connection: client, metadata: metadata, callOptions: callOptions) { error in
+                if let error {
                     logger.error("The error is thrown in the response of StreamStream: \(error)")
                 }
                 

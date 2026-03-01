@@ -30,18 +30,21 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
             throw .unsupportedFeature(methodDescriptor)
         }
         
+        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
+        Task {
+            logger.debug("[\(Self.name)] Opening connection...")
+            try await client.runConnections()
+        }
+        
+        defer{
+            logger.debug("[\(Self.name)] Closing connection...")
+            client.beginGracefulShutdown()
+        }
+        
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            try await withGRPCClient(transport: .http2NIOPosix(
-                target: node.endpoint.target,
-                transportSecurity: node.settings.transportSecurity
-            )) { client in
-                logger.debug("[\(Self.name)] Opening connection...")
-                let metadata = Metadata(from: node.settings)
-                let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
-                logger.debug("[\(Self.name)] Closing connection...")
-                client.beginGracefulShutdown()
-                return response
-            }
+            logger.debug("[\(Self.name)] Opening connection...")
+            let metadata = Metadata(from: node.settings)
+            return try await send(connection: client, metadata: metadata, callOptions: callOptions)
         }
     }
 }

@@ -24,25 +24,20 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
             throw .unsupportedFeature(methodDescriptor)
         }
         
-        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            try await withGRPCClient(transport: .http2NIOPosix(
-                target: node.endpoint.target,
-                transportSecurity: node.settings.transportSecurity
-            )) { client in
-                logger.debug("[\(Self.name)] Opening connection...")
-                let metadata = Metadata(from: node.settings)
-                return try await perform(client: client, settings: node.settings, callOptions: callOptions)
-            }
+        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
+        Task {
+            logger.debug("[\(Self.name)] Opening connection...")
+            try await client.runConnections()
         }
-    }
-
-    package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Response {
-        let metadata = Metadata(from: settings)
-        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
-            let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
+        
+        defer{
             logger.debug("[\(Self.name)] Closing connection...")
             client.beginGracefulShutdown()
-            return response
+        }
+        
+        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
+            let metadata = Metadata(from: node.settings)
+            return try await send(connection: client, metadata: metadata, callOptions: callOptions)
         }
     }
 }
