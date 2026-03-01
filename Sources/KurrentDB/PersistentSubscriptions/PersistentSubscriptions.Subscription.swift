@@ -43,10 +43,11 @@ extension PersistentSubscriptions {
             self.writer = writer
 
             var iterator = reader.makeAsyncIterator()
-            subscriptionId = if case let .confirmation(subscriptionId) = try await iterator.next() {
-                subscriptionId
-            } else {
-                nil
+            subscriptionId = try await iterator.next().flatMap{
+                guard case let .confirmation(subscriptionId) = $0 else {
+                    throw KurrentError.initializationError(reason: "The first response from the server was not a confirmation response.")
+                }
+                return subscriptionId
             }
 
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: PersistentSubscription.EventResult.self)
