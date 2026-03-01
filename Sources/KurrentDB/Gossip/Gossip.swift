@@ -28,7 +28,7 @@ public struct Gossip: Sendable{
 }
 
 extension Gossip {
-    public func read(timeout _: Duration) async throws(KurrentError) -> [MemberInfo] {
+    public func read(timeout _: Duration, notAllowedStates: [Gossip.VNodeState] = []) async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             try await withGRPCClient(transport: .http2NIOPosix(
@@ -37,7 +37,11 @@ extension Gossip {
             )) { client in
                 logger.debug("[\(Self.self)] Opening connection...")
                 let metadata = Metadata(from: settings)
-                return try await usecase.send(connection: client, metadata: metadata, callOptions: callOptions)
+                let memberInfos = try await usecase.send(connection: client, metadata: metadata, callOptions: callOptions)
+                return memberInfos
+                    .filter { !notAllowedStates.contains($0.state) }
+                    .sorted { settings.nodePreference.priority(state: $0.state) < settings.nodePreference.priority(state: $1.state)
+                }
             }
         }
     }

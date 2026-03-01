@@ -104,8 +104,7 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
                 endpoint
             }
 
-            logger.info("Discovering: found best choice \(leaderEndpoint.host):\(leaderEndpoint.port) (\(memberInfo.state))"
-            )
+            logger.info("Discovering: found best choice \(leaderEndpoint.host):\(leaderEndpoint.port) (\(memberInfo.state))")
             return leaderEndpoint
         }
         return nil
@@ -117,17 +116,10 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
         callOptions.timeout = settings.gossipTimeout
 
         let gossipClient = Gossip(endpoint: candidate, settings: settings, callOptions: callOptions)
-        let memberInfos = try await gossipClient.read(timeout: settings.gossipTimeout)
-
+        let memberInfos = try await gossipClient.read(
+                                                    timeout: settings.gossipTimeout,
+                                                    notAllowedStates: [.manager, .shuttingDown, .shutdown])
         logger.debug("Candidate \(candidate) gossip info: \(memberInfos)")
-
-        let sortedMembers = memberInfos.sorted { lhs, rhs in
-            settings.nodePreference.priority(state: lhs.state) < settings.nodePreference.priority(state: rhs.state)
-        }
-
-        let notAllowedState: [Gossip.VNodeState] = [.manager, .shuttingDown, .shutdown]
-        let member = sortedMembers.first(where: { member in member.isAlive && !notAllowedState.contains(member.state) })
-
-        return member
+        return memberInfos.first { $0.isAlive }
     }
 }
