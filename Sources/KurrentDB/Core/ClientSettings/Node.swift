@@ -18,12 +18,6 @@ public struct Node: Sendable {
         self.settings = settings
         self.serverInfo = serverInfo
     }
-
-    func makeClient() throws(KurrentError) -> GRPCClient<HTTP2ClientTransport.Posix> {
-        do {
-            return try settings.makeClient(endpoint: endpoint)
-        } catch {
-            throw .initializationError(reason: "Failed to initialize GRPCClient in \(Self.self)")
-        }
-    }
+    
+    
 }

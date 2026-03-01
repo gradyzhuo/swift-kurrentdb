@@ -350,16 +350,6 @@ extension ClientSettings: Buildable {
 }
 
 extension ClientSettings {
-    func makeClient(endpoint: Endpoint) throws(KurrentError) -> GRPCClient<HTTP2ClientTransport.Posix> {
-        try withRethrowingError(usage: #function) {
-            let transport: HTTP2ClientTransport.Posix = try .http2NIOPosix(
-                target: endpoint.target,
-                transportSecurity: transportSecurity
-            )
-            return GRPCClient<HTTP2ClientTransport.Posix>(transport: transport)
-        }
-    }
-
     var transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity {
         if secure {
             .tls { config in
