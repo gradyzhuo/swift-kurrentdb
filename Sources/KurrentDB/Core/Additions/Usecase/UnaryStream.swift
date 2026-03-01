@@ -9,65 +9,26 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
-extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Responses == AsyncThrowingStream<Response, Error> {
-    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
-        let client = try node.makeClient()
-        Task {
-            try await client.runConnections()
-        }
-
-        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
+extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
+    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses{
+        let node = try await selector.select()
+        return try await perform(node: node, callOptions: callOptions)
+    }
+    
+    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses{
+        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
+            let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
+            Task.detached {
+                logger.debug("[\(Self.name)] Opening connection...")
+                try await client.runConnections()
+            }
+            
             let metadata = Metadata(from: node.settings)
             let request = try request(metadata: metadata)
             return try await send(connection: client, request: request, callOptions: callOptions) {
                 if let error = $0 {
                     logger.error("The error is thrown in the response of UnaryStream: \(error)")
                 }
-                client.beginGracefulShutdown()
-            }
-        }
-    }
-
-    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses where Responses.Element == Response {
-        let node = try await selector.select()
-        return try await perform(node: node, callOptions: callOptions)
-    }
-}
-
-extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
-    package func perform(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        let client = try settings.makeClient(endpoint: endpoint)
-        let metadata = Metadata(from: settings)
-        return try await perform(client: client, metadata: metadata, callOptions: callOptions)
-    }
-
-    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        let node = try await selector.select()
-        return try await perform(node: node, callOptions: callOptions)
-    }
-
-    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        guard node.serverInfo.isSupported(method: methodDescriptor) else {
-            throw .unsupportedFeature(methodDescriptor)
-        }
-        let client = try node.makeClient()
-        let metadata = Metadata(from: node.settings)
-        return try await perform(client: client, metadata: metadata, callOptions: callOptions)
-    }
-
-    package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        Task {
-            logger.debug("[\(Self.name)] Opening connection...")
-            try await client.runConnections()
-        }
-
-        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
-            let request = try request(metadata: metadata)
-            return try await send(connection: client, request: request, callOptions: callOptions) {
-                if let error = $0 {
-                    logger.error("The error is thrown in the response of UnaryStream: \(error)")
-                }
-                logger.debug("[\(Self.name)] Closing connection...")
                 client.beginGracefulShutdown()
             }
         }

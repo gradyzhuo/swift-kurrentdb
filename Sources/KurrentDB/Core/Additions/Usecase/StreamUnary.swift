@@ -23,29 +23,26 @@ extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
         guard node.serverInfo.isSupported(method: methodDescriptor) else {
             throw .unsupportedFeature(methodDescriptor)
         }
-        let client = try node.makeClient()
-        let metadata = Metadata(from: node.settings)
-        return try await perform(client: client, metadata: metadata, callOptions: callOptions)
-    }
-
-    package func perform(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Response {
-        let client = try settings.makeClient(endpoint: endpoint)
-        let metadata = Metadata(from: settings)
-        return try await perform(client: client, metadata: metadata, callOptions: callOptions)
-    }
-
-    package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, metadata: Metadata, callOptions: CallOptions) async throws(KurrentError) -> Response {
-        try await withRethrowingError(usage: "\(Self.self)\(#function)") {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask {
-                    logger.debug("[\(Self.name)] Opening connection...")
-                    try await client.runConnections()
-                }
-                let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
-                logger.debug("[\(Self.name)] Closing connection...")
-                client.beginGracefulShutdown()
-                return response
+        
+        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
+            try await withGRPCClient(transport: .http2NIOPosix(
+                target: node.endpoint.target,
+                transportSecurity: node.settings.transportSecurity
+            )) { client in
+                logger.debug("[\(Self.name)] Opening connection...")
+                let metadata = Metadata(from: node.settings)
+                return try await perform(client: client, settings: node.settings, callOptions: callOptions)
             }
+        }
+    }
+
+    package func perform(client: GRPCClient<HTTP2ClientTransport.Posix>, settings: ClientSettings, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        let metadata = Metadata(from: settings)
+        return try await withRethrowingError(usage: "\(Self.self)\(#function)") {
+            let response = try await send(connection: client, metadata: metadata, callOptions: callOptions)
+            logger.debug("[\(Self.name)] Closing connection...")
+            client.beginGracefulShutdown()
+            return response
         }
     }
 }

@@ -11,11 +11,11 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-public struct Gossip {
+public struct Gossip: Sendable{
     package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
 
-    let endpoint: Endpoint
-    let settings: ClientSettings
+    public let endpoint: Endpoint
+    public let settings: ClientSettings
     public let callOptions: CallOptions
     public let eventLoopGroup: EventLoopGroup
 
@@ -30,8 +30,15 @@ public struct Gossip {
 extension Gossip {
     public func read(timeout _: Duration) async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
-        return try await usecase.perform(endpoint: endpoint, settings: settings, callOptions: callOptions).reduce(into: .init()) { partialResult, memberInfo in
-            partialResult.append(memberInfo)
+        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
+            try await withGRPCClient(transport: .http2NIOPosix(
+                target: endpoint.target,
+                transportSecurity: settings.transportSecurity
+            )) { client in
+                logger.debug("[\(Self.self)] Opening connection...")
+                let metadata = Metadata(from: settings)
+                return try await usecase.send(connection: client, metadata: metadata, callOptions: callOptions)
+            }
         }
     }
 }
