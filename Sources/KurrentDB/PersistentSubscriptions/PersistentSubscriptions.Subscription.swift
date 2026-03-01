@@ -50,15 +50,13 @@ extension PersistentSubscriptions {
                 return subscriptionId
             }
 
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: PersistentSubscription.EventResult.self)
-            Task {
-                while let response = try await iterator.next() {
-                    if case let .readEvent(event, retryCount) = response {
-                        continuation.yield(.init(event: event, retryCount: retryCount))
-                    }
+            events = AsyncThrowingStream(unfolding: { @MainActor in
+                let response = try await iterator.next()
+                guard case let .readEvent(event, retryCount) = response else {
+                   return nil
                 }
-            }
-            events = stream
+                return .init(event: event, retryCount: retryCount)
+            })
         }
 
         /// Acknowledges a list of events by their UUIDs.
