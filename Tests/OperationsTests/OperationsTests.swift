@@ -73,4 +73,20 @@ struct OperationsTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         try await client.operations(of: .system).restartPersistentSubscriptions()
     }
+
+    // MARK: - Node Operations
+
+    @Test("Set node priority completes without error.")
+    func testSetNodePriority() async throws {
+        let client = KurrentDBClient(settings: settings)
+        try await client.operations(of: .node).setNodePriority(priority: 0)
+    }
+
+    @Test("Resign node completes without error.")
+    func testResignNode() async throws {
+        let client = KurrentDBClient(settings: settings)
+        // On a multi-node cluster, resigning causes a brief re-election.
+        // The suite is serialized so subsequent tests wait for completion.
+        try await client.operations(of: .node).resignNode()
+    }
 }
