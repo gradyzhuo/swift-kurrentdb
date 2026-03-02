@@ -16,8 +16,9 @@ jobs:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
-          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1", compose_file: "server/docker-compose.yaml" }
-          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0", compose_file: "server/docker-compose.yaml" }
+          - { version: "24.10",  image: "docker.eventstore.com/eventstore/eventstoredb-ee:24.10", compose_file: "server/docker-compose.eventstore.yaml" }
+          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1",            compose_file: "server/docker-compose.yaml" }
+          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0",            compose_file: "server/docker-compose.yaml" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -75,8 +76,9 @@ jobs:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
-          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1", compose_file: "server/docker-compose.yaml" }
-          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0", compose_file: "server/docker-compose.yaml" }
+          - { version: "24.10",  image: "docker.eventstore.com/eventstore/eventstoredb-ee:24.10", compose_file: "server/docker-compose.eventstore.yaml" }
+          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1",            compose_file: "server/docker-compose.yaml" }
+          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0",            compose_file: "server/docker-compose.yaml" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
