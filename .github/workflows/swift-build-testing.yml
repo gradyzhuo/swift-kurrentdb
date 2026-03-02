@@ -16,7 +16,7 @@ jobs:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
-          - { version: "24.6.0", image: "docker.kurrent.io/kurrent-latest/kurrentdb:24.6.0" }
+          - { version: "24.6.0", image: "docker.kurrent.io/eventstore/eventstore:24.6.0" }
           - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1" }
           - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0" }
     runs-on: ${{ matrix.os }}
@@ -76,7 +76,7 @@ jobs:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
-          - { version: "24.6.0", image: "docker.kurrent.io/kurrent-latest/kurrentdb:24.6.0" }
+          - { version: "24.6.0", image: "docker.kurrent.io/eventstore/eventstore:24.6.0" }
           - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1" }
           - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0" }
     runs-on: ${{ matrix.os }}
