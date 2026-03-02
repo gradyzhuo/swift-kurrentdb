@@ -332,7 +332,13 @@ Streams write-side error paths are explicitly covered:
 
 - Swift 6.0+
 - macOS 15+ / iOS 18+ / tvOS 18+ / watchOS 11+ / visionOS 2+ / Linux
-- Kurrent 24.2+ (or EventStoreDB 23.10+)
+
+### KurrentDB Server Compatibility
+
+| KurrentDB Version | Status | Notes |
+|:-----------------:|:------:|-------|
+| **26.0** | ✅ Supported | Full feature support including KurrentDB v2 batch append |
+| **25.1** | ✅ Supported | Full feature support |
 
 ### Local Development with Docker
 
