@@ -16,9 +16,9 @@ jobs:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
-          - { version: "24.6.0", image: "eventstore/eventstore:24.6.0" }
-          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1" }
-          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0" }
+          - { version: "24.6.0", image: "eventstore/eventstore:24.6.0",                       compose_file: "server/docker-compose.eventstore.yaml" }
+          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1", compose_file: "server/docker-compose.yaml" }
+          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0", compose_file: "server/docker-compose.yaml" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
       - run: ulimit -n 10000
 
       - name: Start KurrentDB cluster
-        run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f server/docker-compose.yaml up -d
+        run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f ${{ matrix.kurrentdb.compose_file }} up -d
 
       - name: Wait for cluster to be healthy
         run: |
@@ -44,7 +44,7 @@ jobs:
             sleep 5
           done
           echo "Cluster failed to become healthy"
-          docker compose -f server/docker-compose.yaml logs
+          docker compose -f ${{ matrix.kurrentdb.compose_file }} logs
           exit 1
 
       - name: Copy generated CA certificate to test resources
@@ -76,9 +76,9 @@ jobs:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
-          - { version: "24.6.0", image: "eventstore/eventstore:24.6.0" }
-          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1" }
-          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0" }
+          - { version: "24.6.0", image: "eventstore/eventstore:24.6.0",                       compose_file: "server/docker-compose.eventstore.yaml" }
+          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1", compose_file: "server/docker-compose.yaml" }
+          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0", compose_file: "server/docker-compose.yaml" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
       - run: ulimit -n 10000
 
       - name: Start KurrentDB cluster
-        run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f server/docker-compose.yaml up -d
+        run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f ${{ matrix.kurrentdb.compose_file }} up -d
 
       - name: Wait for cluster to be healthy
         run: |
@@ -104,7 +104,7 @@ jobs:
             sleep 5
           done
           echo "Cluster failed to become healthy"
-          docker compose -f server/docker-compose.yaml logs
+          docker compose -f ${{ matrix.kurrentdb.compose_file }} logs
           exit 1
 
       - name: Copy generated CA certificate to test resources
