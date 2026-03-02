@@ -14,9 +14,9 @@ services:
     command: >
       -c "mkdir -p ./certs && cd /certs
       && es-gencert-cli create-ca
-      && es-gencert-cli create-node -out ./node1 -ip-addresses 127.0.0.1,172.30.240.11 -dns-names localhost
-      && es-gencert-cli create-node -out ./node2 -ip-addresses 127.0.0.1,172.30.240.12 -dns-names localhost
-      && es-gencert-cli create-node -out ./node3 -ip-addresses 127.0.0.1,172.30.240.13 -dns-names localhost
+      && es-gencert-cli create-node -out ./node1 -ip-addresses 127.0.0.1,172.30.241.11 -dns-names localhost
+      && es-gencert-cli create-node -out ./node2 -ip-addresses 127.0.0.1,172.30.241.12 -dns-names localhost
+      && es-gencert-cli create-node -out ./node3 -ip-addresses 127.0.0.1,172.30.241.13 -dns-names localhost
       && find . -type f -print0 | xargs -0 chmod 666"
     container_name: setup
     volumes:
@@ -25,14 +25,14 @@ services:
       - volumes-provisioner
 
   node1.eventstore: &template
-    image: docker.eventstore.com/eventstore/eventstoredb-ee:24.10
+    image: eventstore/eventstore:24.10
     container_name: node1.eventstore
     env_file:
-      - vars.env
+      - vars.eventstore.env
     environment:
-      - EVENTSTORE_REPLICATION_IP=172.30.240.11
+      - EVENTSTORE_REPLICATION_IP=172.30.241.11
       - EVENTSTORE_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2111
-      - EVENTSTORE_GOSSIP_SEED=172.30.240.12:2113,172.30.240.13:2113
+      - EVENTSTORE_GOSSIP_SEED=172.30.241.12:2113,172.30.241.13:2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
       - EVENTSTORE_CERTIFICATE_FILE=/certs/node1/node.crt
       - EVENTSTORE_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node1/node.key
@@ -54,17 +54,17 @@ services:
     restart: always
     networks:
       clusternetwork:
-        ipv4_address: 172.30.240.11
+        ipv4_address: 172.30.241.11
 
   node2.eventstore:
     <<: *template
     container_name: node2.eventstore
     env_file:
-      - vars.env
+      - vars.eventstore.env
     environment:
-      - EVENTSTORE_REPLICATION_IP=172.30.240.12
+      - EVENTSTORE_REPLICATION_IP=172.30.241.12
       - EVENTSTORE_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2112
-      - EVENTSTORE_GOSSIP_SEED=172.30.240.11:2113,172.30.240.13:2113
+      - EVENTSTORE_GOSSIP_SEED=172.30.241.11:2113,172.30.241.13:2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
       - EVENTSTORE_CERTIFICATE_FILE=/certs/node2/node.crt
       - EVENTSTORE_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node2/node.key
@@ -81,15 +81,15 @@ services:
       - 2112:2113
     networks:
       clusternetwork:
-        ipv4_address: 172.30.240.12
+        ipv4_address: 172.30.241.12
 
   node3.eventstore:
     <<: *template
     container_name: node3.eventstore
     environment:
-      - EVENTSTORE_REPLICATION_IP=172.30.240.13
+      - EVENTSTORE_REPLICATION_IP=172.30.241.13
       - EVENTSTORE_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2113
-      - EVENTSTORE_GOSSIP_SEED=172.30.240.11:2113,172.30.240.12:2113
+      - EVENTSTORE_GOSSIP_SEED=172.30.241.11:2113,172.30.241.12:2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
       - EVENTSTORE_CERTIFICATE_FILE=/certs/node3/node.crt
       - EVENTSTORE_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node3/node.key
@@ -106,7 +106,7 @@ services:
       - 2113:2113
     networks:
       clusternetwork:
-        ipv4_address: 172.30.240.13
+        ipv4_address: 172.30.241.13
 
 networks:
   clusternetwork:
@@ -115,7 +115,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.30.240.0/24
+        - subnet: 172.30.241.0/24
 
 volumes:
   certs:
