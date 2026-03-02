@@ -10,11 +10,15 @@ on:
 jobs:
   # Full integration test suite (Ubuntu + KurrentDB cluster)
   build:
-    name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    name: Swift ${{ matrix.swift }} / KurrentDB ${{ matrix.kurrentdb.version }}
     strategy:
       matrix:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
+        kurrentdb:
+          - { version: "24.6.0", image: "docker.kurrent.io/kurrent-latest/kurrentdb:24.6.0" }
+          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1" }
+          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +28,7 @@ jobs:
       - run: ulimit -n 10000
 
       - name: Start KurrentDB cluster
-        run: docker compose -f server/docker-compose.yaml up -d
+        run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f server/docker-compose.yaml up -d
 
       - name: Wait for cluster to be healthy
         run: |
@@ -66,11 +70,15 @@ jobs:
   # restart-persistent-subscriptions mutate cluster-level state and can interfere
   # with other test suites when run concurrently.
   operations:
-    name: OperationsTests on Swift ${{ matrix.swift }}
+    name: OperationsTests / Swift ${{ matrix.swift }} / KurrentDB ${{ matrix.kurrentdb.version }}
     strategy:
       matrix:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2"]
+        kurrentdb:
+          - { version: "24.6.0", image: "docker.kurrent.io/kurrent-latest/kurrentdb:24.6.0" }
+          - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1" }
+          - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +88,7 @@ jobs:
       - run: ulimit -n 10000
 
       - name: Start KurrentDB cluster
-        run: docker compose -f server/docker-compose.yaml up -d
+        run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f server/docker-compose.yaml up -d
 
       - name: Wait for cluster to be healthy
         run: |
