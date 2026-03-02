@@ -25,14 +25,13 @@ services:
       - volumes-provisioner
 
   node1.eventstore: &template
-    image: eventstore/eventstore:24.6.0
+    image: docker.eventstore.com/eventstore/eventstoredb-ee:24.10
     container_name: node1.eventstore
     env_file:
-      - vars.eventstore.env
+      - vars.env
     environment:
-      - EVENTSTORE_INT_IP=172.30.240.11
-      - EVENTSTORE_ADVERTISE_HTTP_PORT_TO_CLIENT_AS=2111
-      - EVENTSTORE_ADVERTISE_TCP_PORT_TO_CLIENT_AS=1111
+      - EVENTSTORE_REPLICATION_IP=172.30.240.11
+      - EVENTSTORE_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2111
       - EVENTSTORE_GOSSIP_SEED=172.30.240.12:2113,172.30.240.13:2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
       - EVENTSTORE_CERTIFICATE_FILE=/certs/node1/node.crt
@@ -48,7 +47,6 @@ services:
       retries: 24
     ports:
       - 2111:2113
-      - 1111:1113
     volumes:
       - certs:/certs
     depends_on:
@@ -62,11 +60,10 @@ services:
     <<: *template
     container_name: node2.eventstore
     env_file:
-      - vars.eventstore.env
+      - vars.env
     environment:
-      - EVENTSTORE_INT_IP=172.30.240.12
-      - EVENTSTORE_ADVERTISE_HTTP_PORT_TO_CLIENT_AS=2112
-      - EVENTSTORE_ADVERTISE_TCP_PORT_TO_CLIENT_AS=1112
+      - EVENTSTORE_REPLICATION_IP=172.30.240.12
+      - EVENTSTORE_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2112
       - EVENTSTORE_GOSSIP_SEED=172.30.240.11:2113,172.30.240.13:2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
       - EVENTSTORE_CERTIFICATE_FILE=/certs/node2/node.crt
@@ -82,7 +79,6 @@ services:
       retries: 24
     ports:
       - 2112:2113
-      - 1112:1113
     networks:
       clusternetwork:
         ipv4_address: 172.30.240.12
@@ -91,9 +87,8 @@ services:
     <<: *template
     container_name: node3.eventstore
     environment:
-      - EVENTSTORE_INT_IP=172.30.240.13
-      - EVENTSTORE_ADVERTISE_HTTP_PORT_TO_CLIENT_AS=2113
-      - EVENTSTORE_ADVERTISE_TCP_PORT_TO_CLIENT_AS=1113
+      - EVENTSTORE_REPLICATION_IP=172.30.240.13
+      - EVENTSTORE_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2113
       - EVENTSTORE_GOSSIP_SEED=172.30.240.11:2113,172.30.240.12:2113
       - EVENTSTORE_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
       - EVENTSTORE_CERTIFICATE_FILE=/certs/node3/node.crt
@@ -109,14 +104,13 @@ services:
       retries: 24
     ports:
       - 2113:2113
-      - 1113:1113
     networks:
       clusternetwork:
         ipv4_address: 172.30.240.13
 
 networks:
   clusternetwork:
-    name: eventstore.local
+    name: eventstoredb.local
     driver: bridge
     ipam:
       driver: default
