@@ -74,7 +74,7 @@ struct StreamTests: Sendable {
             try StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountDeleted", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
         ],
     ])
-    func testAppendToStreams(events: [StreamEvent]) async throws {
+    func testMultipleAppendToStreams(events: [StreamEvent]) async throws {
         let client = KurrentDBClient(settings: settings)
 
         let appendResponse = try await client.multiStreams.append(events: events)
