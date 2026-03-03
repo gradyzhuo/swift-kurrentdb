@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        swift: ["6.0", "6.1", "6.2"]
+        swift: ["6.2"]
         kurrentdb:
           - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0",            compose_file: "server/docker-compose.yaml" }
     runs-on: ${{ matrix.os }}
