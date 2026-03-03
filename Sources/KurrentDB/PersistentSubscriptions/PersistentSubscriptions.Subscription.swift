@@ -36,7 +36,13 @@ extension PersistentSubscriptions {
 
         /// The stream revision of the last received event, or `nil` if no events have been received yet.
         public var lastRevision: UInt64? {
-            _revisionTracker.value
+            _revisionTracker.revision
+        }
+
+        /// The global log position of the last received event, or `nil` if no events have been received yet.
+        /// Useful when subscribing to `$all` to resume from a known position after a drop.
+        public var lastPosition: StreamPosition? {
+            _revisionTracker.position
         }
 
         private let _revisionTracker = RevisionTracker()
@@ -64,15 +70,20 @@ extension PersistentSubscriptions {
                     guard case let .readEvent(event, retryCount) = response else {
                         throw KurrentError.subscriptionDropped(
                             reason: "The subscription was dropped by the server.",
-                            lastRevision: _revisionTracker.value
+                            lastRevision: _revisionTracker.revision,
+                            lastPosition: _revisionTracker.position
                         )
                     }
-                    _revisionTracker.update(event.record.revision)
+                    _revisionTracker.update(revision: event.record.revision, position: event.record.position)
                     return .init(event: event, retryCount: retryCount)
                 } catch let error as KurrentError {
                     throw error
                 } catch {
-                    throw KurrentError.subscriptionDropped(reason: "\(error)", lastRevision: _revisionTracker.value)
+                    throw KurrentError.subscriptionDropped(
+                        reason: "\(error)",
+                        lastRevision: _revisionTracker.revision,
+                        lastPosition: _revisionTracker.position
+                    )
                 }
             })
         }
@@ -168,14 +179,18 @@ extension PersistentSubscriptions {
     }
 
     private final class RevisionTracker: Sendable {
-        private let _mutex: Mutex<UInt64?> = .init(nil)
+        private let _mutex: Mutex<(revision: UInt64?, position: StreamPosition?)> = .init((nil, nil))
 
-        var value: UInt64? {
-            _mutex.withLock { $0 }
+        var revision: UInt64? {
+            _mutex.withLock { $0.revision }
         }
 
-        func update(_ revision: UInt64) {
-            _mutex.withLock { $0 = revision }
+        var position: StreamPosition? {
+            _mutex.withLock { $0.position }
+        }
+
+        func update(revision: UInt64, position: StreamPosition) {
+            _mutex.withLock { $0 = (revision, position) }
         }
     }
 }
