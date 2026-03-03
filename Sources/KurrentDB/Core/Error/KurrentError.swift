@@ -32,6 +32,7 @@ public enum KurrentError: Error, Sendable {
     case illegalStateError(reason: String)
     case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionOption)
     case subscriptionTerminated(subscriptionId: String?)
+    case subscriptionDropped(reason: String, lastRevision: UInt64?)
     case encodingError(message: String, encoding: String.Encoding)
     case decodingError(cause: DecodingError)
 }
@@ -83,6 +84,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "Wrong expected version '\(expected)' but got '\(current)'."
         case let .subscriptionTerminated(subscriptionId):
             "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId))"
+        case let .subscriptionDropped(reason, lastRevision):
+            "Subscription dropped: \(reason). Last received revision: \(lastRevision.map { String($0) } ?? "none")"
         case let .encodingError(message: message, encoding: encoding):
             "Encoding error \(message) by encoding: \(encoding)"
         case let .decodingError(cause):
@@ -136,6 +139,8 @@ extension KurrentError: Equatable {
             "ServerError"
         case .subscriptionTerminated:
             "SubscriptionTerminated"
+        case .subscriptionDropped:
+            "SubscriptionDropped"
         case .wrongExpectedVersion:
             "WrongExpectedVersion"
         case .resourceDeleted:
