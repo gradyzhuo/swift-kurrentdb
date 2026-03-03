@@ -59,12 +59,21 @@ extension PersistentSubscriptions {
             }
 
             events = AsyncThrowingStream(unfolding: { @MainActor [_revisionTracker] in
-                let response = try await iterator.next()
-                guard case let .readEvent(event, retryCount) = response else {
-                    return nil
+                do {
+                    let response = try await iterator.next()
+                    guard case let .readEvent(event, retryCount) = response else {
+                        throw KurrentError.subscriptionDropped(
+                            reason: "The subscription was dropped by the server.",
+                            lastRevision: _revisionTracker.value
+                        )
+                    }
+                    _revisionTracker.update(event.record.revision)
+                    return .init(event: event, retryCount: retryCount)
+                } catch let error as KurrentError {
+                    throw error
+                } catch {
+                    throw KurrentError.subscriptionDropped(reason: "\(error)", lastRevision: _revisionTracker.value)
                 }
-                _revisionTracker.update(event.record.revision)
-                return .init(event: event, retryCount: retryCount)
             })
         }
 
