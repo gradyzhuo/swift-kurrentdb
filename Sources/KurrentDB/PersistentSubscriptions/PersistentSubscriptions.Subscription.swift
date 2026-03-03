@@ -10,6 +10,7 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportCore
 import GRPCNIOTransportHTTP2Posix
+import Synchronization
 
 extension PersistentSubscriptions {
     /// A subscription to a persistent event stream, enabling reading and acknowledging events.
@@ -33,6 +34,13 @@ extension PersistentSubscriptions {
         /// An asynchronous stream delivering events or errors from the subscription.
         public let events: AsyncThrowingStream<PersistentSubscription.EventResult, Error>
 
+        /// The stream revision of the last received event, or `nil` if no events have been received yet.
+        public var lastRevision: UInt64? {
+            _revisionTracker.value
+        }
+
+        private let _revisionTracker = RevisionTracker()
+
         /// Initializes a new subscription with a writer and response stream.
         ///
         /// - Parameters:
@@ -50,11 +58,12 @@ extension PersistentSubscriptions {
                 return subscriptionId
             }
 
-            events = AsyncThrowingStream(unfolding: { @MainActor in
+            events = AsyncThrowingStream(unfolding: { @MainActor [_revisionTracker] in
                 let response = try await iterator.next()
                 guard case let .readEvent(event, retryCount) = response else {
-                   return nil
+                    return nil
                 }
+                _revisionTracker.update(event.record.revision)
                 return .init(event: event, retryCount: retryCount)
             })
         }
@@ -146,6 +155,18 @@ extension PersistentSubscriptions {
         /// - Throws: An error if the negative acknowledgment process fails.
         public func nack(readEvents: ReadEvent ..., action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             try await nack(readEvents: readEvents, action: action, reason: reason)
+        }
+    }
+
+    private final class RevisionTracker: Sendable {
+        private let _mutex: Mutex<UInt64?> = .init(nil)
+
+        var value: UInt64? {
+            _mutex.withLock { $0 }
+        }
+
+        func update(_ revision: UInt64) {
+            _mutex.withLock { $0 = revision }
         }
     }
 }
