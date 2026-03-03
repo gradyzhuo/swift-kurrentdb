@@ -134,7 +134,8 @@ struct StreamsTargetTests: Sendable {
         #expect(type(of: streams.target) == AllStreams.self)
     }
 
-    @Test("KurrentDBClient should accept MultiStreams target")
+    @Test("KurrentDBClient should accept MultiStreams target",
+          .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_SUPPORTS_MULTI_STREAMS"] == "true"))
     func testClientWithMultiStreams() async {
         let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
             .secure(true)
