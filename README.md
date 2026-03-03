@@ -337,8 +337,8 @@ Streams write-side error paths are explicitly covered:
 
 | Server Version | Status | Notes |
 |:--------------:|:------:|-------|
-| **KurrentDB 26.0** | ✅ Supported | Full feature support including KurrentDB v2 batch append |
-| **KurrentDB 25.1** | ✅ Supported | Full feature support including KurrentDB v2 batch append |
+| **KurrentDB 26.0** | ✅ Supported | Full feature support |
+| **KurrentDB 25.1** | ✅ Supported | Full feature support |
 | **EventStoreDB 24.x** | ✅ Supported | Core features supported; KurrentDB v2 batch append not available |
 
 ### Local Development with Docker
