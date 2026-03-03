@@ -67,7 +67,9 @@ struct StreamTests: Sendable {
         try await client.streams(specified: streamIdentifier.name).delete()
     }
 
-    @Test("It should succeed when appending events to streams.", arguments: [
+    @Test("It should succeed when appending events to streams.",
+          .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_SUPPORTS_MULTI_STREAMS"] == "true"),
+          arguments: [
         [
             try StreamEvent(stream: "AppendSessionStream-\(UUID().uuidString)", eventData: EventData(eventType: "AppendEvent-AccountCreated", model: ["Description": "Gears of War 4"]), expectedRevision: .any),
 
