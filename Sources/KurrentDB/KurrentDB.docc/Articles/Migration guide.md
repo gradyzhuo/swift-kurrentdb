@@ -11,7 +11,26 @@ Version 2.x introduces a **target-based, hierarchical API** that replaces the fl
 
 This makes the API more composable, type-safe, and easier to discover — the compiler guides you to the operations that are valid for the scope you've selected.
 
-All 1.x methods are still available but are marked `@deprecated` with Xcode fix-its pointing to the 2.x equivalents. You can migrate incrementally.
+> **Important — the 1.x API moves to `KurrentDB_V1`**
+>
+> In 2.x, the old flat-method API is no longer part of the `KurrentDB` module.
+> It has been moved to a separate `KurrentDB_V1` library that ships in the same package.
+> If you are not ready to migrate, update your dependency target and import:
+>
+> ```swift
+> // Package.swift — add KurrentDB_V1 to your target dependencies
+> .product(name: "KurrentDB_V1", package: "swift-kurrentdb")
+> ```
+>
+> ```swift
+> // Replace your existing import
+> import KurrentDB_V1   // was: import KurrentDB
+> ```
+>
+> `KurrentDB_V1` gives you access to all 1.x methods (marked `@deprecated`) while you migrate to 2.x at your own pace.
+> The `KurrentDBClient` type and `ClientSettings` are shared between both modules, so no changes to client creation are needed.
+
+All 1.x methods in `KurrentDB_V1` carry `@deprecated` annotations with Xcode fix-its pointing to their 2.x equivalents, making incremental migration straightforward.
 
 ---
 
