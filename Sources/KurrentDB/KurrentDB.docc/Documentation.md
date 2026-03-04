@@ -6,7 +6,8 @@
 
 The Kurrent Database Client SDK connected by `gRPC`.
 
-## Articles 
+## Articles
+- <doc:Migration-guide>
 - <doc:Getting-started>
 - <doc:Appending-events>
 - <doc:Reading-events>
