@@ -289,10 +289,25 @@ try await client.appendToStream("orders", events: [event]) { ... }
 try await client.streams(of: .specified("orders")).append(events: [event]) { ... }
 ```
 
-All 1.x methods remain available in 2.x but are marked `@deprecated` with fix-its.
-Refer to the full guide for a complete mapping of every changed API:
+### The 1.x API moves to `KurrentDB_V1`
 
-👉 [Migration Guide — 1.x to 2.x](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide)
+In 2.x the old flat-method API is **no longer part of the `KurrentDB` module**.
+It has been moved to a separate `KurrentDB_V1` library that ships in the same package.
+If you are not ready to migrate immediately, switch your dependency target and import:
+
+```swift
+// Package.swift
+.product(name: "KurrentDB_V1", package: "swift-kurrentdb")
+```
+
+```swift
+// Replace your existing import
+import KurrentDB_V1   // was: import KurrentDB
+```
+
+`KurrentDB_V1` gives you access to all 1.x methods (marked `@deprecated`) while you migrate to the new API at your own pace.
+
+👉 [Full Migration Guide — 1.x to 2.x](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide)
 
 ---
 
