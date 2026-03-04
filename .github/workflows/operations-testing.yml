@@ -55,7 +55,5 @@ jobs:
             cp /tmp/ca.crt "$dir/ca.crt"
           done
 
-      - name: Build
-        run: swift build --build-tests
       - name: Swift Testing (OperationsTests only)
-        run: swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
+        run: swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
