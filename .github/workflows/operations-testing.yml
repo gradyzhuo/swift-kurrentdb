@@ -11,9 +11,12 @@ on:
 jobs:
   operations:
     name: OperationsTests / Swift ${{ matrix.swift }} / KurrentDB ${{ matrix.kurrentdb.version }}
+    timeout-minutes: 60
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        # ubuntu-22.04 avoids a known ld.gold hang on Ubuntu 24.04 + GCC 14
+        # that causes jobs to silently stall during swift build (manifest linking).
+        os: [ubuntu-22.04]
         swift: ["6.0", "6.1", "6.2"]
         kurrentdb:
           - { version: "24.10",  image: "docker.eventstore.com/eventstore/eventstoredb-ee:24.10", compose_file: "server/docker-compose.eventstore.yaml" }
