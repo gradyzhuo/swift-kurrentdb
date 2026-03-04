@@ -26,10 +26,12 @@ Event Sourcing is a powerful pattern for building scalable, auditable systems. s
 
 - **Native Swift** — Designed for Swift from the ground up, not a wrapper
 - **Modern Concurrency** — Full async/await with Swift 6 data-race safety
-- **Type-Safe** — Target-based API design with compile-time guarantees
+- **Compile-Time Safety** — Swift 6 strict concurrency compliance with typed throws
 - **Cluster-Ready** — First-class support for multi-node TLS clusters
 - **Well-Documented** — Comprehensive guides on [Swift Package Index](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb)
 - **Typed Errors** — All operations throw `KurrentError` for precise error handling
+
+---
 
 ## Quick Start
 
@@ -38,10 +40,21 @@ Event Sourcing is a powerful pattern for building scalable, auditable systems. s
 Add to your `Package.swift`:
 
 ```swift
+// Stable release
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0-beta.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "1.12.1")
 ]
 ```
+
+> **2.0.0 Beta available** — A major new release is in active development.
+> The 2.x API introduces a target-based design with improved type safety and composability.
+> To try it early:
+> ```swift
+> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0-beta.3")
+> ```
+> See the [Migration Guide](#migration-guide) below for what's changed.
+
+---
 
 ### Connect to a Cluster
 
@@ -57,7 +70,7 @@ let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
     .secure(true)
     .tlsVerifyCert(false)
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
+    .cerificate(path: "/path/to/ca.crt")
 
 // Production — remote cluster (TLS enabled by default)
 let settings = ClientSettings.remote(
@@ -66,14 +79,13 @@ let settings = ClientSettings.remote(
     "node3.example.com:2113"
 ).authenticated(.credentials(username: "admin", password: "changeit"))
 
-// Production — remote without TLS
-let settings = ClientSettings.remote("db.example.com:2113", secure: false)
-
 // Connection string
 let settings: ClientSettings = "esdb://admin:changeit@node1:2113,node2:2113?tls=true"
 
 let client = KurrentDBClient(settings: settings)
 ```
+
+---
 
 ### Append and Read Events
 
@@ -89,9 +101,9 @@ try await client.appendToStream("orders", events: [event]) {
     $0.revision(expected: .any)
 }
 
-// Read events (target-based)
-let responses = try await client.streams(of: .specified("orders")).read {
-    $0.startFrom(revision: .start)
+// Read events
+let responses = try await client.readStream("orders") {
+    $0.startFrom(revision: .start).limit(10)
 }
 
 for try await response in responses {
@@ -101,81 +113,74 @@ for try await response in responses {
 }
 ```
 
-### Target-Based API
+---
 
-swift-kurrentdb 2.0 introduces a target-based API design that provides compile-time type safety. Each resource scope exposes only the operations relevant to that target.
+## API Overview
 
-#### Streams
+### Streams
 
 ```swift
-// Specific stream
-let stream = client.streams(of: .specified("orders"))
+// Append
+try await client.appendToStream("orders", events: [event]) {
+    $0.revision(expected: .streamExists)
+}
 
-// $all stream
-let allStreams = client.streams(of: .all)
+// Read forward
+let responses = try await client.readStream("orders") {
+    $0.startFrom(revision: .start).limit(50)
+}
 
-// Projection streams
-let byEventType = client.streams(of: .byEventType("OrderPlaced"))
-let byCategory = client.streams(of: .byStream(prefix: "order"))
+// Read backward
+let responses = try await client.readStream("orders") {
+    $0.startFrom(revision: .end).limit(10).backward()
+}
+
+// Read $all
+let allResponses = try await client.readAllStreams {
+    $0.limit(100)
+}
+
+// Subscribe (catch-up)
+let subscription = try await client.subscribeStream("orders")
+for try await event in subscription.events { ... }
+
+// Subscribe to $all
+let subscription = try await client.subscribeAllStreams()
+
+// Delete / tombstone
+try await client.deleteStream("orders")
+try await client.tombstoneStream("orders")
+
+// Stream metadata
+try await client.setStreamMetadata("orders", metadata: metadata)
+let metadata = try await client.getStreamMetadata("orders")
 ```
 
-#### Projections
+### Projections
 
 ```swift
-// --- Convenience API ---
-
-// Create projections
+// Create
 try await client.createContinuousProjection(name: "order-count", query: js)
 try await client.createOneTimeProjection(query: js)
 try await client.createTransientProjection(name: "temp", query: js)
 
-// Control a named projection
+// Lifecycle
 try await client.enableProjection(name: "order-count")
 try await client.disableProjection(name: "order-count")
+try await client.abortProjection(name: "order-count")
+try await client.resetProjection(name: "order-count")
 try await client.deleteProjection(name: "order-count")
 
-// Query projection state and result
-let state = try await client.getProjectionState(of: CountResult.self, name: "order-count")
-let result = try await client.getProjectionResult(of: Int.self, name: "order-count")
+// Query state / result
+let state: CountResult? = try await client.getProjectionState(of: CountResult.self, name: "order-count")
+let result: Int? = try await client.getProjectionResult(of: Int.self, name: "order-count")
 
-// List projections by mode
+// List
 let continuous = try await client.listAllProjections(mode: .continuous)
-let transient  = try await client.listAllProjections(mode: .transient)
-let all        = try await client.listAllProjections(mode: .any)
-
-// --- Target-based API ---
-
-// .continuous(name:) — create + full control on a named continuous projection
-let projection = client.projections(of: .continuous(name: "order-count"))
-try await projection.create(query: js)
-try await projection.enable()
-try await projection.disable()
-try await projection.reset()
-let detail = try await projection.detail()
-
-// .anyContinuous — list all continuous projections (no name required)
-let details: [Projection.Detail] = try await client.projections(of: .anyContinuous).list()
-
-// .transient(name:) — create + control on a named transient projection
-let transientProjection = client.projections(of: .transient(name: "temp"))
-try await transientProjection.create(query: js)
-
-// .anyTransient — list all transient projections
-let transientDetails: [Projection.Detail] = try await client.projections(of: .anyTransient).list()
-
-// .onetime — create a one-time projection
-try await client.projections(of: .onetime).create(query: js)
-
-// .anyMode — list all projections regardless of mode
-let allDetails: [Projection.Detail] = try await client.projections(of: .anyMode).list()
-
-// named("...") — control an existing projection by name (any mode)
-let named = client.projections(of: .anyMode(name: "order-count"))
-try await named.enable()
-let state2 = try await named.state(of: CountResult.self)
+let all = try await client.listAllProjections(mode: .any)
 ```
 
-#### Persistent Subscriptions
+### Persistent Subscriptions
 
 ```swift
 // Create a subscription group
@@ -194,28 +199,42 @@ let subscription = try await client.subscribePersistentSubscription(
 )
 
 for try await result in subscription.events {
-    try await subscription.ack(readEvents: result.event)
+    do {
+        // handle event
+        try await subscription.ack(readEvents: result.event)
+    } catch {
+        try await subscription.nack(readEvents: result.event, action: .park, reason: "\(error)")
+    }
 }
+
+// $all persistent subscription
+try await client.createPersistentSubscriptionToAllStream(groupName: "all-workers")
+let allSub = try await client.subscribePersistentSubscriptionToAllStreams(groupName: "all-workers")
+
+// Update / delete
+try await client.updatePersistentSubscription(stream: "orders", groupName: "order-workers") { $0 }
+try await client.deletePersistentSubscription(stream: "orders", groupName: "order-workers")
 ```
 
-#### User Management
+### User Management
 
 ```swift
 // Create a user
-try await client.users.create(
+try await client.createUser(
     loginName: "jane",
     password: "secure_password",
     fullName: "Jane Doe",
-    groups: [.ops, .custom("order-writers")]
+    groups: ["ops"]
 )
 
-// Control a specific user
-try await client.user("jane").enable()
-try await client.user("jane").disable()
-try await client.user("jane").reset(password: "new_password")
+// Manage user
+try await client.enableUser(loginName: "jane")
+try await client.disableUser(loginName: "jane")
+try await client.changeUserPassword(loginName: "jane", currentPassword: "old", newPassword: "new")
+try await client.resetUserPassword(loginName: "jane", newPassword: "reset")
 ```
 
-#### Server Operations
+### Server Operations
 
 ```swift
 // Scavenge
@@ -224,39 +243,58 @@ try await client.stopScavenge(scavengeId: response.scavengeId)
 
 // System
 try await client.mergeIndexes()
-try await client.shutdown()
+try await client.restartPersistentSubscriptions()
 
 // Node
 try await client.resignNode()
 try await client.setNodePriority(priority: 10)
 ```
 
-#### Cluster Gossip
+### Cluster Gossip
 
 ```swift
-// Discover all nodes from a single endpoint
 let members = try await client.readCluster()
 
 for member in members {
     print("\(member.httpEndPoint.host):\(member.httpEndPoint.port) — \(member.state)")
 }
 
-// Find the leader
 if let leader = members.first(where: { $0.state == .leader && $0.isAlive }) {
     print("Leader: \(leader.httpEndPoint)")
 }
 ```
 
-#### Monitoring
+### Monitoring
 
 ```swift
-// Stream server statistics
 let stats = try await client.stats(refreshTimePeriodInMs: 5000)
 
 for try await snapshot in stats {
     print("Metrics: \(snapshot.stats.count) entries")
 }
 ```
+
+---
+
+## Migration Guide
+
+**Version 2.0.0** introduces a breaking redesign of the API.
+The flat methods on `KurrentDBClient` are replaced by a **target-based, hierarchical** style:
+
+```swift
+// 1.x
+try await client.appendToStream("orders", events: [event]) { ... }
+
+// 2.x
+try await client.streams(of: .specified("orders")).append(events: [event]) { ... }
+```
+
+All 1.x methods remain available in 2.x but are marked `@deprecated` with fix-its.
+Refer to the full guide for a complete mapping of every changed API:
+
+👉 [Migration Guide — 1.x to 2.x](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide)
+
+---
 
 ## Features
 
@@ -368,6 +406,7 @@ docker run --rm -d -p 2113:2113 \
 
 | Guide | Description |
 |-------|-------------|
+| [Migration Guide (1.x → 2.x)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code |
 | [Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
 | [Appending Events](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency |
 | [Reading Events](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, filters |
