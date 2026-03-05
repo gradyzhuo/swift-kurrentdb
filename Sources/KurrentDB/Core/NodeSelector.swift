@@ -37,6 +37,14 @@ public actor NodeSelector: Sendable {
         return node
     }
 
+    /// Clears the cached node so the next call to `select()` triggers a fresh discovery.
+    /// Call this when a node-level failure is detected (connection error, not-leader, timeout).
+    func invalidate() {
+        logger.debug("[NodeSelector] Invalidating cached node, will re-discover on next select.")
+        selectedNode = nil
+        discover = .init(settings: settings, previousCandidates: [])
+    }
+
     private func selectNode() async throws -> Node? {
         var attempts = 0
 
