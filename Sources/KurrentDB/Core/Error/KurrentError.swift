@@ -94,6 +94,19 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
     }
 }
 
+extension KurrentError {
+    /// Returns `true` when the error indicates the selected node is unavailable or no longer suitable,
+    /// meaning the caller should invalidate the cached node and re-discover.
+    var isNodeFailure: Bool {
+        switch self {
+        case .grpcConnectionError, .notLeaderException, .deadlineExceeded, .grpcError, .grpcRuntimeError:
+            true
+        default:
+            false
+        }
+    }
+}
+
 extension KurrentError: Equatable {
     public static func == (lhs: KurrentError, rhs: KurrentError) -> Bool {
         lhs.description == rhs.description

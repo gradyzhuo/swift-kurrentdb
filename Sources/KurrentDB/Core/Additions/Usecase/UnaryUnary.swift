@@ -22,7 +22,13 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
 
     package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Response {
         let node = try await selector.select()
-        return try await perform(node: node, callOptions: callOptions)
+        do throws(KurrentError) {
+            return try await perform(node: node, callOptions: callOptions)
+        } catch let error where error.isNodeFailure {
+            await selector.invalidate()
+            let retryNode = try await selector.select()
+            return try await perform(node: retryNode, callOptions: callOptions)
+        }
     }
 
     package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
