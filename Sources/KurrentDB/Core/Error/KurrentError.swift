@@ -184,28 +184,62 @@ extension Error where Self: Equatable {
 }
 
 extension RPCError {
-    
     func rethrow(usage: String) throws(KurrentError) {
-        
-        let exception = metadata.first(where: { $0.key == "exception" })?.value
-        switch exception {
-        case "stream-deleted":
-            let streamName = metadata.first(where: { $0.key == "stream-name" })?.value.encoded() ?? "unknown"
-            throw .resourceDeleted(resource: streamName)
-        default:
-            if let cause = cause as? NIOCore.IOError {
-                try cause.rethrow(usage: usage, origin: self)
-            } else {
-                throw .grpcError(cause: self)
+        // 1. Check metadata exception (server-specific error types)
+        if let exception = metadata.first(where: { $0.key == "exception" })?.value {
+            switch exception {
+            case "stream-deleted":
+                let streamName = metadata.first(where: { $0.key == "stream-name" })?.value.encoded() ?? "unknown"
+                throw .resourceDeleted(resource: streamName)
+            default:
+                break
             }
         }
+
+        // 2. Map gRPC status codes to specific KurrentError cases
+        if code == .deadlineExceeded {
+            throw .deadlineExceeded
+        } else if code == .unauthenticated || code == .permissionDenied {
+            throw .accessDenied
+        } else if code == .notFound {
+            throw .resourceNotFound(reason: message)
+        } else if code == .alreadyExists {
+            throw .resourceAlreadyExists
+        } else if code == .unavailable {
+            if let ioError = cause as? NIOCore.IOError {
+                try ioError.rethrow(usage: usage, origin: self)
+            }
+            throw .grpcConnectionError(cause: self)
+        } else if code == .cancelled {
+            throw .connectionClosed
+        } else if code == .invalidArgument || code == .outOfRange {
+            throw .illegalStateError(reason: message)
+        } else if code == .internalError || code == .dataLoss {
+            throw .serverError(message)
+        }
+
+        // 3. Fallback: check message content for server-embedded error type
+        if message.contains("NotFound") {
+            throw .resourceNotFound(reason: message)
+        }
+        if message.contains("Conflict") || message.contains("AlreadyExists") {
+            throw .resourceAlreadyExists
+        }
+
+        // 4. Check IOError cause (connection refused etc.)
+        if let ioError = cause as? NIOCore.IOError {
+            try ioError.rethrow(usage: usage, origin: self)
+        }
+
+        throw .grpcError(cause: self)
     }
 }
 
 extension IOError {
     func rethrow(usage: String, origin: RPCError) throws(KurrentError) {
         switch errnoCode {
-        case 61:
+        case 61,   // macOS: ECONNREFUSED
+             111:  // Linux: ECONNREFUSED
             throw .grpcConnectionError(cause: origin)
         default:
             throw .internalClientError(reason: "`\(usage)` failed, full error: \(origin).")
