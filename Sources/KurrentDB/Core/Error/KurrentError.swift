@@ -218,23 +218,19 @@ extension RPCError {
         case .internalError, .dataLoss:
             throw .serverError(message)
         default:
-            break
+            // Fallback: check message content for server-embedded error type
+            if message.contains("NotFound") {
+                throw .resourceNotFound(reason: message)
+            }
+            if message.contains("Conflict") || message.contains("AlreadyExists") {
+                throw .resourceAlreadyExists
+            }
+            // Check IOError cause (connection refused etc.)
+            if let ioError = cause as? NIOCore.IOError {
+                try ioError.rethrow(usage: usage, origin: self)
+            }
+            throw .grpcError(cause: self)
         }
-
-        // 3. Fallback: check message content for server-embedded error type
-        if message.contains("NotFound") {
-            throw .resourceNotFound(reason: message)
-        }
-        if message.contains("Conflict") || message.contains("AlreadyExists") {
-            throw .resourceAlreadyExists
-        }
-
-        // 4. Check IOError cause (connection refused etc.)
-        if let ioError = cause as? NIOCore.IOError {
-            try ioError.rethrow(usage: usage, origin: self)
-        }
-
-        throw .grpcError(cause: self)
     }
 }
 
