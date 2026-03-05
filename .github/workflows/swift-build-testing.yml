@@ -29,7 +29,7 @@ jobs:
       - uses: sersoft-gmbh/swift-coverage-action@v4
         id: coverage-files
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
