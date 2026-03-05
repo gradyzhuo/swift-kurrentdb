@@ -210,25 +210,28 @@ extension RPCError {
         }
 
         // 2. Map gRPC status codes to specific KurrentError cases
-        if code == .deadlineExceeded {
+        switch code {
+        case .deadlineExceeded:
             throw .deadlineExceeded
-        } else if code == .unauthenticated || code == .permissionDenied {
+        case .unauthenticated, .permissionDenied:
             throw .accessDenied
-        } else if code == .notFound {
+        case .notFound:
             throw .resourceNotFound(reason: message)
-        } else if code == .alreadyExists {
+        case .alreadyExists:
             throw .resourceAlreadyExists
-        } else if code == .unavailable {
+        case .unavailable:
             if let ioError = cause as? NIOCore.IOError {
                 try ioError.rethrow(usage: usage, origin: self)
             }
             throw .grpcConnectionError(cause: self)
-        } else if code == .cancelled {
+        case .cancelled:
             throw .connectionClosed
-        } else if code == .invalidArgument || code == .outOfRange {
+        case .invalidArgument, .outOfRange:
             throw .illegalStateError(reason: message)
-        } else if code == .internalError || code == .dataLoss {
+        case .internalError, .dataLoss:
             throw .serverError(message)
+        default:
+            break
         }
 
         // 3. Fallback: check message content for server-embedded error type
