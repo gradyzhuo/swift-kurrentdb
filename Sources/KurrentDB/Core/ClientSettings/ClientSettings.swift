@@ -89,6 +89,8 @@ public struct ClientSettings: Sendable {
     public var authentication: Authentication?
     public var discoveryInterval: Duration
     public var maxDiscoveryAttempts: UInt16
+    public var nodeCacheTTL: Duration
+    public var operationRetryPolicy: OperationRetryPolicy
 
     public init(
         clusterMode: TopologyClusterMode? = nil,
@@ -102,7 +104,15 @@ public struct ClientSettings: Sendable {
         keepAlive: KeepAlive = .default,
         authentication: Authentication? = nil,
         discoveryInterval: Duration = .microseconds(100),
-        maxDiscoveryAttempts: UInt16 = 10
+        maxDiscoveryAttempts: UInt16 = 10,
+        nodeCacheTTL: Duration = .seconds(30),
+        operationRetryPolicy: OperationRetryPolicy = OperationRetryPolicy(
+            maxAttempts: 2,
+            initialDelay: .zero,
+            maxDelay: .zero,
+            multiplier: 1.0,
+            jitter: .none
+        )
     ) {
         self.certificates = certificates
         self.nodePreference = nodePreference
@@ -115,6 +125,8 @@ public struct ClientSettings: Sendable {
         self.authentication = authentication
         self.discoveryInterval = discoveryInterval
         self.maxDiscoveryAttempts = maxDiscoveryAttempts
+        self.nodeCacheTTL = nodeCacheTTL
+        self.operationRetryPolicy = operationRetryPolicy
 
         if let clusterMode {
             switch clusterMode {
@@ -410,6 +422,20 @@ extension ClientSettings: Buildable {
     public func maxDiscoveryAttempts(_ maxDiscoveryAttempts: UInt16) -> Self {
         withCopy {
             $0.maxDiscoveryAttempts = maxDiscoveryAttempts
+        }
+    }
+
+    @discardableResult
+    public func nodeCacheTTL(_ ttl: Duration) -> Self {
+        withCopy {
+            $0.nodeCacheTTL = ttl
+        }
+    }
+
+    @discardableResult
+    public func operationRetryPolicy(_ policy: OperationRetryPolicy) -> Self {
+        withCopy {
+            $0.operationRetryPolicy = policy
         }
     }
 }

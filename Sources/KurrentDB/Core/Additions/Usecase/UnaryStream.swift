@@ -11,13 +11,12 @@ import GRPCNIOTransportHTTP2Posix
 
 extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
     package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Responses {
-        let node = try await selector.select()
-        do throws(KurrentError) {
-            return try await perform(node: node, callOptions: callOptions)
-        } catch let error where error.isNodeFailure {
-            await selector.invalidate()
-            let retryNode = try await selector.select()
-            return try await perform(node: retryNode, callOptions: callOptions)
+        try await withRetry(
+            policy: selector.retryPolicy,
+            selectNode: { try await selector.select() },
+            invalidate: { await selector.invalidate() }
+        ) { node in
+            try await perform(node: node, callOptions: callOptions)
         }
     }
     
