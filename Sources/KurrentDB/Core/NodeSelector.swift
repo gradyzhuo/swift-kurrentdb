@@ -22,6 +22,13 @@ public actor NodeSelector: Sendable {
         discover = .init(settings: settings, previousCandidates: [])
     }
 
+    /// The operation retry policy from the client settings.
+    /// Declared `nonisolated` because `settings` is an immutable `let` of a `Sendable` type,
+    /// so it is safe to read without actor isolation.
+    nonisolated var retryPolicy: OperationRetryPolicy {
+        settings.operationRetryPolicy
+    }
+
     public func select() async throws(KurrentError) -> Node {
         if let node = selectedNode, let expiry = selectedNodeExpiry, Date.now < expiry {
             return node
@@ -33,7 +40,7 @@ public actor NodeSelector: Sendable {
             return node
         }
         self.selectedNode = node
-        self.selectedNodeExpiry = Date.now.addingTimeInterval(30)
+        self.selectedNodeExpiry = Date.now.addingTimeInterval(settings.nodeCacheTTL.timeInterval)
         return node
     }
 
