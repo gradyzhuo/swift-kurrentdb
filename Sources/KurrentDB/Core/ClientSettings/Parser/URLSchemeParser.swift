@@ -17,7 +17,7 @@ class URLSchemeParser: ConnctionStringParser {
 
     lazy var regex: RegexType = Regex {
         Capture(as: _scheme) {
-            OneOrMore(.any)
+            OneOrMore(.any.subtracting(.anyOf(":")))
         }
         transform: {
             String($0)

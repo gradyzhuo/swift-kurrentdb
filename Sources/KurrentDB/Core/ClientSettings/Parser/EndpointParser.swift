@@ -79,9 +79,11 @@ class EndpointParser: ConnctionStringParser {
     let hostRegex = Regex {
         Anchor.wordBoundary
         OneOrMore {
+            // RFC 1123: hostname labels may start with a letter or digit
             ChoiceOf {
                 "A" ... "Z"
                 "a" ... "z"
+                "0" ... "9"
             }
             ZeroOrMore {
                 One(.word.subtracting(.anyOf(":?=&")))
@@ -122,7 +124,11 @@ class EndpointParser: ConnctionStringParser {
 
     func parse(_ connectionString: String) -> Result? {
         var connectionString = connectionString
-        if let atIndex = connectionString.firstIndex(of: "@") {
+        // Only look for '@' in the authority section (before '?' query string)
+        // to avoid incorrectly stripping when query param values contain '@'
+        let queryStart = connectionString.firstIndex(of: "?") ?? connectionString.endIndex
+        let authority = connectionString[..<queryStart]
+        if let atIndex = authority.firstIndex(of: "@") {
             let range = connectionString.startIndex ..< atIndex
             connectionString.replaceSubrange(range, with: "")
         }
