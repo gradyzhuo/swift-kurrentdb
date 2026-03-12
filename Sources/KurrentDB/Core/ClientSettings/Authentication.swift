@@ -7,6 +7,7 @@
 
 public enum Authentication: Sendable {
     case credentials(username: String, password: String)
+    case x509(certFile: String, keyFile: String)
 
     package func makeBasicAuthHeader() throws(KurrentError) -> String {
         switch self {
@@ -16,6 +17,8 @@ public enum Authentication: Sendable {
                 throw .encodingError(message: "\(credentialString) encoding failed.", encoding: .ascii)
             }
             return "Basic \(data.base64EncodedString())"
+        case .x509:
+            throw .internalParsingError(reason: "X.509 authentication does not use a Basic auth header.")
         }
     }
 }
