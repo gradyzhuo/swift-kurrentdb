@@ -234,31 +234,39 @@ extension ClientSettings {
         }
 
         let nodePreference = queryItems["nodepreference"]?.value.flatMap {
-            NodePreference(rawValue: $0)
+            NodePreference(rawValue: $0.lowercased())
         } ?? .leader
 
         let gossipTimeout: Duration = queryItems["gossiptimeout"]
             .flatMap({ $0.value.flatMap { Int64($0) } })
-            .map { .microseconds($0) } ?? .seconds(3)
+            .map { .seconds($0) } ?? .seconds(5)
 
         let maxDiscoveryAttempts: UInt16 = queryItems["maxdiscoverattempts"]
             .flatMap({ $0.value.flatMap { UInt16($0) } }) ?? 10
 
         let discoveryInterval: Duration = queryItems["discoveryinterval"]
             .flatMap({ $0.value.flatMap { Int64($0) } })
-            .map { .microseconds($0) } ?? .microseconds(100)
+            .map { .milliseconds($0) } ?? .milliseconds(100)
 
-        let authentication = userCredentialParser.parse(connectionString)
+        let authentication: Authentication?
+        if let certFile = queryItems["usercertfile"].flatMap(\.value),
+           let keyFile = queryItems["userkeyfile"].flatMap(\.value)
+        {
+            authentication = .x509(certFile: certFile, keyFile: keyFile)
+        } else {
+            authentication = userCredentialParser.parse(connectionString)
+        }
 
         let keepAlive: KeepAlive = if let keepAliveInterval: UInt64 = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
                                       let keepAliveTimeout: UInt64 = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
         {
-            .init(intervalMs: keepAliveInterval, timeoutMs: keepAliveTimeout)
+            // Connection string values are in seconds; convert to milliseconds
+            .init(intervalMs: keepAliveInterval * 1000, timeoutMs: keepAliveTimeout * 1000)
         } else {
             .default
         }
 
-        let connectionName = queryItems["connectionanme"]?.value
+        let connectionName = queryItems["connectionname"]?.value
 
         let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
 
