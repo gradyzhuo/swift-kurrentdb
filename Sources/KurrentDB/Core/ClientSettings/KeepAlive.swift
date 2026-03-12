@@ -8,7 +8,7 @@
 import Foundation
 
 public struct KeepAlive: Sendable {
-    public static let `default`: Self = .init(interval: .microseconds(10000), timeout: .microseconds(10000))
+    public static let `default`: Self = .init(interval: .seconds(10), timeout: .seconds(10))
 
     var interval: Duration
     var timeout: Duration
@@ -19,7 +19,7 @@ public struct KeepAlive: Sendable {
     }
 
     init(intervalMs interval: UInt64, timeoutMs timeout: UInt64) {
-        self.interval = .microseconds(interval)
-        self.timeout = .microseconds(timeout)
+        self.interval = .milliseconds(interval)
+        self.timeout = .milliseconds(timeout)
     }
 }
