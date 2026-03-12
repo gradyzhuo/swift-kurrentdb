@@ -78,10 +78,41 @@ class EndpointParser: ConnctionStringParser {
 
     let hostRegex = Regex {
         Anchor.wordBoundary
-        OneOrMore {
+        ChoiceOf {
+            // Traditional: first label starts with a letter
+            Regex {
+                ChoiceOf {
+                    "A" ... "Z"
+                    "a" ... "z"
+                }
+                ZeroOrMore {
+                    One(.word.subtracting(.anyOf(":?=&")))
+                }
+                Optionally {
+                    One(.anyOf(".-_"))
+                }
+            }
+            // RFC 1123: first label starts with digit(s) but must contain a letter
+            // e.g. "8node.org" is valid, but "192.168" (all-digit labels) is not
+            Regex {
+                OneOrMore(.digit)
+                ChoiceOf {
+                    "A" ... "Z"
+                    "a" ... "z"
+                }
+                ZeroOrMore {
+                    One(.word.subtracting(.anyOf(":?=&")))
+                }
+                Optionally {
+                    One(.anyOf(".-_"))
+                }
+            }
+        }
+        ZeroOrMore {
             ChoiceOf {
                 "A" ... "Z"
                 "a" ... "z"
+                "0" ... "9"
             }
             ZeroOrMore {
                 One(.word.subtracting(.anyOf(":?=&")))
