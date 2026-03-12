@@ -79,11 +79,9 @@ class EndpointParser: ConnctionStringParser {
     let hostRegex = Regex {
         Anchor.wordBoundary
         OneOrMore {
-            // RFC 1123: hostname labels may start with a letter or digit
             ChoiceOf {
                 "A" ... "Z"
                 "a" ... "z"
-                "0" ... "9"
             }
             ZeroOrMore {
                 One(.word.subtracting(.anyOf(":?=&")))
