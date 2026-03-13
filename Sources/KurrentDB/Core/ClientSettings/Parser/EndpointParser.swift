@@ -162,7 +162,10 @@ class EndpointParser: ConnctionStringParser {
             connectionString.replaceSubrange(range, with: "")
         }
 
-        let matches = connectionString.matches(of: regex)
+        // Only scan the authority section (before '?') so that '@' or ','
+        // inside query parameter values are not mistaken for endpoint delimiters
+        let authorityEnd = connectionString.firstIndex(of: "?") ?? connectionString.endIndex
+        let matches = connectionString[..<authorityEnd].matches(of: regex)
 
         return matches.map {
             .init(host: $0[_host], port: $0[_port])
