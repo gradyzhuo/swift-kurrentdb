@@ -8,9 +8,7 @@
 // MARK: - User Management Factory Methods
 
 extension KurrentDBClient {
-    /// Accesses the user management service for creating new users.
-    ///
-    /// ## Example
+    /// Accesses the user management service for cluster-wide user operations (create, list).
     ///
     /// ```swift
     /// let user = try await client.users.create(
@@ -21,25 +19,22 @@ extension KurrentDBClient {
     /// )
     /// ```
     ///
-    /// - SeeAlso: `user(_:)`
+    /// - SeeAlso: ``user(_:)``
     public var users: Users<AllUsersTarget> {
         .init(target: .all, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 
     /// Returns a users interface for a specific user by login name.
     ///
-    /// ## Example
+    /// Supports operations like enable, disable, update, change password, and details.
     ///
     /// ```swift
+    /// let details = try await client.user("jane_doe").details()
     /// try await client.user("jane_doe").enable()
-    /// try await client.user("jane_doe").details()
     /// ```
     ///
     /// - Parameter loginName: The unique login name of the target user.
-    ///
-    /// - Returns: A configured `Users<SpecifiedUserTarget>` instance for the specified user.
-    ///
-    /// - SeeAlso: `users`
+    /// - Returns: A configured ``Users`` instance scoped to the specified user.
     public func user(_ loginName: String) -> Users<SpecifiedUserTarget> {
         .init(target: .specified(loginName), selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
