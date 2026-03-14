@@ -46,24 +46,24 @@ struct StreamsTargetTests: Sendable {
         #expect(target.identifier.encoding == .utf8)
     }
 
-    // MARK: - AllStreams Tests
+    // MARK: - AllStreamsTarget Tests
 
-    @Test("AllStreams should be created via static property")
-    func testAllStreams() {
-        let target = AllStreams.all
+    @Test("AllStreamsTarget should be created via static property")
+    func testAllStreamsTarget() {
+        let target = AllStreamsTarget.all
 
         // Verify type at compile time - if this compiles, the type is correct
-        #expect(type(of: target) == AllStreams.self)
+        #expect(type(of: target) == AllStreamsTarget.self)
     }
 
-    // MARK: - MultiStreams Tests
+    // MARK: - MultiStreamsTarget Tests
 
-    @Test("MultiStreams should be created via static property")
-    func testMultiStreams() {
-        let target = MultiStreams.multiple
+    @Test("MultiStreamsTarget should be created via static property")
+    func testMultiStreamsTarget() {
+        let target = MultiStreamsTarget.multiple
 
         // Verify type at compile time - if this compiles, the type is correct
-        #expect(type(of: target) == MultiStreams.self)
+        #expect(type(of: target) == MultiStreamsTarget.self)
     }
 
     // MARK: - ProjectionStream Tests
@@ -119,8 +119,8 @@ struct StreamsTargetTests: Sendable {
         #expect(streams.target.identifier.name == "test-stream")
     }
 
-    @Test("KurrentDBClient should accept AllStreams target")
-    func testClientWithAllStreams() async {
+    @Test("KurrentDBClient should accept AllStreamsTarget target")
+    func testClientWithAllStreamsTarget() async {
         let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
             .secure(true)
             .tlsVerifyCert(false)
@@ -131,12 +131,12 @@ struct StreamsTargetTests: Sendable {
         let streams = client.streams(of: .all)
 
         // Verify the target type
-        #expect(type(of: streams.target) == AllStreams.self)
+        #expect(type(of: streams.target) == AllStreamsTarget.self)
     }
 
-    @Test("KurrentDBClient should accept MultiStreams target",
+    @Test("KurrentDBClient should accept MultiStreamsTarget target",
           .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_SUPPORTS_MULTI_STREAMS"] == "true"))
-    func testClientWithMultiStreams() async {
+    func testClientWithMultiStreamsTarget() async {
         let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
             .secure(true)
             .tlsVerifyCert(false)
@@ -147,7 +147,7 @@ struct StreamsTargetTests: Sendable {
         let streams = client.streams(of: .multiple)
 
         // Verify the target type
-        #expect(type(of: streams.target) == MultiStreams.self)
+        #expect(type(of: streams.target) == MultiStreamsTarget.self)
     }
 
     @Test("KurrentDBClient should accept ProjectionStream target by event type")
@@ -193,11 +193,11 @@ struct StreamsTargetTests: Sendable {
 
         // Test allStreams convenience property
         let allStreams = client.allStreams
-        #expect(type(of: allStreams.target) == AllStreams.self)
+        #expect(type(of: allStreams.target) == AllStreamsTarget.self)
 
         // Test multiStreams convenience property
         let multiStreams = client.multiStreams
-        #expect(type(of: multiStreams.target) == MultiStreams.self)
+        #expect(type(of: multiStreams.target) == MultiStreamsTarget.self)
     }
 
     // MARK: - Type Safety Tests
@@ -205,13 +205,13 @@ struct StreamsTargetTests: Sendable {
     @Test("Different StreamsTarget types should be distinct")
     func testStreamsTargetTypeDistinction() {
         let specified: SpecifiedStream = .specified("stream")
-        let all: AllStreams = .all
-        let multiple: MultiStreams = .multiple
+        let all: AllStreamsTarget = .all
+        let multiple: MultiStreamsTarget = .multiple
 
         // These should all be different types
         #expect(type(of: specified) == SpecifiedStream.self)
-        #expect(type(of: all) == AllStreams.self)
-        #expect(type(of: multiple) == MultiStreams.self)
+        #expect(type(of: all) == AllStreamsTarget.self)
+        #expect(type(of: multiple) == MultiStreamsTarget.self)
     }
 
     @Test("SpecifiedStreamTarget subtypes should have identifiers")

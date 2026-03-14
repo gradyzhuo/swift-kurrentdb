@@ -64,7 +64,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     }
 }
 
-extension Streams where Target == AllStreams {
+extension Streams where Target == AllStreamsTarget {
     public func persistentSubscriptions(group: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget> {
         let target = AllStreamPersistentSubscriptionTarget(group: group)
         return .init(target: target, selector: selector, callOptions: callOptions)

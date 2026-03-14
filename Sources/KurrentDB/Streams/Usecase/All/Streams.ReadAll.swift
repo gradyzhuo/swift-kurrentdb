@@ -8,7 +8,7 @@
 import GRPCCore
 import GRPCEncapsulates
 
-extension Streams where Target == AllStreams {
+extension Streams where Target == AllStreamsTarget {
     public struct ReadAll: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
@@ -65,7 +65,7 @@ extension Streams where Target == AllStreams {
     }
 }
 
-extension Streams.ReadAll where Target == AllStreams {
+extension Streams.ReadAll where Target == AllStreamsTarget {
     public struct CursorPointer: Sendable {
         public let position: StreamPosition
         public let direction: Direction

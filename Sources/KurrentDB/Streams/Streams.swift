@@ -18,7 +18,7 @@ import NIO
 /// subscribing, deleting, and managing metadata. It is a concrete implementation of `GRPCConcreteService`.
 ///
 /// The type parameter `Target` determines the scope of the stream, allowing either a specific stream
-/// (`SpecifiedStream`), a projection stream (`ProjectionStream`), or all streams (`AllStreams`).
+/// (`SpecifiedStream`), a projection stream (`ProjectionStream`), or all streams (`AllStreamsTarget`).
 ///
 /// ## Usage
 ///
@@ -30,7 +30,7 @@ import NIO
 ///
 /// Reading from all streams:
 /// ```swift
-/// let allStreams = Streams(target: StreamsTarget.all, settings: clientSettings)
+/// let allStreams = Streams(target: StreamsTarget.all, settings: clientSettings) // AllStreamsTarget
 /// let responses = try await allStreams.read(cursor: .start)
 /// for try await response in responses {
 ///     print(response)
@@ -74,7 +74,7 @@ public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// Initializes a `Streams` instance with a target and settings.
     ///
     /// - Parameters:
-    ///   - target: The stream target (e.g., `SpecifiedStream`, `ProjectionStream`, or `AllStreams`).
+    ///   - target: The stream target (e.g., `SpecifiedStream`, `ProjectionStream`, or `AllStreamsTarget`).
     ///   - settings: The client settings for gRPC communication.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.

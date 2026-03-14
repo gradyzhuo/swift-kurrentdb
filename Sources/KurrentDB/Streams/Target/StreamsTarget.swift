@@ -11,16 +11,16 @@
 ///
 /// The target identifies which streams the operation applies to:
 /// - `SpecifiedStream`: Operates on a specific named stream
-/// - `AllStreams`: Operates on the global `$all` stream containing all events
-/// - `MultiStreams`: Operates on multiple streams simultaneously
+/// - `AllStreamsTarget`: Operates on the global `$all` stream containing all events
+/// - `MultiStreamsTarget`: Operates on multiple streams simultaneously
 /// - `ProjectionStream`: Operates on system projection streams
 ///
 /// ## 2. Constrains Available Operations (What)
 ///
 /// Through protocol composition, different target types enable different capabilities:
 /// - Targets conforming to `SpecifiedStreamTarget` support append, read, delete, and subscription operations
-/// - `AllStreams` only supports read and subscription operations (cannot append to `$all`)
-/// - `MultiStreams` only supports batch append operations
+/// - `AllStreamsTarget` only supports read and subscription operations (cannot append to `$all`)
+/// - `MultiStreamsTarget` only supports batch append operations
 /// - The type system prevents invalid operations at compile time
 ///
 /// ## Usage
@@ -35,5 +35,5 @@
 /// ```
 ///
 /// - Note: This protocol is marked as `Sendable`.
-/// - SeeAlso: `SpecifiedStreamTarget`, `AllStreams`, `MultiStreams`, `ProjectionStream`
+/// - SeeAlso: `SpecifiedStreamTarget`, `AllStreamsTarget`, `MultiStreamsTarget`, `ProjectionStream`
 public protocol StreamsTarget: Sendable {}

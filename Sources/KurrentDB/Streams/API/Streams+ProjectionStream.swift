@@ -28,7 +28,7 @@ extension Streams where Target == ProjectionStream {
 
 // MARK: - Multiple Streams Operations
 
-extension Streams where Target == MultiStreams {
+extension Streams where Target == MultiStreamsTarget {
     /// Appends a batch of pre-constructed stream events using an append session. (KurrentDB > 25.1)
     ///
     /// Use this when you already have fully-formed `StreamEvent` values (including
