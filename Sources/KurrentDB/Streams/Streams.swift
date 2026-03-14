@@ -17,27 +17,32 @@ import NIO
 /// `Streams` enables interaction with event streams through operations such as appending, reading,
 /// subscribing, deleting, and managing metadata. It is a concrete implementation of `GRPCConcreteService`.
 ///
-/// The type parameter `Target` determines the scope of the stream, allowing either a specific stream
-/// (`SpecifiedStream`), a projection stream (`ProjectionStream`), or all streams (`AllStreamsTarget`).
+/// The type parameter `Target` determines the scope of the stream:
+/// - `SpecifiedStream`: A single named stream
+/// - `AllStreamsTarget`: The global `$all` stream containing all events
+/// - `MultiStreamsTarget`: Batch operations across multiple streams
+/// - `ProjectionStream`: A projection-generated stream
 ///
 /// ## Usage
 ///
-/// Creating a client for a specified stream and appending events:
-/// ```swift
-/// let specifiedStream = Streams(target: StreamsTarget.specified("log.txt"), settings: clientSettings)
-/// try await specifiedStream.append(events: [event])
-/// ```
+/// Obtain a `Streams` instance through `KurrentDBClient`:
 ///
-/// Reading from all streams:
 /// ```swift
-/// let allStreams = Streams(target: StreamsTarget.all, settings: clientSettings) // AllStreamsTarget
-/// let responses = try await allStreams.read(cursor: .start)
+/// let client = KurrentDBClient(settings: .localhost())
+///
+/// // Append to a specific stream
+/// let stream = client.streams(specified: "orders")
+/// try await stream.append(events: [event])
+///
+/// // Read from $all
+/// let responses = try await client.allStreams.read()
 /// for try await response in responses {
 ///     print(response)
 /// }
 /// ```
 ///
-/// - Note: This service relies on **gRPC** and requires a valid `ClientSettings` configuration.
+/// - Note: `Streams` instances are obtained via `KurrentDBClient` factory methods and should not be
+///   constructed directly.
 ///
 /// ### Topics
 /// #### Specific Stream Operations
@@ -71,11 +76,11 @@ public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The target stream, defining the scope of operations (e.g., specific stream or all streams).
     public let target: Target
 
-    /// Initializes a `Streams` instance with a target and settings.
+    /// Initializes a `Streams` instance with a target and node selector.
     ///
     /// - Parameters:
-    ///   - target: The stream target (e.g., `SpecifiedStream`, `ProjectionStream`, or `AllStreamsTarget`).
-    ///   - settings: The client settings for gRPC communication.
+    ///   - target: The stream target (e.g., `SpecifiedStream`, `AllStreamsTarget`, or `MultiStreamsTarget`).
+    ///   - selector: The node selector used to resolve the gRPC connection endpoint.
     ///   - callOptions: The gRPC call options, defaulting to `.defaults`.
     ///   - eventLoopGroup: The event loop group, defaulting to a shared multi-threaded group.
     init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
