@@ -8,44 +8,25 @@
 // MARK: - Server Operations Factory Methods
 
 extension KurrentDBClient {
-    /// Creates an operations interface for a specific target type.
+    /// Creates a server operations interface for the specified target.
     ///
-    /// Returns a type-safe `Operations` instance scoped to the given target.
-    /// The target determines which operations are available at compile time.
-    ///
-    /// ## Available Targets
-    ///
-    /// | Target | Factory | Available Operations |
-    /// |--------|---------|---------------------|
-    /// | `ScavengeOperations` | `.scavenge` | `startScavenge(threadCount:startFromChunk:)` |
-    /// | `ActiveScavenge` | `.activeScavenge(scavengeId:)` | `stopScavenge()` |
-    /// | `SystemOperations` | `.system` | `shutdown()`, `mergeIndexes()`, `restartPersistentSubscriptions()` |
-    /// | `NodeOperations` | `.node` | `resignNode()`, `setNodePriority(priority:)` |
-    ///
-    /// ## Example
+    /// The target determines which operations are available at compile time:
+    /// - `.system` — `shutdown()`, `mergeIndexes()`, `restartPersistentSubscriptions()`
+    /// - `.scavenge` — `startScavenge(threadCount:startFromChunk:)`
+    /// - `.activeScavenge(scavengeId:)` — `stopScavenge()`
+    /// - `.node` — `resignNode()`, `setNodePriority(priority:)`
     ///
     /// ```swift
-    /// // System operations
-    /// try await client.operations(of: .system).shutdown()
     /// try await client.operations(of: .system).mergeIndexes()
-    /// try await client.operations(of: .system).restartPersistentSubscriptions()
     ///
-    /// // Scavenge operations
     /// let response = try await client.operations(of: .scavenge)
     ///     .startScavenge(threadCount: 2, startFromChunk: 0)
     /// try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId))
     ///     .stopScavenge()
-    ///
-    /// // Node operations
-    /// try await client.operations(of: .node).resignNode()
-    /// try await client.operations(of: .node).setNodePriority(priority: 10)
     /// ```
     ///
-    /// - Parameter target: The operations target specifying the scope and available operations.
-    ///
-    /// - Returns: A configured `Operations` instance with methods constrained by the target type.
-    ///
-    /// - SeeAlso: `OperationsTarget`, `ScavengeOperations`, `ActiveScavenge`, `SystemOperations`, `NodeOperations`
+    /// - Parameter target: The operations target specifying scope and available operations.
+    /// - Returns: A configured ``Operations`` instance constrained by the target type.
     public func operations<Target: OperationsTarget>(of target: Target) -> Operations<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }

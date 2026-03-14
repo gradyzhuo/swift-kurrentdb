@@ -5,14 +5,11 @@
 //  Created by Grady Zhuo on 2026/2/25.
 //
 
-/// A protocol that mirrors all public factory properties and methods on `KurrentDBClient`.
+/// A protocol mirroring all public factory methods on ``KurrentDBClient``.
 ///
-/// Conform to this protocol in test doubles or mock objects to enable dependency injection
-/// without depending on a live `KurrentDBClient`. `KurrentDBClient` itself conforms to this
-/// protocol, so production code can accept `any KurrentDBClientProtocol` and tests can pass
-/// a mock implementation.
-///
-/// ## Example: Dependency Injection
+/// Conform to this protocol in test doubles to enable dependency injection without depending
+/// on a live client. ``KurrentDBClient`` itself conforms, so production code can accept
+/// `any KurrentDBClientProtocol` and tests can substitute a mock.
 ///
 /// ```swift
 /// struct OrderService {
@@ -23,63 +20,58 @@
 ///         try await db.streams(specified: "orders").append(events: events)
 ///     }
 /// }
-///
-/// // Production
-/// let service = OrderService(db: KurrentDBClient(settings: .localhost()))
-///
-/// // Tests
-/// struct MockClient: KurrentDBClientProtocol { ... }
-/// let service = OrderService(db: MockClient())
 /// ```
+///
+/// - SeeAlso: ``KurrentDBClient``
 public protocol KurrentDBClientProtocol: Sendable {
 
-    // MARK: - Stream Factories
+    // MARK: - Streams
 
-    /// Creates a type-safe streams interface for the specified target.
+    /// Creates a streams interface for the given target (`.specified(_:)`, `.all`, `.multiple`).
     func streams<Target: StreamsTarget>(of target: Target) -> Streams<Target>
 
     /// Creates a streams interface for a specific stream by name.
     func streams(specified name: String) -> Streams<SpecifiedStream>
 
-    /// Accesses the `$all` stream for global event log operations.
+    /// The `$all` stream for global event log operations (read, subscribe).
     var allStreams: Streams<AllStreamsTarget> { get }
 
-    /// Accesses the multi-streams interface for batch operations across multiple streams.
+    /// Batch operations across multiple streams (requires server 25.1+).
     var multiStreams: Streams<MultiStreamsTarget> { get }
 
-    // MARK: - Persistent Subscription Factories
+    // MARK: - Persistent Subscriptions
 
-    /// Returns a persistent subscriptions interface for cluster-wide operations.
+    /// Cluster-wide persistent subscription operations (list, restart subsystem).
     var allPersistentSubscriptions: PersistentSubscriptions<AllPersistentSubscriptionTarget> { get }
 
     /// Creates a persistent subscriptions interface for a specific target type.
     func persistentSubscriptions<Target: PersistentSubscriptionTarget>(of target: Target) -> PersistentSubscriptions<Target>
 
-    /// Creates a persistent subscriptions interface for a specific stream and group.
+    /// Creates a persistent subscriptions interface for a specific stream and consumer group.
     func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget>
 
-    /// Creates a persistent subscriptions interface filtered by group name across all streams.
+    /// Persistent subscriptions filtered by consumer group name across all streams.
     func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget>
 
-    /// Creates a persistent subscriptions interface filtered by stream name.
+    /// Persistent subscriptions filtered by stream name.
     func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<FilterStreamPersistentSubscriptionTarget>
 
-    // MARK: - User Management
+    // MARK: - Users
 
-    /// Accesses the user management service for operations across all users.
+    /// User management service for cluster-wide operations (create, list).
     var users: Users<AllUsersTarget> { get }
 
-    /// Returns a users interface for a specific user by login name.
+    /// User interface scoped to a specific user by login name.
     func user(_ loginName: String) -> Users<SpecifiedUserTarget>
 
     // MARK: - Server Operations
 
-    /// Creates an operations interface for a specific target type.
+    /// Server operations interface for the given target (`.system`, `.scavenge`, `.node`).
     func operations<Target: OperationsTarget>(of target: Target) -> Operations<Target>
 
     // MARK: - Monitoring
 
-    /// Accesses the cluster monitoring service for health checks and status information.
+    /// Cluster monitoring service for health checks and server statistics.
     var monitoring: Monitoring { get }
 }
 

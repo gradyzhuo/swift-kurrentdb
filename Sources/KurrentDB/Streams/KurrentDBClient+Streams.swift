@@ -8,39 +8,22 @@
 extension KurrentDBClient {
     /// Creates a type-safe streams interface for the specified target.
     ///
-    /// This method returns a `Streams` instance configured for operations on a specific
-    /// stream, the `$all` stream, or multiple streams simultaneously. The returned instance
-    /// inherits the client's node selector, call options, and event loop group for consistent
-    /// behavior across all stream operations.
-    ///
-    /// ## Target Types
-    ///
-    /// - `SpecifiedStream`: Operations on a single named stream
-    /// - `AllStreamsTarget`: Operations on the `$all` stream (global event log)
-    /// - `MultiStreamsTarget`: Batch operations across multiple streams
-    /// - `ProjectionStream`: Operations on projection-generated streams
-    ///
-    /// ## Example
+    /// The target determines the scope and available operations:
+    /// - `.specified(_:)` — single named stream (append, read, subscribe, delete)
+    /// - `.all` — global `$all` stream (read, subscribe)
+    /// - `.multiple` — batch operations across multiple streams (requires server 25.1+)
     ///
     /// ```swift
-    /// // Access a specific stream
-    /// let ordersStream = client.streams(of: .specified("orders"))
-    /// try await ordersStream.append(events: events)
+    /// let orders = client.streams(of: .specified("orders"))
+    /// try await orders.append(events: events)
     ///
-    /// // Access the $all stream
-    /// let allStream = client.streams(of: .all)
-    /// let events = try await allStream.read()
+    /// let allEvents = try await client.streams(of: .all).read()
     /// ```
     ///
-    /// - Parameter target: The stream target defining the scope of operations. Use static
-    ///   factory methods like `.specified(_:)`, `.all`, or `.multiple` to create targets.
+    /// - Parameter target: The stream target. Use static factories like `.specified(_:)`, `.all`, or `.multiple`.
+    /// - Returns: A configured ``Streams`` instance ready for stream operations.
     ///
-    /// - Returns: A configured `Streams<Target>` instance ready for stream operations.
-    ///
-    /// - Note: This method creates a new streams instance on each call. For repeated operations
-    ///   on the same stream, consider storing the returned instance to avoid recreation overhead.
-    ///
-    /// - SeeAlso: `StreamsTarget`, `Streams`, `SpecifiedStream`, `AllStreamsTarget`
+    /// - SeeAlso: ``StreamsTarget``, ``SpecifiedStream``, ``AllStreamsTarget``, ``MultiStreamsTarget``
     public func streams<Target: StreamsTarget>(of target: Target) -> Streams<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
