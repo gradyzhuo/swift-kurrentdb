@@ -11,7 +11,7 @@ import Logging
 import Testing
 
 @Suite("The tests of AllStream", .serialized)
-struct AllStreamsTests: Sendable {
+struct AllStreamsTargetTests: Sendable {
     let settings: ClientSettings
 
     init() {

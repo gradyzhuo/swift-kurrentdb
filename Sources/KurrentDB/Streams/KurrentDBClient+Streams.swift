@@ -16,8 +16,8 @@ extension KurrentDBClient {
     /// ## Target Types
     ///
     /// - `SpecifiedStream`: Operations on a single named stream
-    /// - `AllStreams`: Operations on the `$all` stream (global event log)
-    /// - `MultiStreams`: Batch operations across multiple streams
+    /// - `AllStreamsTarget`: Operations on the `$all` stream (global event log)
+    /// - `MultiStreamsTarget`: Batch operations across multiple streams
     /// - `ProjectionStream`: Operations on projection-generated streams
     ///
     /// ## Example
@@ -40,7 +40,7 @@ extension KurrentDBClient {
     /// - Note: This method creates a new streams instance on each call. For repeated operations
     ///   on the same stream, consider storing the returned instance to avoid recreation overhead.
     ///
-    /// - SeeAlso: `StreamsTarget`, `Streams`, `SpecifiedStream`, `AllStreams`
+    /// - SeeAlso: `StreamsTarget`, `Streams`, `SpecifiedStream`, `AllStreamsTarget`
     public func streams<Target: StreamsTarget>(of target: Target) -> Streams<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
@@ -60,24 +60,24 @@ extension KurrentDBClient {
 
     /// Accesses the multi-streams interface for batch operations across multiple streams.
     ///
-    /// - Returns: A `Streams<MultiStreams>` instance for multi-stream operations.
+    /// - Returns: A `Streams<MultiStreamsTarget>` instance for multi-stream operations.
     ///
     /// - Note: Multi-stream operations require KurrentDB server version 25.1 or later.
     ///
-    /// - SeeAlso: `MultiStreams`
-    public var multiStreams: Streams<MultiStreams> {
+    /// - SeeAlso: `MultiStreamsTarget`
+    public var multiStreams: Streams<MultiStreamsTarget> {
         streams(of: .multiple)
     }
 
     /// Accesses the `$all` stream for global event log operations.
     ///
-    /// - Returns: A `Streams<AllStreams>` instance for `$all` stream operations.
+    /// - Returns: A `Streams<AllStreamsTarget>` instance for `$all` stream operations.
     ///
     /// - Warning: Reading from `$all` can return a very large number of events. Always
     ///   use appropriate filtering and pagination when working with the global log.
     ///
-    /// - SeeAlso: `AllStreams`
-    public var allStreams: Streams<AllStreams> {
+    /// - SeeAlso: `AllStreamsTarget`
+    public var allStreams: Streams<AllStreamsTarget> {
         streams(of: .all)
     }
 }

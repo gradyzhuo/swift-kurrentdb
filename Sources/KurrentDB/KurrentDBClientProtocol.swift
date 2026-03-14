@@ -42,10 +42,10 @@ public protocol KurrentDBClientProtocol: Sendable {
     func streams(specified name: String) -> Streams<SpecifiedStream>
 
     /// Accesses the `$all` stream for global event log operations.
-    var allStreams: Streams<AllStreams> { get }
+    var allStreams: Streams<AllStreamsTarget> { get }
 
     /// Accesses the multi-streams interface for batch operations across multiple streams.
-    var multiStreams: Streams<MultiStreams> { get }
+    var multiStreams: Streams<MultiStreamsTarget> { get }
 
     // MARK: - Persistent Subscription Factories
 

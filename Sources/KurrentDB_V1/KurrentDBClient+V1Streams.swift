@@ -48,7 +48,7 @@ extension KurrentDBClient {
 
     /// Appends events to multiple streams in a single batch operation.
     @discardableResult
-    public func appendToStreams(events: [StreamEvent]) async throws(KurrentError) -> Streams<MultiStreams>.AppendSession.Response {
+    public func appendToStreams(events: [StreamEvent]) async throws(KurrentError) -> Streams<MultiStreamsTarget>.AppendSession.Response {
         try await streams(of: .multiple).append(events: events)
     }
 
@@ -71,7 +71,7 @@ extension KurrentDBClient {
     // MARK: - Stream Read Operations
 
     /// Reads events from the `$all` stream (global event log).
-    public func readAllStreams(configure: @Sendable (StreamsReadAllOptions) -> StreamsReadAllOptions = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.ReadAll.Responses {
+    public func readAllStreams(configure: @Sendable (StreamsReadAllOptions) -> StreamsReadAllOptions = { $0 }) async throws(KurrentError) -> Streams<AllStreamsTarget>.ReadAll.Responses {
         try await streams(of: .all).read {
             $0 = .init(from: configure(.init()))
         }
@@ -95,7 +95,7 @@ extension KurrentDBClient {
     // MARK: - Stream Subscription Operations
 
     /// Creates a real-time subscription to the `$all` stream.
-    public func subscribeAllStreams(configure: @Sendable (StreamsSubscribeAllOptions) -> StreamsSubscribeAllOptions = { $0 }) async throws(KurrentError) -> Streams<AllStreams>.Subscription {
+    public func subscribeAllStreams(configure: @Sendable (StreamsSubscribeAllOptions) -> StreamsSubscribeAllOptions = { $0 }) async throws(KurrentError) -> Streams<AllStreamsTarget>.Subscription {
         try await streams(of: .all).subscribe {
             $0 = .init(from: configure(.init()))
         }

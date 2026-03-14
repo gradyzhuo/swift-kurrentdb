@@ -112,12 +112,12 @@ final class MockKurrentDBClient: KurrentDBClientProtocol, Sendable {
         return Streams(target: .specified(name), selector: selector)
     }
 
-    var allStreams: Streams<AllStreams> {
+    var allStreams: Streams<AllStreamsTarget> {
         state.withLock { $0.streamsCalls.append(.all) }
         return Streams(target: .all, selector: selector)
     }
 
-    var multiStreams: Streams<MultiStreams> {
+    var multiStreams: Streams<MultiStreamsTarget> {
         state.withLock { $0.streamsCalls.append(.multiple) }
         return Streams(target: .multiple, selector: selector)
     }

@@ -9,7 +9,7 @@
 // MARK: - All Streams Operations
 
 /// Provides operations for all streams.
-extension Streams where Target == AllStreams {
+extension Streams where Target == AllStreamsTarget {
     /// Reads events from all available streams.
     ///
     /// - Parameter configure: A closure to configure the read operation, such as filters or limits. Defaults to no-op.

@@ -21,7 +21,7 @@ struct OrderEventService {
         db.streams(specified: "orders-\(customerId)")
     }
 
-    func allEventsStream() -> Streams<AllStreams> {
+    func allEventsStream() -> Streams<AllStreamsTarget> {
         db.allStreams
     }
 }

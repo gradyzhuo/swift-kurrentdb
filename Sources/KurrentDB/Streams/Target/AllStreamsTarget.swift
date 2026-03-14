@@ -1,14 +1,14 @@
 //
-//  AllStreams.swift
+//  AllStreamsTarget.swift
 //  KurrentDB
 //
 
 /// Represents the global `$all` stream containing all events across all streams.
-public struct AllStreams: StreamsTarget {}
+public struct AllStreamsTarget: StreamsTarget {}
 
-extension StreamsTarget where Self == AllStreams {
+extension StreamsTarget where Self == AllStreamsTarget {
     /// Returns a target representing the `$all` stream.
-    public static var all: AllStreams {
+    public static var all: AllStreamsTarget {
         .init()
     }
 }
