@@ -48,9 +48,8 @@ dependencies: [
 
 > **2.0.0 Beta available** — A major new release is in active development.
 > The 2.x API introduces a target-based design with improved type safety and composability.
-> To try it early:
 > ```swift
-> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0-beta.3")
+> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0")
 > ```
 > See the [Migration Guide](#migration-guide) below for what's changed.
 

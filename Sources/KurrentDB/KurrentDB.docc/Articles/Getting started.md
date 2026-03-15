@@ -10,7 +10,7 @@ The Swift Package Manager is the preferred way to get EventStoreDB. Simply add t
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0-beta.0")
+  .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0")
 ]
 ```
 ...and depend on "KurrentDB" in the necessary targets:
