@@ -67,23 +67,27 @@ extension PersistentSubscriptions.AllStream {
             let writer = PersistentSubscriptions.Subscription.Writer()
             let requestMessages = try requestMessages()
             writer.write(messages: requestMessages)
-            Task {
-                let client = ServiceClient(wrapping: connection)
-                try await client.read(metadata: metadata, options: callOptions) {
-                    try await $0.write(contentsOf: writer.sender)
-                } onResponse: {
-                    do {
-                        for try await message in $0.messages {
-                            let response = try handle(message: message)
-                            continuation.yield(response)
+            let task = Task {
+                do {
+                    let client = ServiceClient(wrapping: connection)
+                    try await client.read(metadata: metadata, options: callOptions) {
+                        try await $0.write(contentsOf: writer.sender)
+                    } onResponse: {
+                        do {
+                            for try await message in $0.messages {
+                                let response = try handle(message: message)
+                                continuation.yield(response)
+                            }
+                            continuation.finish()
+                        } catch {
+                            continuation.finish(throwing: error)
                         }
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
                     }
+                } catch {
+                    continuation.finish(throwing: error)
                 }
             }
-            return try await .init(writer: writer, responses: stream)
+            return try await .init(writer: writer, responses: stream, task: task)
         }
     }
 }

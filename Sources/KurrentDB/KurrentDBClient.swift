@@ -11,6 +11,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2
 import NIO
 import NIOSSL
+import Synchronization
 
 /// The primary entry point for interacting with a KurrentDB cluster.
 ///
@@ -82,6 +83,8 @@ public final class KurrentDBClient: Sendable, Buildable {
     /// (leader, follower, or random) and maintains connection health.
     package let selector: NodeSelector
 
+    private let isShutdown = Mutex<Bool>(false)
+
     /// Creates a new client with an internally managed event loop group.
     ///
     /// - Parameters:
@@ -110,6 +113,20 @@ public final class KurrentDBClient: Sendable, Buildable {
         self.selector = .init(settings: settings)
         self.eventLoopGroup = eventLoopGroup
     }
+
+    deinit {
+        let alreadyShutdown = isShutdown.withLock {
+            let old = $0
+            $0 = true
+            return old
+        }
+        guard !alreadyShutdown else { return }
+        eventLoopGroup.shutdownGracefully { error in
+            if let error {
+                logger.warning("EventLoopGroup shutdown error during deinit: \(error)")
+            }
+        }
+    }
 }
 
 extension KurrentDBClient {
@@ -118,6 +135,7 @@ extension KurrentDBClient {
     /// Call this when you are done with the client and it was created with the default
     /// initializer (i.e., not sharing an external `EventLoopGroup`). Safe to call multiple times.
     public func shutdown() throws {
+        isShutdown.withLock { $0 = true }
         try eventLoopGroup.syncShutdownGracefully()
     }
 }

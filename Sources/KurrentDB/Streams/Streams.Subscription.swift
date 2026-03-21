@@ -37,18 +37,23 @@ extension Streams {
 
         package let continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation
 
+        package let task: Task<Void, Never>?
+
         /// Initializes a `Subscription` instance with an event stream and subscription ID.
         ///
         /// - Parameters:
         ///   - events: The asynchronous stream of `ReadEvent` objects.
         ///   - subscriptionId: An optional subscription identifier.
-        package init(events: AsyncThrowingStream<ReadEvent, Error>, continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation, subscriptionId: String?) {
+        ///   - task: An optional task handle for the background streaming task.
+        package init(events: AsyncThrowingStream<ReadEvent, Error>, continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation, subscriptionId: String?, task: Task<Void, Never>? = nil) {
             self.events = events
             self.continuation = continuation
             self.subscriptionId = subscriptionId
+            self.task = task
         }
 
         public func cancel() {
+            task?.cancel()
             continuation.finish()
         }
     }

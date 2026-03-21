@@ -26,6 +26,8 @@ extension PersistentSubscriptions {
         /// The writer responsible for sending requests to the subscription service.
         let writer: Writer
 
+        private let task: Task<Void, Never>?
+
         /// The unique identifier of the subscription, if available.
         ///
         /// This is set during initialization based on the first response from the server.
@@ -53,8 +55,9 @@ extension PersistentSubscriptions {
         ///   - writer: The `Writer` instance used to send requests. Defaults to a new `Writer`.
         ///   - reader: An asynchronous stream of responses from the subscription service.
         /// - Throws: An error if the initialization process fails, such as when the response stream cannot be processed.
-        package init(writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>) async throws {
+        package init(writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>, task: Task<Void, Never>? = nil) async throws {
             self.writer = writer
+            self.task = task
 
             var iterator = reader.makeAsyncIterator()
             subscriptionId = try await iterator.next().flatMap{
@@ -86,6 +89,12 @@ extension PersistentSubscriptions {
                     )
                 }
             })
+        }
+
+        /// Cancels the subscription, stopping the background task and the writer.
+        public func cancel() {
+            task?.cancel()
+            writer.stop()
         }
 
         /// Acknowledges a list of events by their UUIDs.
