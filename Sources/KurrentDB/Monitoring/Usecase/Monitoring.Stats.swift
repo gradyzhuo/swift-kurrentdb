@@ -42,24 +42,28 @@ extension Monitoring {
             let client = ServiceClient(wrapping: connection)
             let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
             
+            let task = Task {
+                do {
+                    try await client.stats(request: request, options: callOptions) {
+                        do {
+                            for try await message in $0.messages {
+                                try continuation.yield(handle(message: message))
+                            }
+                            continuation.finish()
+                        } catch {
+                            continuation.finish(throwing: error)
+                        }
+                    }
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
             continuation.onTermination = { termination in
+                task.cancel()
                 if case let .finished(error) = termination {
                     completion(error)
                 } else {
                     completion(nil)
-                }
-            }
-            
-            Task.detached {
-                try await client.stats(request: request, options: callOptions) {
-                    do {
-                        for try await message in $0.messages {
-                            try continuation.yield(handle(message: message))
-                        }
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
-                    }
                 }
             }
             return stream

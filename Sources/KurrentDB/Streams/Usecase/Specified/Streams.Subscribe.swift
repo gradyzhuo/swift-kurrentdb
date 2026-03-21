@@ -53,7 +53,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 }
             }
 
-            Task {
+            let task = Task {
                 do {
                     let client = ServiceClient(wrapping: connection)
                     try await client.read(request: request, options: callOptions) {
@@ -207,7 +207,7 @@ extension Streams.Subscription where Target: SpecifiedStreamTarget {
             }
         }
 
-        Task {
+        let innerTask = Task {
             do {
                 while let message = try await iterator.next() {
                     if case let .event(message) = message.content {
@@ -219,6 +219,6 @@ extension Streams.Subscription where Target: SpecifiedStreamTarget {
                 continuation.finish(throwing: error)
             }
         }
-        self.init(events: events, continuation: continuation, subscriptionId: confirmation.subscriptionID)
+        self.init(events: events, continuation: continuation, subscriptionId: confirmation.subscriptionID, task: innerTask)
     }
 }

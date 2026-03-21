@@ -97,8 +97,8 @@ public struct ClientSettings: Sendable {
         certificates: [TLSConfig.CertificateSource] = [],
         nodePreference: NodePreference = .leader,
         gossipTimeout: Duration = .seconds(3),
-        secure: Bool = false,
-        tlsVerifyCert: Bool = false,
+        secure: Bool = true,
+        tlsVerifyCert: Bool = true,
         defaultDeadline: Int = .max,
         connectionName: String? = nil,
         keepAlive: KeepAlive = .default,
@@ -191,7 +191,7 @@ extension ClientSettings {
         } else {
             .seeds(endpoints)
         }
-        return Self(clusterMode: clusterMode)
+        return Self(clusterMode: clusterMode, secure: false, tlsVerifyCert: false)
     }
 
     public static func remote(_ endpoints: Endpoint..., secure: Bool = true) -> Self {
@@ -268,9 +268,9 @@ extension ClientSettings {
 
         let connectionName = queryItems["connectionname"]?.value
 
-        let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
+        let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? true
 
-        let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) ?? false
+        let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) ?? true
 
         var certificates: [TLSConfig.CertificateSource] = []
         if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap(\.value) {

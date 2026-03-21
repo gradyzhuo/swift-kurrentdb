@@ -207,10 +207,10 @@ struct ClientSettingsParsingTests {
         #expect(settings.secure == expected)
     }
 
-    @Test("tls defaults to false when absent")
+    @Test("tls defaults to true when absent")
     func testTLSDefault() throws {
         let settings = try ClientSettings.parse(connectionString: "esdb://localhost:2113")
-        #expect(settings.secure == false)
+        #expect(settings.secure == true)
     }
 
     @Test("tlsverifycert=true enables certificate verification")
@@ -219,10 +219,10 @@ struct ClientSettingsParsingTests {
         #expect(settings.tlsVerifyCert == true)
     }
 
-    @Test("tlsverifycert defaults to false when absent")
+    @Test("tlsverifycert defaults to true when absent")
     func testTLSVerifyCertDefault() throws {
         let settings = try ClientSettings.parse(connectionString: "esdb://localhost:2113")
-        #expect(settings.tlsVerifyCert == false)
+        #expect(settings.tlsVerifyCert == true)
     }
 
     // MARK: defaultDeadline
