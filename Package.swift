@@ -43,11 +43,11 @@ let package = Package(
             dependencies: [
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
-                "Generated"
+                "_GRPCProtobufGenerated"
             ]
         ),
         .target(
-            name: "Generated",
+            name: "_GRPCProtobufGenerated",
             dependencies: [
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf")
