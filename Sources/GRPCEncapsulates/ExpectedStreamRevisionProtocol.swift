@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Generated
+import _GRPCProtobufGenerated
 
 package protocol ExpectedStreamRevisionProtocol {
     static func any(_ value: EventStore_Client_Empty) -> Self
