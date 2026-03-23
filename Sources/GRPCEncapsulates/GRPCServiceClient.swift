@@ -6,9 +6,9 @@
 //
 
 import Foundation
-import Generated
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import _GRPCProtobufGenerated
 
 public protocol GRPCServiceClient {
     associatedtype UnderlyingService
