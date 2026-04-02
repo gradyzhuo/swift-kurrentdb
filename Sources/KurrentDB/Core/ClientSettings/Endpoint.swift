@@ -46,7 +46,10 @@ extension Endpoint {
 
 extension Endpoint: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = Endpoint(string: value)!
+        guard let endpoint = Endpoint(string: value) else {
+            preconditionFailure("Invalid endpoint string literal: \"\(value)\". Expected format: \"host\" or \"host:port\".")
+        }
+        self = endpoint
     }
 }
 

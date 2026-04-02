@@ -172,7 +172,8 @@ func withRethrowingError<T>(usage: String, action: @Sendable () async throws -> 
     } catch let error as RPCError {
         try error.rethrow(usage: usage)
     } catch {
-        throw .internalClientError(reason: "`\(usage)` failed. full error: \(error)")
+        logger.debug("'\(usage)' failed with unexpected error: \(error)")
+        throw .internalClientError(reason: "`\(usage)` failed.")
     }
     throw .internalClientError(reason: "`\(usage)` failed.")
 }
@@ -185,7 +186,8 @@ func withRethrowingError<T>(usage: String, action: @Sendable () throws -> T) thr
     } catch let error as RPCError {
         try error.rethrow(usage: usage)
     } catch {
-        throw .internalClientError(reason: "`\(usage)` failed. full error: \(error).")
+        logger.debug("'\(usage)' failed with unexpected error: \(error)")
+        throw .internalClientError(reason: "`\(usage)` failed.")
     }
     throw .internalClientError(reason: "`\(usage)` failed.")
 }
@@ -254,7 +256,8 @@ extension IOError {
              111:  // Linux: ECONNREFUSED
             throw .grpcConnectionError(cause: origin)
         default:
-            throw .internalClientError(reason: "`\(usage)` failed, full error: \(origin).")
+            logger.debug("'\(usage)' failed with IO error (errno: \(errnoCode)): \(origin)")
+            throw .internalClientError(reason: "`\(usage)` failed.")
         }
     }
 }
