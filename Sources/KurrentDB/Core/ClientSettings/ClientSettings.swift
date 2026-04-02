@@ -170,7 +170,6 @@ extension ClientSettings {
         }
     }
 
-
     public func httpUri(endpoint: Endpoint) -> URL? {
         var components = URLComponents()
         components.scheme = secure ? "https" : "http"
