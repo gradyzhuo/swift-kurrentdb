@@ -80,6 +80,8 @@ jobs:
         image:
           - "swift:6.2-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
           - "swift:6.2-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
+          - "swift:6.3-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
+          - "swift:6.3-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
