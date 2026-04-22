@@ -66,10 +66,11 @@ extension PersistentSubscriptions {
                 }
                 return subscriptionId
             }
-
-            events = AsyncThrowingStream(unfolding: { @MainActor [_revisionTracker] in
-                do {
-                    let response = try await iterator.next()
+            
+            let (stream, continuation) = AsyncThrowingStream<PersistentSubscription.EventResult, any Error>.makeStream()
+            self.events = stream
+            do{
+                while let response = try await iterator.next() {
                     guard case let .readEvent(event, retryCount) = response else {
                         throw KurrentError.subscriptionDropped(
                             reason: "The subscription was dropped by the server.",
@@ -78,17 +79,17 @@ extension PersistentSubscriptions {
                         )
                     }
                     _revisionTracker.update(revision: event.record.revision, position: event.record.position)
-                    return .init(event: event, retryCount: retryCount)
-                } catch let error as KurrentError {
-                    throw error
-                } catch {
-                    throw KurrentError.subscriptionDropped(
-                        reason: "\(error)",
-                        lastRevision: _revisionTracker.revision,
-                        lastPosition: _revisionTracker.position
-                    )
+                    continuation.yield(.init(event: event, retryCount: retryCount))
                 }
-            })
+            }catch let error as KurrentError {
+                throw error
+            } catch {
+                throw KurrentError.subscriptionDropped(
+                    reason: "\(error)",
+                    lastRevision: _revisionTracker.revision,
+                    lastPosition: _revisionTracker.position
+                )
+            }
         }
 
         /// Cancels the subscription, stopping the background task and the writer.

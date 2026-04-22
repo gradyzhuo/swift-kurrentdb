@@ -81,9 +81,9 @@ extension Endpoint {
 
             return switch resolvedAddress {
             case .v4:
-                .ipv4(host: host, port: port)
+                .ipv4(address: host, port: port)
             case .v6:
-                .ipv6(host: host, port: port)
+                .ipv6(address: host, port: port)
             default:
                 .dns(host: host, port: port)
             }
