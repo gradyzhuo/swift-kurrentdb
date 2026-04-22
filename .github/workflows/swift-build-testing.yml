@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        swift: ["6.0", "6.1", "6.2"]
+        swift: ["6.0", "6.1", "6.2", "6.3"]
         kurrentdb:
           - { version: "24.10",  image: "docker.eventstore.com/eventstore/eventstoredb-ee:24.10", compose_file: "server/docker-compose.eventstore.yaml", supports_multi_streams: "false" }
           - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true"  }
