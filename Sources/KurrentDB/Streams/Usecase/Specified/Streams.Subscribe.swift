@@ -53,7 +53,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 }
             }
 
-            let task = Task {
+            Task {
                 do {
                     let client = ServiceClient(wrapping: connection)
                     try await client.read(request: request, options: callOptions) {
