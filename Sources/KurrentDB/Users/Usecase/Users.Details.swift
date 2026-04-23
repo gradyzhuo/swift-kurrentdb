@@ -66,7 +66,7 @@ extension Users {
 }
 
 extension Users.Details {
-    /// Decoded user detail record from a single gRPC response message.
+    /// gRPC response wrapper for user details.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 

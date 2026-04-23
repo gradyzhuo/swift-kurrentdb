@@ -11,6 +11,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
+/// Performs gossip protocol requests against a single Kurrent cluster endpoint.
 public final class Gossip: Sendable {
     package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
 
@@ -28,6 +29,14 @@ public final class Gossip: Sendable {
 }
 
 extension Gossip {
+    /// Reads the current member list from this endpoint's gossip API.
+    ///
+    /// Members whose state appears in `notAllowedStates` are excluded from the result.
+    /// The returned array is sorted by node preference priority as defined in `ClientSettings`.
+    ///
+    /// - Parameter notAllowedStates: Node states excluded from the result.
+    /// - Returns: An array of ``MemberInfo`` sorted by preference priority, excluding any disallowed states.
+    /// - Throws: `KurrentError` if the gRPC call fails or the response cannot be decoded.
     public func read(timeout _: Duration, notAllowedStates: [Gossip.VNodeState] = []) async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {

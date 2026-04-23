@@ -19,10 +19,8 @@ extension KurrentDBClient {
     /// ```swift
     /// try await client.operations(of: .system).mergeIndexes()
     ///
-    /// let response = try await client.operations(of: .scavenge)
-    ///     .startScavenge(threadCount: 2, startFromChunk: 0)
-    /// try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId))
-    ///     .stopScavenge()
+    /// let response = try await client.operations(of: ScavengeOperations()).startScavenge()
+    /// // scavenge started
     /// ```
     ///
     /// - Parameter target: Operations target specifying scope and capabilities.
