@@ -5,23 +5,18 @@
 
 import Foundation
 
-/// Configures retry behavior for operations that encounter node-level failures.
+/// Retry behaviour applied to operations that fail due to node-level errors.
 ///
-/// When an operation fails with a ``KurrentError`` whose `isNodeFailure` is `true`
-/// (e.g. connection errors, not-leader, deadline exceeded), the client will
-/// invalidate the cached node, re-discover a new one, and retry the operation
-/// up to `maxAttempts` total times with exponential backoff between retries.
-///
-/// ## Example
+/// When an operation throws a `KurrentError` whose `isNodeFailure` is `true`, the client
+/// invalidates the cached node, discovers a new one, and retries up to `maxAttempts` times
+/// with exponential backoff and optional jitter between attempts.
 ///
 /// ```swift
-/// // Enable exponential backoff with sensible defaults (3 attempts, 100ms → 10s)
 /// let settings = ClientSettings.localhost()
-///     .operationOperationRetryPolicy(.default)
+///     .operationRetryPolicy(.default)
 ///
-/// // Fully custom policy
-/// let settings = ClientSettings.localhost()
-///     .operationOperationRetryPolicy(OperationRetryPolicy(
+/// let custom = ClientSettings.localhost()
+///     .operationRetryPolicy(OperationRetryPolicy(
 ///         maxAttempts: 5,
 ///         initialDelay: .milliseconds(200),
 ///         maxDelay: .seconds(30),
@@ -31,32 +26,37 @@ import Foundation
 /// ```
 public struct OperationRetryPolicy: Sendable {
 
-    /// Total number of attempts, including the first try.
-    /// `maxAttempts: 1` means no retry (legacy behavior).
-    /// `maxAttempts: 3` means 1 initial attempt + 2 retries.
+    /// Total number of attempts including the first try; `1` means no retries.
     public var maxAttempts: Int
 
-    /// Delay before the first retry. Set to `.zero` for no delay.
+    /// Delay before the first retry; `.zero` means retry immediately.
     public var initialDelay: Duration
 
-    /// Maximum delay between retries. Acts as a cap on exponential growth.
+    /// Upper bound on the delay between retries, capping exponential growth.
     public var maxDelay: Duration
 
-    /// Backoff multiplier applied to the delay after each retry.
-    /// `2.0` doubles the delay each time.
+    /// Multiplier applied to the current delay after each retry; `2.0` doubles the delay.
     public var multiplier: Double
 
-    /// Jitter strategy to avoid thundering-herd when many clients retry simultaneously.
+    /// Jitter strategy used to spread retry timing across concurrent clients.
     public var jitter: JitterStrategy
 
+    /// Strategy for randomising the retry delay to reduce thundering-herd effects.
     public enum JitterStrategy: Sendable {
-        /// No jitter. Delay is deterministic.
+        /// No jitter; the computed delay is used as-is.
         case none
-        /// Full jitter: actual delay = `delay * random(0.0...1.0)`.
+        /// Full jitter: actual delay is `delay * random(0.0...1.0)`.
         case full
     }
 
-    /// Initialises a retry policy.
+    /// Creates a retry policy with explicit values for all parameters.
+    ///
+    /// - Parameters:
+    ///   - maxAttempts: Total number of attempts, including the initial try.
+    ///   - initialDelay: Delay before the first retry.
+    ///   - maxDelay: Maximum delay between retries.
+    ///   - multiplier: Exponential backoff multiplier applied after each retry.
+    ///   - jitter: Jitter strategy to spread retries across concurrent clients.
     public init(
         maxAttempts: Int,
         initialDelay: Duration,
@@ -71,8 +71,7 @@ public struct OperationRetryPolicy: Sendable {
         self.jitter = jitter
     }
 
-    /// A policy with sensible defaults: 3 total attempts, 100 ms initial delay,
-    /// 2× backoff, 10 s cap, and full jitter.
+    /// Sensible default policy: 3 total attempts, 100 ms initial delay, 2× backoff, 10 s cap, full jitter.
     public static let `default` = OperationRetryPolicy(
         maxAttempts: 3,
         initialDelay: .milliseconds(100),
