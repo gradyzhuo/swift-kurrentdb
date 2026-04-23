@@ -16,82 +16,64 @@ import NIOSSL
 import NIOTransportServices
 import RegexBuilder
 
+/// Default TCP port number for KurrentDB connections.
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 
-/// `ClientSettings` encapsulates various configuration settings for a client.
-///
-/// - Properties:
-///   - `configuration`: TLS configuration.
-///   - `clusterMode`: The cluster topology mode.
-///   - `secure`: Indicates if TLS is enabled (default is false).
-///   - `tlsVerifyCert`: Indicates if TLS certificate verification is enabled (default is false).
-///   - `defaultDeadline`: Default deadline for operations (default is `.max`).
-///   - `connectionName`: Optional connection name.
-///   - `keepAlive`: Keep-alive settings.
-///   - `defaultUserCredentials`: Optional user credentials.
-///
-/// - Initializers:
-///   - `init(clusterMode:configuration:numberOfThreads)`: Initializes with specified cluster mode, TLS configuration, and number of threads.
-///   - `init(clusterMode:numberOfThreads:configure)`: Initializes with specified cluster mode, number of threads, and TLS configuration using a configuration closure.
-///
-/// - Methods:
-///   - `makeCallOptions()`: Creates call options for making requests, optionally including user credentials.
-///
-/// - Static Methods:
-///   - `localhost(port:numberOfThreads:userCredentials:trustRoots)`: Returns settings configured for localhost with optional port, number of threads, user credentials, and trust roots.
-///   - `parse(connectionString)`: Parses a connection string into `ClientSettings`.
-///
-/// - Nested Types:
-///   - `TopologyClusterMode`: Defines the cluster topology modes.
-///   - `Endpoint`: Represents a network endpoint with a host and port.
-///
-/// - Conformance:
-///   - `ExpressibleByStringLiteral`: Allows initialization from a string literal.
-///
-/// - Example:
-///   - single node mode, initiating gRPC communication on the specified port on localhost and using 2 threads.
-///
-///   ```swift
-///   let clientSettingsSingleNode = ClientSettings(
-///       clusterMode: .singleNode(at: .init(host: "localhost", port: 50051)),
-///       configuration: .clientDefault,
-///       numberOfThreads: 2
-///   )
-///   ```
-///   - Gossip cluster mode, specifying multiple nodes' hosts and ports, as well as node preference and timeout, using 3 threads.
-///   ```swift
-///   let clientSettingsGossipCluster = ClientSettings(
-///       clusterMode: .gossipCluster(
-///           endpoints: [.init(host: "node1.example.com", port: 50051), .init(host: "node2.example.com", port: 50052)],
-///           nodePreference: .leader,
-///           timeout: 5.0
-///       ),
-///       configuration: .clientDefault,
-///       numberOfThreads: 3
-///   )
-///   ```
+/// Connection and transport configuration for a KurrentDB client.
 
 public struct ClientSettings: Sendable {
+    /// Resolved server endpoints derived from the cluster mode.
     public private(set) var endpoints: [Endpoint]
+    /// TLS certificate sources used to verify the server.
     public var certificates: [TLSConfig.CertificateSource]
 
+    /// Whether DNS-based cluster discovery is active.
     public private(set) var dnsDiscover: Bool
+    /// Preferred node role to connect to in a cluster.
     public private(set) var nodePreference: NodePreference
+    /// Maximum time allowed for a gossip request to complete.
     public private(set) var gossipTimeout: Duration
 
+    /// Whether TLS is enabled for the connection.
     public private(set) var secure: Bool
+    /// Whether server certificate verification is enforced when TLS is active.
     public private(set) var tlsVerifyCert: Bool
 
+    /// Default operation deadline in milliseconds; `.max` means no deadline.
     public private(set) var defaultDeadline: Int
+    /// Optional human-readable label for this connection.
     public private(set) var connectionName: String?
 
+    /// Keep-alive timing configuration for the gRPC channel.
     public var keepAlive: KeepAlive
+    /// Authentication credentials or certificate sent with each request.
     public var authentication: Authentication?
+    /// Interval between cluster node discovery polls.
     public var discoveryInterval: Duration
+    /// Maximum number of node discovery attempts before giving up.
     public var maxDiscoveryAttempts: UInt16
+    /// Duration for which a discovered node is cached before re-validation.
     public var nodeCacheTTL: Duration
+    /// Retry policy applied to operations that fail due to node-level errors.
     public var operationRetryPolicy: OperationRetryPolicy
 
+    /// Creates settings with explicit values for all configurable options.
+    ///
+    /// - Parameters:
+    ///   - clusterMode: Topology describing how to reach the server. Defaults to `nil` (no endpoint configured).
+    ///   - certificates: TLS certificate sources for server verification. Defaults to empty.
+    ///   - nodePreference: Preferred node role in a cluster. Defaults to `.leader`.
+    ///   - gossipTimeout: Timeout for gossip requests. Defaults to 3 seconds.
+    ///   - secure: Enables TLS. Defaults to `true`.
+    ///   - tlsVerifyCert: Enables certificate verification when TLS is active. Defaults to `true`.
+    ///   - defaultDeadline: Operation deadline in milliseconds. Defaults to `.max`.
+    ///   - connectionName: Optional label for this connection.
+    ///   - keepAlive: Keep-alive timing. Defaults to `.default`.
+    ///   - authentication: Credentials or certificate for authentication.
+    ///   - discoveryInterval: Interval between discovery polls. Defaults to 100 µs.
+    ///   - maxDiscoveryAttempts: Maximum discovery retries. Defaults to 10.
+    ///   - nodeCacheTTL: How long to cache a discovered node. Defaults to 30 seconds.
+    ///   - operationRetryPolicy: Retry behaviour for node-failure errors.
     public init(
         clusterMode: TopologyClusterMode? = nil,
         certificates: [TLSConfig.CertificateSource] = [],
@@ -149,6 +131,7 @@ public struct ClientSettings: Sendable {
 }
 
 extension ClientSettings {
+    /// Cluster topology derived from the current endpoints and discovery mode.
     public var clusterMode: TopologyClusterMode {
         if dnsDiscover {
             .dns(domain: endpoints[0])
@@ -159,6 +142,7 @@ extension ClientSettings {
         }
     }
 
+    /// TLS trust-roots source derived from `certificates`; `nil` when TLS is disabled.
     public var trustRoots: TLSConfig.TrustRootsSource? {
         guard secure else {
             return nil
@@ -170,6 +154,10 @@ extension ClientSettings {
         }
     }
 
+    /// Builds an HTTP or HTTPS URL for the given endpoint using the current security mode.
+    ///
+    /// - Parameter endpoint: The target endpoint.
+    /// - Returns: A `URL` for the endpoint, or `nil` if the URL components are invalid.
     public func httpUri(endpoint: Endpoint) -> URL? {
         var components = URLComponents()
         components.scheme = secure ? "https" : "http"
@@ -180,10 +168,22 @@ extension ClientSettings {
 }
 
 extension ClientSettings {
+    /// Returns settings targeting a single insecure KurrentDB node on `localhost:2113`.
+    ///
+    /// ```swift
+    /// let settings = ClientSettings.localhost()
+    ///     .authenticated(.credentials(username: "admin", password: "changeit"))
+    /// ```
+    ///
+    /// - Returns: Insecure `ClientSettings` for `localhost` on the default port.
     public static func localhost() -> Self {
         localhost(ports: DEFAULT_PORT_NUMBER)
     }
 
+    /// Returns insecure settings targeting one or more ports on `localhost`.
+    ///
+    /// - Parameter ports: One or more port numbers. Multiple ports produce a seed-cluster topology.
+    /// - Returns: Insecure `ClientSettings` for the given `localhost` ports.
     public static func localhost(ports: UInt32...) -> Self {
         let endpoints: [Endpoint] = ports.map { .init(host: "localhost", port: $0) }
         let clusterMode: TopologyClusterMode = if endpoints.count == 1 {
@@ -194,6 +194,12 @@ extension ClientSettings {
         return Self(clusterMode: clusterMode, secure: false, tlsVerifyCert: false)
     }
 
+    /// Returns settings targeting one or more remote endpoints.
+    ///
+    /// - Parameters:
+    ///   - endpoints: One or more server endpoints. Multiple endpoints produce a seed-cluster topology.
+    ///   - secure: Enables TLS. Defaults to `true`.
+    /// - Returns: `ClientSettings` configured for the provided remote endpoints.
     public static func remote(_ endpoints: Endpoint..., secure: Bool = true) -> Self {
         let clusterMode: TopologyClusterMode = if endpoints.count == 1 {
             .standalone(endpoint: endpoints[0])
@@ -203,6 +209,22 @@ extension ClientSettings {
         return Self(clusterMode: clusterMode, secure: secure)
     }
 
+    /// Parses a KurrentDB connection string into `ClientSettings`.
+    ///
+    /// Supported schemes are `esdb://` and `esdb+discover://`. Recognised query parameters include
+    /// `tls`, `tlsVerifyCert`, `nodePreference`, `keepAliveInterval` and `keepAliveTimeout` (both
+    /// required for either to take effect), `gossipTimeout`, `maxDiscoverAttempts`, `discoveryInterval`,
+    /// `userCertFile`, `userKeyFile`, `connectionName`, `tlsCaFile`, and `defaultDeadline`.
+    ///
+    /// ```swift
+    /// let settings = try ClientSettings.parse(
+    ///     connectionString: "esdb://admin:changeit@localhost:2113?tls=false"
+    /// )
+    /// ```
+    ///
+    /// - Parameter connectionString: A well-formed KurrentDB connection string.
+    /// - Returns: Fully populated `ClientSettings`.
+    /// - Throws: `KurrentError.internalParsingError` if the string is malformed or missing required components.
     public static func parse(connectionString: String) throws(KurrentError) -> Self {
         let schemeParser = URLSchemeParser()
         let endpointParser = EndpointParser()
@@ -299,6 +321,13 @@ extension ClientSettings {
 }
 
 extension ClientSettings {
+    /// Loads a TLS CA certificate from disk and returns the appropriate source.
+    ///
+    /// Detects PEM format automatically by inspecting the file header; falls back to DER.
+    /// Returns `nil` and logs a warning if the file is missing or empty.
+    ///
+    /// - Parameter path: File-system path to the CA certificate.
+    /// - Returns: A `TLSConfig.CertificateSource` for the file, or `nil` on failure.
     public static func parseCertificate(path: String) -> TLSConfig.CertificateSource? {
         do {
             let tlsCaFileUrl = URL(fileURLWithPath: path)
@@ -326,8 +355,14 @@ extension ClientSettings {
 }
 
 extension ClientSettings: ExpressibleByStringLiteral {
+    /// String literal type for `ExpressibleByStringLiteral` conformance.
     public typealias StringLiteralType = String
 
+    /// Creates `ClientSettings` by parsing a KurrentDB connection string literal.
+    ///
+    /// - Parameter value: A well-formed KurrentDB connection string (e.g. `"esdb://localhost:2113"`).
+    ///
+    /// > Important: Calls `fatalError` if `value` is not a valid connection string.
     public init(stringLiteral value: String) {
         do {
             self = try Self.parse(connectionString: value)
@@ -343,6 +378,9 @@ extension ClientSettings: ExpressibleByStringLiteral {
 }
 
 extension ClientSettings: Buildable {
+    /// Returns a copy with the given certificate source appended.
+    ///
+    /// - Parameter source: The certificate source to add.
     @discardableResult
     public func certificate(source: TLSConfig.CertificateSource) -> Self {
         withCopy {
@@ -350,6 +388,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with a certificate loaded from the given file path appended.
+    ///
+    /// - Parameter path: File-system path to the certificate file.
     @discardableResult
     public func certificate(path: String) -> Self {
         withCopy {
@@ -359,24 +400,30 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Deprecated. Use ``certificates`` instead.
     @available(*, deprecated, renamed: "certificates")
     public var cerificates: [TLSConfig.CertificateSource] {
         get { certificates }
         set { certificates = newValue }
     }
 
+    /// Deprecated. Use ``certificate(source:)`` instead.
     @available(*, deprecated, renamed: "certificate(source:)")
     @discardableResult
     public func cerificate(source: TLSConfig.CertificateSource) -> Self {
         certificate(source: source)
     }
 
+    /// Deprecated. Use ``certificate(path:)`` instead.
     @available(*, deprecated, renamed: "certificate(path:)")
     @discardableResult
     public func cerificate(path: String) -> Self {
         certificate(path: path)
     }
 
+    /// Returns a copy with TLS enabled or disabled.
+    ///
+    /// - Parameter secure: Pass `true` to enable TLS, `false` for plaintext.
     @discardableResult
     public func secure(_ secure: Bool) -> Self {
         withCopy {
@@ -384,6 +431,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with certificate verification enabled or disabled.
+    ///
+    /// - Parameter tlsVerifyCert: Pass `true` to enforce full certificate verification.
     @discardableResult
     public func tlsVerifyCert(_ tlsVerifyCert: Bool) -> Self {
         withCopy {
@@ -391,6 +441,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the default operation deadline set.
+    ///
+    /// - Parameter defaultDeadline: Deadline in milliseconds; use `.max` for no deadline.
     @discardableResult
     public func defaultDeadline(_ defaultDeadline: Int) -> Self {
         withCopy {
@@ -398,6 +451,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the given connection name set.
+    ///
+    /// - Parameter connectionName: Human-readable label for this connection.
     @discardableResult
     public func connectionName(_ connectionName: String) -> Self {
         withCopy {
@@ -405,6 +461,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the given keep-alive settings applied.
+    ///
+    /// - Parameter keepAlive: Keep-alive interval and timeout configuration.
     @discardableResult
     public func keepAlive(_ keepAlive: KeepAlive) -> Self {
         withCopy {
@@ -412,6 +471,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the given authentication applied.
+    ///
+    /// - Parameter authenication: Credentials or certificate used for authentication.
     @discardableResult
     public func authenticated(_ authenication: Authentication) -> Self {
         withCopy {
@@ -419,6 +481,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the cluster discovery interval set.
+    ///
+    /// - Parameter discoveryInterval: Time between consecutive discovery polls.
     @discardableResult
     public func discoveryInterval(_ discoveryInterval: Duration) -> Self {
         withCopy {
@@ -426,6 +491,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the maximum discovery attempts set.
+    ///
+    /// - Parameter maxDiscoveryAttempts: Upper limit on node-discovery retries.
     @discardableResult
     public func maxDiscoveryAttempts(_ maxDiscoveryAttempts: UInt16) -> Self {
         withCopy {
@@ -433,6 +501,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the node cache TTL set.
+    ///
+    /// - Parameter ttl: Duration for which a discovered node is cached before re-validation.
     @discardableResult
     public func nodeCacheTTL(_ ttl: Duration) -> Self {
         withCopy {
@@ -440,6 +511,9 @@ extension ClientSettings: Buildable {
         }
     }
 
+    /// Returns a copy with the operation retry policy set.
+    ///
+    /// - Parameter policy: Retry behaviour applied to node-failure errors.
     @discardableResult
     public func operationRetryPolicy(_ policy: OperationRetryPolicy) -> Self {
         withCopy {
