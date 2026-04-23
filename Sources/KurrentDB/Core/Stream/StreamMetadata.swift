@@ -8,6 +8,11 @@
 import Foundation
 import GRPCEncapsulates
 
+/// Configuration metadata attached to a KurrentDB stream.
+///
+/// Controls retention, truncation, caching, and access control for a stream.
+/// Use the builder methods to configure individual fields and pass the result to
+/// `setStreamMetadata` on the client.
 public struct StreamMetadata: Buildable, Codable {
     enum CodingKeys: String, CodingKey {
         case maxCount = "$maxCount"
@@ -44,6 +49,7 @@ public struct StreamMetadata: Buildable, Codable {
     // user-provided metadata.
     var customProperties: [String: String]?
 
+    /// Creates a `StreamMetadata` value with all fields unset.
     public init() {
         maxCount = nil
         maxAge = nil
@@ -53,36 +59,60 @@ public struct StreamMetadata: Buildable, Codable {
         customProperties = nil
     }
 
+    /// Sets the maximum number of events retained in the stream.
+    ///
+    /// - Parameter maxCount: Maximum event count before older events become eligible for scavenging.
+    /// - Returns: An updated copy of the metadata.
     public func maxCount(_ maxCount: UInt64) -> Self {
         withCopy { copied in
             copied.maxCount = maxCount
         }
     }
 
+    /// Sets the maximum age of events retained in the stream.
+    ///
+    /// - Parameter maxAge: Maximum age before events become eligible for scavenging.
+    /// - Returns: An updated copy of the metadata.
     public func maxAge(_ maxAge: Duration) -> Self {
         withCopy { copied in
             copied.maxAge = maxAge
         }
     }
 
+    /// Sets the event revision before which all events may be scavenged.
+    ///
+    /// - Parameter truncateBefore: Event revision acting as the soft-delete boundary.
+    /// - Returns: An updated copy of the metadata.
     public func truncateBefore(_ truncateBefore: UInt64) -> Self {
         withCopy { copied in
             copied.truncateBefore = truncateBefore
         }
     }
 
+    /// Sets the cache-control duration for the stream head.
+    ///
+    /// - Parameter cacheControl: Duration for which intermediaries may cache the stream head.
+    /// - Returns: An updated copy of the metadata.
     public func cacheControl(_ cacheControl: Duration) -> Self {
         withCopy { copied in
             copied.cacheControl = cacheControl
         }
     }
 
+    /// Sets the access control list for the stream.
+    ///
+    /// - Parameter acl: The `Acl` value to apply.
+    /// - Returns: An updated copy of the metadata.
     public func acl(_ acl: Acl) -> Self {
         withCopy { copied in
             copied.acl = acl
         }
     }
 
+    /// Sets user-defined key-value metadata on the stream.
+    ///
+    /// - Parameter customProperties: Dictionary of string keys to JSON-serialisable string values.
+    /// - Returns: An updated copy of the metadata.
     public func customProperties(_ customProperties: [String: String]) -> Self {
         withCopy { copied in
             copied.customProperties = customProperties
@@ -98,9 +128,11 @@ public struct StreamMetadata: Buildable, Codable {
 }
 
 extension StreamMetadata {
+    /// Access control list applied to a stream.
     public enum Acl: Codable, Sendable {
         public typealias RawValue = Data
 
+        /// JSON-encoded representation of the ACL, compatible with the KurrentDB stream metadata format.
         public var rawValue: Data {
             get throws {
                 let encoder = JSONEncoder()
@@ -115,8 +147,11 @@ extension StreamMetadata {
             }
         }
 
+        /// Applies the built-in `$userStreamAcl` policy.
         case userStream
+        /// Applies the built-in `$systemStreamAcl` policy.
         case systemStream
+        /// Applies a custom `StreamAcl` policy.
         case stream(StreamAcl)
 
         public init(from decoder: any Decoder) throws {
@@ -150,6 +185,7 @@ extension StreamMetadata {
         }
     }
 
+    /// Fine-grained role-based access control for a stream.
     public struct StreamAcl: Codable, Sendable {
         enum CodingKeys: String, CodingKey {
             case readRoles = "$r"
@@ -159,48 +195,68 @@ extension StreamMetadata {
             case metaWriteRoles = "$mw"
         }
 
-        // Roles and users permitted to read the stream.
+        /// Roles and users permitted to read the stream.
         public private(set) var readRoles: [String]?
 
-        // Roles and users permitted to write to the stream.
+        /// Roles and users permitted to write to the stream.
         public private(set) var writeRoles: [String]?
 
-        // Roles and users permitted to delete to the stream.
+        /// Roles and users permitted to delete the stream.
         public private(set) var deleteRoles: [String]?
 
-        // Roles and users permitted to read stream metadata.
+        /// Roles and users permitted to read stream metadata.
         public private(set) var metaReadRoles: [String]?
 
-        // Roles and users permitted to write stream metadata.
+        /// Roles and users permitted to write stream metadata.
         public private(set) var metaWriteRoles: [String]?
     }
 }
 
 extension StreamMetadata.StreamAcl: Buildable {
+    /// Sets the roles permitted to read the stream.
+    ///
+    /// - Parameter roles: Array of role or username strings.
+    /// - Returns: An updated copy of the ACL.
     public func readRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.readRoles = roles
         }
     }
 
+    /// Sets the roles permitted to write to the stream.
+    ///
+    /// - Parameter roles: Array of role or username strings.
+    /// - Returns: An updated copy of the ACL.
     public func writeRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.writeRoles = roles
         }
     }
 
+    /// Sets the roles permitted to delete the stream.
+    ///
+    /// - Parameter roles: Array of role or username strings.
+    /// - Returns: An updated copy of the ACL.
     public func deleteRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.deleteRoles = roles
         }
     }
 
+    /// Sets the roles permitted to read stream metadata.
+    ///
+    /// - Parameter roles: Array of role or username strings.
+    /// - Returns: An updated copy of the ACL.
     public func metaReadRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.metaReadRoles = roles
         }
     }
 
+    /// Sets the roles permitted to write stream metadata.
+    ///
+    /// - Parameter roles: Array of role or username strings.
+    /// - Returns: An updated copy of the ACL.
     public func metaWriteRoles(_ roles: [String]) -> Self {
         withCopy { copied in
             copied.metaWriteRoles = roles
