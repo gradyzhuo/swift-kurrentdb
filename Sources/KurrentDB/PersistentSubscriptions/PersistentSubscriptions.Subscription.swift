@@ -13,7 +13,7 @@ import GRPCNIOTransportHTTP2Posix
 import Synchronization
 
 extension PersistentSubscriptions {
-    public final class Subscription<EventResult: Sendable>: Sendable {
+    public final class Subscription<EventResult: SubscriptionEventResult>: Sendable {
         package typealias Request = PersistentSubscriptions.UnderlyingService.Method.Read.Input
         
         private let source: (stream: AsyncThrowingStream<EventResult, Error>, continuation: AsyncThrowingStream<EventResult, Error>.Continuation)
