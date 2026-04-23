@@ -10,41 +10,18 @@ import GRPCEncapsulates
 import SwiftProtobuf
 
 extension Streams {
-    /// A subscription to a stream, providing access to events and metadata.
-    ///
-    /// `Subscription` represents a subscription to a stream, enabling you to:
-    /// - Receive events through an asynchronous throwing stream.
-    /// - Access the subscription's unique identifier, if provided by the server.
-    ///
-    /// ## Usage
-    ///
-    /// Subscribing to all streams and processing events:
-    /// ```swift
-    /// let streams = Streams(target: StreamsTarget.all, settings: .localhost())
-    /// let subscription = try await streams.subscribe(from: .start)
-    /// for try await event in subscription.events {
-    ///     print("Received event: \(event)")
-    /// }
-    /// ```
-    ///
-    /// - Note: This class conforms to `Sendable`, ensuring safe use across concurrency contexts.
+    /// Live subscription to a stream, delivering events as an async throwing stream.
     public struct Subscription: Sendable {
-        /// An asynchronous stream delivering events or errors from the subscription.
+        /// Async throwing stream of events received from the server.
         public let events: AsyncThrowingStream<ReadEvent, Error>
 
-        /// The unique identifier of the subscription, if provided by the server.
+        /// Server-assigned identifier for this subscription, if provided.
         public let subscriptionId: String?
 
         package let continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation
 
         package let task: Task<Void, Never>?
 
-        /// Initializes a `Subscription` instance with an event stream and subscription ID.
-        ///
-        /// - Parameters:
-        ///   - events: The asynchronous stream of `ReadEvent` objects.
-        ///   - subscriptionId: An optional subscription identifier.
-        ///   - task: An optional task handle for the background streaming task.
         package init(events: AsyncThrowingStream<ReadEvent, Error>, continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation, subscriptionId: String?, task: Task<Void, Never>? = nil) {
             self.events = events
             self.continuation = continuation
@@ -52,6 +29,7 @@ extension Streams {
             self.task = task
         }
 
+        /// Cancels the subscription and terminates the event stream.
         public func cancel() {
             task?.cancel()
             continuation.finish()
