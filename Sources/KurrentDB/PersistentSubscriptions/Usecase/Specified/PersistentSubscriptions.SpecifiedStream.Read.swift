@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.SpecifiedStream {
+    /// Usecase for reading events from a persistent subscription on a specific named stream.
     public struct Read: StreamStream {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Read.Input
@@ -24,8 +25,11 @@ extension PersistentSubscriptions.SpecifiedStream {
             "PersistentSubscriptions.\(Self.self)"
         }
 
+        /// The stream identifier for the target stream.
         public let streamIdentifier: StreamIdentifier
+        /// The consumer group name for the persistent subscription.
         public let group: String
+        /// The read options for this subscription request.
         public let options: Options
 
         init(stream streamIdentifier: StreamIdentifier, group: String, options: Options) {
@@ -98,10 +102,13 @@ extension PersistentSubscriptions.SpecifiedStream {
 }
 
 extension PersistentSubscriptions.SpecifiedStream.Read {
+    /// Configuration options for reading from a persistent subscription on a specified stream.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// The maximum number of messages to buffer before applying back-pressure.
         public var bufferSize: Int32
+        /// The UUID representation format used for event identifiers in the response.
         public var uuidOption: UUID.Option
 
         public init() {

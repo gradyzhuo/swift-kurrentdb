@@ -12,32 +12,18 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
+/// Service facade for persistent subscription operations scoped to a specific target.
 public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
-    /// The underlying gRPC service type.
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
-
-    /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = UnderlyingService.Client<HTTP2ClientTransport.Posix>
 
-    /// The settings used for client communication.
     internal let selector: NodeSelector
-
-    /// Options to be used for each gRPC service call.
     internal let callOptions: CallOptions
-
-    /// The event loop group for asynchronous execution.
     internal let eventLoopGroup: EventLoopGroup
 
-    /// The target stream for the subscription (e.g., specific stream, all streams, or generic).
+    /// Target that defines which stream or scope this service instance operates on.
     public let target: Target
 
-    /// Initializes a `PersistentSubscriptions` instance.
-    ///
-    /// - Parameters:
-    ///   - target: The target stream for the subscription (e.g., `Specified`, `All`, or `AnyTarget`).
-    ///   - settings: The settings used for client communication.
-    ///   - callOptions: Options for the gRPC call, defaulting to `.defaults`.
-    ///   - eventLoopGroup: The event loop group for async operations, defaulting to `.singletonMultiThreadedEventLoopGroup`.
     init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.selector = selector
         self.callOptions = callOptions
@@ -47,17 +33,19 @@ public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>
 }
 
 extension PersistentSubscriptions {
+    /// Namespace for persistent subscription operations on a specific named stream.
     public struct SpecifiedStream {}
+    /// Namespace for persistent subscription operations on the `$all` stream.
     public struct AllStream {}
 }
 
 // MARK: - Streams
 
 extension Streams where Target: SpecifiedStreamTarget {
-    /// Returns a `PersistentSubscriptions` instance for a specified stream and subscription group.
+    /// Returns a `PersistentSubscriptions` scoped to this stream and the given consumer group.
     ///
-    /// - Parameter group: The name of the persistent subscription group.
-    /// - Returns: A `PersistentSubscriptions` actor scoped to the given stream identifier and group.
+    /// - Parameter group: Consumer group name.
+    /// - Returns: A `PersistentSubscriptions` instance for the specified stream and group.
     public func persistentSubscriptions(group: String) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget> {
         let target = SpecifiedPersistentSubscriptionTarget(identifier: target.identifier, group: group)
         return .init(target: target, selector: selector, callOptions: callOptions)
@@ -65,6 +53,10 @@ extension Streams where Target: SpecifiedStreamTarget {
 }
 
 extension Streams where Target == AllStreamsTarget {
+    /// Returns a `PersistentSubscriptions` scoped to the `$all` stream and the given consumer group.
+    ///
+    /// - Parameter group: Consumer group name.
+    /// - Returns: A `PersistentSubscriptions` instance for the `$all` stream and group.
     public func persistentSubscriptions(group: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget> {
         let target = AllStreamPersistentSubscriptionTarget(group: group)
         return .init(target: target, selector: selector, callOptions: callOptions)

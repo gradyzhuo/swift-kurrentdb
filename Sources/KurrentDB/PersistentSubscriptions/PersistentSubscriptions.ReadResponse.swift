@@ -8,10 +8,13 @@
 import GRPCEncapsulates
 
 extension PersistentSubscriptions {
+    /// Server response received on the persistent subscription read stream.
     public enum ReadResponse: GRPCResponse {
         package typealias UnderlyingMessage = PersistentSubscriptions.UnderlyingService.Method.Read.Output
 
+        /// An event delivered by the subscription along with its retry count.
         case readEvent(event: ReadEvent, retryCount: Int32)
+        /// Initial handshake message confirming the subscription identifier.
         case confirmation(subscriptionId: String)
 
         package init(from message: UnderlyingMessage) throws {

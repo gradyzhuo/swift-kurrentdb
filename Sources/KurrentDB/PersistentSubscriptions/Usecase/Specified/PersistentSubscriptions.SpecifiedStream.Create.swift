@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.SpecifiedStream {
+    /// Usecase for creating a persistent subscription on a specific named stream.
     public struct Create: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Create.Input
@@ -33,11 +34,6 @@ extension PersistentSubscriptions.SpecifiedStream {
             self.options = options
         }
 
-        /// Constructs the underlying gRPC request message for creating a persistent subscription.
-        ///
-        /// Builds the request based on the selected stream(s), group name, and subscription options, including cursor position and optional filters.
-        ///
-        /// - Returns: The constructed gRPC request message.
         /// Constructs the gRPC request message for creating a persistent subscription on a specified stream.
         ///
         /// - Throws: An error if building the stream identifier fails.
@@ -65,10 +61,13 @@ extension PersistentSubscriptions.SpecifiedStream {
 }
 
 extension PersistentSubscriptions.SpecifiedStream.Create {
+    /// Configuration options for creating a persistent subscription on a specified stream.
     public struct Options: CommandOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// The subscription creation settings such as consumer strategy, timeouts, and retry behaviour.
         public var settings: PersistentSubscription.CreateSettings
+        /// The starting revision in the stream from which events will be delivered.
         public var revision: RevisionCursor
 
         public init() {

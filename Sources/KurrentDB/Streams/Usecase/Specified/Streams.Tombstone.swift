@@ -9,6 +9,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension Streams {
+    /// Usecase that permanently tombstones a stream, preventing it from being recreated.
     public struct Tombstone: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Tombstone.Input
@@ -22,7 +23,9 @@ extension Streams {
             "Streams.\(Self.self)"
         }
 
+        /// Identifier of the stream to tombstone.
         public let streamIdentifier: StreamIdentifier
+        /// Options controlling the tombstone behaviour (e.g. expected revision).
         public let options: Options
 
         init(to streamIdentifier: StreamIdentifier, options: Options) {
@@ -48,9 +51,11 @@ extension Streams {
 }
 
 extension Streams.Tombstone {
+    /// Response returned after a stream is successfully tombstoned.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// Global log position of the tombstone operation, or `nil` when unavailable.
         public internal(set) var position: StreamPosition?
 
         package init(from message: UnderlyingMessage) throws {
@@ -67,11 +72,14 @@ extension Streams.Tombstone {
 }
 
 extension Streams.Tombstone {
+    /// Options that control tombstone behaviour.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// Expected stream revision used for optimistic concurrency checks.
         public var expectedRevision: StreamRevision
 
+        /// Initialises options with `expectedRevision` defaulting to `.streamExists`.
         public init(expectedRevision: StreamRevision = .streamExists) {
             self.expectedRevision = expectedRevision
         }

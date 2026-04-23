@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Streams where Target == AllStreamsTarget {
+    /// Usecase that reads events from the global `$all` stream.
     public struct ReadAll: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
@@ -24,6 +25,7 @@ extension Streams where Target == AllStreamsTarget {
             "Streams.\(Self.self)"
         }
 
+        /// Options controlling which events are returned and in what order.
         public let options: Options
 
         init(options: Options) {
@@ -66,14 +68,19 @@ extension Streams where Target == AllStreamsTarget {
 }
 
 extension Streams.ReadAll where Target == AllStreamsTarget {
+    /// A position-and-direction pair used to anchor a `$all` read operation.
     public struct CursorPointer: Sendable {
+        /// Global log position at which to anchor the read.
         public let position: StreamPosition
+        /// Direction in which to read from the anchor position.
         public let direction: Direction
 
+        /// Creates a forward cursor anchored at the given commit and prepare positions.
         public static func forwardOn(commitPosition: UInt64, preparePosition: UInt64) -> Self {
             .init(position: .at(commitPosition: commitPosition, preparePosition: preparePosition), direction: .forward)
         }
 
+        /// Creates a backward cursor anchored at the given commit and prepare positions.
         public static func backwardFrom(commitPosition: UInt64, preparePosition: UInt64) -> Self {
             .init(position: .at(commitPosition: commitPosition, preparePosition: preparePosition), direction: .backward)
         }
@@ -81,16 +88,24 @@ extension Streams.ReadAll where Target == AllStreamsTarget {
 }
 
 extension Streams.ReadAll {
+    /// Options that control `$all` read behaviour.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// Global log position at which the read starts.
         public var position: PositionCursor
+        /// Direction in which events are returned.
         public var direction: Direction
+        /// When `true`, linked events are resolved to their targets.
         public var resolveLinksEnabled: Bool
+        /// Maximum number of events to return.
         public var limit: UInt64
+        /// UUID representation used in event metadata.
         public var uuidOption: UUIDOption
+        /// Compatibility level passed to the server.
         public var compatibility: UInt32
 
+        /// Initialises options with sensible defaults (start from beginning, forward, max events, string UUIDs).
         public init() {
             resolveLinksEnabled = false
             limit = .max

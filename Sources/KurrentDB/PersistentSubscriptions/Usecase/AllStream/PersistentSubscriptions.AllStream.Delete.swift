@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.AllStream {
+    /// Usecase for deleting a persistent subscription group on the `$all` stream.
     public struct Delete: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Delete.Input

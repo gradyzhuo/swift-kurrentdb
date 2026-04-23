@@ -8,35 +8,64 @@
 import GRPCEncapsulates
 
 extension PersistentSubscription {
+    /// Snapshot of the server-side state and configuration for a persistent subscription.
     public struct SubscriptionInfo: GRPCBridge {
         package typealias UnderlyingMessage = EventStore_Client_PersistentSubscriptions_SubscriptionInfo
+        /// Stream name or `$all` that this subscription reads from.
         public let eventSource: String
+        /// Consumer group name for this subscription.
         public let groupName: String
+        /// Human-readable status reported by the server (e.g., "Live", "CatchUp").
         public let status: String
+        /// Active consumer connections to this subscription.
         public let connections: [ConnectionInfo]
+        /// Average number of events processed per second across all connections.
         public let averagePerSecond: Int32
+        /// Total number of events delivered since the subscription was created.
         public let totalItems: Int64
+        /// Number of events delivered since the last measurement snapshot.
         public let countSinceLastMeasurement: Int64
+        /// Position of the last successfully checkpointed event.
         public let lastCheckpointedEventPosition: String
+        /// Position of the most recent event known to this subscription.
         public let lastKnownEventPosition: String
+        /// Whether linked events are resolved to their original event.
         public let resolveLinkTos: Bool
+        /// Stream position or revision from which this subscription started reading.
         public let startFrom: String
+        /// Milliseconds before an unacknowledged message times out and is retried.
         public let messageTimeoutMilliseconds: Int32
+        /// Whether in-depth latency statistics are enabled for this subscription.
         public let extraStatistics: Bool
+        /// Maximum number of delivery retries before a message is parked.
         public let maxRetryCount: Int32
+        /// Capacity of the in-memory buffer for live events.
         public let liveBufferSize: Int32
+        /// Total capacity of the internal event buffer.
         public let bufferSize: Int32
+        /// Number of events fetched per page when reading historical events.
         public let readBatchSize: Int32
+        /// Minimum time in milliseconds between checkpoint writes.
         public let checkPointAfterMilliseconds: Int32
+        /// Minimum number of events required before a checkpoint is written.
         public let minCheckPointCount: Int32
+        /// Maximum number of events allowed between checkpoint writes.
         public let maxCheckPointCount: Int32
+        /// Current number of events in the read buffer.
         public let readBufferCount: Int32
+        /// Current number of events in the live buffer.
         public let liveBufferCount: Int64
+        /// Current number of events in the retry buffer.
         public let retryBufferCount: Int32
+        /// Total number of messages currently in flight across all connections.
         public let totalInFlightMessages: Int32
+        /// Total number of messages awaiting acknowledgement.
         public let outstandingMessageCount: Int32
+        /// Raw string identifying the consumer dispatch strategy.
         public let namedConsumerStrategy: String
+        /// Maximum number of concurrent subscribers; 0 means unlimited.
         public let maxSubscriberCount: Int32
+        /// Number of messages currently held in the parked message queue.
         public let parkedMessageCount: Int64
 
         package init(

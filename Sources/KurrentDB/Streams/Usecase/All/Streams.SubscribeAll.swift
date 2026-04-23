@@ -10,6 +10,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension Streams where Target == AllStreamsTarget {
+    /// Usecase that opens a live subscription to the global `$all` stream.
     public struct SubscribeAll: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ReadAll.UnderlyingRequest
@@ -24,6 +25,7 @@ extension Streams where Target == AllStreamsTarget {
             "Streams.\(Self.self)"
         }
 
+        /// Options controlling the subscription start position and filter.
         public let options: Options
 
         init(options: Options) {
@@ -70,17 +72,25 @@ extension Streams where Target == AllStreamsTarget {
 }
 
 extension Streams.SubscribeAll where Target == AllStreamsTarget {
+    /// A single message received from a `$all` stream subscription.
     public struct Response: GRPCResponse {
+        /// Payload variants delivered by the `$all` subscription.
         public enum Content: Sendable {
+            /// A resolved event read from the stream.
             case event(readEvent: ReadEvent)
+            /// Server confirmation carrying the assigned subscription ID.
             case confirmation(subscriptionId: String)
+            /// First commit position seen on the stream.
             case commitPosition(firstStream: UInt64)
+            /// Last commit position seen on the stream.
             case commitPosition(lastStream: UInt64)
+            /// Last position across all streams.
             case position(lastAllStream: StreamPosition)
         }
 
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// The content delivered in this response message.
         public var content: Content
 
         init(content: Content) {
@@ -137,14 +147,20 @@ extension Streams.SubscribeAll where Target == AllStreamsTarget {
 }
 
 extension Streams.SubscribeAll where Target == AllStreamsTarget {
+    /// Options that control `$all` subscription behaviour.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// Global log position at which the subscription starts.
         public var position: PositionCursor
+        /// When `true`, linked events are resolved to their targets.
         public var resolveLinksEnabled: Bool
+        /// UUID representation used in event metadata.
         public var uuidOption: UUIDOption
+        /// Optional filter applied server-side to reduce event noise.
         public var filter: SubscriptionFilter?
 
+        /// Initialises options with sensible defaults (start from end, string UUIDs, no filter, no link resolution).
         public init() {
             resolveLinksEnabled = false
             uuidOption = .string

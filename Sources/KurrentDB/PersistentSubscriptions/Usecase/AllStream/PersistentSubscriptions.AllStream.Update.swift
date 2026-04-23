@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.AllStream {
+    /// Usecase for updating a persistent subscription on the `$all` stream.
     public struct Update: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Update.Input
@@ -23,7 +24,9 @@ extension PersistentSubscriptions.AllStream {
             "PersistentSubscriptions.\(Self.self)"
         }
 
+        /// The consumer group name for the persistent subscription being updated.
         public private(set) var group: String
+        /// The updated options to apply to the persistent subscription.
         public private(set) var options: Options
 
         init(group: String, options: Options) {
@@ -31,11 +34,6 @@ extension PersistentSubscriptions.AllStream {
             self.options = options
         }
 
-        /// Constructs the underlying gRPC request message for updating a persistent subscription.
-        ///
-        /// Builds the request based on the stream selection (all streams or a specific stream) and the provided cursor position or revision. Throws an error if the stream identifier cannot be built.
-        ///
-        /// - Throws: An error if building the stream identifier fails.
         /// Constructs the gRPC request message for updating a persistent subscription on all streams.
         ///
         /// - Throws: An error if building the options fails, such as when encoding the position cursor.
@@ -58,10 +56,13 @@ extension PersistentSubscriptions.AllStream {
 }
 
 extension PersistentSubscriptions.AllStream.Update {
+    /// Configuration options for updating a persistent subscription on the `$all` stream.
     public struct Options: CommandOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// The updated subscription settings such as consumer strategy, timeouts, and retry behaviour.
         public var settings: PersistentSubscription.UpdateSettings
+        /// The new starting position in the `$all` stream, or `nil` to leave it unchanged.
         public var position: PositionCursor?
 
         public init() {
