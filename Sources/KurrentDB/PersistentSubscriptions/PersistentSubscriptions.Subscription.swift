@@ -76,9 +76,15 @@ extension PersistentSubscriptions {
 
                 let task = Task {
                     do {
-                        for try await subscriptionResult in source.stream {
-                            let result = continuation.yield(subscriptionResult)
-                            if case .terminated = result {
+                        for try await eventResult in source.stream {
+                            let yieldResult = continuation.yield(eventResult)
+                            if let revision = eventResult.revision{
+                                tracker.update(revision: revision)
+                            }
+                            if let position = eventResult.position {
+                                tracker.update(position: position)
+                            }
+                            if case .terminated = yieldResult {
                                 continuation.finish()
                                 return
                             }
@@ -112,9 +118,6 @@ extension PersistentSubscriptions {
             case let .confirmation(subscriptionId):
                 tracker.update(subscriptionId: subscriptionId)
             case let .response(eventResult):
-                if let revision = eventResult.revision, let position = eventResult.position {
-                    tracker.update(revision: revision, position: position)
-                }
                 let result = source.continuation.yield(eventResult)
                 if case .terminated = result {
                     source.continuation.finish()
@@ -260,8 +263,11 @@ extension PersistentSubscriptions.Subscription {
             _finishAction.withLock { $0 = action }
         }
 
-        func update(revision: UInt64, position: StreamPosition) {
+        func update(revision: UInt64) {
             _revision.withLock { $0 = revision }
+        }
+        
+        func update(position: StreamPosition) {
             _position.withLock { $0 = position }
         }
 
