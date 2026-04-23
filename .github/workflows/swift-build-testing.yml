@@ -29,6 +29,14 @@ jobs:
            swift-version: ${{ matrix.swift }}
       - run: ulimit -n 10000
 
+      - name: Login to Kurrent Docker Registry
+        if: startsWith(matrix.kurrentdb.image, 'docker.kurrent.io')
+        uses: docker/login-action@v3
+        with:
+          registry: docker.kurrent.io
+          username: ${{ secrets.KURRENT_DOCKER_USERNAME }}
+          password: ${{ secrets.KURRENT_DOCKER_PASSWORD }}
+
       - name: Start KurrentDB cluster
         run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f ${{ matrix.kurrentdb.compose_file }} up -d
 
