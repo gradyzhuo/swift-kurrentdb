@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Streams {
+    /// Usecase that soft-deletes a stream, allowing it to be recreated later.
     public struct Delete: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Delete.Input
@@ -22,7 +23,9 @@ extension Streams {
             "Streams.\(Self.self)"
         }
 
+        /// Identifier of the stream to delete.
         public let streamIdentifier: StreamIdentifier
+        /// Options controlling the delete behaviour (e.g. expected revision).
         public let options: Options
 
         init(to streamIdentifier: StreamIdentifier, options: Options) {
@@ -47,9 +50,11 @@ extension Streams {
 }
 
 extension Streams.Delete {
+    /// Response returned after a successful stream deletion.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// Global log position of the delete operation, or `nil` when unavailable.
         public internal(set) var position: StreamPosition?
 
         package init(from message: UnderlyingMessage) throws {
@@ -66,11 +71,14 @@ extension Streams.Delete {
 }
 
 extension Streams.Delete {
+    /// Options that control stream delete behaviour.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// Expected stream revision used for optimistic concurrency checks.
         public var expectedRevision: StreamRevision
 
+        /// Initialises options with `expectedRevision` set to `.streamExists`.
         public init() {
             expectedRevision = .streamExists
         }

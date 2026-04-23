@@ -30,6 +30,7 @@ extension StreamsTarget where Self == SpecifiedStream {
 extension SpecifiedStream: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
 
+    /// Creates a stream target from a string literal name.
     public init(stringLiteral value: String) {
         identifier = .init(name: value)
     }

@@ -11,7 +11,7 @@ extension Projection {
         /// No specific mode constraint; matches any projection mode.
         case any = "Any"
 
-        /// Runs in-process and is discarded when the connection closes.
+        /// Runs server-side without a checkpoint; discarded when the server restarts.
         case transient = "Transient"
 
         /// Runs indefinitely, processing events as they arrive.

@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.AllStream {
+    /// Usecase for replaying parked (dead-letter) events on a persistent subscription for the `$all` stream.
     public struct ReplayParked: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.ReplayParked.Input
@@ -56,14 +57,19 @@ extension PersistentSubscriptions.AllStream {
 }
 
 extension PersistentSubscriptions.AllStream.ReplayParked {
+    /// Configuration options for replaying parked events on a persistent subscription for the `$all` stream.
     public struct Options: CommandOptions {
+        /// Controls when the replay of parked events should stop.
         public enum StopAtOption: Sendable {
+            /// Stop replaying when the specified stream position is reached.
             case position(position: Int64)
+            /// Replay all parked events without an upper bound.
             case noLimit
         }
 
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// The stopping condition for the parked event replay.
         public var stopAt: StopAtOption
 
         public init() {

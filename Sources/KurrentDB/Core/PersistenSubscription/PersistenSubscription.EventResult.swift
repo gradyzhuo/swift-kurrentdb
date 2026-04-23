@@ -6,8 +6,11 @@
 //
 
 extension PersistentSubscription {
+    /// An event delivered by a persistent subscription together with its retry metadata.
     public struct EventResult: Sendable {
+        /// The event read from the stream.
         public let event: ReadEvent
+        /// Number of times this event has been retried after a previous nack or timeout.
         public let retryCount: Int32
 
         package init(event: ReadEvent, retryCount: Int32) {
