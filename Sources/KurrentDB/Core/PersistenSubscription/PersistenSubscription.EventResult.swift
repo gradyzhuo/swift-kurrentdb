@@ -21,15 +21,16 @@ extension PersistentSubscription {
 }
 
 
+/// Provides stream-position metadata so that `EventResult` can be used as the
+/// generic parameter of ``PersistentSubscriptions/Subscription``.
 extension PersistentSubscription.EventResult: SubscriptionEventResult {
+    /// Stream revision of the underlying recorded event.
     public var revision: UInt64? {
-        get {
-            event.record.revision
-        }
+        event.record.revision
     }
+
+    /// Commit position of the event in the `$all` stream.
     public var position: StreamPosition? {
-        get{
-            event.commitPosition
-        }
+        event.commitPosition
     }
 }

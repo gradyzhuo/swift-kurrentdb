@@ -13,6 +13,22 @@ import GRPCNIOTransportHTTP2Posix
 import Synchronization
 
 extension PersistentSubscriptions {
+    /// An active handle to a persistent subscription session.
+    ///
+    /// Obtain an instance through ``PersistentSubscriptions/subscribe(configure:)``.
+    /// Iterate ``events`` to receive delivered events, then call ``ack(readEvents:)``
+    /// or ``nack(readEvents:action:reason:)`` for each one.
+    ///
+    /// Breaking out of the `for try await` loop — or letting the subscription go out of
+    /// scope — automatically stops the underlying gRPC stream and closes the server-side
+    /// connection.
+    ///
+    /// ```swift
+    /// let subscription = try await ps.subscribe()
+    /// for try await result in subscription.events {
+    ///     try await subscription.ack(readEvents: result.event)
+    /// }
+    /// ```
     public final class Subscription<EventResult: SubscriptionEventResult>: Sendable {
         package typealias Request = PersistentSubscriptions.UnderlyingService.Method.Read.Input
 
@@ -21,18 +37,35 @@ extension PersistentSubscriptions {
         private let writer: Writer
         private let _eventsCache: Mutex<AsyncThrowingStream<EventResult, Error>?> = .init(nil)
 
+        /// Server-assigned identifier for this subscription session.
         public var subscriptionId: String? {
             tracker.subscriptionId
         }
 
+        /// Stream revision of the most recently received event, or `nil` before any event arrives.
+        ///
+        /// Use this value to resume a subscription from a known position after a drop.
         public var lastRevision: UInt64? {
             tracker.revision
         }
 
+        /// Global log position of the most recently received event in the `$all` stream,
+        /// or `nil` before any event arrives.
+        ///
+        /// Use this value when subscribing to `$all` to resume from a known position after a drop.
         public var lastPosition: StreamPosition? {
             tracker.position
         }
 
+        /// Asynchronous stream of events delivered by this subscription.
+        ///
+        /// The stream is created lazily on first access and cached — every subsequent access
+        /// returns the same instance.  This ensures that exactly one iterator consumes the
+        /// underlying gRPC response stream at any given time.
+        ///
+        /// Breaking out of the `for try await` loop cancels the bridge task, stops the gRPC
+        /// write stream, and closes the server-side connection.  After cancellation, further
+        /// iteration of the same stream returns immediately without yielding new events.
         public var events: AsyncThrowingStream<EventResult, Error> {
             _eventsCache.withLock { cache in
                 if let existing = cache {
@@ -105,6 +138,10 @@ extension PersistentSubscriptions {
             }
         }
 
+        /// Acknowledges an array of events, signalling successful processing to the server.
+        ///
+        /// - Parameter readEvents: Events to acknowledge.
+        /// - Throws: `KurrentError` if the acknowledgement request cannot be sent.
         public func ack(readEvents: [ReadEvent]) async throws(KurrentError) {
             let eventIds = readEvents.map {
                 if let link = $0.link { link.id } else { $0.record.id }
@@ -112,6 +149,10 @@ extension PersistentSubscriptions {
             try await ack(eventIds: eventIds)
         }
 
+        /// Acknowledges one or more events passed as variadic arguments.
+        ///
+        /// - Parameter readEvents: Events to acknowledge.
+        /// - Throws: `KurrentError` if the acknowledgement request cannot be sent.
         public func ack(readEvents: ReadEvent ...) async throws(KurrentError) {
             try await ack(readEvents: readEvents)
         }
@@ -126,6 +167,13 @@ extension PersistentSubscriptions {
             }
         }
 
+        /// Negatively acknowledges an array of events, instructing the server to apply the specified action.
+        ///
+        /// - Parameters:
+        ///   - readEvents: Events to negatively acknowledge.
+        ///   - action: Retry or discard action the server should apply to these events.
+        ///   - reason: Human-readable explanation for the negative acknowledgement.
+        /// - Throws: `KurrentError` if the nack request cannot be sent.
         public func nack(readEvents: [ReadEvent], action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             let eventIds = readEvents.map {
                 if let link = $0.link { link.id } else { $0.record.id }
@@ -133,6 +181,13 @@ extension PersistentSubscriptions {
             try await nack(eventIds: eventIds, action: action, reason: reason)
         }
 
+        /// Negatively acknowledges one or more events passed as variadic arguments.
+        ///
+        /// - Parameters:
+        ///   - readEvents: Events to negatively acknowledge.
+        ///   - action: Retry or discard action the server should apply to these events.
+        ///   - reason: Human-readable explanation for the negative acknowledgement.
+        /// - Throws: `KurrentError` if the nack request cannot be sent.
         public func nack(readEvents: ReadEvent ..., action: PersistentSubscriptions.Nack.Action, reason: String) async throws(KurrentError) {
             try await nack(readEvents: readEvents, action: action, reason: reason)
         }
