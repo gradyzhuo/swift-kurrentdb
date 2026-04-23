@@ -8,9 +8,9 @@
 // MARK: - Server Operations Factory Methods
 
 extension KurrentDBClient {
-    /// Creates a server operations interface for the specified target.
+    /// Returns a server operations interface scoped to the given target.
     ///
-    /// The target determines which operations are available at compile time:
+    /// The target constrains which operations are available at compile time:
     /// - `.system` — `shutdown()`, `mergeIndexes()`, `restartPersistentSubscriptions()`
     /// - `.scavenge` — `startScavenge(threadCount:startFromChunk:)`
     /// - `.activeScavenge(scavengeId:)` — `stopScavenge()`
@@ -25,8 +25,8 @@ extension KurrentDBClient {
     ///     .stopScavenge()
     /// ```
     ///
-    /// - Parameter target: The operations target specifying scope and available operations.
-    /// - Returns: A configured ``Operations`` instance constrained by the target type.
+    /// - Parameter target: Operations target specifying scope and capabilities.
+    /// - Returns: An ``Operations`` instance constrained by the target type.
     public func operations<Target: OperationsTarget>(of target: Target) -> Operations<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }

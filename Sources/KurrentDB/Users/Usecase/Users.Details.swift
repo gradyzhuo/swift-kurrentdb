@@ -11,6 +11,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension Users {
+    /// Usecase that fetches user detail records as a streaming response.
     public struct Details: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
@@ -25,6 +26,7 @@ extension Users {
             "Users.\(Self.self)"
         }
 
+        /// Login name of the user whose details are being requested.
         public let loginName: String
 
         public init(loginName: String) {
@@ -64,6 +66,7 @@ extension Users {
 }
 
 extension Users.Details {
+    /// Decoded user detail record from a single gRPC response message.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 

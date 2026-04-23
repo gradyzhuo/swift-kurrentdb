@@ -10,6 +10,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Users {
+    /// Usecase that sends a create-user RPC to KurrentDB.
     public struct Create: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Create.Input

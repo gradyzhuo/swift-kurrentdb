@@ -3,17 +3,13 @@
 //  KurrentDB
 //
 
-/// A target representing operations on all users in the KurrentDB system.
-///
-/// Supports user creation operations via `UserCreatable`.
-///
-/// - SeeAlso: `UserCreatable`, `UsersTarget`, `SpecifiedUserTarget`
+/// Target representing the full user collection, enabling account creation operations.
 public struct AllUsersTarget: UserCreatable {
     public init() {}
 }
 
 extension UsersTarget where Self == AllUsersTarget {
-    /// Returns a target representing all users (for creation operations).
+    /// Target representing all users, used for account creation.
     public static var all: AllUsersTarget {
         .init()
     }

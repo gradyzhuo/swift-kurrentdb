@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a stop-scavenge RPC to KurrentDB.
     public struct StopScavenge: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StopScavenge.Input

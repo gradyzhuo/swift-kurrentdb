@@ -9,11 +9,17 @@ import Foundation
 import GRPCEncapsulates
 
 extension Operations {
+    /// Response returned when starting or stopping a scavenge operation.
     public struct ScavengeResponse: GRPCResponse {
+        /// Lifecycle status of a scavenge operation.
         public enum ScavengeResult: Sendable {
+            /// Scavenge has been started.
             case started
+            /// Scavenge is currently running.
             case inProgress
+            /// Scavenge has been stopped.
             case stopped
+            /// Unrecognised status value returned by the server.
             case unrecognized(Int)
         }
 

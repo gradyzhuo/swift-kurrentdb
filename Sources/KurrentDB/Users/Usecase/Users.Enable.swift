@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Users {
+    /// Usecase that sends an enable-user RPC to KurrentDB.
     public struct Enable: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Enable.Input
@@ -23,6 +24,7 @@ extension Users {
             "Users.\(Self.self)"
         }
 
+        /// Login name of the user account to enable.
         public let loginName: String
 
         public init(loginName: String) {

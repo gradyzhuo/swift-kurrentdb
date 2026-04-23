@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a merge-indexes RPC to KurrentDB.
     public struct MergeIndexes: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.MergeIndexes.Input

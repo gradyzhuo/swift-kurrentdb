@@ -8,21 +8,12 @@
 // MARK: - Monitoring Operations
 
 extension KurrentDBClient {
-    /// Accesses the cluster monitoring service for health checks and status information.
-    ///
-    /// ```swift
-    /// let health = try await client.monitoring.health()
-    /// ```
-    ///
-    /// - SeeAlso: ``Monitoring``
+    /// Monitoring service for querying real-time KurrentDB server statistics.
     public var monitoring: Monitoring {
         .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
     }
 
-    /// Retrieves real-time server statistics as an asynchronous stream.
-    ///
-    /// Each snapshot contains key-value pairs of server metrics (disk usage, memory, queue lengths, etc.)
-    /// refreshed at the specified interval.
+    /// Streams server statistics snapshots from the monitoring service.
     ///
     /// ```swift
     /// for try await snapshot in try await client.stats() {
@@ -33,10 +24,11 @@ extension KurrentDBClient {
     /// ```
     ///
     /// - Parameters:
-    ///   - useMetadata: Include metadata in the response. Defaults to `false`.
-    ///   - refreshTimePeriodInMs: Refresh interval in milliseconds. Defaults to `10000` (10s).
-    ///
+    ///   - useMetadata: Include metadata fields in each snapshot. Defaults to `false`.
+    ///   - refreshTimePeriodInMs: Interval between snapshots in milliseconds. Defaults to `10000` (10 s).
     /// - Returns: An async stream of ``Monitoring/Stats/Response`` snapshots.
+    /// - Throws: `KurrentError.accessDenied` if the caller lacks permission to read stats.
+    ///   `KurrentError.unavailable` if the server cannot be reached.
     public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Monitoring.Stats.Responses {
         let monitoring = Monitoring(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
         return try await monitoring.stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)

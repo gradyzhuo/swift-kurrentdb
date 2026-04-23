@@ -12,6 +12,7 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
+/// gRPC service for retrieving real-time KurrentDB server statistics.
 public final class Monitoring: GRPCConcreteService {
     package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
 
@@ -27,6 +28,14 @@ public final class Monitoring: GRPCConcreteService {
 }
 
 extension Monitoring {
+    /// Streams server statistics snapshots at the specified refresh interval.
+    ///
+    /// - Parameters:
+    ///   - useMetadata: Include metadata fields in each stats snapshot. Defaults to `false`.
+    ///   - refreshTimePeriodInMs: Interval between snapshots in milliseconds. Defaults to `10000` (10 s).
+    /// - Returns: An async stream of ``Stats/Response`` snapshots.
+    /// - Throws: `KurrentError.accessDenied` if the caller lacks permission to read stats.
+    ///   `KurrentError.unavailable` if the server cannot be reached.
     public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Stats.Responses {
         let node = try await selector.select()
         let usecase = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)

@@ -11,6 +11,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension Users {
+    /// Usecase that sends a disable-user RPC to KurrentDB.
     public struct Disable: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Disable.Input
@@ -25,6 +26,7 @@ extension Users {
             "Users.\(Self.self)"
         }
 
+        /// Login name of the user account to disable.
         public let loginName: String
 
         public init(loginName: String) {

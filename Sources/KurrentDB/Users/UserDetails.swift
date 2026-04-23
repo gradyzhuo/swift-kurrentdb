@@ -7,45 +7,31 @@
 import Foundation
 import GRPCEncapsulates
 
-/// Represents the details of a user.
-///
-/// `UserDetails` contains important information about a user, including their username, full name,
-/// associated groups, last update timestamp, and whether the account is disabled.
-///
-/// - Note: This struct is designed to be used as a part of user management functionalities, typically for
-/// retrieving and updating user information in a user management system.
-///
-/// ## Usage Example:
-/// ```swift
-/// let user = UserDetails(loginName: "john_doe", fullName: "John Doe", groups: ["admin", "user"],
-///                        lastUpdated: Date(), disabled: false)
-/// ```
-///
-/// - SeeAlso: `Users` for the service to manage users and their details.
+/// Snapshot of a KurrentDB user account returned by the Users service.
 public struct UserDetails: Sendable {
-    /// The login name (username) of the user.
+    /// Unique login name identifying the user.
     public var loginName: String
 
-    /// The full name of the user.
+    /// Display name of the user.
     public var fullName: String
 
-    /// The list of groups the user belongs to.
+    /// Groups the user belongs to.
     public var groups: [UserGroup]
 
-    /// The last updated timestamp of the user’s details.
+    /// Timestamp of the most recent update to this user record.
     public var lastUpdated: Date
 
-    /// A flag indicating whether the user’s account is disabled.
+    /// Indicates whether the account is currently disabled.
     public var disabled: Bool
 
-    /// Initializes a `UserDetails` instance with the given user details.
+    /// Creates a `UserDetails` value with the given field values.
     ///
     /// - Parameters:
-    ///   - loginName: The login name (username) of the user.
-    ///   - fullName: The full name of the user.
-    ///   - groups: The groups the user belongs to.
-    ///   - lastUpdated: The date when the user’s details were last updated.
-    ///   - disabled: A flag indicating whether the user’s account is disabled.
+    ///   - loginName: Unique login name for the user.
+    ///   - fullName: Display name of the user.
+    ///   - groups: Groups the user belongs to.
+    ///   - lastUpdated: Date the user record was last modified.
+    ///   - disabled: Whether the account is currently disabled.
     public init(loginName: String, fullName: String, groups: [UserGroup], lastUpdated: Date, disabled: Bool) {
         self.loginName = loginName
         self.fullName = fullName
@@ -56,14 +42,6 @@ public struct UserDetails: Sendable {
 }
 
 extension UserDetails {
-    /// Initializes a `UserDetails` instance from the output of a `Users` service's method.
-    ///
-    /// This initializer converts the underlying message received from the `Users.UnderlyingClient.UnderlyingService.Method.Details.Output.UserDetails`
-    /// into a `UserDetails` struct.
-    ///
-    /// - Parameters:
-    ///   - message: The user details message from the service method output.
-    /// - Throws: An error if the transformation fails.
     package init(from message: Users.UnderlyingClient.UnderlyingService.Method.Details.Output.UserDetails) throws {
         self.init(
             loginName: message.loginName,
