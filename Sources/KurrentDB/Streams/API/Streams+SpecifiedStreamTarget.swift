@@ -9,18 +9,20 @@ import Foundation
 
 // MARK: - Specified Stream Operations
 
-/// Provides operations for specific streams conforming to `SpecifiedStreamTarget`.
+/// Operations available when the target identifies a single named stream.
 extension Streams where Target: SpecifiedStreamTarget {
-    /// The identifier of the specific stream.
+    /// Identifier of the target stream.
     public var identifier: StreamIdentifier {
         target.identifier
     }
 
-    /// Sets metadata for the specified stream.
+    /// Sets metadata on the specified stream.
     ///
-    /// - Parameter metadata: The metadata to associate with the stream.
-    /// - Returns: An `Append.Response` indicating the result of the operation.
-    /// - Throws: An error if the operation fails.
+    /// - Parameters:
+    ///   - metadata: The ``StreamMetadata`` to store.
+    ///   - expectedRevision: The revision expected at the metadata stream before writing. Defaults to `.any`.
+    /// - Returns: An `Append.Response` containing the result of the metadata write.
+    /// - Throws: `KurrentError` if the write fails or a revision conflict occurs.
     @discardableResult
     public func setMetadata(metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Append.Response {
         var options = Append.Options()
@@ -34,21 +36,10 @@ extension Streams where Target: SpecifiedStreamTarget {
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Retrieves the metadata associated with the specified stream.
+    /// Retrieves the latest metadata for the stream.
     ///
-    /// - Parameter cursor: The position in the stream from which to retrieve metadata, defaulting to `.end`.
-    /// - Returns: The `StreamMetadata` if available, otherwise `nil`.
-    /// Retrieves the latest metadata for the stream, if available.
-    ///
-    /// Reads the most recent metadata event from the stream's metadata stream (`$$<streamName>`), decodes it as JSON, and returns it as a `StreamMetadata` object. Returns `nil` if no metadata event exists.
-    ///
-    /// - Throws: `KurrentError` if the metadata event is missing, not in JSON format, or if a parsing or client error occurs.
-    ///
-    /// Retrieves the latest metadata for the stream, decoding it as `StreamMetadata`.
-    ///
-    /// Reads the most recent metadata event from the stream's associated metadata stream. Returns the decoded metadata if present, or `nil` if no metadata event exists. Throws an error if the event data is not valid JSON or if a client or parsing error occurs.
-    ///
-    /// - Returns: The latest `StreamMetadata` if available, or `nil` if no metadata event exists.
+    /// - Returns: The decoded ``StreamMetadata``, or `nil` if no metadata event has been written.
+    /// - Throws: `KurrentError` if the metadata event is not JSON-encoded or a client error occurs.
     @discardableResult
     public func getMetadata() async throws(KurrentError) -> StreamMetadata? {
         var options = Streams.Read.Options()
@@ -80,13 +71,19 @@ extension Streams where Target: SpecifiedStreamTarget {
         }
     }
 
-    /// Appends a list of events to the specified stream.
+    /// Appends events to the stream.
+    ///
+    /// ```swift
+    /// try await client.streams(specified: "orders").append(events: [event]) {
+    ///     $0.expectedRevision = .streamExists
+    /// }
+    /// ```
     ///
     /// - Parameters:
-    ///   - events: An array of events to append.
-    ///   - configure: A closure to configure append options. Defaults to no-op.
-    /// - Returns: An `Append.Response` indicating the result of the operation.
-    /// - Throws: An error if the append operation fails.
+    ///   - events: Events to append.
+    ///   - configure: Closure to configure ``Append/Options`` (e.g., expected revision). Defaults to no-op.
+    /// - Returns: An `Append.Response` with the server-assigned positions.
+    /// - Throws: `KurrentError` if the append fails or a revision conflict occurs.
     @discardableResult
     public func append(events: [EventData], configure: @Sendable (inout Append.Options) -> Void = { _ in }) async throws(KurrentError) -> Append.Response {
         var options = Append.Options()
@@ -95,23 +92,33 @@ extension Streams where Target: SpecifiedStreamTarget {
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Appends a variadic list of events to the specified stream.
+    /// Appends a variadic list of events to the stream.
     ///
     /// - Parameters:
-    ///   - events: A variadic list of events to append.
-    ///   - configure: A closure to configure append options. Defaults to no-op.
-    /// - Returns: An `Append.Response` indicating the result of the operation.
-    /// - Throws: An error if the append operation fails.
+    ///   - events: One or more events to append.
+    ///   - configure: Closure to configure ``Append/Options``. Defaults to no-op.
+    /// - Returns: An `Append.Response` with the server-assigned positions.
+    /// - Throws: `KurrentError` if the append fails or a revision conflict occurs.
     @discardableResult
     public func append(events: EventData..., configure: @Sendable (inout Append.Options) -> Void = { _ in }) async throws(KurrentError) -> Append.Response {
         try await append(events: events, configure: configure)
     }
 
-    /// Reads events from the specified stream.
+    /// Reads events from the stream.
     ///
-    /// - Parameter configure: A closure to configure read options, such as revision range or direction. Defaults to no-op.
-    /// - Returns: An asynchronous throwing stream of read responses containing events from the stream.
-    /// - Throws: `KurrentError` if the read operation fails.
+    /// ```swift
+    /// let responses = try await client.streams(specified: "orders").read {
+    ///     $0.direction = .backward
+    ///     $0.limit = 10
+    /// }
+    /// for try await response in responses {
+    ///     let event = try response.event
+    /// }
+    /// ```
+    ///
+    /// - Parameter configure: Closure to configure ``Read/Options`` (direction, limit, starting revision). Defaults to no-op.
+    /// - Returns: An async throwing stream of ``Streams/ReadResponse`` values.
+    /// - Throws: `KurrentError` if the stream is not found or the read fails.
     public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
         var options = Read.Options()
         configure(&options)
@@ -119,11 +126,11 @@ extension Streams where Target: SpecifiedStreamTarget {
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Subscribes to events from the specified stream.
+    /// Subscribes to live events from the stream.
     ///
-    /// - Parameter configure: A closure to configure subscription options. Defaults to no-op.
-    /// - Returns: A subscription to the stream's events.
-    /// - Throws: `KurrentError` if the subscription fails.
+    /// - Parameter configure: Closure to configure ``Subscribe/Options`` (starting position, filter). Defaults to no-op.
+    /// - Returns: A ``Streams/Subscription`` that delivers events as they are appended.
+    /// - Throws: `KurrentError` if the subscription cannot be established.
     public func subscribe(configure: @Sendable (inout Subscribe.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {
         var options = Subscribe.Options()
         configure(&options)
@@ -131,11 +138,11 @@ extension Streams where Target: SpecifiedStreamTarget {
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Deletes the specified stream.
+    /// Soft-deletes the stream, allowing it to be recreated by appending new events.
     ///
-    /// - Parameter configure: A closure to configure delete options. Defaults to no-op.
-    /// - Returns: A `Delete.Response` indicating the result of the operation.
-    /// - Throws: An error if the delete operation fails.
+    /// - Parameter configure: Closure to configure ``Delete/Options`` (expected revision). Defaults to no-op.
+    /// - Returns: A `Delete.Response` with the resulting stream position.
+    /// - Throws: `KurrentError` if the delete fails or a revision conflict occurs.
     @discardableResult
     public func delete(configure: @Sendable (inout Delete.Options) -> Void = { _ in }) async throws(KurrentError) -> Delete.Response {
         var options = Delete.Options()
@@ -144,11 +151,11 @@ extension Streams where Target: SpecifiedStreamTarget {
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Marks the specified stream as permanently deleted (tombstoned).
+    /// Permanently tombstones the stream so it cannot be recreated.
     ///
-    /// - Parameter configure: A closure to configure tombstone options. Defaults to no-op.
-    /// - Returns: A `Tombstone.Response` indicating the result of the operation.
-    /// - Throws: An error if the tombstone operation fails.
+    /// - Parameter configure: Closure to configure ``Tombstone/Options`` (expected revision). Defaults to no-op.
+    /// - Returns: A `Tombstone.Response` with the resulting stream position.
+    /// - Throws: `KurrentError` if the tombstone operation fails or a revision conflict occurs.
     @discardableResult
     public func tombstone(configure: @Sendable (inout Tombstone.Options) -> Void = { _ in }) async throws(KurrentError) -> Tombstone.Response {
         var options = Tombstone.Options()

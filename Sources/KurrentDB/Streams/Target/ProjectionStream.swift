@@ -3,9 +3,9 @@
 //  KurrentDB
 //
 
-/// Represents a system projection stream.
+/// Target representing a system projection stream.
 public struct ProjectionStream: SpecifiedStreamTarget {
-    /// The identifier for the stream.
+    /// Unique identifier for the projection stream.
     public private(set) var identifier: StreamIdentifier
 
     init(identifier: StreamIdentifier) {
@@ -14,12 +14,12 @@ public struct ProjectionStream: SpecifiedStreamTarget {
 }
 
 extension StreamsTarget where Self == ProjectionStream {
-    /// Creates a `ProjectionStream` scoped to events of a specific type.
+    /// Creates a ``ProjectionStream`` for the `$et-<eventType>` category stream.
     public static func byEventType(_ eventType: String) -> ProjectionStream {
         .init(identifier: .init(name: "$et-\(eventType)"))
     }
 
-    /// Creates a `ProjectionStream` scoped to streams with a specific prefix.
+    /// Creates a ``ProjectionStream`` for the `$ce-<prefix>` category stream.
     public static func byStream(prefix: String) -> ProjectionStream {
         .init(identifier: .init(name: "$ce-\(prefix)"))
     }
