@@ -5,10 +5,15 @@
 //  Created by Grady Zhuo on 2025/5/3.
 //
 
+/// Preferred cluster node role to connect to when multiple nodes are available.
 public enum NodePreference: String, Sendable {
+    /// Prefer the cluster leader for all operations.
     case leader
+    /// Prefer a follower node, falling back to leader if none is available.
     case follower
+    /// Select any available node at random.
     case random
+    /// Prefer a read-only replica, falling back to other node types if unavailable.
     case readOnlyReplica = "readonlyreplica"
 }
 
