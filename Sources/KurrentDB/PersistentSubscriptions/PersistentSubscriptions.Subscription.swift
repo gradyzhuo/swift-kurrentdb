@@ -13,91 +13,76 @@ import GRPCNIOTransportHTTP2Posix
 import Synchronization
 
 extension PersistentSubscriptions {
-    /// A subscription to a persistent event stream, enabling reading and acknowledging events.
-    ///
-    /// This class provides an interface to interact with a persistent subscription, allowing you to:
-    /// - Receive events via an asynchronous stream.
-    /// - Acknowledge (`ack`) or negatively acknowledge (`nack`) events.
-    /// - Manage subscription lifecycle through a writer for sending requests.
-    public final class Subscription: Sendable {
-        /// The underlying request type for the subscription.
+    public final class Subscription<EventResult: Sendable>: Sendable {
         package typealias Request = PersistentSubscriptions.UnderlyingService.Method.Read.Input
-
-        /// The writer responsible for sending requests to the subscription service.
-        let writer: Writer
-
-        private let task: Task<Void, Never>?
-
-        /// The unique identifier of the subscription, if available.
-        ///
-        /// This is set during initialization based on the first response from the server.
-        public let subscriptionId: String?
-
-        /// An asynchronous stream delivering events or errors from the subscription.
-        public let events: AsyncThrowingStream<PersistentSubscription.EventResult, Error>
-
-        /// The stream revision of the last received event, or `nil` if no events have been received yet.
-        public var lastRevision: UInt64? {
-            _revisionTracker.revision
-        }
-
-        /// The global log position of the last received event, or `nil` if no events have been received yet.
-        /// Useful when subscribing to `$all` to resume from a known position after a drop.
-        public var lastPosition: StreamPosition? {
-            _revisionTracker.position
-        }
-
-        private let _revisionTracker = RevisionTracker()
-
-        /// Initializes a new subscription with a writer and response stream.
-        ///
-        /// - Parameters:
-        ///   - writer: The `Writer` instance used to send requests. Defaults to a new `Writer`.
-        ///   - reader: An asynchronous stream of responses from the subscription service.
-        /// - Throws: An error if the initialization process fails, such as when the response stream cannot be processed.
-        package init(writer: Writer = .init(), responses reader: AsyncThrowingStream<PersistentSubscriptions.ReadResponse, any Error>, task: Task<Void, Never>? = nil) async throws {
-            self.writer = writer
-            self.task = task
-
-            var iterator = reader.makeAsyncIterator()
-            subscriptionId = try await iterator.next().flatMap{
-                guard case let .confirmation(subscriptionId) = $0 else {
-                    throw KurrentError.initializationError(reason: "The first response from the server was not a confirmation response.")
-                }
-                return subscriptionId
+        
+        private let source: (stream: AsyncThrowingStream<EventResult, Error>, continuation: AsyncThrowingStream<EventResult, Error>.Continuation)
+        private let tracker: SubscriptionTracker
+        private let writer: Writer
+        
+        public var subscriptionId: String? {
+            get{
+                tracker.subscriptionId
             }
-            
-            let (stream, continuation) = AsyncThrowingStream<PersistentSubscription.EventResult, any Error>.makeStream()
-            self.events = stream
-            do{
-                while let response = try await iterator.next() {
-                    guard case let .readEvent(event, retryCount) = response else {
-                        throw KurrentError.subscriptionDropped(
-                            reason: "The subscription was dropped by the server.",
-                            lastRevision: _revisionTracker.revision,
-                            lastPosition: _revisionTracker.position
-                        )
+        }
+        
+        public var events: AsyncThrowingStream<EventResult, Error>{
+            get{
+                let (stream, continuation) = AsyncThrowingStream<EventResult, Error>.makeStream()
+                
+                let task = Task{
+                    do{
+                        for try await subscriptionResult in source.stream {
+                            let result = continuation.yield(subscriptionResult)
+                            if case .terminated = result {
+                                continuation.finish()
+                            }
+                        }
+                        continuation.finish()
+                    }catch{
+                        continuation.finish(throwing: error)
                     }
-                    _revisionTracker.update(revision: event.record.revision, position: event.record.position)
-                    continuation.yield(.init(event: event, retryCount: retryCount))
                 }
-            }catch let error as KurrentError {
-                throw error
-            } catch {
-                throw KurrentError.subscriptionDropped(
-                    reason: "\(error)",
-                    lastRevision: _revisionTracker.revision,
-                    lastPosition: _revisionTracker.position
-                )
+                
+                continuation.onTermination = { [writer, source, tracker] termination in
+                    // 不管 .finished 還是 .cancelled，都要通知 grpc 端停止
+                    writer.stop()
+                    source.continuation.finish()
+                    task.cancel()
+                    tracker.finishAction?(termination)
+                }
+                
+                
+                return stream
             }
         }
-
-        /// Cancels the subscription, stopping the background task and the writer.
-        public func cancel() {
-            task?.cancel()
-            writer.stop()
+        
+        init(writer: Writer) {
+            self.writer = writer
+            self.tracker = SubscriptionTracker()
+            self.source = AsyncThrowingStream<EventResult, Error>.makeStream()
         }
-
+        
+        internal func send(state: State) {
+            switch state {
+            case let .confirmation(subscriptionId):
+                tracker.update(subscriptionId: subscriptionId)
+            case let .response(eventResult):
+                let result = source.continuation.yield(eventResult)
+                // ✅ 檢查 yield 結果
+                if case .terminated = result {
+                    // consumer 跑了，通知上游停止
+                    source.continuation.finish()
+                }
+            case let .finish(error):
+                source.continuation.finish(throwing: error)
+            }
+        }
+        
+        internal func onFinish(perform action: @Sendable @escaping (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void) {
+            tracker.update(action: action)
+        }
+        
         /// Acknowledges a list of events by their UUIDs.
         ///
         /// - Parameters:
@@ -187,23 +172,10 @@ extension PersistentSubscriptions {
             try await nack(readEvents: readEvents, action: action, reason: reason)
         }
     }
+    
 
-    private final class RevisionTracker: Sendable {
-        private let _mutex: Mutex<(revision: UInt64?, position: StreamPosition?)> = .init((nil, nil))
-
-        var revision: UInt64? {
-            _mutex.withLock { $0.revision }
-        }
-
-        var position: StreamPosition? {
-            _mutex.withLock { $0.position }
-        }
-
-        func update(revision: UInt64, position: StreamPosition) {
-            _mutex.withLock { $0 = (revision, position) }
-        }
-    }
 }
+
 
 extension PersistentSubscriptions.Subscription {
     /// A utility struct for writing requests to the subscription service.
@@ -243,6 +215,52 @@ extension PersistentSubscriptions.Subscription {
         /// Stops the writer by finishing the underlying stream.
         public func stop() {
             continuation.finish()
+        }
+    }
+    
+    enum State: Sendable {
+        case confirmation(subscriptionId: String)
+        case response(eventResult: EventResult)
+        case finish(throwing: (any Error)?)
+        
+        internal static func finish() -> Self {
+            .finish(throwing: nil)
+        }
+    }
+    
+    private final class SubscriptionTracker: Sendable {
+        private let _revision: Mutex<UInt64?> = .init(nil)
+        private let _position: Mutex<StreamPosition?> = .init(nil)
+        private let _subscriptionId: Mutex<String?> = .init(nil)
+        private let _finishAction: Mutex<(@Sendable (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void)?> = .init(nil)
+
+        var subscriptionId: String? {
+            _subscriptionId.withLock { $0 }
+        }
+        
+        var revision: UInt64? {
+            _revision.withLock { $0 }
+        }
+
+        var position: StreamPosition? {
+            _position.withLock { $0 }
+        }
+        
+        var finishAction: (@Sendable (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void)? {
+            _finishAction.withLock { $0 }
+        }
+        
+        func update(subscriptionId: String) {
+            _subscriptionId.withLock { $0 = subscriptionId }
+        }
+        
+        func update(action: @escaping @Sendable (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void) {
+            _finishAction.withLock { $0 = action }
+        }
+
+        func update(revision: UInt64, position: StreamPosition) {
+            _revision.withLock { $0 = revision }
+            _position.withLock { $0 = position }
         }
     }
 }

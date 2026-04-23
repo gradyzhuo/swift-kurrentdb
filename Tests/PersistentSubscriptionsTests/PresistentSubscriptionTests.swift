@@ -51,7 +51,7 @@ struct PersistentSubscriptionsTests {
         ]) { $0.expectedRevision = .any }
 
         var lastEventResult: PersistentSubscription.EventResult?
-        for try await result in subscription.events {
+        for try await result in await subscription.events {
             lastEventResult = result
             try await subscription.ack(readEvents: result.event)
             break
@@ -81,7 +81,7 @@ struct PersistentSubscriptionsTests {
             .append(events: [event]) { $0.expectedRevision = .any }
 
         var lastEventResult: PersistentSubscription.EventResult?
-        for try await result in subscription.events {
+        for try await result in await subscription.events {
             try await subscription.ack(readEvents: result.event)
 
             if result.event.record.eventType == event.eventType {
