@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a resign-node RPC to KurrentDB.
     public struct ResignNode: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.ResignNode.Input

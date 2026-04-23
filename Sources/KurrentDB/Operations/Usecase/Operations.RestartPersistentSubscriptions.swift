@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a restart-persistent-subscriptions RPC to KurrentDB.
     public struct RestartPersistentSubscriptions: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.RestartPersistentSubscriptions.Input

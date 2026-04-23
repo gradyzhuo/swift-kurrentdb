@@ -10,6 +10,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Users {
+    /// Usecase that sends a reset-password RPC to KurrentDB without requiring the current password.
     public struct ResetPassword: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.ResetPassword.Input
@@ -24,6 +25,7 @@ extension Users {
             "Users.\(Self.self)"
         }
 
+        /// Login name of the user whose password is being reset.
         public let loginName: String
         private let newPassword: String
 

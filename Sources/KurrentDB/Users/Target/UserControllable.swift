@@ -3,18 +3,8 @@
 //  KurrentDB
 //
 
-/// A protocol marking user targets that support control operations on specific users.
-///
-/// Types conforming to `UserControllable` can perform administrative and management operations
-/// on individual user accounts: viewing details, modifying account status, updating
-/// profile information, and managing credentials.
-///
-/// ## Conforming Types
-///
-/// - `SpecifiedUserTarget`: Can control a specific user identified by login name
-///
-/// - SeeAlso: `UserCreatable`, `SpecifiedUserTarget`
+/// Capability protocol for user targets that support management operations on a specific account.
 public protocol UserControllable: UsersTarget {
-    /// The login name uniquely identifying the user to control.
+    /// Login name uniquely identifying the target user.
     var loginName: String { get }
 }

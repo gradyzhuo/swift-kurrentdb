@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a start-scavenge RPC to KurrentDB.
     public struct StartScavenge: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.StartScavenge.Input
@@ -23,7 +24,9 @@ extension Operations {
             "Operations.\(Self.self)"
         }
 
+        /// Number of parallel threads to use during scavenging.
         public let threadCount: Int32
+        /// Chunk index from which to begin scavenging.
         public let startFromChunk: Int32
 
         public init(threadCount: Int32, startFromChunk: Int32) {

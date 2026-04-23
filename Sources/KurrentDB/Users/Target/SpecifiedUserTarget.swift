@@ -3,14 +3,9 @@
 //  KurrentDB
 //
 
-/// A target representing operations on a specific user identified by login name.
-///
-/// Supports account management operations via `UserControllable`:
-/// retrieving details, enabling/disabling, updating profile, and managing credentials.
-///
-/// - SeeAlso: `UserControllable`, `UsersTarget`, `AllUsersTarget`
+/// Target scoped to a single user, enabling account management operations.
 public struct SpecifiedUserTarget: UserControllable {
-    /// The unique login name identifying the target user.
+    /// Login name of the targeted user.
     public let loginName: String
 
     public init(loginName: String) {
@@ -19,7 +14,7 @@ public struct SpecifiedUserTarget: UserControllable {
 }
 
 extension UsersTarget where Self == SpecifiedUserTarget {
-    /// Creates a target for a specific user identified by login name.
+    /// Creates a target scoped to the user with the given login name.
     public static func specified(_ loginName: String) -> SpecifiedUserTarget {
         .init(loginName: loginName)
     }
