@@ -12,12 +12,10 @@ import Logging
 import NIO
 
 extension Projections where Target == OneTimeProjectionTarget {
-    /// Creates a continuous projection with the specified query and options.
+    /// Creates a one-time projection on the server with the given query.
     ///
-    /// - Parameters:
-    ///   - query: The query string defining the projection.
-    ///   - options: The options for creating the projection. Defaults to an empty configuration.
-    /// - Throws: An error if the creation process fails.
+    /// - Parameter query: JavaScript query string that defines the projection logic.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func create(query: String) async throws(KurrentError) {
         do {
             let usecase = OneTimeCreate(query: query)
@@ -31,24 +29,10 @@ extension Projections where Target == OneTimeProjectionTarget {
 
 extension Projections where Target == OneTimeProjectionTarget {
 
-    /// Retrieves a list of one-time projection statistics.
+    /// Returns statistics for all one-time projections on the server.
     ///
-    /// This asynchronous method queries the server for all one-time projections and
-    /// returns their detailed statistics. Internally, it:
-    /// - Constructs a `Statistics` use case configured to list all projections in `.oneTime` mode.
-    /// - Performs the request using the current `selector` and `callOptions`.
-    /// - Streams and reduces the server responses into an array of `Statistics.Detail`.
-    ///
-    /// - Returns: An array of `Statistics.Detail` describing each one-time projection.
-    ///
-    /// - Throws: `KurrentError`
-    ///   - `.internalClientError` if an error occurs while reducing or processing the streamed responses,
-    ///     with a reason describing the underlying cause.
-    ///   - Any other `KurrentError` propagated from the use case execution.
-    ///
-    /// - Note: This method is available when `Projections.Target` is `OneTimeProjectionTarget`.
-    ///
-    /// - SeeAlso: `Statistics`, `Statistics.Detail`, `OneTimeProjectionTarget`
+    /// - Returns: An array of ``Projection/Detail`` for each one-time projection.
+    /// - Throws: `KurrentError` if the request fails or the response stream cannot be read.
     public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .oneTime))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)

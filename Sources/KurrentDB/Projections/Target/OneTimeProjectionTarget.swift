@@ -3,8 +3,9 @@
 //  KurrentDB
 //
 
-/// A target for one-time (ephemeral) projections that run to completion and then stop.
+/// Target for one-time projections that process existing events once and then stop.
 public struct OneTimeProjectionTarget: ProjectionsTarget {
+    /// Creates a one-time projection target.
     public init() {}
 }
 

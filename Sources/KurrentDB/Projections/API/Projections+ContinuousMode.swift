@@ -13,12 +13,22 @@ import NIO
 
 //MARK: - Specified Continuous Projection
 extension Projections where Target == SpecifiedContinuousProjectionTarget {
-    /// Creates a continuous projection with the specified query and options.
+    /// Creates a continuous projection on the server with the given query.
+    ///
+    /// ```swift
+    /// let projections = client.projections(of: .continuous(name: "order-stats"))
+    /// try await projections.create(query: """
+    ///     fromAll()
+    ///       .when({ $any: (s, e) => { s.count = (s.count || 0) + 1; } })
+    /// """) {
+    ///     $0.emitEnabled = true
+    /// }
+    /// ```
     ///
     /// - Parameters:
-    ///   - query: The query string defining the projection.
-    ///   - options: The options for creating the projection. Defaults to an empty configuration.
-    /// - Throws: An error if the creation process fails.
+    ///   - query: JavaScript query string that defines the projection logic.
+    ///   - configure: Closure to customise creation options such as emit and track-emitted-streams settings.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func create(query: String, configure: @Sendable (inout ContinuousCreate.Options) -> Void = { _ in }) async throws(KurrentError) {
         var options = ContinuousCreate.Options()
         configure(&options)
@@ -30,25 +40,10 @@ extension Projections where Target == SpecifiedContinuousProjectionTarget {
 //MARK: - Unspecified Continuous Projection
 extension Projections where Target == UnspecifiedContinuousProjectionTarget {
 
-    /// Retrieves a list of continuous projection statistics from the server.
+    /// Returns statistics for all continuous projections on the server.
     ///
-    /// This method queries the projections service for all continuous projections and
-    /// returns an array of detailed statistics for each one. It constructs a `Statistics`
-    /// use case configured to list all projections in continuous mode, performs the request
-    /// using the current selector and call options, and then reduces the streamed responses
-    /// into a collection of `Statistics.Detail` values.
-    ///
-    /// - Returns: An array of `Statistics.Detail` objects, each describing a continuous projection.
-    ///
-    /// - Throws: `KurrentError` in the following cases:
-    ///   - `.internalClientError` if an error occurs while aggregating the streamed responses.
-    ///   - Any other `KurrentError` that may be thrown by the underlying RPC call initiated by `perform`.
-    ///
-    /// - Important: This call is asynchronous and may perform network I/O. It should be awaited
-    ///   from an asynchronous context.
-    ///
-    /// - Note: The results are derived from a streamed response; if any element in the stream
-    ///   fails to decode or process, the entire operation throws.
+    /// - Returns: An array of ``Projection/Detail`` for each continuous projection.
+    /// - Throws: `KurrentError` if the request fails or the response stream cannot be read.
     public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .continuous))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
