@@ -11,29 +11,53 @@ import GRPCEncapsulates
 import GRPCProtobuf
 import NIO
 
+/// Errors thrown by KurrentDB client operations.
 public enum KurrentError: Error, Sendable {
+    /// The server returned an error message not mapped to a specific case.
     case serverError(String)
+    /// A leader-only command was sent to a follower node.
     case notLeaderException
+    /// The gRPC connection was closed before the operation completed.
     case connectionClosed
+    /// An unmapped gRPC status code was received from the server.
     case grpc(code: GoogleRPCStatus?, reason: String)
+    /// A gRPC-level error occurred that is not mapped to a domain-specific case.
     case grpcError(cause: RPCError)
+    /// A gRPC runtime error occurred outside of a specific RPC call.
     case grpcRuntimeError(cause: RuntimeError)
+    /// The underlying transport connection to the server failed.
     case grpcConnectionError(cause: RPCError)
+    /// An internal error occurred while parsing a server response.
     case internalParsingError(reason: String)
+    /// The caller does not have permission to perform the requested operation.
     case accessDenied
+    /// The resource (stream, projection, subscription) already exists.
     case resourceAlreadyExists
+    /// The requested resource was not found on the server.
     case resourceNotFound(reason: String)
+    /// The requested stream or resource has been deleted.
     case resourceDeleted(resource: String)
+    /// A linked event could not be resolved, typically because it was deleted.
     case unservicableEventLink(link: RecordedEvent)
+    /// The server does not support the requested gRPC method.
     case unsupportedFeature(GRPCCore.MethodDescriptor)
+    /// An unexpected client-side error occurred; please file an issue on GitHub.
     case internalClientError(reason: String)
+    /// The operation deadline was exceeded before the server responded.
     case deadlineExceeded
+    /// Client initialization failed before any request could be made.
     case initializationError(reason: String)
+    /// The client or server is in an invalid state for the requested operation.
     case illegalStateError(reason: String)
+    /// The append was rejected because the stream revision did not match the expectation.
     case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionOption)
+    /// The subscription was terminated by an explicit user call.
     case subscriptionTerminated(subscriptionId: String?)
+    /// The server dropped the subscription unexpectedly.
     case subscriptionDropped(reason: String, lastRevision: UInt64?, lastPosition: StreamPosition?)
+    /// A string could not be encoded using the specified encoding.
     case encodingError(message: String, encoding: String.Encoding)
+    /// A value could not be decoded from the server response.
     case decodingError(cause: DecodingError)
 }
 
