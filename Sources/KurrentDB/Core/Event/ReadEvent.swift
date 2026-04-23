@@ -8,11 +8,18 @@
 import Foundation
 import GRPCEncapsulates
 
+/// A single event returned from a stream read operation, pairing the recorded event with its link and position.
 public struct ReadEvent: Sendable {
+    /// The primary recorded event.
     public internal(set) var record: RecordedEvent
+
+    /// The resolved link event when reading from a projection or linked stream; `nil` otherwise.
     public internal(set) var link: RecordedEvent?
+
+    /// Global commit position of this event; `nil` when no position was provided by the server.
     public internal(set) var commitPosition: StreamPosition?
 
+    /// `true` when the server returned no commit position for this event.
     public var noPosition: Bool {
         commitPosition == nil
     }
