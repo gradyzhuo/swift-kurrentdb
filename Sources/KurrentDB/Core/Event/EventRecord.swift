@@ -51,7 +51,7 @@ extension EventRecord {
     ///   - eventType: Logical schema name set as `schema.name` (e.g., `"order-placed"`).
     ///   - payload: Typed payload; its format is inferred and used to populate `schema.format`.
     ///   - customMetadata: Optional JSON bytes parsed into `properties`; keys starting with `$` are system-reserved.
-    /// - Throws: `KurrentError` if JSON encoding or metadata parsing fails.
+    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `Error` if metadata parsing fails.
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data? = nil) throws {
         let schema = Schema(format: payload.format, name: eventType)
         let properties = try customMetadata.flatMap {

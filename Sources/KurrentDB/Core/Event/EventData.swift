@@ -140,7 +140,7 @@ extension EventRecord {
     /// Creates an `EventRecord` from an `EventData` value, bridging the legacy API to the newer record type.
     ///
     /// - Parameter eventData: The source event data to convert.
-    /// - Throws: `KurrentError` if the payload cannot be encoded.
+    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded.
     public init(eventData: EventData) throws {
         let payload: Payload = switch eventData.payload {
         case let .data(data, contentType):
