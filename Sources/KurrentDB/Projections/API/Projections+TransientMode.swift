@@ -13,11 +13,10 @@ import NIO
 
 //MARK: - Specified Transient Projection
 extension Projections where Target == SpecifiedTransientProjectionTarget {
-    /// Creates a transient projection with the specified query.
+    /// Creates a transient projection on the server with the given query.
     ///
-    /// - Parameters:
-    ///   - query: The query string defining the projection.
-    /// - Throws: An error if the creation process fails.
+    /// - Parameter query: JavaScript query string that defines the projection logic.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func create(query: String) async throws(KurrentError) {
         let usecase = TransientCreate(name: target.name, query: query)
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -26,17 +25,11 @@ extension Projections where Target == SpecifiedTransientProjectionTarget {
 
 //MARK: - Unspecified Transient Projection
 extension Projections where Target == UnspecifiedTransientProjectionTarget {
-    
-    /// Lists all transient projections and returns their detailed statistics.
+
+    /// Returns statistics for all transient projections on the server.
     ///
-    /// This asynchronous method queries the server for all projections in transient mode
-    /// and aggregates their detailed information into a single array.
-    ///
-    /// - Returns: An array of `Statistics.Detail` representing each transient projection's details.
-    /// - Throws: `KurrentError` if the request fails or if an internal client error occurs while
-    ///           aggregating the response stream.
-    /// - Note: Internally, this performs a list-all operation scoped to the transient projection mode
-    ///         and reduces the streamed responses into a single result set.
+    /// - Returns: An array of ``Projection/Detail`` for each transient projection.
+    /// - Throws: `KurrentError` if the request fails or the response stream cannot be read.
     public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .transient))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)

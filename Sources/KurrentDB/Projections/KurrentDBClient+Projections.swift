@@ -8,10 +8,10 @@
 // MARK: - Projection Factory Methods
 
 extension KurrentDBClient {
-    /// Creates a projections interface for a specific target type.
+    /// Returns a ``Projections`` service scoped to the given target.
     ///
-    /// - Parameter target: The projection target (e.g., `.continuous(name:)`, `.transient(name:)`, `.onetime`).
-    /// - Returns: A configured ``Projections`` instance.
+    /// - Parameter target: The projection target, such as `.continuous(name:)`, `.transient(name:)`, or `.onetime`.
+    /// - Returns: A ``Projections`` instance configured for the specified target.
     public func projections<Target: ProjectionsTarget>(of target: Target) -> Projections<Target> {
         .init(
             target: target,
@@ -20,17 +20,15 @@ extension KurrentDBClient {
             eventLoopGroup: eventLoopGroup)
     }
 
-    /// Creates a projections interface for a named projection.
-    ///
-    /// Use this to manage (enable, disable, update, delete, reset) or query (state, result, detail)
-    /// an existing projection by name.
+    /// Returns a ``Projections`` service scoped to the named projection.
     ///
     /// ```swift
     /// try await client.projections(name: "my-projection").enable()
     /// let state = try await client.projections(name: "my-projection").state(of: MyState.self)
     /// ```
     ///
-    /// - Parameter name: The projection name.
+    /// - Parameter name: Name of the projection to manage or query.
+    /// - Returns: A ``Projections`` instance targeting the named projection.
     public func projections(name: String) -> Projections<NameTarget> {
         .init(
             target: .init(name: name),
@@ -39,13 +37,14 @@ extension KurrentDBClient {
             eventLoopGroup: eventLoopGroup)
     }
 
-    /// Creates a projections interface for a predefined system projection.
+    /// Returns a ``Projections`` service scoped to a built-in system projection.
     ///
     /// ```swift
     /// try await client.projections(system: .byCategory).enable()
     /// ```
     ///
-    /// - Parameter predefined: The system projection (e.g., `.byCategory`, `.byEventType`, `.byCorrelationId`).
+    /// - Parameter predefined: The system projection to target, such as `.byCategory` or `.byEventType`.
+    /// - Returns: A ``Projections`` instance targeting the specified system projection.
     public func projections(system predefined: NameTarget.Predefined) -> Projections<NameTarget> {
         .init(
             target: .init(predefined: predefined),
