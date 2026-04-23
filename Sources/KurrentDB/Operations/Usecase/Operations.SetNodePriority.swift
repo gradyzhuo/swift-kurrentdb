@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a set-node-priority RPC to KurrentDB.
     public struct SetNodePriority: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.SetNodePriority.Input
@@ -23,6 +24,7 @@ extension Operations {
             "Operations.\(Self.self)"
         }
 
+        /// Election priority value to assign to the node.
         public let priority: Int32
 
         public init(priority: Int32) {

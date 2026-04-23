@@ -10,6 +10,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Users {
+    /// Usecase that sends an update-user RPC to KurrentDB.
     public struct Update: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Update.Input
@@ -52,26 +53,32 @@ extension Users {
 }
 
 extension Users.Update {
+    /// Builder for profile fields that can be modified during an update operation.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// Updated full display name, or `nil` to leave unchanged.
         public fileprivate(set) var fullName: String?
+        /// Updated group memberships, or `nil` to leave unchanged.
         public fileprivate(set) var groups: [UserGroup]?
 
         public init() {}
 
+        /// Returns a copy with `fullName` set to the given value.
         public func set(fullName: String) -> Self {
             withCopy { options in
                 options.fullName = fullName
             }
         }
 
+        /// Returns a copy with the given groups appended to the existing group list.
         public func add(groups: UserGroup...) -> Self {
             withCopy { options in
                 options.groups?.append(contentsOf: groups)
             }
         }
 
+        /// Returns a copy with the group list replaced by the given groups.
         public func set(groups: UserGroup...) -> Self {
             withCopy { options in
                 options.groups = groups

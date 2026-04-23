@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Monitoring {
+    /// Usecase that opens a server-streaming stats RPC and yields periodic snapshots.
     public struct Stats: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Stats.Input
@@ -23,7 +24,9 @@ extension Monitoring {
             "Monitoring.\(Self.self)"
         }
 
+        /// Whether to include metadata fields in each stats snapshot.
         public let useMetadata: Bool
+        /// Interval between consecutive snapshots in milliseconds.
         public let refreshTimePeriodInMs: UInt64
 
         public init(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) {
@@ -72,9 +75,11 @@ extension Monitoring {
 }
 
 extension Monitoring.Stats {
+    /// Single server statistics snapshot decoded from a gRPC response message.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// Key-value map of server metric names to their current values.
         public var stats: [String: String]
 
         package init(from message: UnderlyingMessage) throws {

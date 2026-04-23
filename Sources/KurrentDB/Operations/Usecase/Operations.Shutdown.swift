@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Operations {
+    /// Usecase that sends a shutdown RPC to KurrentDB.
     public struct Shutdown: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Shutdown.Input

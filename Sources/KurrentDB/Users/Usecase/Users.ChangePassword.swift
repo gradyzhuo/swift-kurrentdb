@@ -10,6 +10,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Users {
+    /// Usecase that sends a change-password RPC to KurrentDB.
     public struct ChangePassword: UnaryUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.ChangePassword.Input
@@ -24,6 +25,7 @@ extension Users {
             "Users.\(Self.self)"
         }
 
+        /// Login name of the user whose password is being changed.
         public let loginName: String
         private let currentPassword: String
         private let newPassword: String
