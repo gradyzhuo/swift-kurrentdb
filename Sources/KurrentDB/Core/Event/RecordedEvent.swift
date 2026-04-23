@@ -8,14 +8,27 @@
 import Foundation
 import GRPCEncapsulates
 
+/// An event read back from a KurrentDB stream, including its position and payload.
 public struct RecordedEvent: EventStoreEvent, Sendable {
+    /// Unique identifier assigned to this event.
     public private(set) var id: UUID
+
+    /// Logical schema name identifying the event's payload type.
     public private(set) var eventType: String
+
+    /// Content type of the payload bytes.
     public private(set) var contentType: ContentType
+
+    /// Identifier of the stream this event belongs to.
     public private(set) var streamIdentifier: StreamIdentifier
+
+    /// Stream-local revision number of this event.
     public private(set) var revision: UInt64
+
+    /// Commit and prepare position of this event in the global log.
     public private(set) var position: StreamPosition
 
+    /// gRPC metadata headers derived from `eventType` and `contentType`.
     public var metadata: [String: String] {
         [
             "type": eventType,
@@ -23,9 +36,17 @@ public struct RecordedEvent: EventStoreEvent, Sendable {
         ]
     }
 
+    /// Optional opaque metadata bytes stored alongside the event payload.
     public private(set) var customMetadata: Data
+
+    /// Raw payload bytes of the event.
     public private(set) var data: Data
 
+    /// Decodes the event payload into a `Decodable` type.
+    ///
+    /// - Parameter decodeType: The target type to decode the payload into.
+    /// - Returns: A decoded instance of `T`, or `nil` when the content type is not JSON.
+    /// - Throws: `DecodingError` if JSON decoding fails.
     public func decode<T: Decodable>(to decodeType: T.Type) throws -> T? {
         switch contentType {
         case .json:

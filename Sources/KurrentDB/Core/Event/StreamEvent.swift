@@ -6,46 +6,40 @@
 //
 import Foundation
 
-/// A value that groups one or more events to be appended to a specific stream,
-/// along with the expected stream revision for optimistic concurrency control.
+/// Batch of event records destined for a single stream, with an expected revision for optimistic concurrency.
 ///
-/// Use `StreamEvent` when you want to write a batch of events atomically to a
-/// particular stream. The `expectedRevision` indicates what revision the stream
-/// must currently be at for the append to succeed. If the actual revision does
-/// not match, the write should fail to prevent lost updates.
-///
-/// Topics:
-/// - Stream identity:
-///   - `streamIdentifier`: Identifies the target stream for the events.
-/// - Event payloads:
-///   - `events`: The ordered collection of event data to append.
-/// - Concurrency control:
-///   - `expectedRevision`: The stream revision the writer expects before appending,
-///     typically used for optimistic concurrency checks. A default of `.any` can be
-///     used when no precondition is required.
-///
-/// Thread safety:
-/// - `StreamEvent` is an immutable, `Sendable` value type and can be safely
-///   shared across threads and tasks.
-///
-/// Initialization:
-/// - `init(streamIdentifier:events:expectedRevision:)`
-///   - Parameters:
-///     - streamIdentifier: The unique identifier of the target stream.
-///     - events: The events to append, in the order they should be persisted.
-///     - expectedRevision: The required current revision of the stream for the
-///       append to succeed. Defaults to `.any`.
+/// ```swift
+/// let event = try EventRecord(eventType: "order-placed", payload: .json(order))
+/// let streamEvent = StreamEvent(stream: "orders", records: event)
+/// ```
 public struct StreamEvent: Sendable {
+    /// Target stream identifier.
     public let streamIdentifier: StreamIdentifier
+
+    /// Ordered records to append.
     public let records: [EventRecord]
+
+    /// Required current stream revision; the append fails if the stream is at a different revision.
     public let expectedRevision: StreamRevision
 
+    /// Creates a `StreamEvent` with a `StreamIdentifier` and an array of records.
+    ///
+    /// - Parameters:
+    ///   - streamIdentifier: Target stream identifier.
+    ///   - records: Ordered records to append.
+    ///   - expectedRevision: Required current stream revision; defaults to `.any`.
     public init(stream streamIdentifier: StreamIdentifier, records: [EventRecord], expectedRevision: StreamRevision = .any) {
         self.streamIdentifier = streamIdentifier
         self.records = records
         self.expectedRevision = expectedRevision
     }
 
+    /// Creates a `StreamEvent` with a stream name string and an array of records.
+    ///
+    /// - Parameters:
+    ///   - streamName: Target stream name.
+    ///   - records: Ordered records to append.
+    ///   - expectedRevision: Required current stream revision; defaults to `.any`.
     public init(stream streamName: String, records: [EventRecord], expectedRevision: StreamRevision = .any) {
         streamIdentifier = .init(name: streamName)
         self.records = records
@@ -54,12 +48,24 @@ public struct StreamEvent: Sendable {
 }
 
 extension StreamEvent {
+    /// Creates a `StreamEvent` with a `StreamIdentifier` and variadic records.
+    ///
+    /// - Parameters:
+    ///   - streamIdentifier: Target stream identifier.
+    ///   - records: One or more records to append, in order.
+    ///   - expectedRevision: Required current stream revision; defaults to `.any`.
     public init(stream streamIdentifier: StreamIdentifier, records: EventRecord..., expectedRevision: StreamRevision = .any) {
         self.streamIdentifier = streamIdentifier
         self.records = records
         self.expectedRevision = expectedRevision
     }
 
+    /// Creates a `StreamEvent` with a stream name string and variadic records.
+    ///
+    /// - Parameters:
+    ///   - streamName: Target stream name.
+    ///   - records: One or more records to append, in order.
+    ///   - expectedRevision: Required current stream revision; defaults to `.any`.
     public init(stream streamName: String, records: EventRecord..., expectedRevision: StreamRevision = .any) {
         streamIdentifier = .init(name: streamName)
         self.records = records
@@ -68,6 +74,13 @@ extension StreamEvent {
 }
 
 extension StreamEvent {
+    /// Creates a `StreamEvent` from variadic `EventData` values using a `StreamIdentifier`.
+    ///
+    /// - Parameters:
+    ///   - streamIdentifier: Target stream identifier.
+    ///   - eventData: One or more legacy `EventData` values to convert and append.
+    ///   - expectedRevision: Required current stream revision; defaults to `.any`.
+    /// - Throws: `KurrentError` if any `EventData` cannot be converted to an `EventRecord`.
     public init(stream streamIdentifier: StreamIdentifier, eventData: EventData..., expectedRevision: StreamRevision = .any) throws {
         self.streamIdentifier = streamIdentifier
         records = try eventData.map {
@@ -76,6 +89,13 @@ extension StreamEvent {
         self.expectedRevision = expectedRevision
     }
 
+    /// Creates a `StreamEvent` from variadic `EventData` values using a stream name string.
+    ///
+    /// - Parameters:
+    ///   - streamName: Target stream name.
+    ///   - eventData: One or more legacy `EventData` values to convert and append.
+    ///   - expectedRevision: Required current stream revision; defaults to `.any`.
+    /// - Throws: `KurrentError` if any `EventData` cannot be converted to an `EventRecord`.
     public init(stream streamName: String, eventData: EventData..., expectedRevision: StreamRevision = .any) throws {
         streamIdentifier = .init(name: streamName)
         records = try eventData.map {
