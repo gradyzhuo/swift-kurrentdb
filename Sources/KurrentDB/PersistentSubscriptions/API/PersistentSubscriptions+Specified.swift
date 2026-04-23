@@ -57,7 +57,7 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
     /// - Parameter configure: A closure to configure subscription options. Defaults to no-op.
     /// - Returns: A `Subscription` representing the active persistent subscription.
     /// - Throws: `KurrentError` if the subscription could not be established.
-    public func subscribe(configure: @Sendable (inout SpecifiedStream.Read.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {
+    public func subscribe(configure: @Sendable (inout SpecifiedStream.Read.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription<PersistentSubscription.EventResult> {
         var options = SpecifiedStream.Read.Options()
         configure(&options)
         let usecase = SpecifiedStream.Read(stream: target.identifier, group: group, options: options)

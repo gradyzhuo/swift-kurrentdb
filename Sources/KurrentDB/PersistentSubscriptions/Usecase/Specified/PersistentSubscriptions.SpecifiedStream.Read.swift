@@ -14,7 +14,7 @@ extension PersistentSubscriptions.SpecifiedStream {
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = PersistentSubscriptions.UnderlyingService.Method.Read.Output
         package typealias Response = PersistentSubscriptions.ReadResponse
-        package typealias Responses = PersistentSubscriptions.Subscription
+        package typealias Responses = PersistentSubscriptions.Subscription<PersistentSubscription.EventResult>
 
         package var methodDescriptor: GRPCCore.MethodDescriptor {
             ServiceClient.UnderlyingService.Method.Read.descriptor
@@ -55,39 +55,44 @@ extension PersistentSubscriptions.SpecifiedStream {
         /// - Returns: An object containing the request writer and an asynchronous stream of subscription responses.
         /// - Throws: If building the request messages fails or if the gRPC call encounters an error.
         package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> Responses {
-            let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
-            continuation.onTermination = { termination in
+            let writer = PersistentSubscriptions.Subscription<PersistentSubscription.EventResult>.Writer()
+            let subscription = PersistentSubscriptions.Subscription(writer: writer)
+            let task = Task {
+                do {
+                    let client = ServiceClient(wrapping: connection)
+                    try await withRethrowingError(usage: "PersistentSubscription.SpecifiedStream.Read") {
+                        try await client.read(metadata: metadata, options: callOptions) {
+                            let requestMessages = try requestMessages()
+                            try await $0.write(contentsOf: requestMessages)
+                            try await $0.write(contentsOf: writer.sender)
+                        } onResponse: {
+                            for try await message in $0.messages {
+                                let response = try handle(message: message)
+                                switch response {
+                                case let .confirmation(subscriptionId):
+                                    subscription.send(state: .confirmation(subscriptionId: subscriptionId))
+                                case let .readEvent(event, retryCount):
+                                    subscription.send(state: .response(eventResult: .init( event: event, retryCount: retryCount)))
+                                }
+                            }
+                            subscription.send(state: .finish())
+                        }
+                    }
+                } catch {
+                    subscription.send(state: .finish(throwing: error))
+                }
+            }
+            
+            subscription.onFinish { termination in
                 if case let .finished(error) = termination {
                     completion(error)
                 } else {
                     completion(nil)
                 }
+                task.cancel()
             }
-
-            let writer = PersistentSubscriptions.Subscription.Writer()
-            let task = Task {
-                do {
-                    let client = ServiceClient(wrapping: connection)
-                    try await client.read(metadata: metadata, options: callOptions) {
-                        let requestMessages = try requestMessages()
-                        try await $0.write(contentsOf: requestMessages)
-                        try await $0.write(contentsOf: writer.sender)
-                    } onResponse: {
-                        do {
-                            for try await message in $0.messages {
-                                let response = try handle(message: message)
-                                continuation.yield(response)
-                            }
-                            continuation.finish()
-                        } catch {
-                            continuation.finish(throwing: error)
-                        }
-                    }
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-            return try await .init(writer: writer, responses: stream, task: task)
+        
+            return subscription
         }
     }
 }

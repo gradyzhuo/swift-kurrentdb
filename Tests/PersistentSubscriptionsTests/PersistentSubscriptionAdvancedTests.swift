@@ -186,10 +186,9 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
             try await subscription.nack(readEvents: result.event, action: .park, reason: "park-for-replay-test")
             break
         }
-
+        
         // Trigger replay — parked messages are re-queued for delivery
         try await ps.replayParked()
-//        try await Task.sleep(for: .seconds(5))
 
         let subscription2 = try await ps.subscribe()
         // Verify the event is re-delivered and ACK it
