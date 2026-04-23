@@ -11,12 +11,14 @@ import GRPCNIOTransportHTTP2Posix
 import Logging
 import NIO
 
-/// A structure representing a projections service that interacts with a specific projection target.
+/// Projections service scoped to a specific ``ProjectionsTarget``.
 ///
-/// This struct provides methods to manage projections, such as creating, updating, deleting, and retrieving
-/// details or results, depending on the capabilities of the `Target` type.
+/// Obtain an instance via `KurrentDBClient.projections(of:)` or one of its convenience overloads:
 ///
-/// - Parameter Target: The type conforming to `ProjectionsTarget` that defines the projection's behavior.
+/// ```swift
+/// let projections = client.projections(of: .continuous(name: "order-stats"))
+/// try await projections.enable()
+/// ```
 public final class Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     /// The underlying gRPC client type used for communication.
     package typealias UnderlyingClient = EventStore_Client_Projections_Projections.Client<HTTP2ClientTransport.Posix>
@@ -24,17 +26,11 @@ public final class Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     internal let selector: NodeSelector
     internal let callOptions: CallOptions
     internal let eventLoopGroup: EventLoopGroup
+    /// Target that scopes and constrains the available projection operations.
     public let target: Target
 
     package let serviceName: String = "event_store.client.projections.projections"
 
-    /// Initializes a new `Projections` instance with the specified target and settings.
-    ///
-    /// - Parameters:
-    ///   - target: The projection target to operate on.
-    ///   - settings: The client settings for gRPC communication.
-    ///   - callOptions: The call options for gRPC requests. Defaults to `.defaults`.
-    ///   - eventLoopGroup: The event loop group for asynchronous operations. Defaults to a singleton multi-threaded group.
     init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.target = target
         self.selector = selector
@@ -48,7 +44,7 @@ public final class Projections<Target: ProjectionsTarget>: GRPCConcreteService {
 extension Projections where Target: ProjectionControlable {
     /// Enables the projection.
     ///
-    /// - Throws: An error if enabling the projection fails.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func enable() async throws(KurrentError) {
         let usecase = Enable(name: target.name, options: .init())
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -58,9 +54,9 @@ extension Projections where Target: ProjectionControlable {
 // MARK: - disable / abort
 
 extension Projections where Target: ProjectionControlable {
-    /// Disables the projection and writes a checkpoint.
+    /// Stops the projection and writes a checkpoint before halting.
     ///
-    /// - Throws: An error if disabling the projection fails.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func disable() async throws(KurrentError) {
         var options = Disable.Options()
         options.writeCheckpoint = true
@@ -68,9 +64,9 @@ extension Projections where Target: ProjectionControlable {
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Aborts the projection without writing a checkpoint.
+    /// Stops the projection immediately without writing a checkpoint.
     ///
-    /// - Throws: An error if aborting the projection fails.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func abort() async throws(KurrentError) {
         var options = Disable.Options()
         options.writeCheckpoint = false
@@ -82,9 +78,9 @@ extension Projections where Target: ProjectionControlable {
 // MARK: - reset
 
 extension Projections where Target: ProjectionControlable {
-    /// Resets the projection to its initial state.
+    /// Resets the projection to its initial state, discarding all accumulated state.
     ///
-    /// - Throws: An error if resetting the projection fails.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func reset() async throws(KurrentError) {
         let usecase = Reset(name: target.name, options: .init())
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -94,10 +90,10 @@ extension Projections where Target: ProjectionControlable {
 // MARK: - delete
 
 extension Projections where Target: ProjectionControlable {
-    /// Deletes the projection with the specified options.
+    /// Deletes the projection from the server.
     ///
-    /// - Parameter options: The options for deleting the projection. Defaults to an empty configuration.
-    /// - Throws: An error if deletion fails.
+    /// - Parameter configure: Closure to customise delete options such as whether to delete emitted streams.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func delete(configure: @Sendable (inout Delete.Options) -> Void = { _ in }) async throws(KurrentError) {
         var options = Delete.Options()
         configure(&options)
@@ -109,12 +105,12 @@ extension Projections where Target: ProjectionControlable {
 // MARK: - update
 
 extension Projections where Target: ProjectionControlable {
-    /// Updates the projection with an optional query and options.
+    /// Updates the projection's query and options on the server.
     ///
     /// - Parameters:
-    ///   - query: An optional query string to update the projection. If `nil`, the query remains unchanged.
-    ///   - options: The options for updating the projection. Defaults to an empty configuration.
-    /// - Throws: An error if updating fails.
+    ///   - query: Replacement query string, or `nil` to leave the existing query unchanged.
+    ///   - configure: Closure to customise update options such as emit settings.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func update(query: String?, configure: @Sendable (inout Update.Options) -> Void = { _ in }) async throws(KurrentError) {
         var options = Update.Options()
         configure(&options)
@@ -126,10 +122,10 @@ extension Projections where Target: ProjectionControlable {
 // MARK: - detail
 
 extension Projections where Target: ProjectionControlable {
-    /// Retrieves detailed statistics for the projection.
+    /// Fetches the current runtime statistics for the projection.
     ///
-    /// - Returns: An optional `Statistics.Detail` containing the projection's details, or `nil` if none exist.
-    /// - Throws: An error if retrieving details fails.
+    /// - Returns: A `Projection.Detail` snapshot, or `nil` if the server returns no statistics.
+    /// - Throws: `KurrentError` if the request fails or the response cannot be read.
     public func detail() async throws(KurrentError) -> Projection.Detail? {
         let usecase = Statistics(options: .specified(name: target.name))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -145,13 +141,13 @@ extension Projections where Target: ProjectionControlable {
 // MARK: - get result / state
 
 extension Projections where Target: ProjectionControlable {
-    /// Retrieves the result of the projection decoded to a specified type.
+    /// Fetches the computed result of the projection and decodes it to the given type.
     ///
     /// - Parameters:
-    ///   - _: The type to decode the result into, conforming to `Decodable`.
-    ///   - options: The options for retrieving the result. Defaults to an empty configuration.
-    /// - Returns: An optional decoded result of type `DecodeType`, or `nil` if decoding fails.
-    /// - Throws: An error if the operation or decoding fails.
+    ///   - _: The `Decodable` type to decode the result into.
+    ///   - configure: Closure to customise result options such as the partition key.
+    /// - Returns: The decoded result, or `nil` if the server returns an empty response.
+    /// - Throws: `KurrentError.decodingError` if the response cannot be decoded; `KurrentError` for transport failures.
     public func result<DecodeType: Decodable>(of _: DecodeType.Type, configure: @Sendable (inout Result.Options) -> Void = { _ in }) async throws(KurrentError) -> DecodeType? {
         var options = Result.Options()
         configure(&options)
@@ -166,13 +162,13 @@ extension Projections where Target: ProjectionControlable {
         }
     }
 
-    /// Retrieves the state of the projection decoded to a specified type.
+    /// Fetches the current state of the projection and decodes it to the given type.
     ///
     /// - Parameters:
-    ///   - _: The type to decode the state into, conforming to `Decodable`.
-    ///   - options: The options for retrieving the state. Defaults to an empty configuration.
-    /// - Returns: An optional decoded state of type `DecodeType`, or `nil` if decoding fails.
-    /// - Throws: An error if the operation or decoding fails.
+    ///   - _: The `Decodable` type to decode the state into.
+    ///   - configure: Closure to customise state options such as the partition key.
+    /// - Returns: The decoded state, or `nil` if the server returns an empty response.
+    /// - Throws: `KurrentError.decodingError` if the response cannot be decoded; `KurrentError` for transport failures.
     public func state<DecodeType: Decodable>(of _: DecodeType.Type, configure: @Sendable (inout State.Options) -> Void = { _ in }) async throws(KurrentError) -> DecodeType? {
         var options = State.Options()
         configure(&options)

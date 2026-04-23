@@ -3,14 +3,13 @@
 //  KurrentDB
 //
 
-/// A generic target representing all projections.
-///
-/// Used to perform operations on all projections, such as listing or restarting the subsystem.
+/// Target representing all projections across every mode.
 public struct AnyProjectionsTarget: ProjectionsTarget {
+    /// Creates an any-mode projections target.
     public init() {}
 }
 
-extension ProjectionsTarget where Self == AnyProjectionsTarget{
+extension ProjectionsTarget where Self == AnyProjectionsTarget {
     /// Returns a target representing all projections in any mode.
     public static var anyMode: AnyProjectionsTarget {
         .init()

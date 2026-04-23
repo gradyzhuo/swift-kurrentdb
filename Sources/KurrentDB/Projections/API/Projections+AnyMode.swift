@@ -13,32 +13,10 @@ import NIO
 
 //MARK: - Any Mode Projection
 extension Projections where Target == AnyProjectionsTarget {
-    /// Lists all projection statistics across any mode.
+    /// Returns statistics for all projections regardless of mode.
     ///
-    /// This asynchronous function performs a request to retrieve projection statistics
-    /// without restricting to a specific mode (i.e., it uses `.any`). It leverages the
-    /// `Statistics` use case with the `.listAll(mode: .any)` option and returns the
-    /// collected `Statistics.Detail` entries extracted from the streamed response.
-    ///
-    /// Behavior:
-    /// - Builds a `Statistics` use case configured to list all projections for any mode.
-    /// - Executes the use case with the current `selector` and `callOptions`.
-    /// - Iterates over the streamed responses and accumulates their `detail` payloads.
-    /// - If an error occurs during reduction/collection, it wraps it in
-    ///   `KurrentError.internalClientError` with additional context.
-    ///
-    /// - Returns: An array of `Statistics.Detail` representing the details of each projection.
-    ///
-    /// - Throws: `KurrentError` in the following situations:
-    ///   - Any error produced by the `Statistics.perform(selector:callOptions:)` call,
-    ///     such as transport or server-side failures.
-    ///   - `KurrentError.internalClientError` if an error occurs while reducing the
-    ///     streamed response into the result array.
-    ///
-    /// - Note: This method requires an environment with valid `selector` and `callOptions`
-    ///   configured on the `Projections` instance, as well as a functioning GRPC transport.
-    ///
-    /// - SeeAlso: `Statistics`, `Statistics.Options.listAll(mode:)`, `Statistics.Detail`
+    /// - Returns: An array of ``Projection/Detail`` describing every projection on the server.
+    /// - Throws: `KurrentError` if the request fails or the response stream cannot be read.
     public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .any))
         let response = try await usecase.perform(selector: selector, callOptions: callOptions)
@@ -51,9 +29,9 @@ extension Projections where Target == AnyProjectionsTarget {
         }
     }
 
-    /// Restarts the projection subsystem.
+    /// Restarts the entire projection subsystem on the server.
     ///
-    /// - Throws: `KurrentError` if the restart fails.
+    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func restartSubsystem() async throws(KurrentError) {
         let usecase = RestartSubsystem()
         _ = try await usecase.perform(selector: selector, callOptions: callOptions)

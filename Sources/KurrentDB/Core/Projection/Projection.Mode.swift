@@ -6,21 +6,18 @@
 //
 
 extension Projection {
-    /// Defines the operational modes of a projection.
-    ///
-    /// `Mode` specifies how a projection operates, such as continuously or as a one-time task.
-    /// It is marked as `Sendable`, ensuring it can be safely used across concurrency contexts.
+    /// Operational mode of a projection.
     public enum Mode: String, Sendable {
-        /// Represents a projection with no specific mode constraint.
+        /// No specific mode constraint; matches any projection mode.
         case any = "Any"
 
-        /// Represents a transient projection (currently unavailable).
+        /// Runs in-process and is discarded when the connection closes.
         case transient = "Transient"
 
-        /// Represents a projection that runs continuously, processing events as they occur.
+        /// Runs indefinitely, processing events as they arrive.
         case continuous = "Continuous"
 
-        /// Represents a projection that runs once and then completes.
+        /// Runs once over existing events and then stops.
         case oneTime = "OneTime"
     }
 }
