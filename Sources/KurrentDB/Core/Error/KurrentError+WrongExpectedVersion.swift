@@ -8,6 +8,7 @@
 import GRPCEncapsulates
 
 extension KurrentError {
+    /// Converts a protobuf `WrongExpectedVersion` response into a ``KurrentError/wrongExpectedVersion(expected:current:)`` case.
     package static func wrongExpectedVersion(_ wrongResult: EventStore_Client_Streams_AppendResp.WrongExpectedVersion) -> Self {
         let expectedRevision: ExpectedRevisionOption = wrongResult.expectedRevisionOption.map {
             switch $0 {
