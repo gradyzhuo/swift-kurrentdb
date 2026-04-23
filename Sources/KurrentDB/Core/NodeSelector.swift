@@ -9,6 +9,11 @@ import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
 
+/// Selects and caches the best available cluster node for client connections.
+///
+/// Wraps ``NodeDiscover`` to run gossip-based node discovery and caches the chosen
+/// ``Node`` for the duration specified by `ClientSettings.nodeCacheTTL`. Call ``select()``
+/// before every RPC; the cached node is returned until it expires or is invalidated.
 public actor NodeSelector: Sendable {
     let id: UUID?
     let settings: ClientSettings
@@ -22,13 +27,18 @@ public actor NodeSelector: Sendable {
         discover = .init(settings: settings, previousCandidates: [])
     }
 
-    /// The operation retry policy from the client settings.
-    /// Declared `nonisolated` because `settings` is an immutable `let` of a `Sendable` type,
-    /// so it is safe to read without actor isolation.
+    /// Operation retry policy sourced from the client settings.
     nonisolated var retryPolicy: OperationRetryPolicy {
         settings.operationRetryPolicy
     }
 
+    /// Returns the best available cluster node, using a cached result when still valid.
+    ///
+    /// Runs gossip-based discovery when the cache is empty or expired. Retries up to
+    /// `ClientSettings.maxDiscoveryAttempts` times with `discoveryInterval` between attempts.
+    ///
+    /// - Returns: A ``Node`` ready to accept gRPC connections.
+    /// - Throws: `KurrentError.serverError` if no reachable node is found within the attempt limit.
     public func select() async throws(KurrentError) -> Node {
         if let node = selectedNode, let expiry = selectedNodeExpiry, Date.now < expiry {
             return node
@@ -44,8 +54,7 @@ public actor NodeSelector: Sendable {
         return node
     }
 
-    /// Clears the cached node so the next call to `select()` triggers a fresh discovery.
-    /// Call this when a node-level failure is detected (connection error, not-leader, timeout).
+    /// Clears the cached node so the next ``select()`` call triggers fresh discovery.
     func invalidate() {
         logger.debug("[NodeSelector] Invalidating cached node, will re-discover on next select.")
         selectedNode = nil
@@ -82,6 +91,7 @@ public actor NodeSelector: Sendable {
     }
 }
 
+/// Iterates over cluster candidates via gossip to find the preferred reachable endpoint.
 public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
     public typealias Element = Endpoint
 
@@ -94,6 +104,13 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
         previousCandidates = []
     }
 
+    /// Returns the best endpoint discovered via gossip, or `nil` if no live member is found.
+    ///
+    /// Shuffles the candidate list, queries each candidate's gossip API, and returns the
+    /// HTTP endpoint of the first alive member. Subsequent calls return the cached endpoint.
+    ///
+    /// - Returns: The preferred ``Endpoint`` for gRPC connections, or `nil` if discovery fails.
+    /// - Throws: `KurrentError` if the gossip request to a candidate cannot be completed.
     public func next() async throws(KurrentError) -> Endpoint? {
         guard selectedEndpoint == nil else {
             return selectedEndpoint

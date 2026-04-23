@@ -71,7 +71,7 @@ extension Users.Update {
             }
         }
 
-        /// Returns a copy with the given groups appended to the existing group list.
+        /// Appends groups to the existing group list; call ``set(groups:)`` first to initialise the list.
         public func add(groups: UserGroup...) -> Self {
             withCopy { options in
                 options.groups?.append(contentsOf: groups)
