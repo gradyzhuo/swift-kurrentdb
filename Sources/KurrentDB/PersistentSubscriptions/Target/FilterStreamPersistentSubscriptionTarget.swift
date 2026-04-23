@@ -3,7 +3,7 @@
 //  KurrentDB
 //
 
-/// A target used to list or filter subscriptions by stream name.
+/// Target that filters persistent subscription listings to a specific stream name.
 public struct FilterStreamPersistentSubscriptionTarget: PersistentSubscriptionTarget {
     let stream: String
 
@@ -13,7 +13,7 @@ public struct FilterStreamPersistentSubscriptionTarget: PersistentSubscriptionTa
 }
 
 extension PersistentSubscriptionTarget where Self == FilterStreamPersistentSubscriptionTarget {
-    /// Creates a filter target scoped to a specific stream name.
+    /// Creates a target that filters subscription listings to the given stream name.
     public static func filter(stream: String) -> FilterStreamPersistentSubscriptionTarget {
         .init(stream: stream)
     }

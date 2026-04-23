@@ -8,48 +8,43 @@
 // MARK: - Persistent Subscription Factory Methods
 
 extension KurrentDBClient {
-    /// Accesses persistent subscriptions for cluster-wide operations (list, restart subsystem).
+    /// Provides access to cluster-wide persistent subscription operations such as listing all subscriptions.
     ///
-    /// ```swift
-    /// let allSubs = try await client.allPersistentSubscriptions.list()
-    /// ```
+    /// - Returns: A `PersistentSubscriptions` instance scoped to all subscriptions.
     public var allPersistentSubscriptions: PersistentSubscriptions<AllPersistentSubscriptionTarget> {
         .init(target: .all, selector: selector, callOptions: defaultCallOptions)
     }
 
-    /// Creates a persistent subscriptions interface for a specific target type.
+    /// Returns a `PersistentSubscriptions` instance scoped to the given target.
     ///
-    /// - Parameter target: The subscription target defining the scope.
-    /// - Returns: A configured ``PersistentSubscriptions`` instance.
+    /// - Parameter target: The target that defines the subscription scope.
+    /// - Returns: A `PersistentSubscriptions` instance for the specified target.
     public func persistentSubscriptions<Target: PersistentSubscriptionTarget>(of target: Target) -> PersistentSubscriptions<Target> {
         .init(target: target, selector: selector, callOptions: defaultCallOptions)
     }
 
-    /// Creates a persistent subscriptions interface for a specific stream and consumer group.
-    ///
-    /// ```swift
-    /// let sub = client.persistentSubscriptions(stream: "orders", group: "order-processor")
-    /// try await sub.create()
-    /// let subscription = try await sub.subscribe()
-    /// ```
+    /// Returns a `PersistentSubscriptions` instance scoped to a specific stream and consumer group.
     ///
     /// - Parameters:
-    ///   - stream: The stream name to subscribe to.
-    ///   - group: The consumer group name.
+    ///   - stream: Name of the stream to subscribe to.
+    ///   - group: Consumer group name for the subscription.
+    /// - Returns: A `PersistentSubscriptions` instance for the named stream and group.
     public func persistentSubscriptions(stream: String, group: String) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget> {
         .init(target: .specified(stream: stream, group: group), selector: selector, callOptions: defaultCallOptions)
     }
 
-    /// Lists persistent subscriptions filtered by consumer group name across all streams.
+    /// Returns a `PersistentSubscriptions` instance that lists subscriptions for the given consumer group on all streams.
     ///
-    /// - Parameter groupName: The consumer group name to filter by.
+    /// - Parameter groupName: Consumer group name to filter by.
+    /// - Returns: A `PersistentSubscriptions` instance scoped to the `$all`-stream group.
     public func persistentSubscriptions(filterGroup groupName: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget> {
         .init(target: .allStreams(group: groupName), selector: selector, callOptions: defaultCallOptions)
     }
 
-    /// Lists persistent subscriptions filtered by stream name.
+    /// Returns a `PersistentSubscriptions` instance that lists subscriptions filtered to a specific stream.
     ///
-    /// - Parameter stream: The stream name to filter by.
+    /// - Parameter stream: Stream name to filter by.
+    /// - Returns: A `PersistentSubscriptions` instance scoped to the given stream filter.
     public func persistentSubscriptions(filterStream stream: String) -> PersistentSubscriptions<FilterStreamPersistentSubscriptionTarget> {
         .init(target: .filter(stream: stream), selector: selector, callOptions: defaultCallOptions)
     }

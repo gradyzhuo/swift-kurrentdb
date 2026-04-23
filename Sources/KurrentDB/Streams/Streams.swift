@@ -32,7 +32,7 @@ public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
     package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
 
-    /// The client settings required for establishing a gRPC connection.
+    /// Node selector used to resolve the target gRPC endpoint.
     internal let selector: NodeSelector
 
     /// The gRPC call options.

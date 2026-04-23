@@ -6,38 +6,39 @@
 //
 
 extension PersistentSubscription {
+    /// Settings for creating a new persistent subscription.
     public struct CreateSettings: Sendable {
+        /// Whether linked events are resolved to their original event.
         public var resolveLink: Bool
 
-        /// Whether or not in depth latency statistics should be tracked on this
-        /// subscription.
+        /// Whether in-depth latency statistics are tracked for this subscription.
         public var extraStatistics: Bool
 
-        /// The amount of time (ms) after which a message should be considered to be
-        /// timeout and retried.
+        /// Time in milliseconds before an unacknowledged message is considered timed out and retried.
         public var messageTimeout: TimeSpan
 
-        /// The maximum number of retries (due to timeout) before a message get
-        /// considered to be parked.
+        /// Maximum number of delivery retries before a message is parked.
         public var maxRetryCount: Int32
 
+        /// Inclusive range of events that must be processed before a checkpoint is written.
         public var checkpointCount: ClosedRange<Int32>
 
+        /// Maximum number of subscribers allowed to connect concurrently; 0 means unlimited.
         public var maxSubscriberCount: Int32
 
-        /// The size of the buffer listening to live messages as they happen.
+        /// Size of the in-memory buffer for live events arriving in real time.
         public var liveBufferSize: Int32
 
-        /// The number of events read at a time when paging in history.
+        /// Number of events fetched per page when reading historical events.
         public var readBatchSize: Int32
 
-        /// The number of events to cache when paging through history.
+        /// Number of historical events held in the cache while paging through history.
         public var historyBufferSize: Int32
 
-        /// The amount of time (ms) to try checkpoint after.
+        /// Minimum time in milliseconds between checkpoint writes.
         public var checkpointAfter: TimeSpan
 
-        /// The strategy to use for distributing events to client consumers.
+        /// Strategy used to distribute events among connected consumers.
         public var consumerStrategy: SystemConsumerStrategy = .roundRobin
 
         public init(
@@ -67,35 +68,36 @@ extension PersistentSubscription {
         }
     }
 
+    /// Settings for updating an existing persistent subscription; all fields are optional.
     public struct UpdateSettings: Sendable {
+        /// Whether linked events are resolved to their original event.
         public var resolveLink: Bool?
 
-        /// Whether or not in depth latency statistics should be tracked on this
-        /// subscription.
+        /// Whether in-depth latency statistics are tracked for this subscription.
         public var extraStatistics: Bool?
 
-        /// The amount of time (ms) after which a message should be considered to be
-        /// timeout and retried.
+        /// Time in milliseconds before an unacknowledged message is considered timed out and retried.
         public var messageTimeout: TimeSpan?
 
-        /// The maximum number of retries (due to timeout) before a message get
-        /// considered to be parked.
+        /// Maximum number of delivery retries before a message is parked.
         public var maxRetryCount: Int32?
 
+        /// Inclusive range of events that must be processed before a checkpoint is written.
         public var checkpointCount: ClosedRange<Int32>?
 
+        /// Maximum number of subscribers allowed to connect concurrently; 0 means unlimited.
         public var maxSubscriberCount: Int32?
 
-        /// The size of the buffer listening to live messages as they happen.
+        /// Size of the in-memory buffer for live events arriving in real time.
         public var liveBufferSize: Int32?
 
-        /// The number of events read at a time when paging in history.
+        /// Number of events fetched per page when reading historical events.
         public var readBatchSize: Int32?
 
-        /// The number of events to cache when paging through history.
+        /// Number of historical events held in the cache while paging through history.
         public var historyBufferSize: Int32?
 
-        /// The amount of time (ms) to try checkpoint after.
+        /// Minimum time in milliseconds between checkpoint writes.
         public var checkpointAfter: TimeSpan?
 
         package init(){ }

@@ -8,6 +8,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Streams {
+    /// Usecase that appends one or more events to a single named stream.
     public struct Append: StreamUnary {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Append.Input
@@ -21,8 +22,11 @@ extension Streams {
             "Streams.\(Self.self)"
         }
 
+        /// Events to be appended to the stream.
         public let events: [EventData]
+        /// Identifier of the target stream.
         public let identifier: StreamIdentifier
+        /// Options controlling the append behaviour (e.g. expected revision).
         public private(set) var options: Options
 
         init(to identifier: StreamIdentifier, events: [EventData], options: Options = .init()) {
@@ -68,10 +72,13 @@ extension Streams {
 }
 
 extension Streams.Append {
+    /// Response returned after a successful append operation.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// Revision of the stream after the append, or `nil` if the stream no longer exists.
         public let currentRevision: UInt64?
+        /// Global log position of the append, or `nil` when unavailable.
         public let position: StreamPosition?
 
         init(currentRevision: UInt64?, position: StreamPosition?) {
@@ -118,11 +125,14 @@ extension Streams.Append {
 }
 
 extension Streams.Append {
+    /// Options that control append behaviour.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// Expected stream revision used for optimistic concurrency checks.
         public var expectedRevision: StreamRevision
 
+        /// Initialises options with `expectedRevision` set to `.any`.
         public init() {
             expectedRevision = .any
         }

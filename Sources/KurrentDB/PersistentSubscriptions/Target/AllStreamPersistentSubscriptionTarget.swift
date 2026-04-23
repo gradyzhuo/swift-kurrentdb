@@ -3,9 +3,9 @@
 //  KurrentDB
 //
 
-/// A target that identifies a persistent subscription on the `$all` stream.
+/// Target scoping a persistent subscription to the `$all` stream.
 public struct AllStreamPersistentSubscriptionTarget: PersistentSubscriptionTarget {
-    /// The subscription group name.
+    /// Consumer group name for this subscription.
     public private(set) var group: String
 
     public init(group: String) {
@@ -14,7 +14,7 @@ public struct AllStreamPersistentSubscriptionTarget: PersistentSubscriptionTarge
 }
 
 extension PersistentSubscriptionTarget where Self == AllStreamPersistentSubscriptionTarget {
-    /// Creates a target for the `$all` stream and subscription group.
+    /// Creates a target for the `$all` stream and the given consumer group.
     public static func allStreams(group: String) -> AllStreamPersistentSubscriptionTarget {
         .init(group: group)
     }

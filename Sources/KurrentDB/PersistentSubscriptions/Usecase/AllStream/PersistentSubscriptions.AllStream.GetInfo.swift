@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.AllStream {
+    /// Usecase for retrieving information about a persistent subscription group on the `$all` stream.
     public struct GetInfo: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.GetInfo.Input

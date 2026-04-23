@@ -22,6 +22,7 @@ extension Projection {
                 }
         }
 
+        /// Creates a status from the raw server string.
         public init(rawValue: String) {
             self.rawValue = rawValue
         }

@@ -10,14 +10,21 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions {
+    /// Represents a negative acknowledgement (nack) sent to a persistent subscription, instructing the server how to handle the specified events.
     public struct Nack: StreamRequestBuildable {
         package typealias UnderlyingRequest = UnderlyingService.Method.Read.Input
 
+        /// The action the server should take for nack'd events.
         public enum Action: Int, Sendable {
+            /// The action is unknown or unspecified.
             case unknown = 0
+            /// Park the event in the dead-letter queue.
             case park = 1
+            /// Retry delivering the event.
             case retry = 2
+            /// Skip the event without further processing.
             case skip = 3
+            /// Stop the persistent subscription.
             case stop = 4
 
             func toEventStoreNack() -> UnderlyingRequest.Nack.Action {

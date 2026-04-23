@@ -6,33 +6,23 @@
 //
 
 extension PersistentSubscription {
+    /// Strategy used by the server to dispatch events to competing consumers.
     public enum SystemConsumerStrategy: RawRepresentable, Sendable {
         public typealias RawValue = String
 
-        /// Distributes events to a single client until the bufferSize is reached.
-        /// After which the next client is selected in a round robin style,
-        /// and the process is repeated.
+        /// Fills one consumer's buffer before moving to the next in round-robin order.
         case dispatchToSingle
 
-        /// Distributes events to all clients evenly. If the client buffer-size
-        /// is reached the client is ignored until events are
-        /// acknowledged/not acknowledged.
+        /// Distributes events evenly across all connected consumers.
         case roundRobin
 
-        /// For use with an indexing projection such as the system $by_category
-        /// projection. Event Store inspects event for its source stream id,
-        /// hashing the id to one of 1024 buckets assigned to individual clients.
-        /// When a client disconnects it's buckets are assigned to other clients.
-        /// When a client connects, it is assigned some of the existing buckets.
-        /// This naively attempts to maintain a balanced workload.
-        /// The main aim of this strategy is to decrease the likelihood of
-        /// concurrency and ordering issues while maintaining load balancing.
-        /// This is not a guarantee, and you should handle the usual ordering
-        /// and concurrency issues.
+        /// Routes events to consumers by hashing the source stream identifier, reducing ordering conflicts.
         case pinned
 
+        /// Routes events to consumers by hashing the correlation identifier.
         case pinnedByCorrelation
 
+        /// A custom strategy identified by the given raw string value.
         case custom(String)
 
         public var rawValue: String {

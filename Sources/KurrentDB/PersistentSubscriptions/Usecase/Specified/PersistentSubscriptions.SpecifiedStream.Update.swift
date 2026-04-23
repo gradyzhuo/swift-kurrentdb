@@ -9,6 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension PersistentSubscriptions.SpecifiedStream {
+    /// Usecase for updating a persistent subscription on a specific named stream.
     public struct Update: UnaryUnary {
         package typealias ServiceClient = PersistentSubscriptions.UnderlyingClient
         package typealias UnderlyingRequest = PersistentSubscriptions.UnderlyingService.Method.Update.Input
@@ -23,8 +24,11 @@ extension PersistentSubscriptions.SpecifiedStream {
             "PersistentSubscriptions.\(Self.self)"
         }
 
+        /// The stream identifier for the target stream being updated.
         public private(set) var streamIdentifier: StreamIdentifier
+        /// The consumer group name for the persistent subscription being updated.
         public private(set) var group: String
+        /// The updated options to apply to the persistent subscription.
         public private(set) var options: Options
 
         public init(streamIdentifier: StreamIdentifier, group: String, options: Options) {
@@ -33,11 +37,6 @@ extension PersistentSubscriptions.SpecifiedStream {
             self.options = options
         }
 
-        /// Constructs the underlying gRPC request message for updating a persistent subscription.
-        ///
-        /// Builds the request based on the stream selection (all streams or a specific stream) and the provided cursor position or revision. Throws an error if the stream identifier cannot be built.
-        ///
-        /// - Throws: An error if building the stream identifier fails.
         /// Constructs the underlying gRPC request message for updating a persistent subscription on a specified stream.
         ///
         /// - Throws: An error if the stream identifier cannot be built.
@@ -65,10 +64,13 @@ extension PersistentSubscriptions.SpecifiedStream {
 }
 
 extension PersistentSubscriptions.SpecifiedStream.Update {
+    /// Configuration options for updating a persistent subscription on a specified stream.
     public struct Options: CommandOptions, PersistentSubscriptionsSettingsBuildable {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// The updated subscription settings such as consumer strategy, timeouts, and retry behaviour.
         public var settings: PersistentSubscription.UpdateSettings
+        /// The new starting revision in the stream, or `nil` to leave it unchanged.
         public var revision: RevisionCursor?
 
         public init() {

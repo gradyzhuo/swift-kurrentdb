@@ -10,6 +10,7 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
 extension Streams where Target: SpecifiedStreamTarget {
+    /// Usecase that opens a live subscription to a single named stream.
     public struct Subscribe: UnaryStream {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = Read.UnderlyingRequest
@@ -24,9 +25,12 @@ extension Streams where Target: SpecifiedStreamTarget {
             "Streams.\(Self.self)"
         }
 
+        /// Identifier of the stream to subscribe to.
         public let streamIdentifier: StreamIdentifier
+        /// Options controlling the subscription behaviour.
         public let options: Options
 
+        /// Creates a subscribe usecase for the given stream and options.
         public init(from streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.options = options
@@ -73,17 +77,25 @@ extension Streams where Target: SpecifiedStreamTarget {
 }
 
 extension Streams.Subscribe {
+    /// A single message received from a stream subscription.
     public struct Response: GRPCResponse {
+        /// Payload variants delivered by the subscription.
         public enum Content: Sendable {
+            /// A resolved event read from the stream.
             case event(readEvent: ReadEvent)
+            /// Server confirmation carrying the assigned subscription ID.
             case confirmation(subscriptionId: String)
+            /// First commit position seen on the stream.
             case commitPosition(firstStream: UInt64)
+            /// Last commit position seen on the stream.
             case commitPosition(lastStream: UInt64)
+            /// Last position across all streams.
             case position(lastAllStream: StreamPosition)
         }
 
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// The content delivered in this response message.
         public var content: Content
 
         init(content: Content) {
@@ -140,13 +152,18 @@ extension Streams.Subscribe {
 }
 
 extension Streams.Subscribe {
+    /// Options that control stream subscription behaviour.
     public struct Options: CommandOptions {
         package typealias UnderlyingMessage = UnderlyingRequest.Options
 
+        /// When `true`, linked events are resolved to their targets.
         public var resolveLinksEnabled: Bool
+        /// UUID representation used in event metadata.
         public var uuidOption: UUIDOption
+        /// Stream revision from which the subscription starts.
         public var revision: RevisionCursor
 
+        /// Initialises options with sensible defaults (start from end, string UUIDs, no link resolution).
         public init() {
             resolveLinksEnabled = false
             uuidOption = .string

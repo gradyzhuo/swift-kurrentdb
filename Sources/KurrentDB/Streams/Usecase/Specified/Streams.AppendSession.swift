@@ -10,6 +10,7 @@ import GRPCNIOTransportHTTP2Posix
 import SwiftProtobuf
 
 extension Streams {
+    /// Usecase that appends events to one or more streams in a single session call.
     public struct AppendSession: StreamUnary {
         package typealias ServiceClient = Kurrentdb_Protocol_V2_Streams_StreamsService.Client<HTTP2ClientTransport.Posix>
         package typealias UnderlyingRequest = Kurrentdb_Protocol_V2_Streams_StreamsService.Method.AppendSession.Input
@@ -23,6 +24,7 @@ extension Streams {
             "Streams.\(Self.self)"
         }
 
+        /// Stream events to be written across one or more target streams.
         public let streamEvents: [StreamEvent]
 
         init(streamEvents: [StreamEvent]) {
@@ -61,6 +63,7 @@ extension Streams {
 }
 
 extension Streams.AppendSession.Response {
+    /// Result for a single stream written during an append session.
     public struct AppendedResult: Sendable {
         let streamIdentifier: StreamIdentifier
         let currentRevision: UInt64
@@ -75,10 +78,13 @@ extension Streams.AppendSession.Response {
 }
 
 extension Streams.AppendSession {
+    /// Response returned after a completed append session.
     public struct Response: GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingResponse
 
+        /// Per-stream append results included in the session response.
         public let results: [AppendedResult]
+        /// Global log position of the session commit.
         public let position: StreamPosition
 
         init(results: [AppendedResult], position: StreamPosition) {

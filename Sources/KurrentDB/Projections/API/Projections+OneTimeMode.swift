@@ -15,7 +15,8 @@ extension Projections where Target == OneTimeProjectionTarget {
     /// Creates a one-time projection on the server with the given query.
     ///
     /// - Parameter query: JavaScript query string that defines the projection logic.
-    /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
+    ///
+    /// Errors encountered during creation are logged to stdout but not rethrown.
     public func create(query: String) async throws(KurrentError) {
         do {
             let usecase = OneTimeCreate(query: query)
