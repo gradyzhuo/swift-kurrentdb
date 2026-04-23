@@ -8,10 +8,13 @@
 import GRPCEncapsulates
 
 extension Streams {
+    /// Response returned by a stream read operation.
     public enum ReadResponse: Sendable, GRPCResponse {
         package typealias UnderlyingMessage = UnderlyingClient.UnderlyingService.Method.Read.Output
 
+        /// An event whose original record could not be resolved, optionally carrying its link event.
         case unserviceable(link: RecordedEvent?)
+        /// A successfully resolved event.
         case event(readEvent: ReadEvent)
 
         // TODO: Not sure how to request to get first_stream_position, last_stream_position, first_all_stream_position.
@@ -43,6 +46,11 @@ extension Streams {
 }
 
 extension Streams.ReadResponse {
+    /// Extracts the resolved ``ReadEvent`` from this response.
+    ///
+    /// - Returns: The ``ReadEvent`` when the response is `.event`.
+    /// - Throws: `KurrentError.unservicableEventLink` if the event link cannot be resolved,
+    ///   or `KurrentError.resourceNotFound` if no event is present.
     public var event: ReadEvent {
         get throws(KurrentError) {
             return switch self {

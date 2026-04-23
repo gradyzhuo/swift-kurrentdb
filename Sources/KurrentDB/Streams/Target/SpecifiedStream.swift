@@ -5,9 +5,9 @@
 
 import Foundation
 
-/// Represents a specific named stream.
+/// Target representing a single named stream.
 public struct SpecifiedStream: SpecifiedStreamTarget {
-    /// The identifier for the stream.
+    /// Unique identifier for the stream.
     public private(set) var identifier: StreamIdentifier
 
     init(identifier: StreamIdentifier) {
@@ -16,12 +16,12 @@ public struct SpecifiedStream: SpecifiedStreamTarget {
 }
 
 extension StreamsTarget where Self == SpecifiedStream {
-    /// Creates a `SpecifiedStream` using a `StreamIdentifier`.
+    /// Creates a ``SpecifiedStream`` from an existing ``StreamIdentifier``.
     public static func specified(_ identifier: StreamIdentifier) -> SpecifiedStream {
         .init(identifier: identifier)
     }
 
-    /// Creates a `SpecifiedStream` identified by a name and encoding.
+    /// Creates a ``SpecifiedStream`` from a stream name string.
     public static func specified(_ name: String, encoding: String.Encoding = .utf8) -> SpecifiedStream {
         .init(identifier: .init(name: name, encoding: encoding))
     }

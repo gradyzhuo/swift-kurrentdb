@@ -3,11 +3,11 @@
 //  KurrentDB
 //
 
-/// Represents the global `$all` stream containing all events across all streams.
+/// Target representing the global `$all` stream that contains every event in the database.
 public struct AllStreamsTarget: StreamsTarget {}
 
 extension StreamsTarget where Self == AllStreamsTarget {
-    /// Returns a target representing the `$all` stream.
+    /// Target for the `$all` stream.
     public static var all: AllStreamsTarget {
         .init()
     }

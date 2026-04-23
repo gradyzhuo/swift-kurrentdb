@@ -6,17 +6,17 @@
 //
 
 
-/// Provides operations for projection streams.
+/// Operations available on projection streams.
 extension Streams where Target == ProjectionStream {
-    /// The identifier of the projection stream.
+    /// Identifier of the projection stream.
     public var identifier: StreamIdentifier {
         target.identifier
     }
 
-    /// Subscribes to events from the specified projection stream.
+    /// Subscribes to live events from the projection stream.
     ///
-    /// - Parameter configure: A closure to configure subscription options. Defaults to no-op.
-    /// - Returns: A subscription that receives events from the stream.
+    /// - Parameter configure: Closure to configure ``Subscribe/Options`` (starting position). Defaults to no-op.
+    /// - Returns: A ``Streams/Subscription`` that delivers events from the projection stream.
     /// - Throws: `KurrentError` if the subscription cannot be established.
     public func subscribe(configure: @Sendable (inout Subscribe.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {
         var options = Subscribe.Options()
@@ -29,39 +29,22 @@ extension Streams where Target == ProjectionStream {
 // MARK: - Multiple Streams Operations
 
 extension Streams where Target == MultiStreamsTarget {
-    /// Appends a batch of pre-constructed stream events using an append session. (KurrentDB > 25.1)
+    /// Appends fully-formed stream events across multiple streams in a single session (requires KurrentDB 25.1+).
     ///
-    /// Use this when you already have fully-formed `StreamEvent` values (including
-    /// their event IDs, types, content type, and data) and want to persist them in
-    /// a single session. This is useful for advanced scenarios like idempotent
-    /// writes, preserving event IDs across retries, or when events are built
-    /// incrementally by upstream systems.
-    ///
-    /// - Parameter events: The collection of `StreamEvent` values to append in order.
-    /// - Returns: An `AppendSession.Response` describing the outcome of the session,
-    ///   including the next expected revision and any server-assigned positions.
-    /// - Throws: `KurrentError` if the session could not be established or the write
-    ///   fails, for example due to version conflicts, access issues, or transport errors.
+    /// - Parameter events: ``StreamEvent`` values to append, each carrying its target stream, event ID, type, and payload.
+    /// - Returns: An `AppendSession.Response` with the next expected revisions and server-assigned positions.
+    /// - Throws: `KurrentError` if the session fails, a version conflict occurs, or access is denied.
     @discardableResult
     public func append(events: [StreamEvent]) async throws(KurrentError) -> AppendSession.Response {
         let usecase = AppendSession(streamEvents: events)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
 
-    /// Appends a variadic list of pre-constructed stream events in a single append session.  (KurrentDB > 25.1)
+    /// Appends a variadic list of fully-formed stream events in a single session (requires KurrentDB 25.1+).
     ///
-    /// Use this when you already have fully formed `StreamEvent` values (including IDs,
-    /// types, content type, and payload) and want to persist them together while preserving
-    /// ordering and event IDs. This is useful for idempotent writes, retries, or when events
-    /// are assembled upstream.
-    ///
-    /// - Parameter events: One or more `StreamEvent` values to append in order.
-    /// - Returns: An `AppendSession.Response` describing the outcome, including the next
-    ///   expected revision and any server-assigned positions.
-    /// - Throws: `KurrentError` if the session cannot be established or the write fails
-    ///   (e.g., due to version conflicts, access issues, or transport errors).
-    /// - Note: Events are appended in the order provided and are not transformed; ensure
-    ///   each `StreamEvent` carries the desired identifiers and content metadata.
+    /// - Parameter events: One or more ``StreamEvent`` values to append in order.
+    /// - Returns: An `AppendSession.Response` with the next expected revisions and server-assigned positions.
+    /// - Throws: `KurrentError` if the session fails, a version conflict occurs, or access is denied.
     @discardableResult
     public func append(events: StreamEvent...) async throws(KurrentError) -> AppendSession.Response {
         let usecase = AppendSession(streamEvents: events)

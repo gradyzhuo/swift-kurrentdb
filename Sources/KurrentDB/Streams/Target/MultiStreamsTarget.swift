@@ -3,11 +3,11 @@
 //  KurrentDB
 //
 
-/// Represents a batch target for operations across multiple streams simultaneously.
+/// Target for batch append operations across multiple streams (requires KurrentDB 25.1+).
 public struct MultiStreamsTarget: StreamsTarget {}
 
 extension StreamsTarget where Self == MultiStreamsTarget {
-    /// Returns a target for batch multi-stream operations.
+    /// Target for multi-stream batch operations.
     public static var multiple: MultiStreamsTarget {
         .init()
     }
