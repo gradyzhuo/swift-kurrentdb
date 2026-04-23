@@ -16,3 +16,17 @@ extension PersistentSubscription {
         }
     }
 }
+
+
+extension PersistentSubscription.EventResult: SubscriptionEventResult {
+    public var revision: UInt64? {
+        get {
+            event.record.revision
+        }
+    }
+    public var position: StreamPosition? {
+        get{
+            event.commitPosition
+        }
+    }
+}
