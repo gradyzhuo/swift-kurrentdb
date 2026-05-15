@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>swift-kurrentdb — Type-safe Swift client for Kurrent</title>
+  <meta name="description" content="A modern, type-safe Swift client for Kurrent (formerly EventStoreDB). Built for Server-Side Swift and Event Sourcing with Swift 6 strict concurrency.">
+  <meta property="og:title" content="swift-kurrentdb">
+  <meta property="og:description" content="A modern, type-safe Swift client for Kurrent. Built for Server-Side Swift and Event Sourcing.">
+  <meta property="og:image" content="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg">
+  <meta property="og:url" content="https://gradyzhuo.github.io/swift-kurrentdb/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <img class="hero-icon" src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg" alt="swift-kurrentdb icon">
+    <h1>swift-kurrentdb</h1>
+    <p class="tagline">A modern, type-safe Swift client for Kurrent <span class="dim">(formerly EventStoreDB)</span></p>
+    <p class="tagline-zh">為 Kurrent / EventStoreDB 而設計的現代化 Swift 客戶端</p>
+    <p class="subtagline">Built for Server-Side Swift and Event Sourcing — 為伺服器端 Swift 與 Event Sourcing 打造</p>
+
+    <div class="badges">
+      <a href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dswift-versions" alt="Swift versions"></a>
+      <a href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dplatforms" alt="Platforms"></a>
+      <a href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/Licence"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+      <a href="https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml"><img src="https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml/badge.svg" alt="Build status"></a>
+    </div>
+
+    <div class="cta">
+      <a class="btn primary" href="#quick-start">Get Started · 開始使用</a>
+      <a class="btn" href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb" target="_blank" rel="noopener">Documentation</a>
+      <a class="btn" href="https://github.com/gradyzhuo/swift-kurrentdb" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<section id="install" class="container">
+  <h2>Install <span class="zh">安裝</span></h2>
+  <p>Add to your <code>Package.swift</code>:</p>
+  <p class="zh-p">在 <code>Package.swift</code> 加入：</p>
+  <pre><code class="lang-swift">dependencies: [
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.3")
+]</code></pre>
+  <p class="note">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
+  <p class="note zh-p">🎉 <strong>2.0 已上線</strong>　目前推薦使用 target-based API。仍在 1.x？請改用 <code>KurrentDB_V1</code>，原本程式碼可繼續運作，遷移節奏自己決定。</p>
+</section>
+
+<section id="why" class="container">
+  <h2>Why swift-kurrentdb <span class="zh">為什麼選擇</span></h2>
+  <div class="features">
+    <div class="feature">
+      <h3>Native Swift</h3>
+      <p>Designed for Swift from the ground up — not a wrapper around another language's client.</p>
+      <p class="zh-p">從 Swift 角度設計，不是其他語言客戶端的轉接層。</p>
+    </div>
+    <div class="feature">
+      <h3>Modern Concurrency</h3>
+      <p>Full <code>async/await</code> throughout, with Swift 6 strict-concurrency compliance and zero <code>@unchecked Sendable</code>.</p>
+      <p class="zh-p">全面 <code>async/await</code>，符合 Swift 6 strict concurrency，零 <code>@unchecked Sendable</code>。</p>
+    </div>
+    <div class="feature">
+      <h3>Compile-Time Safety</h3>
+      <p>Target-based API rules out illegal operations (e.g. tombstoning <code>$all</code>) before they reach the wire.</p>
+      <p class="zh-p">Target-based API 讓不合法的操作（例如對 <code>$all</code> 下 tombstone）在編譯期就被擋下。</p>
+    </div>
+    <div class="feature">
+      <h3>Typed Errors</h3>
+      <p>Every operation throws <code>KurrentError</code> via typed throws — failure cases are exhaustive at compile time.</p>
+      <p class="zh-p">所有操作以 typed throws 拋出 <code>KurrentError</code>，錯誤處理在編譯期就被窮舉。</p>
+    </div>
+    <div class="feature">
+      <h3>Cluster-Ready</h3>
+      <p>First-class support for multi-node TLS clusters with gossip discovery and <code>NodePreference</code> routing.</p>
+      <p class="zh-p">原生支援多節點 TLS 叢集，含 gossip discovery 與 <code>NodePreference</code> 路由。</p>
+    </div>
+    <div class="feature">
+      <h3>Well-Documented</h3>
+      <p>Comprehensive DocC guides on Swift Package Index — getting started, appending events, projections, subscriptions, and more.</p>
+      <p class="zh-p">Swift Package Index 上有完整 DocC 指南：入門、寫入事件、Projections、訂閱等。</p>
+    </div>
+  </div>
+</section>
+
+<section id="quick-start" class="container">
+  <h2>Quick Start <span class="zh">快速上手</span></h2>
+
+  <h3>Connect <span class="zh">連線</span></h3>
+  <pre><code class="lang-swift">import KurrentDB
+
+// Local development — single node
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+
+// Production — remote cluster (TLS enabled by default)
+let production = ClientSettings.remote(
+    "node1.example.com:2113",
+    "node2.example.com:2113",
+    "node3.example.com:2113"
+).authenticated(.credentials(username: "admin", password: "changeit"))
+
+let client = KurrentDBClient(settings: settings)</code></pre>
+
+  <h3>Append &amp; Read Events <span class="zh">寫入與讀取事件</span></h3>
+  <pre><code class="lang-swift">// Create an event
+let event = EventData(
+    eventType: "OrderPlaced",
+    model: ["orderId": "order-123", "total": 99.99]
+)
+
+// Append to stream
+try await client.streams(specified: "orders").append(events: [event]) {
+    $0.expectedRevision = .any
+}
+
+// Read events
+let responses = try await client.streams(specified: "orders").read {
+    $0.revision = .start
+    $0.limit = 10
+}
+
+for try await response in responses {
+    if let event = try response.event {
+        print("Event: \(event.record.eventType)")
+    }
+}</code></pre>
+
+  <h3>Subscribe <span class="zh">訂閱</span></h3>
+  <pre><code class="lang-swift">// Catch-up subscription
+let subscription = try await client.streams(specified: "orders").subscribe()
+
+for try await event in subscription.events {
+    print("Live event: \(event.record.eventType)")
+}</code></pre>
+</section>
+
+<section id="api" class="container">
+  <h2>API at a glance <span class="zh">API 一覽</span></h2>
+  <p>The target-based design scopes every operation through a typed target — the compiler keeps you on rails.</p>
+  <p class="zh-p">所有操作都透過型別化的 target 進入，編譯器幫你守住合法的呼叫範圍。</p>
+
+  <div class="api-grid">
+    <div class="api-card">
+      <h3>Streams</h3>
+      <pre><code class="lang-swift">client.streams(specified: "orders")
+  .append(events: ...)
+  .read { ... }
+  .subscribe()
+  .delete()
+  .tombstone()
+
+client.allStreams.read { ... }
+client.allStreams.subscribe()</code></pre>
+    </div>
+
+    <div class="api-card">
+      <h3>Projections</h3>
+      <pre><code class="lang-swift">client.projections(of: .continuous(name: "x"))
+  .create(query: js)
+
+client.projections(name: "x")
+  .enable() / .disable()
+  .state(of: T.self)
+  .result(of: T.self)
+
+client.projections(of: .anyMode).list()</code></pre>
+    </div>
+
+    <div class="api-card">
+      <h3>Persistent Subscriptions</h3>
+      <pre><code class="lang-swift">client.persistentSubscriptions(
+    stream: "orders", group: "workers"
+).create {
+    $0.revision = .start
+    $0.settings.maxRetryCount = 5
+}
+
+// subscribe → ack / nack with park/retry</code></pre>
+    </div>
+
+    <div class="api-card">
+      <h3>Users · Operations · Gossip</h3>
+      <pre><code class="lang-swift">client.users.create(...)
+client.user("jane").enable()
+
+client.operations(of: .scavenge)
+  .startScavenge(...)
+
+let members = try await client.readCluster()</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="compat" class="container">
+  <h2>Server Compatibility <span class="zh">伺服器相容性</span></h2>
+  <table class="compat">
+    <thead>
+      <tr><th>Server Version</th><th>Status</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>KurrentDB 26.1</strong></td><td>✅</td><td>Full feature support · 全功能支援</td></tr>
+      <tr><td><strong>KurrentDB 26.0</strong></td><td>✅</td><td>Full feature support · 全功能支援</td></tr>
+      <tr><td><strong>KurrentDB 25.1</strong></td><td>✅</td><td>Full feature support · 全功能支援</td></tr>
+      <tr><td><strong>EventStoreDB 24.x</strong></td><td>✅</td><td>Core features · v2 batch append 尚未提供</td></tr>
+    </tbody>
+  </table>
+  <p>Tested in CI across Swift 6.0 / 6.1 / 6.2 / 6.3 against every supported server version.</p>
+  <p class="zh-p">CI 在 Swift 6.0 / 6.1 / 6.2 / 6.3 對所有支援版本進行完整整合測試。</p>
+</section>
+
+<footer class="container">
+  <div class="footer-links">
+    <a href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb" target="_blank" rel="noopener">Documentation</a>
+    <a href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide" target="_blank" rel="noopener">Migration Guide (1.x → 2.x)</a>
+    <a href="https://github.com/gradyzhuo/swift-kurrentdb" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/gradyzhuo/swift-kurrentdb/discussions" target="_blank" rel="noopener">Discussions</a>
+    <a href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+  </div>
+  <p class="footer-meta">MIT License · Made by <a href="https://github.com/gradyzhuo" target="_blank" rel="noopener">Grady Zhuo</a></p>
+</footer>
+
+</body>
+</html>
