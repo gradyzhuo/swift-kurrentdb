@@ -19,6 +19,7 @@
 <header class="hero">
   <div class="container">
     <img class="hero-icon" src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg" alt="swift-kurrentdb icon">
+    <a href="#whats-new" class="version-pill">🚀 v2.0.0 · Target-based API has landed</a>
     <h1>swift-kurrentdb</h1>
     <p class="tagline">A modern, type-safe Swift client for Kurrent <span class="dim">(formerly EventStoreDB)</span></p>
     <p class="tagline-zh">為 Kurrent / EventStoreDB 而設計的現代化 Swift 客戶端</p>
@@ -48,6 +49,111 @@
 ]</code></pre>
   <p class="note">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note zh-p">🎉 <strong>2.0 已上線</strong>　目前推薦使用 target-based API。仍在 1.x？請改用 <code>KurrentDB_V1</code>，原本程式碼可繼續運作，遷移節奏自己決定。</p>
+</section>
+
+<section id="whats-new" class="container whats-new">
+  <div class="whats-new-tag">Major release · v2.0.0</div>
+  <h2>What's new in 2.0 <span class="zh">2.0 帶來了什麼</span></h2>
+  <p class="lead">
+    Version 2.0 is a <strong>ground-up redesign</strong> of the public API. The flat
+    <code>client.appendToStream(...)</code> surface gives way to typed targets the compiler can verify —
+    illegal operations literally don't compile.
+  </p>
+  <p class="lead zh-p">
+    2.0 是 API 的<strong>全面重新設計</strong>。原本 <code>client.appendToStream(...)</code> 的扁平呼叫，
+    換成編譯器能驗證的型別化 target — 不合法的操作根本通不過編譯。
+  </p>
+
+  <div class="highlights">
+    <div class="highlight">
+      <h3>🎯 Target-based API</h3>
+      <p>Every operation flows through a typed target. Tombstoning <code>$all</code>? Reading from a write-only target? Won't compile.</p>
+      <p class="zh-p">每個操作都透過型別化的 target 進入。對 <code>$all</code> 下 tombstone？編譯就過不去。</p>
+    </div>
+    <div class="highlight">
+      <h3>⚡️ Trailing-closure builders</h3>
+      <p>Options are mutated in an <code>inout</code> closure. No more options structs, no more parameter explosion.</p>
+      <p class="zh-p">用 <code>inout</code> closure 設定 options，告別參數爆炸與龐大的 options struct。</p>
+    </div>
+    <div class="highlight">
+      <h3>🛡️ Actor + Swift 6 strict concurrency</h3>
+      <p><code>KurrentDBClient</code> is an actor. The whole package compiles under <code>-strict-concurrency=complete</code> with zero <code>@unchecked Sendable</code>.</p>
+      <p class="zh-p"><code>KurrentDBClient</code> 是 actor。整個 package 在 <code>-strict-concurrency=complete</code> 下零 <code>@unchecked Sendable</code> 通過編譯。</p>
+    </div>
+    <div class="highlight">
+      <h3>📐 Typed throws</h3>
+      <p>Every operation throws <code>KurrentError</code> via typed throws — failure cases are exhaustive at compile time.</p>
+      <p class="zh-p">所有操作以 typed throws 拋出 <code>KurrentError</code>，錯誤處理在編譯期就被窮舉。</p>
+    </div>
+    <div class="highlight">
+      <h3>🧩 Three-layer module split</h3>
+      <p><code>KurrentDB</code> → <code>GRPCEncapsulates</code> → <code>Generated</code>. gRPC patterns live in their own module — reusable beyond KurrentDB.</p>
+      <p class="zh-p"><code>KurrentDB</code> → <code>GRPCEncapsulates</code> → <code>Generated</code> 三層拆分，gRPC 抽象可被其他客戶端重用。</p>
+    </div>
+    <div class="highlight">
+      <h3>🛟 1.x preserved as KurrentDB_V1</h3>
+      <p>The 1.x flat-method API ships in the same package under a separate library. Migrate at your own pace — your code keeps working today.</p>
+      <p class="zh-p">1.x 平面式 API 在同一個 package 內以獨立 library 保留。今天升級依舊跑得動，遷移節奏自己掌握。</p>
+    </div>
+  </div>
+
+  <h3>See the difference <span class="zh">前後對照</span></h3>
+  <div class="compare">
+    <div class="compare-col compare-old">
+      <h4>1.x · Flat methods</h4>
+      <pre><code class="lang-swift">// Append
+try await client.appendToStream(
+    "orders",
+    events: [event]
+) {
+    $0.revision(expected: .streamExists)
+}
+
+// Read
+let responses = try await client.readStream("orders") {
+    $0.startFrom(revision: .start).limit(50)
+}
+
+// Persistent subscription
+try await client.createPersistentSubscription(
+    stream: "orders",
+    groupName: "workers"
+) {
+    $0.startFrom(revision: .start)
+      .maxRetryCount(5)
+}</code></pre>
+    </div>
+    <div class="compare-col compare-new">
+      <h4>2.x · Target-based</h4>
+      <pre><code class="lang-swift">// Append
+try await client.streams(specified: "orders")
+    .append(events: [event]) {
+        $0.expectedRevision = .streamExists
+    }
+
+// Read
+let responses = try await client.streams(specified: "orders").read {
+    $0.revision = .start
+    $0.limit = 50
+}
+
+// Persistent subscription
+try await client.persistentSubscriptions(
+    stream: "orders", group: "workers"
+).create {
+    $0.revision = .start
+    $0.settings.maxRetryCount = 5
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a class="btn primary" href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide" target="_blank" rel="noopener">Read the Migration Guide →</a>
+    <span class="cta-note">
+      Full 1.x → 2.x walkthrough with every breaking change documented.<br>
+      <span class="zh-p">完整 1.x → 2.x 遷移指南，每一個破壞性變更都有對照。</span>
+    </span>
+  </div>
 </section>
 
 <section id="why" class="container">
