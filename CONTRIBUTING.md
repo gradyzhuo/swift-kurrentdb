@@ -7,6 +7,7 @@ It's people like you that make swift-kurrentdb a great tool for the Swift commun
 ## 📋 Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Project Heritage & Design Philosophy](#-project-heritage--design-philosophy)
 - [How Can I Contribute?](#how-can-i-contribute)
 - [Development Setup](#development-setup)
 - [Pull Request Process](#pull-request-process)
@@ -24,6 +25,35 @@ This project and everyone participating in it is governed by our commitment to p
 - Be collaborative and constructive
 - Focus on what is best for the community
 - Show empathy towards other community members
+
+## 🧭 Project Heritage & Design Philosophy
+
+Knowing where the public API comes from — and where it deliberately steps away from precedent — helps when reviewing PRs and proposing new surface. This is the context maintainers use when evaluating design questions.
+
+### Built on
+
+- [grpc-swift](https://github.com/grpc/grpc-swift) — Swift gRPC implementation (v2.x)
+- [swift-nio](https://github.com/apple/swift-nio) — Non-blocking I/O
+- [swift-log](https://github.com/apple/swift-log) — Logging API
+
+### Design influences and divergences
+
+The shape of the public API and the underlying wire semantics owe a lot to the official Kurrent/EventStoreDB clients — primarily the [.NET](https://github.com/EventStore/EventStore-Client-Dotnet), [Java](https://github.com/EventStore/EventStoreDB-Client-Java), and [Node.js](https://github.com/EventStore/EventStoreDB-Client-NodeJS) clients. What was adopted, and where this client deliberately takes a different path:
+
+**Adopted from the official clients**
+- The `esdb://` connection string format, cluster gossip discovery, and `NodePreference` semantics (leader / follower / random) for routing.
+- Optimistic concurrency via expected revision (`.any` / `.noStream` / `.streamExists` / `.at(n)`) and the resulting `wrongExpectedVersion` error path.
+- Persistent subscription ACK/NACK with park/retry/skip/stop semantics.
+- Subscription filtering primitives (event-type / stream-name prefix and regex).
+
+**Where swift-kurrentdb diverges**
+- **Target-based API instead of flat methods.** Official clients expose a flat surface like `client.appendToStream(name, options, events)`. swift-kurrentdb scopes operations through typed targets — `client.streams(of: .specified("orders")).append(...)`, `client.projections(name: ...)`, `client.persistentSubscriptions(stream: ..., group: ...)` — so the compiler rules out illegal operations (e.g. tombstoning `$all`) before they reach the wire.
+- **Trailing-closure builders for options** instead of options objects/records. This keeps the call site terse and removes the need for either parameter overloads or partially-filled structs.
+- **Actor-based client with Swift 6 strict concurrency.** `KurrentDBClient` and `NodeSelector` are actors, not thread-safe instances guarded by locks. The whole package compiles under `-strict-concurrency=complete` with zero `@unchecked Sendable`.
+- **Typed throws.** Operations throw `KurrentError` rather than a hierarchy of untyped exceptions, so callers exhaustively handle failure cases at compile time.
+- **Three-layer module split** (`KurrentDB` → `GRPCEncapsulates` → `Generated`). gRPC patterns (`UnaryUnary`, `UnaryStream`, etc.) live in their own module so the public API stays decoupled from generated protobuf types — the same pattern can be reused by other gRPC-backed Swift clients without dragging KurrentDB-specific types along.
+
+When in doubt about a proposed design, lean toward these principles. If a new surface fights them, that's a signal to discuss the design in an issue before opening a PR.
 
 ## 🎯 How Can I Contribute?
 
