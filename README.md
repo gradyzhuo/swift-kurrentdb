@@ -100,13 +100,14 @@ let event = EventData(
 )
 
 // Append to stream
-try await client.appendToStream("orders", events: [event]) {
-    $0.revision(expected: .any)
+try await client.streams(specified: "orders").append(events: [event]) {
+    $0.expectedRevision = .any
 }
 
 // Read events
-let responses = try await client.readStream("orders") {
-    $0.startFrom(revision: .start).limit(10)
+let responses = try await client.streams(specified: "orders").read {
+    $0.revision = .start
+    $0.limit = 10
 }
 
 for try await response in responses {
@@ -124,86 +125,86 @@ for try await response in responses {
 
 ```swift
 // Append
-try await client.appendToStream("orders", events: [event]) {
-    $0.revision(expected: .streamExists)
+try await client.streams(specified: "orders").append(events: [event]) {
+    $0.expectedRevision = .streamExists
 }
 
 // Read forward
-let responses = try await client.readStream("orders") {
-    $0.startFrom(revision: .start).limit(50)
+let responses = try await client.streams(specified: "orders").read {
+    $0.revision = .start
+    $0.limit = 50
 }
 
 // Read backward
-let responses = try await client.readStream("orders") {
-    $0.startFrom(revision: .end).limit(10).backward()
+let responses = try await client.streams(specified: "orders").read {
+    $0.revision = .end
+    $0.direction = .backward
+    $0.limit = 10
 }
 
 // Read $all
-let allResponses = try await client.readAllStreams {
-    $0.limit(100)
+let allResponses = try await client.allStreams.read {
+    $0.limit = 100
 }
 
 // Subscribe (catch-up)
-let subscription = try await client.subscribeStream("orders")
+let subscription = try await client.streams(specified: "orders").subscribe()
 for try await event in subscription.events { ... }
 
 // Subscribe to $all
-let subscription = try await client.subscribeAllStreams()
+let subscription = try await client.allStreams.subscribe()
 
 // Delete / tombstone
-try await client.deleteStream("orders")
-try await client.tombstoneStream("orders")
+try await client.streams(specified: "orders").delete()
+try await client.streams(specified: "orders").tombstone()
 
 // Stream metadata
-try await client.setStreamMetadata("orders", metadata: metadata)
-let metadata = try await client.getStreamMetadata("orders")
+try await client.streams(specified: "orders").setMetadata(metadata: metadata)
+let metadata = try await client.streams(specified: "orders").getMetadata()
 ```
 
 ### Projections
 
 ```swift
 // Create
-try await client.createContinuousProjection(name: "order-count", query: js)
-try await client.createOneTimeProjection(query: js)
-try await client.createTransientProjection(name: "temp", query: js)
+try await client.projections(of: .continuous(name: "order-count")).create(query: js)
+try await client.projections(of: .onetime).create(query: js)
+try await client.projections(of: .transient(name: "temp")).create(query: js)
 
 // Lifecycle
-try await client.enableProjection(name: "order-count")
-try await client.disableProjection(name: "order-count")
-try await client.abortProjection(name: "order-count")
-try await client.resetProjection(name: "order-count")
-try await client.deleteProjection(name: "order-count")
+try await client.projections(name: "order-count").enable()
+try await client.projections(name: "order-count").disable()
+try await client.projections(name: "order-count").abort()
+try await client.projections(name: "order-count").reset()
+try await client.projections(name: "order-count").delete()
 
 // Query state / result
-let state: CountResult? = try await client.getProjectionState(of: CountResult.self, name: "order-count")
-let result: Int? = try await client.getProjectionResult(of: Int.self, name: "order-count")
+let state: CountResult? = try await client.projections(name: "order-count").state(of: CountResult.self)
+let result: Int? = try await client.projections(name: "order-count").result(of: Int.self)
 
 // List
-let continuous = try await client.listAllProjections(mode: .continuous)
-let all = try await client.listAllProjections(mode: .any)
+let continuous = try await client.projections(of: .continuous).list()
+let all = try await client.projections(of: .any).list()
 ```
 
 ### Persistent Subscriptions
 
 ```swift
 // Create a subscription group
-try await client.createPersistentSubscription(
-    stream: "orders",
-    groupName: "order-workers"
-) {
-    $0.startFrom(revision: .start)
-      .maxRetryCount(5)
+try await client.persistentSubscriptions(stream: "orders", group: "order-workers").create {
+    $0.settings.startFrom = .start
+    $0.settings.maxRetryCount = 5
 }
 
 // Subscribe and process events
-let subscription = try await client.subscribePersistentSubscription(
+let subscription = try await client.persistentSubscriptions(
     stream: "orders",
-    groupName: "order-workers"
-)
+    group: "order-workers"
+).subscribe()
 
 for try await result in subscription.events {
     do {
-        // handle event
+        // handle event via result.event.record
         try await subscription.ack(readEvents: result.event)
     } catch {
         try await subscription.nack(readEvents: result.event, action: .park, reason: "\(error)")
@@ -211,19 +212,19 @@ for try await result in subscription.events {
 }
 
 // $all persistent subscription
-try await client.createPersistentSubscriptionToAllStream(groupName: "all-workers")
-let allSub = try await client.subscribePersistentSubscriptionToAllStreams(groupName: "all-workers")
+try await client.persistentSubscriptions(filterGroup: "all-workers").create()
+let allSub = try await client.persistentSubscriptions(filterGroup: "all-workers").subscribe()
 
 // Update / delete
-try await client.updatePersistentSubscription(stream: "orders", groupName: "order-workers") { $0 }
-try await client.deletePersistentSubscription(stream: "orders", groupName: "order-workers")
+try await client.persistentSubscriptions(stream: "orders", group: "order-workers").update()
+try await client.persistentSubscriptions(stream: "orders", group: "order-workers").delete()
 ```
 
 ### User Management
 
 ```swift
 // Create a user
-try await client.createUser(
+try await client.users.create(
     loginName: "jane",
     password: "secure_password",
     fullName: "Jane Doe",
@@ -231,26 +232,26 @@ try await client.createUser(
 )
 
 // Manage user
-try await client.enableUser(loginName: "jane")
-try await client.disableUser(loginName: "jane")
-try await client.changeUserPassword(loginName: "jane", currentPassword: "old", newPassword: "new")
-try await client.resetUserPassword(loginName: "jane", newPassword: "reset")
+try await client.user("jane").enable()
+try await client.user("jane").disable()
+try await client.user("jane").change(password: "new", origin: "old")
+try await client.user("jane").reset(password: "reset")
 ```
 
 ### Server Operations
 
 ```swift
 // Scavenge
-let response = try await client.startScavenge(threadCount: 2, startFromChunk: 0)
-try await client.stopScavenge(scavengeId: response.scavengeId)
+let response = try await client.operations(of: .scavenge).startScavenge(threadCount: 2, startFromChunk: 0)
+try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId)).stopScavenge()
 
 // System
-try await client.mergeIndexes()
-try await client.restartPersistentSubscriptions()
+try await client.operations(of: .system).mergeIndexes()
+try await client.operations(of: .system).restartPersistentSubscriptions()
 
 // Node
-try await client.resignNode()
-try await client.setNodePriority(priority: 10)
+try await client.operations(of: .node).resignNode()
+try await client.operations(of: .node).setNodePriority(priority: 10)
 ```
 
 ### Cluster Gossip
