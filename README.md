@@ -183,8 +183,8 @@ let state: CountResult? = try await client.projections(name: "order-count").stat
 let result: Int? = try await client.projections(name: "order-count").result(of: Int.self)
 
 // List
-let continuous = try await client.projections(of: .continuous).list()
-let all = try await client.projections(of: .any).list()
+let continuous = try await client.projections(of: .anyContinuous).list()
+let all = try await client.projections(of: .anyMode).list()
 ```
 
 ### Persistent Subscriptions
@@ -192,7 +192,7 @@ let all = try await client.projections(of: .any).list()
 ```swift
 // Create a subscription group
 try await client.persistentSubscriptions(stream: "orders", group: "order-workers").create {
-    $0.settings.startFrom = .start
+    $0.revision = .start
     $0.settings.maxRetryCount = 5
 }
 
@@ -449,47 +449,6 @@ Contributions are welcome! Whether it's bug reports, feature requests, documenta
 ## License
 
 MIT License — see [LICENSE](Licence) for details.
-
-## Acknowledgments
-
-Built with:
-- [grpc-swift](https://github.com/grpc/grpc-swift) — Swift gRPC implementation (v2.x)
-- [swift-nio](https://github.com/apple/swift-nio) — Non-blocking I/O
-- [swift-log](https://github.com/apple/swift-log) — Logging API
-
-### Design influences and divergences
-
-The shape of the public API and the underlying wire semantics owe a lot to the official
-Kurrent/EventStoreDB clients — primarily the [.NET](https://github.com/EventStore/EventStore-Client-Dotnet),
-[Java](https://github.com/EventStore/EventStoreDB-Client-Java), and
-[Node.js](https://github.com/EventStore/EventStoreDB-Client-NodeJS) clients.
-What was adopted, and where this client deliberately takes a different path:
-
-**Adopted from the official clients**
-- The `esdb://` connection string format, cluster gossip discovery, and `NodePreference`
-  semantics (leader / follower / random) for routing.
-- Optimistic concurrency via expected revision (`.any` / `.noStream` / `.streamExists` / `.at(n)`)
-  and the resulting `wrongExpectedVersion` error path.
-- Persistent subscription ACK/NACK with park/retry/skip/stop semantics.
-- Subscription filtering primitives (event-type / stream-name prefix and regex).
-
-**Where swift-kurrentdb diverges**
-- **Target-based API instead of flat methods.** Official clients expose a flat surface like
-  `client.appendToStream(name, options, events)`. swift-kurrentdb scopes operations through
-  typed targets — `client.streams(of: .specified("orders")).append(...)`,
-  `client.projections(name: ...)`, `client.persistentSubscriptions(stream: ..., group: ...)` —
-  so the compiler rules out illegal operations (e.g. tombstoning `$all`) before they reach the wire.
-- **Trailing-closure builders for options** instead of options objects/records. This keeps the
-  call site terse and removes the need for either parameter overloads or partially-filled structs.
-- **Actor-based client with Swift 6 strict concurrency.** `KurrentDBClient` and `NodeSelector`
-  are actors, not thread-safe instances guarded by locks. The whole package compiles under
-  `-strict-concurrency=complete` with zero `@unchecked Sendable`.
-- **Typed throws.** Operations throw `KurrentError` rather than a hierarchy of untyped
-  exceptions, so callers exhaustively handle failure cases at compile time.
-- **Three-layer module split** (`KurrentDB` → `GRPCEncapsulates` → `Generated`).
-  gRPC patterns (`UnaryUnary`, `UnaryStream`, etc.) live in their own module so the public
-  API stays decoupled from generated protobuf types — the same pattern can be reused by
-  other gRPC-backed Swift clients without dragging KurrentDB-specific types along.
 
 ---
 
