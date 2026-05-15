@@ -394,6 +394,7 @@ Streams write-side error paths are explicitly covered:
 
 | Server Version | Status | Notes |
 |:--------------:|:------:|-------|
+| **KurrentDB 26.1** | ✅ Supported | Full feature support |
 | **KurrentDB 26.0** | ✅ Supported | Full feature support |
 | **KurrentDB 25.1** | ✅ Supported | Full feature support |
 | **EventStoreDB 24.x** | ✅ Supported | Core features supported; KurrentDB v2 batch append not available |
