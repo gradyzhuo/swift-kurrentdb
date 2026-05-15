@@ -4,7 +4,7 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
-[![Swift-build-testing](https://github.com/gradyzhuo/EventStoreDB-Swift/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/offsky-studio/swift-kurrentdb/actions/workflows/swift-build-testing.yml)
+[![Swift-build-testing](https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml)
 [![codecov](https://codecov.io/gh/gradyzhuo/swift-kurrentdb/graph/badge.svg)](https://codecov.io/gh/gradyzhuo/swift-kurrentdb)
 
 <div align=center>
@@ -14,7 +14,7 @@
 
 Built for Server-Side Swift and Event Sourcing
 
-[Documentation](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions)
+[Documentation](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions)
 
 </div>
 
@@ -40,18 +40,22 @@ Event Sourcing is a powerful pattern for building scalable, auditable systems. s
 Add to your `Package.swift`:
 
 ```swift
-// Stable release
+// 2.x — current stable, target-based API
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "1.12.1")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.3")
 ]
 ```
 
-> **2.0.0 Beta available** — A major new release is in active development.
-> The 2.x API introduces a target-based design with improved type safety and composability.
-> ```swift
-> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.0")
-> ```
+> 🎉 **2.0 is here.** The target-based API is now the recommended way to use swift-kurrentdb —
+> richer compile-time guarantees, better composability, and a cleaner surface area.
 > See the [Migration Guide](#migration-guide) below for what's changed.
+>
+> **Already on 1.x?** Your existing code keeps working — the legacy flat-method API now ships
+> as a separate `KurrentDB_V1` library in the same package, so you can migrate at your own pace.
+> ```swift
+> // Continue using the 1.x API without changes
+> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "1.12.2")
+> ```
 
 ---
 
@@ -421,15 +425,15 @@ docker run --rm -d -p 2113:2113 \
 | Guide | Description |
 |-------|-------------|
 | [Migration Guide (1.x → 2.x)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code |
-| [Getting Started](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
-| [Appending Events](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency |
-| [Reading Events](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, filters |
-| [Projections](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/projections) | Create, manage, and query projection state |
-| [Persistent Subscriptions](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/persistent-subscriptions) | Competing consumers, ACK/NAK, subscription groups |
-| [User Management](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/user-management) | Create, enable, disable, password management |
-| [Cluster Gossip](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/cluster-gossip) | Cluster discovery, node health monitoring |
-| [Monitoring](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/monitoring) | Real-time server statistics |
-| [Server Operations](https://swiftpackageindex.com/gradyzhuo/kurrentdb-swift/documentation/kurrentdb/server-operations) | Scavenge, index merge, shutdown, node management |
+| [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
+| [Appending Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency |
+| [Reading Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, filters |
+| [Projections](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/projections) | Create, manage, and query projection state |
+| [Persistent Subscriptions](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/persistent-subscriptions) | Competing consumers, ACK/NAK, subscription groups |
+| [User Management](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/user-management) | Create, enable, disable, password management |
+| [Cluster Gossip](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/cluster-gossip) | Cluster discovery, node health monitoring |
+| [Monitoring](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/monitoring) | Real-time server statistics |
+| [Server Operations](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/server-operations) | Scavenge, index merge, shutdown, node management |
 | [Full API Reference](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | Complete API documentation |
 
 ## Contributing
@@ -447,10 +451,43 @@ MIT License — see [LICENSE](Licence) for details.
 ## Acknowledgments
 
 Built with:
-- [grpc-swift](https://github.com/grpc/grpc-swift) — Swift gRPC implementation
+- [grpc-swift](https://github.com/grpc/grpc-swift) — Swift gRPC implementation (v2.x)
 - [swift-nio](https://github.com/apple/swift-nio) — Non-blocking I/O
+- [swift-log](https://github.com/apple/swift-log) — Logging API
 
-Inspired by official Kurrent/EventStoreDB clients.
+### Design influences and divergences
+
+The shape of the public API and the underlying wire semantics owe a lot to the official
+Kurrent/EventStoreDB clients — primarily the [.NET](https://github.com/EventStore/EventStore-Client-Dotnet),
+[Java](https://github.com/EventStore/EventStoreDB-Client-Java), and
+[Node.js](https://github.com/EventStore/EventStoreDB-Client-NodeJS) clients.
+What was adopted, and where this client deliberately takes a different path:
+
+**Adopted from the official clients**
+- The `esdb://` connection string format, cluster gossip discovery, and `NodePreference`
+  semantics (leader / follower / random) for routing.
+- Optimistic concurrency via expected revision (`.any` / `.noStream` / `.streamExists` / `.at(n)`)
+  and the resulting `wrongExpectedVersion` error path.
+- Persistent subscription ACK/NACK with park/retry/skip/stop semantics.
+- Subscription filtering primitives (event-type / stream-name prefix and regex).
+
+**Where swift-kurrentdb diverges**
+- **Target-based API instead of flat methods.** Official clients expose a flat surface like
+  `client.appendToStream(name, options, events)`. swift-kurrentdb scopes operations through
+  typed targets — `client.streams(of: .specified("orders")).append(...)`,
+  `client.projections(name: ...)`, `client.persistentSubscriptions(stream: ..., group: ...)` —
+  so the compiler rules out illegal operations (e.g. tombstoning `$all`) before they reach the wire.
+- **Trailing-closure builders for options** instead of options objects/records. This keeps the
+  call site terse and removes the need for either parameter overloads or partially-filled structs.
+- **Actor-based client with Swift 6 strict concurrency.** `KurrentDBClient` and `NodeSelector`
+  are actors, not thread-safe instances guarded by locks. The whole package compiles under
+  `-strict-concurrency=complete` with zero `@unchecked Sendable`.
+- **Typed throws.** Operations throw `KurrentError` rather than a hierarchy of untyped
+  exceptions, so callers exhaustively handle failure cases at compile time.
+- **Three-layer module split** (`KurrentDB` → `GRPCEncapsulates` → `Generated`).
+  gRPC patterns (`UnaryUnary`, `UnaryStream`, etc.) live in their own module so the public
+  API stays decoupled from generated protobuf types — the same pattern can be reused by
+  other gRPC-backed Swift clients without dragging KurrentDB-specific types along.
 
 ---
 
