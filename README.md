@@ -8,7 +8,6 @@
 [![codecov](https://codecov.io/gh/gradyzhuo/swift-kurrentdb/graph/badge.svg)](https://codecov.io/gh/gradyzhuo/swift-kurrentdb)
 
 <div align=center>
-<img src="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg" height="200px" width="200px" >
 
 **A modern, type-safe Swift client for Kurrent (formerly EventStoreDB)**
 
