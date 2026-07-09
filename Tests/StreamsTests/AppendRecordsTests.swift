@@ -11,7 +11,8 @@ import Foundation
 import Logging
 import Testing
 
-@Suite("AppendRecords (DCB) Tests", .serialized)
+@Suite("AppendRecords (DCB) Tests", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_SUPPORTS_APPEND_RECORDS"] == "true"))
 struct AppendRecordsTests: Sendable {
     let settings: ClientSettings
 
