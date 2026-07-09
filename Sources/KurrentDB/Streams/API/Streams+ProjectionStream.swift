@@ -50,4 +50,39 @@ extension Streams where Target == MultiStreamsTarget {
         let usecase = AppendSession(streamEvents: events)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
+
+    /// Appends records across one or more streams atomically with cross-stream consistency checks
+    /// (Dynamic Consistency Boundary). Requires KurrentDB 25.1+.
+    ///
+    /// Each ``StreamEvent`` whose `expectedRevision` is not `.any` becomes an implicit check on its
+    /// own stream. Additional ``checks`` may reference **any** stream — including streams this call
+    /// does not write to — so a decision can depend on multiple streams while producing events for
+    /// only a subset.
+    ///
+    /// - Parameters:
+    ///   - events: ``StreamEvent`` values to append, each carrying its target stream and records.
+    ///   - checks: Extra pre-commit consistency checks on any stream. Defaults to none.
+    /// - Returns: An ``AppendRecords/Response`` with per-stream revisions and the commit position.
+    /// - Throws: ``KurrentError/consistencyViolation(violations:)`` if any check fails (reporting all
+    ///   failing checks at once); other `KurrentError` cases on transport or access failures.
+    @discardableResult
+    public func appendRecords(events: [StreamEvent], checks: [ConsistencyCheck] = []) async throws(KurrentError) -> AppendRecords.Response {
+        let usecase = AppendRecords(streamEvents: events, checks: checks)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
+    }
+
+    /// Appends a variadic list of records across one or more streams atomically with cross-stream
+    /// consistency checks (Dynamic Consistency Boundary). Requires KurrentDB 25.1+.
+    ///
+    /// - Parameters:
+    ///   - events: One or more ``StreamEvent`` values to append, in order.
+    ///   - checks: Extra pre-commit consistency checks on any stream. Defaults to none.
+    /// - Returns: An ``AppendRecords/Response`` with per-stream revisions and the commit position.
+    /// - Throws: ``KurrentError/consistencyViolation(violations:)`` if any check fails; other
+    ///   `KurrentError` cases on transport or access failures.
+    @discardableResult
+    public func appendRecords(events: StreamEvent..., checks: [ConsistencyCheck] = []) async throws(KurrentError) -> AppendRecords.Response {
+        let usecase = AppendRecords(streamEvents: events, checks: checks)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
+    }
 }
