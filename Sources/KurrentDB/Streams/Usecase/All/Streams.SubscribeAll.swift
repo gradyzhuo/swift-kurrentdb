@@ -158,7 +158,7 @@ extension Streams.SubscribeAll where Target == AllStreamsTarget {
         /// UUID representation used in event metadata.
         public var uuidOption: UUIDOption
         /// Optional filter applied server-side to reduce event noise.
-        public var filter: SubscriptionFilter?
+        public var filter: StreamFilter?
 
         /// Initialises options with sensible defaults (start from end, string UUIDs, no filter, no link resolution).
         public init() {
@@ -176,35 +176,7 @@ extension Streams.SubscribeAll where Target == AllStreamsTarget {
         package func build() -> UnderlyingMessage {
             .with {
                 if let filter {
-                    $0.filter = .with {
-                        // filter
-                        switch filter.type {
-                        case .streamName:
-                            $0.streamIdentifier = .with {
-                                if let regex = filter.regex {
-                                    $0.regex = regex
-                                }
-                                $0.prefix = filter.prefixes
-                            }
-                        case .eventType:
-                            $0.eventType = .with {
-                                if let regex = filter.regex {
-                                    $0.regex = regex
-                                }
-                                $0.prefix = filter.prefixes
-                            }
-                        }
-                        // window
-                        switch filter.window {
-                        case .count:
-                            $0.count = .init()
-                        case let .max(value):
-                            $0.max = value
-                        }
-
-                        // checkpointIntervalMultiplier
-                        $0.checkpointIntervalMultiplier = filter.checkpointIntervalMultiplier
-                    }
+                    $0.filter = filter.buildFilterOptions()
                 } else {
                     $0.noFilter = .init()
                 }
