@@ -51,10 +51,18 @@ extension Streams where Target == AllStreamsTarget {
                 }
                 do {
                     for try await message in $0.messages {
-                        do {
-                            try continuation.yield(handle(message: message))
-                        } catch {
-                            continuation.finish(throwing: error)
+                        // Filtered `$all` reads interleave control frames (checkpoint, caught-up,
+                        // fell-behind, positions). The read stream yields events only, so skip
+                        // anything that isn't an event or a stream-not-found signal.
+                        switch message.content {
+                        case .event, .streamNotFound:
+                            do {
+                                try continuation.yield(handle(message: message))
+                            } catch {
+                                continuation.finish(throwing: error)
+                            }
+                        default:
+                            continue
                         }
                     }
                     continuation.finish()
@@ -104,8 +112,10 @@ extension Streams.ReadAll {
         public var uuidOption: UUIDOption
         /// Compatibility level passed to the server.
         public var compatibility: UInt32
+        /// Optional server-side filter selecting a subset of events from `$all`.
+        public var filter: StreamFilter?
 
-        /// Initialises options with sensible defaults (start from beginning, forward, max events, string UUIDs).
+        /// Initialises options with sensible defaults (start from beginning, forward, max events, string UUIDs, no filter).
         public init() {
             resolveLinksEnabled = false
             limit = .max
@@ -113,6 +123,7 @@ extension Streams.ReadAll {
             compatibility = 0
             position = .start
             direction = .forward
+            filter = nil
         }
 
         /// Constructs the underlying gRPC request message for reading all streams using the configured options.
@@ -122,7 +133,11 @@ extension Streams.ReadAll {
         /// - Returns: A gRPC request message populated with the current options.
         package func build() -> UnderlyingMessage {
             .with {
-                $0.noFilter = .init()
+                if let filter {
+                    $0.filter = filter.buildFilterOptions()
+                } else {
+                    $0.noFilter = .init()
+                }
                 $0.all = .init()
 
                 switch uuidOption {
