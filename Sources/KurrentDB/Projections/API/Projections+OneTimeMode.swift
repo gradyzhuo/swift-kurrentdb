@@ -20,7 +20,7 @@ extension Projections where Target == OneTimeProjectionTarget {
     public func create(query: String) async throws(KurrentError) {
         do {
             let usecase = OneTimeCreate(query: query)
-            _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+            _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         } catch {
             print(error)
         }
@@ -36,7 +36,7 @@ extension Projections where Target == OneTimeProjectionTarget {
     /// - Throws: `KurrentError` if the request fails or the response stream cannot be read.
     public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .oneTime))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         do {
             return try await response.reduce(into: .init()) { partialResult, response in
                 partialResult.append(response.detail)

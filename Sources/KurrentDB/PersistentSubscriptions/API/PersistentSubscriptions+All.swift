@@ -13,7 +13,7 @@ extension PersistentSubscriptions where Target == AllPersistentSubscriptionTarge
     /// - Throws: `KurrentError` if the request fails.
     public func list() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         let usecase = ListForAll(filter: .stream(.all))
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Restarts the persistent subscriptions subsystem on the server.
@@ -22,6 +22,6 @@ extension PersistentSubscriptions where Target == AllPersistentSubscriptionTarge
     @MainActor
     public func restartSubsystem() async throws(KurrentError) {
         let usecase = RestartSubsystem()
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }

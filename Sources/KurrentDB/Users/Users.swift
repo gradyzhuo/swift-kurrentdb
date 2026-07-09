@@ -22,11 +22,25 @@ public final class Users<Target: UsersTarget>: GRPCConcreteService {
     /// The target specifying which users this service operates on.
     public let target: Target
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    /// Per-call authentication override, set via ``authenticated(_:)``. When nil, the client-level
+    /// authentication from ``ClientSettings`` is used.
+    internal let overrideCredentials: Authentication?
+
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
+        self.overrideCredentials = overrideCredentials
+    }
+
+    /// Returns a copy of this interface that authenticates subsequent calls with the given
+    /// credentials, overriding the client-level authentication for those calls only.
+    ///
+    /// - Parameter credentials: Authentication to use for calls made on the returned instance.
+    /// - Returns: A new interface scoped to `credentials`.
+    public func authenticated(_ credentials: Authentication) -> Self {
+        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
     }
 }
 
@@ -55,11 +69,11 @@ extension Users where Target: UserCreatable {
     ///   `KurrentError.invalidArgument` if the login name or password is invalid.
     public func create(loginName: String, password: String, fullName: String, groups: [UserGroup]) async throws(KurrentError) -> UserDetails? {
         let usecase = Create(loginName: loginName, password: password, fullName: fullName, groups: groups)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
 
         // Retrieve and return the created user's details
         let userTarget = SpecifiedUserTarget(loginName: loginName)
-        let userService = Users<SpecifiedUserTarget>(target: userTarget, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup)
+        let userService = Users<SpecifiedUserTarget>(target: userTarget, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: overrideCredentials)
         let responses = try await userService.details()
         do {
             return try await responses.first { _ in true }
@@ -92,7 +106,7 @@ extension Users where Target: UserControllable {
     ///   `KurrentError.accessDenied` if the caller lacks permission to view user details.
     public func details() async throws(KurrentError) -> AsyncThrowingStream<UserDetails, Error> {
         let usecase = Details(loginName: target.loginName)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Enables the target user account, restoring authentication access.
@@ -101,7 +115,7 @@ extension Users where Target: UserControllable {
     ///   `KurrentError.accessDenied` if the caller lacks user management permissions.
     public func enable() async throws(KurrentError) {
         let usecase = Enable(loginName: target.loginName)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Disables the target user account, preventing authentication.
@@ -110,7 +124,7 @@ extension Users where Target: UserControllable {
     ///   `KurrentError.accessDenied` if the caller lacks user management permissions.
     public func disable() async throws(KurrentError) {
         let usecase = Disable(loginName: target.loginName)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Updates the target user's profile with the specified options.
@@ -123,7 +137,7 @@ extension Users where Target: UserControllable {
     ///   `KurrentError.invalidArgument` if the update options are invalid.
     public func update(password: String, options: Update.Options) async throws(KurrentError) {
         let usecase = Update(loginName: target.loginName, password: password, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Updates the target user's full name.
@@ -147,7 +161,7 @@ extension Users where Target: UserControllable {
     ///   `KurrentError.invalidArgument` if the new password does not meet requirements.
     public func change(password newPassword: String, origin currentPassword: String) async throws(KurrentError) {
         let usecase = ChangePassword(loginName: target.loginName, currentPassword: currentPassword, newPassword: newPassword)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Resets the target user's password without requiring the current password.
@@ -158,6 +172,6 @@ extension Users where Target: UserControllable {
     ///   `KurrentError.invalidArgument` if the new password does not meet requirements.
     public func reset(password newPassword: String) async throws(KurrentError) {
         let usecase = ResetPassword(loginName: target.loginName, newPassword: newPassword)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
