@@ -20,17 +20,17 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
         try await send(connection: connection, request: request(metadata: metadata), callOptions: callOptions)
     }
 
-    package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Response {
+    package func perform(selector: NodeSelector, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Response {
         try await withRetry(
             policy: selector.retryPolicy,
             selectNode: { try await selector.select() },
             invalidate: { await selector.invalidate() }
         ) { node in
-            try await perform(node: node, callOptions: callOptions)
+            try await perform(node: node, callOptions: callOptions, credentials: credentials)
         }
     }
 
-    package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
+    package func perform(node: Node, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Response {
         guard node.serverInfo.isSupported(method: methodDescriptor) else {
             throw .unsupportedFeature(methodDescriptor)
         }
@@ -48,7 +48,7 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
         
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             logger.debug("[\(Self.name)] Opening connection...")
-            let metadata = Metadata(from: node.settings)
+            let metadata = Metadata(from: node.settings, overriding: credentials)
             return try await send(connection: client, metadata: metadata, callOptions: callOptions)
         }
     }
