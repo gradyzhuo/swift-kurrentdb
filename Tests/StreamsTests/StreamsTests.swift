@@ -188,7 +188,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
 
-        let filter: SubscriptionFilter = .onEventType(prefixes: "SubscribeAll-AccountCreated")
+        let filter: StreamFilter = .onEventType(prefixes: "SubscribeAll-AccountCreated")
         let subscription = try await client.allStreams.subscribe {
             $0.filter = filter
             $0.position = .end
@@ -216,7 +216,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
 
-        let filter: SubscriptionFilter = .excludeSystemEvents()
+        let filter: StreamFilter = .excludeSystemEvents()
         let subscription = try await client.allStreams.subscribe {
             $0.filter = filter
             $0.position = .end
@@ -244,7 +244,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
 
-        let filter: SubscriptionFilter = .onStreamName(prefix: streamIdentifier.name)
+        let filter: StreamFilter = .onStreamName(prefix: streamIdentifier.name)
         let subscription = try await client.allStreams.subscribe {
             $0.filter = filter
             $0.position = .end
@@ -272,7 +272,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
 
-        let filter: SubscriptionFilter = .onStreamName(prefix: "wrong")
+        let filter: StreamFilter = .onStreamName(prefix: "wrong")
         let subscription = try await client.allStreams.subscribe {
             $0.filter = filter
             $0.position = .end
@@ -289,6 +289,107 @@ struct StreamTests: Sendable {
         for try await _ in subscription.events {
             break
         }
+    }
+
+    @Test("It should return only matching events when reading $all with an event type filter.")
+    func testReadAllWithEventTypeFilter() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let unique = "ReadAllFilter-\(UUID().uuidString)"
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+
+        let events = [
+            EventData(eventType: "\(unique)-Created", model: ["k": "v1"]),
+            EventData(eventType: "\(unique)-Updated", model: ["k": "v2"]),
+        ]
+        _ = try await client.streams(specified: streamIdentifier.name)
+            .append(events: events) { $0.expectedRevision = .any }
+
+        let responses = try await client.allStreams.read {
+            $0.filter = .onEventType(prefixes: unique)
+            $0.position = .start
+            $0.direction = .forward
+        }
+
+        var matched: [RecordedEvent] = []
+        for try await response in responses {
+            let record = try response.event.record
+            matched.append(record)
+        }
+
+        // Every returned event matches the filter, and both appended events are present.
+        #expect(matched.allSatisfy { $0.eventType.hasPrefix(unique) })
+        let ids = Set(matched.map(\.id))
+        #expect(events.allSatisfy { ids.contains($0.id) })
+
+        try await client.streams(specified: streamIdentifier.name).delete()
+    }
+
+    @Test("It should return only matching events when reading $all with a stream name filter.")
+    func testReadAllWithStreamNameFilter() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let prefix = "ReadAllStreamFilter-\(UUID().uuidString)"
+        let targetName = "\(prefix)-orders"
+        let otherName = UUID().uuidString
+
+        let targetEvent = EventData(eventType: "AccountCreated", model: ["k": "target"])
+        let otherEvent = EventData(eventType: "AccountCreated", model: ["k": "other"])
+
+        _ = try await client.streams(specified: targetName)
+            .append(events: [targetEvent]) { $0.expectedRevision = .any }
+        _ = try await client.streams(specified: otherName)
+            .append(events: [otherEvent]) { $0.expectedRevision = .any }
+
+        let responses = try await client.allStreams.read {
+            $0.filter = .onStreamName(prefix: prefix)
+            $0.position = .start
+            $0.direction = .forward
+        }
+
+        var matched: [RecordedEvent] = []
+        for try await response in responses {
+            let record = try response.event.record
+            matched.append(record)
+        }
+
+        let ids = Set(matched.map(\.id))
+        #expect(ids.contains(targetEvent.id))
+        #expect(!ids.contains(otherEvent.id))
+
+        try await client.streams(specified: targetName).delete()
+        try await client.streams(specified: otherName).delete()
+    }
+
+    @Test("It should not fail when a filtered $all read emits checkpoints.")
+    func testReadAllFilterWithCheckpoints() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let unique = "ReadAllCheckpoint-\(UUID().uuidString)"
+        let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+
+        let events = [
+            EventData(eventType: "\(unique)-Created", model: ["k": "v1"]),
+            EventData(eventType: "\(unique)-Updated", model: ["k": "v2"]),
+        ]
+        _ = try await client.streams(specified: streamIdentifier.name)
+            .append(events: events) { $0.expectedRevision = .any }
+
+        // A low checkpoint multiplier forces the server to interleave checkpoint frames while
+        // scanning the sparse filter across all of $all — these must be skipped, not thrown.
+        let responses = try await client.allStreams.read {
+            $0.filter = .onEventType(prefixes: unique).checkpointIntervalMultiplier(1)
+            $0.position = .start
+            $0.direction = .forward
+        }
+
+        var matched: [RecordedEvent] = []
+        for try await response in responses {
+            matched.append(try response.event.record)
+        }
+
+        let ids = Set(matched.map(\.id))
+        #expect(events.allSatisfy { ids.contains($0.id) })
+        #expect(matched.allSatisfy { $0.eventType.hasPrefix(unique) })
+
+        try await client.streams(specified: streamIdentifier.name).delete()
     }
 
     @Test("Testing stream ACL encoding and decoding should succeed.", arguments: [
