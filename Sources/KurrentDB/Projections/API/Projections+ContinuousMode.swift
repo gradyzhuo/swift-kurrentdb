@@ -33,7 +33,7 @@ extension Projections where Target == SpecifiedContinuousProjectionTarget {
         var options = ContinuousCreate.Options()
         configure(&options)
         let usecase = ContinuousCreate(name: target.name, query: query, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -46,7 +46,7 @@ extension Projections where Target == UnspecifiedContinuousProjectionTarget {
     /// - Throws: `KurrentError` if the request fails or the response stream cannot be read.
     public func list() async throws(KurrentError) -> [Projection.Detail] {
         let usecase = Statistics(options: .listAll(mode: .continuous))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         do {
             return try await response.reduce(into: .init()) { partialResult, response in
                 partialResult.append(response.detail)

@@ -19,7 +19,7 @@ extension Streams where Target == AllStreamsTarget {
         var options = ReadAll.Options()
         configure(&options)
         let usecase = ReadAll(options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Subscribes to live events from the `$all` stream.
@@ -31,6 +31,6 @@ extension Streams where Target == AllStreamsTarget {
         var options = SubscribeAll.Options()
         configure(&options)
         let usecase = SubscribeAll(options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
