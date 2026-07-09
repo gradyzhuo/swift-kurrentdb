@@ -1,19 +1,19 @@
 //
-//  SubscriptionFilterTests.swift
+//  StreamFilterTests.swift
 //  swift-kurrentdb
 //
 
 import Testing
 @testable import KurrentDB
 
-@Suite("SubscriptionFilter Tests")
-struct SubscriptionFilterTests {
+@Suite("StreamFilter Tests")
+struct StreamFilterTests {
 
     // MARK: - Event type filters
 
     @Test("onEventType(regex:) sets type and regex")
     func testEventTypeRegex() {
-        let filter = SubscriptionFilter.onEventType(regex: "^Order.*")
+        let filter = StreamFilter.onEventType(regex: "^Order.*")
         #expect(filter.type == .eventType)
         #expect(filter.regex == "^Order.*")
         #expect(filter.prefixes.isEmpty)
@@ -21,7 +21,7 @@ struct SubscriptionFilterTests {
 
     @Test("onEventType(prefixes:) via variadic sets type and prefixes")
     func testEventTypePrefixVariadic() {
-        let filter = SubscriptionFilter.onEventType(prefixes: "Order", "Payment")
+        let filter = StreamFilter.onEventType(prefixes: "Order", "Payment")
         #expect(filter.type == .eventType)
         #expect(filter.prefixes.contains("Order"))
         #expect(filter.prefixes.contains("Payment"))
@@ -30,7 +30,7 @@ struct SubscriptionFilterTests {
 
     @Test("onEventType(prefixes:) via array sets correct count")
     func testEventTypePrefixArray() {
-        let filter = SubscriptionFilter.onEventType(prefixes: ["A", "B", "C"])
+        let filter = StreamFilter.onEventType(prefixes: ["A", "B", "C"])
         #expect(filter.prefixes.count == 3)
     }
 
@@ -38,7 +38,7 @@ struct SubscriptionFilterTests {
 
     @Test("onStreamName(regex:) sets type and regex")
     func testStreamNameRegex() {
-        let filter = SubscriptionFilter.onStreamName(regex: "^orders-.*")
+        let filter = StreamFilter.onStreamName(regex: "^orders-.*")
         #expect(filter.type == .streamName)
         #expect(filter.regex == "^orders-.*")
         #expect(filter.prefixes.isEmpty)
@@ -46,14 +46,14 @@ struct SubscriptionFilterTests {
 
     @Test("onStreamName(prefix:) variadic sets type and prefix")
     func testStreamNamePrefixVariadic() {
-        let filter = SubscriptionFilter.onStreamName(prefix: "orders")
+        let filter = StreamFilter.onStreamName(prefix: "orders")
         #expect(filter.type == .streamName)
         #expect(filter.prefixes.contains("orders"))
     }
 
     @Test("onStreamName(prefixes:) array accepts multiple prefixes")
     func testStreamNameMultiplePrefixes() {
-        let filter = SubscriptionFilter.onStreamName(prefixes: ["orders", "payments", "accounts"])
+        let filter = StreamFilter.onStreamName(prefixes: ["orders", "payments", "accounts"])
         #expect(filter.prefixes.count == 3)
         #expect(filter.prefixes.contains("accounts"))
     }
@@ -62,14 +62,14 @@ struct SubscriptionFilterTests {
 
     @Test("excludeSystemEvents sets streamName type with a non-nil regex")
     func testExcludeSystemEventsType() {
-        let filter = SubscriptionFilter.excludeSystemEvents()
+        let filter = StreamFilter.excludeSystemEvents()
         #expect(filter.type == .streamName)
         #expect(filter.regex != nil)
     }
 
     @Test("excludeSystemEvents regex does not match system streams starting with $")
     func testExcludeSystemEventsRegexExcludes$Prefix() throws {
-        let filter = SubscriptionFilter.excludeSystemEvents()
+        let filter = StreamFilter.excludeSystemEvents()
         let regex = try #require(filter.regex)
         // The regex should not match "$et-OrderPlaced" (system stream)
         let systemStream = "$et-OrderPlaced"
@@ -79,7 +79,7 @@ struct SubscriptionFilterTests {
 
     @Test("excludeSystemEvents regex matches user streams not starting with $")
     func testExcludeSystemEventsRegexAllowsUserStreams() throws {
-        let filter = SubscriptionFilter.excludeSystemEvents()
+        let filter = StreamFilter.excludeSystemEvents()
         let regex = try #require(filter.regex)
         let userStream = "orders-123"
         let range = userStream.range(of: regex, options: .regularExpression)
@@ -90,7 +90,7 @@ struct SubscriptionFilterTests {
 
     @Test("Default window is .count")
     func testDefaultWindowIsCount() {
-        let filter = SubscriptionFilter.onEventType(regex: ".*")
+        let filter = StreamFilter.onEventType(regex: ".*")
         if case .count = filter.window {
             // pass
         } else {
@@ -100,7 +100,7 @@ struct SubscriptionFilterTests {
 
     @Test("max() sets window to .max with given count")
     func testMaxWindow() {
-        let filter = SubscriptionFilter.onEventType(regex: ".*").max(100)
+        let filter = StreamFilter.onEventType(regex: ".*").max(100)
         if case let .max(count) = filter.window {
             #expect(count == 100)
         } else {
@@ -112,7 +112,7 @@ struct SubscriptionFilterTests {
 
     @Test("add(prefix:) appends a prefix to existing prefixes")
     func testAddPrefix() {
-        let filter = SubscriptionFilter.onStreamName(prefixes: ["orders"])
+        let filter = StreamFilter.onStreamName(prefixes: ["orders"])
             .add(prefix: "payments")
         #expect(filter.prefixes.count == 2)
         #expect(filter.prefixes.contains("payments"))
@@ -120,13 +120,13 @@ struct SubscriptionFilterTests {
 
     @Test("checkpointIntervalMultiplier() sets the multiplier")
     func testCheckpointIntervalMultiplier() {
-        let filter = SubscriptionFilter.onEventType(regex: ".*").checkpointIntervalMultiplier(5)
+        let filter = StreamFilter.onEventType(regex: ".*").checkpointIntervalMultiplier(5)
         #expect(filter.checkpointIntervalMultiplier == 5)
     }
 
     @Test("Builder methods do not mutate the original")
     func testBuilderImmutability() {
-        let original = SubscriptionFilter.onEventType(prefixes: ["Order"])
+        let original = StreamFilter.onEventType(prefixes: ["Order"])
         let modified = original.add(prefix: "Payment")
         #expect(original.prefixes.count == 1)
         #expect(modified.prefixes.count == 2)

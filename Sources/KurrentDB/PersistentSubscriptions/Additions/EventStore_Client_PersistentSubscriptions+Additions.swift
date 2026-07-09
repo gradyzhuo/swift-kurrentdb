@@ -104,7 +104,7 @@ extension EventStore_Client_PersistentSubscriptions_UpdateReq.Settings {
 }
 
 extension EventStore_Client_PersistentSubscriptions_CreateReq.AllOptions.FilterOptions {
-    package static func make(with filter: SubscriptionFilter) -> Self {
+    package static func make(with filter: StreamFilter) -> Self {
         .with {
             switch filter.window {
             case .count:
