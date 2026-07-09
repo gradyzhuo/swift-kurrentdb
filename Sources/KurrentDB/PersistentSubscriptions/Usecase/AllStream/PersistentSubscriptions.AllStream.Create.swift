@@ -61,7 +61,7 @@ extension PersistentSubscriptions.AllStream.Create {
         /// The subscription creation settings such as consumer strategy, timeouts, and retry behaviour.
         public var settings: PersistentSubscription.CreateSettings
         /// An optional filter to restrict which events are delivered to the subscription.
-        public var filter: SubscriptionFilter?
+        public var filter: StreamFilter?
         /// The starting position in the `$all` stream from which events will be delivered.
         public var position: PositionCursor
 

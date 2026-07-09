@@ -314,7 +314,7 @@ public struct StreamsSubscribeAllOptions: Sendable {
     public var position: PositionCursor
     public var resolveLinksEnabled: Bool
     public var uuidOption: UUIDOption
-    public var filter: SubscriptionFilter?
+    public var filter: StreamFilter?
 
     public init() {
         resolveLinksEnabled = false
@@ -331,7 +331,7 @@ public struct StreamsSubscribeAllOptions: Sendable {
     }
 
     @discardableResult
-    public func filter(_ filter: SubscriptionFilter) -> Self {
+    public func filter(_ filter: StreamFilter) -> Self {
         var copy = self
         copy.filter = filter
         return copy

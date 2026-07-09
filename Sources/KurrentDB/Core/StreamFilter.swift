@@ -1,5 +1,5 @@
 //
-//  SubscriptionFilter.swift
+//  StreamFilter.swift
 //  KurrentCore
 //
 //  Created by 卓俊諺 on 2025/1/23.
@@ -13,13 +13,13 @@ import GRPCEncapsulates
 ///
 /// ```swift
 /// // Match streams whose name starts with "orders"
-/// let filter = SubscriptionFilter.onStreamName(prefix: "orders")
+/// let filter = StreamFilter.onStreamName(prefix: "orders")
 ///     .checkpointIntervalMultiplier(100)
 ///
 /// // Match events whose type matches a regex
-/// let filter = SubscriptionFilter.onEventType(regex: "^OrderPlaced$")
+/// let filter = StreamFilter.onEventType(regex: "^OrderPlaced$")
 /// ```
-public struct SubscriptionFilter: Buildable {
+public struct StreamFilter: Buildable {
     /// Controls how many filtered events trigger a checkpoint.
     public enum Window: Sendable {
         /// No upper-bound window; checkpointing is driven solely by `checkpointIntervalMultiplier`.
@@ -91,11 +91,11 @@ public struct SubscriptionFilter: Buildable {
 
 // MARK: - Constructor on StreamName
 
-extension SubscriptionFilter {
+extension StreamFilter {
     /// Creates a stream-name filter matching the given regular expression.
     ///
     /// - Parameter regex: Regular expression applied to each stream name.
-    /// - Returns: A configured `SubscriptionFilter`.
+    /// - Returns: A configured `StreamFilter`.
     public static func onStreamName(regex: String) -> Self {
         .init(type: .streamName, regex: regex)
     }
@@ -103,11 +103,11 @@ extension SubscriptionFilter {
     /// Creates a stream-name filter matching any of the given prefixes.
     ///
     /// ```swift
-    /// let filter = SubscriptionFilter.onStreamName(prefix: "orders", "payments")
+    /// let filter = StreamFilter.onStreamName(prefix: "orders", "payments")
     /// ```
     ///
     /// - Parameter prefix: One or more stream name prefixes.
-    /// - Returns: A configured `SubscriptionFilter`.
+    /// - Returns: A configured `StreamFilter`.
     public static func onStreamName(prefix: String...) -> Self {
         .onStreamName(prefixes: prefix)
     }
@@ -115,7 +115,7 @@ extension SubscriptionFilter {
     /// Creates a stream-name filter matching any of the given prefixes.
     ///
     /// - Parameter prefixes: Array of stream name prefixes.
-    /// - Returns: A configured `SubscriptionFilter`.
+    /// - Returns: A configured `StreamFilter`.
     public static func onStreamName(prefixes: [String]) -> Self {
         .init(type: .streamName, prefixes: prefixes)
     }
@@ -123,15 +123,15 @@ extension SubscriptionFilter {
 
 // MARK: - Constructor on EventType
 
-extension SubscriptionFilter {
+extension StreamFilter {
     /// Creates an event-type filter matching the given regular expression.
     ///
     /// ```swift
-    /// let filter = SubscriptionFilter.onEventType(regex: "^OrderPlaced$")
+    /// let filter = StreamFilter.onEventType(regex: "^OrderPlaced$")
     /// ```
     ///
     /// - Parameter regex: Regular expression applied to each event type name.
-    /// - Returns: A configured `SubscriptionFilter`.
+    /// - Returns: A configured `StreamFilter`.
     public static func onEventType(regex: String) -> Self {
         .init(type: .eventType, regex: regex)
     }
@@ -139,7 +139,7 @@ extension SubscriptionFilter {
     /// Creates an event-type filter matching any of the given prefixes.
     ///
     /// - Parameter prefixes: One or more event type prefixes.
-    /// - Returns: A configured `SubscriptionFilter`.
+    /// - Returns: A configured `StreamFilter`.
     public static func onEventType(prefixes: String...) -> Self {
         .onEventType(prefixes: prefixes)
     }
@@ -147,7 +147,7 @@ extension SubscriptionFilter {
     /// Creates an event-type filter matching any of the given prefixes.
     ///
     /// - Parameter prefixes: Array of event type prefixes.
-    /// - Returns: A configured `SubscriptionFilter`.
+    /// - Returns: A configured `StreamFilter`.
     public static func onEventType(prefixes: [String]) -> Self {
         .init(type: .eventType, prefixes: prefixes)
     }
@@ -155,11 +155,16 @@ extension SubscriptionFilter {
 
 // MARK: - Constructor with excludeSystemEvents
 
-extension SubscriptionFilter {
+extension StreamFilter {
     /// Creates a stream-name filter that excludes all system streams (names starting with `$`).
     ///
-    /// - Returns: A `SubscriptionFilter` configured to skip system streams.
+    /// - Returns: A `StreamFilter` configured to skip system streams.
     public static func excludeSystemEvents() -> Self {
         .onStreamName(regex: "^[^\\$].*")
     }
 }
+
+// MARK: - Deprecated alias
+
+@available(*, deprecated, renamed: "StreamFilter")
+public typealias SubscriptionFilter = StreamFilter

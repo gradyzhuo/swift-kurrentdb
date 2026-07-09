@@ -141,7 +141,7 @@ extension PersistentSubscriptions.SpecifiedStream.Read.Options {
 /// V1 options for creating a persistent subscription to all streams.
 public struct PersistentSubscriptionsAllStreamCreateOptions: Sendable {
     public var settings: PersistentSubscription.CreateSettings
-    public var filter: SubscriptionFilter?
+    public var filter: StreamFilter?
     public var position: PositionCursor
 
     public init() {
@@ -151,7 +151,7 @@ public struct PersistentSubscriptionsAllStreamCreateOptions: Sendable {
     }
 
     @discardableResult
-    public func filter(_ filter: SubscriptionFilter) -> Self {
+    public func filter(_ filter: StreamFilter) -> Self {
         var copy = self
         copy.filter = filter
         return copy
