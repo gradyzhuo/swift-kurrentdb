@@ -51,6 +51,9 @@ public enum KurrentError: Error, Sendable {
     case illegalStateError(reason: String)
     /// The append was rejected because the stream revision did not match the expectation.
     case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionOption)
+    /// An `AppendRecords` transaction was rejected because one or more pre-commit consistency checks
+    /// failed. All failing checks are reported so stale state can be refreshed in a single round trip.
+    case consistencyViolation(violations: [ConsistencyViolation])
     /// The subscription was terminated by an explicit user call.
     case subscriptionTerminated(subscriptionId: String?)
     /// The server dropped the subscription unexpectedly.
@@ -106,6 +109,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "Illegal state error: \(reason)"
         case let .wrongExpectedVersion(expected, current):
             "Wrong expected version '\(expected)' but got '\(current)'."
+        case let .consistencyViolation(violations):
+            "AppendRecords consistency violation: \(violations.map(\.description).joined(separator: "; "))."
         case let .subscriptionTerminated(subscriptionId):
             "User terminate subscription manually with subscriptionId: \(String(describing: subscriptionId))"
         case let .subscriptionDropped(reason, lastRevision, lastPosition):
@@ -180,6 +185,8 @@ extension KurrentError: Equatable {
             "SubscriptionDropped"
         case .wrongExpectedVersion:
             "WrongExpectedVersion"
+        case .consistencyViolation:
+            "ConsistencyViolation"
         case .resourceDeleted:
             "ResourceDeleted"
         case .unservicableEventLink:
@@ -224,6 +231,11 @@ extension Error where Self: Equatable {
 
 extension RPCError {
     func rethrow(usage: String) throws(KurrentError) {
+        // 0. AppendRecords (v2) reports failed consistency checks as packed status details.
+        if let violation = KurrentError.consistencyViolation(from: self) {
+            throw violation
+        }
+
         // 1. Check metadata exception (server-specific error types)
         if let exception = metadata.first(where: { $0.key == "exception" })?.value {
             switch exception {
