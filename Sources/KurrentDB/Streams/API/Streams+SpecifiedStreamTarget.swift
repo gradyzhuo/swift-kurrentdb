@@ -33,7 +33,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 model: metadata
             ),
         ], options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Retrieves the latest metadata for the stream.
@@ -47,7 +47,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         options.direction = .backward
         options.limit = 1
         let usecase = Read(from: .init(name: "$$\(identifier.name)"), options: options)
-        let responses = try await usecase.perform(selector: selector, callOptions: callOptions)
+        let responses = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
 
         do {
             return try await responses.first {
@@ -89,7 +89,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         var options = Append.Options()
         configure(&options)
         let usecase = Append(to: identifier, events: events, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Appends a variadic list of events to the stream.
@@ -123,7 +123,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         var options = Read.Options()
         configure(&options)
         let usecase = Read(from: identifier, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Subscribes to live events from the stream.
@@ -135,7 +135,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         var options = Subscribe.Options()
         configure(&options)
         let usecase = Subscribe(from: identifier, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Soft-deletes the stream, allowing it to be recreated by appending new events.
@@ -148,7 +148,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         var options = Delete.Options()
         configure(&options)
         let usecase = Delete(to: identifier, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Permanently tombstones the stream so it cannot be recreated.
@@ -161,6 +161,6 @@ extension Streams where Target: SpecifiedStreamTarget {
         var options = Tombstone.Options()
         configure(&options)
         let usecase = Tombstone(to: identifier, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }

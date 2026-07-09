@@ -19,7 +19,7 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
         var options = SpecifiedStream.Create.Options()
         configure(&options)
         let usecase = SpecifiedStream.Create(streamIdentifier: target.identifier, group: group, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Updates the persistent subscription on the target stream.
@@ -32,7 +32,7 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
         options.settings.update(from: originInfo)
         configure(&options)
         let usecase = SpecifiedStream.Update(streamIdentifier: target.identifier, group: group, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Deletes the persistent subscription from the target stream.
@@ -40,7 +40,7 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
     /// - Throws: `KurrentError` if the deletion fails.
     public func delete() async throws(KurrentError) {
         let usecase = SpecifiedStream.Delete(streamIdentifier: target.identifier, group: target.group)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Retrieves current statistics and configuration for the named-stream subscription group.
@@ -49,7 +49,7 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
     /// - Throws: `KurrentError` if the request fails.
     public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
         let usecase = SpecifiedStream.GetInfo(stream: target.identifier, group: group)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Opens a persistent subscription on the target stream and returns an active handle.
@@ -71,7 +71,7 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
         var options = SpecifiedStream.Read.Options()
         configure(&options)
         let usecase = SpecifiedStream.Read(stream: target.identifier, group: group, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Replays all parked messages for this named-stream subscription group.
@@ -82,6 +82,6 @@ extension PersistentSubscriptions where Target == SpecifiedPersistentSubscriptio
         var options = SpecifiedStream.ReplayParked.Options()
         configure(&options)
         let usecase = SpecifiedStream.ReplayParked(stream: target.identifier, group: group, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }

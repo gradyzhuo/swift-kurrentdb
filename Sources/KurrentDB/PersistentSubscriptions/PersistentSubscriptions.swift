@@ -24,11 +24,25 @@ public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>
     /// Target that defines which stream or scope this service instance operates on.
     public let target: Target
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    /// Per-call authentication override, set via ``authenticated(_:)``. When nil, the client-level
+    /// authentication from ``ClientSettings`` is used.
+    internal let overrideCredentials: Authentication?
+
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
         self.target = target
+        self.overrideCredentials = overrideCredentials
+    }
+
+    /// Returns a copy of this interface that authenticates subsequent calls with the given
+    /// credentials, overriding the client-level authentication for those calls only.
+    ///
+    /// - Parameter credentials: Authentication to use for calls made on the returned instance.
+    /// - Returns: A new interface scoped to `credentials`.
+    public func authenticated(_ credentials: Authentication) -> Self {
+        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
     }
 }
 
@@ -48,7 +62,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Returns: A `PersistentSubscriptions` instance for the specified stream and group.
     public func persistentSubscriptions(group: String) -> PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget> {
         let target = SpecifiedPersistentSubscriptionTarget(identifier: target.identifier, group: group)
-        return .init(target: target, selector: selector, callOptions: callOptions)
+        return .init(target: target, selector: selector, callOptions: callOptions, overrideCredentials: overrideCredentials)
     }
 }
 
@@ -59,7 +73,7 @@ extension Streams where Target == AllStreamsTarget {
     /// - Returns: A `PersistentSubscriptions` instance for the `$all` stream and group.
     public func persistentSubscriptions(group: String) -> PersistentSubscriptions<AllStreamPersistentSubscriptionTarget> {
         let target = AllStreamPersistentSubscriptionTarget(group: group)
-        return .init(target: target, selector: selector, callOptions: callOptions)
+        return .init(target: target, selector: selector, callOptions: callOptions, overrideCredentials: overrideCredentials)
     }
 }
 

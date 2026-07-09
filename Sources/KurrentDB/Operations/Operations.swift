@@ -23,11 +23,25 @@ public final class Operations<Target: OperationsTarget>: GRPCConcreteService {
     /// Target specifying the scope and available operations for this service instance.
     public let target: Target
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    /// Per-call authentication override, set via ``authenticated(_:)``. When nil, the client-level
+    /// authentication from ``ClientSettings`` is used.
+    internal let overrideCredentials: Authentication?
+
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
+        self.overrideCredentials = overrideCredentials
+    }
+
+    /// Returns a copy of this interface that authenticates subsequent calls with the given
+    /// credentials, overriding the client-level authentication for those calls only.
+    ///
+    /// - Parameter credentials: Authentication to use for calls made on the returned instance.
+    /// - Returns: A new interface scoped to `credentials`.
+    public func authenticated(_ credentials: Authentication) -> Self {
+        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
     }
 }
 
@@ -46,7 +60,7 @@ extension Operations where Target: ScavengeCreatable {
     public func startScavenge(threadCount: Int32, startFromChunk: Int32) async throws(KurrentError) -> StartScavenge.Response {
         let node = try await selector.select()
         let usecase = StartScavenge(threadCount: threadCount, startFromChunk: startFromChunk)
-        return try await usecase.perform(node: node, callOptions: callOptions)
+        return try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -61,7 +75,7 @@ extension Operations where Target: ScavengeControllable {
     public func stopScavenge() async throws(KurrentError) -> StopScavenge.Response {
         let node = try await selector.select()
         let usecase = StopScavenge(scavengeId: target.scavengeId)
-        return try await usecase.perform(node: node, callOptions: callOptions)
+        return try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -75,7 +89,7 @@ extension Operations where Target: SystemControllable {
     public func mergeIndexes() async throws(KurrentError) {
         let node = try await selector.select()
         let usecase = MergeIndexes()
-        _ = try await usecase.perform(node: node, callOptions: callOptions)
+        _ = try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Restarts the persistent subscriptions subsystem, reloading all subscription groups from storage.
@@ -85,7 +99,7 @@ extension Operations where Target: SystemControllable {
     public func restartPersistentSubscriptions() async throws(KurrentError) {
         let node = try await selector.select()
         let usecase = RestartPersistentSubscriptions()
-        _ = try await usecase.perform(node: node, callOptions: callOptions)
+        _ = try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Initiates a graceful server shutdown.
@@ -95,7 +109,7 @@ extension Operations where Target: SystemControllable {
     public func shutdown() async throws(KurrentError) {
         let node = try await selector.select()
         let usecase = Shutdown()
-        _ = try await usecase.perform(node: node, callOptions: callOptions)
+        _ = try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -109,7 +123,7 @@ extension Operations where Target: NodeControllable {
     public func resignNode() async throws(KurrentError) {
         let node = try await selector.select()
         let usecase = ResignNode()
-        _ = try await usecase.perform(node: node, callOptions: callOptions)
+        _ = try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Sets the current node's election priority; higher values increase the chance of becoming leader.
@@ -120,6 +134,6 @@ extension Operations where Target: NodeControllable {
     public func setNodePriority(priority: Int32) async throws(KurrentError) {
         let node = try await selector.select()
         let usecase = SetNodePriority(priority: priority)
-        _ = try await usecase.perform(node: node, callOptions: callOptions)
+        _ = try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 }

@@ -19,7 +19,7 @@ extension PersistentSubscriptions where Target == AllStreamPersistentSubscriptio
         var options = AllStream.Create.Options()
         configure(&options)
         let usecase = AllStream.Create(group: group, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Updates the persistent subscription on the `$all` stream.
@@ -30,7 +30,7 @@ extension PersistentSubscriptions where Target == AllStreamPersistentSubscriptio
         var options = AllStream.Update.Options()
         configure(&options)
         let usecase = AllStream.Update(group: group, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Deletes the persistent subscription group from the `$all` stream.
@@ -38,7 +38,7 @@ extension PersistentSubscriptions where Target == AllStreamPersistentSubscriptio
     /// - Throws: `KurrentError` if the deletion fails.
     public func delete() async throws(KurrentError) {
         let usecase = AllStream.Delete(group: group)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Retrieves current statistics and configuration for the `$all`-stream subscription group.
@@ -47,7 +47,7 @@ extension PersistentSubscriptions where Target == AllStreamPersistentSubscriptio
     /// - Throws: `KurrentError` if the request fails.
     public func getInfo() async throws(KurrentError) -> PersistentSubscription.SubscriptionInfo {
         let usecase = AllStream.GetInfo(group: group)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Opens a persistent subscription on the `$all` stream and returns an active handle.
@@ -59,7 +59,7 @@ extension PersistentSubscriptions where Target == AllStreamPersistentSubscriptio
         var options = AllStream.Read.Options()
         configure(&options)
         let usecase = AllStream.Read(group: group, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Replays all parked messages for this `$all`-stream subscription group.
@@ -70,6 +70,6 @@ extension PersistentSubscriptions where Target == AllStreamPersistentSubscriptio
         var options = AllStream.ReplayParked.Options()
         configure(&options)
         let usecase = AllStream.ReplayParked(group: group, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }

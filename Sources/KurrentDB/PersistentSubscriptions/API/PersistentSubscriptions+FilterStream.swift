@@ -12,6 +12,6 @@ extension PersistentSubscriptions where Target == FilterStreamPersistentSubscrip
     /// - Throws: `KurrentError` if the request fails.
     public func list() async throws(KurrentError) -> [PersistentSubscription.SubscriptionInfo] {
         let usecase = ListForAll(filter: .stream(target.stream))
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }

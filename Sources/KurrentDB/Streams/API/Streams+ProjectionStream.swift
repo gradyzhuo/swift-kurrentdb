@@ -22,7 +22,7 @@ extension Streams where Target == ProjectionStream {
         var options = Subscribe.Options()
         configure(&options)
         let usecase = Subscribe(from: identifier, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -37,7 +37,7 @@ extension Streams where Target == MultiStreamsTarget {
     @discardableResult
     public func append(events: [StreamEvent]) async throws(KurrentError) -> AppendSession.Response {
         let usecase = AppendSession(streamEvents: events)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Appends a variadic list of fully-formed stream events in a single session (requires KurrentDB 25.1+).
@@ -48,7 +48,7 @@ extension Streams where Target == MultiStreamsTarget {
     @discardableResult
     public func append(events: StreamEvent...) async throws(KurrentError) -> AppendSession.Response {
         let usecase = AppendSession(streamEvents: events)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Appends records across one or more streams atomically with cross-stream consistency checks

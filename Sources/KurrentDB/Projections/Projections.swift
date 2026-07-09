@@ -31,11 +31,25 @@ public final class Projections<Target: ProjectionsTarget>: GRPCConcreteService {
 
     package let serviceName: String = "event_store.client.projections.projections"
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    /// Per-call authentication override, set via ``authenticated(_:)``. When nil, the client-level
+    /// authentication from ``ClientSettings`` is used.
+    internal let overrideCredentials: Authentication?
+
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
+        self.overrideCredentials = overrideCredentials
+    }
+
+    /// Returns a copy of this interface that authenticates subsequent calls with the given
+    /// credentials, overriding the client-level authentication for those calls only.
+    ///
+    /// - Parameter credentials: Authentication to use for calls made on the returned instance.
+    /// - Returns: A new interface scoped to `credentials`.
+    public func authenticated(_ credentials: Authentication) -> Self {
+        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
     }
 }
 
@@ -47,7 +61,7 @@ extension Projections where Target: ProjectionControlable {
     /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func enable() async throws(KurrentError) {
         let usecase = Enable(name: target.name, options: .init())
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -61,7 +75,7 @@ extension Projections where Target: ProjectionControlable {
         var options = Disable.Options()
         options.writeCheckpoint = true
         let usecase = Disable(name: target.name, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Stops the projection immediately without writing a checkpoint.
@@ -71,7 +85,7 @@ extension Projections where Target: ProjectionControlable {
         var options = Disable.Options()
         options.writeCheckpoint = false
         let usecase = Disable(name: target.name, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -83,7 +97,7 @@ extension Projections where Target: ProjectionControlable {
     /// - Throws: `KurrentError` if the server rejects the request or a transport failure occurs.
     public func reset() async throws(KurrentError) {
         let usecase = Reset(name: target.name, options: .init())
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -98,7 +112,7 @@ extension Projections where Target: ProjectionControlable {
         var options = Delete.Options()
         configure(&options)
         let usecase = Delete(name: target.name, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -115,7 +129,7 @@ extension Projections where Target: ProjectionControlable {
         var options = Update.Options()
         configure(&options)
         let usecase = Update(name: target.name, query: query, options: options)
-        _ = try await usecase.perform(selector: selector, callOptions: callOptions)
+        _ = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
 
@@ -128,7 +142,7 @@ extension Projections where Target: ProjectionControlable {
     /// - Throws: `KurrentError` if the request fails or the response cannot be read.
     public func detail() async throws(KurrentError) -> Projection.Detail? {
         let usecase = Statistics(options: .specified(name: target.name))
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         do {
             let result = try await response.first { _ in true }
             return result?.detail
@@ -152,7 +166,7 @@ extension Projections where Target: ProjectionControlable {
         var options = Result.Options()
         configure(&options)
         let usecase = Result(name: target.name, options: options)
-        let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         do {
             return try response.decode(to: DecodeType.self)
         } catch let error as DecodingError {
@@ -174,7 +188,7 @@ extension Projections where Target: ProjectionControlable {
         configure(&options)
         do {
             let usecase = State(name: target.name, options: options)
-            let response = try await usecase.perform(selector: selector, callOptions: callOptions)
+            let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
             return try response.decode(to: DecodeType.self)
         } catch let error as KurrentError {
             throw error

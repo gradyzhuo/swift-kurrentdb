@@ -20,10 +20,24 @@ public final class Monitoring: GRPCConcreteService {
     internal let callOptions: CallOptions
     internal let eventLoopGroup: EventLoopGroup
 
-    init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    /// Per-call authentication override, set via ``authenticated(_:)``. When nil, the client-level
+    /// authentication from ``ClientSettings`` is used.
+    internal let overrideCredentials: Authentication?
+
+    init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
         self.selector = selector
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
+        self.overrideCredentials = overrideCredentials
+    }
+
+    /// Returns a copy of this interface that authenticates subsequent calls with the given
+    /// credentials, overriding the client-level authentication for those calls only.
+    ///
+    /// - Parameter credentials: Authentication to use for calls made on the returned instance.
+    /// - Returns: A new interface scoped to `credentials`.
+    public func authenticated(_ credentials: Authentication) -> Self {
+        .init(selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
     }
 }
 
@@ -39,6 +53,6 @@ extension Monitoring {
     public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Stats.Responses {
         let node = try await selector.select()
         let usecase = Stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
-        return try await usecase.perform(node: node, callOptions: callOptions)
+        return try await usecase.perform(node: node, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
