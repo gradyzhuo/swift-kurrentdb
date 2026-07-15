@@ -85,4 +85,33 @@ extension Streams where Target == MultiStreamsTarget {
         let usecase = AppendRecords(streamEvents: events, checks: checks)
         return try await usecase.perform(selector: selector, callOptions: callOptions)
     }
+
+    /// Pipelines multiple appends over a single `BatchAppend` call for high throughput (requires a
+    /// server that supports BatchAppend).
+    ///
+    /// Unlike ``append(events:)-(_)`` (AppendSession, atomic), this is **non-atomic**: each
+    /// ``StreamEvent`` is an independent append, so some may succeed while others fail. Inspect the
+    /// returned ``BatchAppend/Response`` (`results` / `failed`) instead of relying on a thrown error
+    /// for per-item conflicts. Only transport-level failures are thrown.
+    ///
+    /// - Parameter events: Append operations to pipeline, each with its own stream and expected revision.
+    /// - Returns: A ``BatchAppend/Response`` with a per-item result in input order.
+    /// - Throws: `KurrentError` on transport failure, access denial, or when the server does not
+    ///   support BatchAppend.
+    @discardableResult
+    public func batchAppend(events: [StreamEvent]) async throws(KurrentError) -> BatchAppend.Response {
+        let usecase = BatchAppend(streamEvents: events)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
+    }
+
+    /// Pipelines a variadic list of appends over a single `BatchAppend` call (non-atomic).
+    ///
+    /// - Parameter events: One or more append operations to pipeline.
+    /// - Returns: A ``BatchAppend/Response`` with a per-item result in input order.
+    /// - Throws: `KurrentError` on transport failure, access denial, or unsupported server.
+    @discardableResult
+    public func batchAppend(events: StreamEvent...) async throws(KurrentError) -> BatchAppend.Response {
+        let usecase = BatchAppend(streamEvents: events)
+        return try await usecase.perform(selector: selector, callOptions: callOptions)
+    }
 }
