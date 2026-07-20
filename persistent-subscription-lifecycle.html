@@ -236,7 +236,8 @@ footer code{font-size:12px}
     <li><a href="#s8"><span class="n">08</span>驗證設計</a></li>
     <li><a href="#s9"><span class="n">09</span>CI 護欄</a></li>
     <li><a href="#s10"><span class="n">10</span>未來:自動重連</a></li>
-    <li><a href="#s11"><span class="n">11</span>未解與風險</a></li>
+    <li><a href="#s11"><span class="n">11</span>hang 另案調查</a></li>
+    <li><a href="#s12"><span class="n">12</span>未解與風險</a></li>
   </ol>
 </nav>
 
@@ -346,7 +347,17 @@ error: Exited with unexpected signal code 6                ← SIGABRT</span></d
   </div>
 
   <h3>被吞掉的錯誤</h3>
-  <p>這是整份分析裡最關鍵的六行程式碼。連線一旦建立失敗,<strong>沒有任何人會知道</strong>。</p>
+
+  <div class="call bad">
+    <div class="h">2026-07-20 更新 — 本節原始主張已被實驗證偽</div>
+    <p>本節原先認定「錯誤被吞」是 hang 的成因。實作階段的特性化測試(各重現 3 次)證明並非如此:</p>
+    <p><strong>目標不可達</strong> → <code>runConnections()</code> 永不拋錯、永不返回。<br>
+       <strong>被取消</strong> → <strong>正常返回,不拋任何錯誤</strong>(連 <code>CancellationError</code> 都沒有)。</p>
+    <p>兩種情況下<strong>都沒有錯誤存在</strong>,因此「吞錯」不可能是成因。連帶結論:<strong>改動 1 治不了 hang</strong>,它只能治連線洩漏;且生產程式碼不得以 <code>catch is CancellationError</code> 判斷連線是否因取消而收尾。hang 的真正成因已另案調查(見第 11 節)。</p>
+    <p>以下程式碼與說明保留,作為原始推論的紀錄 —— 這段程式碼確實仍是缺陷(無主的 Task),只是它造成的是洩漏而非 hang。</p>
+  </div>
+
+  <p>連線一旦建立失敗,<strong>沒有任何人會知道</strong>。</p>
 
   <pre class="code"><span class="c">// Sources/KurrentDB/Core/Additions/Usecase/StreamStream.swift:28-32</span>
 <span class="k">let</span> client = <span class="k">try</span> GRPCClient&lt;HTTP2ClientTransport.Posix&gt;(from: node)
@@ -551,7 +562,7 @@ CASE 2: 存取 .events(bridge task 啟動)後丟棄
           <td><span class="pill acc">1</span></td>
           <td>持有 <code>connectionTask</code>,不再吞錯;失敗需傳遞給 RPC。completion 中額外 <code>.cancel()</code></td>
           <td><code>StreamStream.perform</code></td>
-          <td><span class="pill bad">hang</span></td>
+          <td><span class="pill warn">連線洩漏</span></td>
         </tr>
         <tr>
           <td><span class="pill acc">2</span></td>
@@ -577,8 +588,8 @@ CASE 2: 存取 .events(bridge task 啟動)後丟棄
 
   <div class="call">
     <div class="h">改動 1 的核心不變式</div>
-    <p>連線 task 一旦結束 —— <strong>無論正常返回或拋錯</strong> —— 若該連線上的 RPC 仍在進行中,<strong>必須使該 RPC 以錯誤終止,不得讓其無限等待</strong>。</p>
-    <p>達成機制由實作計畫決定,但<strong>不得</strong>以「等待固定秒數後放棄」的方式滿足 —— 理由見下方「刻意不做的事」。</p>
+    <p>連線 task 必須有明確擁有者,且在 teardown 時被取消,不得無主殘留。</p>
+    <p><strong>原先此處要求「必須使進行中的 RPC 以錯誤終止」,該要求已撤銷</strong> —— 特性化測試證明取消 <code>runConnections()</code> 不產生任何錯誤,也不影響已排隊的 RPC。此要求移至第 11 節另案處理。</p>
   </div>
 
   <div class="plate">
@@ -745,7 +756,44 @@ CASE 2: 存取 .events(bridge task 啟動)後丟棄
 
 <!-- ========== 11 ========== -->
 <section id="s11">
-  <h2><span class="n">11</span>未解與風險</h2>
+  <h2><span class="n">11</span>hang 另案調查</h2>
+  <p class="lede">原假設已證偽。本節記錄目前排除了什麼、以及最有力的候選。</p>
+
+  <div class="plate">
+    <div class="plate-cap">已排除的成因</div>
+    <div class="g2">
+      <div class="node bad"><div class="t">錯誤被吞</div><div class="s">兩種情境下皆無錯誤產生 —— 無錯可吞</div></div>
+      <div class="node bad"><div class="t">目標不可達</div><div class="s">CI 的 Wait for cluster to be healthy 已通過,叢集是健康的</div></div>
+    </div>
+  </div>
+
+  <div class="call warn">
+    <div class="h">最有力的候選:CallOptions.waitForReady</div>
+    <p>grpc-swift 的文件(<code>CallOptions.swift:44</code>)寫著:「若為 <code>false</code>,連線發生暫時性失敗時 RPC 會立即中止;<strong>否則 gRPC 會持續嘗試連線,直到 deadline 被超過</strong>。」</p>
+    <p>本 SDK <strong>既未設定 <code>waitForReady</code>,也未設定任何 deadline</strong>。兩者相加即為:連線一有問題,RPC 便無限等待 —— 與觀察到的靜默 hang 吻合,且<strong>不需要伺服器不可達,只需要一次連線抖動</strong>。</p>
+    <p><strong>為何未納入本次修正</strong>:這是全域行為變更(影響所有 RPC,非僅訂閱),且「它就是 CI 那次 hang 的成因」目前仍屬推論。依本文一貫原則,未驗證的因果不寫進修正。</p>
+  </div>
+
+  <div class="plate">
+    <div class="plate-cap">下一步驗證路徑</div>
+    <div class="flow">
+      <div class="cell node acc"><div class="t">寫特性化測試</div><div class="s">叢集健康但連線中途中斷 / 被重置</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node acc"><div class="t">觀察 RPC 是否無限等待</div><div class="s">若是,即重現了 CI 情境</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node acc"><div class="t">驗證 waitForReady = false</div><div class="s">是否使其立即失敗</div></div>
+    </div>
+  </div>
+
+  <div class="call">
+    <div class="h">與自動重連的關係</div>
+    <p>若 <code>waitForReady = false</code> 確為正解,它同時也是第 10 節自動重連所需的斷線訊號 —— 兩者應一併設計,而非各做各的。</p>
+  </div>
+</section>
+
+<!-- ========== 12 ========== -->
+<section id="s12">
+  <h2><span class="n">12</span>未解與風險</h2>
   <p class="lede">明確區分已驗證的事實與尚屬推論的部分。</p>
 
   <div class="plate">
@@ -758,7 +806,10 @@ CASE 2: 存取 .events(bridge task 啟動)後丟棄
         <tr><td>bridge Task 強持有 self,deinit 不觸發</td><td><span class="pill ok">已驗證</span></td><td>獨立最小範例實測</td></tr>
         <tr><td><code>.timeLimit</code> 僅支援分鐘</td><td><span class="pill ok">已驗證</span></td><td>編譯器錯誤訊息</td></tr>
         <tr><td><code>subscriptionDropped</code> 從未被拋出</td><td><span class="pill ok">已驗證</span></td><td>全 Sources grep</td></tr>
-        <tr><td>hang 源於連線錯誤被吞</td><td><span class="pill warn">高信心推論</span></td><td>程式碼結構充分,但 CI debug log 未開,未直接觀測</td></tr>
+        <tr><td><s>hang 源於連線錯誤被吞</s></td><td><span class="pill bad">已證偽</span></td><td>特性化測試:兩種情境皆無錯誤產生,無錯可吞</td></tr>
+        <tr><td><code>runConnections()</code> 對不可達目標永不返回也不拋錯</td><td><span class="pill ok">已驗證</span></td><td>重現 3 次</td></tr>
+        <tr><td>被取消的 <code>runConnections()</code> 正常返回、不拋錯</td><td><span class="pill ok">已驗證</span></td><td>重現 3 次</td></tr>
+        <tr><td><strong>hang 的真正成因</strong></td><td><span class="pill bad">未知</span></td><td>原假設已證偽;CI 該次叢集為健康狀態,故「不可達」亦非該情境</td></tr>
         <tr><td>SIGABRT 的確切 trap frame</td><td><span class="pill bad">未知</span></td><td>CI log 僅保留 frame 27-28;SDK 路徑無 fatalError,abort 應在 NIO 層</td></tr>
         <tr><td>「只有 Swift 6.0 有問題」</td><td><span class="pill bad">不可信</span></td><td>fail-fast 造成系統性取樣偏差</td></tr>
       </tbody>
