@@ -94,7 +94,21 @@ Task {
 
 `Subscription.swift:21-24` 的文件註解明載「letting the subscription go out of scope — automatically stops the underlying gRPC stream and closes the server-side connection」。此行為從未實作。因此加上 `deinit` 不是行為變更,而是履行既有合約。
 
-### 2.5 `deinit` 無法單獨作為安全網(實測)
+### 2.5 `deinit` 完全不需要(實作階段實測推翻)
+
+> **2026-07-20 更新 — 改動 4 已取消。**
+>
+> 實作 Task 3 時發現:移除 `deinit` 後,T1(建立後從未存取 `.events` 就丟棄)**仍然通過**。
+> 原因是 `AsyncThrowingStream.Continuation` 的 `onTermination` 在其底層儲存被釋放時即自動觸發,
+> 因此改動 2(於 `init` 佈署 teardown)**已完整涵蓋**「丟棄但未迭代」的情境。
+>
+> `deinit` 是已驗證的死碼,依 Simplicity First / YAGNI 不予實作。T1 保留 —— 它仍是有效的
+> 契約測試,只是它驗證的是改動 2 的行為,而非 `deinit`。
+>
+> 以下原始分析保留作為紀錄。它對「bridge task 強持有 self」的判斷仍然正確且重要
+> (那是改動 3 的依據),錯的只是「因此需要 deinit」這個推論。
+
+### 2.5(原始分析)`deinit` 無法單獨作為安全網
 
 `Subscription.swift:77` 的 `Task {}` 無 capture list 卻引用 stored property,Swift 6 允許此處隱式 `self` 捕獲 → 該 Task 強持有整個 `Subscription`。
 
@@ -116,7 +130,7 @@ CASE 2: 存取 .events 後丟棄       →  deinit 永不觸發
 | 1 | 持有 `connectionTask`,於 teardown 時 `.cancel()` | `StreamStream.perform` | 連線洩漏(**非** hang,見 §2.2 修正) |
 | 2 | teardown 從 lazy getter 移入 `init` 的 `source.continuation.onTermination` | `Subscription.init` | teardown 不可達 |
 | 3 | bridge Task 加明確 capture list,解除對 `self` 的強持有 | `Subscription.events` | 物件永不釋放 |
-| 4 | 新增 `deinit` 作為「從未迭代就丟棄」的兜底 | `Subscription` | 連線洩漏 |
+| ~~4~~ | ~~新增 `deinit` 兜底~~ **已證實不必要,不實作** | — | 見下方說明 |
 
 四項皆治洩漏與生命週期正確性。**本次修正不宣稱解決 hang** —— 其成因已另案調查(§10)。
 
