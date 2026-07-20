@@ -379,7 +379,9 @@ continuation, which cascades into the teardown handler installed at init."
 
 **Interfaces:**
 - Consumes: `GRPCClient.runConnections()`、`beginGracefulShutdown()`
-- Produces: 不變式 —— 連線 Task 結束時,該連線上進行中的 RPC 必定以錯誤終止
+- Produces: 連線 Task 有明確擁有者,teardown 時被取消,不再無主殘留
+
+**範圍已於 2026-07-20 縮減**:Task 1 證明取消 `runConnections()` 不產生任何錯誤,故本 Task **不**宣稱修復 hang,僅修復連線洩漏。hang 另案(spec §10)。
 
 - [ ] **Step 1: 修改 perform,持有並取消連線 Task**
 

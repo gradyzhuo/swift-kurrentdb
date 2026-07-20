@@ -43,7 +43,7 @@
 
 | Task | 位置 | 擁有者 | 失敗被觀察 |
 |---|---|---|---|
-| `runConnections()` | `StreamStream.swift:29` | 無 | **否 — 錯誤被吞** |
+| `runConnections()` | `StreamStream.swift:29` | 無 | **不適用 — 它根本不產生錯誤**(見 §2.2 修正) |
 | RPC read loop | `…SpecifiedStream.Read.swift:64` | 僅由 completion 取消 | 是(有 catch) |
 | events bridge | `Subscription.swift:77` | 無,且隱式強持有 `self` | 是 |
 
@@ -113,18 +113,18 @@ CASE 2: 存取 .events 後丟棄       →  deinit 永不觸發
 
 | # | 改動 | 位置 | 解決 |
 |---|---|---|---|
-| 1 | 持有 `connectionTask`,不再吞錯;completion 中額外 `.cancel()` | `StreamStream.perform` | **hang** |
+| 1 | 持有 `connectionTask`,於 teardown 時 `.cancel()` | `StreamStream.perform` | 連線洩漏(**非** hang,見 §2.2 修正) |
 | 2 | teardown 從 lazy getter 移入 `init` 的 `source.continuation.onTermination` | `Subscription.init` | teardown 不可達 |
 | 3 | bridge Task 加明確 capture list,解除對 `self` 的強持有 | `Subscription.events` | 物件永不釋放 |
 | 4 | 新增 `deinit` 作為「從未迭代就丟棄」的兜底 | `Subscription` | 連線洩漏 |
 
-第 1 項是治 hang 的關鍵;2–4 治洩漏並履行文件合約。
+四項皆治洩漏與生命週期正確性。**本次修正不宣稱解決 hang** —— 其成因已另案調查(§10)。
 
 **改動 1 的要求(明確化 — 本設計的核心不變式)**
 
-連線 task 一旦結束 —— 無論正常返回或拋錯 —— 若該連線上的 RPC 仍在進行中,**必須使該 RPC 以錯誤終止,不得讓其無限等待**。
+連線 task 必須有明確擁有者,且在 teardown 時被取消,不得無主殘留。
 
-達成機制由實作計畫決定,但**不得**以「等待固定秒數後放棄」的方式滿足(理由見 §7)。
+原先此處要求「必須使進行中的 RPC 以錯誤終止」。Task 1 證明僅靠改動 1 無法達成 —— 取消 `runConnections()` 不產生任何錯誤,也不影響已排隊的 RPC。該要求移至 §10 的另案處理。
 
 `callFinishActionOnce` 已具冪等性(`Subscription.swift:274`),重複觸發安全。
 
