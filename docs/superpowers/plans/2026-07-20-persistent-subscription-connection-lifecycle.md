@@ -387,6 +387,10 @@ continuation, which cascades into the teardown handler installed at init."
 
 將 `StreamStream.swift:28-45` 改為:
 
+> **2026-07-20 更新**:main 已併入 per-call-credentials,`perform` 現在多了
+> `credentials: Authentication? = nil` 參數,且 metadata 改用
+> `Metadata(from:overriding:)`。以下程式碼已對齊新簽名 —— 請勿改動這兩處。
+
 ```swift
         let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
         let connectionTask = Task {
@@ -395,7 +399,7 @@ continuation, which cascades into the teardown handler installed at init."
         }
 
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let metadata = Metadata(from: node.settings)
+            let metadata = Metadata(from: node.settings, overriding: credentials)
             return try await send(connection: client, metadata: metadata, callOptions: callOptions) { error in
                 if let error {
                     logger.error("The error is thrown in the response of StreamStream: \(error)")
