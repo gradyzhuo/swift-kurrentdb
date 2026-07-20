@@ -58,6 +58,22 @@ Task {
 }
 ```
 
+> **2026-07-20 修正 — 本節原始主張已被實驗證偽。**
+>
+> 本節原先認定「錯誤被吞」是 hang 的成因。Task 1 的特性化測試(各重現 3 次)證明並非如此:
+>
+> | 情境 | `runConnections()` 實際行為 |
+> |---|---|
+> | 目標不可達 | **永不拋錯、永不返回** |
+> | 被取消 | **正常返回、不拋任何錯誤**(連 `CancellationError` 都沒有) |
+>
+> 兩種情況下**都沒有錯誤存在**,因此「吞錯」不可能是成因。連帶的兩個結論:
+>
+> 1. **改動 1 治不了 hang**,它只能治連線洩漏。
+> 2. 生產程式碼**不得**以 `catch is CancellationError` 判斷連線是否因取消而收尾。
+>
+> **hang 的真正成因尚未確定**,已另案調查(見 §10)。本節以下文字保留作為原始推論的紀錄。
+
 連線建立失敗時無人知曉 → RPC 永不拋錯(且無 deadline)→ `source` 永不終止 → teardown 永不觸發 → 靜默卡死。
 
 `StreamStream` 是同目錄中唯一缺少 `defer { beginGracefulShutdown() }` 的路徑(`UnaryUnary.swift:44`、`StreamUnary.swift:38` 皆有)。
@@ -202,7 +218,10 @@ error: 'seconds' is unavailable: Time limit must be specified in minutes
 | bridge Task 強持有 self,`deinit` 不觸發 | 已驗證 | 獨立最小範例實測 |
 | `.timeLimit` 僅支援分鐘 | 已驗證 | 編譯器錯誤訊息 |
 | `subscriptionDropped` 從未被拋出 | 已驗證 | 全 `Sources/` grep |
-| hang 源於連線錯誤被吞 | **高信心推論** | 程式碼結構充分,但 CI debug log 未開,未直接觀測 |
+| ~~hang 源於連線錯誤被吞~~ | **已證偽** | Task 1 特性化測試:兩種情境下皆無錯誤產生,無錯可吞 |
+| `runConnections()` 對不可達目標永不返回也不拋錯 | 已驗證 | Task 1,重現 3 次 |
+| 被取消的 `runConnections()` 正常返回、不拋錯 | 已驗證 | Task 1 修正回合,重現 3 次 |
+| hang 的真正成因 | **未知** | 原假設已證偽;CI 該次叢集為健康狀態,故「目標不可達」亦非該情境 |
 | SIGABRT 的確切 trap frame | **未知** | CI log 僅存 frame 27-28;SDK 路徑無 `fatalError`,abort 應在 NIO 層 |
 | 「只有 Swift 6.0 有問題」 | **不可信** | `fail-fast` 造成系統性取樣偏差 |
 
@@ -210,3 +229,25 @@ error: 'seconds' is unavailable: Time limit must be specified in minutes
 
 1. CI 開啟 debug logging。若 hang 時 `"Closing connection..."` 確未出現,即可將 hang 機制升級為已證實。目前做不到 —— CI 僅有 info 級 log。
 2. 以 `SWIFT_BACKTRACE=enable=yes,interactive=no` 重跑擷取完整 frame 0–26,可定位 SIGABRT。若套用修正後 hang 消失但 abort 仍在,則 abort 為獨立的第二個缺陷。
+
+## 10. 另案:hang 的真正成因(未解)
+
+原假設(§2.2「錯誤被吞」)已由 Task 1 證偽。目前狀態:
+
+**已排除**
+- 錯誤被吞 —— 兩種情境下皆無錯誤產生
+- 「目標不可達」—— CI 該次 workflow 的 `Wait for cluster to be healthy` 步驟已通過,叢集是健康的
+
+**最有力的候選:`CallOptions.waitForReady`**
+
+`CallOptions.swift:44` 的文件:
+
+> *"If `false` the RPC will abort immediately if there is a transient failure connecting to the server. Otherwise gRPC will attempt to connect **until the deadline is exceeded**."*
+
+本 SDK **既未設定 `waitForReady`,也未設定任何 deadline**。若其預設為等待,則連線一有短暫問題,RPC 即會無限等待 —— 與觀察到的靜默 hang 完全吻合,且不需要伺服器不可達,只需要一次連線抖動。
+
+**為何未納入本次修正**:這是全域行為變更(影響所有 RPC,非僅訂閱),且「它就是 CI 那次 hang 的成因」目前仍屬推論。依本文件一貫原則,未驗證的因果不寫進修正。
+
+**下一步應做的驗證**:針對「叢集健康但連線中途中斷 / 被重置」寫特性化測試,觀察 RPC 是否無限等待、以及 `waitForReady = false` 是否使其立即失敗。確認後再以獨立設計處理。
+
+**與自動重連的關係**:若 `waitForReady = false` 確為正解,它同時也是 §8 自動重連所需的斷線訊號 —— 兩者應一併設計。
