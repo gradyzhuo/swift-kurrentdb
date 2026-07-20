@@ -74,11 +74,13 @@ extension PersistentSubscriptions {
 
                 let (stream, continuation) = AsyncThrowingStream<EventResult, Error>.makeStream()
 
-                let task = Task {
+                let source = self.source
+                let tracker = self.tracker
+                let task = Task { [source, tracker] in
                     do {
                         for try await eventResult in source.stream {
                             let yieldResult = continuation.yield(eventResult)
-                            if let revision = eventResult.revision{
+                            if let revision = eventResult.revision {
                                 tracker.update(revision: revision)
                             }
                             if let position = eventResult.position {
@@ -95,11 +97,10 @@ extension PersistentSubscriptions {
                     }
                 }
 
-                continuation.onTermination = { [writer, source, tracker] termination in
-                    writer.stop()
+                continuation.onTermination = { [source] _ in
+                    // 串接到 init 佈署的 handler,由其執行 writer.stop 與 finish action
                     source.continuation.finish()
                     task.cancel()
-                    tracker.callFinishActionOnce(termination: termination)
                 }
 
                 cache = stream
@@ -111,6 +112,15 @@ extension PersistentSubscriptions {
             self.writer = writer
             self.tracker = SubscriptionTracker()
             self.source = AsyncThrowingStream<EventResult, Error>.makeStream()
+
+            // teardown 必須從 handle 存在的那一刻起就可達,而非等到第一次存取
+            // `.events`。對照 Streams.Subscribe.send 的作法。
+            let writer = self.writer
+            let tracker = self.tracker
+            source.continuation.onTermination = { termination in
+                writer.stop()
+                tracker.callFinishActionOnce(termination: termination)
+            }
         }
 
         internal func send(state: State) {
