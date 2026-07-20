@@ -312,16 +312,20 @@ list so it no longer strongly retains the subscription."
 ```swift
     @Test("T1:從未存取 events 就丟棄,仍會觸發 teardown")
     func droppingWithoutIteratingTearsDown() async throws {
-        let tornDown = Mutex<Int>(0)
-        do {
+        // 等待實際的 teardown 訊號,而非猜測排程時機。
+        // `deinit` 因 ARC 在 closure 結束時確定性觸發,但它驅動 `onTermination`
+        // 的時機是 AsyncStream 的實作細節 —— 故等待訊號而非 Task.yield()。
+        //
+        // 若 teardown 從未發生,測試會停在此處,由 suite 的 `.timeLimit` 攔截。
+        // 這正是設計意圖:斷言本身不含任何時間值,時間界限只存在於維運層。
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             let writer = Sub.Writer()
             let sub = Sub(writer: writer)
-            sub.onFinish { _ in tornDown.withLock { $0 += 1 } }
-            // 刻意不存取 sub.events
+            sub.onFinish { _ in continuation.resume() }
+            // 刻意不存取 sub.events;離開此 closure 後 sub 立即被釋放。
+            // 沒有 bridge task 持有它,故釋放是確定的。
         }
-        // 讓 deinit 與 onTermination 完成
-        await Task.yield()
-        #expect(tornDown.withLock { $0 } == 1)
+        // 能執行到此行,即代表 teardown 確實被觸發 —— 這就是斷言。
     }
 ```
 
@@ -329,7 +333,9 @@ list so it no longer strongly retains the subscription."
 
 Run: `swift test --filter "SubscriptionLifecycleTests/droppingWithoutIteratingTearsDown" -v --no-parallel --disable-xctest --enable-swift-testing`
 
-預期:FAIL —— `tornDown` 為 `0`。現行程式碼無 `deinit`,handle 被丟棄時不會終止 `source`。
+預期:FAIL —— 測試會**停住直到 suite 的 1 分鐘上限**,因為現行程式碼無 `deinit`,handle 被丟棄時 `source` 從不終止,訊號永不到來。
+
+**這個「以逾時呈現的失敗」就是本測試的紅燈**,並非測試寫壞。Task 3 Step 3 加入 `deinit` 後,它應在毫秒內通過。
 
 - [ ] **Step 3: 新增 deinit**
 
