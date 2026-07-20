@@ -35,6 +35,24 @@ struct SubscriptionLifecycleTests {
         return (sub, counter)
     }
 
+    @Test("T1:從未存取 events 就丟棄,仍會觸發 teardown")
+    func droppingWithoutIteratingTearsDown() async throws {
+        // 等待實際的 teardown 訊號,而非猜測排程時機。
+        // `deinit` 因 ARC 在 closure 結束時確定性觸發,但它驅動 `onTermination`
+        // 的時機是 AsyncStream 的實作細節 —— 故等待訊號而非 Task.yield()。
+        //
+        // 若 teardown 從未發生,測試會停在此處,由 suite 的 `.timeLimit` 攔截。
+        // 這正是設計意圖:斷言本身不含任何時間值,時間界限只存在於維運層。
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let writer = Sub.Writer()
+            let sub = Sub(writer: writer)
+            sub.onFinish { _ in continuation.resume() }
+            // 刻意不存取 sub.events;離開此 closure 後 sub 立即被釋放。
+            // 沒有 bridge task 持有它,故釋放是確定的。
+        }
+        // 能執行到此行,即代表 teardown 確實被觸發 —— 這就是斷言。
+    }
+
     @Test("T3:RPC 拋錯時 events 拋出且 teardown 執行")
     func rpcErrorTerminatesAndTearsDown() async throws {
         let (sub, tornDown) = makeSubscription()
