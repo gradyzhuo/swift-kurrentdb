@@ -1,0 +1,724 @@
+<title>持久訂閱連線生命週期缺陷 — 根因與修正設計</title>
+<style>
+:root{
+  --ground:#fbfcfe; --surface:#f1f4f8; --surface-2:#e7ecf3; --line:#d5dde7; --line-soft:#e4eaf2;
+  --ink:#151a21; --ink-2:#3c4653; --muted:#68727f;
+  --accent:#16708f; --accent-soft:#e3f1f7; --accent-line:#a8d3e4;
+  --danger:#c33843; --danger-soft:#fdeaec; --danger-line:#f0bcc1;
+  --warn:#9a6c0b; --warn-soft:#fbf2dd; --warn-line:#e8d29a;
+  --ok:#2c6e49; --ok-soft:#e6f2ea; --ok-line:#b3d5c1;
+  --plate:#f7f9fb;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Noto Sans TC",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#0e1217; --surface:#161c24; --surface-2:#1d252f; --line:#2b3440; --line-soft:#222a34;
+    --ink:#e8ecf2; --ink-2:#c2cad4; --muted:#94a0ae;
+    --accent:#5cbadd; --accent-soft:#11303c; --accent-line:#215d74;
+    --danger:#f2646c; --danger-soft:#3a1a1d; --danger-line:#6d2f34;
+    --warn:#dda52f; --warn-soft:#332711; --warn-line:#664e18;
+    --ok:#63b98a; --ok-soft:#13291d; --ok-line:#2c5740;
+    --plate:#131920;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0e1217; --surface:#161c24; --surface-2:#1d252f; --line:#2b3440; --line-soft:#222a34;
+  --ink:#e8ecf2; --ink-2:#c2cad4; --muted:#94a0ae;
+  --accent:#5cbadd; --accent-soft:#11303c; --accent-line:#215d74;
+  --danger:#f2646c; --danger-soft:#3a1a1d; --danger-line:#6d2f34;
+  --warn:#dda52f; --warn-soft:#332711; --warn-line:#664e18;
+  --ok:#63b98a; --ok-soft:#13291d; --ok-line:#2c5740;
+  --plate:#131920;
+}
+:root[data-theme="light"]{
+  --ground:#fbfcfe; --surface:#f1f4f8; --surface-2:#e7ecf3; --line:#d5dde7; --line-soft:#e4eaf2;
+  --ink:#151a21; --ink-2:#3c4653; --muted:#68727f;
+  --accent:#16708f; --accent-soft:#e3f1f7; --accent-line:#a8d3e4;
+  --danger:#c33843; --danger-soft:#fdeaec; --danger-line:#f0bcc1;
+  --warn:#9a6c0b; --warn-soft:#fbf2dd; --warn-line:#e8d29a;
+  --ok:#2c6e49; --ok-soft:#e6f2ea; --ok-line:#b3d5c1;
+  --plate:#f7f9fb;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:1px solid var(--line);padding:56px 0 28px;margin-bottom:40px}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(28px,4.2vw,42px);line-height:1.25;margin:14px 0 12px;text-wrap:balance;letter-spacing:-.015em}
+.dek{font-size:17px;color:var(--ink-2);max-width:66ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.tag{font-size:12px;font-family:var(--mono);padding:4px 10px;border:1px solid var(--line);
+  border-radius:2px;background:var(--surface);color:var(--muted)}
+.tag.on{border-color:var(--accent-line);background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px}
+@media(min-width:1000px){.cols{grid-template-columns:200px 1fr;gap:52px;align-items:start}}
+nav.toc{display:none}
+@media(min-width:1000px){
+  nav.toc{display:block;position:sticky;top:24px;font-size:13.5px;line-height:1.5}
+  nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  nav.toc a{display:block;padding:6px 10px;color:var(--muted);text-decoration:none;
+    border-left:2px solid var(--line-soft);border-radius:0 2px 2px 0}
+  nav.toc a:hover{color:var(--accent);border-left-color:var(--accent);background:var(--surface)}
+  nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  nav.toc .n{font-family:var(--mono);font-size:11px;color:var(--accent);margin-right:7px}
+}
+main{min-width:0}
+section{margin-bottom:64px;scroll-margin-top:24px}
+h2{font-size:23px;letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance;
+  display:flex;align-items:baseline;gap:12px}
+h2 .n{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;flex:none}
+h3{font-size:16.5px;margin:34px 0 10px;letter-spacing:-.005em}
+.lede{color:var(--ink-2);max-width:70ch;margin:0 0 24px}
+p{max-width:70ch}
+code{font-family:var(--mono);font-size:.875em;background:var(--surface-2);
+  padding:1.5px 5px;border-radius:3px;color:var(--ink)}
+mark{background:var(--warn-soft);color:var(--ink);padding:1px 4px;border-radius:2px}
+
+/* ---------- diagram plate ---------- */
+.plate{background:var(--plate);border:1px solid var(--line);border-radius:4px;
+  padding:26px 24px 20px;margin:24px 0;overflow-x:auto}
+.plate-cap{font-size:12px;font-family:var(--mono);color:var(--muted);
+  letter-spacing:.05em;margin-bottom:20px;display:flex;gap:9px;align-items:center}
+.plate-cap::before{content:"";width:16px;height:1px;background:var(--accent);flex:none}
+
+/* ---------- node / box primitives ---------- */
+.node{border:1px solid var(--line);background:var(--surface);border-radius:3px;
+  padding:11px 13px;min-width:0}
+.node .t{font-size:13.5px;font-weight:650;line-height:1.35}
+.node .s{font-size:11.5px;font-family:var(--mono);color:var(--muted);margin-top:3px;
+  word-break:break-all;line-height:1.45}
+.node.bad{border-color:var(--danger-line);background:var(--danger-soft)}
+.node.bad .t{color:var(--danger)}
+.node.good{border-color:var(--ok-line);background:var(--ok-soft)}
+.node.good .t{color:var(--ok)}
+.node.warn{border-color:var(--warn-line);background:var(--warn-soft)}
+.node.warn .t{color:var(--warn)}
+.node.acc{border-color:var(--accent-line);background:var(--accent-soft)}
+.node.acc .t{color:var(--accent)}
+
+/* ---------- chain diagram ---------- */
+.chain{display:flex;flex-direction:column;gap:0;min-width:440px}
+.chain .link{display:grid;grid-template-columns:34px 1fr;gap:0}
+.chain .rail{position:relative;display:flex;justify-content:center}
+.chain .rail::before{content:"";position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.chain .link:first-child .rail::before{top:50%}
+.chain .link:last-child .rail::before{bottom:50%}
+.chain .dot{position:relative;width:9px;height:9px;border-radius:50%;background:var(--accent);
+  margin-top:19px;box-shadow:0 0 0 3px var(--plate)}
+.chain .dot.bad{background:var(--danger)}
+.chain .body{padding:8px 0 8px 4px}
+.chain .step{font-size:13.5px;font-weight:600}
+.chain .loc{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px;word-break:break-all}
+.chain .brk{font-size:12px;color:var(--danger);font-weight:650;margin-top:4px}
+
+/* ---------- grid diagrams ---------- */
+.g2{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:620px){.g2{grid-template-columns:1fr 1fr}}
+.g3{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:620px){.g3{grid-template-columns:repeat(3,1fr)}}
+
+/* ---------- arrow flow ---------- */
+.flow{display:flex;align-items:stretch;gap:0;min-width:560px}
+.flow .cell{flex:1;min-width:0}
+.flow .arw{flex:none;width:34px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.flow .arw svg{width:18px;height:12px}
+
+/* ---------- ownership table ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:540px}
+.tbl th{text-align:left;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;padding:0 12px 9px;border-bottom:1px solid var(--line)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl code{background:none;padding:0;font-size:12.5px;color:var(--ink-2)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:10px;
+  border:1px solid;white-space:nowrap}
+.pill.bad{color:var(--danger);border-color:var(--danger-line);background:var(--danger-soft)}
+.pill.ok{color:var(--ok);border-color:var(--ok-line);background:var(--ok-soft)}
+.pill.warn{color:var(--warn);border-color:var(--warn-line);background:var(--warn-soft)}
+.pill.acc{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- sequence diagram ---------- */
+.seq{display:grid;grid-template-columns:132px repeat(3,1fr);gap:0;min-width:640px;font-size:12.5px}
+.seq .hd{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;padding-bottom:10px;border-bottom:1px solid var(--line);text-align:center}
+.seq .hd:first-child{text-align:left}
+.seq .tm{font-family:var(--mono);font-size:11px;color:var(--muted);padding:11px 10px 11px 0;
+  border-bottom:1px solid var(--line-soft);white-space:nowrap}
+.seq .ev{padding:11px 8px;border-bottom:1px solid var(--line-soft);border-left:1px solid var(--line-soft);
+  text-align:center;color:var(--ink-2)}
+.seq .ev.act{background:var(--surface);color:var(--ink);font-weight:600}
+.seq .ev.dead{background:var(--danger-soft);color:var(--danger);font-weight:650}
+.seq .ev.wait{color:var(--muted);font-style:italic}
+
+/* ---------- proof block ---------- */
+.proof{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:0 4px 4px 0;padding:16px 18px;margin:20px 0;font-family:var(--mono);
+  font-size:12.5px;line-height:1.7;overflow-x:auto;white-space:pre;color:var(--ink-2)}
+.proof .hi{color:var(--ok);font-weight:700}
+.proof .lo{color:var(--danger);font-weight:700}
+
+/* ---------- callout ---------- */
+.call{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface);
+  padding:16px 18px;border-radius:0 4px 4px 0;margin:22px 0}
+.call.bad{border-left-color:var(--danger)}
+.call.warn{border-left-color:var(--warn)}
+.call .h{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  color:var(--accent);margin-bottom:7px}
+.call.bad .h{color:var(--danger)}
+.call.warn .h{color:var(--warn)}
+.call p{margin:0;max-width:66ch;font-size:14.5px;color:var(--ink-2)}
+.call p + p{margin-top:9px}
+
+/* ---------- retain graph ---------- */
+.retain{display:flex;flex-direction:column;align-items:center;gap:0;min-width:320px}
+.retain .r-row{display:flex;align-items:center;gap:12px}
+.retain .lbl{font-family:var(--mono);font-size:11px;color:var(--danger);font-weight:700}
+.vline{width:1px;height:26px;background:var(--danger);position:relative}
+.vline::after{content:"";position:absolute;bottom:0;left:-3px;border:3.5px solid transparent;
+  border-top-color:var(--danger)}
+
+/* ---------- code ---------- */
+pre.code{background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  padding:15px 17px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  margin:16px 0;color:var(--ink-2)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--accent);font-weight:600}
+pre.code .bad{color:var(--danger);font-weight:600}
+pre.code .add{color:var(--ok);font-weight:600}
+
+/* ---------- test matrix ---------- */
+.tests{display:grid;gap:10px;grid-template-columns:1fr}
+.test{display:grid;grid-template-columns:42px 1fr;gap:14px;border:1px solid var(--line);
+  background:var(--surface);border-radius:3px;padding:13px 15px}
+.test .id{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent)}
+.test .w{font-size:13.5px;font-weight:640;margin-bottom:3px}
+.test .a{font-size:13px;color:var(--muted)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);margin-top:72px;padding-top:24px;
+  font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 22px}
+footer code{font-size:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">swift-kurrentdb · 根因分析與修正設計</div>
+  <h1>持久訂閱的連線生命週期缺陷</h1>
+  <p class="dek">CI 上偶發的 16 分鐘靜默 hang 與 SIGABRT,兩者共用同一個根因:三個非同步工作沒有任何擁有者,而其中一個把連線的死訊完全吞掉了。</p>
+  <div class="meta">
+    <span class="tag">2026-07-20</span>
+    <span class="tag on">方案 A · 已核可</span>
+    <span class="tag">範圍:已驗證的失效路徑</span>
+    <span class="tag">PersistentSubscriptionAdvancedTests</span>
+  </div>
+</header>
+
+<div class="cols">
+<nav class="toc" aria-label="章節目錄">
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>觀察到的證據</a></li>
+    <li><a href="#s2"><span class="n">02</span>所有權模型</a></li>
+    <li><a href="#s3"><span class="n">03</span>teardown 呼叫鏈</a></li>
+    <li><a href="#s4"><span class="n">04</span>hang 的時序</a></li>
+    <li><a href="#s5"><span class="n">05</span>deinit 實測</a></li>
+    <li><a href="#s6"><span class="n">06</span>修正方案</a></li>
+    <li><a href="#s7"><span class="n">07</span>錯誤語意</a></li>
+    <li><a href="#s8"><span class="n">08</span>驗證設計</a></li>
+    <li><a href="#s9"><span class="n">09</span>CI 護欄</a></li>
+    <li><a href="#s10"><span class="n">10</span>未解與風險</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ========== 01 ========== -->
+<section id="s1">
+  <h2><span class="n">01</span>觀察到的證據</h2>
+  <p class="lede">兩次真實的測試層級失敗,同一個 suite、同一個 matrix cell,但表現形式完全不同。</p>
+
+  <div class="plate">
+    <div class="plate-cap">失敗 A — PR #118 · job 88266932116 · Swift 6.0 / KurrentDB 26.1</div>
+    <div class="proof">03:45:17  ◇ Test "NACK with park action..." (testNackWithPark()) started.
+<span class="lo">04:01:33  ##[error]The operation was canceled.        ← 16 分鐘,零輸出</span>
+          Terminate orphan process: pid (13553) (swift-test)
+          Terminate orphan process: pid (14934) (swift-kurrentdbPackageTests.xctest)</div>
+  </div>
+
+  <div class="plate">
+    <div class="plate-cap">失敗 B — PR #119 · job 87397952995 · Swift 6.0 / KurrentDB 26.1</div>
+    <div class="proof">◇ testNackWithPark() started.
+<span class="lo">error KurrentCore: The error is thrown in the response of StreamStream: Connection is closed.</span>
+✔ testNackWithPark() passed after 0.207 seconds.
+◇ testNackWithRetry() started.
+<span class="lo">error KurrentCore: The error is thrown in the response of StreamStream: Connection is closed.</span>
+✔ testNackWithRetry() passed after 0.094 seconds.
+◇ testGetInfo() ... passed
+◇ testGetInfoAllStream() ... passed
+◇ Test "Update subscription settings does not throw" (testUpdateSubscription()) started.
+<span class="lo">*** Program crashed: Aborted at 0x000003e9000043b3 ***
+error: Exited with unexpected signal code 6                ← SIGABRT</span></div>
+  </div>
+
+  <h3>歷史失敗必須先分類,否則會得出錯誤結論</h3>
+  <p>近期 5 次失敗的 run 乍看像是同一個問題,但拆開失敗步驟後,<strong>只有 1 次是真正的測試失敗</strong>,其餘 4 次是 docker 拉 image / 起 cluster 失敗,與 SDK 無關。</p>
+
+  <div class="plate">
+    <div class="plate-cap">CI 失敗分類 — 依失敗步驟,而非依 job 名稱</div>
+    <table class="tbl">
+      <thead><tr><th>分支</th><th>Matrix cell</th><th>失敗步驟</th><th>歸類</th></tr></thead>
+      <tbody>
+        <tr><td>all-read-filter</td><td class="tnum">Swift 6.0 / 26.1</td><td><code>Swift Testing</code></td><td><span class="pill bad">SDK 缺陷</span></td></tr>
+        <tr><td>batch-append</td><td class="tnum">Swift 6.0 / 25.1</td><td><code>Start KurrentDB cluster</code></td><td><span class="pill warn">環境</span></td></tr>
+        <tr><td>per-call-credentials</td><td class="tnum">Swift 6.0 / 26.1</td><td><code>Start KurrentDB cluster</code></td><td><span class="pill warn">環境</span></td></tr>
+        <tr><td>all-read-filter</td><td class="tnum">Swift 6.1 / 26.1</td><td><code>Start KurrentDB cluster</code></td><td><span class="pill warn">環境</span></td></tr>
+        <tr><td>append-records-dcb</td><td class="tnum">Swift 6.0 / 26.0</td><td><code>Start KurrentDB cluster</code></td><td><span class="pill warn">環境</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call warn">
+    <div class="h">取樣偏差警告</div>
+    <p>兩次真實失敗都落在 Swift 6.0 / 26.1,容易讓人斷定「只有 6.0 有問題」。<strong>不要據此下結論。</strong>workflow 未設 <code>fail-fast: false</code>,任一 cell 失敗會立刻取消其餘所有 cell —— 我們根本沒看到別的 cell 跑完會怎樣。這個樣本有系統性偏差。</p>
+  </div>
+</section>
+
+<!-- ========== 02 ========== -->
+<section id="s2">
+  <h2><span class="n">02</span>所有權模型</h2>
+  <p class="lede">核心問題一句話:<strong>每一個非同步工作都應該有明確的擁有者,且它的失敗必須有人觀察。</strong>目前三個 task 全是孤兒。</p>
+
+  <div class="plate">
+    <div class="plate-cap">三個非結構化 Task 的擁有權與失敗可觀察性</div>
+    <table class="tbl">
+      <thead><tr><th>Task</th><th>位置</th><th>擁有者</th><th>失敗被觀察?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>runConnections()</code></td>
+          <td><code>StreamStream.swift:29</code></td>
+          <td><span class="pill bad">無</span></td>
+          <td><span class="pill bad">否 — 錯誤被吞</span></td>
+        </tr>
+        <tr>
+          <td>RPC read loop</td>
+          <td><code>…SpecifiedStream.Read.swift:64</code></td>
+          <td><span class="pill warn">僅由 completion 取消</span></td>
+          <td><span class="pill ok">是 — 有 catch</span></td>
+        </tr>
+        <tr>
+          <td>events bridge</td>
+          <td><code>Subscription.swift:77</code></td>
+          <td><span class="pill bad">無 · 隱式強持有 self</span></td>
+          <td><span class="pill ok">是</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>被吞掉的錯誤</h3>
+  <p>這是整份分析裡最關鍵的六行程式碼。連線一旦建立失敗,<strong>沒有任何人會知道</strong>。</p>
+
+  <pre class="code"><span class="c">// Sources/KurrentDB/Core/Additions/Usecase/StreamStream.swift:28-32</span>
+<span class="k">let</span> client = <span class="k">try</span> GRPCClient&lt;HTTP2ClientTransport.Posix&gt;(from: node)
+Task {
+    logger.debug(<span class="c">"[\(Self.name)] Opening connection..."</span>)
+    <span class="k">try await</span> client.runConnections()   <span class="bad">// ← 拋錯就此消失,無人持有、無人觀察</span>
+}</pre>
+
+  <div class="plate">
+    <div class="plate-cap">同目錄三種 usecase 的連線收尾方式對照</div>
+    <div class="g3">
+      <div class="node good">
+        <div class="t">UnaryUnary</div>
+        <div class="s">UnaryUnary.swift:44<br>defer { beginGracefulShutdown() }</div>
+      </div>
+      <div class="node good">
+        <div class="t">StreamUnary</div>
+        <div class="s">StreamUnary.swift:38<br>defer { beginGracefulShutdown() }</div>
+      </div>
+      <div class="node bad">
+        <div class="t">StreamStream</div>
+        <div class="s">無 defer<br>唯一關閉路徑 = completion closure</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="call">
+    <div class="h">同一個 repo 裡就有正確寫法</div>
+    <p><code>Streams.Subscribe.swift:52</code> 在開 Task(line 60)<strong>之前</strong>就裝好 <code>onTermination</code>,並於 line 65 使用 <code>.cancelOnGracefulShutdown()</code>。<code>Gossip.swift:43</code> 與 <code>ServerFeatures.swift:35</code> 則使用 scoped 的 <code>withGRPCClient(transport:)</code>。持久訂閱是唯一把 teardown 藏在 lazy getter 後面的串流路徑。</p>
+  </div>
+</section>
+
+<!-- ========== 03 ========== -->
+<section id="s3">
+  <h2><span class="n">03</span>teardown 呼叫鏈</h2>
+  <p class="lede">關閉連線需要走完五個環節。整條鏈的入口被鎖在一個 lazy 的 computed property 後面。</p>
+
+  <div class="plate">
+    <div class="plate-cap">關閉連線的五段呼叫鏈 — 第一環是唯一入口</div>
+    <div class="chain">
+      <div class="link">
+        <div class="rail"><span class="dot bad"></span></div>
+        <div class="body">
+          <div class="step">存取 <code>.events</code> → 裝上 <code>continuation.onTermination</code></div>
+          <div class="loc">Subscription.swift:98 — 位於 lazy computed property 內</div>
+          <div class="brk">✗ 若從未存取 .events,整條鏈永遠不會被接上</div>
+        </div>
+      </div>
+      <div class="link">
+        <div class="rail"><span class="dot"></span></div>
+        <div class="body">
+          <div class="step"><code>tracker.callFinishActionOnce(termination:)</code></div>
+          <div class="loc">Subscription.swift:102 — 全 repo 唯一呼叫點</div>
+        </div>
+      </div>
+      <div class="link">
+        <div class="rail"><span class="dot"></span></div>
+        <div class="body">
+          <div class="step"><code>onFinish</code> 註冊的 closure</div>
+          <div class="loc">…SpecifiedStream.Read.swift:90 / AllStream.Read.swift:89</div>
+        </div>
+      </div>
+      <div class="link">
+        <div class="rail"><span class="dot"></span></div>
+        <div class="body">
+          <div class="step"><code>completion(error)</code></div>
+          <div class="loc">StreamStream.swift:36 — 傳入 send 的 closure</div>
+        </div>
+      </div>
+      <div class="link">
+        <div class="rail"><span class="dot"></span></div>
+        <div class="body">
+          <div class="step"><code>client.beginGracefulShutdown()</code></div>
+          <div class="loc">StreamStream.swift:43 — 連線真正關閉</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>init 沒有接上這條鏈</h3>
+  <pre class="code"><span class="c">// Sources/KurrentDB/PersistentSubscriptions/PersistentSubscriptions.Subscription.swift:110-114</span>
+init(writer: Writer) {
+    self.writer  = writer
+    self.tracker = SubscriptionTracker()
+    self.source  = AsyncThrowingStream&lt;EventResult, Error&gt;.makeStream()
+    <span class="bad">// ← 沒有裝 onTermination,也沒有 deinit</span>
+}</pre>
+
+  <div class="call bad">
+    <div class="h">文件承諾了一個從未實作的行為</div>
+    <p>類別的文件註解(<code>Subscription.swift:21-24</code>)寫著:「<em>Breaking out of the <code>for try await</code> loop — or letting the subscription go out of scope — automatically stops the underlying gRPC stream and closes the server-side connection.</em>」</p>
+    <p>但整個 <code>PersistentSubscriptions/</code> 目錄<strong>沒有任何 <code>deinit</code></strong>。「離開 scope 就自動關閉」從來沒有被實作過。因此加上 <code>deinit</code> 不是行為變更,而是讓程式碼履行它自己已宣告的合約。</p>
+  </div>
+</section>
+
+<!-- ========== 04 ========== -->
+<section id="s4">
+  <h2><span class="n">04</span>hang 的時序</h2>
+  <p class="lede">teardown 由「終止」觸發,但終止永遠不會到來 —— 因為連線的死訊被吞掉了,RPC 因此永遠不會拋錯。</p>
+
+  <div class="plate">
+    <div class="plate-cap">失效時序 — 三個 task 各自的狀態演進</div>
+    <div class="seq">
+      <div class="hd">時間</div>
+      <div class="hd">連線 Task</div>
+      <div class="hd">RPC read Task</div>
+      <div class="hd">使用者的 for-await</div>
+
+      <div class="tm">t0</div>
+      <div class="ev act">runConnections() 啟動</div>
+      <div class="ev act">client.read(…) 發出</div>
+      <div class="ev wait">await 第一個事件</div>
+
+      <div class="tm">t1</div>
+      <div class="ev dead">拋錯 → 被 Task 吞掉</div>
+      <div class="ev wait">仍在 await 回應</div>
+      <div class="ev wait">await…</div>
+
+      <div class="tm">t2</div>
+      <div class="ev dead">連線已死,無人知曉</div>
+      <div class="ev dead">永不拋錯,永不 finish</div>
+      <div class="ev wait">await…</div>
+
+      <div class="tm">t3 … t+16min</div>
+      <div class="ev dead">—</div>
+      <div class="ev dead">source 永不終止</div>
+      <div class="ev dead">靜默卡死</div>
+
+      <div class="tm">CI timeout</div>
+      <div class="ev dead">orphan process</div>
+      <div class="ev dead">orphan process</div>
+      <div class="ev dead">job cancelled</div>
+    </div>
+  </div>
+
+  <div class="plate">
+    <div class="plate-cap">因果鏈 — 為什麼「沒有錯誤」比「有錯誤」更糟</div>
+    <div class="flow">
+      <div class="cell node bad"><div class="t">連線拋錯</div><div class="s">runConnections() throws</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">錯誤被吞</div><div class="s">無人持有 Task</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">RPC 不拋錯</div><div class="s">無 deadline,無限等待</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">source 不終止</div><div class="s">teardown 不被觸發</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">16 分鐘靜默</div><div class="s">orphan process</div></div>
+    </div>
+  </div>
+
+  <div class="call">
+    <div class="h">對照:RPC 側其實是接好的</div>
+    <p><code>Read.swift:85-87</code> 的 <code>catch</code> 會呼叫 <code>subscription.send(state: .finish(throwing: error))</code>,而 <code>Subscription.swift:126</code> 會 <code>source.continuation.finish(throwing:)</code>。<strong>只要 RPC 拋錯,整條 teardown 鏈是通的。</strong>問題純粹在於 RPC 永遠不拋錯。</p>
+  </div>
+</section>
+
+<!-- ========== 05 ========== -->
+<section id="s5">
+  <h2><span class="n">05</span>deinit 實測</h2>
+  <p class="lede">最初的修正提案是用 <code>deinit</code> 當安全網。實測證明:在最需要它的情境下,<code>deinit</code> 永遠不會觸發。</p>
+
+  <h3>bridge task 隱式強持有 self</h3>
+  <p><code>Subscription.swift:77</code> 的 <code>Task {}</code> 沒有 capture list,卻引用了 stored property <code>source</code> 與 <code>tracker</code> —— Swift 6 允許此處的隱式 <code>self</code> 捕獲,因此該 Task 強持有整個 <code>Subscription</code>。</p>
+
+  <div class="plate">
+    <div class="plate-cap">持有關係 — 一個無法自行解開的環</div>
+    <div class="retain">
+      <div class="r-row"><div class="node bad" style="min-width:200px"><div class="t">bridge Task</div><div class="s">Subscription.swift:77</div></div></div>
+      <div class="r-row"><span class="lbl">強持有</span><div class="vline"></div></div>
+      <div class="r-row"><div class="node bad" style="min-width:200px"><div class="t">Subscription (self)</div><div class="s">deinit 因此無法觸發</div></div></div>
+      <div class="r-row"><span class="lbl">擁有</span><div class="vline"></div></div>
+      <div class="r-row"><div class="node bad" style="min-width:200px"><div class="t">source.stream</div><div class="s">bridge Task 正等在此 · 永不 finish</div></div></div>
+    </div>
+  </div>
+
+  <div class="plate">
+    <div class="plate-cap">獨立最小範例實測 — swiftc -swift-version 6</div>
+    <div class="proof">CASE 1: 從未存取 .events,然後丟棄
+<span class="hi">  &gt;&gt;&gt; deinit A                    ← deinit 有觸發</span>
+
+CASE 2: 存取 .events(bridge task 啟動)後丟棄
+<span class="lo">  (無 deinit 輸出)                 ← deinit 永遠不觸發</span></div>
+  </div>
+
+  <div class="call bad">
+    <div class="h">這推翻了原提案的安全網</div>
+    <p><code>deinit</code> 只救得了「從未迭代就丟棄」。而實際發生的 hang 正是「<code>.events</code> 正在被迭代」—— 此時 bridge Task 持有 self,而它正等在 <code>source.stream</code> 上,而 source 只有 teardown 才會結束。<strong>互相卡死。</strong></p>
+  </div>
+</section>
+
+<!-- ========== 06 ========== -->
+<section id="s6">
+  <h2><span class="n">06</span>修正方案</h2>
+  <p class="lede">四處改動,全部落在已驗證的失效路徑上。其中第 1 項是治 hang 的關鍵,2–4 項治洩漏並履行文件合約。</p>
+
+  <div class="plate">
+    <div class="plate-cap">四處改動與各自解決的問題</div>
+    <table class="tbl">
+      <thead><tr><th style="width:34px">#</th><th>改動</th><th>位置</th><th>解決</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="pill acc">1</span></td>
+          <td>持有 <code>connectionTask</code>,不再吞錯;失敗需傳遞給 RPC。completion 中額外 <code>.cancel()</code></td>
+          <td><code>StreamStream.perform</code></td>
+          <td><span class="pill bad">hang</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill acc">2</span></td>
+          <td>teardown 從 lazy getter 移入 <code>init</code> 的 <code>source.continuation.onTermination</code></td>
+          <td><code>Subscription.init</code></td>
+          <td><span class="pill warn">teardown 不可達</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill acc">3</span></td>
+          <td>bridge Task 加明確 capture list,解除對 <code>self</code> 的強持有</td>
+          <td><code>Subscription.events</code></td>
+          <td><span class="pill warn">物件永不釋放</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill acc">4</span></td>
+          <td>新增 <code>deinit</code>,作為「從未迭代就丟棄」的兜底</td>
+          <td><code>Subscription</code></td>
+          <td><span class="pill warn">連線洩漏</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="plate">
+    <div class="plate-cap">修正前 / 修正後 — 失敗傳遞路徑</div>
+    <div class="g2">
+      <div>
+        <div class="node bad" style="margin-bottom:10px"><div class="t">修正前</div><div class="s">連線死亡 → 錯誤被吞 → RPC 無限等待</div></div>
+        <div class="node" style="border-style:dashed"><div class="s">teardown 由「終止」觸發<br>但終止永遠不會來</div></div>
+      </div>
+      <div>
+        <div class="node good" style="margin-bottom:10px"><div class="t">修正後</div><div class="s">連線死亡 → 錯誤被觀察 → RPC 失敗</div></div>
+        <div class="node" style="border-style:dashed"><div class="s">RPC 失敗 → source 終止<br>→ teardown 鏈完整執行</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="call">
+    <div class="h">刻意不做的事</div>
+    <p><strong>不在 SDK 加 RPC deadline。</strong>理由與測試裡不用計時相同 —— 那是一個沒人能正當決定的數字。正確行為是「<em>連線死掉時就失敗</em>」,而不是「等一個猜出來的時間後失敗」。第 1 項改動正是為了達成前者。</p>
+    <p><strong>不動 <code>UnaryUnary</code> / <code>StreamUnary</code> / <code>UnaryStream</code>。</strong>那三條路徑本來就有 <code>defer</code>,且不在已驗證的失效路徑上。符合 CLAUDE.md 的 Minimal Impact 原則。</p>
+  </div>
+</section>
+
+<!-- ========== 07 ========== -->
+<section id="s7">
+  <h2><span class="n">07</span>錯誤語意</h2>
+  <p class="lede">連線死亡目前對使用者是「無限靜默」。修正後應是明確且可據以續傳的錯誤。</p>
+
+  <div class="plate">
+    <div class="plate-cap">錯誤映射</div>
+    <table class="tbl">
+      <thead><tr><th>情境</th><th>拋出</th><th>攜帶資訊</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>連線 task 失敗 / 結束而 RPC 仍在等</td>
+          <td><code>.subscriptionDropped</code></td>
+          <td><code>reason</code> · <code>lastRevision</code> · <code>lastPosition</code></td>
+        </tr>
+        <tr>
+          <td>RPC 本身被取消</td>
+          <td><code>.connectionClosed</code></td>
+          <td><span class="pill acc">維持現狀</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call">
+    <div class="h">這個 error case 一直存在,但從未被接上</div>
+    <p><code>KurrentError.swift:58,60</code> 宣告了 <code>subscriptionTerminated</code> 與 <code>subscriptionDropped(reason:lastRevision:lastPosition:)</code>,並在 description 有完整處理 —— 但<strong>全 <code>Sources/</code> 沒有任何一處拋出它們</strong>。</p>
+    <p><code>subscriptionDropped</code> 攜帶的正是 <code>tracker</code> 一直在維護、文件也明說「用來斷線後續傳」的 <code>lastRevision</code> / <code>lastPosition</code>。它就是為這個情境設計的,只是從未被接上。</p>
+  </div>
+</section>
+
+<!-- ========== 08 ========== -->
+<section id="s8">
+  <h2><span class="n">08</span>驗證設計</h2>
+  <p class="lede">關鍵設計決定:斷言不碰時間。時間界限只存在於維運層,且不編碼任何關於 SDK 時序的假設。</p>
+
+  <h3>為什麼斷言不能依賴計時</h3>
+  <p>若測試以「N 秒內沒卡住就算過」來斷言正確性,它本身就是機率性測試 —— 等於用我們正在治療的病來當藥。而且 Swift Testing 的 <code>.timeLimit</code> 有硬性限制:</p>
+
+  <div class="plate">
+    <div class="plate-cap">實測 — 在測試 target 編譯 .timeLimit(.seconds(5))</div>
+    <div class="proof"><span class="lo">error: 'seconds' is unavailable: Time limit must be specified in minutes</span></div>
+  </div>
+
+  <p>最小粒度是 1 分鐘,連「數秒內失敗」都做不到。因此設計上把兩件事切開:</p>
+
+  <div class="plate">
+    <div class="plate-cap">時間界限的歸屬 — 誰決定數字,以及憑什麼</div>
+    <div class="g2">
+      <div class="node acc">
+        <div class="t">斷言正確性 → 不碰時間</div>
+        <div class="s">直接建構 Subscription,先同步驅動失敗,再 await。<br>實作正確時 stream 必定已終止,next() 立即回傳或拋出。</div>
+      </div>
+      <div class="node warn">
+        <div class="t">偵測無限卡住 → 維運上限</div>
+        <div class="s">suite .timeLimit(.minutes(1)) + job timeout-minutes。<br>語意是「單元測試不該逼近一分鐘」,非 SDK 時序假設。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="call warn">
+    <div class="h">誠實限制</div>
+    <p>「永遠不會終止」在原理上<strong>無法不用時間界限來偵測</strong>。這裡能做的是把界限推到它該在的位置(維運政策),而不是讓它出現在斷言裡。最差情況下回歸了,也是 1 分鐘失敗且其他 cell 照跑完,而非 16 分鐘靜默加整個 matrix 陪葬。</p>
+  </div>
+
+  <h3>契約測試 — 確定性,不需伺服器</h3>
+  <p><code>Subscription.init(writer:)</code>、<code>send(state:)</code>、<code>onFinish(_:)</code> 皆為 internal,測試可用 <code>@testable import KurrentDB</code> 直接建構並驅動。<code>MockKurrentDBClient</code> 幫不上忙 —— 它只是 factory 呼叫的 spy,不模擬 gRPC 傳輸。</p>
+
+  <div class="tests">
+    <div class="test"><div class="id">T1</div><div><div class="w">建立後從未存取 <code>.events</code> 就丟棄</div><div class="a">斷言 teardown action 有執行 — 驗證 deinit 兜底</div></div></div>
+    <div class="test"><div class="id">T2</div><div><div class="w">迭代 <code>.events</code> 後 break 跳出</div><div class="a">斷言 teardown action 有執行</div></div></div>
+    <div class="test"><div class="id">T3</div><div><div class="w">RPC 拋錯 · <code>send(state:.finish(throwing:))</code></div><div class="a">斷言 <code>.events</code> 拋出且 teardown 執行</div></div></div>
+    <div class="test"><div class="id">T4</div><div><div class="w">連線失敗</div><div class="a">斷言 <code>.events</code> 拋 <code>.subscriptionDropped</code> — 同步驅動後再 await,不使用計時</div></div></div>
+    <div class="test"><div class="id">T5</div><div><div class="w">teardown 觸發兩次</div><div class="a">斷言 action 只執行一次 — 驗證 <code>callFinishActionOnce</code> 冪等</div></div></div>
+  </div>
+
+  <p style="margin-top:22px"><strong>壓測(輔助)。</strong>於 Swift 6.0 環境迴圈跑 <code>PersistentSubscriptionAdvancedTests</code> 數十次,修前應能重現、修後不再發生。因屬機率性,提供信心但<strong>不作為驗收門檻</strong>。</p>
+</section>
+
+<!-- ========== 09 ========== -->
+<section id="s9">
+  <h2><span class="n">09</span>CI 護欄</h2>
+  <p class="lede">獨立於 SDK 修正的止血措施。目前的設定會在失敗發生時主動銷毀診斷所需的證據。</p>
+
+  <div class="plate">
+    <div class="plate-cap">fail-fast 預設值造成的連鎖取消</div>
+    <div class="flow">
+      <div class="cell node bad"><div class="t">1 個 cell 失敗</div><div class="s">例:Swift 6.0 / 26.1</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">fail-fast 預設 true</div><div class="s">workflow 未設定此項</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">其餘 15 個 cell 被取消</div><div class="s">實際觀測值</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node bad"><div class="t">證據消失</div><div class="s">無法分辨單點問題或全面問題</div></div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="node acc"><div class="t">fail-fast: false</div><div class="s">保留所有 cell 的結果<br>讓 flake 與全面性問題可區分</div></div>
+    <div class="node acc"><div class="t">job timeout-minutes</div><div class="s">避免單一 job 佔用 16 分鐘</div></div>
+    <div class="node acc"><div class="t">suite .timeLimit</div><div class="s">維運上限,非時序假設</div></div>
+  </div>
+
+  <div class="call warn">
+    <div class="h">順帶發現:一個無效的設定</div>
+    <p>workflow 第 32 行的 <code>- run: ulimit -n 10000</code> 是 no-op —— 每個 <code>run:</code> 步驟都是全新的 shell,不影響後續的 <code>swift test</code> 步驟。它的存在本身也是證據:<strong>過去已經有人撞過資源耗盡</strong>。</p>
+  </div>
+</section>
+
+<!-- ========== 10 ========== -->
+<section id="s10">
+  <h2><span class="n">10</span>未解與風險</h2>
+  <p class="lede">明確區分已驗證的事實與尚屬推論的部分。</p>
+
+  <div class="plate">
+    <div class="plate-cap">證據強度分級</div>
+    <table class="tbl">
+      <thead><tr><th>主張</th><th>強度</th><th>依據</th></tr></thead>
+      <tbody>
+        <tr><td><code>StreamStream</code> 缺 defer、錯誤被吞</td><td><span class="pill ok">已驗證</span></td><td>直接讀原始碼</td></tr>
+        <tr><td>teardown 鏈鎖在 lazy getter</td><td><span class="pill ok">已驗證</span></td><td>唯一呼叫點 grep 確認</td></tr>
+        <tr><td>bridge Task 強持有 self,deinit 不觸發</td><td><span class="pill ok">已驗證</span></td><td>獨立最小範例實測</td></tr>
+        <tr><td><code>.timeLimit</code> 僅支援分鐘</td><td><span class="pill ok">已驗證</span></td><td>編譯器錯誤訊息</td></tr>
+        <tr><td><code>subscriptionDropped</code> 從未被拋出</td><td><span class="pill ok">已驗證</span></td><td>全 Sources grep</td></tr>
+        <tr><td>hang 源於連線錯誤被吞</td><td><span class="pill warn">高信心推論</span></td><td>程式碼結構充分,但 CI debug log 未開,未直接觀測</td></tr>
+        <tr><td>SIGABRT 的確切 trap frame</td><td><span class="pill bad">未知</span></td><td>CI log 僅保留 frame 27-28;SDK 路徑無 fatalError,abort 應在 NIO 層</td></tr>
+        <tr><td>「只有 Swift 6.0 有問題」</td><td><span class="pill bad">不可信</span></td><td>fail-fast 造成系統性取樣偏差</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call">
+    <div class="h">能提升證據等級的兩件事</div>
+    <p><strong>其一</strong>,在 CI 開啟 debug logging。若 hang 發生時 <code>"Closing connection..."</code> 確實從未出現,即可將 hang 機制從高信心推論升級為已證實。此驗證目前做不到 —— CI 只有 info 級 log。</p>
+    <p><strong>其二</strong>,以 <code>SWIFT_BACKTRACE=enable=yes,interactive=no</code> 重跑並擷取完整 frame 0–26,可確定 SIGABRT 的 trap 位置。若套用修正後 hang 消失但 abort 仍在,則 abort 是獨立的第二個缺陷。</p>
+  </div>
+</section>
+
+<footer>
+  <span>swift-kurrentdb · 持久訂閱連線生命週期</span>
+  <span>方案 A · 範圍限已驗證失效路徑</span>
+  <span>下一步:<code>writing-plans</code> 產出實作計畫</span>
+</footer>
+
+</main>
+</div>
+</div>
