@@ -235,7 +235,8 @@ footer code{font-size:12px}
     <li><a href="#s7"><span class="n">07</span>錯誤語意</a></li>
     <li><a href="#s8"><span class="n">08</span>驗證設計</a></li>
     <li><a href="#s9"><span class="n">09</span>CI 護欄</a></li>
-    <li><a href="#s10"><span class="n">10</span>未解與風險</a></li>
+    <li><a href="#s10"><span class="n">10</span>未來:自動重連</a></li>
+    <li><a href="#s11"><span class="n">11</span>未解與風險</a></li>
   </ol>
 </nav>
 
@@ -296,6 +297,26 @@ error: Exited with unexpected signal code 6                ← SIGABRT</span></d
 <section id="s2">
   <h2><span class="n">02</span>所有權模型</h2>
   <p class="lede">核心問題一句話:<strong>每一個非同步工作都應該有明確的擁有者,且它的失敗必須有人觀察。</strong>目前三個 task 全是孤兒。</p>
+
+  <div class="call warn">
+    <div class="h">先看這個 — 同名檔案不只一份</div>
+    <p>本文以簡寫指稱檔案。<code>Sources/GRPCEncapsulates/Usecase/</code> 下有<strong>同名的</strong> <code>StreamStream.swift</code> / <code>UnaryUnary.swift</code> / <code>StreamUnary.swift</code>(各 12 行,僅 protocol 宣告)。本文所有行號<strong>不</strong>指向那些檔案。</p>
+  </div>
+
+  <div class="plate">
+    <div class="plate-cap">檔案路徑對照 — 實作時務必開對</div>
+    <table class="tbl">
+      <thead><tr><th>本文簡寫</th><th>實際路徑</th><th style="text-align:right">行數</th></tr></thead>
+      <tbody>
+        <tr><td><code>StreamStream.swift</code></td><td><code>Sources/KurrentDB/Core/Additions/Usecase/StreamStream.swift</code></td><td class="tnum" style="text-align:right">46</td></tr>
+        <tr><td><code>UnaryUnary.swift</code></td><td><code>Sources/KurrentDB/Core/Additions/Usecase/UnaryUnary.swift</code></td><td class="tnum" style="text-align:right">55</td></tr>
+        <tr><td><code>StreamUnary.swift</code></td><td><code>Sources/KurrentDB/Core/Additions/Usecase/StreamUnary.swift</code></td><td class="tnum" style="text-align:right">48</td></tr>
+        <tr><td><code>Subscription.swift</code></td><td><code>Sources/KurrentDB/PersistentSubscriptions/PersistentSubscriptions.Subscription.swift</code></td><td class="tnum" style="text-align:right">283</td></tr>
+        <tr><td><code>…Read.swift</code></td><td><code>…/PersistentSubscriptions/Usecase/Specified/PersistentSubscriptions.SpecifiedStream.Read.swift</code></td><td class="tnum" style="text-align:right">—</td></tr>
+        <tr><td><code>KurrentError.swift</code></td><td><code>Sources/KurrentDB/Core/Error/KurrentError.swift</code></td><td class="tnum" style="text-align:right">299</td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="plate">
     <div class="plate-cap">三個非結構化 Task 的擁有權與失敗可觀察性</div>
@@ -554,6 +575,12 @@ CASE 2: 存取 .events(bridge task 啟動)後丟棄
     </table>
   </div>
 
+  <div class="call">
+    <div class="h">改動 1 的核心不變式</div>
+    <p>連線 task 一旦結束 —— <strong>無論正常返回或拋錯</strong> —— 若該連線上的 RPC 仍在進行中,<strong>必須使該 RPC 以錯誤終止,不得讓其無限等待</strong>。</p>
+    <p>達成機制由實作計畫決定,但<strong>不得</strong>以「等待固定秒數後放棄」的方式滿足 —— 理由見下方「刻意不做的事」。</p>
+  </div>
+
   <div class="plate">
     <div class="plate-cap">修正前 / 修正後 — 失敗傳遞路徑</div>
     <div class="g2">
@@ -686,7 +713,39 @@ CASE 2: 存取 .events(bridge task 啟動)後丟棄
 
 <!-- ========== 10 ========== -->
 <section id="s10">
-  <h2><span class="n">10</span>未解與風險</h2>
+  <h2><span class="n">10</span>未來範圍:自動重連</h2>
+  <p class="lede">已討論但<strong>刻意延後</strong>。本修正是該功能的前提 —— 目前斷線根本不會被偵測,連「該重連了」的時機都不存在。</p>
+
+  <div class="plate">
+    <div class="plate-cap">依賴關係 — 為什麼必須先修核心</div>
+    <div class="flow">
+      <div class="cell node good"><div class="t">改動 1</div><div class="s">連線死亡不再被吞</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node acc"><div class="t">斷線成為可觀察事件</div><div class="s">RPC 以錯誤終止</div></div>
+      <div class="arw"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 6h13M9 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>
+      <div class="cell node acc"><div class="t">重連有了觸發點</div><div class="s">此層才可能存在</div></div>
+    </div>
+  </div>
+
+  <h3>屆時必須處理的四個問題</h3>
+  <p>先記錄於此以免遺失 —— 這些在核心修好之後仍然存在。</p>
+
+  <div class="tests">
+    <div class="test"><div class="id">1</div><div><div class="w"><code>subscriptionId</code> 每次重連都會變</div><div class="a">由伺服器 <code>.confirmation</code> 訊息提供(<code>Subscription.swift:118-119</code>);而 <code>ack(eventIds:)</code>(line 135)在呼叫當下才讀取它 → 重連後 ack 斷線前的事件會送往新 subscription</div></div></div>
+    <div class="test"><div class="id">2</div><div><div class="w">writer 需重新綁定</div><div class="a">teardown 會 <code>writer.stop()</code>。重連若未處理 writer 重綁,ack 會靜默送進虛空</div></div></div>
+    <div class="test"><div class="id">3</div><div><div class="w">重複事件的可見性</div><div class="a">持久訂閱為 at-least-once,重連本就會重送未 ack 事件。若重連完全透明,使用者看到重複時無從得知原因</div></div></div>
+    <div class="test"><div class="id">4</div><div><div class="w">可重用既有基礎設施,但預設值不適用</div><div class="a"><code>OperationRetryPolicy</code>(含指數退避與 jitter)、<code>withRetry</code>、<code>isNodeFailure</code> 皆可沿用。但 <code>.default</code> 為 <strong>3 次嘗試</strong>,係為一次性操作設計,不適用於長生命週期訂閱</div></div></div>
+  </div>
+
+  <div class="call">
+    <div class="h">對本設計的約束</div>
+    <p>本設計<strong>不得阻擋</strong>該層。改動 1 使連線死亡成為可觀察事件,正是重連所需的觸發點 —— 兩者方向一致,不衝突。</p>
+  </div>
+</section>
+
+<!-- ========== 11 ========== -->
+<section id="s11">
+  <h2><span class="n">11</span>未解與風險</h2>
   <p class="lede">明確區分已驗證的事實與尚屬推論的部分。</p>
 
   <div class="plate">
