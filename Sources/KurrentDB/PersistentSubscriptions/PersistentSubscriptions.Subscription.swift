@@ -123,12 +123,6 @@ extension PersistentSubscriptions {
             }
         }
 
-        deinit {
-            // 丟棄 handle 而從未迭代 `events` 時,仍須關閉底層 RPC。
-            // 這履行本型別文件註解對「離開 scope 自動關閉」的承諾。
-            // 觸發 init 佈署的 onTermination,其中 callFinishActionOnce 具冪等性。
-            source.continuation.finish()
-        }
 
         internal func send(state: State) {
             switch state {

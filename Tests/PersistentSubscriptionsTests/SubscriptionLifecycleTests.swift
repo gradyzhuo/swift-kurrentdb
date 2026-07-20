@@ -35,6 +35,10 @@ struct SubscriptionLifecycleTests {
         return (sub, counter)
     }
 
+    /// 註:本測試**不需要** `deinit` 就能通過,已實測確認。
+    /// `AsyncThrowingStream.Continuation` 的 `onTermination` 在其底層儲存被釋放時
+    /// 即自動觸發,故 `init` 佈署的 teardown handler 已完整涵蓋「丟棄但未迭代」。
+    /// 設計階段原本規劃的 `deinit` 兜底經驗證為死碼,已移除 —— 請勿再加回。
     @Test("T1:從未存取 events 就丟棄,仍會觸發 teardown")
     func droppingWithoutIteratingTearsDown() async throws {
         // 等待實際的 teardown 訊號,而非猜測排程時機。
