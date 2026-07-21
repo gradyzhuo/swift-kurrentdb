@@ -134,7 +134,18 @@ extension PersistentSubscriptions {
                     source.continuation.finish()
                 }
             case let .finish(error):
-                source.continuation.finish(throwing: error)
+                // 連線層級失敗(而非伺服器主動終止或使用者取消)一律回報為
+                // subscriptionDropped,並附上 tracker 已記錄的續傳位置,
+                // 讓呼叫端能從中斷處恢復訂閱。
+                if let kurrentError = error as? KurrentError, kurrentError.isNodeFailure {
+                    source.continuation.finish(throwing: KurrentError.subscriptionDropped(
+                        reason: "\(kurrentError)",
+                        lastRevision: tracker.revision,
+                        lastPosition: tracker.position
+                    ))
+                } else {
+                    source.continuation.finish(throwing: error)
+                }
             }
         }
 

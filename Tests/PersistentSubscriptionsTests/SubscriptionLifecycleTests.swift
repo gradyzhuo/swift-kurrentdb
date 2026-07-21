@@ -5,6 +5,7 @@
 
 import Testing
 import Synchronization
+import GRPCCore
 @testable import KurrentDB
 
 @Suite("Subscription 生命週期契約", .serialized, .timeLimit(.minutes(1)))
@@ -76,6 +77,27 @@ struct SubscriptionLifecycleTests {
 
         for try await _ in sub.events { break }
         #expect(tornDown.count == 1)
+    }
+
+    @Test("T4:連線失敗回報為 subscriptionDropped 並攜帶續傳位置")
+    func connectionFailureReportsDropped() async throws {
+        let (sub, _) = makeSubscription()
+        // 先同步驅動連線失敗,再 await —— 不使用任何計時
+        sub.send(state: .finish(throwing: KurrentError.grpcConnectionError(
+            cause: RPCError(code: .unavailable, message: "connection lost")
+        )))
+
+        var caught: KurrentError?
+        do {
+            for try await _ in sub.events {}
+        } catch let error as KurrentError {
+            caught = error
+        }
+
+        guard case .subscriptionDropped = caught else {
+            Issue.record("預期 .subscriptionDropped,實得 \(String(describing: caught))")
+            return
+        }
     }
 
     @Test("T5:teardown 重複觸發只執行一次")
