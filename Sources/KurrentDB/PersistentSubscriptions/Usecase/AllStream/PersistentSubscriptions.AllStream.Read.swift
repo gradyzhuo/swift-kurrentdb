@@ -66,20 +66,22 @@ extension PersistentSubscriptions.AllStream {
             let task = Task {
                 do {
                     let client = ServiceClient(wrapping: connection)
-                    
-                    try await client.read(metadata: metadata, options: callOptions) {
-                        try await $0.write(contentsOf: writer.sender)
-                    } onResponse: {
-                        for try await message in $0.messages {
-                            let response = try handle(message: message)
-                            switch response {
-                            case let .confirmation(subscriptionId):
-                                subscription.send(state: .confirmation(subscriptionId: subscriptionId))
-                            case let .readEvent(event, retryCount):
-                                subscription.send(state: .response(eventResult: .init(event: event, retryCount: retryCount)))
+
+                    try await withRethrowingError(usage: "PersistentSubscription.AllStream.Read") {
+                        try await client.read(metadata: metadata, options: callOptions) {
+                            try await $0.write(contentsOf: writer.sender)
+                        } onResponse: {
+                            for try await message in $0.messages {
+                                let response = try handle(message: message)
+                                switch response {
+                                case let .confirmation(subscriptionId):
+                                    subscription.send(state: .confirmation(subscriptionId: subscriptionId))
+                                case let .readEvent(event, retryCount):
+                                    subscription.send(state: .response(eventResult: .init(event: event, retryCount: retryCount)))
+                                }
                             }
+                            subscription.send(state: .finish())
                         }
-                        subscription.send(state: .finish())
                     }
                 } catch {
                     subscription.send(state: .finish(throwing: error))
