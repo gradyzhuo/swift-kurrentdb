@@ -244,6 +244,15 @@ error: 'seconds' is unavailable: Time limit must be specified in minutes
 1. CI 開啟 debug logging。若 hang 時 `"Closing connection..."` 確未出現,即可將 hang 機制升級為已證實。目前做不到 —— CI 僅有 info 級 log。
 2. 以 `SWIFT_BACKTRACE=enable=yes,interactive=no` 重跑擷取完整 frame 0–26,可定位 SIGABRT。若套用修正後 hang 消失但 abort 仍在,則 abort 為獨立的第二個缺陷。
 
+## 9.1 更正:「Connection is closed」不是症狀
+
+本文件先前引用 CI log 中的
+`The error is thrown in the response of StreamStream: Connection is closed.`
+作為「RPC 在測試進行中被取消」的徵候,並以此支撐 SIGABRT 的推論。
+
+**該推論錯誤。** 本機對真實叢集執行時,一個 **8 個測試全數通過**的 run 裡同樣出現該訊息 **4 次**。
+它是常規的 teardown 雜訊,不具診斷價值。任何以它為前提的推論都應重新檢視。
+
 ## 10. 另案:hang 的真正成因(未解)
 
 原假設(§2.2「錯誤被吞」)已由 Task 1 證偽。目前狀態:
