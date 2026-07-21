@@ -12,6 +12,7 @@ jobs:
   build:
     name: Swift ${{ matrix.swift }} / KurrentDB ${{ matrix.kurrentdb.version }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         swift: ["6.0", "6.1", "6.2", "6.3"]
@@ -21,6 +22,7 @@ jobs:
           - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true",  supports_append_records: "false" }
           - { version: "26.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.1",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true",  supports_append_records: "true"  }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     env:
       KURRENTDB_SUPPORTS_MULTI_STREAMS: ${{ matrix.kurrentdb.supports_multi_streams }}
       KURRENTDB_SUPPORTS_APPEND_RECORDS: ${{ matrix.kurrentdb.supports_append_records }}
@@ -78,6 +80,7 @@ jobs:
   build-linux-distros:
     name: Build on ${{ matrix.image }}
     strategy:
+      fail-fast: false
       matrix:
         image:
           - "swift:6.2-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
@@ -85,6 +88,7 @@ jobs:
           - "swift:6.3-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
           - "swift:6.3-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Build and Offline Tests (MockClientTests)
