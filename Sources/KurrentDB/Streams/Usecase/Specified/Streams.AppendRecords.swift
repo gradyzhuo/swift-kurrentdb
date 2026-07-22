@@ -54,7 +54,7 @@ extension Streams {
         }
 
         package func requestMessage() throws -> UnderlyingRequest {
-            .with { request in
+            try .with { request in
                 request.records = streamEvents.flatMap { streamEvent in
                     streamEvent.records.map { record in
                         Kurrentdb_Protocol_V2_Streams_AppendRecord.with {
@@ -71,11 +71,11 @@ extension Streams {
                         }
                     }
                 }
-                request.checks = resolvedChecks.map { check in
-                    Kurrentdb_Protocol_V2_Streams_ConsistencyCheck.with {
-                        $0.streamState = .with {
+                request.checks = try resolvedChecks.map { check in
+                    try Kurrentdb_Protocol_V2_Streams_ConsistencyCheck.with {
+                        $0.streamState = try .with {
                             $0.stream = check.streamIdentifier.name
-                            $0.expectedState = check.expectedState.v2ExpectedState
+                            $0.expectedState = try check.expectedState.v2ExpectedState()
                         }
                     }
                 }

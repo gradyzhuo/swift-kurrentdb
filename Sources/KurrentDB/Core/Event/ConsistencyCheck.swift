@@ -56,12 +56,19 @@ extension StreamRevision {
     ///
     /// v2 `ExpectedRevisionConstants`: `SINGLE_EVENT = 0`, `NO_STREAM = -1`, `ANY = -2`, `EXISTS = -4`.
     /// A concrete revision `n` is encoded as `n`.
-    package var v2ExpectedState: Int64 {
+    ///
+    /// - Throws: ``KurrentError/initializationError(reason:)`` when the revision exceeds the range
+    ///   the wire format can carry (`Int64.max`), instead of trapping on conversion.
+    package func v2ExpectedState() throws(KurrentError) -> Int64 {
         switch self {
-        case .any: -2
-        case .noStream: -1
-        case .streamExists: -4
-        case let .at(revision): Int64(revision)
+        case .any: return -2
+        case .noStream: return -1
+        case .streamExists: return -4
+        case let .at(revision):
+            guard let encoded = Int64(exactly: revision) else {
+                throw .initializationError(reason: "Stream revision \(revision) exceeds the maximum revision (\(Int64.max)) a consistency check can express.")
+            }
+            return encoded
         }
     }
 }

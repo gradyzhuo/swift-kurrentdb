@@ -68,7 +68,7 @@ extension Streams where Target == MultiStreamsTarget {
     @discardableResult
     public func appendRecords(events: [StreamEvent], checks: [ConsistencyCheck] = []) async throws(KurrentError) -> AppendRecords.Response {
         let usecase = AppendRecords(streamEvents: events, checks: checks)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Appends a variadic list of records across one or more streams atomically with cross-stream
@@ -83,7 +83,7 @@ extension Streams where Target == MultiStreamsTarget {
     @discardableResult
     public func appendRecords(events: StreamEvent..., checks: [ConsistencyCheck] = []) async throws(KurrentError) -> AppendRecords.Response {
         let usecase = AppendRecords(streamEvents: events, checks: checks)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Pipelines multiple appends over a single `BatchAppend` call for high throughput (requires a
@@ -101,7 +101,7 @@ extension Streams where Target == MultiStreamsTarget {
     @discardableResult
     public func batchAppend(events: [StreamEvent]) async throws(KurrentError) -> BatchAppend.Response {
         let usecase = BatchAppend(streamEvents: events)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 
     /// Pipelines a variadic list of appends over a single `BatchAppend` call (non-atomic).
@@ -112,6 +112,6 @@ extension Streams where Target == MultiStreamsTarget {
     @discardableResult
     public func batchAppend(events: StreamEvent...) async throws(KurrentError) -> BatchAppend.Response {
         let usecase = BatchAppend(streamEvents: events)
-        return try await usecase.perform(selector: selector, callOptions: callOptions)
+        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
     }
 }
