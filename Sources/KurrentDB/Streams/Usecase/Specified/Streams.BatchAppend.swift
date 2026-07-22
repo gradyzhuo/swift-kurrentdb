@@ -79,19 +79,29 @@ extension Streams {
             }
         }
 
-        package func perform(selector: NodeSelector, callOptions: CallOptions) async throws(KurrentError) -> Response {
-            try await withRetry(
+        package func perform(selector: NodeSelector, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Response {
+            // An empty batch produces no responses, so the response loop would never reach its
+            // completion condition and the request stream would never half-close. Short-circuit.
+            guard !streamEvents.isEmpty else {
+                return Response(results: [])
+            }
+
+            return try await withRetry(
                 policy: selector.retryPolicy,
                 selectNode: { try await selector.select() },
                 invalidate: { await selector.invalidate() }
             ) { node in
-                try await perform(node: node, callOptions: callOptions)
+                try await perform(node: node, callOptions: callOptions, credentials: credentials)
             }
         }
 
-        package func perform(node: Node, callOptions: CallOptions) async throws(KurrentError) -> Response {
+        package func perform(node: Node, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Response {
             guard node.serverInfo.isSupported(method: methodDescriptor) else {
                 throw .unsupportedFeature(methodDescriptor)
+            }
+
+            guard !streamEvents.isEmpty else {
+                return Response(results: [])
             }
 
             let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
@@ -108,7 +118,7 @@ extension Streams {
             let eventByCorrelation = Dictionary(uniqueKeysWithValues: zip(correlationIds, streamEvents))
 
             return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-                let metadata = Metadata(from: node.settings)
+                let metadata = try Metadata(from: node.settings, overriding: credentials)
                 let messages = try requestMessages()
                 let serviceClient = ServiceClient(wrapping: client)
 

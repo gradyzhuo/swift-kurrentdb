@@ -48,7 +48,7 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
         
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             logger.debug("[\(Self.name)] Opening connection...")
-            let metadata = Metadata(from: node.settings, overriding: credentials)
+            let metadata = try Metadata(from: node.settings, overriding: credentials)
             return try await send(connection: client, metadata: metadata, callOptions: callOptions)
         }
     }

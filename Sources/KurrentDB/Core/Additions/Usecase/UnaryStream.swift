@@ -30,7 +30,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
         }
         
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let metadata = Metadata(from: node.settings, overriding: credentials)
+            let metadata = try Metadata(from: node.settings, overriding: credentials)
             let request = try request(metadata: metadata)
             return try await send(connection: client, request: request, callOptions: callOptions) { error in
                 if let error {

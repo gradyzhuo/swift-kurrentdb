@@ -45,7 +45,7 @@ extension Gossip {
                 transportSecurity: settings.transportSecurity
             )) { client in
                 logger.debug("[\(Self.self)] Opening connection...")
-                let metadata = Metadata(from: settings)
+                let metadata = try Metadata(from: settings)
                 let memberInfos = try await usecase.send(connection: client, metadata: metadata, callOptions: callOptions)
                 return memberInfos
                     .filter { !notAllowedStates.contains($0.state) }

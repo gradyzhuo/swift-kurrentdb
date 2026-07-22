@@ -25,6 +25,18 @@ struct BatchAppendTests: Sendable {
         try EventRecord(eventType: type, payload: .json(model))
     }
 
+    @Test("An empty batch returns immediately instead of hanging on an open request stream.", .timeLimit(.minutes(1)))
+    func testEmptyBatchReturnsImmediately() async throws {
+        // No responses arrive for an empty batch, so the response loop would never half-close the
+        // request stream. The call must short-circuit before opening the RPC — which also means it
+        // needs no reachable server.
+        let client = KurrentDBClient(settings: settings)
+        let response = try await client.multiStreams.batchAppend(events: [])
+
+        #expect(response.results.isEmpty)
+        #expect(!response.hasFailures)
+    }
+
     @Test("It pipelines appends to multiple different streams in one call.")
     func testMultiStreamBatchAppend() async throws {
         let client = KurrentDBClient(settings: settings)

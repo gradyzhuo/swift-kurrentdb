@@ -32,7 +32,7 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
         }
         
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let metadata = Metadata(from: node.settings, overriding: credentials)
+            let metadata = try Metadata(from: node.settings, overriding: credentials)
             return try await send(connection: client, metadata: metadata, callOptions: callOptions) { error in
                 if let error {
                     logger.error("The error is thrown in the response of StreamStream: \(error)")
