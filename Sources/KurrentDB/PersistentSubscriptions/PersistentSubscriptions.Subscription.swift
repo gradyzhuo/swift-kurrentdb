@@ -19,9 +19,13 @@ extension PersistentSubscriptions {
     /// Iterate ``events`` to receive delivered events, then call ``ack(readEvents:)``
     /// or ``nack(readEvents:action:reason:)`` for each one.
     ///
-    /// Breaking out of the `for try await` loop — or letting the subscription go out of
-    /// scope — automatically stops the underlying gRPC stream and closes the server-side
-    /// connection.
+    /// Breaking out of the `for try await` loop stops the underlying gRPC stream and
+    /// closes the server-side connection.
+    ///
+    /// - Important: Letting the subscription go out of scope does **not** currently close
+    ///   the connection. The read task retains this object, so it is never deallocated and
+    ///   teardown is never reached. Always iterate `events` and leave the loop, or the
+    ///   stream stays open. This is a known defect, not the intended design.
     ///
     /// ```swift
     /// let subscription = try await ps.subscribe()
@@ -115,6 +119,12 @@ extension PersistentSubscriptions {
 
             // teardown 必須從 handle 存在的那一刻起就可達,而非等到第一次存取
             // `.events`。對照 Streams.Subscribe.send 的作法。
+            //
+            // 注意:此 handler 由兩條路徑觸發 —— 顯式的 `source.continuation.finish(...)`
+            // (即 `send(state: .finish)`),以及儲存被釋放時。**目前只有前者會實際發生**:
+            // Read usecase 的 task 強持有本物件(該 task 又被 tracker 持有的 closure 捕獲),
+            // 形成 retain cycle,故本物件永不 dealloc。因此「丟棄 handle 即關閉連線」
+            // 尚未成立,待修。
             let writer = self.writer
             let tracker = self.tracker
             source.continuation.onTermination = { termination in
