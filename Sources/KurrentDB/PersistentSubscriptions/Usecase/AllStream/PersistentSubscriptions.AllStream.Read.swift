@@ -63,6 +63,9 @@ extension PersistentSubscriptions.AllStream {
             let subscription = PersistentSubscriptions.Subscription(writer: writer)
             let requestMessages = try requestMessages()
             writer.write(messages: requestMessages)
+            // 同 Specified 版本:RPC task 只能弱持有 subscription,否則會與 tracker 所存的
+            // finish action 形成保留循環,使 subscription 永不釋放。詳見 WeakSubscriptionRef。
+            let subscriptionRef = PersistentSubscriptions.WeakSubscriptionRef(subscription)
             let task = Task {
                 do {
                     let client = ServiceClient(wrapping: connection)
@@ -72,6 +75,11 @@ extension PersistentSubscriptions.AllStream {
                             try await $0.write(contentsOf: writer.sender)
                         } onResponse: {
                             for try await message in $0.messages {
+                                // subscription 已被釋放代表沒有人在監聽了,直接捨棄之後的訊息並結束讀取。
+                                // subscription 已釋放代表無人監聽,停止讀取。
+                                guard let subscription = subscriptionRef.value else {
+                                    return
+                                }
                                 let response = try handle(message: message)
                                 switch response {
                                 case let .confirmation(subscriptionId):
@@ -80,11 +88,12 @@ extension PersistentSubscriptions.AllStream {
                                     subscription.send(state: .response(eventResult: .init(event: event, retryCount: retryCount)))
                                 }
                             }
-                            subscription.send(state: .finish())
+                            subscriptionRef.value?.send(state: .finish())
                         }
                     }
                 } catch {
-                    subscription.send(state: .finish(throwing: error))
+                    // subscription 可能已釋放,此時通知已無意義,直接捨棄錯誤。
+                    subscriptionRef.value?.send(state: .finish(throwing: error))
                 }
             }
             

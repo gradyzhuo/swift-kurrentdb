@@ -22,10 +22,10 @@ extension PersistentSubscriptions {
     /// Breaking out of the `for try await` loop stops the underlying gRPC stream and
     /// closes the server-side connection.
     ///
-    /// - Important: Letting the subscription go out of scope does **not** currently close
-    ///   the connection. The read task retains this object, so it is never deallocated and
-    ///   teardown is never reached. Always iterate `events` and leave the loop, or the
-    ///   stream stays open. This is a known defect, not the intended design.
+    /// Letting the subscription go out of scope without ever iterating `events` also
+    /// closes the connection: the read task holds this object only weakly, so releasing
+    /// the last external reference deallocates it, which runs the teardown installed in
+    /// `init`.
     ///
     /// ```swift
     /// let subscription = try await ps.subscribe()
@@ -120,11 +120,11 @@ extension PersistentSubscriptions {
             // teardown 必須從 handle 存在的那一刻起就可達,而非等到第一次存取
             // `.events`。對照 Streams.Subscribe.send 的作法。
             //
-            // 注意:此 handler 由兩條路徑觸發 —— 顯式的 `source.continuation.finish(...)`
-            // (即 `send(state: .finish)`),以及儲存被釋放時。**目前只有前者會實際發生**:
-            // Read usecase 的 task 強持有本物件(該 task 又被 tracker 持有的 closure 捕獲),
-            // 形成 retain cycle,故本物件永不 dealloc。因此「丟棄 handle 即關閉連線」
-            // 尚未成立,待修。
+            // 此 handler 由兩條路徑觸發:顯式的 `source.continuation.finish(...)`
+            // (即 `send(state: .finish)`),以及本物件被釋放、source 的 continuation
+            // 隨之 deinit 時。後者之所以能成立,是因為 Read usecase 的 RPC task 只以
+            // `[weak subscription]` 弱捕獲本物件,不會與 tracker._finishAction 形成
+            // retain cycle,故「丟棄 handle 即關閉連線」在未曾存取 `.events` 的情況下也成立。
             let writer = self.writer
             let tracker = self.tracker
             source.continuation.onTermination = { termination in
@@ -159,6 +159,9 @@ extension PersistentSubscriptions {
             }
         }
 
+        /// 註冊一個 teardown 觀察者。可呼叫多次——每個註冊的 action 都會在 teardown 時依註冊
+        /// 順序執行,不會互相覆蓋。這讓測試得以在不干擾 `Read.send` 已裝好的內部清理邏輯
+        /// (呼叫 completion、取消 RPC task 與底層連線)的前提下,額外觀察 teardown 是否發生。
         internal func onFinish(perform action: @Sendable @escaping (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void) {
             tracker.update(action: action)
         }
@@ -291,8 +294,19 @@ extension PersistentSubscriptions.Subscription {
             _subscriptionId.withLock { $0 = subscriptionId }
         }
 
-        func update(action: @escaping @Sendable (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void) {
-            _finishAction.withLock { $0 = action }
+        /// 疊加而非覆蓋:若已有先前註冊的 action,新 action 會接在其後依序執行,
+        /// 讓多個觀察者(例如 `Read.send` 內部的清理邏輯與測試用的觀察者)可以並存。
+        func update(action newAction: @escaping @Sendable (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void) {
+            _finishAction.withLock { stored in
+                if let previous = stored {
+                    stored = { termination in
+                        previous(termination)
+                        newAction(termination)
+                    }
+                } else {
+                    stored = newAction
+                }
+            }
         }
 
         func update(revision: UInt64) {
