@@ -130,7 +130,7 @@ CASE 2: 存取 .events 後丟棄       →  deinit 永不觸發
 | 1 | 持有 `connectionTask`,於 teardown 時 `.cancel()` | `StreamStream.perform` | 連線洩漏(**非** hang,見 §2.2 修正) |
 | 2 | teardown 從 lazy getter 移入 `init` 的 `source.continuation.onTermination` | `Subscription.init` | teardown 不可達 |
 | 3 | bridge Task 加明確 capture list,解除對 `self` 的強持有 | `Subscription.events` | 物件永不釋放 |
-| ~~4~~ | ~~新增 `deinit` 兜底~~ **已證實不必要,不實作** | — | 見下方說明 |
+| ~~4~~ | ~~新增 `deinit` 兜底~~ **不實作(死碼,但理由與原判斷不同)** | — | 見 §11 |
 
 四項皆治洩漏與生命週期正確性。**本次修正不宣稱解決 hang** —— 其成因已另案調查(§10)。
 
@@ -274,3 +274,60 @@ error: 'seconds' is unavailable: Time limit must be specified in minutes
 **下一步應做的驗證**:針對「叢集健康但連線中途中斷 / 被重置」寫特性化測試,觀察 RPC 是否無限等待、以及 `waitForReady = false` 是否使其立即失敗。確認後再以獨立設計處理。
 
 **與自動重連的關係**:若 `waitForReady = false` 確為正解,它同時也是 §8 自動重連所需的斷線訊號 —— 兩者應一併設計。
+
+
+## 11. 已知未修:retain cycle 使「丟棄即關閉」無法成立
+
+最終全分支審查發現,並經獨立追查確認。
+
+### 環
+
+```
+subscription ──owns──▶ tracker._finishAction   (Read.swift:90 存入的 closure)
+                            │ 捕獲
+                            ▼
+                          task                 (Read.swift:64,無 capture list)
+                            │ 強持有
+                            ▼
+                       subscription            ← 閉合
+```
+
+`Read.swift:64` 的 `Task {}` 未使用 capture list 卻引用區域變數 `subscription`,故強持有;
+而 `Read.swift:90` 的 `onFinish` closure 捕獲 `task`,被存入 `tracker._finishAction`,
+tracker 又是 subscription 的成員。
+
+### 後果
+
+`Subscription` 在生產路徑上**永不 dealloc**,因此 `init` 佈署的 `onTermination`
+也永不因釋放而觸發。改動 2 所宣稱修復的「丟棄但未迭代」情境**實際上未修復**。
+
+teardown 在 `send(state: .finish(...))` 被顯式呼叫時仍正常運作(RPC 結束或拋錯),
+故其餘情境不受影響:
+
+| 情境 | 狀態 |
+|---|---|
+| RPC 正常結束 / 拋錯 | ✅ |
+| 迭代後 break 跳出 | ✅ |
+| **訂閱後從不迭代就丟棄** | ⛔ **仍洩漏** |
+
+### T1 為何是假訊號
+
+`SubscriptionLifecycleTests` 直接建構 `Subscription`,不經過 `Read.send`,
+因此沒有那個 task,物件圖與生產完全不同。實作階段據此判定 `deinit` 為死碼 ——
+**結論正確但理由錯誤**:並非「init 佈署已涵蓋」,而是物件根本不會被釋放。
+
+### 修法(下一步)
+
+`Read.send` 的 task 改為 `[weak subscription]` 捕獲。丟棄 handle 即可 dealloc
+→ 觸發 teardown → `writer.stop()` → sender 結束 → RPC 收斂。
+修後需新增一個**經由 `Read.send`** 的測試,而非直接建構 `Subscription`。
+
+## 12. 已知未修:錯誤重分類的打擊面過寬
+
+`isNodeFailure`(`KurrentError.swift:129`)包含 `.grpcError`,而該 case 是
+`RPCError.rethrow` 的 **default 分支**。因此 `.unimplemented`、`.failedPrecondition`、
+`.resourceExhausted`、`.aborted` 等業務層錯誤也會被重分類為 `.subscriptionDropped`,
+真實原因僅以字串保留。
+
+應收窄至 `.grpcConnectionError` / `.notLeaderException`,或為 `subscriptionDropped`
+增設 `cause:` 欄位以保留原始錯誤。
