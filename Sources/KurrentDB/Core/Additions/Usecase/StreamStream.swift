@@ -28,7 +28,17 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
         let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
         let connectionTask = Task {
             logger.debug("[\(Self.name)] Opening connection...")
-            try await client.runConnections()
+            do {
+                try await client.runConnections()
+            } catch is CancellationError {
+                // teardown 會取消本 task,這是正常收尾,不記錄為錯誤。
+                // (特性化測試顯示取消時 runConnections() 多半正常返回而不拋錯,
+                //  此分支僅為防禦不同 grpc 版本/transport 的行為差異。)
+            } catch {
+                // 其餘錯誤 —— 例如 transport 建立失敗 —— 過去被這個無主 task 靜默吞掉,
+                // 使連線故障無從診斷。至少記錄下來。
+                logger.error("[\(Self.name)] Connection run loop terminated with error: \(error)")
+            }
         }
 
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
