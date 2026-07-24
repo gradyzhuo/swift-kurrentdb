@@ -10,7 +10,10 @@ import Foundation
 @testable import KurrentDB
 import Testing
 
-@Suite("Persistent Subscription Advanced Tests", .serialized)
+// `.timeLimit` 作為終極 backstop:任何測試(尤其 testReplayParked 等 redelivery 的
+// `subscription2.events` 迴圈)若因非預期原因無限等待,會在此上限失敗,而非把 CI 卡到被砍。
+// 這是維運上限,非時序斷言;健康單一測試遠低於此。
+@Suite("Persistent Subscription Advanced Tests", .serialized, .timeLimit(.minutes(2)))
 struct PersistentSubscriptionAdvancedTests: Sendable {
     let settings: ClientSettings
     let groupName: String
@@ -190,13 +193,15 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
         // nack(park) 是射後不理:enqueue 後即返回,伺服器尚未 commit park。
         // 必須等 parkedMessageCount 反映 park 完成再觸發 replay,否則 replay 可能
         // 在 park commit 之前執行、無事可 replay,使下方第二個訂閱永遠等不到 redelivery。
-        // 輪詢真實前提條件(而非固定 sleep);上限僅作為快速失敗的兜底,非時序假設。
+        // 輪詢真實前提條件(而非固定 sleep);上限作為快速失敗的兜底,非時序假設。
+        // 必須用 `#require`(拋錯中止)而非 `#expect`(只記錄、會繼續執行)——
+        // 否則 park 未觀察到時仍會往下 replay 並卡在下方 subscription2.events 無限等待。
         var parkedReady = false
         for _ in 0 ..< 50 {
             if try await ps.getInfo().parkedMessageCount >= 1 { parkedReady = true; break }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
-        #expect(parkedReady, "park 未在預期時間內 commit;replay 無事可做")
+        try #require(parkedReady, "park 未在預期時間內 commit;replay 無事可做")
 
         // Trigger replay — parked messages are re-queued for delivery
         try await ps.replayParked()
