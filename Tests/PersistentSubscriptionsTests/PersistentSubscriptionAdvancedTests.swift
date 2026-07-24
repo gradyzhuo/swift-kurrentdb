@@ -186,7 +186,18 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
             try await subscription.nack(readEvents: result.event, action: .park, reason: "park-for-replay-test")
             break
         }
-        
+
+        // nack(park) 是射後不理:enqueue 後即返回,伺服器尚未 commit park。
+        // 必須等 parkedMessageCount 反映 park 完成再觸發 replay,否則 replay 可能
+        // 在 park commit 之前執行、無事可 replay,使下方第二個訂閱永遠等不到 redelivery。
+        // 輪詢真實前提條件(而非固定 sleep);上限僅作為快速失敗的兜底,非時序假設。
+        var parkedReady = false
+        for _ in 0 ..< 50 {
+            if try await ps.getInfo().parkedMessageCount >= 1 { parkedReady = true; break }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        #expect(parkedReady, "park 未在預期時間內 commit;replay 無事可做")
+
         // Trigger replay — parked messages are re-queued for delivery
         try await ps.replayParked()
 
