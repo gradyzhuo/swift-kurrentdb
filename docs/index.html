@@ -44,10 +44,55 @@
   <p>Add to your <code>Package.swift</code>:</p>
   <p class="zh-p">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.3")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.1.0")
 ]</code></pre>
   <p class="note">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note zh-p">🎉 <strong>2.0 已上線</strong>　目前推薦使用 target-based API。仍在 1.x？請改用 <code>KurrentDB_V1</code>，原本程式碼可繼續運作，遷移節奏自己決定。</p>
+</section>
+
+<section id="whats-new-21" class="container whats-new">
+  <div class="whats-new-tag">Latest · v2.1.0</div>
+  <h2>What's new in 2.1 <span class="zh">2.1 帶來了什麼</span></h2>
+  <p class="lead">
+    2.1 builds on the 2.0 target-based API with new write and read capabilities, per-call
+    authentication, and a hardened persistent-subscription connection lifecycle.
+  </p>
+  <p class="lead zh-p">
+    2.1 在 2.0 的 target-based API 上，新增寫入與讀取能力、逐請求認證，並強化了持久訂閱的連線生命週期。
+  </p>
+
+  <div class="highlights">
+    <div class="highlight">
+      <h3>🧬 AppendRecords (Dynamic Consistency Boundary)</h3>
+      <p>Atomically append across multiple streams with cross-stream consistency checks. Requires server support (KurrentDB 25.1+).</p>
+      <p class="zh-p">跨多個 stream 的原子寫入，帶前置一致性檢查（Dynamic Consistency Boundary）。需伺服器支援（KurrentDB 25.1+）。</p>
+    </div>
+    <div class="highlight">
+      <h3>🚀 BatchAppend</h3>
+      <p>High-throughput pipelined multi-stream append over v1 <code>BatchAppend</code> — non-atomic, per-item results, for bulk writes.</p>
+      <p class="zh-p">以 v1 <code>BatchAppend</code> 一次 pipeline 多筆的高吞吐寫入 — 非原子、逐筆回報,適合大量寫入。</p>
+    </div>
+    <div class="highlight">
+      <h3>🔍 Server-side <code>$all</code> filtering</h3>
+      <p>Filter <code>$all</code> reads on the server by stream name or event type, with prefix or regex matching.</p>
+      <p class="zh-p">在伺服器端過濾 <code>$all</code> 讀取,可依 stream 名稱或 event type,支援 prefix 與 regex。</p>
+    </div>
+    <div class="highlight">
+      <h3>🔐 Per-call credentials &amp; Bearer auth</h3>
+      <p>Override authentication per operation via <code>.authenticated(_:)</code>, and authenticate with Bearer tokens — for multi-tenant and per-request authorization.</p>
+      <p class="zh-p">以 <code>.authenticated(_:)</code> 逐操作覆寫認證身分,並支援 Bearer token — 適用多租戶與逐請求授權。</p>
+    </div>
+    <div class="highlight">
+      <h3>🏷️ StreamFilter</h3>
+      <p><code>SubscriptionFilter</code> is renamed to <code>StreamFilter</code> (the old name is deprecated), now shared across subscriptions and filtered reads.</p>
+      <p class="zh-p"><code>SubscriptionFilter</code> 更名為 <code>StreamFilter</code>（舊名標記 deprecated），並在訂閱與過濾讀取間共用。</p>
+    </div>
+    <div class="highlight">
+      <h3>🔧 Persistent subscription lifecycle</h3>
+      <p>Connection tasks are now owned and torn down deterministically, connection failures are observable, and node-level drops surface as <code>subscriptionDropped</code> with resume position.</p>
+      <p class="zh-p">連線 task 現在有明確擁有者與確定性收尾,連線故障可被觀察,節點層級中斷會以 <code>subscriptionDropped</code> 回報並附續傳位置。</p>
+    </div>
+  </div>
 </section>
 
 <section id="whats-new" class="container whats-new">
