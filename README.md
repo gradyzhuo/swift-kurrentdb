@@ -146,6 +146,11 @@ let allResponses = try await client.allStreams.read {
     $0.limit = 100
 }
 
+// Read $all with server-side filtering (new in 2.1)
+let filtered = try await client.allStreams.read {
+    $0.filter = .onEventType(prefixes: "OrderPlaced")
+}
+
 // Subscribe (catch-up)
 let subscription = try await client.streams(specified: "orders").subscribe()
 for try await event in subscription.events { ... }
@@ -160,6 +165,40 @@ try await client.streams(specified: "orders").tombstone()
 // Stream metadata
 try await client.streams(specified: "orders").setMetadata(metadata: metadata)
 let metadata = try await client.streams(specified: "orders").getMetadata()
+```
+
+### Multi-stream writes (new in 2.1)
+
+```swift
+// AppendRecords — atomic multi-stream append with Dynamic Consistency Boundary.
+// Requires server support (KurrentDB 25.1+).
+try await client.multiStreams.appendRecords(
+    events: [
+        StreamEvent(stream: "order-1", records: [record]),
+        StreamEvent(stream: "inventory-1", records: [record]),
+    ],
+    checks: [.streamState("order-1", .streamExists)]
+)
+
+// BatchAppend — high-throughput pipelined append; non-atomic, per-item results.
+let batch = try await client.multiStreams.batchAppend(events: [
+    StreamEvent(stream: "orders", records: [record]),
+    StreamEvent(stream: "audit", records: [record]),
+])
+```
+
+### Per-call credentials (new in 2.1)
+
+```swift
+// Override authentication for a single operation (multi-tenant / per-request auth).
+try await client.streams(specified: "orders")
+    .authenticated(.credentials(username: "svc", password: "secret"))
+    .append(events: [event])
+
+// Bearer token authentication is also supported.
+try await client.streams(specified: "orders")
+    .authenticated(.bearer(token: "<token>"))
+    .append(events: [event])
 ```
 
 ### Projections

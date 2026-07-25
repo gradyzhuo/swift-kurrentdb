@@ -35,8 +35,8 @@ Then, interact with a specific stream by creating a `Streams` client for it.
 let clientSettings: ClientSettings = "kurrent://localhost:2113?tls=false" // Initialize with actual settings
 let client = KurrentDBClient(settings: clientSettings, numberOfThreads: 2)
 
-// Perform an action like appending events to the stream
-try await client.appendStream("streamName", events: eventData)
+// Perform an action like appending events to the stream through a typed target
+try await client.streams(specified: "streamName").append(events: eventData)
 
 ```
 
@@ -59,9 +59,12 @@ let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
 let groupName = "myGroupTest"
 
 let streamName = UUID().uuidString
-try await client.createPersistentSubscription(stream: streamName, groupName: groupName)
 
-let subscription = try await client.subscribePersistentSubscription(stream: streamName, groupName: groupName)
+// Create and subscribe through the typed persistent-subscription target
+let persistentSubscriptions = client.persistentSubscriptions(stream: streamName, group: groupName)
+try await persistentSubscriptions.create()
+
+let subscription = try await persistentSubscriptions.subscribe()
 
 // Loop all results by subscription.events
 for try await result in subscription.events {
@@ -75,5 +78,61 @@ for try await result in subscription.events {
 }
 
 ```
+
+## New in 2.1
+
+### AppendRecords — Dynamic Consistency Boundary
+
+Atomically append across multiple streams with cross-stream consistency checks.
+Requires server support (KurrentDB 25.1+).
+
+```swift
+try await client.multiStreams.appendRecords(
+    events: [
+        StreamEvent(stream: "order-1", records: [record]),
+        StreamEvent(stream: "inventory-1", records: [record]),
+    ],
+    checks: [.streamState("order-1", .streamExists)]
+)
+```
+
+### BatchAppend
+
+High-throughput pipelined multi-stream append (v1 `BatchAppend`). Non-atomic —
+each item reports its own result.
+
+```swift
+let response = try await client.multiStreams.batchAppend(events: [
+    StreamEvent(stream: "orders", records: [record]),
+    StreamEvent(stream: "audit", records: [record]),
+])
+```
+
+### Server-side `$all` filtering
+
+Filter `$all` reads on the server by stream name or event type (prefix or regex).
+
+```swift
+let events = try await client.allStreams.read {
+    $0.filter = .onEventType(prefixes: "OrderPlaced")
+}
+```
+
+### Per-call credentials & Bearer authentication
+
+Override authentication for a single operation — for multi-tenant or per-request
+authorization.
+
+```swift
+try await client.streams(specified: "orders")
+    .authenticated(.credentials(username: "svc", password: "secret"))
+    .append(events: [event])
+```
+
+### StreamFilter
+
+``StreamFilter`` (renamed from `SubscriptionFilter`, which is now deprecated) is the
+shared filter type for both persistent subscriptions and filtered `$all` reads. Build
+it with ``StreamFilter/onStreamName(prefixes:)`` or ``StreamFilter/onEventType(prefixes:)``.
 
 
