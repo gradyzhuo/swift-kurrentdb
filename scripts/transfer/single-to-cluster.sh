@@ -113,23 +113,23 @@ docker run --rm \
   -v "$TARGET:/to" \
   alpine sh -c 'cp -a /from/. /to/'
 
-# The kurrentdb image runs as uid/gid 1001:1001, so the copied data must be
-# owned by that user or the node will fail to start with a permission error.
-echo "Fixing ownership to 1001:1001..."
-docker run --rm -v "$TARGET:/to" alpine chown -R 1001:1001 /to
-
 # Per Kurrent's "Simple Full Restore" procedure: duplicate chaser.chk as
 # truncate.chk so the node truncates itself to the chaser position on start,
 # instead of trusting a truncate.chk left over from the source instance.
 docker run --rm -v "$TARGET:/to" alpine sh -c '
   if [ -f /to/chaser.chk ]; then
     cp -a /to/chaser.chk /to/truncate.chk
-    chown 1001:1001 /to/truncate.chk
     echo "Recreated truncate.chk from chaser.chk"
   else
     echo "Warning: /to/chaser.chk not found -- skipping truncate.chk step. Is '$TARGET' really KurrentDB data?" >&2
   fi
 '
+
+# The kurrentdb image runs as uid/gid 1001:1001, so the copied data (including
+# the truncate.chk just created) must be owned by that user or the node will
+# fail to start with a permission error.
+echo "Fixing ownership to 1001:1001..."
+docker run --rm -v "$TARGET:/to" alpine chown -R 1001:1001 /to
 
 echo "Done. Target volume size:"
 docker run --rm -v "$TARGET:/to" alpine du -sh /to
