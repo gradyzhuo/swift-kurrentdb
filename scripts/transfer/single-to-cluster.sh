@@ -8,6 +8,12 @@
 # not a supported migration path and can cause epoch/truncation conflicts
 # during cluster election.
 #
+# After copying, this script also:
+#   - chowns the target volume to 1001:1001 (the uid/gid the kurrentdb image
+#     runs as; otherwise the node fails to start with a permission error)
+#   - recreates truncate.chk from chaser.chk, per Kurrent's documented
+#     "Simple Full Restore" procedure
+#
 # Usage:
 #   single-to-cluster.sh --source <docker-volume|host-path> [--target <docker-volume>] [--force]
 #
@@ -107,6 +113,24 @@ docker run --rm \
   -v "$TARGET:/to" \
   alpine sh -c 'cp -a /from/. /to/'
 
+# The kurrentdb image runs as uid/gid 1001:1001, so the copied data must be
+# owned by that user or the node will fail to start with a permission error.
+echo "Fixing ownership to 1001:1001..."
+docker run --rm -v "$TARGET:/to" alpine chown -R 1001:1001 /to
+
+# Per Kurrent's "Simple Full Restore" procedure: duplicate chaser.chk as
+# truncate.chk so the node truncates itself to the chaser position on start,
+# instead of trusting a truncate.chk left over from the source instance.
+docker run --rm -v "$TARGET:/to" alpine sh -c '
+  if [ -f /to/chaser.chk ]; then
+    cp -a /to/chaser.chk /to/truncate.chk
+    chown 1001:1001 /to/truncate.chk
+    echo "Recreated truncate.chk from chaser.chk"
+  else
+    echo "Warning: /to/chaser.chk not found -- skipping truncate.chk step. Is '$TARGET' really KurrentDB data?" >&2
+  fi
+'
+
 echo "Done. Target volume size:"
 docker run --rm -v "$TARGET:/to" alpine du -sh /to
 
@@ -114,7 +138,11 @@ cat <<EOF
 
 Next steps:
   1. cd server && docker compose up -d node1.kurrentdb
-  2. Wait until node1 reports healthy (docker compose ps)
-  3. docker compose up -d node2.kurrentdb node3.kurrentdb
+  2. node1 will detect truncate.chk, perform a one-time truncation, then exit
+     on purpose (this is expected -- see "Exit reason: Shutting down after
+     successful truncation." in its logs). Restart it once more:
+       docker compose up -d node1.kurrentdb
+  3. Wait until node1 reports healthy (docker compose ps)
+  4. docker compose up -d node2.kurrentdb node3.kurrentdb
      -> they will join the cluster and replicate data from node1 automatically.
 EOF
