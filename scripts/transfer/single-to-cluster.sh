@@ -9,10 +9,11 @@
 # during cluster election.
 #
 # Usage:
-#   single-to-cluster.sh --source <docker-volume> [--target <docker-volume>] [--force]
+#   single-to-cluster.sh --source <docker-volume|host-path> [--target <docker-volume>] [--force]
 #
-# Example:
+# Examples:
 #   single-to-cluster.sh --source kurrentdb-single-data --target node1-data
+#   single-to-cluster.sh --source /mnt/old-kurrentdb-data --target node1-data
 
 set -euo pipefail
 
@@ -22,12 +23,13 @@ FORCE=0
 
 usage() {
   cat <<'EOF'
-Usage: single-to-cluster.sh --source <docker-volume> [--target <docker-volume>] [--force]
+Usage: single-to-cluster.sh --source <docker-volume|host-path> [--target <docker-volume>] [--force]
 
-  --source <volume>  Docker volume holding the single-node KurrentDB data (required)
-  --target <volume>  Docker volume for the cluster's node1 (default: node1-data)
-  --force            Skip the "volume already has data" / "still in use" safety checks
-  -h, --help         Show this help
+  --source <volume|path>  Docker volume name OR host directory path holding the
+                          single-node KurrentDB data (required)
+  --target <volume>       Docker volume for the cluster's node1 (default: node1-data)
+  --force                 Skip the "volume already has data" / "still in use" safety checks
+  -h, --help              Show this help
 EOF
 }
 
@@ -42,7 +44,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$SOURCE" ]]; then
-  echo "Error: --source <docker-volume> is required" >&2
+  echo "Error: --source <docker-volume|host-path> is required" >&2
   usage
   exit 1
 fi
@@ -52,8 +54,14 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! docker volume inspect "$SOURCE" >/dev/null 2>&1; then
-  echo "Error: source volume '$SOURCE' does not exist" >&2
+# --source may be a docker volume name or a host directory path; figure out which.
+if docker volume inspect "$SOURCE" >/dev/null 2>&1; then
+  SOURCE_KIND="volume"
+elif [[ -d "$SOURCE" ]]; then
+  SOURCE_KIND="path"
+  SOURCE="$(cd "$SOURCE" && pwd)"
+else
+  echo "Error: source '$SOURCE' is neither an existing docker volume nor a directory path" >&2
   exit 1
 fi
 
@@ -67,11 +75,15 @@ in_use_by() {
 }
 
 if [[ $FORCE -eq 0 ]]; then
-  source_users="$(in_use_by "$SOURCE")"
-  if [[ -n "$source_users" ]]; then
-    echo "Error: source volume '$SOURCE' is mounted by a running container: $source_users" >&2
-    echo "Stop it first so the data is flushed and not being written during the copy, or pass --force." >&2
-    exit 1
+  if [[ "$SOURCE_KIND" == "volume" ]]; then
+    source_users="$(in_use_by "$SOURCE")"
+    if [[ -n "$source_users" ]]; then
+      echo "Error: source volume '$SOURCE' is mounted by a running container: $source_users" >&2
+      echo "Stop it first so the data is flushed and not being written during the copy, or pass --force." >&2
+      exit 1
+    fi
+  else
+    echo "Warning: source is a host path -- make sure no process (e.g. a running KurrentDB container bind-mounting it) is still writing to '$SOURCE' before continuing." >&2
   fi
 
   target_users="$(in_use_by "$TARGET")"
