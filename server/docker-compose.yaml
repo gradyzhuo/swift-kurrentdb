@@ -49,6 +49,7 @@ services:
       - 2111:2113
     volumes:
       - certs:/certs
+      - node1-data:/var/lib/kurrentdb
     depends_on:
       - setup
     restart: always
@@ -79,6 +80,9 @@ services:
       retries: 24
     ports:
       - 2112:2113
+    volumes:
+      - certs:/certs
+      - node2-data:/var/lib/kurrentdb
     networks:
       clusternetwork:
         ipv4_address: 172.30.240.12
@@ -104,6 +108,9 @@ services:
       retries: 24
     ports:
       - 2113:2113
+    volumes:
+      - certs:/certs
+      - node3-data:/var/lib/kurrentdb
     networks:
       clusternetwork:
         ipv4_address: 172.30.240.13
@@ -119,3 +126,6 @@ networks:
 
 volumes:
   certs:
+  node1-data:
+  node2-data:
+  node3-data:
