@@ -217,10 +217,6 @@ extension Streams.Subscription where Target == AllStreamsTarget {
             throw KurrentError.subscriptionTerminated(subscriptionId: nil)
         }
 
-        guard case .caughtUp = try await iterator.next()?.content else {
-            throw KurrentError.serverError("the `Caughtup` event from the Server was not received when subscribe.")
-        }
-
         let (events, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
         continuation.onTermination = { termination in
             if case let .finished(error) = termination {
@@ -233,8 +229,15 @@ extension Streams.Subscription where Target == AllStreamsTarget {
         let innerTask = Task {
             do {
                 while let message = try await iterator.next() {
-                    if case let .event(message) = message.content {
-                        try continuation.yield(.init(message: message))
+                    switch message.content {
+                    case let .event(value):
+                        try continuation.yield(.init(message: value))
+                    case .caughtUp:
+                        logger.debug("[Streams.SubscribeAll] Subscription caught up with the $all stream.")
+                    case let content?:
+                        logger.debug("[Streams.SubscribeAll] Received non-event subscription message: \(content)")
+                    case nil:
+                        break
                     }
                 }
                 continuation.finish()
