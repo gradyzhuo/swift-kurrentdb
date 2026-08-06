@@ -84,6 +84,10 @@ let settings = ClientSettings.remote(
 // Connection string
 let settings: ClientSettings = "esdb://admin:changeit@node1:2113,node2:2113?tls=true"
 
+// From an environment variable (defaults to SWIFT_KURRENT_DB_URL)
+let settings = try ClientSettings.fromEnv()
+let settings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
+
 let client = KurrentDBClient(settings: settings)
 ```
 
