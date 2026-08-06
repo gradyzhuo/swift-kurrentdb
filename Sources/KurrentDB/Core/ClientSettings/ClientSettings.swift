@@ -19,6 +19,9 @@ import RegexBuilder
 /// Default TCP port number for KurrentDB connections.
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 
+/// Default environment variable name consulted by ``ClientSettings/fromEnv(key:)``.
+public let DEFAULT_ENV_KEY_NAME: String = "SWIFT_KURRENT_DB_URL"
+
 /// Connection and transport configuration for a KurrentDB client.
 
 public struct ClientSettings: Sendable {
@@ -317,6 +320,26 @@ extension ClientSettings {
             discoveryInterval: discoveryInterval,
             maxDiscoveryAttempts: maxDiscoveryAttempts
         )
+    }
+
+    /// Builds `ClientSettings` by parsing a KurrentDB connection string read from an environment variable.
+    ///
+    /// ```swift
+    /// // Reads from SWIFT_KURRENT_DB_URL by default.
+    /// let settings = try ClientSettings.fromEnv()
+    ///
+    /// // Or read from a custom environment variable.
+    /// let settings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
+    /// ```
+    ///
+    /// - Parameter key: Name of the environment variable holding the connection string. Defaults to `DEFAULT_ENV_KEY_NAME` (`"SWIFT_KURRENT_DB_URL"`).
+    /// - Returns: Fully populated `ClientSettings`.
+    /// - Throws: `KurrentError.internalParsingError` if the environment variable is unset or the connection string is malformed.
+    public static func fromEnv(key: String = DEFAULT_ENV_KEY_NAME) throws(KurrentError) -> Self {
+        guard let connectionString = ProcessInfo.processInfo.environment[key] else {
+            throw KurrentError.internalParsingError(reason: "Environment variable \(key) is not set")
+        }
+        return try parse(connectionString: connectionString)
     }
 }
 
