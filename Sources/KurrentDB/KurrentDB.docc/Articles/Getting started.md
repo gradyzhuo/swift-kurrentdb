@@ -83,6 +83,20 @@ Or you can use a string literal directly:
 let settings: ClientSettings = "kurrent://admin:changeit@localhost:2113"
 ```
 
+### Environment variable
+
+Use `fromEnv(key:)` to build client settings from a connection string stored in an environment variable. This keeps connection details out of source code, which is useful for containerized deployments and CI.
+
+```swift
+// Reads the connection string from SWIFT_KURRENT_DB_URL (the default key)
+let settings = try ClientSettings.fromEnv()
+
+// Or read from a custom environment variable
+let settings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
+```
+
+`fromEnv(key:)` defaults to ``DEFAULT_ENV_KEY_NAME`` (`"SWIFT_KURRENT_DB_URL"`) and parses the variable's value the same way as `parse(connectionString:)`. It throws `KurrentError.internalParsingError` if the variable is unset or the connection string is malformed.
+
 ### Localhost (development)
 
 Use the `localhost()` factory method for local development. You can specify one or more ports for multi-node local clusters:
