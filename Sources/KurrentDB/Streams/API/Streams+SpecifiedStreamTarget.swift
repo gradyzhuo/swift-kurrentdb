@@ -66,6 +66,11 @@ extension Streams where Target: SpecifiedStreamTarget {
                     throw KurrentError.initializationError(reason: "The metadata event does not exist.")
                 }
             }
+        } catch let error as KurrentError {
+            if case .resourceNotFound = error {
+                return nil
+            }
+            throw error
         } catch {
             throw .internalClientError(reason: "\(#function) failed, cause: \(error)")
         }
