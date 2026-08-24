@@ -102,4 +102,43 @@ struct KurrentDBPoolLiveTests {
         await KurrentDBPool.shared.remove(deadID)
         for lease in heldLive { await lease.giveBack() }
     }
+
+    @Test("候選人輪替不會讓健康成員被排在前面的壞成員永久卡住（迴歸測試）")
+    func testBorrowRotatesPastPersistentlyBadCandidates() async {
+        // 借光目前所有本來就存在的成員，讓接下來加的候選人變成唯一可見的。
+        var heldLive: [KurrentDBPool.Lease] = []
+        while let lease = await KurrentDBPool.shared.tryAcquire() {
+            heldLive.append(lease)
+        }
+
+        guard let goodSettings = heldLive.first?.settings else {
+            Issue.record("需要至少一個活的成員來源設定")
+            return
+        }
+
+        // 順序很重要：3 個連不到的先插進去，健康的最後才加——修好之前，
+        // firstIdleID() 固定依插入順序掃描，healthy 成員永遠排在最後面，
+        // 而 giveBack() 把壞成員還回去時也不會改變它們的位置，所以每次
+        // borrow() 都會重測同樣 3 個壞成員，好成員永遠輪不到。
+        var deadIDs: [KurrentDBPool.MemberID] = []
+        for _ in 0..<3 {
+            deadIDs.append(await KurrentDBPool.shared.add(.remote(.init(host: "127.0.0.1", port: 1), secure: false)))
+        }
+        let goodID = await KurrentDBPool.shared.add(goodSettings)
+
+        // 4 個候選人、maxAttempts=3，最多兩次呼叫（6 次嘗試）保證輪過一整輪。
+        var succeeded = false
+        for _ in 0..<8 {
+            if let borrowed = await KurrentDBPool.borrow(maxAttempts: 3) {
+                succeeded = true
+                await borrowed.giveBack()
+                break
+            }
+        }
+        #expect(succeeded)
+
+        for id in deadIDs { await KurrentDBPool.shared.remove(id) }
+        await KurrentDBPool.shared.remove(goodID)
+        for lease in heldLive { await lease.giveBack() }
+    }
 }
