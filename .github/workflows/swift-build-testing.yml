@@ -63,7 +63,7 @@ jobs:
       - name: Build
         run: swift build --build-tests --enable-code-coverage
       - name: Swift Testing
-        run: swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests"
+        run: swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests|KurrentDBPoolTests"
       - uses: sersoft-gmbh/swift-coverage-action@v4
         id: coverage-files
       - name: Upload coverage reports to Codecov
