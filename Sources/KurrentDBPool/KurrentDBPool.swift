@@ -45,6 +45,12 @@ package actor KurrentDBPool {
     private var order: [MemberID] = []
     private var waiters: [Waiter] = []
 
+    /// firstIdleID() 掃描 order 的起點。每次成功配出一個成員就往後移一格——
+    /// 沒有這個的話 order 是固定順序,giveBack() 把一個失敗的候選人還回去時
+    /// 也不會改變它在 order 裡的位置,於是它永遠排在較晚插入的健康成員前面,
+    /// 每次 borrow() 都會重測同一批壞成員,後面的健康成員永遠輪不到。
+    private var rotationCursor = 0
+
     package init(settings: [ClientSettings] = KurrentDBPool.settingsFromEnv()) {
         for settings in settings {
             let id = MemberID()
@@ -75,14 +81,18 @@ package actor KurrentDBPool {
 
     /// 池子非空但全忙碌時會排隊掛起，直到有人 release()/add()。
     ///
-    /// 支援取消：Task 被取消時會嘗試從佇列移除並回傳 nil。取消跟「剛好被
-    /// dispatchNextWaiterIfPossible() 派送」兩件事可能同時發生——如果派送
-    /// 先贏，continuation 已經帶著一個真的 lease resume 了，cancelWaiter()
-    /// 這時候在佇列裡找不到人、直接算了。單靠佇列移除擋不住這個空隙，
-    /// 所以 resume 之後另外檢查一次 Task.isCancelled：如果呼叫端已經不在乎
-    /// 這次呼叫、卻還是分到一個真的 lease，就地把它還回去，不要留給呼叫端
-    /// 自己判斷（他們也不會去判斷——都取消了）。
+    /// 支援取消，處理兩種情況：
+    /// 1. 呼叫 acquire() 之前 Task 就已經被取消——連閒置成員的快速路徑都不能
+    ///    直接配置，開頭就先擋掉，不然會白白分配一個沒人要的 lease。
+    /// 2. 排進佇列之後才被取消，卻剛好跟 dispatchNextWaiterIfPossible() 的
+    ///    派送同時發生——如果派送先贏，continuation 已經帶著一個真的 lease
+    ///    resume 了，cancelWaiter() 這時候在佇列裡找不到人、直接算了。單靠
+    ///    佇列移除擋不住這個空隙，所以 resume 之後另外檢查一次
+    ///    Task.isCancelled：如果呼叫端已經不在乎這次呼叫、卻還是分到一個
+    ///    真的 lease，就地把它還回去，不要留給呼叫端自己判斷（他們也不會去
+    ///    判斷——都取消了）。
     package func acquire() async -> Lease? {
+        guard !Task.isCancelled else { return nil }
         guard !members.isEmpty else { return nil }
         if let id = firstIdleID() { return lease(marking: id) }
 
@@ -154,6 +164,15 @@ package actor KurrentDBPool {
     }
 
     private func firstIdleID() -> MemberID? {
-        order.first { members[$0].map { !$0.isBusy && !$0.pendingRemoval } ?? false }
+        guard !order.isEmpty else { return nil }
+        let count = order.count
+        for offset in 0..<count {
+            let index = (rotationCursor + offset) % count
+            let id = order[index]
+            guard let member = members[id], !member.isBusy, !member.pendingRemoval else { continue }
+            rotationCursor = (index + 1) % count
+            return id
+        }
+        return nil
     }
 }
