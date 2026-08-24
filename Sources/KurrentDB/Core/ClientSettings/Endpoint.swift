@@ -31,11 +31,6 @@ public struct Endpoint: Sendable {
         self.host = host
         self.port = port ?? DEFAULT_PORT_NUMBER
     }
-
-    /// Returns `true` when the host resolves to the local machine.
-    public var isLocalhost: Bool {
-        ["127.0.0.1", "localhost"].contains(host)
-    }
 }
 
 extension Endpoint {
