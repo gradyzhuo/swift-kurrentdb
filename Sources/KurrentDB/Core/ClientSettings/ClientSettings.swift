@@ -36,6 +36,8 @@ public struct ClientSettings: Sendable {
     public private(set) var nodePreference: NodePreference
     /// Maximum time allowed for a gossip request to complete.
     public private(set) var gossipTimeout: Duration
+    /// Which endpoint to connect through once gossip selects a node.
+    public var endpointResolutionPreference: EndpointResolutionPreference
 
     /// Whether TLS is enabled for the connection.
     public private(set) var secure: Bool
@@ -67,6 +69,8 @@ public struct ClientSettings: Sendable {
     ///   - certificates: TLS certificate sources for server verification. Defaults to empty.
     ///   - nodePreference: Preferred node role in a cluster. Defaults to `.leader`.
     ///   - gossipTimeout: Timeout for gossip requests. Defaults to 3 seconds.
+    ///   - endpointResolutionPreference: Which endpoint to connect through once gossip selects
+    ///     a node. Defaults to `.gossipReported`.
     ///   - secure: Enables TLS. Defaults to `true`.
     ///   - tlsVerifyCert: Enables certificate verification when TLS is active. Defaults to `true`.
     ///   - defaultDeadline: Operation deadline in milliseconds. Defaults to `.max`.
@@ -82,6 +86,7 @@ public struct ClientSettings: Sendable {
         certificates: [TLSConfig.CertificateSource] = [],
         nodePreference: NodePreference = .leader,
         gossipTimeout: Duration = .seconds(3),
+        endpointResolutionPreference: EndpointResolutionPreference = .gossipReported,
         secure: Bool = true,
         tlsVerifyCert: Bool = true,
         defaultDeadline: Int = .max,
@@ -102,6 +107,7 @@ public struct ClientSettings: Sendable {
         self.certificates = certificates
         self.nodePreference = nodePreference
         self.gossipTimeout = gossipTimeout
+        self.endpointResolutionPreference = endpointResolutionPreference
         self.secure = secure
         self.tlsVerifyCert = tlsVerifyCert
         self.defaultDeadline = defaultDeadline
@@ -531,6 +537,18 @@ extension ClientSettings: Buildable {
     public func nodeCacheTTL(_ ttl: Duration) -> Self {
         withCopy {
             $0.nodeCacheTTL = ttl
+        }
+    }
+
+    /// Returns a copy with the endpoint resolution preference set.
+    ///
+    /// - Parameter preference: `.gossipReported` (default) connects through the address
+    ///   gossip reports — required for `.seeds` / `.dns`. `.userConfigured` always connects
+    ///   through the endpoint you configured — safe only for `.standalone`.
+    @discardableResult
+    public func endpointResolutionPreference(_ preference: EndpointResolutionPreference) -> Self {
+        withCopy {
+            $0.endpointResolutionPreference = preference
         }
     }
 
