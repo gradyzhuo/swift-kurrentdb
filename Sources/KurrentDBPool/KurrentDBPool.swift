@@ -11,9 +11,20 @@ package actor KurrentDBPool {
     package struct Lease: Sendable {
         package let id: MemberID
         package let settings: ClientSettings
+        private let owner: KurrentDBPool
 
+        fileprivate init(id: MemberID, settings: ClientSettings, owner: KurrentDBPool) {
+            self.id = id
+            self.settings = settings
+            self.owner = owner
+        }
+
+        /// 還給發出這個租約的那個 pool——不是寫死的 KurrentDBPool.shared。
+        /// 用自訂（非 shared）pool 實例的 acquire() 拿到的 lease 呼叫這個，
+        /// 一樣會正確還到原本那個實例，不會悄悄還到 shared 裡一個不存在的
+        /// MemberID、讓原本的 pool 永遠少一個可用成員。
         package func giveBack() async {
-            await KurrentDBPool.shared.release(self)
+            await owner.release(self)
         }
     }
 
@@ -63,20 +74,32 @@ package actor KurrentDBPool {
     }
 
     /// 池子非空但全忙碌時會排隊掛起，直到有人 release()/add()。
-    /// 支援取消：Task 被取消時會從佇列移除並回傳 nil，不會讓一個沒人記得的
-    /// continuation 永遠卡在佇列裡、悄悄吃掉一個租約。
+    ///
+    /// 支援取消：Task 被取消時會嘗試從佇列移除並回傳 nil。取消跟「剛好被
+    /// dispatchNextWaiterIfPossible() 派送」兩件事可能同時發生——如果派送
+    /// 先贏，continuation 已經帶著一個真的 lease resume 了，cancelWaiter()
+    /// 這時候在佇列裡找不到人、直接算了。單靠佇列移除擋不住這個空隙，
+    /// 所以 resume 之後另外檢查一次 Task.isCancelled：如果呼叫端已經不在乎
+    /// 這次呼叫、卻還是分到一個真的 lease，就地把它還回去，不要留給呼叫端
+    /// 自己判斷（他們也不會去判斷——都取消了）。
     package func acquire() async -> Lease? {
         guard !members.isEmpty else { return nil }
         if let id = firstIdleID() { return lease(marking: id) }
 
         let waiterID = UUID()
-        return await withTaskCancellationHandler {
+        let result = await withTaskCancellationHandler {
             await withCheckedContinuation { (k: CheckedContinuation<Lease?, Never>) in
                 waiters.append(Waiter(id: waiterID, continuation: k))
             }
         } onCancel: {
             Task { await self.cancelWaiter(waiterID) }
         }
+
+        if Task.isCancelled, let lease = result {
+            release(lease)
+            return nil
+        }
+        return result
     }
 
     /// 不排隊的版本——沒有任何成員閒置就立刻回 nil，不會掛起等待。
@@ -127,7 +150,7 @@ package actor KurrentDBPool {
 
     private func lease(marking id: MemberID) -> Lease {
         members[id]!.isBusy = true
-        return Lease(id: id, settings: members[id]!.settings)
+        return Lease(id: id, settings: members[id]!.settings, owner: self)
     }
 
     private func firstIdleID() -> MemberID? {

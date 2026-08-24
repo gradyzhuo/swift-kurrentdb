@@ -6,7 +6,16 @@ import Testing
 /// 這些測試會實際連線到 KurrentDBPool.shared 背後、由 KURRENTDB_POOL_URLS 指定的容器，
 /// 走 borrow()/withBorrowedClient() 這兩個真正會打 RPC 的入口——跟 KurrentDBPoolTests.swift
 /// 裡純 actor 記帳邏輯的測試分開。
-@Suite("KurrentDBPool Live Tests", .serialized)
+///
+/// 沒設 KURRENTDB_POOL_URLS 時整個 suite 用 .enabled(if:) 跳過，而不是讓每個
+/// 測試各自因為拿不到 client 而記錄失敗——標準的 `swift test` 在沒有額外準備
+/// 好多台獨立 KurrentDB 實例的環境下（例如一般開發機、offline CI job）應該
+/// 乾淨跳過這個 suite，而不是回傳非 0 的結果。
+@Suite(
+    "KurrentDBPool Live Tests",
+    .serialized,
+    .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_POOL_URLS"] != nil)
+)
 struct KurrentDBPoolLiveTests {
     @Test("withBorrowedClient 借到一個真的能打 RPC 的 client")
     func testWithBorrowedClientWorks() async throws {
