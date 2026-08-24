@@ -131,9 +131,10 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
             }
 
             let endpoint = memberInfo.httpEndPoint
-            let leaderEndpoint = if !candidate.isLocalhost, endpoint.isLocalhost {
+            let leaderEndpoint = switch settings.endpointResolutionPreference {
+            case .userConfigured:
                 candidate
-            } else {
+            case .gossipReported:
                 endpoint
             }
 
