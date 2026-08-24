@@ -25,7 +25,6 @@ extension KurrentDBPool {
                 for lease in rejected { await lease.giveBack() }
                 return BorrowedClient(client: client, lease: candidate)
             }
-            try? client.shutdown()
             rejected.append(candidate)
 
             guard let next = await shared.tryAcquire() else { break }
