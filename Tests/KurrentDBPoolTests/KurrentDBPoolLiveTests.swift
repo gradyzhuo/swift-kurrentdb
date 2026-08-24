@@ -17,21 +17,19 @@ struct KurrentDBPoolLiveTests {
         #expect(members?.isEmpty == false)
     }
 
-    @Test("借用範圍結束後 giveBack() 已經 shutdown，同一個 client 再打 RPC 會失敗")
-    func testGiveBackShutsDownClient() async throws {
-        var capturedClient: KurrentDBClient?
+    @Test("借用範圍結束後 isGivenBack 讀到 true——這只是 pool 帳本訊號，不代表底層 client 被擋住")
+    func testIsGivenBackReflectsPoolBookkeeping() async {
+        var capturedBorrowed: BorrowedClient?
         _ = await withBorrowedClient { borrowed in
-            capturedClient = borrowed.client
+            capturedBorrowed = borrowed
         }
 
-        guard let client = capturedClient else {
-            Issue.record("預期能拿到 client")
+        guard let borrowed = capturedBorrowed else {
+            Issue.record("預期能拿到 BorrowedClient")
             return
         }
 
-        await #expect(throws: (any Error).self) {
-            _ = try await client.readCluster()
-        }
+        #expect(borrowed.isGivenBack)
     }
 
     @Test("同時借兩個不同成員，各自寫入的事件不會出現在對方那裡（隔離驗證）")

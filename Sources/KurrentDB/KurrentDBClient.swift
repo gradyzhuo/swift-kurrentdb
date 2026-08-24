@@ -97,6 +97,7 @@ extension KurrentDBClient {
     /// Safe to call multiple times. Has no effect if the client was already shut down or deinitialized.
     ///
     /// - Throws: Any error raised by the underlying NIO `syncShutdownGracefully()`.
+    @available(*, deprecated, message: "This only releases the EventLoopGroup this client owns; it does not stop the client from performing further RPCs, since most request paths do not depend on it. deinit already performs the same cleanup automatically and there is no additional guarantee to be gained by calling this explicitly. This method may be removed in a future release.")
     public func shutdown() throws {
         isShutdown.withLock { $0 = true }
         try eventLoopGroup.syncShutdownGracefully()
