@@ -35,6 +35,12 @@ let package = Package(
                 "KurrentDB_V1",
             ]
         ),
+        .library(
+            name: "KurrentDBPool",
+            targets: [
+                "KurrentDBPool",
+            ]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.0.0"),
@@ -61,6 +67,12 @@ let package = Package(
         ),
         .target(
             name: "KurrentDB_V1",
+            dependencies: [
+                "KurrentDB",
+            ]
+        ),
+        .target(
+            name: "KurrentDBPool",
             dependencies: [
                 "KurrentDB",
             ]
@@ -248,6 +260,21 @@ let package = Package(
             name: "MockClientTests",
             dependencies: [
                 "KurrentDB",
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-warn-long-function-bodies=100",
+                    "-Xfrontend",
+                    "-warn-long-expression-type-checking=100",
+                ]),
+            ]
+        ),
+        .testTarget(
+            name: "KurrentDBPoolTests",
+            dependencies: [
+                "KurrentDB",
+                "KurrentDBPool",
             ],
             swiftSettings: [
                 .unsafeFlags([
