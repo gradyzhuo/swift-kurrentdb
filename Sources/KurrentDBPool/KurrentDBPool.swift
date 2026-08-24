@@ -23,9 +23,16 @@ package actor KurrentDBPool {
         var pendingRemoval = false
     }
 
+    /// 排隊等候的 acquire()。id 讓取消處理能精確地把「這一個」從佇列裡拔掉，
+    /// 而不是猜哪一個 continuation 對應哪個呼叫端。
+    private struct Waiter {
+        let id: UUID
+        let continuation: CheckedContinuation<Lease?, Never>
+    }
+
     private var members: [MemberID: Member] = [:]
     private var order: [MemberID] = []
-    private var waiters: [CheckedContinuation<Lease, Never>] = []
+    private var waiters: [Waiter] = []
 
     package init(settings: [ClientSettings] = KurrentDBPool.settingsFromEnv()) {
         for settings in settings {
@@ -55,12 +62,29 @@ package actor KurrentDBPool {
         members[id] = member
     }
 
+    /// 池子非空但全忙碌時會排隊掛起，直到有人 release()/add()。
+    /// 支援取消：Task 被取消時會從佇列移除並回傳 nil，不會讓一個沒人記得的
+    /// continuation 永遠卡在佇列裡、悄悄吃掉一個租約。
     package func acquire() async -> Lease? {
         guard !members.isEmpty else { return nil }
         if let id = firstIdleID() { return lease(marking: id) }
-        return await withCheckedContinuation { (k: CheckedContinuation<Lease, Never>) in
-            waiters.append(k)
+
+        let waiterID = UUID()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (k: CheckedContinuation<Lease?, Never>) in
+                waiters.append(Waiter(id: waiterID, continuation: k))
+            }
+        } onCancel: {
+            Task { await self.cancelWaiter(waiterID) }
         }
+    }
+
+    /// 不排隊的版本——沒有任何成員閒置就立刻回 nil，不會掛起等待。
+    /// borrow() 用這個在同一次呼叫裡換下一個候選人：如果目前真的沒有其他
+    /// 候選人可換，就該立刻放棄，而不是等一個永遠不會發生的 release()。
+    package func tryAcquire() -> Lease? {
+        guard let id = firstIdleID() else { return nil }
+        return lease(marking: id)
     }
 
     package func release(_ lease: Lease) {
@@ -68,6 +92,15 @@ package actor KurrentDBPool {
         if member.pendingRemoval {
             members.removeValue(forKey: lease.id)
             order.removeAll { $0 == lease.id }
+            if members.isEmpty {
+                // 池子因為移除最後一個成員而變空——跟一個全新的 acquire() 遇到
+                // 空池一樣，所有還在排隊的 waiter 都該立刻拿到 nil，而不是繼續
+                // 卡著等一個不可能發生的 release()。
+                let pending = waiters
+                waiters = []
+                for waiter in pending { waiter.continuation.resume(returning: nil) }
+                return
+            }
         } else {
             member.isBusy = false
             members[lease.id] = member
@@ -82,9 +115,14 @@ package actor KurrentDBPool {
         return id
     }
 
+    private func cancelWaiter(_ id: UUID) {
+        guard let index = waiters.firstIndex(where: { $0.id == id }) else { return }
+        waiters.remove(at: index).continuation.resume(returning: nil)
+    }
+
     private func dispatchNextWaiterIfPossible() {
         guard !waiters.isEmpty, let id = firstIdleID() else { return }
-        waiters.removeFirst().resume(returning: lease(marking: id))
+        waiters.removeFirst().continuation.resume(returning: lease(marking: id))
     }
 
     private func lease(marking id: MemberID) -> Lease {
