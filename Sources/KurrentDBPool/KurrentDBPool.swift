@@ -120,6 +120,11 @@ package actor KurrentDBPool {
         return lease(marking: id)
     }
 
+    /// 目前池子裡的成員總數（不分忙碌/閒置）。給測試之類的呼叫端用來在借用前
+    /// 先確認「有沒有足夠的成員可以測試某個情境」，而不是直接 acquire() 下去、
+    /// 在成員不夠時真的卡住等一個不會發生的 release()。
+    package var count: Int { members.count }
+
     package func release(_ lease: Lease) {
         guard var member = members[lease.id] else { return }
         if member.pendingRemoval {
