@@ -72,6 +72,64 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
 
+  # KurrentDBPool's live suite needs genuinely independent (non-clustered)
+  # KurrentDB instances, unlike the `build` job's gossip cluster above — a
+  # pool member is supposed to be its own unrelated database, not a replica.
+  # Each instance sets KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS to its own
+  # mapped host port: without it, every instance's gossip response reports
+  # the same internal container port (2113), and the client's node discovery
+  # collapses all of them onto that one (wrong) address.
+  kurrentdb-pool-live-tests:
+    name: KurrentDBPool live suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.2"
+
+      - name: Start two independent KurrentDB instances
+        run: |
+          for port in 2114 2115; do
+            docker run --rm -d --name "kurrentdb-pool-$port" -p ${port}:2113 \
+              -e KURRENTDB_CLUSTER_SIZE=1 \
+              -e KURRENTDB_RUN_PROJECTIONS=All \
+              -e KURRENTDB_START_STANDARD_PROJECTIONS=true \
+              -e KURRENTDB_INSECURE=true \
+              -e KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true \
+              -e KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS=${port} \
+              docker.kurrent.io/kurrent-latest/kurrentdb:25.1
+          done
+
+      - name: Wait for both instances to be healthy
+        run: |
+          for port in 2114 2115; do
+            echo "Waiting for instance on port $port..."
+            healthy=false
+            for i in $(seq 1 30); do
+              if curl --fail http://127.0.0.1:${port}/gossip >/dev/null 2>&1; then
+                echo "port $port healthy"
+                healthy=true
+                break
+              fi
+              sleep 2
+            done
+            if [ "$healthy" != "true" ]; then
+              echo "instance on port $port failed to become healthy"
+              docker logs "kurrentdb-pool-${port}"
+              exit 1
+            fi
+          done
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Swift Testing
+        env:
+          KURRENTDB_POOL_URLS: '["esdb://admin:changeit@localhost:2114?tls=false","esdb://admin:changeit@localhost:2115?tls=false"]'
+        run: swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "KurrentDBPoolTests"
+
   # Offline build + MockClientTests on additional Linux distributions.
   # Uses `docker run` instead of the `container:` directive so that
   # actions/checkout@v4 (Node.js 20, requires GLIBC_2.27) runs on the Ubuntu

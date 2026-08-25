@@ -49,8 +49,8 @@
 ### 新增(`Sources/KurrentDBPool/`)
 - `KurrentDBPool.swift` — actor 本體:`shared`、`MemberID`、`Lease`(含 `giveBack()` 便利方法)、
   `Member`、`add`/`remove`/`acquire`/`release`/`dispatchNextWaiterIfPossible`/`firstIdleID`。全部 `package`。
-- `KurrentDBPool+Env.swift` — `settingsFromEnv(key:)` 解析 `KURRENTDB_POOL_URLS`(逗號分隔連線字串,
-  `ClientSettings.parse(connectionString:)`,格式錯誤 `fatalError`)。`package`。
+- `KurrentDBPool+Env.swift` — `settingsFromEnv(key:)` 解析 `KURRENTDB_POOL_URLS`(JSON 字串陣列,
+  每個字串各自餵給 `ClientSettings.parse(connectionString:)`,格式錯誤 `fatalError`)。`package`。
 - `BorrowedClient.swift` — 頂層型別,`public final class`。`client: KurrentDBClient` public;
   `giveBack()`/`isGivenBack` package;`state: Mutex<Bool>`;`deinit` 保底。
 - `KurrentDBPool+Borrow.swift` — `KurrentDBPool.borrow(numberOfThreads:maxAttempts:)`,package,
