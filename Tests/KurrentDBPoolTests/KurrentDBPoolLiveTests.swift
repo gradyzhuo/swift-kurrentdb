@@ -43,6 +43,14 @@ struct KurrentDBPoolLiveTests {
 
     @Test("同時借兩個不同成員，各自寫入的事件不會出現在對方那裡（隔離驗證）")
     func testTwoSimultaneousBorrowsAreIsolated() async throws {
+        // 這個測試天生需要至少兩個成員——第二次 borrow() 才有機會拿到跟第一次
+        // 不同的那個。只設一個成員時，第二次 borrow() 內部的 acquire() 會因為
+        // 池子非空但全忙碌而真的排隊掛起，永遠等不到 first 才會發生的 release()。
+        // 先檢查數量、不夠就明確跳過，不要讓整個測試執行卡死在這裡。
+        guard await KurrentDBPool.shared.count >= 2 else {
+            return
+        }
+
         guard let first = await KurrentDBPool.borrow() else {
             Issue.record("預期能借到第一個")
             return
