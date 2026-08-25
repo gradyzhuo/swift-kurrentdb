@@ -75,6 +75,7 @@ let package = Package(
             name: "KurrentDBPool",
             dependencies: [
                 "KurrentDB",
+                .product(name: "GRPCCore", package: "grpc-swift-2"),
             ]
         ),
         .target(
