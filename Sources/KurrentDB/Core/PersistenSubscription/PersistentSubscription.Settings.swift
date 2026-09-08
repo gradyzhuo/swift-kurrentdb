@@ -44,14 +44,17 @@ extension PersistentSubscription {
         public init(
             resolveLink: Bool = false,
             extraStatistics: Bool = false,
-            messageTimeout: TimeSpan = .ms(30),
+            // KurrentDB server default: 30 seconds. (.ms(30) — 30 milliseconds —
+            // made every consumer slower than 30ms time out and park messages.)
+            messageTimeout: TimeSpan = .ms(30000),
             maxRetryCount: Int32 = 10,
             checkpointCount: ClosedRange<Int32> = 10 ... 1000,
             maxSubscriberCount: Int32 = 0,
             liveBufferSize: Int32 = 500,
             readBatchSize: Int32 = 20,
             historyBufferSize: Int32 = 500,
-            checkpointAfter: TimeSpan = .ms(2),
+            // KurrentDB server default: 2 seconds, not 2 milliseconds.
+            checkpointAfter: TimeSpan = .ms(2000),
             consumerStrategy: SystemConsumerStrategy = .roundRobin
         ) {
             self.resolveLink = resolveLink
