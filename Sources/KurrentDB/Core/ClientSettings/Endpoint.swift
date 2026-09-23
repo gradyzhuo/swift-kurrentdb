@@ -66,10 +66,17 @@ extension Endpoint: ExpressibleByStringLiteral {
     }
 }
 
-extension Endpoint: Equatable {
+extension Endpoint: Hashable {
     /// Returns true if both endpoints have the same host and port.
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.host == rhs.host && lhs.port == rhs.port
+    }
+
+    /// Hashes the host and port, matching the equality definition above so that
+    /// endpoints can key a connection cache.
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(host)
+        hasher.combine(port)
     }
 }
 
