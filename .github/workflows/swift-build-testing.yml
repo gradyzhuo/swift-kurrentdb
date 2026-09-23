@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        swift: ["6.0", "6.1", "6.2", "6.3"]
+        swift: ["6.0", "6.1", "6.2", "6.3", "6.4"]
         kurrentdb:
           - { version: "24.10",  image: "docker.kurrent.io/eventstore/eventstoredb-ee:24.10", compose_file: "server/docker-compose.eventstore.yaml", supports_multi_streams: "false", supports_append_records: "false" }
           - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true",  supports_append_records: "false" }
@@ -145,6 +145,9 @@ jobs:
           - "swift:6.2-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
           - "swift:6.3-amazonlinux2"   # Amazon Linux 2 — primary AWS/Lambda deployment target
           - "swift:6.3-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
+          # Swift 6.4 dropped Amazon Linux 2 images (AL2 is EOL); use AL2023 instead.
+          - "swift:6.4-amazonlinux2023" # Amazon Linux 2023 — AWS/Lambda deployment target
+          - "swift:6.4-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
