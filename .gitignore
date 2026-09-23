@@ -8,4 +8,5 @@ DerivedData/
 .netrc
 Package.resolved
 .claude/
+.capacitor/
 CLAUDE.local.md
