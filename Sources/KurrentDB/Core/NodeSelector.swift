@@ -21,9 +21,14 @@ public actor NodeSelector: Sendable {
     var selectedNodeExpiry: Date?
     var discover: NodeDiscover
 
+    /// 這個 client 所有 gRPC 連線的來源。`nonisolated let`:同步的
+    /// `KurrentDBClient.shutdown()` 需要在不進入 actor 的情況下關閉它。
+    nonisolated let connections: ConnectionProvider
+
     init(settings: ClientSettings) {
         id = nil
         self.settings = settings
+        connections = ConnectionProvider(settings: settings)
         discover = .init(settings: settings, previousCandidates: [])
     }
 
@@ -75,7 +80,7 @@ public actor NodeSelector: Sendable {
 
                 let serviceFeaturesClient = ServerFeatures(endpoint: endpoint, settings: settings, callOptions: callOptions)
                 let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
-                return Node(endpoint: endpoint, settings: settings, serverInfo: serverInfo)
+                return Node(endpoint: endpoint, settings: settings, serverInfo: serverInfo, connections: connections)
             } catch {
                 attempts += 1
 

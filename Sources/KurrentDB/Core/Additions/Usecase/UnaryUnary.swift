@@ -35,21 +35,13 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
             throw .unsupportedFeature(methodDescriptor)
         }
         
-        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
-        Task {
-            logger.debug("[\(Self.name)] Opening connection...")
-            try await client.runConnections()
-        }
-        
-        defer{
-            logger.debug("[\(Self.name)] Closing connection...")
-            client.beginGracefulShutdown()
-        }
-        
+        // 單一回應的呼叫一定在這裡結束,所以走共用連線。
+        let lease = try node.connections.acquire(node.endpoint)
+        defer { lease.release() }
+
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            logger.debug("[\(Self.name)] Opening connection...")
             let metadata = try Metadata(from: node.settings, overriding: credentials)
-            return try await send(connection: client, metadata: metadata, callOptions: callOptions)
+            return try await send(connection: lease.client, metadata: metadata, callOptions: callOptions)
         }
     }
 }
