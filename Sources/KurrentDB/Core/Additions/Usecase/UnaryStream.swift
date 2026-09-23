@@ -20,24 +20,32 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
         }
     }
 
-    package func perform(node: Node, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Responses{
-        
-        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
-        
-        Task {
-            logger.debug("[\(Self.name)] Opening connection...")
-            try await client.runConnections()
+    package func perform(node: Node, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Responses {
+        guard node.serverInfo.isSupported(method: methodDescriptor) else {
+            throw .unsupportedFeature(methodDescriptor)
         }
-        
-        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let metadata = try Metadata(from: node.settings, overriding: credentials)
-            let request = try request(metadata: metadata)
-            return try await send(connection: client, request: request, callOptions: callOptions) { error in
-                if let error {
-                    logger.error("The error is thrown in the response of UnaryStream: \(error)")
+
+        // stream 回應會把連線帶出這個函式,所以每次呼叫獨立一條。completion 閉包持有
+        // connection,讓它(以及 provider)活到 stream 終止為止。
+        let connection = try node.connections.openDedicated(for: node.endpoint)
+        do {
+            return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
+                let metadata = try Metadata(from: node.settings, overriding: credentials)
+                let request = try request(metadata: metadata)
+                return try await send(connection: connection.client, request: request, callOptions: callOptions) { error in
+                    if let error {
+                        logger.error("The error is thrown in the response of UnaryStream: \(error)")
+                    }
+                    // cancel 這條連線的 runTask 會中止其上的 RPC,send() 裡跑 read 的內層 task
+                    // 也因此結束。不能用 graceful shutdown:它會等無限期的訂閱結束。
+                    connection.close()
                 }
-                client.beginGracefulShutdown()
             }
+        } catch {
+            // setup 失敗(metadata、request、呼叫本身):stream 永遠不會終止,由這裡收尾。
+            // 成功時不可在這裡 close —— 那會立刻殺掉剛回傳出去的訂閱。
+            connection.close()
+            throw error
         }
     }
 }

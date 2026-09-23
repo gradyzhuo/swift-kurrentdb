@@ -24,7 +24,7 @@ struct GRPCClientLifecycleCharacterizationTests {
 
     /// 指向一個必定無法連線的位址(TEST-NET-1,RFC 5737 保留,不可路由)。
     /// 沿用 repo 既有的 `Endpoint.target` 與 `.http2NIOPosix`,與
-    /// `GRPCClient+Additions.swift:17-20` 的建構方式一致。
+    /// `ConnectionProvider.makeClient(for:)` 的建構方式一致。
     private func unreachableTransport() throws -> HTTP2ClientTransport.Posix {
         let endpoint = Endpoint(host: "192.0.2.1", port: 2113)
         return try .http2NIOPosix(
