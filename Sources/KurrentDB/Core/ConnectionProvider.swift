@@ -241,6 +241,11 @@ package final class ConnectionProvider: Sendable {
     ///
     /// - Throws: `KurrentError.connectionClosed` 若 provider 已 shutdown。
     package func openDedicated(for endpoint: Endpoint) throws(KurrentError) -> DedicatedConnection {
+        // 先檢查一次:已 shutdown 就不必建 transport,且呼叫端拿到的一定是 connectionClosed,
+        // 而不是建構失敗的錯誤。發布前的第二次檢查仍然需要,用來涵蓋建構期間發生的 shutdown。
+        guard !isShutdown else {
+            throw .connectionClosed
+        }
         let client = try makeClient(for: endpoint)
         return try state.withLock { state throws(KurrentError) -> DedicatedConnection in
             guard !state.isShutdown else {
