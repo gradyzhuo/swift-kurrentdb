@@ -29,7 +29,7 @@ public actor NodeSelector: Sendable {
         id = nil
         self.settings = settings
         connections = ConnectionProvider(settings: settings)
-        discover = .init(settings: settings, previousCandidates: [])
+        discover = .init(settings: settings, connections: connections, previousCandidates: [])
     }
 
     /// Operation retry policy sourced from the client settings.
@@ -63,7 +63,7 @@ public actor NodeSelector: Sendable {
     func invalidate() {
         logger.debug("[NodeSelector] Invalidating cached node, will re-discover on next select.")
         selectedNode = nil
-        discover = .init(settings: settings, previousCandidates: [])
+        discover = .init(settings: settings, connections: connections, previousCandidates: [])
     }
 
     private func selectNode() async throws -> Node? {
@@ -78,7 +78,7 @@ public actor NodeSelector: Sendable {
                 var callOptions = CallOptions.defaults
                 callOptions.timeout = settings.gossipTimeout
 
-                let serviceFeaturesClient = ServerFeatures(endpoint: endpoint, settings: settings, callOptions: callOptions)
+                let serviceFeaturesClient = ServerFeatures(endpoint: endpoint, settings: settings, connections: connections, callOptions: callOptions)
                 let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
                 return Node(endpoint: endpoint, settings: settings, serverInfo: serverInfo, connections: connections)
             } catch {
@@ -103,9 +103,13 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
     let settings: ClientSettings
     var selectedEndpoint: Endpoint?
     private let previousCandidates: [Endpoint]
+    /// 與 NodeSelector 同一個 provider:探測走的是同一份共用連線快取,
+    /// 在這裡另建 provider 會讓復用失效。
+    private let connections: ConnectionProvider
 
-    init(settings: ClientSettings, previousCandidates _: [Gossip.MemberInfo]) {
+    init(settings: ClientSettings, connections: ConnectionProvider, previousCandidates _: [Gossip.MemberInfo]) {
         self.settings = settings
+        self.connections = connections
         previousCandidates = []
     }
 
@@ -154,7 +158,7 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
         var callOptions = CallOptions.defaults
         callOptions.timeout = settings.gossipTimeout
 
-        let gossipClient = Gossip(endpoint: candidate, settings: settings, callOptions: callOptions)
+        let gossipClient = Gossip(endpoint: candidate, settings: settings, connections: connections, callOptions: callOptions)
         let memberInfos = try await gossipClient.read(
                                                     timeout: settings.gossipTimeout,
                                                     notAllowedStates: [.manager, .shuttingDown, .shutdown])

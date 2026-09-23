@@ -19,10 +19,13 @@ public final class ServerFeatures: GRPCConcreteService {
     internal let settings: ClientSettings
     internal let callOptions: CallOptions
     internal let eventLoopGroup: EventLoopGroup
+    /// 查詢支援的方法是單一回應的 RPC,走 client 的共用連線。
+    internal let connections: ConnectionProvider
 
-    init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.endpoint = endpoint
         self.settings = settings
+        self.connections = connections
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
     }
@@ -31,15 +34,11 @@ public final class ServerFeatures: GRPCConcreteService {
 extension ServerFeatures {
     public func getSupportedMethods() async throws(KurrentError) -> ServiceInfo {
         let usecase = GetSupportedMethods()
+        let lease = try connections.acquire(endpoint)
+        defer { lease.release() }
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            try await withGRPCClient(transport: .http2NIOPosix(
-                target: endpoint.target,
-                transportSecurity: settings.transportSecurity
-            )) { client in
-                logger.debug("[\(Self.self)] Opening connection...")
-                let metadata = try Metadata(from: settings)
-                return try await usecase.send(connection: client, request: usecase.request(metadata: metadata), callOptions: callOptions)
-            }
+            let metadata = try Metadata(from: settings)
+            return try await usecase.send(connection: lease.client, request: usecase.request(metadata: metadata), callOptions: callOptions)
         }
     }
 }
