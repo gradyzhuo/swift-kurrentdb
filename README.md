@@ -91,6 +91,8 @@ let settings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
 let client = KurrentDBClient(settings: settings)
 ```
 
+Create one client per application and reuse it. Calls that return a single response — appends, deletes, metadata, management operations — share one connection per node. Calls that return a stream — reads and subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`.
+
 ---
 
 ### Append and Read Events
