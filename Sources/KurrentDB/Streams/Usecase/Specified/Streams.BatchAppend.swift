@@ -104,16 +104,11 @@ extension Streams {
                 return Response(results: [])
             }
 
-            let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
-            Task {
-                logger.debug("[\(Self.name)] Opening connection...")
-                try await client.runConnections()
-            }
-
-            defer {
-                logger.debug("[\(Self.name)] Closing connection...")
-                client.beginGracefulShutdown()
-            }
+            // BatchAppend 在 wire 上是雙向 stream,依回應形態走獨立連線 —— 即使這個
+            // adapter 會在函式內彙整完所有回應才返回。結果已經在這裡收齊,所以每個出口都關閉。
+            let connection = try node.connections.openDedicated(for: node.endpoint)
+            defer { connection.close() }
+            let client = connection.client
 
             let eventByCorrelation = Dictionary(uniqueKeysWithValues: zip(correlationIds, streamEvents))
 

@@ -25,36 +25,25 @@ extension StreamStream where Transport == HTTP2ClientTransport.Posix {
             throw .unsupportedFeature(methodDescriptor)
         }
         
-        let client = try GRPCClient<HTTP2ClientTransport.Posix>(from: node)
-        let connectionTask = Task {
-            logger.debug("[\(Self.name)] Opening connection...")
-            do {
-                try await client.runConnections()
-            } catch is CancellationError {
-                // teardown 會取消本 task,這是正常收尾,不記錄為錯誤。
-                // (特性化測試顯示取消時 runConnections() 多半正常返回而不拋錯,
-                //  此分支僅為防禦不同 grpc 版本/transport 的行為差異。)
-            } catch {
-                // 其餘錯誤 —— 例如 transport 建立失敗 —— 過去被這個無主 task 靜默吞掉,
-                // 使連線故障無從診斷。至少記錄下來。
-                logger.error("[\(Self.name)] Connection run loop terminated with error: \(error)")
-            }
-        }
-
-        return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            let metadata = try Metadata(from: node.settings, overriding: credentials)
-            return try await send(connection: client, metadata: metadata, callOptions: callOptions) { error in
-                if let error {
-                    logger.error("The error is thrown in the response of StreamStream: \(error)")
+        // stream 回應會把連線帶出這個函式,所以每次呼叫獨立一條。completion 閉包持有
+        // connection,讓它(以及 provider)活到 stream 終止為止。
+        let connection = try node.connections.openDedicated(for: node.endpoint)
+        do {
+            return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
+                let metadata = try Metadata(from: node.settings, overriding: credentials)
+                return try await send(connection: connection.client, metadata: metadata, callOptions: callOptions) { error in
+                    if let error {
+                        logger.error("The error is thrown in the response of StreamStream: \(error)")
+                    }
+                    // graceful shutdown 會等待進行中的 RPC 完成 —— 對長生命週期訂閱而言
+                    // 那可能永遠不會發生。取消執行 runConnections() 的 task 才會中止所有工作。
+                    connection.close()
                 }
-
-                logger.debug("[\(Self.name)] Closing connection...")
-                // graceful shutdown 會等待進行中的 RPC 完成 —— 對長生命週期訂閱而言
-                // 那可能永遠不會發生。依 GRPCClient.runConnections() 的文件,
-                // 取消執行該方法的 Task 是中止所有工作的正規手段。
-                client.beginGracefulShutdown()
-                connectionTask.cancel()
             }
+        } catch {
+            // setup 失敗:stream 永遠不會終止,由這裡收尾。成功時不可在這裡 close。
+            connection.close()
+            throw error
         }
     }
 }
