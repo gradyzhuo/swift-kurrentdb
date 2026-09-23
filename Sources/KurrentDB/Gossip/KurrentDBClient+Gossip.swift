@@ -38,6 +38,7 @@ extension KurrentDBClient {
             let gossip = Gossip(
                 endpoint: candidate,
                 settings: settings,
+                connections: selector.connections,
                 callOptions: defaultCallOptions,
                 eventLoopGroup: eventLoopGroup
             )
@@ -49,6 +50,7 @@ extension KurrentDBClient {
         return try await Gossip(
             endpoint: candidates[0],
             settings: settings,
+            connections: selector.connections,
             callOptions: defaultCallOptions,
             eventLoopGroup: eventLoopGroup
         ).read(timeout: gossipTimeout)

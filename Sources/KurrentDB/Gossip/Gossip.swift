@@ -19,10 +19,13 @@ public final class Gossip: Sendable {
     internal let settings: ClientSettings
     internal let callOptions: CallOptions
     internal let eventLoopGroup: EventLoopGroup
+    /// gossip 讀取是單一回應的 RPC,走 client 的共用連線。
+    internal let connections: ConnectionProvider
 
-    init(endpoint: Endpoint, settings: ClientSettings, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         self.endpoint = endpoint
         self.settings = settings
+        self.connections = connections
         self.callOptions = callOptions
         self.eventLoopGroup = eventLoopGroup
     }
@@ -39,18 +42,14 @@ extension Gossip {
     /// - Throws: `KurrentError` if the gRPC call fails or the response cannot be decoded.
     public func read(timeout _: Duration, notAllowedStates: [Gossip.VNodeState] = []) async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
+        let lease = try connections.acquire(endpoint)
+        defer { lease.release() }
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
-            try await withGRPCClient(transport: .http2NIOPosix(
-                target: endpoint.target,
-                transportSecurity: settings.transportSecurity
-            )) { client in
-                logger.debug("[\(Self.self)] Opening connection...")
-                let metadata = try Metadata(from: settings)
-                let memberInfos = try await usecase.send(connection: client, metadata: metadata, callOptions: callOptions)
-                return memberInfos
-                    .filter { !notAllowedStates.contains($0.state) }
-                    .sorted { settings.nodePreference.priority(state: $0.state) < settings.nodePreference.priority(state: $1.state)
-                }
+            let metadata = try Metadata(from: settings)
+            let memberInfos = try await usecase.send(connection: lease.client, metadata: metadata, callOptions: callOptions)
+            return memberInfos
+                .filter { !notAllowedStates.contains($0.state) }
+                .sorted { settings.nodePreference.priority(state: $0.state) < settings.nodePreference.priority(state: $1.state)
             }
         }
     }
