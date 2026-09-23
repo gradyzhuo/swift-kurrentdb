@@ -206,6 +206,19 @@ let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
 ```
 
+### Reusing the client
+
+Create one client per application and share it. The client manages its connections for you:
+
+- Calls that return a single response — appends, deletes, stream metadata, projection and user management, server operations — share one connection per node. A shared connection that has been idle for an hour is closed and reopened on next use.
+- Calls that return a stream — reads, subscriptions, persistent subscriptions, statistics — each open their own connection, which closes when the stream ends or is cancelled. Long-lived subscriptions therefore never compete with other calls for capacity on a shared connection.
+
+Calling `shutdown()` closes every connection the client opened, ends active subscriptions, and makes every later call — including calls through `Streams` or other values obtained from the client earlier — throw `KurrentError.connectionClosed`. Shutdown is initiated rather than awaited: connections may still be closing when the method returns. Calling it more than once has no further effect.
+
+```swift
+try client.shutdown()
+```
+
 
 ## Creating an event
 In `Swift`, the payload in EventData conforms to the Codable protocol, which means you can use any type that can be encoded or decoded to `JSON`.
