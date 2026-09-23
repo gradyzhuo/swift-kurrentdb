@@ -77,6 +77,10 @@ public final class KurrentDBClient: Sendable, Buildable {
     }
 
     deinit {
+        // The connection provider is deliberately NOT torn down here: facades
+        // (`Streams`, `Projections`, ...) and returned subscriptions may outlive this
+        // client, and they keep the provider alive through the node selector. The
+        // provider closes its own connections when its last reference goes away.
         let alreadyShutdown = isShutdown.withLock {
             let old = $0
             $0 = true
@@ -92,13 +96,26 @@ public final class KurrentDBClient: Sendable, Buildable {
 }
 
 extension KurrentDBClient {
-    /// Shuts down the internal event loop group and releases all network resources.
+    /// Closes every connection this client opened and rejects further calls.
     ///
-    /// Safe to call multiple times. Has no effect if the client was already shut down or deinitialized.
+    /// After shutdown, every operation made through this client — including through
+    /// facades obtained from it earlier — throws `KurrentError.connectionClosed`, and
+    /// active subscriptions end.
+    ///
+    /// Shutdown is *initiated*, not awaited: connections are cancelled, but may still be
+    /// closing when this method returns.
+    ///
+    /// Safe to call multiple times; calls after the first have no effect.
     ///
     /// - Throws: Any error raised by the underlying NIO `syncShutdownGracefully()`.
     public func shutdown() throws {
-        isShutdown.withLock { $0 = true }
+        let alreadyShutdown = isShutdown.withLock {
+            let old = $0
+            $0 = true
+            return old
+        }
+        guard !alreadyShutdown else { return }
+        selector.connections.shutdown()
         try eventLoopGroup.syncShutdownGracefully()
     }
 }
