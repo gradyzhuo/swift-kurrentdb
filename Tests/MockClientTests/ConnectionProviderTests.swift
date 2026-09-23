@@ -344,3 +344,28 @@ struct ConnectionProviderTests {
         }
     }
 }
+
+@Suite("KurrentDBClient shutdown", .serialized, .timeLimit(.minutes(1)))
+struct KurrentDBClientShutdownTests {
+    @Test("public shutdown 是冪等的,並關閉連線來源")
+    func shutdownIsIdempotentAndClosesProvider() throws {
+        let client = KurrentDBClient(settings: .localhost())
+
+        try client.shutdown()
+        try client.shutdown()
+
+        #expect(client.selector.connections.isShutdown)
+    }
+
+    /// 不論 node 快取是否過期,shutdown 之後 select() 都要立刻回報 connectionClosed,
+    /// 而不是進入 discovery 重試、最後回報「找不到 node」。
+    @Test("shutdown 之後 select() 立即拋 connectionClosed")
+    func selectAfterShutdownThrowsConnectionClosed() async throws {
+        let client = KurrentDBClient(settings: .localhost())
+        try client.shutdown()
+
+        await #expect(throws: KurrentError.connectionClosed) {
+            try await client.selector.select()
+        }
+    }
+}

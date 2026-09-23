@@ -288,6 +288,11 @@ package final class ConnectionProvider: Sendable {
         }
     }
 
+    /// provider 是否已 shutdown。
+    package var isShutdown: Bool {
+        state.withLock { $0.isShutdown }
+    }
+
     // MARK: - Introspection (tests)
 
     /// 至今建立過幾條共用連線。只增不減;計的是 `GRPCClient` 的建立次數,不是 TCP 連線或

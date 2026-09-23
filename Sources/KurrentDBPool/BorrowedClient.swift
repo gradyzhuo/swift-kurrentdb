@@ -8,13 +8,12 @@ import Synchronization
 /// giveBack() 時才動作，state（Mutex<Bool>）保證兩條路徑加起來只會真的
 /// release 一次（跟 KurrentDBClient.isShutdown 同一招，見 KurrentDBClient.swift）。
 ///
-/// 歸還不會讓底層的 KurrentDBClient 變得不能用——KurrentDBClient.shutdown()
-/// 只釋放它自己擁有的 EventLoopGroup，並不影響大多數 RPC 路徑，所以呼叫它
-/// 沒辦法讓「歸還」變成真正的硬邊界（已用 @available(*, deprecated) 標記，
-/// 見 KurrentDBClient.swift），這裡索性不再呼叫。isGivenBack 是唯一的、
-/// 讀得到的訊號，呼叫端如果自己把 BorrowedClient（不只是 client）留到
-/// withBorrowedClient 範圍以外，該自己檢查這個旗標，而不是預期底層連線會
-/// 自動失敗。
+/// 歸還不會讓底層的 KurrentDBClient 變得不能用——這裡不呼叫
+/// KurrentDBClient.shutdown()。（shutdown() 現在會關閉所有連線並拒絕之後的
+/// RPC，所以技術上已經能拿來把「歸還」做成硬邊界；但那是行為變更，另議。）
+/// isGivenBack 是唯一的、讀得到的訊號，呼叫端如果自己把 BorrowedClient
+/// （不只是 client）留到 withBorrowedClient 範圍以外，該自己檢查這個旗標，
+/// 而不是預期底層連線會自動失敗。
 public final class BorrowedClient: Sendable {
     public let client: KurrentDBClient
     private let lease: KurrentDBPool.Lease

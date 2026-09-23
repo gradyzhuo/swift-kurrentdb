@@ -45,6 +45,12 @@ public actor NodeSelector: Sendable {
     /// - Returns: A ``Node`` ready to accept gRPC connections.
     /// - Throws: `KurrentError.serverError` if no reachable node is found within the attempt limit.
     public func select() async throws(KurrentError) -> Node {
+        // 不論 node 快取是否過期,shutdown 之後一律是 connectionClosed。否則快取過期時
+        // 會進入 discovery,把探測的 connectionClosed 當成一般失敗重試,最後回報成
+        // 「找不到 node」。
+        guard !connections.isShutdown else {
+            throw .connectionClosed
+        }
         if let node = selectedNode, let expiry = selectedNodeExpiry, Date.now < expiry {
             return node
         }
