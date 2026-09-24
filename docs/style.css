@@ -41,7 +41,9 @@ html, body {
 .container {
   max-width: 880px;
   margin: 0 auto;
-  padding: 0 24px;
+  /* Side gutter only. A `padding` shorthand here would out-rank `section` /
+     `footer` (class beats element) and silently zero their vertical padding. */
+  padding-inline: 24px;
 }
 
 a {
