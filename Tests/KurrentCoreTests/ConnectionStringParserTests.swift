@@ -159,6 +159,14 @@ struct ClientSettingsParsingTests {
         #expect(settings.discoveryInterval == .milliseconds(100))
     }
 
+    @Test("settings built in code default discoveryInterval to 100ms, like the connection string")
+    func testDiscoveryIntervalDefaultWithoutConnectionString() throws {
+        let parsed = try ClientSettings.parse(connectionString: "esdb://localhost:2113")
+        #expect(ClientSettings().discoveryInterval == parsed.discoveryInterval)
+        #expect(ClientSettings.localhost().discoveryInterval == .milliseconds(100))
+        #expect(ClientSettings.remote("db.example.com:2113").discoveryInterval == .milliseconds(100))
+    }
+
     // MARK: keepAlive
 
     @Test("keepAlive connection string values (seconds) are converted to milliseconds internally")
