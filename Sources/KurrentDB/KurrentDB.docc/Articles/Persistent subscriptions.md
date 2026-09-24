@@ -1,10 +1,10 @@
 # Persistent subscriptions
 
-Manage persistent subscription groups for competing consumer patterns, enabling reliable, distributed event processing with automatic retry and checkpoint management.
+Manage persistent subscription groups for competing consumers: reliable, distributed event processing with server-side retries and checkpoints.
 
 ## Creating a client
 
-Persistent subscription management requires appropriate credentials.
+Managing persistent subscriptions needs credentials with the right permissions:
 
 ```swift
 let settings = ClientSettings.localhost()
@@ -12,288 +12,269 @@ let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
 ```
 
-For TLS-enabled or multi-node clusters:
-
-```swift
-// Multi-node localhost with TLS
-let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
-    .secure(true)
-    .tlsVerifyCert(false)
-    .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
-let client = KurrentDBClient(settings: settings)
-
-// Remote cluster (secure: true by default)
-let settings = ClientSettings.remote(
-    "node1.example.com:2113",
-    "node2.example.com:2113",
-    "node3.example.com:2113"
-).authenticated(.credentials(username: "admin", password: "changeit"))
-let client = KurrentDBClient(settings: settings)
-
-// Remote without TLS
-let settings = ClientSettings.remote(
-    "node1.example.com:2113", secure: false
-).authenticated(.credentials(username: "admin", password: "changeit"))
-let client = KurrentDBClient(settings: settings)
-```
+For TLS, clusters and remote servers, see <doc:Getting-started>.
 
 ## Overview
 
-Persistent subscriptions provide a **competing consumer** model where multiple clients can subscribe to the same subscription group and have events distributed among them. The server tracks the group's position in the stream, handles retries for failed events, and provides at-least-once delivery guarantees.
+Persistent subscriptions follow the **competing consumers** model: several clients connect to the same subscription group, and the server distributes the events among them. The server tracks the group's position, retries events that fail, and delivers every event at least once.
 
-Key characteristics:
-- Events are distributed round-robin across connected consumers
-- Each event is delivered to exactly one consumer in the group
-- The server maintains the group's checkpoint position
-- Failed consumers do not lose events; the server redistributes their pending events
+- Each event goes to one consumer in the group, chosen by the group's consumer strategy.
+- The server stores the group's checkpoint.
+- Events pending on a consumer that disconnects are redelivered to the others.
 
 ## Subscription lifecycle
 
-The typical workflow for persistent subscriptions follows these phases:
+1. **Create** the subscription group and its settings.
+2. **Subscribe** consumers to receive events.
+3. **Process** each event and acknowledge it (ack) or reject it (nack).
+4. **Update** the settings, keeping the checkpoint (optional).
+5. **Delete** the group when it's no longer needed.
 
-1. **Create** — Define the subscription group and configuration
-2. **Subscribe** — Connect consumers to receive events
-3. **Process** — Handle events and ACK/NAK as needed
-4. **Update** — Modify configuration while preserving checkpoint (optional)
-5. **Delete** — Remove the subscription group entirely (when no longer needed)
+## Choosing a target
+
+Every operation starts from a ``PersistentSubscriptions`` value for a target:
+
+| Accessor | Target | Operations |
+|----------|--------|------------|
+| `client.persistentSubscriptions(stream:group:)` | One stream + group | `create`, `update`, `delete`, `subscribe`, `getInfo`, `replayParked` |
+| `client.persistentSubscriptions(filterGroup:)` | `$all` + group | `create`, `update`, `delete`, `subscribe`, `getInfo`, `replayParked` |
+| `client.persistentSubscriptions(filterStream:)` | All groups on one stream | `list` |
+| `client.allPersistentSubscriptions` | Every group on the server | `list`, `restartSubsystem` |
 
 ## Create a subscription
 
 ### On a specific stream
 
-Creates a persistent subscription group for a specific stream.
-
 ```swift
-try await client.createPersistentSubscription(
-    stream: "order-events",
-    groupName: "order-processing-workers"
-) {
-    $0.startFrom(revision: .start)
-      .messageTimeout(seconds: 30)
-      .maxRetryCount(5)
-      .bufferSize(20)
-      .checkpointAfter(seconds: 10)
-}
+try await client.persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .create {
+        $0.revision = .start
+        $0.settings.messageTimeout = .ms(30_000)
+        $0.settings.maxRetryCount = 5
+        $0.settings.checkpointAfter = .ms(10_000)
+    }
 ```
+
+A new group starts at the **end** of the stream unless you set `revision`.
 
 ### On the $all stream
 
-Creates a subscription group that processes events from every stream in the event store. Useful for cross-cutting concerns like audit logging or analytics.
+A group on `$all` processes events from every stream — useful for cross-cutting work such as audit logging or analytics. Set `filter` to limit it to the streams or event types you need:
 
 ```swift
-try await client.createPersistentSubscriptionToAllStream(
-    groupName: "global-audit-logger"
-) {
-    $0.startFrom(position: .start)
-      .messageTimeout(seconds: 60)
-      .maxRetryCount(3)
-      .checkpointAfter(seconds: 30)
-}
+try await client.persistentSubscriptions(filterGroup: "global-audit-logger")
+    .create {
+        $0.position = .start
+        $0.filter = .onStreamName(prefixes: ["order-", "payment-"])
+        $0.settings.messageTimeout = .ms(60_000)
+        $0.settings.maxRetryCount = 3
+    }
 ```
 
-> Warning: `$all` subscriptions can generate very high event volumes. Configure appropriate filters and buffer sizes to prevent overwhelming consumers.
+> Warning: `$all` groups can see very high event volumes. Use a filter and suitable buffer sizes so consumers aren't overwhelmed.
 
-### Configuration options
+### Settings
 
-| Option | Description |
-|--------|-------------|
-| Start Position | Where to begin reading (start, end, position/revision) |
-| Message Timeout | How long to wait for ACK before retrying |
-| Max Retry Count | Number of retries before parking failed events |
-| Buffer Size | Number of events to buffer per consumer |
-| Strategy | Round-robin, dispatch to single, or pinned consumer |
-| Live Buffer Size | In-memory buffer for live events |
-| Read Batch Size | Number of events to read from disk per batch |
-| Checkpoint Settings | Checkpoint interval and thresholds |
+`settings` is a ``PersistentSubscription/CreateSettings`` value. Its defaults match the server's:
+
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| `messageTimeout` | 30 s | How long the server waits for an ack before retrying |
+| `maxRetryCount` | 10 | Retries before an event is parked |
+| `checkpointAfter` | 2 s | Minimum time between checkpoints |
+| `checkpointCount` | `10...1000` | Minimum and maximum events between checkpoints |
+| `liveBufferSize` | 500 | Live events buffered in memory |
+| `readBatchSize` | 20 | Events read from disk per batch |
+| `historyBufferSize` | 500 | Historical events buffered in memory |
+| `maxSubscriberCount` | 0 (unlimited) | Maximum consumers in the group |
+| `consumerStrategy` | `.roundRobin` | `.roundRobin`, `.dispatchToSingle`, `.pinned`, `.pinnedByCorrelation` |
+| `resolveLink` | `false` | Deliver the linked event for link events |
+
+Durations are ``TimeSpan`` values, such as `.ms(30_000)`.
 
 ## Subscribe and process events
 
 ### Connecting a consumer
 
 ```swift
-let subscription = try await client.subscribePersistentSubscription(
-    stream: "order-events",
-    groupName: "order-processing-workers"
-)
+let subscription = try await client
+    .persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .subscribe()
 
 for try await result in subscription.events {
-    // Process the event
-    let event = result.event
-
-    // Acknowledge successful processing
-    try await subscription.ack(readEvents: event)
+    print(result.event.record, "retry count:", result.retryCount)
+    try await subscription.ack(readEvents: result.event)
 }
 ```
 
+Set `bufferSize` in the `subscribe` closure to control how many unacknowledged events the server sends ahead.
+
 ### Acknowledging events
 
-Each event must be acknowledged with one of these actions:
+Acknowledge every event you receive:
 
-| Action | Description |
-|--------|-------------|
-| ACK | Event processed successfully, advance checkpoint |
-| NAK (retry) | Event processing failed, retry based on subscription settings |
-| NAK (park) | Move event to parked queue for manual intervention |
-| NAK (skip) | Skip this event without retrying |
+| Call | Effect |
+|------|--------|
+| `ack(readEvents:)` | Processed; the checkpoint can move past it |
+| `nack(readEvents:action: .retry, reason:)` | Failed; redeliver it |
+| `nack(readEvents:action: .park, reason:)` | Move it to the parked queue for manual handling |
+| `nack(readEvents:action: .skip, reason:)` | Drop it without retrying |
+
+<!-- snippet:toplevel -->
+```swift
+struct RecoverableError: Error {}
+
+func processOrder(_ event: ReadEvent) async throws {
+    // Your processing logic.
+}
+```
 
 ```swift
+let subscription = try await client
+    .persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .subscribe()
+
 for try await result in subscription.events {
     do {
         try await processOrder(result.event)
         try await subscription.ack(readEvents: result.event)
     } catch let error as RecoverableError {
-        // Retry on recoverable errors
         try await subscription.nack(readEvents: result.event, action: .retry, reason: "\(error)")
     } catch {
-        // Park on unrecoverable errors for manual review
         try await subscription.nack(readEvents: result.event, action: .park, reason: "\(error)")
     }
 }
 ```
 
+> Warning: An event you neither ack nor nack times out and is retried, which can build a backlog.
+
 ### Subscribing to $all
 
 ```swift
-let subscription = try await client.subscribePersistentSubscriptionToAllStreams(
-    groupName: "global-audit-logger"
-)
+let subscription = try await client
+    .persistentSubscriptions(filterGroup: "global-audit-logger")
+    .subscribe()
 
 for try await result in subscription.events {
     try await subscription.ack(readEvents: result.event)
 }
 ```
 
-> Warning: Failing to acknowledge events causes them to time out and retry, potentially creating processing backlogs. Always ACK or NAK every event received.
+### Handling a dropped subscription
+
+When the server drops the subscription, iterating `events` throws ``KurrentError/subscriptionDropped(reason:lastRevision:lastPosition:)``. It carries the revision (stream groups) or position (`$all` groups) of the last event you received:
+
+```swift
+let subscription = try await client
+    .persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .subscribe()
+
+do {
+    for try await result in subscription.events {
+        try await subscription.ack(readEvents: result.event)
+    }
+} catch let KurrentError.subscriptionDropped(reason, lastRevision, lastPosition) {
+    print("Dropped: \(reason), last revision: \(String(describing: lastRevision)), last position: \(String(describing: lastPosition))")
+}
+```
+
+### Closing a subscription
+
+A subscription's connection closes when nothing references the subscription or its `events` stream any more — for example, when the scope holding them ends. This holds whether or not you iterated `events`.
+
+Breaking out of the `for try await` loop alone doesn't close the connection while you still hold the subscription. Let the references go, or call ``KurrentDBClient/shutdown()``, to end it.
 
 ## Update a subscription
 
-Updates configuration for an existing subscription group while preserving its checkpoint position.
+Change a group's settings while keeping its checkpoint. Only the settings you set change; ``PersistentSubscription/UpdateSettings`` leaves every `nil` setting as it is.
 
 ```swift
-try await client.updatePersistentSubscription(
-    stream: "order-events",
-    groupName: "order-processing-workers"
-) {
-    $0.messageTimeout(seconds: 120)
-      .maxRetryCount(10)
-      .bufferSize(50)
-}
+try await client.persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .update {
+        $0.settings.messageTimeout = .ms(120_000)
+        $0.settings.maxRetryCount = 10
+    }
 ```
 
-For `$all` subscriptions:
+For `$all` groups:
 
 ```swift
-try await client.updatePersistentSubscriptionToAllStream(
-    groupName: "analytics-processor"
-) {
-    $0.messageTimeout(seconds: 90)
-      .checkpointAfter(seconds: 60)
-}
+try await client.persistentSubscriptions(filterGroup: "analytics-processor")
+    .update {
+        $0.settings.messageTimeout = .ms(90_000)
+        $0.settings.checkpointAfter = .ms(60_000)
+    }
 ```
 
-> Note: Connected consumers may experience brief disruption as the new configuration takes effect.
+> Note: Connected consumers may be briefly disrupted while the new settings take effect.
+
+## Replay parked events
+
+Parked events stay in the group's parked queue until you replay them:
+
+```swift
+try await client.persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .replayParked()
+```
 
 ## Delete a subscription
 
-Permanently removes a subscription group, including its checkpoint, retry state, and parked events.
+Deleting a group removes its checkpoint, retry state and parked events.
 
 ```swift
-try await client.deletePersistentSubscription(
-    stream: "order-events",
-    groupName: "old-order-processor"
-)
+try await client.persistentSubscriptions(stream: "order-events", group: "old-order-processor")
+    .delete()
+
+try await client.persistentSubscriptions(filterGroup: "legacy-analytics")
+    .delete()
 ```
 
-For `$all` subscriptions:
+> Warning: Deletion is permanent.
+
+## Inspect subscriptions
+
+### One group
 
 ```swift
-try await client.deletePersistentSubscriptionToAllStream(
-    groupName: "legacy-analytics"
-)
+let info = try await client
+    .persistentSubscriptions(stream: "order-events", group: "order-processing-workers")
+    .getInfo()
+
+print(info.groupName, info.status, info.connections.count)
 ```
 
-> Warning: Deletion is permanent and cannot be undone. Checkpoint positions and parked events are lost.
-
-## List subscriptions
-
-### List by stream
+### Groups on a stream
 
 ```swift
-let subscriptions = try await client.listPersistentSubscriptions(stream: "orders")
+let subscriptions = try await client.persistentSubscriptions(filterStream: "orders").list()
 
-for sub in subscriptions {
-    print("Group: \(sub.groupName)")
-    print("Connections: \(sub.connectionCount)")
+for subscription in subscriptions {
+    print("Group: \(subscription.groupName), connections: \(subscription.connections.count)")
 }
 ```
 
-### List $all subscriptions
+### Every group on the server
 
 ```swift
-let allSubscriptions = try await client.listPersistentSubscriptionsToAllStream()
-
-for sub in allSubscriptions {
-    print("Global subscription: \(sub.groupName)")
-}
-```
-
-### List all subscriptions across all streams
-
-```swift
-let allSubscriptions = try await client.listAllPersistentSubscription()
+let allSubscriptions = try await client.allPersistentSubscriptions.list()
 
 print("Total subscription groups: \(allSubscriptions.count)")
 
-// Find subscriptions with parked events
-let withParked = allSubscriptions.filter { $0.parkedMessageCount > 0 }
-for sub in withParked {
-    print("\(sub.groupName): \(sub.parkedMessageCount) parked events")
+// Find groups with parked events
+for subscription in allSubscriptions where subscription.parkedMessageCount > 0 {
+    print("\(subscription.groupName): \(subscription.parkedMessageCount) parked events")
 }
 ```
 
 ## Restart the subsystem
 
-Restarts the entire persistent subscription subsystem, reinitializing all subscription groups from their last checkpoints. This is a cluster-wide disruptive operation.
+Restarting the persistent subscription subsystem reloads every group from its last checkpoint. It affects the whole cluster.
 
 ```swift
-try await client.restartPersistentSubscriptionSubsystem()
-```
-
-> Warning: All connected consumers will be disconnected. Only use during maintenance windows or when recovering from subsystem failures.
-
-## Target-based API
-
-Persistent subscriptions use a target-based API accessed through the ``Streams`` interface. The ``PersistentSubscriptionTarget`` protocol provides type-safe access to different subscription scopes.
-
-### Available targets
-
-| Target | Scope | Operations |
-|--------|-------|------------|
-| `SpecifiedPersistentSubscriptionTarget` | Specific stream + group | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
-| `AllStreamPersistentSubscriptionTarget` | `$all` stream + group | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
-| `AllPersistentSubscriptionTarget` | Cluster-wide | `list()`, `restartSubsystem()` |
-
-### Using the target API directly
-
-```swift
-// Specific stream + group
-let ps = client.persistentSubscriptions(stream: "orders", group: "order-workers")
-
-try await ps.create()
-let subscription = try await ps.subscribe()
-try await ps.delete()
-
-// $all stream + group
-let allPs = client.persistentSubscriptions(filterGroup: "audit-logger")
-
-try await allPs.create()
-let allSubscription = try await allPs.subscribe()
-
-// Cluster-wide operations
 try await client.allPersistentSubscriptions.restartSubsystem()
-let allSubs = try await client.allPersistentSubscriptions.list()
 ```
+
+> Warning: Every connected consumer is disconnected. Use it only in maintenance windows or to recover the subsystem.
 
 ## Architecture
 

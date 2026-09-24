@@ -4,19 +4,20 @@
     @TopicsVisualStyle(hidden)
 }
 
-The Kurrent Database Client SDK connected by `gRPC`.
+A modern, type-safe Swift client for KurrentDB (formerly EventStoreDB), built on gRPC and Swift Concurrency.
 
 ## Articles
-- <doc:Migration-guide>
 - <doc:Getting-started>
 - <doc:Appending-events>
 - <doc:Reading-events>
-- <doc:Projections>
-- <doc:User-management>
 - <doc:Persistent-subscriptions>
+- <doc:Managing-projections>
+- <doc:User-management>
 - <doc:Cluster-gossip>
-- <doc:Monitoring>
+- <doc:Server-statistics>
 - <doc:Server-operations>
+- <doc:Client-pools>
+- <doc:Migration-guide>
 
 ## Architecture
 - <doc:StreamsTarget-design>
@@ -27,112 +28,80 @@ The Kurrent Database Client SDK connected by `gRPC`.
 
 ## Usage
 
-Create a ``KurrentDBClient`` instance with client settings and the number of threads.
-Then, interact with a specific stream by creating a `Streams` client for it.
+Create one ``KurrentDBClient`` for your application and reuse it. Every operation starts from a value scoped to what it acts on — a stream, a projection, a subscription group — and the compiler only offers the operations that make sense for it.
 
 ### Streams
-```swift
-let clientSettings: ClientSettings = "kurrent://localhost:2113?tls=false" // Initialize with actual settings
-let client = KurrentDBClient(settings: clientSettings, numberOfThreads: 2)
-
-// Perform an action like appending events to the stream through a typed target
-try await client.streams(specified: "streamName").append(events: eventData)
-
-```
-
-### PersistentSubscriptions
 
 ```swift
-// Import packages of EventStoreDB.
-import KurrentDB
-
-// Using a client settings for a single node configuration by parsing a connection string.
-let settings: ClientSettings = .localhost()
-
-// Build a persistentSubscriptions client.
+let settings: ClientSettings = "kurrentdb://localhost:2113?tls=false"
 let client = KurrentDBClient(settings: settings)
 
-// the stream identifier to subscribe.
-let streamIdentifier = StreamIdentifier(name: UUID().uuidString)
+// Append to a stream
+try await client.streams(specified: "orders").append(events: [eventData])
 
-// the group of subscription
-let groupName = "myGroupTest"
+// Read it back
+for try await response in try await client.streams(specified: "orders").read() {
+    print(try response.event.record)
+}
+```
 
-let streamName = UUID().uuidString
+### Persistent subscriptions
 
-// Create and subscribe through the typed persistent-subscription target
-let persistentSubscriptions = client.persistentSubscriptions(stream: streamName, group: groupName)
+```swift
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "changeit"))
+let client = KurrentDBClient(settings: settings)
+
+// Create the group, then subscribe to it
+let persistentSubscriptions = client.persistentSubscriptions(stream: "orders", group: "order-workers")
 try await persistentSubscriptions.create()
 
 let subscription = try await persistentSubscriptions.subscribe()
 
-// Loop all results by subscription.events
 for try await result in subscription.events {
-    //handle result
-    // ...
-    
-    // ack the readEvent if succeed
+    // Handle the event, then acknowledge it...
     try await subscription.ack(readEvents: result.event)
-    // else nack thr readEvent if not succeed.
-    // try await subscription.nack(readEvents: result.event, action: .park, reason: "It's failed.")
+    // ...or reject it:
+    // try await subscription.nack(readEvents: result.event, action: .park, reason: "It failed.")
 }
-
 ```
 
-## New in 2.1
+## What's new
 
-### AppendRecords — Dynamic Consistency Boundary
+### 2.4
 
-Atomically append across multiple streams with cross-stream consistency checks.
-Requires server support (KurrentDB 25.1+).
+- **Connection management.** Calls that return a single response share one connection per node; reads and subscriptions each get their own, so long-lived subscriptions never compete with other calls. ``KurrentDBClient/shutdown()`` closes every connection the client opened, makes later calls throw ``KurrentError/connectionClosed``, and can be called more than once. See <doc:Getting-started>.
+- **Persistent subscriptions close when dropped.** A subscription's connection now closes once nothing references the subscription or its `events` stream (2.4.1).
+
+### 2.3
+
+- **`KurrentDBPool`.** Borrow a client for one of several independent KurrentDB instances, for example one per test. See <doc:Client-pools>.
+- **Persistent subscription defaults fixed.** `messageTimeout` and `checkpointAfter` now default to 30 s and 2 s, matching the server (2.3.1).
+
+### 2.2
+
+- **`ClientSettings.fromEnv(key:)`** builds settings from a connection string in an environment variable.
+
+### 2.1
+
+- **Multi-stream writes.** `appendRecords(events:checks:)` appends atomically with cross-stream consistency checks (Dynamic Consistency Boundary, KurrentDB 26.1+); `batchAppend(events:)` pipelines many non-atomic appends. See <doc:Appending-events>.
+- **Server-side `$all` filtering.** Set `filter` when reading `$all` to receive only matching stream names or event types. See <doc:Reading-events>.
+- **Per-call credentials and bearer tokens.** Call `authenticated(_:)` on a `Streams`, `Projections` or other value to override credentials for calls made through it, including ``Authentication/bearer(token:)``.
+- **`StreamFilter`.** Renamed from `SubscriptionFilter` (now deprecated); shared by subscriptions and filtered reads.
 
 ```swift
 try await client.multiStreams.appendRecords(
     events: [
         StreamEvent(stream: "order-1", records: [record]),
-        StreamEvent(stream: "inventory-1", records: [record]),
     ],
-    checks: [.streamState("order-1", .streamExists)]
+    checks: [.streamState("customer-42", .streamExists)]
 )
-```
 
-### BatchAppend
-
-High-throughput pipelined multi-stream append (v1 `BatchAppend`). Non-atomic —
-each item reports its own result.
-
-```swift
-let response = try await client.multiStreams.batchAppend(events: [
-    StreamEvent(stream: "orders", records: [record]),
-    StreamEvent(stream: "audit", records: [record]),
-])
-```
-
-### Server-side `$all` filtering
-
-Filter `$all` reads on the server by stream name or event type (prefix or regex).
-
-```swift
-let events = try await client.allStreams.read {
+let filtered = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
 }
-```
 
-### Per-call credentials & Bearer authentication
-
-Override authentication for a single operation — for multi-tenant or per-request
-authorization.
-
-```swift
 try await client.streams(specified: "orders")
-    .authenticated(.credentials(username: "svc", password: "secret"))
-    .append(events: [event])
+    .authenticated(.bearer(token: "user-access-token"))
+    .append(events: [eventData])
 ```
-
-### StreamFilter
-
-``StreamFilter`` (renamed from `SubscriptionFilter`, which is now deprecated) is the
-shared filter type for both persistent subscriptions and filtered `$all` reads. Build
-it with ``StreamFilter/onStreamName(prefixes:)`` or ``StreamFilter/onEventType(prefixes:)``.
-
-

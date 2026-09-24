@@ -14,8 +14,8 @@ StreamsTarget (Protocol)
 │   ├── SpecifiedStream (Struct)
 │   ├── ProjectionStream (Struct)
 │   └── String (Extension)
-├── AllStreams (Struct)
-├── MultiStreams (Struct)
+├── AllStreamsTarget (Struct)
+├── MultiStreamsTarget (Struct)
 └── AnyStreamTarget (Struct)
 ```
 
@@ -25,29 +25,29 @@ Each target type represents a different scope for stream operations:
 
 | Target | Purpose | Operations |
 |--------|---------|------------|
-| ``SpecifiedStream`` | Operates on a specific named stream | `append(events:)`, `read(configure:)`, `subscribe(configure:)`, `delete(configure:)`, `tombstone(configure:)` |
-| ``AllStreams`` | Operates on the global `$all` stream | `read(configure:)`, `subscribe(configure:)` |
-| ``MultiStreams`` | Batch operations across multiple streams | `append(events:)` (batch) |
-| ``ProjectionStream`` | System projection-generated streams | Inherits from ``SpecifiedStreamTarget`` |
+| ``SpecifiedStream`` | A single named stream | `append(events:configure:)`, `read(configure:)`, `subscribe(configure:)`, `delete(configure:)`, `tombstone(configure:)`, `getMetadata()`, `setMetadata(metadata:expectedRevision:)` |
+| ``AllStreamsTarget`` | The global `$all` stream | `read(configure:)`, `subscribe(configure:)` |
+| ``MultiStreamsTarget`` | Writes across several streams | `append(events:)`, `appendRecords(events:checks:)`, `batchAppend(events:)` |
+| ``ProjectionStream`` | Streams produced by system projections | Everything ``SpecifiedStreamTarget`` offers |
 
 ## Design decisions
 
-### Why separate SpecifiedStream and AllStreams?
+### Why separate SpecifiedStream and AllStreamsTarget?
 
 Stream operations have fundamentally different scopes:
 
-1. **SpecifiedStream** — Operates on a single named stream. Supports the full range of operations: append, read, subscribe, delete, and tombstone.
-2. **AllStreams** — Represents the global `$all` stream containing all events across all streams. Only supports read and subscribe operations — you cannot append to or delete `$all`.
+1. **SpecifiedStream** — A single named stream. Supports the full range of operations: append, read, subscribe, delete, tombstone and metadata.
+2. **AllStreamsTarget** — The global `$all` stream containing every event in the store. Supports only read and subscribe — you cannot append to or delete `$all`.
 
-This separation ensures you cannot accidentally append events to the `$all` stream or delete it, which would be invalid operations.
+This separation means you cannot accidentally append to or delete `$all`.
 
-### Why a separate MultiStreams target?
+### Why a separate MultiStreamsTarget?
 
-KurrentDB 25.1+ supports batch append across multiple streams in a single operation. ``MultiStreams`` isolates this capability from single-stream operations, making the API intent explicit.
+Writing to several streams in one call has its own guarantees and server requirements: an atomic multi-stream append (KurrentDB 25.1+), an atomic append with cross-stream consistency checks (`appendRecords`, KurrentDB 26.1+), and a pipelined, non-atomic `batchAppend`. ``MultiStreamsTarget`` keeps these apart from single-stream operations, so the intent is explicit.
 
 ### Why does String conform to SpecifiedStreamTarget?
 
-For convenience, `String` conforms to ``SpecifiedStreamTarget``, allowing stream names to be used directly where a stream identifier is expected. ``SpecifiedStream`` also conforms to `ExpressibleByStringLiteral` for the same reason.
+For convenience, `String` conforms to ``SpecifiedStreamTarget``, so stream names can be used directly where a stream target is expected. ``SpecifiedStream`` also conforms to `ExpressibleByStringLiteral` for the same reason.
 
 ## Static factory methods
 
@@ -55,37 +55,48 @@ Each target has a static factory method on ``StreamsTarget`` via `where Self ==`
 
 ```swift
 client.streams(of: .specified("orders"))            // SpecifiedStream
-client.streams(of: .all)                            // AllStreams
-client.streams(of: .multiple)                       // MultiStreams
+client.streams(of: .all)                            // AllStreamsTarget
+client.streams(of: .multiple)                       // MultiStreamsTarget
 client.streams(of: .byEventType("OrderCreated"))    // ProjectionStream
 client.streams(of: .byStream(prefix: "order"))      // ProjectionStream
 ```
 
-## Type safety
-
-The target-based design provides compile-time guarantees that prevent invalid operation combinations:
+The most common ones also have shorthands on ``KurrentDBClient``:
 
 ```swift
-// ✓ Correct: Append to a specific stream
+client.streams(specified: "orders")   // client.streams(of: .specified("orders"))
+client.allStreams                     // client.streams(of: .all)
+client.multiStreams                   // client.streams(of: .multiple)
+```
+
+## Type safety
+
+The target-based design turns invalid combinations into compile errors:
+
+```swift
+// ✓ Append to a specific stream
 try await client.streams(of: .specified("orders"))
-    .append(events: [...])
+    .append(events: [eventData])
 
-// ✓ Correct: Read from $all
-try await client.streams(of: .all)
-    .read(configure: { $0.forward() })
+// ✓ Read from $all
+let responses = try await client.streams(of: .all)
+    .read { $0.direction = .forward }
 
-// ✗ Compile error: Cannot append to $all
-try await client.streams(of: .all).append(events: [...])
+// ✓ Append to several streams at once
+try await client.streams(of: .multiple)
+    .append(events: [StreamEvent(stream: "orders", records: [record])])
+```
 
-// ✗ Compile error: Cannot delete $all
+<!-- snippet:skip -->
+```swift
+// ✗ Compile error: cannot append to $all
+try await client.streams(of: .all).append(events: [eventData])
+
+// ✗ Compile error: cannot delete $all
 try await client.streams(of: .all).delete()
 
-// ✓ Correct: Batch append to multiple streams
-try await client.streams(of: .multiple)
-    .append(events: [...])
-
-// ✗ Compile error: Cannot read from MultiStreams
-try await client.streams(of: .multiple).read(configure: { $0.forward() })
+// ✗ Compile error: cannot read from MultiStreamsTarget
+try await client.streams(of: .multiple).read()
 ```
 
 ## Comparison with other targets
@@ -95,24 +106,32 @@ try await client.streams(of: .multiple).read(configure: { $0.forward() })
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` |
 | Creation Target | — | `AllUsersTarget` | `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget` | `ScavengeOperations` |
 | Control Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` |
-| System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` |
-| Batch Target | `MultiStreams` | — | — | — |
-| Service Actor | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
+| System Target | `AllStreamsTarget` | — | `AnyProjectionsTarget` | `SystemOperations` |
+| Batch Target | `MultiStreamsTarget` | — | — | — |
+| Service | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
 
 ## File structure
 
 ```
 Sources/KurrentDB/Streams/
-├── StreamsTarget.swift                    # Base protocol + all target types + factory methods
-├── Streams.swift                          # Generic Streams<Target> actor
+├── KurrentDBClient+Streams.swift          # streams(of:), streams(specified:), allStreams, multiStreams
+├── Streams.swift                          # Generic Streams<Target> service
 ├── Streams.ReadResponse.swift             # Read response types
 ├── Streams.Subscription.swift             # Subscription types
+├── StreamFilter+Build.swift               # StreamFilter → gRPC request mapping
 ├── Additions/
-│   └── StreamIdentifier+Additions.swift   # StreamIdentifier extensions
+│   └── StreamIdentifier+Additions.swift
+├── API/                                   # Operations, one file per target constraint
+│   ├── Streams+SpecifiedStreamTarget.swift
+│   ├── Streams+AllStreamsTarget.swift
+│   └── Streams+ProjectionStream.swift     # ProjectionStream and MultiStreamsTarget
+├── Target/                                # StreamsTarget and every target type
 └── Usecase/
-    ├── Specified/                         # Single-stream operations
+    ├── Specified/                         # Single- and multi-stream operations
     │   ├── Streams.Append.swift
+    │   ├── Streams.AppendRecords.swift
     │   ├── Streams.AppendSession.swift
+    │   ├── Streams.BatchAppend.swift
     │   ├── Streams.Read.swift
     │   ├── Streams.Subscribe.swift
     │   ├── Streams.Delete.swift

@@ -10,10 +10,11 @@ The Persistent Subscriptions API uses a target-based design pattern, consistent 
 
 ```
 PersistentSubscriptionTarget (Protocol)
-├── PersistentSubscription.Specified (Struct)
-├── PersistentSubscription.AllStream (Struct)
-├── PersistentSubscription.All (Struct)
-└── PersistentSubscription.AnyTarget (Struct)
+├── SpecifiedPersistentSubscriptionTarget (Struct)
+├── AllStreamPersistentSubscriptionTarget (Struct)
+├── FilterStreamPersistentSubscriptionTarget (Struct)
+├── AllPersistentSubscriptionTarget (Struct)
+└── AnyPersistentSubscriptionTarget (Struct)
 ```
 
 ## Target types
@@ -22,157 +23,142 @@ Each target type represents a different scope for persistent subscription operat
 
 | Target | Properties | Purpose | Operations |
 |--------|-----------|---------|------------|
-| ``PersistentSubscription/Specified`` | `identifier`, `group` | Manage a subscription group on a specific stream | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
-| ``PersistentSubscription/AllStream`` | `group` | Manage a subscription group on the `$all` stream | `create()`, `update()`, `delete()`, `subscribe()`, `getInfo()`, `replayParked()` |
-| ``PersistentSubscription/All`` | — | Cluster-wide listing and subsystem control | `list(for:)`, `restartSubsystem()` |
-| ``PersistentSubscription/AnyTarget`` | — | Generic target for unspecified contexts | — |
+| ``SpecifiedPersistentSubscriptionTarget`` | `identifier`, `group` | A subscription group on a specific stream | `create`, `update`, `delete`, `subscribe`, `getInfo`, `replayParked` |
+| ``AllStreamPersistentSubscriptionTarget`` | `group` | A subscription group on the `$all` stream | `create`, `update`, `delete`, `subscribe`, `getInfo`, `replayParked` |
+| ``FilterStreamPersistentSubscriptionTarget`` | stream name | Every group on one stream | `list` |
+| ``AllPersistentSubscriptionTarget`` | — | Every group on the server, and the subsystem | `list`, `restartSubsystem` |
+| ``AnyPersistentSubscriptionTarget`` | — | Generic target for unspecified contexts | — |
 
 ## Design decisions
 
-### Why separate Specified and AllStream?
+### Why separate the specified and $all targets?
 
-Persistent subscriptions on specific streams and the `$all` stream have fundamentally different characteristics:
+Groups on a specific stream and groups on `$all` differ in kind:
 
-1. **Specified** — Targets a single stream by `StreamIdentifier` and a `group` name. Uses stream revisions for position tracking. Configuration options are stream-specific.
-2. **AllStream** — Targets the global `$all` stream with a `group` name. Uses commit positions instead of revisions. Supports additional options like event type filtering.
+1. **SpecifiedPersistentSubscriptionTarget** — a single stream, identified by its ``StreamIdentifier``, plus a group name. Positions are stream revisions.
+2. **AllStreamPersistentSubscriptionTarget** — the global `$all` stream plus a group name. Positions are commit positions, and groups can filter by stream name or event type.
 
-Each target holds the state needed for its scope: `Specified` stores both the stream identifier and group name, while `AllStream` only stores the group name (since the stream is implicitly `$all`).
+Each target holds only the state its scope needs: the specified target stores the stream identifier and the group name; the `$all` target stores just the group name, because the stream is implicitly `$all`.
 
-### Why a separate All target?
+### Why separate listing targets?
 
-``PersistentSubscription/All`` represents the cluster-wide view of persistent subscriptions. It does not target any specific subscription group — instead, it provides system-level operations:
-
-- **Listing** — Query subscription groups across all streams, a specific stream, or `$all`
-- **Subsystem restart** — Restart the entire persistent subscription subsystem
-
-These operations don't require a stream identifier or group name, so they are isolated from the stream-scoped targets.
+Listing doesn't address a single group, so it has its own targets: ``FilterStreamPersistentSubscriptionTarget`` lists the groups on one stream, and ``AllPersistentSubscriptionTarget`` lists every group and restarts the subsystem. Neither needs a group name, and neither can create or subscribe.
 
 ### Relationship with Streams
 
-Unlike other target-based APIs (Users, Operations, Projections), persistent subscriptions are accessed **through** the ``Streams`` API rather than directly from the client. This reflects the domain model: persistent subscriptions are always associated with a stream (either a specific stream or `$all`).
+Persistent subscriptions are always attached to a stream — a specific one or `$all` — so besides the client's own accessors, a ``Streams`` value can hand out the persistent subscriptions for its stream:
 
 ```swift
-// Persistent subscriptions are created via Streams
-client.streams(of: .specified("orders"))
-    .persistentSubscriptions(group: "workers")     // → PersistentSubscriptions<Specified>
+client.streams(specified: "orders")
+    .persistentSubscriptions(group: "workers")     // → PersistentSubscriptions<SpecifiedPersistentSubscriptionTarget>
 
-client.streams(of: .all)
-    .persistentSubscriptions(group: "audit")       // → PersistentSubscriptions<AllStream>
+client.allStreams
+    .persistentSubscriptions(group: "audit")       // → PersistentSubscriptions<AllStreamPersistentSubscriptionTarget>
 ```
 
-This design leverages the existing ``StreamsTarget`` infrastructure to determine whether the subscription is on a specific stream or `$all`, then creates the appropriate ``PersistentSubscriptionTarget`` type.
+Credentials set with `authenticated(_:)` on the ``Streams`` value carry over.
 
 ## Static factory methods
 
 Targets are created via `where Self ==` constrained extensions on ``PersistentSubscriptionTarget``:
 
 ```swift
-// Specific stream subscription
-PersistentSubscriptionTarget.specified("orders", group: "workers")
-PersistentSubscriptionTarget.specified(streamIdentifier, group: "workers")
-
-// All streams (cluster-wide operations)
-PersistentSubscriptionTarget.all
+client.persistentSubscriptions(of: .specified(stream: "orders", group: "workers"))
+client.persistentSubscriptions(of: .allStreams(group: "audit"))
+client.persistentSubscriptions(of: .filter(stream: "orders"))
+client.persistentSubscriptions(of: .all)
 ```
 
-In practice, targets are most commonly created through the ``Streams`` interface:
+The client also has shorthands for each:
 
 ```swift
-// Through Streams (recommended)
-client.streams(of: .specified("orders")).persistentSubscriptions(group: "workers")
-client.streams(of: .all).persistentSubscriptions(group: "audit")
+client.persistentSubscriptions(stream: "orders", group: "workers")
+client.persistentSubscriptions(filterGroup: "audit")
+client.persistentSubscriptions(filterStream: "orders")
+client.allPersistentSubscriptions
 ```
 
 ## Type safety
 
-The target-based design provides compile-time guarantees that prevent invalid operation combinations:
+The target-based design turns invalid combinations into compile errors:
 
 ```swift
-// ✓ Correct: Create subscription on a specific stream
-let specified = client.streams(of: .specified("orders"))
-    .persistentSubscriptions(group: "workers")
+// ✓ Manage and consume a group on a specific stream
+let specified = client.persistentSubscriptions(stream: "orders", group: "workers")
 try await specified.create()
-try await specified.subscribe()
+let subscription = try await specified.subscribe()
 try await specified.delete()
 
-// ✓ Correct: Create subscription on $all
-let allStream = client.streams(of: .all)
-    .persistentSubscriptions(group: "audit")
+// ✓ Manage and consume a group on $all
+let allStream = client.persistentSubscriptions(filterGroup: "audit")
 try await allStream.create()
-try await allStream.subscribe()
+let allSubscription = try await allStream.subscribe()
 
-// ✓ Correct: List all subscriptions cluster-wide
-let all = client.persistentSubscriptions  // PersistentSubscriptions<All>
-try await all.list(for: .allSubscriptions)
+// ✓ List every group and restart the subsystem
+let all = client.allPersistentSubscriptions
+let groups = try await all.list()
 try await all.restartSubsystem()
+```
 
-// ✗ Compile error: Cannot list from a specific subscription target
-try await specified.list(for: .allSubscriptions)
+<!-- snippet:skip -->
+```swift
+let specified = client.persistentSubscriptions(stream: "orders", group: "workers")
+let all = client.allPersistentSubscriptions
 
-// ✗ Compile error: Cannot restart subsystem from a stream-scoped target
+// ✗ Compile error: a group target can't list every group
+try await specified.list()
+
+// ✗ Compile error: a stream-scoped target can't restart the subsystem
 try await specified.restartSubsystem()
 
-// ✗ Compile error: Cannot create/subscribe from All target
+// ✗ Compile error: the server-wide target can't create or subscribe
 try await all.create()
 try await all.subscribe()
 ```
 
 ## Subscription class
 
-The ``PersistentSubscriptions/Subscription`` class is returned when subscribing to a persistent subscription group. It provides:
+``PersistentSubscriptions/Subscription`` is returned when you subscribe to a group. It provides:
 
-- **`events`** — An `AsyncThrowingStream` of ``PersistentSubscription/EventResult`` for consuming events
-- **`ack(readEvents:)`** — Acknowledge successful event processing
-- **`nack(readEvents:action:reason:)`** — Negatively acknowledge events with retry, park, or skip actions
+- **`events`** — An `AsyncThrowingStream` of ``PersistentSubscription/EventResult`` values to consume
+- **`ack(readEvents:)`** — Acknowledge successfully processed events
+- **`nack(readEvents:action:reason:)`** — Reject events with a retry, park, skip or stop action
 - **`subscriptionId`** — The server-assigned subscription identifier
+- **`lastRevision`** / **`lastPosition`** — Where the last received event was, for resuming after a drop
+
+The subscription's connection closes once nothing references the subscription or its `events` stream.
 
 ## Comparison with other targets
 
 | Concept | StreamsTarget | UsersTarget | ProjectionsTarget | OperationsTarget | PersistentSubscriptionTarget |
 |---------|--------------|-------------|-------------------|------------------|------------------------------|
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` | `PersistentSubscriptionTarget` |
-| Specified Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` | `PersistentSubscription.Specified` |
-| System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` | `PersistentSubscription.All` |
-| All-Stream Target | — | — | — | — | `PersistentSubscription.AllStream` |
-| Service Actor | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` | `PersistentSubscriptions<Target>` |
-| Access Pattern | `client.streams(of:)` | `client.users` / `client.user(_:)` | `client.projections(of:)` | `client.operations(of:)` | `client.streams(of:).persistentSubscriptions(group:)` |
+| Specified Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` | `SpecifiedPersistentSubscriptionTarget` |
+| System Target | `AllStreamsTarget` | — | `AnyProjectionsTarget` | `SystemOperations` | `AllPersistentSubscriptionTarget` |
+| All-Stream Target | — | — | — | — | `AllStreamPersistentSubscriptionTarget` |
+| Service | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` | `PersistentSubscriptions<Target>` |
+| Access Pattern | `client.streams(of:)` | `client.users` / `client.user(_:)` | `client.projections(of:)` | `client.operations(of:)` | `client.persistentSubscriptions(of:)` |
 
 ## File structure
 
 ```
 Sources/KurrentDB/PersistentSubscriptions/
-├── PersistentSubscriptionTarget.swift             # Base protocol + target types + factory methods
-├── PersistentSubscriptions.swift                   # Generic PersistentSubscriptions<Target> actor
+├── KurrentDBClient+PersistentSubscriptions.swift   # Client accessors
+├── PersistentSubscriptions.swift                   # Generic PersistentSubscriptions<Target> service
 ├── PersistentSubscriptions.Subscription.swift      # Subscription class (events, ack, nack)
 ├── PersistentSubscriptions.ReadResponse.swift      # Read response types
-├── PersistentSubscriptions.StreamSelection.swift   # Stream selection enum
-├── PersistentSubscriptions.ReplayParkedOptions.swift
-├── PersistentSubscriptionStreamSelection.swift
-├── PersistentSubscriptionsSettingsBuildable.swift   # Settings builder protocol
-├── Additions/
-│   ├── EventStore_Client_PersistentSubscriptions+Additions.swift
-│   ├── ReadEvent+Additions.swift
-│   └── PersistentSubscriptions+Convenience.swift
+├── PersistentSubscriptionsSettingsBuildable.swift  # Settings builder protocol
+├── API/                                            # Operations, one file per target
+│   ├── PersistentSubscriptions+Specified.swift
+│   ├── PersistentSubscriptions+AllStream.swift
+│   ├── PersistentSubscriptions+FilterStream.swift
+│   └── PersistentSubscriptions+All.swift
+├── Target/                                         # PersistentSubscriptionTarget and every target type
 └── Usecase/
-    ├── PersistentSubscriptions.Ack.swift            # Acknowledge events
-    ├── PersistentSubscriptions.Nack.swift           # Negative acknowledge events
+    ├── PersistentSubscriptions.Ack.swift
+    ├── PersistentSubscriptions.Nack.swift
     ├── PersistentSubscriptions.RestartSubsystem.swift
-    ├── All/
-    │   └── PersistentSubscriptions.ListForAll.swift # List all subscriptions
-    ├── Specified/                                   # Specific stream operations
-    │   ├── PersistentSubscriptions.SpecifiedStream.Create.swift
-    │   ├── PersistentSubscriptions.SpecifiedStream.Read.swift
-    │   ├── PersistentSubscriptions.SpecifiedStream.Update.swift
-    │   ├── PersistentSubscriptions.SpecifiedStream.Delete.swift
-    │   ├── PersistentSubscriptions.SpecifiedStream.GetInfo.swift
-    │   ├── PersistentSubscriptions.SpecifiedStream.List.swift
-    │   └── PersistentSubscriptions.SpecifiedStream.ReplayParked.swift
-    └── AllStream/                                   # $all stream operations
-        ├── PersistentSubscriptions.AllStream.Create.swift
-        ├── PersistentSubscriptions.AllStream.Read.swift
-        ├── PersistentSubscriptions.AllStream.Update.swift
-        ├── PersistentSubscriptions.AllStream.Delete.swift
-        ├── PersistentSubscriptions.AllStream.GetInfo.swift
-        ├── PersistentSubscriptions.AllStream.List.swift
-        └── PersistentSubscriptions.AllStream.ReplayParked.swift
+    ├── All/                                        # Server-wide listing
+    ├── Specified/                                  # Specific stream operations
+    └── AllStream/                                  # $all stream operations
 ```

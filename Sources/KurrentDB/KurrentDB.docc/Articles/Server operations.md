@@ -12,32 +12,7 @@ let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
 ```
 
-For TLS-enabled or multi-node clusters:
-
-```swift
-// Multi-node localhost with TLS
-let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
-    .secure(true)
-    .tlsVerifyCert(false)
-    .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
-let client = KurrentDBClient(settings: settings)
-
-// Remote cluster (secure: true by default)
-let settings = ClientSettings.remote(
-    "node1.example.com:2113",
-    "node2.example.com:2113",
-    "node3.example.com:2113"
-).authenticated(.credentials(username: "admin", password: "changeit"))
-  .certificate(path: "/path/to/ca.crt")
-let client = KurrentDBClient(settings: settings)
-
-// Remote without TLS
-let settings = ClientSettings.remote(
-    "node1.example.com:2113", secure: false
-).authenticated(.credentials(username: "admin", password: "changeit"))
-let client = KurrentDBClient(settings: settings)
-```
+For TLS, clusters and remote servers, see <doc:Getting-started>.
 
 ## Scavenge
 
@@ -64,8 +39,9 @@ The `startFromChunk` parameter allows resuming interrupted scavenges. Use `0` to
 
 ### Stop a scavenge
 
-Stops a running scavenge gracefully. The current chunk completes before halting, and the position is saved for potential resumption.
+Stops a running scavenge gracefully. The current chunk completes before halting.
 
+<!-- snippet:continue -->
 ```swift
 try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId))
     .stopScavenge()
@@ -83,11 +59,11 @@ let scavengeId = response.scavengeId
 // Later, stop if needed
 let stopResponse = try await client.operations(of: .activeScavenge(scavengeId: scavengeId))
     .stopScavenge()
-print("Scavenge stopped. Result: \(stopResponse.result)")
+print("Scavenge stopped. Result: \(stopResponse.scavengeResult)")
 
-// Resume later from where it stopped
+// Resume later from a chunk of your choosing
 try await client.operations(of: .scavenge)
-    .startScavenge(threadCount: 2, startFromChunk: lastCompletedChunk)
+    .startScavenge(threadCount: 2, startFromChunk: 10)
 ```
 
 > Warning: Scavenges can be resource-intensive. Schedule them during maintenance windows or low-traffic periods. Do not restart the server while a scavenge is running.

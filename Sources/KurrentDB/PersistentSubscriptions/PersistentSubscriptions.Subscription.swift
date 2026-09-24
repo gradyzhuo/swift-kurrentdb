@@ -29,7 +29,9 @@ extension PersistentSubscriptions {
     /// go (or shut the client down) to end it.
     ///
     /// ```swift
-    /// let subscription = try await ps.subscribe()
+    /// let subscription = try await client
+    ///     .persistentSubscriptions(stream: "orders", group: "workers")
+    ///     .subscribe()
     /// for try await result in subscription.events {
     ///     try await subscription.ack(readEvents: result.event)
     /// }

@@ -31,7 +31,7 @@ extension KurrentDBClient {
         streams(of: .specified(name))
     }
 
-    /// Streams interface for batch append operations across multiple streams (requires KurrentDB 25.1+).
+    /// Streams interface for writes across multiple streams: `append` (KurrentDB 25.1+), `appendRecords` (26.1+) and `batchAppend`.
     public var multiStreams: Streams<MultiStreamsTarget> {
         streams(of: .multiple)
     }
