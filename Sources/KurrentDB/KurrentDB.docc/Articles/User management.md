@@ -12,31 +12,7 @@ let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
 ```
 
-For TLS-enabled or remote clusters:
-
-```swift
-// Multi-node localhost with TLS
-let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
-    .secure(true)
-    .tlsVerifyCert(false)
-    .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
-let client = KurrentDBClient(settings: settings)
-
-// Remote cluster (secure: true by default)
-let settings = ClientSettings.remote(
-    "node1.example.com:2113",
-    "node2.example.com:2113",
-    "node3.example.com:2113"
-).authenticated(.credentials(username: "admin", password: "changeit"))
-let client = KurrentDBClient(settings: settings)
-
-// Remote without TLS
-let settings = ClientSettings.remote(
-    "node1.example.com:2113", secure: false
-).authenticated(.credentials(username: "admin", password: "changeit"))
-let client = KurrentDBClient(settings: settings)
-```
+For TLS, clusters and remote servers, see <doc:Getting-started>.
 
 ## User groups
 
@@ -163,7 +139,7 @@ try await client.user("jane_doe")
 
 ## Target-based API
 
-The `users` property and `user(_:)` method return a type-safe ``Users`` actor scoped to the given target. The target determines which operations are available at compile time.
+The `users` property and `user(_:)` method return a type-safe ``Users`` value scoped to the given target. The target determines which operations are available at compile time.
 
 ### Available targets
 
@@ -178,13 +154,17 @@ The target-based design provides compile-time guarantees:
 
 ```swift
 // client.users — can create users
-try await client.users.create(loginName: "user", ...)    // ✓ Allowed
-try await client.users.enable()                           // ✗ Compile error
+try await client.users.create(loginName: "user", password: "secret", fullName: "User", groups: [])
 
 // client.user("user") — can control a specific user
-try await client.user("user").details()    // ✓ Allowed
-try await client.user("user").enable()     // ✓ Allowed
-try await client.user("user").create(...)  // ✗ Compile error
+let details = try await client.user("user").details()
+try await client.user("user").enable()
+```
+
+<!-- snippet:skip -->
+```swift
+try await client.users.enable()                   // ✗ Compile error
+try await client.user("user").create(...)         // ✗ Compile error
 ```
 
 ## Architecture

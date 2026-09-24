@@ -59,7 +59,7 @@ client.user("jane_doe")              // Users<SpecifiedUserTarget>
 The target-based design provides compile-time guarantees that prevent invalid operation combinations:
 
 ```swift
-// ✓ Correct: Create a user via AllUsersTarget
+// ✓ Create a user via AllUsersTarget
 try await client.users.create(
     loginName: "jane_doe",
     password: "secure_password",
@@ -67,19 +67,22 @@ try await client.users.create(
     groups: [.ops]
 )
 
-// ✗ Compile error: Cannot create from SpecifiedUserTarget
-try await client.user("jane_doe").create(loginName: "other", ...)
-
-// ✓ Correct: Control a specific user
-try await client.user("jane_doe").details()
+// ✓ Control a specific user
+let details = try await client.user("jane_doe").details()
 try await client.user("jane_doe").enable()
 try await client.user("jane_doe").disable()
 try await client.user("jane_doe").change(password: "new", origin: "old")
+```
 
-// ✗ Compile error: Cannot call details() on AllUsersTarget
+<!-- snippet:skip -->
+```swift
+// ✗ Compile error: cannot create from SpecifiedUserTarget
+try await client.user("jane_doe").create(loginName: "other", password: "secret", fullName: "Other", groups: [])
+
+// ✗ Compile error: cannot call details() on AllUsersTarget
 try await client.users.details()
 
-// ✗ Compile error: Cannot call enable() on AllUsersTarget
+// ✗ Compile error: cannot call enable() on AllUsersTarget
 try await client.users.enable()
 ```
 
@@ -90,23 +93,23 @@ try await client.users.enable()
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` |
 | Creation Target | — | `AllUsersTarget` | `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget` | `ScavengeOperations` |
 | Control Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` |
-| System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` |
-| Service Actor | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
+| System Target | `AllStreamsTarget` | — | `AnyProjectionsTarget` | `SystemOperations` |
+| Service | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
 
 ## File structure
 
 ```
 Sources/KurrentDB/Users/
-├── UsersTarget.swift                      # Base protocol + static factory methods
-├── Protocols/
-│   ├── UserCreatable.swift                # User creation capability
-│   └── UserControllable.swift             # User control capability
-├── Targets/
-│   ├── AllUsersTarget.swift               # System-wide user creation target
-│   └── SpecifiedUserTarget.swift          # Specific user management target
-├── Users.swift                            # Generic Users<Target> actor
+├── KurrentDBClient+Users.swift            # client.users, client.user(_:)
+├── Users.swift                            # Generic Users<Target> service
 ├── UserDetails.swift                      # User details response type
 ├── UserGroup.swift                        # Type-safe user group enum
+├── Target/
+│   ├── UsersTarget.swift                  # Base protocol + static factory methods
+│   ├── UserCreatable.swift                # User creation capability
+│   ├── UserControllable.swift             # User control capability
+│   ├── AllUsersTarget.swift               # System-wide user creation target
+│   └── SpecifiedUserTarget.swift          # Specific user management target
 └── Usecase/
     ├── Users.Create.swift
     ├── Users.Details.swift

@@ -15,8 +15,8 @@ import RegexBuilder
 /// from a string literal wherever the type is known.
 ///
 /// ```swift
-/// let stream: StreamIdentifier = "orders-123"
-/// let stream = StreamIdentifier(name: "orders-123")
+/// let fromLiteral: StreamIdentifier = "orders-123"
+/// let fromName = StreamIdentifier(name: "orders-123")
 /// ```
 public struct StreamIdentifier: Sendable {
     package typealias UnderlyingMessage = EventStore_Client_StreamIdentifier

@@ -49,7 +49,7 @@ The shape of the public API and the underlying wire semantics owe a lot to the o
 **Where swift-kurrentdb diverges**
 - **Target-based API instead of flat methods.** Official clients expose a flat surface like `client.appendToStream(name, options, events)`. swift-kurrentdb scopes operations through typed targets — `client.streams(of: .specified("orders")).append(...)`, `client.projections(name: ...)`, `client.persistentSubscriptions(stream: ..., group: ...)` — so the compiler rules out illegal operations (e.g. tombstoning `$all`) before they reach the wire.
 - **Trailing-closure builders for options** instead of options objects/records. This keeps the call site terse and removes the need for either parameter overloads or partially-filled structs.
-- **Actor-based client with Swift 6 strict concurrency.** `KurrentDBClient` and `NodeSelector` are actors, not thread-safe instances guarded by locks. The whole package compiles under `-strict-concurrency=complete` with zero `@unchecked Sendable`.
+- **Swift 6 strict concurrency.** `KurrentDBClient` is a `Sendable` final class whose little mutable state sits behind a `Mutex`; `NodeSelector` is an actor. The whole package compiles in the Swift 6 language mode with zero `@unchecked Sendable`.
 - **Typed throws.** Operations throw `KurrentError` rather than a hierarchy of untyped exceptions, so callers exhaustively handle failure cases at compile time.
 - **Three-layer module split** (`KurrentDB` → `GRPCEncapsulates` → `Generated`). gRPC patterns (`UnaryUnary`, `UnaryStream`, etc.) live in their own module so the public API stays decoupled from generated protobuf types — the same pattern can be reused by other gRPC-backed Swift clients without dragging KurrentDB-specific types along.
 
@@ -348,10 +348,10 @@ We follow the [Swift API Design Guidelines](https://swift.org/documentation/api-
 4. **Async/Await**
    ```swift
    // ✅ Good: Use async/await
-   func readStream(_ streamName: String) async throws -> AsyncThrowingStream<Event, Error>
+   func read(configure: @Sendable (inout Read.Options) -> Void) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error>
    
    // ❌ Bad: Completion handlers (unless necessary for compatibility)
-   func readStream(_ streamName: String, completion: @escaping (Result<[Event], Error>) -> Void)
+   func read(completion: @escaping (Result<[Read.Response], Error>) -> Void)
    ```
 
 5. **Access Control**
@@ -380,23 +380,23 @@ We follow the [Swift API Design Guidelines](https://swift.org/documentation/api-
 
 2. **Test Structure**
    ```swift
-   final class StreamOperationsTests: XCTestCase {
-       var client: KurrentDBClient!
-       
-       override func setUp() async throws {
-           client = KurrentDBClient(settings: .localhost())
-       }
-       
-       func testAppendToStream() async throws {
+   @Suite("Stream Operations", .serialized)
+   struct StreamOperationsTests {
+       let client = KurrentDBClient(settings: .localhost())
+
+       @Test("Appending to a new stream starts it at revision 0")
+       func appendToNewStream() async throws {
            // Given
            let streamName = "test-\(UUID())"
            let event = EventData(eventType: "TestEvent", model: ["key": "value"])
-           
+
            // When
-           let result = try await client.appendStream(streamName, events: [event])
-           
+           let result = try await client.streams(specified: streamName).append(events: [event]) {
+               $0.expectedRevision = .noStream
+           }
+
            // Then
-           XCTAssertEqual(result.nextExpectedRevision, .specific(1))
+           #expect(result.currentRevision == 0)
        }
    }
    ```
@@ -420,7 +420,7 @@ We follow the [Swift API Design Guidelines](https://swift.org/documentation/api-
 swift test
 
 # Run specific test
-swift test --filter KurrentDBTests.StreamOperationsTests
+swift test --filter StreamsTests
 
 # Run with coverage
 swift test --enable-code-coverage
@@ -443,9 +443,9 @@ swift test --enable-code-coverage
    /// - ``init(settings:)``
    ///
    /// ### Stream Operations
-   /// - ``appendStream(_:events:options:)``
-   /// - ``readStream(_:options:)``
-   public class KurrentDBClient { }
+   /// - ``streams(specified:)``
+   /// - ``allStreams``
+   public final class KurrentDBClient { }
    ```
 
 2. **Include Examples**
@@ -454,14 +454,14 @@ swift test --enable-code-coverage
    ///
    /// ```swift
    /// let event = EventData(eventType: "OrderPlaced", model: order)
-   /// try await client.appendStream("orders", events: [event])
+   /// try await client.streams(specified: "orders").append(events: [event])
    /// ```
    ```
 
 3. **Articles and Tutorials**
-   - Add tutorials to `Documentation/KurrentDB.docc/`
+   - Add articles to `Sources/KurrentDB/KurrentDB.docc/Articles/`
    - Use clear, step-by-step instructions
-   - Include complete, working examples
+   - Include complete, working examples — `scripts/check-doc-snippets.sh` compiles every ```` ```swift ```` block in the docs and `///` comments, and CI fails if one breaks
 
 ### README and Guides
 

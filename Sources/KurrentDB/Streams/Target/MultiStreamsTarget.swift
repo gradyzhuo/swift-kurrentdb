@@ -3,7 +3,7 @@
 //  KurrentDB
 //
 
-/// Target for batch append operations across multiple streams (requires KurrentDB 25.1+).
+/// Target for writes across multiple streams: `append` (KurrentDB 25.1+), `appendRecords` (26.1+) and `batchAppend`.
 public struct MultiStreamsTarget: StreamsTarget {}
 
 extension StreamsTarget where Self == MultiStreamsTarget {

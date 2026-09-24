@@ -14,7 +14,7 @@
 /// struct OrderService {
 ///     let db: any KurrentDBClientProtocol
 ///
-///     func placeOrder(_ order: Order) async throws {
+///     func placeOrder(_ order: OrderPlaced) async throws {
 ///         let events = [EventData(eventType: "OrderPlaced", model: order)]
 ///         try await db.streams(specified: "orders").append(events: events)
 ///     }
@@ -41,7 +41,7 @@ public protocol KurrentDBClientProtocol: Sendable {
     /// Streams interface for the global `$all` stream.
     var allStreams: Streams<AllStreamsTarget> { get }
 
-    /// Streams interface for batch operations across multiple streams (requires server 25.1+).
+    /// Streams interface for writes across multiple streams: `append` (KurrentDB 25.1+), `appendRecords` (26.1+) and `batchAppend`.
     var multiStreams: Streams<MultiStreamsTarget> { get }
 
     // MARK: - Persistent Subscriptions

@@ -92,7 +92,7 @@
 
   <!-- ===================================================================== -->
   <article class="release" id="v2.4">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.4.0</span><span lang="zh-Hant">最新 · v2.4.0</span></div>
+    <div class="whats-new-tag"><span lang="en">Latest · v2.4.1</span><span lang="zh-Hant">最新 · v2.4.1</span></div>
     <h3 class="release-title"><span lang="en">Connection reuse — faster and more solid</span><span lang="zh-Hant">連線復用 —— 更快，也更穩</span></h3>
     <p class="lead" lang="en">
       Up to 2.3, every single call — each append, each read, each delete — dialled a brand-new
@@ -248,6 +248,10 @@ let client = KurrentDBClient(settings: settings)
 // When the app is shutting down
 try client.shutdown()</code></pre>
 
+    <h4 class="subsection-title"><span lang="en">2.4.1: dropped subscriptions hang up</span><span lang="zh-Hant">2.4.1：訂閱丟掉就掛線</span></h4>
+    <p lang="en">A persistent subscription's connection now closes as soon as nothing references the subscription or its <code>events</code> stream — even if you never iterated it. Before 2.4.1 a retain cycle kept those connections open.</p>
+    <p lang="zh-Hant">只要沒有人再持有持久訂閱或它的 <code>events</code> stream，它的連線就會關閉 —— 就算從來沒迭代過也一樣。2.4.1 之前，一個 retain cycle 會讓這些連線一直開著。</p>
+
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.4.0" target="_blank" rel="noopener"><span lang="en">Full 2.4.0 release notes →</span><span lang="zh-Hant">2.4.0 完整 release notes →</span></a></p>
   </article>
 
@@ -319,8 +323,8 @@ let custom = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")</code></pre>
     <div class="highlights">
       <div class="highlight">
         <h3>🧬 AppendRecords (Dynamic Consistency Boundary)</h3>
-        <p lang="en">Atomically append across multiple streams with cross-stream consistency checks. Requires server support (KurrentDB 25.1+).</p>
-        <p lang="zh-Hant">跨多個 stream 的原子寫入，帶前置一致性檢查（Dynamic Consistency Boundary）。需伺服器支援（KurrentDB 25.1+）。</p>
+        <p lang="en">Atomically append across multiple streams with cross-stream consistency checks. Requires server support (KurrentDB 26.1+).</p>
+        <p lang="zh-Hant">跨多個 stream 的原子寫入，帶前置一致性檢查（Dynamic Consistency Boundary）。需伺服器支援（KurrentDB 26.1+）。</p>
       </div>
       <div class="highlight">
         <h3>🚀 BatchAppend</h3>
@@ -515,10 +519,15 @@ let production = ClientSettings.remote(
 let client = KurrentDBClient(settings: settings)</code></pre>
 
   <h3><span lang="en">Append &amp; Read Events</span><span lang="zh-Hant">寫入與讀取事件</span></h3>
-  <pre><code class="lang-swift">// Create an event
+  <pre><code class="lang-swift">struct OrderPlaced: Codable, Sendable {
+    let orderId: String
+    let total: Double
+}
+
+// Create an event
 let event = EventData(
     eventType: "OrderPlaced",
-    model: ["orderId": "order-123", "total": 99.99]
+    model: OrderPlaced(orderId: "order-123", total: 99.99)
 )
 
 // Append to stream
@@ -533,17 +542,16 @@ let responses = try await client.streams(specified: "orders").read {
 }
 
 for try await response in responses {
-    if let event = try response.event {
-        print("Event: \(event.record.eventType)")
-    }
+    let readEvent = try response.event
+    print("Event: \(readEvent.record.eventType)")
 }</code></pre>
 
   <h3><span lang="en">Subscribe</span><span lang="zh-Hant">訂閱</span></h3>
   <pre><code class="lang-swift">// Catch-up subscription
 let subscription = try await client.streams(specified: "orders").subscribe()
 
-for try await event in subscription.events {
-    print("Live event: \(event.record.eventType)")
+for try await readEvent in subscription.events {
+    print("Live event: \(readEvent.record.eventType)")
 }</code></pre>
 </section>
 
@@ -617,9 +625,9 @@ let members = try await client.readCluster()</code></pre>
       </thead>
       <tbody>
         <tr><td><strong>KurrentDB 26.1</strong></td><td>✅</td><td><span lang="en">Full feature support</span><span lang="zh-Hant">全功能支援</span></td></tr>
-        <tr><td><strong>KurrentDB 26.0</strong></td><td>✅</td><td><span lang="en">Full feature support</span><span lang="zh-Hant">全功能支援</span></td></tr>
-        <tr><td><strong>KurrentDB 25.1</strong></td><td>✅</td><td><span lang="en">Full feature support</span><span lang="zh-Hant">全功能支援</span></td></tr>
-        <tr><td><strong>EventStoreDB 24.x</strong></td><td>✅</td><td><span lang="en">Core features · v2 batch append not available</span><span lang="zh-Hant">核心功能 · 尚未提供 v2 batch append</span></td></tr>
+        <tr><td><strong>KurrentDB 26.0</strong></td><td>✅</td><td><span lang="en">Everything except AppendRecords (26.1+)</span><span lang="zh-Hant">AppendRecords（26.1+）以外全部支援</span></td></tr>
+        <tr><td><strong>KurrentDB 25.1</strong></td><td>✅</td><td><span lang="en">Everything except AppendRecords (26.1+)</span><span lang="zh-Hant">AppendRecords（26.1+）以外全部支援</span></td></tr>
+        <tr><td><strong>EventStoreDB 24.x</strong></td><td>✅</td><td><span lang="en">Core features · no multi-stream append or AppendRecords</span><span lang="zh-Hant">核心功能 · 無多 stream 原子寫入與 AppendRecords</span></td></tr>
       </tbody>
     </table>
   </div>

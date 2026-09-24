@@ -42,7 +42,7 @@ extension EventRecord {
     /// ```swift
     /// let record = try EventRecord(
     ///     eventType: "order-placed",
-    ///     payload: .json(OrderPlaced(id: "123", total: 42.0))
+    ///     payload: .json(OrderPlaced(orderId: "123", total: 42.0))
     /// )
     /// ```
     ///

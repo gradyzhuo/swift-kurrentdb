@@ -51,12 +51,15 @@ let client = KurrentDBClient(settings: settings)
 
 The `cerificates` property and `cerificate(source:)` / `cerificate(path:)` builder methods were misspelled in 1.x. They are corrected in 2.x and the old names are kept as deprecated aliases.
 
+<!-- snippet:skip -->
 ```swift
 // 1.x (misspelled — still compiles but emits a deprecation warning)
-settings.cerificate(source: .crtInBundle("ca", inBundle: .module)!)
+settings.cerificate(source: .crtInBundle("ca")!)
+```
 
+```swift
 // 2.x (correct)
-settings.certificate(source: .crtInBundle("ca", inBundle: .module)!)
+let withCertificate = settings.certificate(source: .crtInBundle("ca")!)
 ```
 
 ---
@@ -65,6 +68,7 @@ settings.certificate(source: .crtInBundle("ca", inBundle: .module)!)
 
 In 1.x, options were configured by chaining methods that each returned `Self`:
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let options = StreamsReadOptions()
@@ -77,8 +81,8 @@ In 2.x, options are configured through an `inout` closure passed directly to the
 
 ```swift
 // 2.x
-try await stream.read {
-    $0.maxCount = 10
+let responses = try await client.streams(specified: "orders").read {
+    $0.limit = 10
     $0.direction = .backward
     $0.revision = .end
 }
@@ -90,12 +94,15 @@ try await stream.read {
 
 ### Appending events
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.appendToStream("orders", events: [eventData]) {
     $0.revision(expected: .streamExists)
 }
+```
 
+```swift
 // 2.x
 try await client.streams(of: .specified("orders")).append(events: [eventData]) {
     $0.expectedRevision = .streamExists
@@ -104,15 +111,18 @@ try await client.streams(of: .specified("orders")).append(events: [eventData]) {
 
 ### Reading from a stream
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let responses = try await client.readStream("orders") {
     $0.limit(10).backward().startFrom(revision: .end)
 }
+```
 
+```swift
 // 2.x
 let responses = try await client.streams(of: .specified("orders")).read {
-    $0.maxCount = 10
+    $0.limit = 10
     $0.direction = .backward
     $0.revision = .end
 }
@@ -120,45 +130,57 @@ let responses = try await client.streams(of: .specified("orders")).read {
 
 ### Reading from $all
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let responses = try await client.readAllStreams {
     $0.limit(50)
 }
+```
 
+```swift
 // 2.x
 let responses = try await client.allStreams.read {
-    $0.maxCount = 50
+    $0.limit = 50
 }
 ```
 
 ### Subscribing to a stream
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let subscription = try await client.subscribeStream("orders")
+```
 
+```swift
 // 2.x
 let subscription = try await client.streams(of: .specified("orders")).subscribe()
 ```
 
 ### Subscribing to $all
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let subscription = try await client.subscribeAllStreams()
+```
 
+```swift
 // 2.x
 let subscription = try await client.allStreams.subscribe()
 ```
 
 ### Deleting / tombstoning a stream
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.deleteStream("orders")
 try await client.tombstoneStream("orders")
+```
 
+```swift
 // 2.x
 try await client.streams(of: .specified("orders")).delete()
 try await client.streams(of: .specified("orders")).tombstone()
@@ -166,13 +188,16 @@ try await client.streams(of: .specified("orders")).tombstone()
 
 ### Stream metadata
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.setStreamMetadata("orders", metadata: metadata)
 let metadata = try await client.getStreamMetadata("orders")
+```
 
+```swift
 // 2.x
-try await client.streams(of: .specified("orders")).setMetadata(metadata: metadata)
+try await client.streams(of: .specified("orders")).setMetadata(metadata: StreamMetadata().maxCount(1000))
 let metadata = try await client.streams(of: .specified("orders")).getMetadata()
 ```
 
@@ -182,7 +207,7 @@ let metadata = try await client.streams(of: .specified("orders")).getMetadata()
 // 2.x provides convenience accessors
 client.streams(specified: "orders")   // same as .streams(of: .specified("orders"))
 client.allStreams                      // same as .streams(of: .all)
-client.multiStreams                    // multi-stream batch (KurrentDB 25.1+)
+client.multiStreams                    // multi-stream writes: append, appendRecords, batchAppend
 ```
 
 ---
@@ -191,20 +216,24 @@ client.multiStreams                    // multi-stream batch (KurrentDB 25.1+)
 
 ### Create
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.createContinuousProjection(name: "by-order", query: js)
 try await client.createOneTimeProjection(query: js)
 try await client.createTransientProjection(name: "temp", query: js)
+```
 
+```swift
 // 2.x
-try await client.projections(of: .continuous("by-order")).create(query: js)
+try await client.projections(of: .continuous(name: "by-order")).create(query: js)
 try await client.projections(of: .onetime).create(query: js)
-try await client.projections(of: .transient("temp")).create(query: js)
+try await client.projections(of: .transient(name: "temp")).create(query: js)
 ```
 
 ### Lifecycle operations
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.enableProjection(name: "by-order")
@@ -212,7 +241,9 @@ try await client.disableProjection(name: "by-order")
 try await client.abortProjection(name: "by-order")
 try await client.resetProjection(name: "by-order")
 try await client.deleteProjection(name: "by-order")
+```
 
+```swift
 // 2.x
 let proj = client.projections(name: "by-order")
 try await proj.enable()
@@ -224,11 +255,14 @@ try await proj.delete()
 
 ### Query result / state
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let result: MyResult? = try await client.getProjectionResult(of: MyResult.self, name: "by-order")
 let state: MyState? = try await client.getProjectionState(of: MyState.self, name: "by-order")
+```
 
+```swift
 // 2.x
 let result: MyResult? = try await client.projections(name: "by-order").result(of: MyResult.self)
 let state: MyState? = try await client.projections(name: "by-order").state(of: MyState.self)
@@ -236,11 +270,14 @@ let state: MyState? = try await client.projections(name: "by-order").state(of: M
 
 ### Detail & listing
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let detail = try await client.getProjectionDetail(name: "by-order")
 let all = try await client.listAllProjections(mode: .continuous)
+```
 
+```swift
 // 2.x
 let detail = try await client.projections(name: "by-order").detail()
 let all = try await client.projections(of: .anyMode).list()
@@ -251,7 +288,7 @@ let all = try await client.projections(of: .anyMode).list()
 ```swift
 // 2.x — new in 2.x, no direct equivalent in 1.x
 try await client.projections(system: .byCategory).enable()
-try await client.projections(system: .streamByType).enable()
+try await client.projections(system: .streamByCategory).enable()
 ```
 
 ---
@@ -260,18 +297,22 @@ try await client.projections(system: .streamByType).enable()
 
 ### Create
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.createPersistentSubscription(stream: "orders", groupName: "workers")
 try await client.createPersistentSubscriptionToAllStream(groupName: "all-workers")
+```
 
+```swift
 // 2.x
 try await client.persistentSubscriptions(stream: "orders", group: "workers").create()
-try await client.allPersistentSubscriptions.create()  // uses group configured via closure
+try await client.persistentSubscriptions(filterGroup: "all-workers").create()
 ```
 
 ### Subscribe & acknowledge
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let subscription = try await client.subscribePersistentSubscription(
@@ -280,7 +321,9 @@ let subscription = try await client.subscribePersistentSubscription(
 for try await result in subscription.events {
     try await subscription.ack(readEvents: result.event)
 }
+```
 
+```swift
 // 2.x
 let subscription = try await client.persistentSubscriptions(
     stream: "orders", group: "workers"
@@ -297,6 +340,7 @@ for try await result in subscription.events {
 
 In 2.x, when the server drops the subscription, the `events` stream throws `KurrentError.subscriptionDropped` instead of ending silently:
 
+<!-- snippet:continue -->
 ```swift
 do {
     for try await result in subscription.events {
@@ -310,11 +354,14 @@ do {
 
 ### Delete & update
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.deletePersistentSubscription(stream: "orders", groupName: "workers")
 try await client.updatePersistentSubscription(stream: "orders", groupName: "workers") { $0 }
+```
 
+```swift
 // 2.x
 try await client.persistentSubscriptions(stream: "orders", group: "workers").delete()
 try await client.persistentSubscriptions(stream: "orders", group: "workers").update()
@@ -322,10 +369,13 @@ try await client.persistentSubscriptions(stream: "orders", group: "workers").upd
 
 ### Listing
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let list = try await client.listAllPersistentSubscription()
+```
 
+```swift
 // 2.x
 let list = try await client.allPersistentSubscriptions.list()
 ```
@@ -336,6 +386,7 @@ let list = try await client.allPersistentSubscriptions.list()
 
 ### Create & manage
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.createUser(loginName: "alice", password: "secret", fullName: "Alice", groups: ["admins"])
@@ -343,7 +394,9 @@ try await client.enableUser(loginName: "alice")
 try await client.disableUser(loginName: "alice")
 try await client.changeUserPassword(loginName: "alice", currentPassword: "secret", newPassword: "new")
 try await client.resetUserPassword(loginName: "alice", newPassword: "reset")
+```
 
+```swift
 // 2.x
 try await client.users.create(loginName: "alice", password: "secret", fullName: "Alice", groups: ["admins"])
 try await client.user("alice").enable()
@@ -358,11 +411,14 @@ try await client.user("alice").reset(password: "reset")
 
 ### Scavenge
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 let response = try await client.startScavenge(threadCount: 1, startFromChunk: 0)
 try await client.stopScavenge(scavengeId: response.scavengeId)
+```
 
+```swift
 // 2.x
 let response = try await client.operations(of: .scavenge).startScavenge(threadCount: 1, startFromChunk: 0)
 try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId)).stopScavenge()
@@ -370,13 +426,16 @@ try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId)
 
 ### Other operations
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.mergeIndexes()
 try await client.restartPersistentSubscriptions()
 try await client.resignNode()
 try await client.setNodePriority(priority: 3)
+```
 
+```swift
 // 2.x
 try await client.operations(of: .system).mergeIndexes()
 try await client.operations(of: .system).restartPersistentSubscriptions()

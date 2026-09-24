@@ -1,181 +1,147 @@
 # Appending events
 
-
-> Tips: Check the Getting Started guide to learn how to configure and use the client SDK.
+> Tip: See <doc:Getting-started> to learn how to configure and create a ``KurrentDBClient``.
 
 ## Append your first event
-The simplest way to append an event to KurrentDB is to create an `EventData` object and call ``Streams/append(events:options:)`` method from ``KurrentDBClient/streams(of:)``.
 
+The simplest way to append an event is to create an ``EventData`` value and pass it to `append(events:configure:)` on the ``Streams`` value for the stream:
+
+<!-- snippet:toplevel -->
 ```swift
-let data = TestEvent(
-    id: "1",
-    note: "I wrote my first event!"
-)
-
-let event = EventData(
-    id: UUID(),
-    eventType: "\(TestEvent.self)",
-    payload: data
-)
-
-try await client.appendStream("some-stream", events: event){
-    $0.revision(expected: .noStream)
+struct TestEvent: Codable, Sendable {
+    let id: String
+    let note: String
 }
 ```
 
-Append to streams takes a collection of `EventData`, which allows you to save more than one event in a single batch.
+```swift
+let event = EventData(
+    eventType: "TestEvent",
+    model: TestEvent(id: "1", note: "I wrote my first event!")
+)
 
-Outside the example above, other options exist for dealing with different scenarios.
+try await client.streams(specified: "some-stream").append(events: [event]) {
+    $0.expectedRevision = .noStream
+}
+```
+
+`append` takes an array of events (or a variadic list), so you can save several events in a single atomic write. The closure configures the append options as an `inout` value; leave it out to append with no expectation about the stream's state.
 
 ## Working with EventData
 
-Events appended to KurrentDB must be wrapped in an `EventData` instance. This allows you to specify the event's content, the type of event, and whether it's in JSON format. In its simplest form, you need three arguments: `eventId`, `type`, and `payload`.
+Events appended to KurrentDB are wrapped in an ``EventData`` value. It holds the event's ID, its type, its payload, and optional metadata.
 
+### id
 
-### eventId
-This takes the format of a `UUID` and is used to uniquely identify the event you are trying to append. If two events with the same Uuid are appended to the same stream in quick succession, KurrentDB will only append one of the events to the stream.
+A `UUID` that uniquely identifies the event. It defaults to a new random `UUID`. If two events with the same ID are appended to the same stream in quick succession, KurrentDB appends only one of them.
 
-For example, the following code will only append a single event:
+For example, the following code appends a single event:
 
 ```swift
-let data = TestEvent(
-    id: "1",
-    note: "I wrote my first event!"
-)
-
 let event = EventData(
     id: UUID(),
-    eventType: "\(TestEvent.self)",
-    payload: data
+    eventType: "TestEvent",
+    model: TestEvent(id: "1", note: "I wrote my first event!")
 )
 
-let copiedEvent = event
-
-try await client.appendStream("some-stream", events: event, copiedEvent)
+try await client.streams(specified: "some-stream").append(events: event, event)
 ```
 
-### type
-Each event should be supplied with an event type. This unique string is used to identify the type of event you are saving.
+### eventType
 
-It is common to see the explicit event code type name used as the type as it makes serialising and de-serialising of the event easy. However, we recommend against this as it couples the storage to the type and will make it more difficult if you need to version the event at a later date.
+A string that identifies the kind of event. Using the Swift type name is convenient for serialising and deserialising, but it couples storage to your code: renaming or versioning the type later becomes harder. Prefer a stable name you choose explicitly.
 
-### payload 
+### Payload
 
-Representation of your event data. It is recommended that you store your events as JSON objects. This allows you to take advantage of all of KurrentDB's functionality, such as projections. That said, you can save events using whatever format suits your workflow. Eventually, the data will be stored as encoded bytes.
-The payload in EventData conforms to the Codable protocol, which means you can use any type that can be encoded to `JSON` or decoded from `JSON` by case json or passing a decoded data of `JSON` by `binary` case.
+Storing events as JSON lets you use all of KurrentDB's features, such as projections. You can create an ``EventData`` from:
+
+- a `Codable` model, encoded as JSON: `EventData(eventType:model:)`
+- raw bytes with a content type: `EventData(eventType:data:contentType:)` or `EventData(eventType:bytes:contentType:)`
+- an ``EventData/Payload`` value: `EventData(eventType:payload:)`
 
 ```swift
-extension EventData {
-    public enum Payload: Sendable {
-        case data(Data)
-        case json(Codable & Sendable)
-        // ...
-    }
-}
+let fromModel = EventData(eventType: "TestEvent", model: TestEvent(id: "1", note: "json"))
+
+let fromData = EventData(
+    eventType: "TestEvent",
+    data: Data(#"{"id":"2","note":"raw"}"#.utf8),
+    contentType: .json
+)
 ```
 
+### Metadata
 
-### metadata
-Storing additional information alongside your event that is part of the event itself is standard practice. This can be correlation IDs, timestamps, access information, etc. `KurrentDB` allows you to store a separate byte array containing this information to keep it separate.
+Information that belongs with the event but isn't part of it — correlation IDs, causation IDs, access information — goes in `customMetadata`, a separate byte array stored alongside the event:
 
+```swift
+let metadata = try JSONEncoder().encode(["correlationId": "abc-123"])
 
-
+let event = EventData(
+    eventType: "TestEvent",
+    model: TestEvent(id: "1", note: "with metadata"),
+    customMetadata: metadata
+)
+```
 
 ## Handling concurrency
-When appending events to a stream, you can supply a stream state or stream revision. Your client uses this to inform EventStoreDB of the state or version you expect the stream to be in when appending an event. If the stream isn't in that state, an exception will be thrown.
 
-For example, if you try to append the same record twice, expecting both times that the stream doesn't exist, you will get an exception on the second:
+When appending, you can state what you expect the stream's state to be. If the stream isn't in that state, the append fails with ``KurrentError/wrongExpectedVersion(expected:current:)``.
 
-```swift
-let data = TestEvent(
-    id: "1",
-    note: "some value"
-)
-
-let event = EventData(
-    id: UUID(),
-    eventType: "some-event",
-    payload: data
-)
-
-try await client.appendStream("same-event-stream", events: event){
-    $0.revision(expected: .noStream)
-}
-
-let data2 = TestEvent(
-    id: "2",
-    note: "some other value"
-)
-
-let event2 = EventData(
-    id: UUID(),
-    eventType: "some-event",
-    payload: data2
-)
-
-try await client.appendStream("same-event-stream", events: event2){
-    $0.revision(expected: .noStream)
-}
-
-```
-
-There are three available stream states:
-
-- any
-- noStream
-- streamExists
-- revision(UInt64)
+For example, appending twice while expecting that the stream doesn't exist fails on the second append:
 
 ```swift
-public enum Rule: Sendable {
-    case any
-    case noStream
-    case streamExists
-    case revision(UInt64)
+let stream = client.streams(specified: "same-event-stream")
+
+try await stream.append(events: EventData(eventType: "some-event", model: TestEvent(id: "1", note: "some value"))) {
+    $0.expectedRevision = .noStream
+}
+
+// Throws KurrentError.wrongExpectedVersion
+try await stream.append(events: EventData(eventType: "some-event", model: TestEvent(id: "2", note: "some other value"))) {
+    $0.expectedRevision = .noStream
 }
 ```
 
-This check can be used to implement optimistic concurrency. When retrieving a stream from `KurrentDB`, note the current version number. When you save it back, you can determine if somebody else has modified the record in the meantime.
+``StreamRevision`` has four cases:
 
+| Case | The append succeeds when |
+|------|--------------------------|
+| `.any` | always (the default) |
+| `.noStream` | the stream doesn't exist yet |
+| `.streamExists` | the stream exists |
+| `.at(UInt64)` | the stream's last event is at exactly this revision |
+
+`.at` gives you optimistic concurrency: read the stream's current revision, and when you write back, the append fails if someone else wrote in the meantime.
 
 ```swift
-let stream = client.streams(of: .specified("concurrency-stream"))
+let stream = client.streams(specified: "concurrency-stream")
 
-if case let .event(event) = try await client.readStream("concurrency-stream"){ $0.startFrom(revision: .end) }.first{ _ in true} {
-    let data = TestEvent(
-        id: "1",
-        note: "clientOne"
-    )
+let responses = try await stream.read {
+    $0.revision = .end
+    $0.direction = .backward
+    $0.limit = 1
+}
 
-    let revision = event.record.revision
+for try await response in responses {
+    let revision = try response.event.record.revision
 
-    try await client.appendStream("concurrency-stream", events: [
-            .init(
-                id: UUID(),
-                eventType: "some-event",
-                payload: data)
-        ]) {
-        $0.revision(expected: .revision(revision))
+    // Succeeds: nobody else has written since we read `revision`.
+    try await stream.append(events: EventData(eventType: "some-event", model: TestEvent(id: "1", note: "clientOne"))) {
+        $0.expectedRevision = .at(revision)
     }
-    
-    let data2 = TestEvent(
-        id: "2",
-        note: "clientTwo"
-    )
 
-    try await client.appendStream("concurrency-stream", events: [
-            .init(
-                id: UUID(),
-                eventType: "some-event",
-                payload: data2)
-        ]) {
-        $0.revision(expected: .revision(revision))
+    // Throws KurrentError.wrongExpectedVersion: the stream moved past `revision`.
+    try await stream.append(events: EventData(eventType: "some-event", model: TestEvent(id: "2", note: "clientTwo"))) {
+        $0.expectedRevision = .at(revision)
     }
 }
 ```
+
+The ``Streams/Append/Response`` returned by `append` carries the stream's new `currentRevision` and the commit `position`.
 
 ## User credentials
-You can provide user credentials to append the data as follows. This will override the default credentials set on the connection.
+
+Credentials set on ``ClientSettings`` apply to every call:
 
 ```swift
 let settings = ClientSettings.localhost()
@@ -183,36 +149,67 @@ let settings = ClientSettings.localhost()
 
 let client = KurrentDBClient(settings: settings)
 
-try await client.appendStream("some-stream", events: [
-        .init(
-            id: UUID(),
-            eventType: "some-event",
-            payload: data2)
+try await client.streams(specified: "some-stream").append(events: [event])
+```
+
+To use different credentials for a single call, call `authenticated(_:)` on the ``Streams`` value. The override applies only to calls made through the returned value:
+
+```swift
+try await client.streams(specified: "some-stream")
+    .authenticated(.credentials(username: "ops", password: "secret"))
+    .append(events: [event])
+```
+
+For TLS and remote connections, see <doc:Getting-started>.
+
+## Appending to several streams
+
+``KurrentDBClient/multiStreams`` appends to more than one stream in one call. Each ``StreamEvent`` names its target stream, the ``EventRecord`` values to write, and optionally an expected revision. There are three ways to send them, with different guarantees:
+
+| Method | Atomic | Server |
+|--------|--------|--------|
+| `append(events:)` | Yes — all streams or none | KurrentDB 25.1+ |
+| `appendRecords(events:checks:)` | Yes, plus consistency checks on any stream | KurrentDB 26.1+ |
+| `batchAppend(events:)` | No — each item succeeds or fails on its own | Any supported server |
+
+```swift
+let record = try EventRecord(eventType: "OrderPlaced", payload: .json(OrderPlaced(orderId: "order-1")))
+
+try await client.multiStreams.append(events: [
+    StreamEvent(stream: "order-1", records: [record], expectedRevision: .noStream),
+    StreamEvent(stream: "audit", records: [record]),
 ])
 ```
 
-For TLS-enabled or remote connections:
+### AppendRecords — Dynamic Consistency Boundary
+
+`appendRecords(events:checks:)` commits atomically and lets the write depend on streams it doesn't write to. Every ``StreamEvent`` whose expected revision isn't `.any` becomes a check on its own stream; ``ConsistencyCheck`` values in `checks` can name any other stream. If any check fails, nothing is written and the call throws ``KurrentError/consistencyViolation(violations:)`` listing every failed check.
 
 ```swift
-// Multi-node localhost with TLS
-let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
-    .secure(true)
-    .tlsVerifyCert(false)
-    .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
-let client = KurrentDBClient(settings: settings)
+try await client.multiStreams.appendRecords(
+    events: [
+        StreamEvent(stream: "order-1", records: [record]),
+    ],
+    checks: [
+        // Only place the order while the customer's stream is still where we read it.
+        .streamState("customer-42", .at(7)),
+    ]
+)
+```
 
-// Remote cluster (secure: true by default)
-let settings = ClientSettings.remote("db.example.com:2113")
-    .tlsVerifyCert(false)
-    .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
-let client = KurrentDBClient(settings: settings)
+### BatchAppend
 
-// Remote without TLS
-let settings = ClientSettings.remote("db.example.com:2113", secure: false)
-    .authenticated(.credentials(username: "admin", password: "changeit"))
-let client = KurrentDBClient(settings: settings)
+`batchAppend(events:)` pipelines many appends over one call for throughput. It is **not atomic**: some items can succeed while others fail. Conflicts on individual items don't throw — inspect the response instead. Only transport failures throw.
+
+```swift
+let response = try await client.multiStreams.batchAppend(events: [
+    StreamEvent(stream: "orders", records: [record]),
+    StreamEvent(stream: "audit", records: [record]),
+])
+
+for failure in response.failed {
+    print(failure.streamIdentifier.name, failure.message)
+}
 ```
 
 ## Architecture
