@@ -72,6 +72,9 @@ for try await result in subscription.events {
 
 - **Connection management.** Calls that return a single response share one connection per node; reads and subscriptions each get their own, so long-lived subscriptions never compete with other calls. ``KurrentDBClient/shutdown()`` closes every connection the client opened, makes later calls throw ``KurrentError/connectionClosed``, and can be called more than once. See <doc:Getting-started>.
 - **Persistent subscriptions close when dropped.** A subscription's connection now closes once nothing references the subscription or its `events` stream (2.4.1).
+- **Discovery retries wait.** Settings built in code now wait 100 ms between node-discovery attempts, like connection strings; before, they waited 100 µs, so retries were effectively immediate (2.4.2).
+- **X.509 client certificates are sent.** `userCertFile` / `userKeyFile` now present the certificate in the TLS handshake (2.4.2).
+- **`StreamFilter.onStreamName(prefixes:)`** accepts a variadic list, like `onEventType(prefixes:)`; `onStreamName(prefix:)` is deprecated (2.4.2).
 
 ### 2.3
 
