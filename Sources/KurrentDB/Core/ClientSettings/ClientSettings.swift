@@ -77,7 +77,7 @@ public struct ClientSettings: Sendable {
     ///   - connectionName: Optional label for this connection.
     ///   - keepAlive: Keep-alive timing. Defaults to `.default`.
     ///   - authentication: Credentials or certificate for authentication.
-    ///   - discoveryInterval: Interval between discovery polls. Defaults to 100 µs.
+    ///   - discoveryInterval: Interval between discovery polls. Defaults to 100 ms.
     ///   - maxDiscoveryAttempts: Maximum discovery retries. Defaults to 10.
     ///   - nodeCacheTTL: How long to cache a discovered node. Defaults to 30 seconds.
     ///   - operationRetryPolicy: Retry behaviour for node-failure errors.
@@ -93,7 +93,7 @@ public struct ClientSettings: Sendable {
         connectionName: String? = nil,
         keepAlive: KeepAlive = .default,
         authentication: Authentication? = nil,
-        discoveryInterval: Duration = .microseconds(100),
+        discoveryInterval: Duration = .milliseconds(100),
         maxDiscoveryAttempts: UInt16 = 10,
         nodeCacheTTL: Duration = .seconds(30),
         operationRetryPolicy: OperationRetryPolicy = OperationRetryPolicy(
