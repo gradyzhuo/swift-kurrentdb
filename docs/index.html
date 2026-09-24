@@ -67,7 +67,7 @@
   <p lang="en">Add to your <code>Package.swift</code>:</p>
   <p lang="zh-Hant">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.2")
 ]</code></pre>
   <p class="note" lang="en">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note" lang="zh-Hant">🎉 <strong>2.0 已上線</strong> —— 目前推薦使用 target-based API。仍在 1.x？改用 <code>KurrentDB_V1</code>，原本的程式碼可以繼續運作，遷移節奏由你決定。</p>
@@ -92,7 +92,7 @@
 
   <!-- ===================================================================== -->
   <article class="release" id="v2.4">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.4.1</span><span lang="zh-Hant">最新 · v2.4.1</span></div>
+    <div class="whats-new-tag"><span lang="en">Latest · v2.4.2</span><span lang="zh-Hant">最新 · v2.4.2</span></div>
     <h3 class="release-title"><span lang="en">Connection reuse — faster and more solid</span><span lang="zh-Hant">連線復用 —— 更快，也更穩</span></h3>
     <p class="lead" lang="en">
       Up to 2.3, every single call — each append, each read, each delete — dialled a brand-new
@@ -252,6 +252,16 @@ try client.shutdown()</code></pre>
     <p lang="en">A persistent subscription's connection now closes as soon as nothing references the subscription or its <code>events</code> stream — even if you never iterated it. Before 2.4.1 a retain cycle kept those connections open.</p>
     <p lang="zh-Hant">只要沒有人再持有持久訂閱或它的 <code>events</code> stream，它的連線就會關閉 —— 就算從來沒迭代過也一樣。2.4.1 之前，一個 retain cycle 會讓這些連線一直開著。</p>
 
+    <h4 class="subsection-title"><span lang="en">2.4.2: retries that actually wait, and X.509 that actually sends</span><span lang="zh-Hant">2.4.2：重試真的會等，X.509 真的會送</span></h4>
+    <ul>
+      <li lang="en">Settings built in code (<code>.localhost()</code>, <code>.remote()</code>, <code>ClientSettings(...)</code>) waited 100 µs between node-discovery retries instead of 100 ms, so a leader election failed calls at once. They now wait 100 ms, like connection strings.</li>
+      <li lang="zh-Hant">用程式建立的設定（<code>.localhost()</code>、<code>.remote()</code>、<code>ClientSettings(...)</code>）在節點探索重試之間只等 100 µs 而不是 100 ms，所以換 leader 時呼叫會直接失敗。現在跟連線字串一樣等 100 ms。</li>
+      <li lang="en"><code>userCertFile</code> / <code>userKeyFile</code> now present the client certificate in the TLS handshake; before, the connection was silently anonymous.</li>
+      <li lang="zh-Hant"><code>userCertFile</code> / <code>userKeyFile</code> 現在會在 TLS 握手時出示用戶端憑證；以前連線會悄悄變成匿名。</li>
+      <li lang="en">Every Swift example in the docs is now compiled in CI.</li>
+      <li lang="zh-Hant">文件裡的每個 Swift 範例現在都會在 CI 編譯檢查。</li>
+    </ul>
+    <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.4.2" target="_blank" rel="noopener"><span lang="en">Full 2.4.2 release notes →</span><span lang="zh-Hant">2.4.2 完整 release notes →</span></a></p>
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.4.0" target="_blank" rel="noopener"><span lang="en">Full 2.4.0 release notes →</span><span lang="zh-Hant">2.4.0 完整 release notes →</span></a></p>
   </article>
 

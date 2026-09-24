@@ -11,7 +11,7 @@ Add the package dependency to your `Package.swift`:
 <!-- snippet:skip -->
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.2")
 ]
 ```
 
