@@ -413,6 +413,119 @@ footer {
   .compare { grid-template-columns: 1fr; }
 }
 
+/* What's new in 2.4 — explainer, diagrams, lifecycle */
+.whats-new h3.section-title {
+  margin: 36px 0 10px;
+  font-size: 1.25rem;
+}
+
+.analogy {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 20px 0;
+}
+.analogy p { margin: 6px 0; }
+.analogy p.zh-p { margin-top: 2px; }
+
+figure.diagram {
+  margin: 24px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 16px 12px;
+}
+figure.diagram .diagram-scroll { overflow-x: auto; }
+figure.diagram svg {
+  display: block;
+  width: 100%;
+  min-width: 620px;
+  height: auto;
+}
+figure.diagram figcaption {
+  font-size: 0.86rem;
+  color: var(--text-dim);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+/* SVG parts take their colors from the page tokens so both themes work */
+.d-panel { fill: var(--bg-alt); stroke: var(--border); }
+.d-box { fill: var(--bg); stroke: var(--text-dim); stroke-width: 1.2; }
+.d-text { fill: var(--text); font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", sans-serif; }
+.d-small { fill: var(--text-dim); font: 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", sans-serif; }
+.d-title { fill: var(--text); font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", sans-serif; }
+.d-title-accent { fill: var(--accent); font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", sans-serif; }
+.d-old-line { stroke: var(--text-dim); stroke-width: 1.4; fill: none; }
+.d-handshake { fill: var(--bg); stroke: var(--text-dim); stroke-width: 1.2; }
+.d-shared { stroke: var(--accent); stroke-width: 12; stroke-linecap: round; fill: none; opacity: 0.85; }
+.d-packet { fill: var(--bg); stroke: var(--accent); stroke-width: 1.2; }
+.d-dedicated { stroke: var(--accent); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+
+.gains {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin: 12px 0 8px;
+}
+.gain {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+.gain h4 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--accent);
+}
+.gain ul {
+  margin: 0;
+  padding-left: 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gain li { font-size: 0.92rem; }
+.gain li .zh-p { display: block; font-size: 0.87rem; margin-top: 2px; }
+
+.lifecycle {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+.lifecycle li {
+  flex: 1 1 130px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  position: relative;
+}
+.lifecycle li strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 4px;
+}
+.lifecycle li span {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.lifecycle li.is-active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft); }
+.lifecycle-note {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  margin: 6px 0 0;
+}
+
 /* Mobile */
 @media (max-width: 600px) {
   .hero { padding: 40px 0 32px; }
