@@ -118,6 +118,81 @@ html[data-lang="zh"] body [lang="en"] {
 
 .dim { color: var(--text-dim); font-weight: normal; }
 
+/* Anchor jumps: smooth, and clear of the sticky top bar. */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+section[id], header[id] { scroll-margin-top: 64px; }
+
+/* Table of contents.
+   Narrow screens: a horizontal, scrollable row under the top bar.
+   Wide screens (≥ 1320px, where the left gutter can hold it without
+   covering the 880px content column): a fixed sidebar on the left. */
+.toc {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  overflow-x: auto;
+  padding-inline: 24px;
+}
+.toc-title { display: none; }
+.toc ol {
+  list-style: none;
+  margin: 0 auto;
+  padding: 8px 0;
+  max-width: 832px;
+  display: flex;
+  gap: 4px 18px;
+  white-space: nowrap;
+}
+.toc a {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  padding: 2px 0;
+  border-radius: 4px;
+}
+.toc a:hover { color: var(--text); text-decoration: none; }
+.toc a[aria-current="true"] { color: var(--accent); font-weight: 600; }
+.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (min-width: 1320px) {
+  .toc {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 84px);
+    left: calc((100vw - 880px) / 2 - 204px);
+    width: 180px;
+    padding: 0;
+    border-bottom: 0;
+    background: transparent;
+    overflow: visible;
+    z-index: 5;
+  }
+  .toc-title {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .toc ol {
+    flex-direction: column;
+    gap: 2px;
+    padding: 0;
+    white-space: normal;
+    border-left: 1px solid var(--border);
+  }
+  .toc a {
+    padding: 4px 0 4px 12px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+  }
+  .toc a[aria-current="true"] { border-left-color: var(--accent); }
+}
+
 /* Top bar */
 .topbar {
   position: sticky;

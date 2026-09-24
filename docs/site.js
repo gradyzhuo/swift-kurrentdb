@@ -48,17 +48,19 @@
   // another release updates the hash with replaceState so it can be shared.
   var select = document.getElementById('release-select');
   var releases = Array.prototype.slice.call(document.querySelectorAll('.release'));
-  if (!select || releases.length === 0) return;
 
-  function releaseFor(id) {
+  function currentHash() {
+    return decodeURIComponent(window.location.hash.slice(1));
+  }
+
+  function findRelease(id) {
     for (var i = 0; i < releases.length; i++) {
       if (releases[i].id === id) return releases[i];
     }
-    return releases[0]; // the first article is the latest release
+    return null;
   }
 
-  function show(id, updateHash) {
-    var target = releaseFor(id);
+  function show(target, updateHash) {
     releases.forEach(function (release) { release.hidden = release !== target; });
     select.value = target.id;
     if (updateHash) {
@@ -67,10 +69,51 @@
     }
   }
 
-  show(decodeURIComponent(window.location.hash.slice(1)), false);
+  if (select && releases.length > 0) {
+    // The first article is the latest release.
+    show(findRelease(currentHash()) || releases[0], false);
 
-  select.addEventListener('change', function () { show(select.value, true); });
-  window.addEventListener('hashchange', function () {
-    show(decodeURIComponent(window.location.hash.slice(1)), false);
+    select.addEventListener('change', function () {
+      show(findRelease(select.value) || releases[0], true);
+    });
+    // Only release hashes switch the release. Other anchors (#install, #api …)
+    // are table-of-contents jumps and must not reset the chosen release.
+    window.addEventListener('hashchange', function () {
+      var target = findRelease(currentHash());
+      if (target) show(target, false);
+    });
+  }
+
+  // ---- Table of contents: highlight the section in view ----------------------
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  if (tocLinks.length === 0 || !('IntersectionObserver' in window)) return;
+
+  var linkFor = {};
+  var sections = [];
+  tocLinks.forEach(function (link) {
+    var section = document.getElementById(link.getAttribute('href').slice(1));
+    if (section) {
+      linkFor[section.id] = link;
+      sections.push(section);
+    }
   });
+
+  var visible = {};
+  function markCurrent() {
+    // The topmost section that is currently in the reading band wins.
+    var current = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (visible[sections[i].id]) { current = sections[i].id; break; }
+    }
+    if (!current) return; // between sections: keep the last highlight
+    tocLinks.forEach(function (link) { link.removeAttribute('aria-current'); });
+    linkFor[current].setAttribute('aria-current', 'true');
+  }
+
+  // The reading band is the upper part of the viewport, just below the top bar.
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) { visible[entry.target.id] = entry.isIntersecting; });
+    markCurrent();
+  }, { rootMargin: '-72px 0px -55% 0px' });
+  sections.forEach(function (section) { observer.observe(section); });
 })();
