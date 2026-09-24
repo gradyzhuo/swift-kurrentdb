@@ -25,8 +25,8 @@ extension Operations {
 
         package typealias UnderlyingMessage = EventStore_Client_Operations_ScavengeResp
 
-        let scavengeId: String
-        let scavengeResult: ScavengeResult
+        public let scavengeId: String
+        public let scavengeResult: ScavengeResult
 
         package init(from message: UnderlyingMessage) throws {
             scavengeId = message.scavengeID

@@ -18,9 +18,9 @@ import NIO
 /// ```
 public struct Endpoint: Sendable {
     /// DNS name or IP address of the server.
-    let host: String
+    public let host: String
     /// TCP port the server is listening on.
-    let port: UInt32
+    public let port: UInt32
 
     /// Creates an endpoint with an explicit host and optional port.
     ///
