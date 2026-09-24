@@ -10,3 +10,6 @@ Package.resolved
 .claude/
 .capacitor/
 CLAUDE.local.md
+
+# Generated from the documentation by scripts/generate-doc-snippets.py
+Tests/DocSnippetsTests/DocSnippets.generated.swift

@@ -60,6 +60,11 @@ jobs:
             cp /tmp/ca.crt "$dir/ca.crt"
           done
 
+      # Every Swift example in the docs becomes part of the DocSnippetsTests
+      # target, so the build below fails if an example no longer compiles.
+      - name: Generate documentation snippets
+        run: python3 scripts/generate-doc-snippets.py
+
       - name: Build
         run: swift build --build-tests --enable-code-coverage
       - name: Swift Testing
