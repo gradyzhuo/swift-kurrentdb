@@ -44,11 +44,13 @@ struct StreamFilterTests {
         #expect(filter.prefixes.isEmpty)
     }
 
-    @Test("onStreamName(prefix:) variadic sets type and prefix")
+    @Test("onStreamName(prefixes:) variadic sets type and prefixes, like onEventType")
     func testStreamNamePrefixVariadic() {
-        let filter = StreamFilter.onStreamName(prefix: "orders")
+        let filter = StreamFilter.onStreamName(prefixes: "orders", "payments")
         #expect(filter.type == .streamName)
         #expect(filter.prefixes.contains("orders"))
+        #expect(filter.prefixes.contains("payments"))
+        #expect(filter.regex == nil)
     }
 
     @Test("onStreamName(prefixes:) array accepts multiple prefixes")
