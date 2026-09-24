@@ -95,19 +95,81 @@ h3 {
   margin-bottom: 0.4em;
 }
 
-h2 .zh, h3 .zh {
-  color: var(--text-zh);
-  font-weight: 500;
-  font-size: 0.7em;
-  margin-left: 0.4em;
+/* Language switch: the page carries both languages; only the chosen one shows.
+   <html data-lang="en"> ships in the markup, so without JS the page is English. */
+html[data-lang="en"] body [lang="zh-Hant"],
+html[data-lang="zh"] body [lang="en"] {
+  display: none !important;
 }
 
-p.zh-p {
-  color: var(--text-zh);
-  margin-top: -0.4em;
+[hidden] { display: none !important; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .dim { color: var(--text-dim); font-weight: normal; }
+
+/* Top bar */
+.topbar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 10px;
+}
+.topbar-brand {
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.topbar-brand:hover { text-decoration: none; color: var(--accent); }
+
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  background: var(--bg-alt);
+}
+.lang-switch button {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.lang-switch button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+.lang-switch button:focus-visible,
+.release-picker select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .note {
   background: var(--accent-soft);
@@ -116,7 +178,6 @@ p.zh-p {
   border-radius: 6px;
   margin: 12px 0;
 }
-.note.zh-p { margin-top: 4px; }
 
 /* Hero */
 .hero {
@@ -143,12 +204,6 @@ p.zh-p {
   font-size: 1.15rem;
   margin: 8px 0 4px;
   font-weight: 500;
-}
-
-.tagline-zh {
-  font-size: 1.05rem;
-  color: var(--text-zh);
-  margin: 0 0 8px;
 }
 
 .subtagline {
@@ -226,7 +281,6 @@ section:last-of-type { border-bottom: none; }
   color: var(--accent);
 }
 .feature p { margin: 6px 0; font-size: 0.93rem; }
-.feature p.zh-p { font-size: 0.88rem; }
 
 /* API grid */
 .api-grid {
@@ -253,6 +307,7 @@ section:last-of-type { border-bottom: none; }
 }
 
 /* Compat table */
+.table-scroll { overflow-x: auto; }
 table.compat {
   width: 100%;
   border-collapse: collapse;
@@ -320,7 +375,54 @@ footer {
 .whats-new h2 {
   border-bottom: none;
   padding-bottom: 0;
+  margin: 0;
   font-size: 2rem;
+}
+
+/* Release picker: "What's new in [ 2.4 (latest) ▾ ]" */
+.release-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  margin-bottom: 28px;
+}
+.release-picker { display: none; }
+html.js .release-picker { display: block; }
+.release-picker select {
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 6px 36px 6px 14px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+                    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 55%, calc(100% - 12px) 55%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* Without JS every release is shown; separate them. */
+.release + .release {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+html.js .release + .release { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.release-title {
+  font-size: 1.5rem;
+  margin: 4px 0 8px;
+}
+.release-link {
+  margin: 24px 0 0;
+  font-weight: 600;
 }
 
 .lead {
@@ -328,7 +430,6 @@ footer {
   margin: 12px 0;
   max-width: 760px;
 }
-.lead.zh-p { margin-top: 4px; }
 
 .highlights {
   display: grid;
@@ -357,8 +458,9 @@ footer {
   margin: 6px 0;
   font-size: 0.92rem;
 }
-.highlight p.zh-p {
-  font-size: 0.87rem;
+.highlight pre {
+  margin: 10px 0 0;
+  font-size: 0.8em;
 }
 
 .compare {
@@ -367,7 +469,7 @@ footer {
   gap: 16px;
   margin: 16px 0 24px;
 }
-.compare-col h4 {
+.compare-col h5 {
   margin: 0 0 8px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -375,14 +477,14 @@ footer {
   letter-spacing: 0.06em;
   color: var(--text-dim);
 }
-.compare-old h4::before {
+.compare-old h5::before {
   content: "↩ ";
   color: var(--text-dim);
 }
-.compare-new h4 {
+.compare-new h5 {
   color: var(--accent);
 }
-.compare-new h4::before {
+.compare-new h5::before {
   content: "→ ";
 }
 .compare-col pre {
@@ -414,9 +516,9 @@ footer {
 }
 
 /* What's new in 2.4 — explainer, diagrams, lifecycle */
-.whats-new h3.section-title {
-  margin: 36px 0 10px;
-  font-size: 1.25rem;
+.subsection-title {
+  margin: 32px 0 10px;
+  font-size: 1.15rem;
 }
 
 .analogy {
@@ -428,7 +530,6 @@ footer {
   margin: 20px 0;
 }
 .analogy p { margin: 6px 0; }
-.analogy p.zh-p { margin-top: 2px; }
 
 figure.diagram {
   margin: 24px 0;
@@ -489,7 +590,6 @@ figure.diagram figcaption {
   gap: 10px;
 }
 .gain li { font-size: 0.92rem; }
-.gain li .zh-p { display: block; font-size: 0.87rem; margin-top: 2px; }
 
 .lifecycle {
   list-style: none;
@@ -513,7 +613,7 @@ figure.diagram figcaption {
   font-size: 0.92rem;
   margin-bottom: 4px;
 }
-.lifecycle li span {
+.lifecycle li > span {
   display: block;
   font-size: 0.82rem;
   color: var(--text-dim);
