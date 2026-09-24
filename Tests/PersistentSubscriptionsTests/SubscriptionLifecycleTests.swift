@@ -37,13 +37,10 @@ struct SubscriptionLifecycleTests {
     }
 
     /// 註:本測試**不需要** `deinit` 就能通過,已實測確認。
-    /// - Warning: 本測試**不反映生產行為**。它直接建構 `Subscription`,不經過
-    ///   `Read.send`,因此沒有那個會強持有本物件的 RPC task。生產路徑上存在
-    ///   retain cycle(subscription → tracker → onFinish closure → task → subscription),
-    ///   物件永不 dealloc,「丟棄即關閉」實際上**不會發生**。
-    ///
-    ///   設計階段規劃的 `deinit` 確實是死碼並已移除,但理由不是「init 佈署已涵蓋」,
-    ///   而是物件根本不會被釋放。修掉 cycle 後需重新檢視本測試是否仍具代表性。
+    /// - Note: 本測試直接建構 `Subscription`,不經過 `Read.send`,只驗證「source stream
+    ///   被釋放 → teardown」這一段。生產路徑(經過真實 read task)由
+    ///   `SubscriptionRetainCycleLiveTests` 覆蓋 —— 過去那條路徑有 retain cycle
+    ///   (#127),本測試因為繞過 read task 而抓不到。
     @Test("T1:從未存取 events 就丟棄,仍會觸發 teardown")
     func droppingWithoutIteratingTearsDown() async throws {
         // 等待實際的 teardown 訊號,而非猜測排程時機。
