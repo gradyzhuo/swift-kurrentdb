@@ -44,14 +44,54 @@
   <p>Add to your <code>Package.swift</code>:</p>
   <p class="zh-p">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.1.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.0")
 ]</code></pre>
   <p class="note">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note zh-p">🎉 <strong>2.0 已上線</strong>　目前推薦使用 target-based API。仍在 1.x？請改用 <code>KurrentDB_V1</code>，原本程式碼可繼續運作，遷移節奏自己決定。</p>
 </section>
 
+<section id="whats-new-24" class="container whats-new">
+  <div class="whats-new-tag">Latest · v2.4.0</div>
+  <h2>What's new in 2.4 <span class="zh">2.4 帶來了什麼</span></h2>
+  <p class="lead">
+    2.4 stops opening a new connection for every call. A client now manages its connections
+    itself — no public API changes, just create one client per application and reuse it.
+  </p>
+  <p class="lead zh-p">
+    2.4 不再為每一次呼叫開一條新連線。client 會自己管理連線 —— public API 完全沒有變動，只要一個應用程式建一個 client 並重複使用即可。
+  </p>
+
+  <div class="highlights">
+    <div class="highlight">
+      <h3>⚡️ Shared connections for single-response calls</h3>
+      <p>Appends, deletes, metadata, management operations and cluster discovery share one connection per node instead of paying a TCP + TLS handshake per call. Idle connections are closed after an hour.</p>
+      <p class="zh-p">append、delete、metadata、各種管理操作與叢集探索，每個 node 共用一條連線，不再每次呼叫都做一次 TCP + TLS 握手。閒置一小時的連線會自動關閉。</p>
+    </div>
+    <div class="highlight">
+      <h3>🛰️ Dedicated connections for streams</h3>
+      <p>Reads, subscriptions and persistent subscriptions each get their own connection, so long-lived subscriptions never compete with other calls for capacity.</p>
+      <p class="zh-p">讀取、訂閱與持久訂閱各自使用獨立連線，長時間的訂閱不會跟其他呼叫搶佔連線容量。</p>
+    </div>
+    <div class="highlight">
+      <h3>🛑 <code>shutdown()</code> that actually shuts down</h3>
+      <p>Closes every connection the client opened, ends active subscriptions, and makes later calls throw <code>connectionClosed</code>. Safe to call more than once.</p>
+      <p class="zh-p">關閉 client 開過的所有連線、結束進行中的訂閱，之後的呼叫一律拋出 <code>connectionClosed</code>。可以安全地重複呼叫。</p>
+    </div>
+    <div class="highlight">
+      <h3>🔧 Subscription cancellation fixed</h3>
+      <p>Cancelling a subscription now stops the underlying gRPC read instead of leaving it streaming in the background.</p>
+      <p class="zh-p">取消訂閱時，底層的 gRPC 讀取現在會一併停止，不再在背景持續接收。</p>
+    </div>
+    <div class="highlight">
+      <h3>💓 Keepalive settings applied</h3>
+      <p><code>keepAliveInterval</code> and <code>keepAliveTimeout</code> from your settings or connection string now configure HTTP/2 keepalive pings.</p>
+      <p class="zh-p">設定或連線字串中的 <code>keepAliveInterval</code> 與 <code>keepAliveTimeout</code>，現在會實際套用到 HTTP/2 keepalive ping。</p>
+    </div>
+  </div>
+</section>
+
 <section id="whats-new-21" class="container whats-new">
-  <div class="whats-new-tag">Latest · v2.1.0</div>
+  <div class="whats-new-tag">v2.1.0</div>
   <h2>What's new in 2.1 <span class="zh">2.1 帶來了什麼</span></h2>
   <p class="lead">
     2.1 builds on the 2.0 target-based API with new write and read capabilities, per-call
@@ -358,8 +398,8 @@ let members = try await client.readCluster()</code></pre>
       <tr><td><strong>EventStoreDB 24.x</strong></td><td>✅</td><td>Core features · v2 batch append 尚未提供</td></tr>
     </tbody>
   </table>
-  <p>Tested in CI across Swift 6.0 / 6.1 / 6.2 / 6.3 against every supported server version.</p>
-  <p class="zh-p">CI 在 Swift 6.0 / 6.1 / 6.2 / 6.3 對所有支援版本進行完整整合測試。</p>
+  <p>Tested in CI across Swift 6.0 / 6.1 / 6.2 / 6.3 / 6.4 against every supported server version.</p>
+  <p class="zh-p">CI 在 Swift 6.0 / 6.1 / 6.2 / 6.3 / 6.4 對所有支援版本進行完整整合測試。</p>
 </section>
 
 <footer class="container">
