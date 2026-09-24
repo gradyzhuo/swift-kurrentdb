@@ -75,6 +75,12 @@ extension Streams.Read {
         public var uuidOption: UUIDOption
         public var compatibility: UInt32
 
+        /// Same as ``resolveLinks``, under the name the `$all` read and the subscribe options use.
+        public var resolveLinksEnabled: Bool {
+            get { resolveLinks }
+            set { resolveLinks = newValue }
+        }
+
         public init() {
             resolveLinks = false
             limit = .max
