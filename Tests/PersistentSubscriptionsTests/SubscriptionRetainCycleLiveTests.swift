@@ -53,7 +53,13 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
 
         do {
             // 刻意不 iterate events,離開這個 scope 後就不再有人持有 handle。
-            _ = try await persistent.subscribe()
+            let subscription = try await persistent.subscribe()
+
+            // 前提:丟棄之前,連線確實開著 —— client 端登記了、伺服器端也看得到 consumer。
+            // 少了這一步,「subscribe 根本沒連上」也會讓後面的斷言通過。
+            #expect(try await eventually { subscription.subscriptionId != nil })   // 伺服器已確認這個訂閱
+            #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
+            #expect(try await eventually { try await persistent.getInfo().connections.count == 1 })
         }
 
         #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
@@ -71,7 +77,12 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         try await persistent.create()
 
         do {
-            _ = try await persistent.subscribe()
+            let subscription = try await persistent.subscribe()
+
+            // 前提:丟棄之前,連線確實開著。
+            #expect(try await eventually { subscription.subscriptionId != nil })   // 伺服器已確認這個訂閱
+            #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
+            #expect(try await eventually { try await persistent.getInfo().connections.count == 1 })
         }
 
         #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
