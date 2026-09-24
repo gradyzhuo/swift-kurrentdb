@@ -244,7 +244,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
 
-        let filter: StreamFilter = .onStreamName(prefix: streamIdentifier.name)
+        let filter: StreamFilter = .onStreamName(prefixes: streamIdentifier.name)
         let subscription = try await client.allStreams.subscribe {
             $0.filter = filter
             $0.position = .end
@@ -272,7 +272,7 @@ struct StreamTests: Sendable {
         )
         let client = KurrentDBClient(settings: settings)
 
-        let filter: StreamFilter = .onStreamName(prefix: "wrong")
+        let filter: StreamFilter = .onStreamName(prefixes: "wrong")
         let subscription = try await client.allStreams.subscribe {
             $0.filter = filter
             $0.position = .end
@@ -340,7 +340,7 @@ struct StreamTests: Sendable {
             .append(events: [otherEvent]) { $0.expectedRevision = .any }
 
         let responses = try await client.allStreams.read {
-            $0.filter = .onStreamName(prefix: prefix)
+            $0.filter = .onStreamName(prefixes: prefix)
             $0.position = .start
             $0.direction = .forward
         }
