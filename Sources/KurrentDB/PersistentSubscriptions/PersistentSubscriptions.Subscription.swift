@@ -19,13 +19,14 @@ extension PersistentSubscriptions {
     /// Iterate ``events`` to receive delivered events, then call ``ack(readEvents:)``
     /// or ``nack(readEvents:action:reason:)`` for each one.
     ///
-    /// Breaking out of the `for try await` loop stops the underlying gRPC stream and
-    /// closes the server-side connection.
+    /// The subscription's connection closes when nothing references the subscription or
+    /// its ``events`` stream any more — for example when the scope holding them ends. You
+    /// don't have to iterate `events` for that to happen; dropping a subscription you
+    /// never iterated closes its connection too.
     ///
-    /// - Important: Letting the subscription go out of scope does **not** currently close
-    ///   the connection. The read task retains this object, so it is never deallocated and
-    ///   teardown is never reached. Always iterate `events` and leave the loop, or the
-    ///   stream stays open. This is a known defect, not the intended design.
+    /// Breaking out of a `for try await` loop on its own does **not** close the
+    /// connection while you still hold the subscription or `events`. Let the references
+    /// go (or shut the client down) to end it.
     ///
     /// ```swift
     /// let subscription = try await ps.subscribe()
@@ -67,9 +68,9 @@ extension PersistentSubscriptions {
         /// returns the same instance.  This ensures that exactly one iterator consumes the
         /// underlying gRPC response stream at any given time.
         ///
-        /// Breaking out of the `for try await` loop cancels the bridge task, stops the gRPC
-        /// write stream, and closes the server-side connection.  After cancellation, further
-        /// iteration of the same stream returns immediately without yielding new events.
+        /// The subscription's connection closes once neither this stream nor the
+        /// subscription is referenced any more. Breaking out of a `for try await` loop
+        /// alone does not close it, because the stream is cached here.
         public var events: AsyncThrowingStream<EventResult, Error> {
             _eventsCache.withLock { cache in
                 if let existing = cache {
@@ -120,11 +121,12 @@ extension PersistentSubscriptions {
             // teardown 必須從 handle 存在的那一刻起就可達,而非等到第一次存取
             // `.events`。對照 Streams.Subscribe.send 的作法。
             //
-            // 注意:此 handler 由兩條路徑觸發 —— 顯式的 `source.continuation.finish(...)`
-            // (即 `send(state: .finish)`),以及儲存被釋放時。**目前只有前者會實際發生**:
-            // Read usecase 的 task 強持有本物件(該 task 又被 tracker 持有的 closure 捕獲),
-            // 形成 retain cycle,故本物件永不 dealloc。因此「丟棄 handle 即關閉連線」
-            // 尚未成立,待修。
+            // 此 handler 由兩條路徑觸發 —— 顯式的 `source.continuation.finish(...)`
+            // (即 `send(state: .finish)`),以及 source stream 被釋放時(本物件與
+            // `.events` 的 bridge task 都不再持有它)。後者成立的前提是 Read usecase 的
+            // read task 只持有 `inbox`、不持有本物件;過去它持有本物件,形成
+            // subscription → tracker → finish action → read task → subscription 的
+            // retain cycle,丟棄 handle 永遠不會關閉連線(#127)。
             let writer = self.writer
             let tracker = self.tracker
             source.continuation.onTermination = { termination in
@@ -134,29 +136,21 @@ extension PersistentSubscriptions {
         }
 
 
+        /// The part of this subscription the RPC read task feeds: the source continuation
+        /// and the tracker, without the subscription object itself.
+        ///
+        /// The read task must hold this, never the subscription. Holding the subscription
+        /// formed a retain cycle (subscription → tracker → finish action → read task →
+        /// subscription), so a dropped handle was never released and its connection never
+        /// closed (#127). The inbox keeps no reference back to the subscription, and events
+        /// keep flowing even after the handle is released — for example while a caller
+        /// iterates `events` without holding on to the subscription.
+        package var inbox: Inbox {
+            Inbox(continuation: source.continuation, tracker: tracker)
+        }
+
         internal func send(state: State) {
-            switch state {
-            case let .confirmation(subscriptionId):
-                tracker.update(subscriptionId: subscriptionId)
-            case let .response(eventResult):
-                let result = source.continuation.yield(eventResult)
-                if case .terminated = result {
-                    source.continuation.finish()
-                }
-            case let .finish(error):
-                // 連線層級失敗(而非伺服器主動終止或使用者取消)一律回報為
-                // subscriptionDropped,並附上 tracker 已記錄的續傳位置,
-                // 讓呼叫端能從中斷處恢復訂閱。
-                if let kurrentError = error as? KurrentError, kurrentError.isNodeFailure {
-                    source.continuation.finish(throwing: KurrentError.subscriptionDropped(
-                        reason: "\(kurrentError)",
-                        lastRevision: tracker.revision,
-                        lastPosition: tracker.position
-                    ))
-                } else {
-                    source.continuation.finish(throwing: error)
-                }
-            }
+            inbox.send(state: state)
         }
 
         internal func onFinish(perform action: @Sendable @escaping (_ termination: AsyncThrowingStream<EventResult, Error>.Continuation.Termination) -> Void) {
@@ -268,7 +262,38 @@ extension PersistentSubscriptions.Subscription {
         }
     }
 
-    private final class SubscriptionTracker: Sendable {
+    /// See ``PersistentSubscriptions/Subscription/inbox``.
+    package struct Inbox: Sendable {
+        fileprivate let continuation: AsyncThrowingStream<EventResult, Error>.Continuation
+        fileprivate let tracker: SubscriptionTracker
+
+        internal func send(state: State) {
+            switch state {
+            case let .confirmation(subscriptionId):
+                tracker.update(subscriptionId: subscriptionId)
+            case let .response(eventResult):
+                let result = continuation.yield(eventResult)
+                if case .terminated = result {
+                    continuation.finish()
+                }
+            case let .finish(error):
+                // 連線層級失敗(而非伺服器主動終止或使用者取消)一律回報為
+                // subscriptionDropped,並附上 tracker 已記錄的續傳位置,
+                // 讓呼叫端能從中斷處恢復訂閱。
+                if let kurrentError = error as? KurrentError, kurrentError.isNodeFailure {
+                    continuation.finish(throwing: KurrentError.subscriptionDropped(
+                        reason: "\(kurrentError)",
+                        lastRevision: tracker.revision,
+                        lastPosition: tracker.position
+                    ))
+                } else {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
+    fileprivate final class SubscriptionTracker: Sendable {
         private let _revision: Mutex<UInt64?> = .init(nil)
         private let _position: Mutex<StreamPosition?> = .init(nil)
         private let _subscriptionId: Mutex<String?> = .init(nil)

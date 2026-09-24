@@ -61,6 +61,9 @@ extension PersistentSubscriptions.SpecifiedStream {
         package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> Responses {
             let writer = PersistentSubscriptions.Subscription<PersistentSubscription.EventResult>.Writer()
             let subscription = PersistentSubscriptions.Subscription(writer: writer)
+            // The read task feeds the inbox, never the subscription itself: capturing the
+            // subscription here formed a retain cycle through its finish action (#127).
+            let inbox = subscription.inbox
             let task = Task {
                 do {
                     let client = ServiceClient(wrapping: connection)
@@ -74,16 +77,16 @@ extension PersistentSubscriptions.SpecifiedStream {
                                 let response = try handle(message: message)
                                 switch response {
                                 case let .confirmation(subscriptionId):
-                                    subscription.send(state: .confirmation(subscriptionId: subscriptionId))
+                                    inbox.send(state: .confirmation(subscriptionId: subscriptionId))
                                 case let .readEvent(event, retryCount):
-                                    subscription.send(state: .response(eventResult: .init( event: event, retryCount: retryCount)))
+                                    inbox.send(state: .response(eventResult: .init( event: event, retryCount: retryCount)))
                                 }
                             }
-                            subscription.send(state: .finish())
+                            inbox.send(state: .finish())
                         }
                     }
                 } catch {
-                    subscription.send(state: .finish(throwing: error))
+                    inbox.send(state: .finish(throwing: error))
                 }
             }
             
