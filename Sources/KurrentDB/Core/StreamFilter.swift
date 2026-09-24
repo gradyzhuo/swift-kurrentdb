@@ -13,7 +13,7 @@ import GRPCEncapsulates
 ///
 /// ```swift
 /// // Match streams whose name starts with "orders"
-/// let byStreamName = StreamFilter.onStreamName(prefix: "orders")
+/// let byStreamName = StreamFilter.onStreamName(prefixes: "orders")
 ///     .checkpointIntervalMultiplier(100)
 ///
 /// // Match events whose type matches a regex
@@ -103,11 +103,20 @@ extension StreamFilter {
     /// Creates a stream-name filter matching any of the given prefixes.
     ///
     /// ```swift
-    /// let filter = StreamFilter.onStreamName(prefix: "orders", "payments")
+    /// let filter = StreamFilter.onStreamName(prefixes: "orders", "payments")
     /// ```
+    ///
+    /// - Parameter prefixes: One or more stream name prefixes.
+    /// - Returns: A configured `StreamFilter`.
+    public static func onStreamName(prefixes: String...) -> Self {
+        .onStreamName(prefixes: prefixes)
+    }
+
+    /// Creates a stream-name filter matching any of the given prefixes.
     ///
     /// - Parameter prefix: One or more stream name prefixes.
     /// - Returns: A configured `StreamFilter`.
+    @available(*, deprecated, renamed: "onStreamName(prefixes:)")
     public static func onStreamName(prefix: String...) -> Self {
         .onStreamName(prefixes: prefix)
     }
