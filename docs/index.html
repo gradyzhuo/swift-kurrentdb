@@ -54,40 +54,168 @@
   <div class="whats-new-tag">Latest · v2.4.0</div>
   <h2>What's new in 2.4 <span class="zh">2.4 帶來了什麼</span></h2>
   <p class="lead">
-    2.4 stops opening a new connection for every call. A client now manages its connections
-    itself — no public API changes, just create one client per application and reuse it.
+    Up to 2.3, every single call — each append, each read, each delete — dialled a brand-new
+    connection to the server: a TCP handshake, a TLS handshake, the request, then hang up.
+    2.4 keeps the line open. Same API, nothing to change in your code; it just gets faster
+    and holds up better.
   </p>
   <p class="lead zh-p">
-    2.4 不再為每一次呼叫開一條新連線。client 會自己管理連線 —— public API 完全沒有變動，只要一個應用程式建一個 client 並重複使用即可。
+    到 2.3 為止，每一次呼叫（每個 append、每個 read、每個 delete）都會跟伺服器重新「撥一通電話」：
+    TCP 握手、TLS 握手、講一句話，然後掛掉。2.4 開始，線路會一直保持接通。API 完全一樣，你的程式碼一行都不用改，
+    就是變快、也變穩了。
   </p>
 
-  <div class="highlights">
-    <div class="highlight">
-      <h3>⚡️ Shared connections for single-response calls</h3>
-      <p>Appends, deletes, metadata, management operations and cluster discovery share one connection per node instead of paying a TCP + TLS handshake per call. Idle connections are closed after an hour.</p>
-      <p class="zh-p">append、delete、metadata、各種管理操作與叢集探索，每個 node 共用一條連線，不再每次呼叫都做一次 TCP + TLS 握手。閒置一小時的連線會自動關閉。</p>
+  <div class="analogy">
+    <p><strong>Think of it like phone calls.</strong> Before, it was like hanging up and redialling after every sentence. Now there's one open line everyone takes turns on — HTTP/2 was built to carry many requests over one connection at once. Callers who talk for hours (subscriptions) get their own line, so they never tie up the shared one.</p>
+    <p class="zh-p"><strong>打個比方：</strong>以前就像每講一句話就掛電話、再重撥一次。現在是開一條一直接通的專線，大家在同一條線上輪流講 —— HTTP/2 本來就是設計來在一條連線上同時跑很多請求的。至於訂閱這種一講就講好幾個小時的，另外給它自己的線，不會把公用線佔住。</p>
+  </div>
+
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 820 300" role="img" aria-labelledby="fig24-title fig24-desc">
+        <title id="fig24-title">Connections before and after 2.4</title>
+        <desc id="fig24-desc">Before 2.4, every call from the app to the KurrentDB node opens its own connection with its own handshake. In 2.4, short calls share one connection with a single handshake, while subscriptions and reads each have their own dedicated connection.</desc>
+
+        <!-- Before -->
+        <rect class="d-panel" x="10" y="10" width="390" height="280" rx="12"/>
+        <text class="d-title" x="30" y="40">Before · 2.3 以前</text>
+        <rect class="d-box" x="30" y="62" width="86" height="176" rx="8"/>
+        <text class="d-text" x="73" y="146" text-anchor="middle">Your app</text>
+        <text class="d-small" x="73" y="163" text-anchor="middle">你的 App</text>
+        <rect class="d-box" x="294" y="62" width="86" height="176" rx="8"/>
+        <text class="d-text" x="337" y="146" text-anchor="middle">KurrentDB</text>
+        <text class="d-small" x="337" y="163" text-anchor="middle">node</text>
+
+        <line class="d-old-line" x1="116" y1="82" x2="294" y2="82"/>
+        <line class="d-old-line" x1="116" y1="110" x2="294" y2="110"/>
+        <line class="d-old-line" x1="116" y1="138" x2="294" y2="138"/>
+        <line class="d-old-line" x1="116" y1="166" x2="294" y2="166"/>
+        <line class="d-old-line" x1="116" y1="194" x2="294" y2="194"/>
+        <line class="d-old-line" x1="116" y1="222" x2="294" y2="222"/>
+        <circle class="d-handshake" cx="140" cy="82" r="6"/>
+        <circle class="d-handshake" cx="140" cy="110" r="6"/>
+        <circle class="d-handshake" cx="140" cy="138" r="6"/>
+        <circle class="d-handshake" cx="140" cy="166" r="6"/>
+        <circle class="d-handshake" cx="140" cy="194" r="6"/>
+        <circle class="d-handshake" cx="140" cy="222" r="6"/>
+        <text class="d-small" x="215" y="77" text-anchor="middle">append</text>
+        <text class="d-small" x="215" y="105" text-anchor="middle">append</text>
+        <text class="d-small" x="215" y="133" text-anchor="middle">read</text>
+        <text class="d-small" x="215" y="161" text-anchor="middle">delete</text>
+        <text class="d-small" x="215" y="189" text-anchor="middle">append</text>
+        <text class="d-small" x="215" y="217" text-anchor="middle">subscribe</text>
+
+        <circle class="d-handshake" cx="42" cy="265" r="6"/>
+        <text class="d-small" x="56" y="269">= TCP + TLS handshake · 握手</text>
+        <text class="d-small" x="205" y="283" text-anchor="middle">每個呼叫都開新連線、握手一次 · a new connection per call</text>
+
+        <!-- After -->
+        <rect class="d-panel" x="420" y="10" width="390" height="280" rx="12"/>
+        <text class="d-title-accent" x="440" y="40">After · 2.4</text>
+        <rect class="d-box" x="440" y="62" width="86" height="176" rx="8"/>
+        <text class="d-text" x="483" y="146" text-anchor="middle">Your app</text>
+        <text class="d-small" x="483" y="163" text-anchor="middle">你的 App</text>
+        <rect class="d-box" x="704" y="62" width="86" height="176" rx="8"/>
+        <text class="d-text" x="747" y="146" text-anchor="middle">KurrentDB</text>
+        <text class="d-small" x="747" y="163" text-anchor="middle">node</text>
+
+        <text class="d-small" x="615" y="80" text-anchor="middle">shared · 共用連線</text>
+        <line class="d-shared" x1="532" y1="102" x2="698" y2="102"/>
+        <rect class="d-packet" x="568" y="97" width="16" height="10" rx="2"/>
+        <rect class="d-packet" x="596" y="97" width="16" height="10" rx="2"/>
+        <rect class="d-packet" x="624" y="97" width="16" height="10" rx="2"/>
+        <rect class="d-packet" x="652" y="97" width="16" height="10" rx="2"/>
+        <circle class="d-handshake" cx="546" cy="102" r="6"/>
+        <text class="d-small" x="615" y="126" text-anchor="middle">append · delete · metadata · admin</text>
+
+        <line class="d-dedicated" x1="526" y1="160" x2="704" y2="160"/>
+        <line class="d-dedicated" x1="526" y1="190" x2="704" y2="190"/>
+        <line class="d-dedicated" x1="526" y1="220" x2="704" y2="220"/>
+        <circle class="d-handshake" cx="546" cy="160" r="6"/>
+        <circle class="d-handshake" cx="546" cy="190" r="6"/>
+        <circle class="d-handshake" cx="546" cy="220" r="6"/>
+        <text class="d-small" x="625" y="155" text-anchor="middle">subscription · 訂閱</text>
+        <text class="d-small" x="625" y="185" text-anchor="middle">subscription · 訂閱</text>
+        <text class="d-small" x="625" y="215" text-anchor="middle">read · 讀取</text>
+
+        <text class="d-small" x="615" y="265" text-anchor="middle">短呼叫共用一條線；stream 各走自己的線</text>
+        <text class="d-small" x="615" y="283" text-anchor="middle">short calls share one line · streams get their own</text>
+      </svg>
     </div>
-    <div class="highlight">
-      <h3>🛰️ Dedicated connections for streams</h3>
-      <p>Reads, subscriptions and persistent subscriptions each get their own connection, so long-lived subscriptions never compete with other calls for capacity.</p>
-      <p class="zh-p">讀取、訂閱與持久訂閱各自使用獨立連線，長時間的訂閱不會跟其他呼叫搶佔連線容量。</p>
+    <figcaption>
+      Which line a call takes depends on what comes back: one response → the shared line; a stream of responses → its own line.
+      <br>走哪條線，看回來的是什麼：只回一個結果的，走共用線；會一直回傳資料的（stream），走自己的線。
+    </figcaption>
+  </figure>
+
+  <h3 class="section-title">Faster — and more solid <span class="zh">更快，也更穩</span></h3>
+  <div class="gains">
+    <div class="gain">
+      <h4>⚡️ Faster · 更快在哪</h4>
+      <ul>
+        <li>
+          <strong>Far fewer handshakes.</strong> A TLS handshake takes several network round trips before a single byte of your request moves. A page that does 200 appends used to pay for 200 of them; now it pays once.
+          <span class="zh-p"><strong>握手大幅減少。</strong>TLS 握手要在網路上來回好幾趟，請求本身才開始送。一個頁面打 200 次 append，以前就是 200 次握手；現在只有第一次要握，後面直接走開好的線。</span>
+        </li>
+        <li>
+          <strong>Concurrency shares too.</strong> Fire 100 appends at once and they ride the same connection side by side — no burst of 100 new sockets.
+          <span class="zh-p"><strong>並行也共用。</strong>同時丟出 100 個 append，它們會一起擠在同一條連線上跑，不會瞬間開出 100 個 socket。</span>
+        </li>
+        <li>
+          <strong>Cluster discovery reuses it.</strong> Gossip and server-feature checks go over the same shared connections instead of opening their own.
+          <span class="zh-p"><strong>叢集探索也共用。</strong>gossip 與伺服器功能檢查也走同一批共用連線，不再各開各的。</span>
+        </li>
+        <li>
+          <strong>Verified, not assumed.</strong> Our integration tests check that after warm-up, 200 back-to-back appends open zero new connections.
+          <span class="zh-p"><strong>有測試撐腰。</strong>整合測試會實際驗證：暖機之後連續 200 次 append，一條新連線都沒開。</span>
+        </li>
+      </ul>
     </div>
-    <div class="highlight">
-      <h3>🛑 <code>shutdown()</code> that actually shuts down</h3>
-      <p>Closes every connection the client opened, ends active subscriptions, and makes later calls throw <code>connectionClosed</code>. Safe to call more than once.</p>
-      <p class="zh-p">關閉 client 開過的所有連線、結束進行中的訂閱，之後的呼叫一律拋出 <code>connectionClosed</code>。可以安全地重複呼叫。</p>
-    </div>
-    <div class="highlight">
-      <h3>🔧 Subscription cancellation fixed</h3>
-      <p>Cancelling a subscription now stops the underlying gRPC read instead of leaving it streaming in the background.</p>
-      <p class="zh-p">取消訂閱時，底層的 gRPC 讀取現在會一併停止，不再在背景持續接收。</p>
-    </div>
-    <div class="highlight">
-      <h3>💓 Keepalive settings applied</h3>
-      <p><code>keepAliveInterval</code> and <code>keepAliveTimeout</code> from your settings or connection string now configure HTTP/2 keepalive pings.</p>
-      <p class="zh-p">設定或連線字串中的 <code>keepAliveInterval</code> 與 <code>keepAliveTimeout</code>，現在會實際套用到 HTTP/2 keepalive ping。</p>
+    <div class="gain">
+      <h4>🛡️ More solid · 更穩在哪</h4>
+      <ul>
+        <li>
+          <strong>Subscriptions never clog the line.</strong> Each one has its own connection, so a pile of long-running subscriptions can't make your appends wait in line. Tested with 150 subscriptions open at once while appends still go through.
+          <span class="zh-p"><strong>訂閱不會把線塞住。</strong>每個訂閱都有自己的連線，就算開了一堆長時間的訂閱，你的 append 也不用排隊。實測同時開 150 個訂閱，append 照樣順利完成。</span>
+        </li>
+        <li>
+          <strong>Cancel means stop.</strong> Cancelling a subscription used to leave the network read running in the background. Now it really stops.
+          <span class="zh-p"><strong>取消就是真的停。</strong>以前取消訂閱後，底層的網路讀取還會在背景偷偷跑；現在是真的停下來。</span>
+        </li>
+        <li>
+          <strong>Blips heal themselves.</strong> If the network hiccups or the server restarts, the connection reconnects on its own. One slow call timing out doesn't tear down the line everyone else is using.
+          <span class="zh-p"><strong>網路抖一下會自己好。</strong>網路短暫中斷或伺服器重啟，連線會自己重連。某一次呼叫逾時，也不會把大家正在用的那條線砍掉。</span>
+        </li>
+        <li>
+          <strong>Dead connections get noticed.</strong> Your <code>keepAliveInterval</code> / <code>keepAliveTimeout</code> settings are now actually applied, so a connection that silently died while calls are in flight is detected instead of hanging.
+          <span class="zh-p"><strong>斷掉的連線會被發現。</strong>設定裡的 <code>keepAliveInterval</code> / <code>keepAliveTimeout</code> 現在真的會生效，有呼叫在跑時，連線如果默默斷掉會被偵測出來，而不是一直卡著。</span>
+        </li>
+        <li>
+          <strong><code>shutdown()</code> means it.</strong> It closes every connection, ends active subscriptions, and any later call fails fast with <code>connectionClosed</code>.
+          <span class="zh-p"><strong><code>shutdown()</code> 說到做到。</strong>它會關掉所有連線、結束進行中的訂閱，之後的呼叫會立刻以 <code>connectionClosed</code> 失敗。</span>
+        </li>
+      </ul>
     </div>
   </div>
+
+  <h3 class="section-title">The life of a shared connection <span class="zh">一條共用連線的一生</span></h3>
+  <ol class="lifecycle" aria-label="Shared connection lifecycle">
+    <li><strong>Opened · 建立</strong><span>on the first call to that node<br>第一次打到這個 node 時</span></li>
+    <li class="is-active"><strong>In use · 使用中</strong><span>any number of calls share it<br>多少個呼叫都一起用</span></li>
+    <li><strong>Idle · 閒置</strong><span>no calls in flight<br>目前沒有呼叫在跑</span></li>
+    <li><strong>Retired · 回收</strong><span>after 1 hour idle<br>閒置超過 1 小時</span></li>
+    <li><strong>Reopened · 重新建立</strong><span>on the next call, automatically<br>下次呼叫時自動重開</span></li>
+  </ol>
+  <p class="lifecycle-note">A connection is never retired while a call is using it — the client keeps count. · 只要還有呼叫在用，連線就不會被回收 —— client 會記著目前有幾個人在用。</p>
+
+  <h3 class="section-title">What you need to do <span class="zh">你需要做什麼</span></h3>
+  <p>Almost nothing. Create one client for your whole app and share it — creating a new client per request means connections can't be shared.</p>
+  <p class="zh-p">幾乎什麼都不用做。整個 app 建一個 client、到處共用就好 —— 如果每個請求都 new 一個 client，連線就沒辦法共用了。</p>
+  <pre><code class="lang-swift">// One client for the whole app · 整個 app 一個就好
+let client = KurrentDBClient(settings: settings)
+
+// When the app is shutting down · app 要關閉時
+try client.shutdown()</code></pre>
 </section>
 
 <section id="whats-new-21" class="container whats-new">
