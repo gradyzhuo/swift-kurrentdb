@@ -68,9 +68,9 @@ There are a number of query parameters that can be used in the connection string
 |defaultDeadline|Number|None|Default timeout for client operations, in milliseconds. Most clients allow overriding the deadline per operation.|
 |keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds.|
 |keepAliveTimeout|Number|10|Keep-alive ping call timeout, in seconds.|
-|userCertFile|String|None|User certificate file for X.509 authentication. Parsed, but not yet applied to the TLS connection.|
+|userCertFile|String|None|User certificate file (PEM) for X.509 authentication. Requires TLS.|
 | ^ | file path |   ^  |     ^     |
-|userKeyFile|String|None|Key file for the user certificate used for X.509 authentication. Parsed, but not yet applied to the TLS connection.|
+|userKeyFile|String|None|Key file (PEM) for the user certificate used for X.509 authentication. Requires TLS.|
 | ^ | file path |   ^  |     ^     |
 
 When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `kurrentdb://localhost:2113?tls=false`. Note that `usernames` and `passwords` aren't provided there because insecure deployments don't support authentication and authorisation.
@@ -219,6 +219,14 @@ let basic = ClientSettings.localhost()
 // Bearer token, e.g. an OAuth/OIDC access token
 let bearer = ClientSettings.localhost()
     .authenticated(.bearer(token: "eyJhbGciOi..."))
+```
+
+With a client certificate (X.509), the client presents the certificate during the TLS handshake instead of sending an `Authorization` header. It needs a TLS connection, and it can only be set for the whole client, not per call. When `userCertFile` and `userKeyFile` are present, username and password in the connection string are ignored.
+
+```swift
+let x509: ClientSettings = try .parse(
+    connectionString: "kurrentdb://node1:2113?tlsCaFile=/certs/ca.crt&userCertFile=/certs/user.crt&userKeyFile=/certs/user.key"
+)
 ```
 
 To use different credentials for a single call — for example, the end user's token in a multi-tenant service — call `authenticated(_:)` on the value you make the call through. The override applies only to calls made through the returned value; the client's own credentials are unchanged:

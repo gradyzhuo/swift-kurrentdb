@@ -301,6 +301,11 @@ extension ClientSettings {
 
         let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? true
 
+        // The client certificate is presented in the TLS handshake, so X.509 needs TLS.
+        if case .x509 = authentication, !secure {
+            throw .internalParsingError(reason: "X.509 authentication (userCertFile/userKeyFile) requires a TLS connection; remove tls=false.")
+        }
+
         let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) ?? true
 
         var certificates: [TLSConfig.CertificateSource] = []
@@ -565,15 +570,24 @@ extension ClientSettings: Buildable {
 
 extension ClientSettings {
     var transportSecurity: HTTP2ClientTransport.Posix.TransportSecurity {
-        if secure {
-            .tls { config in
-                if let trustRoots {
-                    config.trustRoots = trustRoots
-                }
-                config.serverCertificateVerification = tlsVerifyCert ? .fullVerification : .noVerification
-            }
-        } else {
-            .plaintext
+        secure ? .tls(tlsConfiguration) : .plaintext
+    }
+
+    /// TLS settings for a secure connection.
+    ///
+    /// With ``Authentication/x509(certFile:keyFile:)`` the client certificate and key are offered
+    /// during the TLS handshake — that is how the server learns who the user is, since X.509
+    /// sends no `Authorization` header.
+    var tlsConfiguration: HTTP2ClientTransport.Posix.TransportSecurity.TLS {
+        var config = HTTP2ClientTransport.Posix.TransportSecurity.TLS.defaults
+        if let trustRoots {
+            config.trustRoots = trustRoots
         }
+        config.serverCertificateVerification = tlsVerifyCert ? .fullVerification : .noVerification
+        if case let .x509(certFile, keyFile) = authentication {
+            config.certificateChain = [.file(path: certFile, format: .pem)]
+            config.privateKey = .file(path: keyFile, format: .pem)
+        }
+        return config
     }
 }

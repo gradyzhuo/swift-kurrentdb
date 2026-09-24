@@ -287,6 +287,31 @@ struct ClientSettingsParsingTests {
         }
     }
 
+    @Test("X.509 over a plaintext connection is rejected")
+    func testX509RequiresTLS() {
+        #expect(throws: KurrentError.self) {
+            try ClientSettings.parse(connectionString: "esdb://localhost:2113?tls=false&usercertfile=/cert.pem&userkeyfile=/key.pem")
+        }
+    }
+
+    // MARK: X.509 client certificate reaches the TLS configuration
+
+    @Test("X.509 authentication puts the client certificate and key into the TLS configuration")
+    func testX509ConfiguresClientCertificate() throws {
+        let settings = try ClientSettings.parse(connectionString: "esdb://localhost:2113?usercertfile=/cert.pem&userkeyfile=/key.pem")
+        let tls = settings.tlsConfiguration
+        #expect(tls.certificateChain.count == 1)
+        #expect(tls.privateKey != nil)
+    }
+
+    @Test("without X.509 the TLS configuration offers no client certificate")
+    func testNoClientCertificateWithoutX509() throws {
+        let settings = try ClientSettings.parse(connectionString: "esdb://admin:changeit@localhost:2113")
+        let tls = settings.tlsConfiguration
+        #expect(tls.certificateChain.isEmpty)
+        #expect(tls.privateKey == nil)
+    }
+
     // MARK: query params with '@' in value don't corrupt credential parsing
 
     @Test("query param value containing '@' does not break credential parsing")
