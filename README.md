@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](Licence)
 [![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![Swift-build-testing](https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml)
 [![codecov](https://codecov.io/gh/gradyzhuo/swift-kurrentdb/graph/badge.svg)](https://codecov.io/gh/gradyzhuo/swift-kurrentdb)
@@ -39,10 +39,11 @@ Event Sourcing is a powerful pattern for building scalable, auditable systems. s
 
 Add to your `Package.swift`:
 
+<!-- snippet:skip -->
 ```swift
 // 2.x — current stable, target-based API
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.0.3")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.0")
 ]
 ```
 
@@ -69,40 +70,46 @@ let settings = ClientSettings.localhost()
     .authenticated(.credentials(username: "admin", password: "changeit"))
 
 // Local development — multi-node TLS cluster
-let settings = ClientSettings.localhost(ports: 2111, 2112, 2113)
+let localCluster = ClientSettings.localhost(ports: 2111, 2112, 2113)
     .secure(true)
     .tlsVerifyCert(false)
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .cerificate(path: "/path/to/ca.crt")
+    .certificate(path: "/path/to/ca.crt")
 
 // Production — remote cluster (TLS enabled by default)
-let settings = ClientSettings.remote(
+let production = ClientSettings.remote(
     "node1.example.com:2113",
     "node2.example.com:2113",
     "node3.example.com:2113"
 ).authenticated(.credentials(username: "admin", password: "changeit"))
 
 // Connection string
-let settings: ClientSettings = "esdb://admin:changeit@node1:2113,node2:2113?tls=true"
+let fromString: ClientSettings = "kurrentdb://admin:changeit@node1:2113,node2:2113?tls=true"
 
 // From an environment variable (defaults to SWIFT_KURRENT_DB_URL)
-let settings = try ClientSettings.fromEnv()
-let settings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
+let fromEnvironment = try ClientSettings.fromEnv()
 
 let client = KurrentDBClient(settings: settings)
 ```
 
-Create one client per application and reuse it. Calls that return a single response — appends, deletes, metadata, management operations — share one connection per node. Calls that return a stream — reads and subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`.
+Create one client per application and reuse it. Calls that return a single response — appends, deletes, metadata, management operations — share one connection per node. Calls that return a stream — reads and subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`; calling it again does nothing.
+
+Need a database per test? The `KurrentDBPool` library lends out clients for a set of independent KurrentDB instances, one caller per instance at a time — see [Client pools](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/client-pools).
 
 ---
 
 ### Append and Read Events
 
 ```swift
+struct OrderPlaced: Codable, Sendable {
+    let orderId: String
+    let total: Double
+}
+
 // Create an event
 let event = EventData(
     eventType: "OrderPlaced",
-    model: ["orderId": "order-123", "total": 99.99]
+    model: OrderPlaced(orderId: "order-123", total: 99.99)
 )
 
 // Append to stream
@@ -117,9 +124,8 @@ let responses = try await client.streams(specified: "orders").read {
 }
 
 for try await response in responses {
-    if let event = try response.event {
-        print("Event: \(event.record.eventType)")
-    }
+    let readEvent = try response.event
+    print("Event: \(readEvent.record.eventType)")
 }
 ```
 
@@ -136,13 +142,13 @@ try await client.streams(specified: "orders").append(events: [event]) {
 }
 
 // Read forward
-let responses = try await client.streams(specified: "orders").read {
+let forward = try await client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 50
 }
 
 // Read backward
-let responses = try await client.streams(specified: "orders").read {
+let backward = try await client.streams(specified: "orders").read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 10
@@ -153,32 +159,44 @@ let allResponses = try await client.allStreams.read {
     $0.limit = 100
 }
 
-// Read $all with server-side filtering (new in 2.1)
+// Read $all with server-side filtering
 let filtered = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
 }
 
 // Subscribe (catch-up)
 let subscription = try await client.streams(specified: "orders").subscribe()
-for try await event in subscription.events { ... }
+for try await readEvent in subscription.events {
+    print(readEvent.record.eventType)
+}
 
-// Subscribe to $all
-let subscription = try await client.allStreams.subscribe()
+// Subscribe to $all, filtered on the server
+let allSubscription = try await client.allStreams.subscribe {
+    $0.filter = .onStreamName(prefixes: ["order-"])
+}
 
 // Delete / tombstone
 try await client.streams(specified: "orders").delete()
 try await client.streams(specified: "orders").tombstone()
 
 // Stream metadata
-try await client.streams(specified: "orders").setMetadata(metadata: metadata)
+try await client.streams(specified: "orders").setMetadata(metadata: StreamMetadata().maxCount(1000))
 let metadata = try await client.streams(specified: "orders").getMetadata()
 ```
 
-### Multi-stream writes (new in 2.1)
+### Multi-stream writes
 
 ```swift
-// AppendRecords — atomic multi-stream append with Dynamic Consistency Boundary.
-// Requires server support (KurrentDB 25.1+).
+let record = try EventRecord(eventType: "OrderPlaced", payload: .json(OrderPlaced(orderId: "order-1", total: 10)))
+
+// Atomic multi-stream append (KurrentDB 25.1+).
+try await client.multiStreams.append(events: [
+    StreamEvent(stream: "order-1", records: [record]),
+    StreamEvent(stream: "inventory-1", records: [record]),
+])
+
+// AppendRecords — atomic multi-stream append with Dynamic Consistency Boundary
+// checks on any stream (KurrentDB 26.1+).
 try await client.multiStreams.appendRecords(
     events: [
         StreamEvent(stream: "order-1", records: [record]),
@@ -194,7 +212,7 @@ let batch = try await client.multiStreams.batchAppend(events: [
 ])
 ```
 
-### Per-call credentials (new in 2.1)
+### Per-call credentials
 
 ```swift
 // Override authentication for a single operation (multi-tenant / per-request auth).
@@ -211,6 +229,8 @@ try await client.streams(specified: "orders")
 ### Projections
 
 ```swift
+let js = "fromAll().when({ $any: function(s, e) { s.count = (s.count || 0) + 1; } }).outputState();"
+
 // Create
 try await client.projections(of: .continuous(name: "order-count")).create(query: js)
 try await client.projections(of: .onetime).create(query: js)
@@ -224,6 +244,7 @@ try await client.projections(name: "order-count").reset()
 try await client.projections(name: "order-count").delete()
 
 // Query state / result
+struct CountResult: Codable { let count: Int }
 let state: CountResult? = try await client.projections(name: "order-count").state(of: CountResult.self)
 let result: Int? = try await client.projections(name: "order-count").result(of: Int.self)
 
@@ -330,12 +351,17 @@ for try await snapshot in stats {
 **Version 2.0.0** introduces a breaking redesign of the API.
 The flat methods on `KurrentDBClient` are replaced by a **target-based, hierarchical** style:
 
+<!-- snippet:skip -->
 ```swift
 // 1.x
 try await client.appendToStream("orders", events: [event]) { ... }
+```
 
+```swift
 // 2.x
-try await client.streams(of: .specified("orders")).append(events: [event]) { ... }
+try await client.streams(of: .specified("orders")).append(events: [event]) {
+    $0.expectedRevision = .streamExists
+}
 ```
 
 ### The 1.x API moves to `KurrentDB_V1`
@@ -344,11 +370,13 @@ In 2.x the old flat-method API is **no longer part of the `KurrentDB` module**.
 It has been moved to a separate `KurrentDB_V1` library that ships in the same package.
 If you are not ready to migrate immediately, switch your dependency target and import:
 
+<!-- snippet:skip -->
 ```swift
 // Package.swift
 .product(name: "KurrentDB_V1", package: "swift-kurrentdb")
 ```
 
+<!-- snippet:skip -->
 ```swift
 // Replace your existing import
 import KurrentDB_V1   // was: import KurrentDB
@@ -364,50 +392,37 @@ import KurrentDB_V1   // was: import KurrentDB
 
 | Category | Operations |
 |----------|-----------|
-| **Streams** | Append, read, delete, subscribe (catch-up), $all stream |
+| **Streams** | Append, read, delete, tombstone, metadata, subscribe (catch-up), $all stream with server-side filtering |
+| **Multi-stream writes** | Atomic multi-stream append, AppendRecords (Dynamic Consistency Boundary), BatchAppend |
 | **Persistent Subscriptions** | Create, subscribe, update, delete, ACK/NAK, $all support |
 | **Projections** | Create (continuous/one-time/transient), enable, disable, state, result |
 | **Users** | Create, enable, disable, update, change/reset password |
 | **Operations** | Scavenge (start/stop), merge indexes, shutdown, node priority |
 | **Gossip** | Cluster discovery, node health, leader detection |
 | **Monitoring** | Real-time server statistics |
-| **Connection** | TLS/SSL, cluster gossip discovery, auto-reconnection, keep-alive |
+| **Connection** | TLS/SSL, cluster gossip discovery, auto-reconnection, keep-alive, shared/dedicated connection management |
+| **Authentication** | Username/password, bearer tokens, per-call credential overrides |
+| **Client pools** | `KurrentDBPool` — borrow a client for one of several independent KurrentDB instances (e.g. per test) |
 
 ## Test Coverage
 
-**75% line coverage** across the `KurrentDB` module, measured by running all 174 tests against a live 3-node TLS KurrentDB cluster.
-
-### Coverage by Subsystem
-
-| Subsystem | Line Coverage | Lines |
-|-----------|:------------:|------:|
-| Monitoring | 88.4% | 95 |
-| ServerFeatures | 90.2% | 61 |
-| Users | 87.6% | 403 |
-| Streams | 86.1% | 1,560 |
-| Operations | 83.0% | 235 |
-| Projections | 77.3% | 865 |
-| PersistentSubscriptions | 71.9% | 1,555 |
-| Gossip | 66.9% | 142 |
-| Core | 66.8% | 2,650 |
-| **KurrentDB (total)** | **75.0%** | **7,581** |
+Coverage is measured on every CI run against a live 3-node TLS KurrentDB cluster and published to [Codecov](https://codecov.io/gh/gradyzhuo/swift-kurrentdb).
 
 ### Test Suites
 
-174 tests across 9 integration suites and 2 unit/mock suites. All integration tests run against a live 3-node TLS KurrentDB cluster.
-
-| Suite | Tests | Type | Key Scenarios |
-|-------|------:|------|---------------|
-| **StreamsTests** | 35 | Integration | Append, read (forward/backward/limit/revision), subscribe, metadata, optimistic concurrency, delete, tombstone |
-| **ProjectionsTests** | 16 | Integration | Create (continuous/one-time/transient), enable/disable, abort, reset, state/result query, list |
-| **PersistentSubscriptionsTests** | 11 | Integration | Create, subscribe, ACK, NACK (park/retry), getInfo, update settings, list, delete, replay parked |
-| **UsersTests** | 7 | Integration | Create, enable/disable, update, change/reset password |
-| **OperationsTests** | 6 | Integration | Scavenge (start/stop), merge indexes, restart persistent subscriptions, node priority, resign |
-| **GossipTests** | 3 | Integration | Read cluster members, node state, custom timeout |
-| **MonitoringTests** | 3 | Integration | Server stats, refresh interval, metadata flag |
-| **KurrentCoreTests** | 67 | Unit | Connection string parsing, `EventData`, projection status, stream identifiers, metadata, subscription filters |
-| **MockClientTests** | 26 | Mock/DI | `KurrentDBClientProtocol` conformance, all factory call patterns, 5 domain service scenarios |
-| **Total** | **174** | | 0 commented-out tests |
+| Suite | Type | Key Scenarios |
+|-------|------|---------------|
+| **StreamsTests** | Integration | Append, read (forward/backward/limit/revision), subscribe, metadata, optimistic concurrency, delete, tombstone, multi-stream append, AppendRecords, BatchAppend, filtered `$all` reads |
+| **ProjectionsTests** | Integration | Create (continuous/one-time/transient), enable/disable, abort, reset, state/result query, list |
+| **PersistentSubscriptionsTests** | Integration | Create, subscribe, ACK, NACK (park/retry), getInfo, update settings, list, delete, replay parked, connection teardown |
+| **UsersTests** | Integration | Create, enable/disable, update, change/reset password |
+| **OperationsTests** | Integration | Scavenge (start/stop), merge indexes, restart persistent subscriptions, node priority, resign |
+| **GossipTests** | Integration | Read cluster members, node state, custom timeout |
+| **MonitoringTests** | Integration | Server stats, refresh interval, metadata flag |
+| **KurrentDBPoolTests** | Integration | Borrowing, waiting, env configuration against independent instances |
+| **KurrentCoreTests** | Unit | Connection string parsing, `EventData`, projection status, stream identifiers, metadata, stream filters |
+| **MockClientTests** | Mock/DI | `KurrentDBClientProtocol` conformance, all factory call patterns, domain service scenarios |
+| **DocSnippetsTests** | Build | Every Swift example in this README and the DocC articles compiles |
 
 ### Optimistic Concurrency
 
@@ -429,6 +444,7 @@ Streams write-side error paths are explicitly covered:
 | getInfo (groupName, eventSource, $all) | ✓ |
 | Update settings → getInfo confirms change | ✓ |
 | park → replayParked → re-delivered → ACK | ✓ |
+| Dropping the subscription handle closes its connection | ✓ |
 
 ## Requirements
 
@@ -440,9 +456,9 @@ Streams write-side error paths are explicitly covered:
 | Server Version | Status | Notes |
 |:--------------:|:------:|-------|
 | **KurrentDB 26.1** | ✅ Supported | Full feature support |
-| **KurrentDB 26.0** | ✅ Supported | Full feature support |
-| **KurrentDB 25.1** | ✅ Supported | Full feature support |
-| **EventStoreDB 24.x** | ✅ Supported | Core features supported; KurrentDB v2 batch append not available |
+| **KurrentDB 26.0** | ✅ Supported | Everything except AppendRecords (26.1+) |
+| **KurrentDB 25.1** | ✅ Supported | Everything except AppendRecords (26.1+) |
+| **EventStoreDB 24.x** | ✅ Supported | Core features; no multi-stream append or AppendRecords |
 
 ### Local Development with Docker
 
@@ -473,14 +489,15 @@ docker run --rm -d -p 2113:2113 \
 |-------|-------------|
 | [Migration Guide (1.x → 2.x)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code |
 | [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
-| [Appending Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency |
-| [Reading Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, filters |
-| [Projections](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/projections) | Create, manage, and query projection state |
+| [Appending Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency, multi-stream writes |
+| [Reading Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, server-side filters |
+| [Projections](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/managing-projections) | Create, manage, and query projection state |
 | [Persistent Subscriptions](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/persistent-subscriptions) | Competing consumers, ACK/NAK, subscription groups |
 | [User Management](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/user-management) | Create, enable, disable, password management |
 | [Cluster Gossip](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/cluster-gossip) | Cluster discovery, node health monitoring |
-| [Monitoring](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/monitoring) | Real-time server statistics |
+| [Monitoring](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/server-statistics) | Real-time server statistics |
 | [Server Operations](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/server-operations) | Scavenge, index merge, shutdown, node management |
+| [Client Pools](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/client-pools) | `KurrentDBPool`: borrow a client per test from independent instances |
 | [Full API Reference](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | Complete API documentation |
 
 ## Contributing
@@ -493,7 +510,7 @@ Contributions are welcome! Whether it's bug reports, feature requests, documenta
 
 ## License
 
-MIT License — see [LICENSE](Licence) for details.
+MIT License — see [Licence](Licence) for details.
 
 ---
 

@@ -19,7 +19,7 @@ extension KurrentDBClient {
     /// ```swift
     /// try await client.operations(of: .system).mergeIndexes()
     ///
-    /// let response = try await client.operations(of: ScavengeOperations()).startScavenge()
+    /// let response = try await client.operations(of: .scavenge).startScavenge(threadCount: 2, startFromChunk: 0)
     /// // scavenge started
     /// ```
     ///

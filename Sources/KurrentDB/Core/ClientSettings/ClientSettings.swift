@@ -335,7 +335,7 @@ extension ClientSettings {
     /// let settings = try ClientSettings.fromEnv()
     ///
     /// // Or read from a custom environment variable.
-    /// let settings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
+    /// let customSettings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
     /// ```
     ///
     /// - Parameter key: Name of the environment variable holding the connection string. Defaults to `DEFAULT_ENV_KEY_NAME` (`"SWIFT_KURRENT_DB_URL"`).

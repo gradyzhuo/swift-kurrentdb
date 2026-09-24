@@ -15,6 +15,8 @@ ProjectionsTarget (Protocol)
 │   ├── SpecifiedContinuousProjectionTarget (Struct)
 │   └── SpecifiedTransientProjectionTarget (Struct)
 ├── OneTimeProjectionTarget (Struct)
+├── UnspecifiedContinuousProjectionTarget (Struct)
+├── UnspecifiedTransientProjectionTarget (Struct)
 └── AnyProjectionsTarget (Struct)
 ```
 
@@ -24,11 +26,13 @@ Each target type represents a different scope and mode of projection operations:
 
 | Target | Purpose | Operations |
 |--------|---------|------------|
-| ``NameTarget`` | Control a specific named projection (any mode) | `enable()`, `disable()`, `update(query:)`, `delete()`, `reset()`, `result()`, `state()`, `statistics()` |
-| ``SpecifiedContinuousProjectionTarget`` | Create and control a continuous projection | `create(query:)` + all ``NameTarget`` operations |
-| ``OneTimeProjectionTarget`` | Create a one-time projection | `create(query:)` |
+| ``NameTarget`` | Control a specific named projection (any mode) | `enable()`, `disable()`, `abort()`, `reset()`, `update(query:)`, `delete()`, `detail()`, `result(of:)`, `state(of:)` |
+| ``SpecifiedContinuousProjectionTarget`` | Create and control a continuous projection | `create(query:configure:)` + all ``NameTarget`` operations |
 | ``SpecifiedTransientProjectionTarget`` | Create and control a transient projection | `create(query:)` + all ``NameTarget`` operations |
-| ``AnyProjectionsTarget`` | System-wide projection operations | `list(for:)`, `restartSubsystem()` |
+| ``OneTimeProjectionTarget`` | Create and list one-time projections | `create(query:)`, `list()` |
+| ``UnspecifiedContinuousProjectionTarget`` | Every continuous projection | `list()` |
+| ``UnspecifiedTransientProjectionTarget`` | Every transient projection | `list()` |
+| ``AnyProjectionsTarget`` | Every projection, and the subsystem | `list()`, `restartSubsystem()` |
 
 ## Design decisions
 
@@ -48,45 +52,51 @@ Separating them ensures you cannot call `enable()` on a one-time projection (whi
 
 ### Why ProjectionControlable?
 
-The ``ProjectionControlable`` protocol marks targets that support control operations (enable, disable, update, delete, reset). It requires a `name` property, ensuring the target can identify which projection to control. ``OneTimeProjectionTarget`` and ``AnyProjectionsTarget`` do not conform because they don't support individual projection control.
+The ``ProjectionControlable`` protocol marks targets that support control operations (enable, disable, abort, reset, update, delete, and the state queries). It requires a `name` property, ensuring the target can identify which projection to control. ``OneTimeProjectionTarget``, the unspecified targets and ``AnyProjectionsTarget`` do not conform because they don't name a single projection.
 
 ## Static factory methods
 
 Each target has a static factory method on ``ProjectionsTarget``:
 
 ```swift
-client.projections(name: "my-projection")       // NameTarget (via convenience)
-client.projections(of: .continuous(name: "stats"))   // SpecifiedContinuousProjectionTarget
-client.projections(of: .onetime)                     // OneTimeProjectionTarget
-client.projections(of: .transient(name: "temp"))     // SpecifiedTransientProjectionTarget
-client.projections(of: .any)                         // AnyProjectionsTarget
+client.projections(name: "my-projection")               // NameTarget (convenience)
+client.projections(system: .byCategory)                 // NameTarget for a system projection
+client.projections(of: .continuous(name: "stats"))      // SpecifiedContinuousProjectionTarget
+client.projections(of: .transient(name: "temp"))        // SpecifiedTransientProjectionTarget
+client.projections(of: .onetime)                        // OneTimeProjectionTarget
+client.projections(of: .anyContinuous)                  // UnspecifiedContinuousProjectionTarget
+client.projections(of: .anyTransient)                   // UnspecifiedTransientProjectionTarget
+client.projections(of: .anyMode)                        // AnyProjectionsTarget
 ```
 
 ## Type safety
 
-The target-based design provides compile-time guarantees that prevent invalid operation combinations:
+The target-based design turns invalid combinations into compile errors:
 
 ```swift
-// ✓ Correct: Create a continuous projection
-try await client.createContinuousProjection(name: "stats", query: query)
+let query = "fromAll().when({ $any: function(s, e) {} })"
 
-// ✓ Correct: Control a named projection
-try await client.enableProjection(name: "stats")
-try await client.disableProjection(name: "stats")
+// ✓ Create a continuous projection
+try await client.projections(of: .continuous(name: "stats")).create(query: query)
 
-// ✓ Correct: Create a one-time projection
-try await client.createOneTimeProjection(query: query)
+// ✓ Control a named projection
+try await client.projections(name: "stats").enable()
+try await client.projections(name: "stats").disable()
 
-// ✗ Compile error: Cannot enable a one-time projection
-let oneTime = Projections(target: .onetime, ...)
-try await oneTime.enable()
+// ✓ Create a one-time projection
+try await client.projections(of: .onetime).create(query: query)
 
-// ✗ Compile error: Cannot create from AnyProjectionsTarget
-let any = Projections(target: .any, ...)
-try await any.create(query: query)
+// ✓ List every continuous projection
+let continuous = try await client.projections(of: .anyContinuous).list()
+```
 
-// ✓ Correct: List all projections
-try await client.listAllProjections(mode: .continuous)
+<!-- snippet:skip -->
+```swift
+// ✗ Compile error: a one-time projection can't be enabled
+try await client.projections(of: .onetime).enable()
+
+// ✗ Compile error: AnyProjectionsTarget can't create
+try await client.projections(of: .anyMode).create(query: "fromAll()")
 ```
 
 ## Comparison with other targets
@@ -96,25 +106,21 @@ try await client.listAllProjections(mode: .continuous)
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` |
 | Creation Target | — | `AllUsersTarget` | `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget` | `ScavengeOperations` |
 | Control Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` |
-| System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` |
-| Service Actor | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
+| System Target | `AllStreamsTarget` | — | `AnyProjectionsTarget` | `SystemOperations` |
+| Service | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
 
 ## File structure
 
 ```
 Sources/KurrentDB/Projections/
-├── Protocols/
-│   ├── ProjectionsTarget.swift              # Base protocol + static factory methods
-│   ├── ProjectionControlable.swift          # Control capability protocol
-│   ├── NameTarget.swift                     # Named projection target
-│   ├── AnyTarget.swift                      # All projections target
-│   ├── ProjectionTarget+Continuous.swift    # Continuous projection target
-│   ├── ProjectionTarget+OneTime.swift       # One-time projection target
-│   └── ProjectionTarget+Transient.swift     # Transient projection target
-├── Projections.swift                        # Generic Projections<Target> actor
-├── Projections+ContinuousMode.swift         # Continuous mode extensions
-├── Projections+OneTimeMode.swift            # One-time mode extensions
-├── Projections+TransientMode.swift          # Transient mode extensions
+├── KurrentDBClient+Projections.swift        # projections(of:), projections(name:), projections(system:)
+├── Projections.swift                        # Generic Projections<Target> service + control operations
+├── API/
+│   ├── Projections+ContinuousMode.swift     # Continuous create / list
+│   ├── Projections+TransientMode.swift      # Transient create / list
+│   ├── Projections+OneTimeMode.swift        # One-time create / list
+│   └── Projections+AnyMode.swift            # List all, restart subsystem
+├── Target/                                  # ProjectionsTarget, ProjectionControlable and every target type
 └── Usecase/
     ├── Create/
     │   ├── Projections.ContinuousCreate.swift

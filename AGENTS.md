@@ -10,7 +10,7 @@ Source targets live under `Sources/`: `KurrentDB` exposes the public client APIs
 - `bash proto/generate.sh` refreshes the gRPC stubs after editing files in `proto/kurrentdb` or `proto/google`; commit both `Sources/GRPCEncapsulates/Generated` and the proto changes.
 
 ## Coding Style & Naming Conventions
-Follow idiomatic Swift 6: four-space indentation, trailing commas for multi-line literals, and `UpperCamelCase` for types such as `KurrentDBClient`. Use `lowerCamelCase` for methods (`appendStream`) and properties, and prefer expressive argument labels (`subscribePersistentSubscription(stream:groupName:)`). Keep module imports explicit and avoid wildcard extensions. Generated files stay package-visible; do not change their access modifiers outside the generator.
+Follow idiomatic Swift 6: four-space indentation, trailing commas for multi-line literals, and `UpperCamelCase` for types such as `KurrentDBClient`. Use `lowerCamelCase` for methods (`append(events:configure:)`) and properties, and prefer expressive argument labels (`persistentSubscriptions(stream:group:)`). Keep module imports explicit and avoid wildcard extensions. Generated files stay package-visible; do not change their access modifiers outside the generator.
 
 ## Testing Guidelines
 All logic additions must include XCTests in the closest suite (for example, stream projections belong in `Tests/ProjectionsTests`). Name tests descriptively using the `test<Scenario>_<Expectation>()` convention to align with current files. Since the suite hits TLS fixtures, ensure `Resources/ca.crt` is included via the `.copy` directives already defined in `Package.swift`. Run `swift test --enable-code-coverage` locally for regressions touching networking or serialization.

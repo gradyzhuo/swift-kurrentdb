@@ -12,7 +12,7 @@ import SwiftProtobuf
 
 extension Streams {
     /// Usecase that appends records to one or more streams atomically with cross-stream
-    /// consistency checks (Dynamic Consistency Boundary). Requires KurrentDB 25.1+.
+    /// consistency checks (Dynamic Consistency Boundary). Requires KurrentDB 26.1+.
     ///
     /// Consistency checks are evaluated before any records are written. If any check fails, no
     /// records are written and every failing check is reported together via

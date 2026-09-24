@@ -69,23 +69,26 @@ client.operations(of: .node)                              // NodeOperations
 The target-based design provides compile-time guarantees that prevent invalid operation combinations:
 
 ```swift
-// ✓ Correct: Start scavenge on ScavengeOperations
-try await client.operations(of: .scavenge)
+// ✓ Start a scavenge on ScavengeOperations
+let response = try await client.operations(of: .scavenge)
     .startScavenge(threadCount: 2, startFromChunk: 0)
 
-// ✗ Compile error: Cannot stop without specifying a scavenge ID
+// ✓ Stop a specific scavenge
+try await client.operations(of: .activeScavenge(scavengeId: response.scavengeId))
+    .stopScavenge()
+```
+
+<!-- snippet:skip -->
+```swift
+// ✗ Compile error: cannot stop without specifying a scavenge ID
 try await client.operations(of: .scavenge).stopScavenge()
 
-// ✓ Correct: Stop a specific scavenge
-try await client.operations(of: .activeScavenge(scavengeId: "abc"))
-    .stopScavenge()
-
-// ✗ Compile error: Cannot start from ActiveScavenge target
+// ✗ Compile error: cannot start from an ActiveScavenge target
 try await client.operations(of: .activeScavenge(scavengeId: "abc"))
     .startScavenge(threadCount: 2, startFromChunk: 0)
 
-// ✗ Compile error: Cannot mix system and scavenge operations
-try await client.operations(of: .system).startScavenge(...)
+// ✗ Compile error: cannot mix system and scavenge operations
+try await client.operations(of: .system).startScavenge(threadCount: 2, startFromChunk: 0)
 try await client.operations(of: .node).shutdown()
 ```
 
@@ -96,15 +99,17 @@ try await client.operations(of: .node).shutdown()
 | Base Protocol | `StreamsTarget` | `UsersTarget` | `ProjectionsTarget` | `OperationsTarget` |
 | Creation Target | — | `AllUsersTarget` | `SpecifiedContinuousProjectionTarget`, `OneTimeProjectionTarget`, `SpecifiedTransientProjectionTarget` | `ScavengeOperations` |
 | Control Target | `SpecifiedStream` | `SpecifiedUserTarget` | `NameTarget` | `ActiveScavenge` |
-| System Target | `AllStreams` | — | `AnyProjectionsTarget` | `SystemOperations` |
+| System Target | `AllStreamsTarget` | — | `AnyProjectionsTarget` | `SystemOperations` |
 | Node Target | — | — | — | `NodeOperations` |
-| Service Actor | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
+| Service | `Streams<Target>` | `Users<Target>` | `Projections<Target>` | `Operations<Target>` |
 
 ## File structure
 
 ```
 Sources/KurrentDB/Operations/
+├── KurrentDBClient+ServerOperations.swift # client.operations(of:)
 ├── OperationsTarget.swift                 # Base protocol + static factory methods
+├── ScavengeResponse.swift                 # Start/stop scavenge response
 ├── Protocols/
 │   ├── ScavengeCreatable.swift            # Scavenge creation capability
 │   ├── ScavengeControllable.swift         # Scavenge control capability
@@ -115,6 +120,6 @@ Sources/KurrentDB/Operations/
 │   ├── ActiveScavenge.swift               # Stop scavenge target (holds scavengeId)
 │   ├── SystemOperations.swift             # System-wide operations target
 │   └── NodeOperations.swift               # Node management target
-├── Operations.swift                       # Generic Operations<Target> actor
+├── Operations.swift                       # Generic Operations<Target> service
 └── Usecase/                               # gRPC usecase implementations
 ```

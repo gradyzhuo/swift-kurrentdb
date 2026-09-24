@@ -17,7 +17,7 @@ import Foundation
 /// ```swift
 /// // Only checks seat-A1's revision; writes nothing to it.
 /// try await client.multiStreams.appendRecords(
-///     events: [StreamEvent(stream: "booking-123", records: bookedEvent)],
+///     events: [StreamEvent(stream: "booking-123", records: [record])],
 ///     checks: [.streamState("seat-A1", .at(7))]
 /// )
 /// ```

@@ -1,9 +1,10 @@
-# Projections
-The various gRPC client APIs include dedicated clients that allow you to manage projections.
+# Managing projections
 
+Create, control and query projections through ``KurrentDBClient``.
 
 ## Creating a client
-Projection management operations are exposed through a dedicated client.
+
+Managing projections needs credentials with the right permissions:
 
 ```swift
 let settings = ClientSettings.localhost()
@@ -11,12 +12,25 @@ let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
 ```
 
+## Choosing a target
+
+Every operation starts from a ``Projections`` value for a target. The target decides which operations are available, so calling one that doesn't apply fails at compile time:
+
+| Accessor | Operations |
+|----------|------------|
+| `client.projections(of: .continuous(name:))` | `create(query:configure:)`, plus every control operation |
+| `client.projections(of: .transient(name:))` | `create(query:)`, plus every control operation |
+| `client.projections(of: .onetime)` | `create(query:)`, `list()` |
+| `client.projections(name:)` | `enable`, `disable`, `abort`, `reset`, `delete`, `update`, `detail`, `state`, `result` |
+| `client.projections(system:)` | The same, for a system projection such as `.byCategory` |
+| `client.projections(of: .anyMode)` | `list()`, `restartSubsystem()` |
+| `client.projections(of: .anyContinuous)` / `.anyTransient` | `list()` for that mode |
+
 ## Create a projection
-Creates a projection that runs until the last event in the store, and then continues processing new events as they are appended to the store. The query parameter contains the JavaScript you want created as a projection. Projections have explicit names, and you can enable or disable them via this name.
+
+A continuous projection processes every event up to the end of the store, then keeps processing new events as they are appended. The query is the projection's JavaScript. Projections have names, which you use to enable, disable or query them.
 
 ```swift
-import Foundation
-
 let js = """
 fromAll()
     .when({
@@ -33,138 +47,104 @@ fromAll()
 """
 let name = "countEvents_Create_\(UUID())"
 
-try await client.createContinuousProjection(name: name, query: js)
+try await client.projections(of: .continuous(name: name)).create(query: js)
 ```
 
-Trying to create projections with the same name will result in an error:
+Set `emitEnabled` or `trackEmittedStreams` in the closure to control emitted streams:
 
+<!-- snippet:continue -->
+```swift
+try await client.projections(of: .continuous(name: "emitting-\(UUID())")).create(query: js) {
+    $0.emitEnabled = true
+    $0.trackEmittedStreams = true
+}
+```
+
+Creating a projection whose name is already taken throws ``KurrentError/resourceAlreadyExists``:
+
+<!-- snippet:continue -->
 ```swift
 do {
-    try await client.createContinuousProjection(name: name, query: js)
-}catch let error as KurrentError {
-    if case .resourceAlreadyExists = error {
-        print("\(name) already exists")
-    }
+    try await client.projections(of: .continuous(name: name)).create(query: js)
+} catch KurrentError.resourceAlreadyExists {
+    print("\(name) already exists")
 }
 ```
 
 ## Restart the subsystem
 
-It is possible to restart the entire projection subsystem using the projections management client API. The user must be in the $ops or $admin group to perform this operation.
-
+Restarts the whole projection subsystem. The user must be in the `$ops` or `$admins` group.
 
 ```swift
-try await client.restartProjectionSubsystem()
+try await client.projections(of: .anyMode).restartSubsystem()
 ```
 
 ## Enable a projection
 
-Enables an existing projection by name. Once enabled, the projection will start to process events even after restarting the server or the projection subsystem. You must have access to a projection to enable it, see the [ACL documentation](https://docs.kurrent.io/server/v24.10/security/user-authorization.html).
+Enables an existing projection. An enabled projection processes events, and keeps doing so after the server or the projection subsystem restarts. You need access to the projection; see the [ACL documentation](https://docs.kurrent.io/server/v24.10/security/user-authorization.html).
 
 ```swift
-// by predefined enum.
-try await client.enableProjection(name: "$by_category")
+try await client.projections(system: .byCategory).enable()
 ```
 
-You can only enable an existing projection. When you try to enable a non-existing projection, you'll get an error:
+Enabling a projection that doesn't exist throws ``KurrentError/resourceNotFound(reason:)``:
 
 ```swift
-do{
-    try await client.enableProjection(name: "projection that does not exists")
-}catch let error as KurrentError {
-    if case .resourceNotFound(let reason) = error {
-        print(reason)
-    }
+do {
+    try await client.projections(name: "projection that does not exist").enable()
+} catch KurrentError.resourceNotFound(let reason) {
+    print(reason)
 }
 ```
+
+The other control operations below throw the same error for a projection that doesn't exist.
 
 ## Disable a projection
-Disables a projection, this will save the projection checkpoint. Once disabled, the projection will not process events even after restarting the server or the projection subsystem. You must have access to a projection to disable it, see the [ACL documentation](https://docs.kurrent.io/server/v24.10/security/user-authorization.html).
+
+Disables a projection and saves its checkpoint. A disabled projection stays stopped after the server or the projection subsystem restarts.
 
 ```swift
-try await client.disableProjection(name: "$by_category")
+try await client.projections(system: .byCategory).disable()
 ```
 
-You can only disable an existing projection. When you try to disable a non-existing projection, you'll get an error:
+## Abort a projection
+
+Stops a projection **without** saving its checkpoint.
 
 ```swift
-do{
-    try await client.disableProjection(name: "projection that does not exists")
-}catch let error as KurrentError {
-    if case .resourceNotFound(let reason) = error {
-        print(reason)
-    }
-}
+try await client.projections(system: .byCategory).abort()
+```
+
+## Reset a projection
+
+Deletes a projection's checkpoint, so it starts again from the beginning and re-emits its events. Streams the projection writes to are soft-deleted.
+
+```swift
+try await client.projections(system: .byCategory).reset()
 ```
 
 ## Delete a projection
 
-Deletes an existing projection. You must disable the projection before deleting it, running projections cannot be deleted. Deleting a projection includes deleting the checkpoint and the emitted streams.
+Deletes a projection. Disable it first — a running projection can't be deleted. The options choose whether the checkpoint, state and emitted streams are deleted too.
 
 ```swift
-let name = "projection"
-// A projection must be disabled to allow it to be deleted.
-try await client.disableProjection(name: name)
+let projection = client.projections(name: "projection")
 
-// The projection can now be deleted
-try await client.deleteProjection(name: name)
-```
-You can only delete an existing projection. When you try to delete a non-existing projection, you'll get an error:
+// A projection must be disabled before it can be deleted.
+try await projection.disable()
 
-```swift
-do{
-    try await client.deleteProjection(name: "projection that does not exists")
-}catch let error as KurrentError {
-    if case .resourceNotFound(let reason) = error {
-        print(reason)
-    }
-}
-```
-
-## Abort a projection
-Aborts a projection, this will not save the projection's checkpoint.
-
-```swift
-try await client.abortProjection(name: "$by_category")
-```
-
-You can only disable an existing projection. When you try to disable a non-existing projection, you'll get an error:
-
-```swift
-do{
-    try await client.abortProjection(name: "projection that does not exists")
-}catch let error as KurrentError {
-    if case .resourceNotFound(let reason) = error {
-        print(reason)
-    }
-}
-```
-
-## Reset a projection
-Resets a projection, which causes deleting the projection checkpoint. This will force the projection to start afresh and re-emit events. Streams that are written to from the projection will also be soft-deleted.
-
-```swift
-try await client.resetProjection(name: "$by_category")
-```
-
-You can only disable an existing projection. When you try to disable a non-existing projection, you'll get an error:
-
-```swift
-do{
-    try await client.resetProjection(name: "projection that does not exists")
-}catch let error as KurrentError {
-    if case .resourceNotFound(let reason) = error {
-        print(reason)
-    }
+try await projection.delete {
+    $0.deleteEmittedStreams = true
+    $0.deleteStateStream = true
+    $0.deleteCheckpointStream = true
 }
 ```
 
 ## Update a projection
-Updates a projection with a given name. The query parameter contains the new JavaScript. Updating system projections using this operation is not supported at the moment.
 
+Replaces a projection's query. Updating system projections isn't supported.
 
-```swift 
-let name = "countEvents_Update_\(UUID())"
+```swift
 let js = """
 fromAll()
     .when({
@@ -180,51 +160,46 @@ fromAll()
     .outputState();
 """
 
-try await client.updateProjection(name: name, query: "fromAll().when()")
+try await client.projections(name: "countEvents").update(query: js)
 ```
 
-You can only update an existing projection. When you try to update a non-existing projection, you'll get an error:
+## List projections
+
+Returns the details of every projection, user-defined and system. See <doc:#Projection-details> for the fields.
 
 ```swift
-do{
-    try await client.updateProjection(name: "projection that does not exists", query: "fromAll().when()")
-}catch let error as KurrentError {
-    if case .resourceNotFound(let reason) = error {
-        print(reason)
-    }
-}
-```
-
-## List all projections
-Returns a list of all projections, user defined & system projections. See the projection details section for an explanation of the returned values.
-
-```swift
-let details = try await client.listAllProjections(mode: .any)
+let details = try await client.projections(of: .anyMode).list()
 
 for detail in details {
     print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
 }
 ```
 
+To list only one mode, use `.anyContinuous`, `.anyTransient` or `.onetime` as the target.
 
 ## Get status
-Gets the status of a named projection. See the projection details section for an explanation of the returned values.
+
+Returns the details of one projection, or `nil` if it doesn't exist.
 
 ```swift
-let detail = try await client.getProjectionDetail(name: "$by_category")
-
-print("\(detail?.name), \(detail?.status), \(detail?.checkpointStatus), \(detail?.mode), \(detail?.progress)")
+if let detail = try await client.projections(system: .byCategory).detail() {
+    print("\(detail.name), \(detail.status), \(detail.checkpointStatus), \(detail.mode), \(detail.progress)")
+}
 ```
 
 ## Get state
-Retrieves the state of a projection.
 
+Decodes a projection's state:
+
+<!-- snippet:toplevel -->
 ```swift
-// Result structure of state 
+// The shape of the projection's state
 struct CountResult: Codable {
     let count: Int
 }
+```
 
+```swift
 let name = "get_state_example"
 let js = """
 fromAll()
@@ -241,16 +216,20 @@ fromAll()
     .outputState();
 """
 
-try await client.createContinuousProjection(name: name, query: js)
+try await client.projections(of: .continuous(name: name)).create(query: js)
 
-try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
+// Give the projection time to process events and build its state.
+try await Task.sleep(for: .milliseconds(500))
 
-let state = try await client.getProjectionState(of: CountResult.self, name: name)
-print(state)
+let state = try await client.projections(name: name).state(of: CountResult.self)
+print(state as Any)
 ```
 
+For a partitioned projection, set `partition` in the closure.
+
 ## Get result
-Retrieves the result of the named projection and partition.
+
+Decodes the result of a projection:
 
 ```swift
 let name = "get_result_example"
@@ -270,54 +249,57 @@ fromAll()
     .outputState();
 """
 
-try await client.createContinuousProjection(name: name, query: js)
+try await client.projections(of: .continuous(name: name)).create(query: js)
 
-try await Task.sleep(for: .microseconds(500)) //give it some time to process and have a state.
+// Give the projection time to process events.
+try await Task.sleep(for: .milliseconds(500))
 
-let result = try await client.getProjectionResult(of: Int.self, name: name)
-print(result)
+let result = try await client.projections(name: name).result(of: Int.self)
+print(result as Any)
 ```
 
-## Projection Details
-`List all`, `list continuous` and `get status` all return the details and statistics of projections.
-|Field|Description|
-|-----|-----------|
-|Name, EffectiveName|The name of the projection.|
-|Status|A human readable string of the current statuses of the projection (see below)|
-|StateReason|A human readable string explaining the reason of the current projection state.|
-|CheckpointStatus|A human readable string explaining the current operation performed on the checkpoint : requested, writing.|
-|Mode|`Continuous`, `OneTime` , `Transient`|
-|CoreProcessingTime|The total time, in ms, the projection took to handle events since the last restart|
-|Progress|The progress, in %, indicates how far this projection has processed event, in case of a restart this could be -1% or some number. It will be updated as soon as a new event is appended and processed|
-|WritesInProgress|The number of write requests to emitted streams currently in progress, these writes can be batches of events|
-|ReadsInProgress|The number of read requests currently in progress.|
-|PartitionsCached|The number of cached projection partitions.|
-|Position|The Position of the last processed event.|
-|LastCheckpoint|The Position of the last checkpoint of this projection.|
-|EventsProcessedAfterRestart|The number of events processed since the last restart of this projection.|
-|BufferedEvents|The number of events in the projection read buffer.|
-|WritePendingEventsBeforeCheckpoint|The number of events waiting to be appended to emitted streams before the pending checkpoint can be written.|
-|WritePendingEventsAfterCheckpoint|The number of events to be appended to emitted streams since the last checkpoint.|
-|Version|This is used internally, the version is increased when the projection is edited or reset.|
-|Epoch|This is used internally, the epoch is increased when the projection is reset.|
+## Projection details
+
+`list()` and `detail()` return ``Projection/Detail`` values:
+
+| Field | Description |
+|-------|-------------|
+| `name`, `effectiveName` | The name of the projection |
+| `status` | The current status of the projection (see below) |
+| `stateReason` | Why the projection is in its current state |
+| `checkpointStatus` | The current checkpoint operation: requested, writing |
+| `mode` | Continuous, one-time or transient |
+| `coreProcessingTime` | Total time, in ms, spent handling events since the last restart |
+| `progress` | How far the projection has processed, in percent. Can be -1 after a restart until the next event is processed |
+| `writesInProgress` | Write requests to emitted streams in progress; each can be a batch of events |
+| `readsInProgress` | Read requests in progress |
+| `partitionsCached` | Cached projection partitions |
+| `position` | Position of the last processed event |
+| `lastCheckpoint` | Position of the last checkpoint |
+| `eventsProcessedAfterRestart` | Events processed since the last restart |
+| `bufferedEvents` | Events in the read buffer |
+| `writePendingEventsBeforeCheckpoint` | Events waiting to be written to emitted streams before the pending checkpoint can be written |
+| `writePendingEventsAfterCheckpoint` | Events written to emitted streams since the last checkpoint |
+| `version` | Internal; increases when the projection is edited or reset |
+| `epoch` | Internal; increases when the projection is reset |
+
+The status is one of the following. The first three are the common ones; the rest are transient while the projection starts or stops.
+
+| Value | Description |
+|-------|-------------|
+| Running | Running and processing events |
+| Stopped | Stopped; not processing new events |
+| Faulted | An error occurred; `stateReason` has the details. Not processing events |
+| Initial | The initial state, before the projection is fully initialised |
+| Suspended | Suspended while stopping; not processing events |
+| LoadStateRequested | Retrieving its state while starting |
+| StateLoaded | State loaded while starting |
+| Subscribed | Subscribed to its readers while starting |
+| FaultedStopping | Stopping because of an error |
+| Stopping | Stopping |
+| CompletingPhase | Stopping |
+| PhaseCompleted | Stopping |
 
 ## Architecture
 
 For details on the target-based design of the Projections API, see <doc:ProjectionsTarget-design>.
-
-
-The Status string is a combination of the following values. The first 3 are the most common one, as the other one are transient values while the projection is initialised or stopped.
-|Value|Description|
-|-----|-----------|
-|Running|The projection is running and processing events.|
-|Stopped|The projection is stopped and is no longer processing new events.|
-|Faulted|An error occurred in the projection, StateReason will give the fault details, the projection is not processing events.|
-|Initial|This is the initial state, before the projection is fully initialised.|
-|Suspended|The projection is suspended and will not process events, this happens while stopping the projection.|
-|LoadStateRequested|The state of the projection is being retrieved, this happens while the projection is starting.|
-|StateLoaded|The state of the projection is loaded, this happens while the projection is starting.|
-|Subscribed|The projection has successfully subscribed to its readers, this happens while the projection is starting.|
-|FaultedStopping|This happens before the projection is stopped due to an error in the projection.|
-|Stopping|The projection is being stopped.|
-|CompletingPhase|This happens while the projection is stopping.|
-|PhaseCompleted|This happens while the projection is stopping.|

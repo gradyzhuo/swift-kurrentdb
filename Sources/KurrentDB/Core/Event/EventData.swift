@@ -30,7 +30,7 @@ public struct EventData: EventStoreEvent {
     /// ```swift
     /// let event = EventData(
     ///     eventType: "order-placed",
-    ///     payload: .json(OrderPlaced(id: "123"))
+    ///     payload: .json(OrderPlaced(orderId: "123"))
     /// )
     /// ```
     ///

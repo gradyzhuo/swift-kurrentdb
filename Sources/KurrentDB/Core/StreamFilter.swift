@@ -13,11 +13,11 @@ import GRPCEncapsulates
 ///
 /// ```swift
 /// // Match streams whose name starts with "orders"
-/// let filter = StreamFilter.onStreamName(prefix: "orders")
+/// let byStreamName = StreamFilter.onStreamName(prefix: "orders")
 ///     .checkpointIntervalMultiplier(100)
 ///
 /// // Match events whose type matches a regex
-/// let filter = StreamFilter.onEventType(regex: "^OrderPlaced$")
+/// let byEventType = StreamFilter.onEventType(regex: "^OrderPlaced$")
 /// ```
 public struct StreamFilter: Buildable {
     /// Controls how many filtered events trigger a checkpoint.

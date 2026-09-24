@@ -9,8 +9,8 @@ import Foundation
 /// Batch of event records destined for a single stream, with an expected revision for optimistic concurrency.
 ///
 /// ```swift
-/// let event = try EventRecord(eventType: "order-placed", payload: .json(order))
-/// let streamEvent = StreamEvent(stream: "orders", records: event)
+/// let record = try EventRecord(eventType: "order-placed", payload: .json(OrderPlaced(orderId: "123")))
+/// let streamEvent = StreamEvent(stream: "orders", records: [record])
 /// ```
 public struct StreamEvent: Sendable {
     /// Target stream identifier.

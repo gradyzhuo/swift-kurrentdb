@@ -52,10 +52,10 @@ extension Streams where Target == MultiStreamsTarget {
     }
 
     /// Appends records across one or more streams atomically with cross-stream consistency checks
-    /// (Dynamic Consistency Boundary). Requires KurrentDB 25.1+.
+    /// (Dynamic Consistency Boundary). Requires KurrentDB 26.1+.
     ///
     /// Each ``StreamEvent`` whose `expectedRevision` is not `.any` becomes an implicit check on its
-    /// own stream. Additional ``checks`` may reference **any** stream — including streams this call
+    /// own stream. Additional `checks` may reference **any** stream — including streams this call
     /// does not write to — so a decision can depend on multiple streams while producing events for
     /// only a subset.
     ///
@@ -72,7 +72,7 @@ extension Streams where Target == MultiStreamsTarget {
     }
 
     /// Appends a variadic list of records across one or more streams atomically with cross-stream
-    /// consistency checks (Dynamic Consistency Boundary). Requires KurrentDB 25.1+.
+    /// consistency checks (Dynamic Consistency Boundary). Requires KurrentDB 26.1+.
     ///
     /// - Parameters:
     ///   - events: One or more ``StreamEvent`` values to append, in order.
