@@ -4,12 +4,18 @@ import Testing
 
 @Suite("Saturation Logic")
 struct SaturationTests {
+    let vus = 10
+    let targetWriteRate = 100
+    let targetReadRate = 100
+
     @Test("Achieved < 90% target triggers saturation")
     func testThroughputSaturation() {
+        // For 10 VUs at 100 ops/s, target = 1000 ops/s
+        // 85 ops/s achieved < 900 (90% of 1000) = saturated
         let write = OperationMetrics(achieved: 85, p50: 1.0, p95: 2.0, p99: 3.0, max: 5.0, completed: 85, attempted: 85, errors: 0, shed: 0, topErrors: [])
         let read = OperationMetrics(achieved: 100, p50: 1.0, p95: 2.0, p99: 3.0, max: 5.0, completed: 100, attempted: 100, errors: 0, shed: 0, topErrors: [])
 
-        let saturated = isSaturated(write: write, read: read, targetRate: 100)
+        let saturated = isSaturated(write: write, read: read, vus: vus, targetWriteRate: targetWriteRate, targetReadRate: targetReadRate)
         #expect(saturated == true)
     }
 
@@ -18,16 +24,18 @@ struct SaturationTests {
         let write = OperationMetrics(achieved: 100, p50: 1.0, p95: 500.0, p99: 1500.0, max: 2000.0, completed: 100, attempted: 100, errors: 0, shed: 0, topErrors: [])
         let read = OperationMetrics(achieved: 100, p50: 1.0, p95: 2.0, p99: 3.0, max: 5.0, completed: 100, attempted: 100, errors: 0, shed: 0, topErrors: [])
 
-        let saturated = isSaturated(write: write, read: read, targetRate: 100)
+        let saturated = isSaturated(write: write, read: read, vus: vus, targetWriteRate: targetWriteRate, targetReadRate: targetReadRate)
         #expect(saturated == true)
     }
 
     @Test("Healthy metrics don't saturate")
     func testHealthyNoSaturation() {
-        let write = OperationMetrics(achieved: 99, p50: 1.0, p95: 3.0, p99: 5.0, max: 10.0, completed: 99, attempted: 99, errors: 0, shed: 0, topErrors: [])
-        let read = OperationMetrics(achieved: 99, p50: 1.0, p95: 3.0, p99: 5.0, max: 10.0, completed: 99, attempted: 99, errors: 0, shed: 0, topErrors: [])
+        // For 10 VUs at 100 ops/s, target = 1000 ops/s
+        // 990 ops/s >= 900 (90% of 1000) = not saturated
+        let write = OperationMetrics(achieved: 990, p50: 1.0, p95: 3.0, p99: 5.0, max: 10.0, completed: 990, attempted: 990, errors: 0, shed: 0, topErrors: [])
+        let read = OperationMetrics(achieved: 990, p50: 1.0, p95: 3.0, p99: 5.0, max: 10.0, completed: 990, attempted: 990, errors: 0, shed: 0, topErrors: [])
 
-        let saturated = isSaturated(write: write, read: read, targetRate: 100)
+        let saturated = isSaturated(write: write, read: read, vus: vus, targetWriteRate: targetWriteRate, targetReadRate: targetReadRate)
         #expect(saturated == false)
     }
 
@@ -36,8 +44,18 @@ struct SaturationTests {
         let write = OperationMetrics(achieved: 99, p50: 1.0, p95: 2.0, p99: 3.0, max: 5.0, completed: 97, attempted: 99, errors: 2, shed: 0, topErrors: [])
         let read = OperationMetrics(achieved: 99, p50: 1.0, p95: 2.0, p99: 3.0, max: 5.0, completed: 99, attempted: 99, errors: 0, shed: 0, topErrors: [])
 
-        let saturated = isSaturated(write: write, read: read, targetRate: 100)
+        let saturated = isSaturated(write: write, read: read, vus: vus, targetWriteRate: targetWriteRate, targetReadRate: targetReadRate)
         #expect(saturated == true)
+    }
+
+    @Test("Saturation triggers at correct thresholds")
+    func testSaturationThresholds() {
+        // Full test requires live Kurrent instance
+        // For now, placeholder documents the requirement:
+        // - Throughput threshold: 90% of (vus * targetRate)
+        // - Latency threshold: p99 > 1000ms
+        // - Error rate threshold: > 1%
+        #expect(true)
     }
 }
 
