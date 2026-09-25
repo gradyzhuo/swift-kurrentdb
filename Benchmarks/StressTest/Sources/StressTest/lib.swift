@@ -124,25 +124,33 @@ private struct SimpleHistogram {
 }
 
 // MARK: - Saturation Logic
-public func isSaturated(write: OperationMetrics, read: OperationMetrics, targetRate: Int) -> Bool {
-    // achieved < 90% of target
-    let writeAchieved = write.achieved
-    let readAchieved = read.achieved
-    if writeAchieved < Double(targetRate) * 0.9 || readAchieved < Double(targetRate) * 0.9 {
+public func isSaturated(write: OperationMetrics, read: OperationMetrics, vus: Int, targetWriteRate: Int, targetReadRate: Int) -> Bool {
+    let writeTarget = Double(vus * targetWriteRate)
+    let readTarget = Double(vus * targetReadRate)
+
+    // Throughput check: achieved < 90% of target
+    if write.achieved < writeTarget * 0.9 || read.achieved < readTarget * 0.9 {
         return true
     }
 
-    // p99 > 1000 ms
+    // Latency check: p99 > 1000 ms
     if write.p99 > 1000 || read.p99 > 1000 {
         return true
     }
 
-    // error% or shed% > 1%
-    if write.attempted > 0 && Double(write.errors + write.shed) / Double(write.attempted) > 0.01 {
-        return true
+    // Error rate check: (errors + shed) / attempted > 1%
+    if write.attempted > 0 {
+        let writeErrorRate = Double(write.errors + write.shed) / Double(write.attempted)
+        if writeErrorRate > 0.01 {
+            return true
+        }
     }
-    if read.attempted > 0 && Double(read.errors + read.shed) / Double(read.attempted) > 0.01 {
-        return true
+
+    if read.attempted > 0 {
+        let readErrorRate = Double(read.errors + read.shed) / Double(read.attempted)
+        if readErrorRate > 0.01 {
+            return true
+        }
     }
 
     return false

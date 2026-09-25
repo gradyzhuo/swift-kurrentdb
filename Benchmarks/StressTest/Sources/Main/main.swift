@@ -23,7 +23,17 @@ struct StressTestExecutable {
                 _ = await runStressTest(client: client, vus: vuCount, config: config, duration: config.warmupDuration)
 
                 // Measurement: 30 seconds, collect metrics
-                let stepResult = await runStressTest(client: client, vus: vuCount, config: config, duration: config.stepDuration)
+                var stepResult = await runStressTest(client: client, vus: vuCount, config: config, duration: config.stepDuration)
+
+                // Compute saturation
+                let saturated = isSaturated(
+                    write: stepResult.write,
+                    read: stepResult.read,
+                    vus: vuCount,
+                    targetWriteRate: config.writeRate,
+                    targetReadRate: config.readRate
+                )
+                stepResult = StepResult(vus: vuCount, write: stepResult.write, read: stepResult.read, saturated: saturated)
                 results.append(stepResult)
 
                 print("  VUs: \(vuCount), Saturated: \(stepResult.saturated)")
