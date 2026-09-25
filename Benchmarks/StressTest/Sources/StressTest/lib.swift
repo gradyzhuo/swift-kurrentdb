@@ -116,33 +116,44 @@ public func isSaturated(write: OperationMetrics, read: OperationMetrics, targetR
     return false
 }
 
-// MARK: - Real Load Generation
+// MARK: - Helper function for percentile calculation
+private func calculatePercentile(_ sorted: [Double], percentile: Double) -> Double {
+    guard !sorted.isEmpty else { return 0 }
+    let index = Int(Double(sorted.count) * percentile)
+    let clampedIndex = max(0, min(index, sorted.count - 1))
+    return sorted[clampedIndex]
+}
+
+// MARK: - Real Load Generation (Global Open Load Model)
 public func runStressTest(client: KurrentDBClient, vus: Int, config: Config, duration: Int) async -> StepResult {
     nonisolated(unsafe) var allMetrics = (writes: [Double](), reads: [Double](), writeErrors: 0, readErrors: 0, writeShed: 0, readShed: 0)
     nonisolated(unsafe) var writeSuccesses = 0, readSuccesses = 0
     let startTime = Date()
 
+    // Global load model parameters
+    let globalWriteRate = vus * config.writeRate  // Total write rate across all VUs
+    let globalReadRate = vus * config.readRate    // Total read rate across all VUs
+    let totalWriteRequests = globalWriteRate * duration
+    let totalReadRequests = globalReadRate * duration
+
     // Spawn VUs
     var vuTasks: [Task<Void, Never>] = []
-    let writeRate = config.writeRate
-    let readRate = config.readRate
     for vuID in 0..<vus {
         let task = Task {
-            // Write loop
-            for writeSeq in 0..<(writeRate * duration) {
-                let scheduledTime = startTime.addingTimeInterval(Double(writeSeq) / Double(writeRate))
+            // Write loop: VU k handles requests k, k+vus, k+2*vus, ...
+            for globalWriteSeq in stride(from: vuID, to: totalWriteRequests, by: vus) {
+                let scheduledTime = startTime.addingTimeInterval(Double(globalWriteSeq) / Double(globalWriteRate))
                 let now = Date()
                 if now < scheduledTime {
                     try? await Task.sleep(nanoseconds: UInt64((scheduledTime.timeIntervalSince(now)) * 1_000_000_000))
                 }
 
-                let writeStart = Date()
                 do {
-                    // Simplified: append to stream
+                    // Measure latency from scheduled time to completion (avoids coordinated omission)
                     let streamName = "stress-\(UUID().uuidString)-\(vuID)"
                     let event = EventData(eventType: "StressEvent", model: ["vu": vuID])
                     _ = try await client.streams(specified: streamName).append(events: [event])
-                    let latency = Date().timeIntervalSince(writeStart) * 1000 // ms
+                    let latency = Date().timeIntervalSince(scheduledTime) * 1000 // ms
                     allMetrics.writes.append(latency)
                     writeSuccesses += 1
                 } catch {
@@ -150,19 +161,18 @@ public func runStressTest(client: KurrentDBClient, vus: Int, config: Config, dur
                 }
             }
 
-            // Read loop (similar pattern)
-            for readSeq in 0..<(readRate * duration) {
-                let scheduledTime = startTime.addingTimeInterval(Double(readSeq) / Double(readRate))
+            // Read loop: VU k handles requests k, k+vus, k+2*vus, ...
+            for globalReadSeq in stride(from: vuID, to: totalReadRequests, by: vus) {
+                let scheduledTime = startTime.addingTimeInterval(Double(globalReadSeq) / Double(globalReadRate))
                 let now = Date()
                 if now < scheduledTime {
                     try? await Task.sleep(nanoseconds: UInt64((scheduledTime.timeIntervalSince(now)) * 1_000_000_000))
                 }
 
-                let readStart = Date()
                 do {
                     let streamName = "stress-\(UUID().uuidString)-\(vuID)"
                     _ = try await client.streams(specified: streamName).read { $0.limit = 10 }
-                    let latency = Date().timeIntervalSince(readStart) * 1000
+                    let latency = Date().timeIntervalSince(scheduledTime) * 1000
                     allMetrics.reads.append(latency)
                     readSuccesses += 1
                 } catch {
@@ -178,22 +188,32 @@ public func runStressTest(client: KurrentDBClient, vus: Int, config: Config, dur
         await task.value
     }
 
-    // Compute percentiles (simplified; real: use HDR histogram)
-    let writeP50 = allMetrics.writes.isEmpty ? 0 : allMetrics.writes.sorted()[allMetrics.writes.count / 2]
-    let writePMax = allMetrics.writes.max() ?? 0
+    // Compute percentiles from sorted arrays
+    let writeSorted = allMetrics.writes.sorted()
+    let readSorted = allMetrics.reads.sorted()
+
+    let writeP50 = calculatePercentile(writeSorted, percentile: 0.50)
+    let writeP95 = calculatePercentile(writeSorted, percentile: 0.95)
+    let writeP99 = calculatePercentile(writeSorted, percentile: 0.99)
+    let writePMax = writeSorted.max() ?? 0
+
+    let readP50 = calculatePercentile(readSorted, percentile: 0.50)
+    let readP95 = calculatePercentile(readSorted, percentile: 0.95)
+    let readP99 = calculatePercentile(readSorted, percentile: 0.99)
+    let readPMax = readSorted.max() ?? 0
 
     return StepResult(
         vus: vus,
         write: OperationMetrics(
             achieved: Double(writeSuccesses) / Double(duration),
-            p50: writeP50, p95: writeP50, p99: writeP50, max: writePMax,
+            p50: writeP50, p95: writeP95, p99: writeP99, max: writePMax,
             errors: allMetrics.writeErrors,
             shed: allMetrics.writeShed,
             topErrors: []
         ),
         read: OperationMetrics(
             achieved: Double(readSuccesses) / Double(duration),
-            p50: 2.0, p95: 4.0, p99: 6.0, max: 12.0,
+            p50: readP50, p95: readP95, p99: readP99, max: readPMax,
             errors: allMetrics.readErrors,
             shed: allMetrics.readShed,
             topErrors: []
