@@ -36,16 +36,20 @@ public struct OperationMetrics: Codable {
     public let p95: Double            // ms
     public let p99: Double            // ms
     public let max: Double            // ms
+    public let completed: Int         // successful operations
+    public let attempted: Int         // total attempts = completed + errors + shed
     public let errors: Int
     public let shed: Int              // requests not sent (max inflight exceeded)
     public let topErrors: [ErrorCount]
 
-    public init(achieved: Double, p50: Double, p95: Double, p99: Double, max: Double, errors: Int, shed: Int, topErrors: [ErrorCount]) {
+    public init(achieved: Double, p50: Double, p95: Double, p99: Double, max: Double, completed: Int, attempted: Int, errors: Int, shed: Int, topErrors: [ErrorCount]) {
         self.achieved = achieved
         self.p50 = p50
         self.p95 = p95
         self.p99 = p99
         self.max = max
+        self.completed = completed
+        self.attempted = attempted
         self.errors = errors
         self.shed = shed
         self.topErrors = topErrors
@@ -88,6 +92,37 @@ public struct Report: Codable {
     }
 }
 
+// MARK: - Histogram-based Percentile Calculation
+private struct SimpleHistogram {
+    private var buckets: [Int64: Int] = [:]
+    private var maxValue: Int64 = 0
+    private var count: Int = 0
+
+    mutating func recordValue(_ value: Int64) {
+        buckets[value, default: 0] += 1
+        count += 1
+        maxValue = max(maxValue, value)
+    }
+
+    func getValueAtPercentile(_ percentile: Double) -> Int64 {
+        guard count > 0 else { return 0 }
+        let targetCount = Int(Double(count) * (percentile / 100.0))
+        var accumulated = 0
+
+        for value in buckets.keys.sorted() {
+            accumulated += buckets[value] ?? 0
+            if accumulated >= targetCount {
+                return value
+            }
+        }
+        return maxValue
+    }
+
+    func getMaxValue() -> Int64 {
+        return maxValue
+    }
+}
+
 // MARK: - Saturation Logic
 public func isSaturated(write: OperationMetrics, read: OperationMetrics, targetRate: Int) -> Bool {
     // achieved < 90% of target
@@ -103,25 +138,14 @@ public func isSaturated(write: OperationMetrics, read: OperationMetrics, targetR
     }
 
     // error% or shed% > 1%
-    let totalWriteAttempts = write.errors + write.shed + Int(writeAchieved) // approximate
-    let totalReadAttempts = read.errors + read.shed + Int(readAchieved)
-
-    if totalWriteAttempts > 0 && Double(write.errors + write.shed) / Double(totalWriteAttempts) > 0.01 {
+    if write.attempted > 0 && Double(write.errors + write.shed) / Double(write.attempted) > 0.01 {
         return true
     }
-    if totalReadAttempts > 0 && Double(read.errors + read.shed) / Double(totalReadAttempts) > 0.01 {
+    if read.attempted > 0 && Double(read.errors + read.shed) / Double(read.attempted) > 0.01 {
         return true
     }
 
     return false
-}
-
-// MARK: - Helper function for percentile calculation
-private func calculatePercentile(_ sorted: [Double], percentile: Double) -> Double {
-    guard !sorted.isEmpty else { return 0 }
-    let index = Int(Double(sorted.count) * percentile)
-    let clampedIndex = max(0, min(index, sorted.count - 1))
-    return sorted[clampedIndex]
 }
 
 // MARK: - Real Load Generation (Global Open Load Model)
@@ -188,25 +212,43 @@ public func runStressTest(client: KurrentDBClient, vus: Int, config: Config, dur
         await task.value
     }
 
-    // Compute percentiles from sorted arrays
-    let writeSorted = allMetrics.writes.sorted()
-    let readSorted = allMetrics.reads.sorted()
+    // Compute percentiles using histogram-based calculation
+    var writeHistogram = SimpleHistogram()
+    var readHistogram = SimpleHistogram()
 
-    let writeP50 = calculatePercentile(writeSorted, percentile: 0.50)
-    let writeP95 = calculatePercentile(writeSorted, percentile: 0.95)
-    let writeP99 = calculatePercentile(writeSorted, percentile: 0.99)
-    let writePMax = writeSorted.max() ?? 0
+    // Convert latencies from milliseconds to microseconds and record in histograms
+    for writeLatency in allMetrics.writes {
+        let micros = Int64(writeLatency * 1000)
+        writeHistogram.recordValue(micros)
+    }
 
-    let readP50 = calculatePercentile(readSorted, percentile: 0.50)
-    let readP95 = calculatePercentile(readSorted, percentile: 0.95)
-    let readP99 = calculatePercentile(readSorted, percentile: 0.99)
-    let readPMax = readSorted.max() ?? 0
+    for readLatency in allMetrics.reads {
+        let micros = Int64(readLatency * 1000)
+        readHistogram.recordValue(micros)
+    }
+
+    // Extract percentiles and max values, convert back to milliseconds
+    let writeP50 = Double(writeHistogram.getValueAtPercentile(50.0)) / 1000.0
+    let writeP95 = Double(writeHistogram.getValueAtPercentile(95.0)) / 1000.0
+    let writeP99 = Double(writeHistogram.getValueAtPercentile(99.0)) / 1000.0
+    let writePMax = Double(writeHistogram.getMaxValue()) / 1000.0
+
+    let readP50 = Double(readHistogram.getValueAtPercentile(50.0)) / 1000.0
+    let readP95 = Double(readHistogram.getValueAtPercentile(95.0)) / 1000.0
+    let readP99 = Double(readHistogram.getValueAtPercentile(99.0)) / 1000.0
+    let readPMax = Double(readHistogram.getMaxValue()) / 1000.0
+
+    // Calculate attempted counts
+    let writeAttempted = writeSuccesses + allMetrics.writeErrors + allMetrics.writeShed
+    let readAttempted = readSuccesses + allMetrics.readErrors + allMetrics.readShed
 
     return StepResult(
         vus: vus,
         write: OperationMetrics(
             achieved: Double(writeSuccesses) / Double(duration),
             p50: writeP50, p95: writeP95, p99: writeP99, max: writePMax,
+            completed: writeSuccesses,
+            attempted: writeAttempted,
             errors: allMetrics.writeErrors,
             shed: allMetrics.writeShed,
             topErrors: []
@@ -214,6 +256,8 @@ public func runStressTest(client: KurrentDBClient, vus: Int, config: Config, dur
         read: OperationMetrics(
             achieved: Double(readSuccesses) / Double(duration),
             p50: readP50, p95: readP95, p99: readP99, max: readPMax,
+            completed: readSuccesses,
+            attempted: readAttempted,
             errors: allMetrics.readErrors,
             shed: allMetrics.readShed,
             topErrors: []
