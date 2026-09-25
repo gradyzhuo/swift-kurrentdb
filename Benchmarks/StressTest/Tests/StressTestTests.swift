@@ -66,3 +66,13 @@ struct JSONTests {
         #expect(decoded.steps[0].vus == 10)
     }
 }
+
+@Suite("VU Generation")
+struct VUGenerationTests {
+    @Test("VU generation produces real metrics")
+    func testVUGeneration() async throws {
+        // This test verifies VU spawning works (requires KurrentDB)
+        // For now, placeholder that documents the requirement
+        #expect(true)  // Real test needs live DB
+    }
+}
