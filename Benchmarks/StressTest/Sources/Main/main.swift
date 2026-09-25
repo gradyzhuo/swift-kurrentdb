@@ -52,7 +52,12 @@ struct StressTestExecutable {
 
             let report = Report(label: config.label, runId: runId, steps: results)
             let encoded = try JSONEncoder().encode(report)
-            try encoded.write(to: URL(fileURLWithPath: config.outputFile))
+
+            // Ensure results directory exists
+            let outputURL = URL(fileURLWithPath: config.outputFile)
+            try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+            try encoded.write(to: outputURL)
             print("Results written to \(config.outputFile)")
 
         } catch {

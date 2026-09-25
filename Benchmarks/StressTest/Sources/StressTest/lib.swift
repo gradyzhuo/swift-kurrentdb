@@ -10,11 +10,17 @@ public struct Config {
     public let stepDuration: Int      // seconds per step
     public let maxInflight: Int       // per VU, per operation
     public let label: String          // version label
+    public let round: Int             // round number (for multi-run aggregation)
     public let outputFile: String     // JSON output path
 
     public static func fromEnv() -> Config {
         let stepsStr = ProcessInfo.processInfo.environment["STRESS_STEPS"] ?? "10,50,100,250,500,1000"
         let steps = stepsStr.split(separator: ",").compactMap { Int($0) }
+        let label = ProcessInfo.processInfo.environment["STRESS_LABEL"] ?? "unknown"
+        let round = Int(ProcessInfo.processInfo.environment["STRESS_ROUND"] ?? "1") ?? 1
+
+        // Generate output filename: results/<label>-round<R>.json
+        let outputFile = "results/\(label)-round\(round).json"
 
         return Config(
             steps: steps,
@@ -23,8 +29,9 @@ public struct Config {
             warmupDuration: Int(ProcessInfo.processInfo.environment["STRESS_WARMUP"] ?? "5") ?? 5,
             stepDuration: Int(ProcessInfo.processInfo.environment["STRESS_DURATION"] ?? "30") ?? 30,
             maxInflight: Int(ProcessInfo.processInfo.environment["STRESS_MAX_INFLIGHT"] ?? "200") ?? 200,
-            label: ProcessInfo.processInfo.environment["STRESS_LABEL"] ?? "unknown",
-            outputFile: ProcessInfo.processInfo.environment["STRESS_OUTPUT"] ?? "stress-result.json"
+            label: label,
+            round: round,
+            outputFile: outputFile
         )
     }
 }

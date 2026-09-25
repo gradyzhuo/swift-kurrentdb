@@ -4,14 +4,18 @@ from pathlib import Path
 from statistics import median
 
 def aggregate_results(results_per_round):
-    """Median across rounds for each metric."""
+    """Aggregate across rounds: median for numeric fields, ANY for saturated."""
     if not results_per_round:
         return {}
 
     aggregated = {}
     for key in results_per_round[0].keys():
-        if key in ["vus", "saturated"]:
+        if key == "vus":
+            # VUs is same across all rounds for a given step
             aggregated[key] = results_per_round[0][key]
+        elif key == "saturated":
+            # For saturated: if ANY round is saturated, the step is saturated
+            aggregated[key] = any(r.get("saturated", False) for r in results_per_round)
         elif isinstance(results_per_round[0][key], dict):
             aggregated[key] = aggregate_dict([r[key] for r in results_per_round])
         else:
