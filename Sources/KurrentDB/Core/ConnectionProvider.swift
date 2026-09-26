@@ -14,13 +14,15 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 import Synchronization
 
-/// 管理兩類連線,依 RPC 在 wire 上的**回應形態**決定用哪一類:
+/// 管理兩類連線,依 RPC 是否在 `perform(node:)` **內結束**決定用哪一類:
 ///
-/// - **共用**(``acquire(_:)``):回應為單一訊息的 RPC(`UnaryUnary`、`StreamUnary`)。
-///   這類呼叫一定在 `perform(node:)` 內結束,連線不會逃出作用域,因此每個 endpoint
-///   共用一條長生命週期的連線。
-/// - **獨立**(``openDedicated(for:)``):回應為 stream 的 RPC(`UnaryStream`、
-///   `StreamStream`、`BatchAppend`)。這類呼叫會把連線帶出 `perform`,且可能長期佔住
+/// - **共用**(``acquire(_:)``):呼叫在 `perform(node:)` 內結束、連線不會逃出作用域的
+///   RPC —— 回應為單一訊息的(`UnaryUnary`、`StreamUnary`),以及 `send()` 在回傳前就把
+///   stream 排空的 `UnaryStream`(標記 `BufferedStreamResponse`:`Streams.Read`、
+///   `Streams.ReadAll`、`Projections.Statistics`、`Users.Details`)。每個 endpoint 共用一條
+///   長生命週期的連線,這些呼叫一起分攤該連線的 HTTP/2 stream 額度。
+/// - **獨立**(``openDedicated(for:)``):把 stream 帶出 `perform` 的 RPC(訂閱、persistent
+///   subscription、`Monitoring.Stats`、`StreamStream`、`BatchAppend`)。可能長期佔住
 ///   HTTP/2 stream slot,因此每次呼叫獨立一條,不跟任何人共用容量。
 ///
 /// ## 為什麼是 Mutex 而不是 actor
