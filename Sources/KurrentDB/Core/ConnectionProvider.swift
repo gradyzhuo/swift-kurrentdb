@@ -22,8 +22,9 @@ import Synchronization
 ///   `Streams.ReadAll`、`Projections.Statistics`、`Users.Details`)。每個 endpoint 共用一條
 ///   長生命週期的連線,這些呼叫一起分攤該連線的 HTTP/2 stream 額度。
 /// - **獨立**(``openDedicated(for:)``):把 stream 帶出 `perform` 的 RPC(訂閱、persistent
-///   subscription、`Monitoring.Stats`、`StreamStream`、`BatchAppend`)。可能長期佔住
-///   HTTP/2 stream slot,因此每次呼叫獨立一條,不跟任何人共用容量。
+///   subscription、`Monitoring.Stats`、`StreamStream`)。可能長期佔住 HTTP/2 stream slot,
+///   因此每次呼叫獨立一條,不跟任何人共用容量。`BatchAppend` 在函式內就收齊回應,目前仍
+///   走這條(見該檔註解)。
 ///
 /// ## 為什麼是 Mutex 而不是 actor
 ///
@@ -235,7 +236,7 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Dedicated connections
 
-    /// 為一次 stream 回應的呼叫開一條獨立連線,並向 provider 登記。
+    /// 為一次把 stream 帶出 `perform` 的呼叫開一條獨立連線,並向 provider 登記。
     ///
     /// 登記是 atomic 的:與 ``shutdown()`` 競爭時,不是被拒絕,就是被納入 shutdown 的取消集合。
     /// 回傳的 handle 會強引用 provider 直到 ``DedicatedConnection/close()``,所以一個被
