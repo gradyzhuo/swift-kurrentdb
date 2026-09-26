@@ -70,6 +70,7 @@ for try await result in subscription.events {
 
 ### 2.4
 
+- **Reads share the connection.** `read()`, `readAll()`, projection statistics and user details now use the per-node shared connection instead of opening one connection per call; only subscriptions, persistent subscriptions and server statistics keep a dedicated connection. See <doc:Getting-started> (2.4.3).
 - **Connection management.** Calls that return a single response share one connection per node; reads and subscriptions each get their own, so long-lived subscriptions never compete with other calls. ``KurrentDBClient/shutdown()`` closes every connection the client opened, makes later calls throw ``KurrentError/connectionClosed``, and can be called more than once. See <doc:Getting-started>.
 - **Persistent subscriptions close when dropped.** A subscription's connection now closes once nothing references the subscription or its `events` stream (2.4.1).
 - **Discovery retries wait.** Settings built in code now wait 100 ms between node-discovery attempts, like connection strings; before, they waited 100 µs, so retries were effectively immediate (2.4.2).
