@@ -69,6 +69,7 @@ package final class ConnectionProvider: Sendable {
         var nextID: UInt64 = 0
         var isShutdown = false
         var createdSharedConnectionCount = 0
+        var createdDedicatedConnectionCount = 0
         var sweeper: Task<Void, Never>?
     }
 
@@ -256,6 +257,7 @@ package final class ConnectionProvider: Sendable {
             }
             state.nextID += 1
             let id = state.nextID
+            state.createdDedicatedConnectionCount += 1
             // 這個 task 不捕捉 provider,也不捕捉 handle:登記表 → task 這條邊不會形成循環。
             let runTask = Task {
                 await Self.run(client, endpoint: endpoint)
@@ -307,6 +309,13 @@ package final class ConnectionProvider: Sendable {
     /// TLS handshake —— transport 內部的重連不會讓它增加。
     package var createdSharedConnectionCount: Int {
         state.withLock { $0.createdSharedConnectionCount }
+    }
+
+    /// 至今建立過幾條獨立連線。只增不減;與 ``createdSharedConnectionCount`` 成對,
+    /// 是分辨一次呼叫走了哪條路徑的依據 —— 獨立連線關閉後 ``activeDedicatedConnectionCount``
+    /// 也會回到 0,分不出來。
+    package var createdDedicatedConnectionCount: Int {
+        state.withLock { $0.createdDedicatedConnectionCount }
     }
 
     /// 目前登記中的獨立連線數量。
