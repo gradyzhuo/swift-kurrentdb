@@ -9,7 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Streams {
-    public struct Read: UnaryStream {
+    public struct Read: UnaryStream, BufferedStreamResponse {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output

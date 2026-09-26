@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Streams where Target == AllStreamsTarget {
     /// Usecase that reads events from the global `$all` stream.
-    public struct ReadAll: UnaryStream {
+    public struct ReadAll: UnaryStream, BufferedStreamResponse {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
