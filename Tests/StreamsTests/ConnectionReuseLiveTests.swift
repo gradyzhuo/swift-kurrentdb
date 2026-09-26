@@ -176,16 +176,19 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    /// Buffered read 的 RPC 在 send() 內就跑完,所以「排空中」指的是 send() 還在 drain 的那段:
-    /// 用夠大的 stream 讓 5 ms 後的 cancel 大概率落在那裡。不論 cancel 落在 drain 中還是
-    /// 之後,perform 的 defer 都必須把 lease 還掉 —— retainCount 回到基準才算數,
-    /// 「之後的 append 能成功」擋不住 retain 洩漏(acquire 照樣復用那個 entry)。
+    /// Buffered read 的 RPC 在 send() 內就跑完,所以「排空中」指的是 send() 還在 drain 的那段。
+    /// 那段的可觀察訊號是 endpoint 的 retainCount 升到基準 +1(lease 被拿走、尚未 defer 還回):
+    /// 等到它出現才 cancel,而且要求 reader 以失敗結束,證明取消真的打斷了進行中的 RPC。
+    /// 之後 retainCount 必須回到基準 —— 「之後的 append 能成功」擋不住 retain 洩漏
+    /// (acquire 照樣復用那個 entry)。
     @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
     func cancellingReadMidDrainReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
-        _ = try await stream.append(events: (0 ..< 5000).map { _ in event() }) { $0.expectedRevision = .any }
+        for _ in 0 ..< 2 {
+            _ = try await stream.append(events: (0 ..< 5000).map { _ in event() }) { $0.expectedRevision = .any }
+        }
         let warmed = client.selector.connections.createdSharedConnectionCount
         let endpoint = try #require(await client.selector.selectedNode?.endpoint)
         let baseline = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount)
@@ -193,9 +196,18 @@ struct ConnectionReuseLiveTests: Sendable {
         let reader = Task {
             for try await _ in try await stream.read() {}
         }
-        try await Task.sleep(for: .milliseconds(5))
+        var sawLeaseHeld = false
+        for _ in 0 ..< 2000 {
+            if client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == baseline + 1 {
+                sawLeaseHeld = true
+                break
+            }
+            try await Task.sleep(for: .milliseconds(1))
+        }
+        try #require(sawLeaseHeld, "read finished before the held lease was observed; enlarge the stream")
         reader.cancel()
-        _ = await reader.result
+        let result = await reader.result
+        #expect(throws: (any Error).self) { try result.get() }
 
         #expect(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == baseline)
 
