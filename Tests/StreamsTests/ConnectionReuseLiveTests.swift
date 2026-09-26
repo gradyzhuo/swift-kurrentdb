@@ -3,7 +3,9 @@
 //  swift-kurrentdb
 //
 //  需要 server/docker-compose.yaml 的 3 節點 cluster。驗證連線復用在真實伺服器上的行為:
-//  單一回應的 RPC 共用連線、stream 回應的 RPC 各自獨立,以及 shutdown 的語意。
+//  在 perform 內就結束的 RPC(單一回應,以及 read / readAll / projection statistics /
+//  user details 這類在 send() 內排空的有限 stream)共用連線;把 stream 帶出 perform 的
+//  訂閱各自獨立;以及 shutdown 的語意。
 //
 
 import Foundation
@@ -81,15 +83,17 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    // MARK: - Dedicated connections
+    // MARK: - Buffered stream responses (shared connection)
 
-    /// 有限的 stream 回應(Read)在 send() 內就完成收尾;成功與失敗兩條路徑都要把獨立連線還掉。
-    @Test("成功與失敗的 read 都會關閉自己的獨立連線")
-    func finiteReadsCloseDedicatedConnections() async throws {
+    /// 有限的 stream 回應(Read)在 send() 內就排空,所以走共用連線:成功與失敗都不開獨立連線,
+    /// 而且失敗的 read 不能把共用連線弄壞 —— 之後的 append 必須還在同一條連線上完成。
+    @Test("成功與失敗的 read 都走共用連線,且不影響之後的 append")
+    func finiteReadsUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         _ = try await stream.append(events: [event(), event()]) { $0.expectedRevision = .any }
+        let warmed = client.selector.connections.createdSharedConnectionCount
 
         var count = 0
         for try await _ in try await stream.read() {
@@ -102,9 +106,143 @@ struct ConnectionReuseLiveTests: Sendable {
             for try await _ in try await missing.read() {}
         }
 
-        #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
+        // read 從不建立獨立連線;createdDedicatedConnectionCount 是單調的,才分得出「開了又關」。
+        #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
+        #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
+        #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+
+        // 失敗的 read 之後,共用連線必須還能用。
+        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
+        #expect(client.selector.connections.createdSharedConnectionCount == warmed)
         try await stream.delete()
     }
+
+    @Test("readAll、projection statistics、user details 都走共用連線")
+    func otherBufferedUsecasesUseSharedConnection() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
+        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
+        let warmed = client.selector.connections.createdSharedConnectionCount
+
+        for _ in 0 ..< 20 {
+            for try await _ in try await client.allStreams.read(configure: { $0.limit = 5 }) {}
+        }
+        for _ in 0 ..< 20 {
+            _ = try await client.projections(of: .anyContinuous).list()
+        }
+        for _ in 0 ..< 20 {
+            for try await _ in try await client.user("admin").details() {}
+        }
+
+        #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+        #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
+        #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
+        try await stream.delete()
+    }
+
+    /// 超過伺服器單一連線的並行 stream 上限時,多出來的 read 會在 client 端排隊,不會失敗,
+    /// 也不會把同一條連線上的 append 卡死。這是 #143 接受的取捨,這裡把它釘住。
+    @Test("150 個並行 read 全部完成,期間的 append 也完成,且不新開共用連線")
+    func manyConcurrentReadsDoNotStarveAppends() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
+        _ = try await stream.append(events: (0 ..< 200).map { _ in event() }) { $0.expectedRevision = .any }
+        let warmed = client.selector.connections.createdSharedConnectionCount
+
+        let readCounts = try await withThrowingTaskGroup(of: Int.self) { group in
+            for _ in 0 ..< 150 {
+                group.addTask {
+                    var n = 0
+                    for try await _ in try await stream.read() { n += 1 }
+                    return n
+                }
+            }
+            // 讀取排隊期間的 append 必須仍能完成。
+            group.addTask {
+                _ = try await stream.append(events: [self.event()]) { $0.expectedRevision = .any }
+                return -1
+            }
+            var counts: [Int] = []
+            for try await n in group { counts.append(n) }
+            return counts
+        }
+
+        #expect(readCounts.filter { $0 >= 200 }.count == 150)
+        #expect(readCounts.contains(-1))
+        #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+        #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
+        try await stream.delete()
+    }
+
+    /// Buffered read 的 RPC 在 send() 內就跑完,所以「排空中」指的是 send() 還在 drain 的那段。
+    /// 那段的可觀察訊號是 endpoint 的 retainCount 升到基準 +1(lease 被拿走、尚未 defer 還回):
+    /// 等到它出現才 cancel,而且要求 reader 以失敗結束,證明取消真的打斷了進行中的 RPC。
+    /// 之後 retainCount 必須回到基準 —— 「之後的 append 能成功」擋不住 retain 洩漏
+    /// (acquire 照樣復用那個 entry)。
+    @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
+    func cancellingReadMidDrainReleasesLease() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
+        for _ in 0 ..< 2 {
+            _ = try await stream.append(events: (0 ..< 5000).map { _ in event() }) { $0.expectedRevision = .any }
+        }
+        let warmed = client.selector.connections.createdSharedConnectionCount
+        let endpoint = try #require(await client.selector.selectedNode?.endpoint)
+        let baseline = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount)
+
+        let reader = Task {
+            for try await _ in try await stream.read() {}
+        }
+        var sawLeaseHeld = false
+        for _ in 0 ..< 2000 {
+            if client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == baseline + 1 {
+                sawLeaseHeld = true
+                break
+            }
+            try await Task.sleep(for: .milliseconds(1))
+        }
+        try #require(sawLeaseHeld, "read finished before the held lease was observed; enlarge the stream")
+        reader.cancel()
+        let result = await reader.result
+        #expect(throws: (any Error).self) { try result.get() }
+
+        #expect(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == baseline)
+
+        // 共用連線若被弄壞,下一個 append 會失敗或新開連線。
+        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
+        #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+        #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
+        try await stream.delete()
+    }
+
+    @Test("shutdown 期間的 read 會在有限時間內結束,不會掛住")
+    func shutdownDuringReadEndsIteration() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
+        _ = try await stream.append(events: (0 ..< 2000).map { _ in event() }) { $0.expectedRevision = .any }
+
+        let reader = Task {
+            do {
+                for try await _ in try await stream.read() {}
+            } catch {}
+        }
+        try await Task.sleep(for: .milliseconds(5))
+        try client.shutdown()
+
+        let ended = await withTaskGroup(of: Bool.self) { group in
+            group.addTask { await reader.value; return true }
+            group.addTask { try? await Task.sleep(for: .seconds(10)); return false }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
+        }
+        #expect(ended)
+    }
+
+    // MARK: - Dedicated connections
 
     @Test("取消一個訂閱,不影響同一個 client 上的其他訂閱與 unary 呼叫")
     func cancellingOneSubscriptionLeavesOthersWorking() async throws {

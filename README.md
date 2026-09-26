@@ -92,7 +92,7 @@ let fromEnvironment = try ClientSettings.fromEnv()
 let client = KurrentDBClient(settings: settings)
 ```
 
-Create one client per application and reuse it. Calls that return a single response — appends, deletes, metadata, management operations — share one connection per node. Calls that return a stream — reads and subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`; calling it again does nothing.
+Create one client per application and reuse it. Calls that complete before they return — appends, deletes, metadata, reads, projection statistics, management operations — share one connection per node. Calls that hand you a live stream — subscriptions and persistent subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`; calling it again does nothing.
 
 Need a database per test? The `KurrentDBPool` library lends out clients for a set of independent KurrentDB instances, one caller per instance at a time — see [Client pools](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/client-pools).
 

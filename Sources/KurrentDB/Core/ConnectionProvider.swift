@@ -14,14 +14,17 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 import Synchronization
 
-/// 管理兩類連線,依 RPC 在 wire 上的**回應形態**決定用哪一類:
+/// 管理兩類連線,依 RPC 是否在 `perform(node:)` **內結束**決定用哪一類:
 ///
-/// - **共用**(``acquire(_:)``):回應為單一訊息的 RPC(`UnaryUnary`、`StreamUnary`)。
-///   這類呼叫一定在 `perform(node:)` 內結束,連線不會逃出作用域,因此每個 endpoint
-///   共用一條長生命週期的連線。
-/// - **獨立**(``openDedicated(for:)``):回應為 stream 的 RPC(`UnaryStream`、
-///   `StreamStream`、`BatchAppend`)。這類呼叫會把連線帶出 `perform`,且可能長期佔住
-///   HTTP/2 stream slot,因此每次呼叫獨立一條,不跟任何人共用容量。
+/// - **共用**(``acquire(_:)``):呼叫在 `perform(node:)` 內結束、連線不會逃出作用域的
+///   RPC —— 回應為單一訊息的(`UnaryUnary`、`StreamUnary`),以及 `send()` 在回傳前就把
+///   stream 排空的 `UnaryStream`(標記 `BufferedStreamResponse`:`Streams.Read`、
+///   `Streams.ReadAll`、`Projections.Statistics`、`Users.Details`)。每個 endpoint 共用一條
+///   長生命週期的連線,這些呼叫一起分攤該連線的 HTTP/2 stream 額度。
+/// - **獨立**(``openDedicated(for:)``):把 stream 帶出 `perform` 的 RPC(訂閱、persistent
+///   subscription、`Monitoring.Stats`、`StreamStream`)。可能長期佔住 HTTP/2 stream slot,
+///   因此每次呼叫獨立一條,不跟任何人共用容量。`BatchAppend` 在函式內就收齊回應,目前仍
+///   走這條(見該檔註解)。
 ///
 /// ## 為什麼是 Mutex 而不是 actor
 ///
@@ -66,6 +69,7 @@ package final class ConnectionProvider: Sendable {
         var nextID: UInt64 = 0
         var isShutdown = false
         var createdSharedConnectionCount = 0
+        var createdDedicatedConnectionCount = 0
         var sweeper: Task<Void, Never>?
     }
 
@@ -233,7 +237,7 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Dedicated connections
 
-    /// 為一次 stream 回應的呼叫開一條獨立連線,並向 provider 登記。
+    /// 為一次把 stream 帶出 `perform` 的呼叫開一條獨立連線,並向 provider 登記。
     ///
     /// 登記是 atomic 的:與 ``shutdown()`` 競爭時,不是被拒絕,就是被納入 shutdown 的取消集合。
     /// 回傳的 handle 會強引用 provider 直到 ``DedicatedConnection/close()``,所以一個被
@@ -253,6 +257,7 @@ package final class ConnectionProvider: Sendable {
             }
             state.nextID += 1
             let id = state.nextID
+            state.createdDedicatedConnectionCount += 1
             // 這個 task 不捕捉 provider,也不捕捉 handle:登記表 → task 這條邊不會形成循環。
             let runTask = Task {
                 await Self.run(client, endpoint: endpoint)
@@ -304,6 +309,13 @@ package final class ConnectionProvider: Sendable {
     /// TLS handshake —— transport 內部的重連不會讓它增加。
     package var createdSharedConnectionCount: Int {
         state.withLock { $0.createdSharedConnectionCount }
+    }
+
+    /// 至今建立過幾條獨立連線。只增不減;與 ``createdSharedConnectionCount`` 成對,
+    /// 是分辨一次呼叫走了哪條路徑的依據 —— 獨立連線關閉後 ``activeDedicatedConnectionCount``
+    /// 也會回到 0,分不出來。
+    package var createdDedicatedConnectionCount: Int {
+        state.withLock { $0.createdDedicatedConnectionCount }
     }
 
     /// 目前登記中的獨立連線數量。
