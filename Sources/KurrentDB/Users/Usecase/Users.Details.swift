@@ -12,7 +12,7 @@ import GRPCNIOTransportHTTP2Posix
 
 extension Users {
     /// Usecase that fetches user detail records as a streaming response.
-    public struct Details: UnaryStream {
+    public struct Details: UnaryStream, BufferedStreamResponse {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Details.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Details.Output

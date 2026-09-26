@@ -10,7 +10,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Projections {
-    public struct Statistics: UnaryStream {
+    public struct Statistics: UnaryStream, BufferedStreamResponse {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Statistics.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Statistics.Output
