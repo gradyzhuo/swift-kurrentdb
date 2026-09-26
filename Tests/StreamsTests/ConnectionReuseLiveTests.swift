@@ -106,7 +106,8 @@ struct ConnectionReuseLiveTests: Sendable {
             for try await _ in try await missing.read() {}
         }
 
-        // read 從不登記獨立連線,所以不需要 eventually。
+        // read 從不建立獨立連線;createdDedicatedConnectionCount 是單調的,才分得出「開了又關」。
+        #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
         #expect(client.selector.connections.createdSharedConnectionCount == warmed)
 
@@ -135,6 +136,7 @@ struct ConnectionReuseLiveTests: Sendable {
         }
 
         #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+        #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
         try await stream.delete()
     }
@@ -174,13 +176,19 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
+    /// Buffered read 的 RPC 在 send() 內就跑完,所以「排空中」指的是 send() 還在 drain 的那段:
+    /// 用夠大的 stream 讓 5 ms 後的 cancel 大概率落在那裡。不論 cancel 落在 drain 中還是
+    /// 之後,perform 的 defer 都必須把 lease 還掉 —— retainCount 回到基準才算數,
+    /// 「之後的 append 能成功」擋不住 retain 洩漏(acquire 照樣復用那個 entry)。
     @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
     func cancellingReadMidDrainReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
-        _ = try await stream.append(events: (0 ..< 2000).map { _ in event() }) { $0.expectedRevision = .any }
+        _ = try await stream.append(events: (0 ..< 5000).map { _ in event() }) { $0.expectedRevision = .any }
         let warmed = client.selector.connections.createdSharedConnectionCount
+        let endpoint = try #require(await client.selector.selectedNode?.endpoint)
+        let baseline = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount)
 
         let reader = Task {
             for try await _ in try await stream.read() {}
@@ -189,10 +197,12 @@ struct ConnectionReuseLiveTests: Sendable {
         reader.cancel()
         _ = await reader.result
 
-        // lease 若沒還掉,不會直接看得到;但共用連線若被弄壞,下一個 append 會失敗或新開連線。
+        #expect(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == baseline)
+
+        // 共用連線若被弄壞,下一個 append 會失敗或新開連線。
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
         #expect(client.selector.connections.createdSharedConnectionCount == warmed)
-        #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
+        #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
         try await stream.delete()
     }
 
