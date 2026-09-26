@@ -83,7 +83,7 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    // MARK: - Dedicated connections
+    // MARK: - Buffered stream responses (shared connection)
 
     /// 有限的 stream 回應(Read)在 send() 內就排空,所以走共用連線:成功與失敗都不開獨立連線,
     /// 而且失敗的 read 不能把共用連線弄壞 —— 之後的 append 必須還在同一條連線上完成。
@@ -125,7 +125,7 @@ struct ConnectionReuseLiveTests: Sendable {
         let warmed = client.selector.connections.createdSharedConnectionCount
 
         for _ in 0 ..< 20 {
-            for try await _ in try await client.allStreams.read { $0.limit = 5 } {}
+            for try await _ in try await client.allStreams.read(configure: { $0.limit = 5 }) {}
         }
         for _ in 0 ..< 20 {
             _ = try await client.projections(of: .anyContinuous).list()
@@ -219,6 +219,8 @@ struct ConnectionReuseLiveTests: Sendable {
         }
         #expect(ended)
     }
+
+    // MARK: - Dedicated connections
 
     @Test("取消一個訂閱,不影響同一個 client 上的其他訂閱與 unary 呼叫")
     func cancellingOneSubscriptionLeavesOthersWorking() async throws {
