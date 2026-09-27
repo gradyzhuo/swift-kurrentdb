@@ -25,9 +25,11 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
             throw .unsupportedFeature(methodDescriptor)
         }
 
-        // stream 回應會把連線帶出這個函式(send() 裡 spawn Task 後就 return),所以每次呼叫
-        // 獨立一條。completion 閉包持有 connection,讓它(以及 provider)活到 stream 終止為止。
-        // 若 send() 在回傳前就 finish 了 continuation,改標 BufferedStreamResponse 走共用連線。
+        // A stream response carries the connection out of this function (send() returns right
+        // after spawning its Task), so each call gets its own connection. The completion closure
+        // holds the connection so it (and the provider) stay alive until the stream terminates.
+        // If send() finishes the continuation before returning, mark the usecase
+        // BufferedStreamResponse instead and it will use the shared connection.
         let connection = try node.connections.openDedicated(for: node.endpoint)
         do {
             return try await withRethrowingError(usage: "\(Self.self).\(#function)") {

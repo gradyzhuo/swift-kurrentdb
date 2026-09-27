@@ -2,10 +2,11 @@
 //  UnaryStreamConnectionPathTests.swift
 //  swift-kurrentdb
 //
-//  不需要伺服器:指向 127.0.0.1:1(ECONNREFUSED),RPC 一定失敗。要驗證的不是結果,
-//  而是 perform(node:) 走了哪一條連線:共用連線會讓 createdSharedConnectionCount 變 1,
-//  獨立連線不會動它。這是唯一能區分兩條路徑的斷言 —— activeDedicatedConnectionCount
-//  在失敗後兩條路徑都是 0。
+//  No server needed: everything points at 127.0.0.1:1 (ECONNREFUSED), so every RPC fails.
+//  What is verified is not the result but which connection perform used: the shared path
+//  bumps createdSharedConnectionCount to 1 and the dedicated path bumps
+//  createdDedicatedConnectionCount. Those monotonic counters are the only assertions that
+//  tell the two paths apart — activeDedicatedConnectionCount is 0 after failure on both.
 //
 
 import GRPCCore
@@ -31,8 +32,8 @@ struct UnaryStreamConnectionPathTests {
         return Node(endpoint: Self.refused, settings: settings, serverInfo: makeInfo(supporting: descriptors), connections: provider)
     }
 
-    /// 給 `perform(selector:)` 用:seed 與快取的 node 都指向 refused port,retry 關掉,
-    /// 所以失敗後不會 invalidate → discovery 去探測任何地方。
+    /// For `perform(selector:)`: both the seed and the cached node point at the refused port and
+    /// retries are off, so a failure never invalidates the cache and probes anything via discovery.
     private func makeSelector(supporting descriptors: [GRPCCore.MethodDescriptor]) async -> NodeSelector {
         var policy = OperationRetryPolicy.default
         policy.maxAttempts = 1
@@ -96,9 +97,10 @@ struct UnaryStreamConnectionPathTests {
 
     // MARK: - Through perform(selector:) — the path the public facades take
 
-    /// base extension 的 perform(selector:) 會把 perform(node:) 靜態綁到獨立連線那一版,
-    /// 所以 constrained extension 必須自己提供 perform(selector:)。上面直接呼叫 perform(node:)
-    /// 的測試守不住這件事 —— 把 constrained 的 perform(selector:) 拿掉,它們照樣過,但這裡會退回獨立連線。
+    /// The base extension's perform(selector:) binds perform(node:) statically to the
+    /// dedicated-connection version, so the constrained extension must provide its own
+    /// perform(selector:). The perform(node:) tests above cannot guard that: remove the
+    /// constrained perform(selector:) and they still pass, while these fall back to dedicated.
     @Test("Read 經 perform(selector:) 走共用連線")
     func readTakesSharedPathThroughSelector() async throws {
         let usecase = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
