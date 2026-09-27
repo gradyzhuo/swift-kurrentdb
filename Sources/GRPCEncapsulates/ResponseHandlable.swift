@@ -31,3 +31,23 @@ extension UnaryResponseHandlable where Response: GRPCResponse<UnderlyingResponse
 package protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Usecase {
     associatedtype Responses: Sendable
 }
+
+/// A ``StreamResponseHandlable`` whose `send()` consumes the entire response **before
+/// returning**: inside gRPC's response closure it iterates `for try await` to the end, yields
+/// each message to the continuation, calls `continuation.finish()` / `finish(throwing:)`, and
+/// only then does `return stream`.
+///
+/// There is exactly one criterion: is `continuation.finish()` guaranteed to run before
+/// `return stream`? Yes — add this conformance; the RPC ends inside `perform(node:)` and the
+/// connection never leaves that scope. No (`send()` spawns a `Task {}` that carries the stream
+/// out, e.g. `Streams.Subscribe`) — leave it off and keep the dedicated connection.
+///
+/// Current conformers: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
+/// `Users.Details`. The connection policy itself lives in KurrentDB's
+/// `UnaryStream where Self: BufferedStreamResponse` extension.
+///
+/// Note: constrained extensions are statically dispatched. Any helper generic over
+/// `UnaryStream` that does not also constrain `Self: BufferedStreamResponse` binds to the
+/// dedicated-connection `perform`. No such helper exists under Sources/ today; add the
+/// constraint if one is introduced.
+package protocol BufferedStreamResponse: StreamResponseHandlable {}
