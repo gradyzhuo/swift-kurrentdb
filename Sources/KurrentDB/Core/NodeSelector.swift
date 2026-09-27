@@ -37,7 +37,8 @@ public actor NodeSelector: Sendable {
         settings.operationRetryPolicy
     }
 
-    /// 測試用:直接放入快取,略過 discovery,讓 `perform(selector:)` 能離線走到 `perform(node:)`。
+    /// Test hook: seeds the cache directly, bypassing discovery, so `perform(selector:)` can
+    /// reach `perform(node:)` offline.
     package func cacheNodeForTesting(_ node: Node) {
         selectedNode = node
         selectedNodeExpiry = Date.now.addingTimeInterval(settings.nodeCacheTTL.timeInterval)

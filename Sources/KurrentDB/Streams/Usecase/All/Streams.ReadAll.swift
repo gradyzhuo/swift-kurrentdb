@@ -59,8 +59,9 @@ extension Streams where Target == AllStreamsTarget {
                             do {
                                 try continuation.yield(handle(message: message))
                             } catch {
-                                // 跟 Streams.Read 一樣,parse 失敗就結束 RPC —— 不要把伺服器剩下的回應
-                                // 全部讀完,那會一直佔著共用連線的 stream slot 和 lease。
+                                // Like Streams.Read, end the RPC on a parse failure. Reading the
+                                // rest of the server's response would keep the shared
+                                // connection's stream slot and the lease pinned.
                                 continuation.finish(throwing: error)
                                 return stream
                             }

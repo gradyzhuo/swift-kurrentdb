@@ -14,17 +14,19 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 import Synchronization
 
-/// 管理兩類連線,依 RPC 是否在 `perform(node:)` **內結束**決定用哪一類:
+/// Manages two kinds of connections, chosen by whether the RPC **finishes inside** `perform(node:)`:
 ///
-/// - **共用**(``acquire(_:)``):呼叫在 `perform(node:)` 內結束、連線不會逃出作用域的
-///   RPC —— 回應為單一訊息的(`UnaryUnary`、`StreamUnary`),以及 `send()` 在回傳前就把
-///   stream 排空的 `UnaryStream`(標記 `BufferedStreamResponse`:`Streams.Read`、
-///   `Streams.ReadAll`、`Projections.Statistics`、`Users.Details`)。每個 endpoint 共用一條
-///   長生命週期的連線,這些呼叫一起分攤該連線的 HTTP/2 stream 額度。
-/// - **獨立**(``openDedicated(for:)``):把 stream 帶出 `perform` 的 RPC(訂閱、persistent
-///   subscription、`Monitoring.Stats`、`StreamStream`)。可能長期佔住 HTTP/2 stream slot,
-///   因此每次呼叫獨立一條,不跟任何人共用容量。`BatchAppend` 在函式內就收齊回應,目前仍
-///   走這條(見該檔註解)。
+/// - **Shared** (``acquire(_:)``): calls that end inside `perform(node:)` and whose connection
+///   never leaves that scope — single-message responses (`UnaryUnary`, `StreamUnary`) and
+///   `UnaryStream` usecases whose `send()` drains the stream before returning (marked
+///   `BufferedStreamResponse`: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
+///   `Users.Details`). One long-lived connection per endpoint; these calls share that
+///   connection's HTTP/2 stream budget.
+/// - **Dedicated** (``openDedicated(for:)``): RPCs that carry the stream out of `perform`
+///   (subscriptions, persistent subscriptions, `Monitoring.Stats`, `StreamStream`). They may
+///   hold an HTTP/2 stream slot indefinitely, so each call gets its own connection and never
+///   competes for shared capacity. `BatchAppend` collects its responses inside the function
+///   but still takes this path for now (see the comment in that file).
 ///
 /// ## 為什麼是 Mutex 而不是 actor
 ///
@@ -237,7 +239,8 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Dedicated connections
 
-    /// 為一次把 stream 帶出 `perform` 的呼叫開一條獨立連線,並向 provider 登記。
+    /// Opens a dedicated connection for one call that carries its stream out of `perform`, and
+    /// registers it with the provider.
     ///
     /// 登記是 atomic 的:與 ``shutdown()`` 競爭時,不是被拒絕,就是被納入 shutdown 的取消集合。
     /// 回傳的 handle 會強引用 provider 直到 ``DedicatedConnection/close()``,所以一個被
@@ -311,9 +314,10 @@ package final class ConnectionProvider: Sendable {
         state.withLock { $0.createdSharedConnectionCount }
     }
 
-    /// 至今建立過幾條獨立連線。只增不減;與 ``createdSharedConnectionCount`` 成對,
-    /// 是分辨一次呼叫走了哪條路徑的依據 —— 獨立連線關閉後 ``activeDedicatedConnectionCount``
-    /// 也會回到 0,分不出來。
+    /// How many dedicated connections have been created so far. Monotonic; the counterpart of
+    /// ``createdSharedConnectionCount`` and the way to tell which path a call took —
+    /// ``activeDedicatedConnectionCount`` returns to 0 once a dedicated connection closes, so
+    /// it cannot distinguish them.
     package var createdDedicatedConnectionCount: Int {
         state.withLock { $0.createdDedicatedConnectionCount }
     }

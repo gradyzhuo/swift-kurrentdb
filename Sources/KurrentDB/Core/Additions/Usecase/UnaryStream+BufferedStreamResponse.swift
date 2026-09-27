@@ -8,19 +8,22 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 import Synchronization
 
-/// completion closure 是 @Sendable escaping,不能直接捕獲 ~Copyable 的 Mutex,所以包一層。
+/// The completion closure is @Sendable and escaping, so it cannot capture a ~Copyable Mutex
+/// directly; wrap it in a class.
 private final class CompletionFlag: Sendable {
     private let fired = Mutex(false)
     func set() { fired.withLock { $0 = true } }
     var isSet: Bool { fired.withLock { $0 } }
 }
 
-/// `send()` 在回傳前就把 stream 收尾的 UnaryStream(見 ``BufferedStreamResponse``):
-/// RPC 一定在 `perform(node:)` 內結束,所以跟 `StreamUnary` 一樣走共用連線。
+/// UnaryStream usecases whose `send()` finishes the stream before returning (see
+/// ``BufferedStreamResponse``): the RPC always ends inside `perform(node:)`, so they use the
+/// shared connection exactly like `StreamUnary`.
 ///
-/// 兩個 perform 都要在這裡提供 —— `perform(selector:)` 內對 `perform(node:)` 的呼叫是
-/// 在 generic context 靜態綁定的,若只覆寫 `perform(node:)`,base extension 的
-/// `perform(selector:)` 仍會叫到獨立連線那一版。
+/// Both `perform`s must be provided here. The call to `perform(node:)` inside
+/// `perform(selector:)` is bound statically in generic context, so overriding only
+/// `perform(node:)` would leave the base extension's `perform(selector:)` calling the
+/// dedicated-connection version.
 extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: BufferedStreamResponse {
     package func perform(selector: NodeSelector, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Responses {
         try await withRetry(
@@ -37,7 +40,8 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: Buffe
             throw .unsupportedFeature(methodDescriptor)
         }
 
-        // 回應在 send() 內就消費完,連線不會逃出這個函式:走共用連線,離開時還 lease。
+        // The response is consumed inside send() and the connection never leaves this function:
+        // use the shared connection and return the lease on the way out.
         let lease = try node.connections.acquire(node.endpoint)
         defer { lease.release() }
 
@@ -46,8 +50,8 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: Buffe
             let metadata = try Metadata(from: node.settings, overriding: credentials)
             let request = try request(metadata: metadata)
             return try await send(connection: lease.client, request: request, callOptions: callOptions) { error in
-                // 只能 log。絕對不可碰 lease.client:對共用的 GRPCClient 做 shutdown
-                // 會讓同一 endpoint 之後所有呼叫都失敗。
+                // Log only. Never touch lease.client: shutting down the shared GRPCClient
+                // would fail every later call on this endpoint.
                 completed.set()
                 if let error {
                     logger.error("The error is thrown in the response of \(Self.name): \(error)")
@@ -55,8 +59,9 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: Buffe
             }
         }
 
-        // send() 回傳時 continuation 必須已經 finish(onTermination 同步觸發)。沒有就是
-        // 這個 usecase 把 stream 帶出去了,不該標 BufferedStreamResponse。
+        // By the time send() returns the continuation must already be finished (onTermination
+        // fires synchronously). If it is not, this usecase carried the stream out and must not
+        // be marked BufferedStreamResponse.
         assert(completed.isSet, "\(Self.name) returned an open stream; it must conform to UnaryStream without BufferedStreamResponse (dedicated connection)")
         if !completed.isSet {
             logger.error("\(Self.name) is marked BufferedStreamResponse but returned an open stream; its lease is already released")
