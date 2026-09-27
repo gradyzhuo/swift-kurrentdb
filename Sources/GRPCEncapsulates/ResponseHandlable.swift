@@ -42,6 +42,9 @@ package protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Use
 /// connection never leaves that scope. No (`send()` spawns a `Task {}` that carries the stream
 /// out, e.g. `Streams.Subscribe`) — leave it off and keep the dedicated connection.
 ///
+/// Draining inline means building each `Response` from its underlying message as it arrives,
+/// which is what `handle(message:)` does — hence the `Response: GRPCResponse` requirement.
+///
 /// Current conformers: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
 /// `Users.Details`. The connection policy itself lives in KurrentDB's
 /// `UnaryStream where Self: BufferedStreamResponse` extension.
@@ -50,4 +53,5 @@ package protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Use
 /// `UnaryStream` that does not also constrain `Self: BufferedStreamResponse` binds to the
 /// dedicated-connection `perform`. No such helper exists under Sources/ today; add the
 /// constraint if one is introduced.
-package protocol BufferedStreamResponse: StreamResponseHandlable {}
+package protocol BufferedStreamResponse: StreamResponseHandlable
+    where Response: GRPCResponse<UnderlyingResponse> {}
