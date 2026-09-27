@@ -2,10 +2,11 @@
 //  ConnectionReuseLiveTests.swift
 //  swift-kurrentdb
 //
-//  需要 server/docker-compose.yaml 的 3 節點 cluster。驗證連線復用在真實伺服器上的行為:
-//  在 perform 內就結束的 RPC(單一回應,以及 read / readAll / projection statistics /
-//  user details 這類在 send() 內排空的有限 stream)共用連線;把 stream 帶出 perform 的
-//  訂閱各自獨立;以及 shutdown 的語意。
+//  Needs the 3-node cluster from server/docker-compose.yaml. Verifies connection reuse against
+//  a real server: RPCs that finish inside perform (single responses, and the finite streams
+//  that read / readAll / projection statistics / user details drain inside send()) share a
+//  connection; subscriptions, which carry the stream out of perform, each get their own; and
+//  the semantics of shutdown.
 //
 
 import Foundation
@@ -85,8 +86,9 @@ struct ConnectionReuseLiveTests: Sendable {
 
     // MARK: - Buffered stream responses (shared connection)
 
-    /// 有限的 stream 回應(Read)在 send() 內就排空,所以走共用連線:成功與失敗都不開獨立連線,
-    /// 而且失敗的 read 不能把共用連線弄壞 —— 之後的 append 必須還在同一條連線上完成。
+    /// A finite stream response (Read) is drained inside send(), so it uses the shared
+    /// connection: neither success nor failure opens a dedicated one, and a failed read must
+    /// not break the shared connection — the following append has to complete on the same one.
     @Test("成功與失敗的 read 都走共用連線,且不影響之後的 append")
     func finiteReadsUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -106,12 +108,13 @@ struct ConnectionReuseLiveTests: Sendable {
             for try await _ in try await missing.read() {}
         }
 
-        // read 從不建立獨立連線;createdDedicatedConnectionCount 是單調的,才分得出「開了又關」。
+        // A read never creates a dedicated connection. createdDedicatedConnectionCount is
+        // monotonic, which is what distinguishes "opened and closed" from "never opened".
         #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
         #expect(client.selector.connections.createdSharedConnectionCount == warmed)
 
-        // 失敗的 read 之後,共用連線必須還能用。
+        // After a failed read the shared connection must still work.
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
         #expect(client.selector.connections.createdSharedConnectionCount == warmed)
         try await stream.delete()
@@ -141,8 +144,9 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    /// 超過伺服器單一連線的並行 stream 上限時,多出來的 read 會在 client 端排隊,不會失敗,
-    /// 也不會把同一條連線上的 append 卡死。這是 #143 接受的取捨,這裡把它釘住。
+    /// Beyond the server's per-connection concurrent-stream limit, extra reads queue on the
+    /// client instead of failing, and do not starve appends on the same connection. This is
+    /// the tradeoff #143 accepts; pin it here.
     @Test("150 個並行 read 全部完成,期間的 append 也完成,且不新開共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -159,7 +163,7 @@ struct ConnectionReuseLiveTests: Sendable {
                     return n
                 }
             }
-            // 讀取排隊期間的 append 必須仍能完成。
+            // An append issued while reads are queued must still complete.
             group.addTask {
                 _ = try await stream.append(events: [self.event()]) { $0.expectedRevision = .any }
                 return -1
@@ -176,11 +180,12 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    /// Buffered read 的 RPC 在 send() 內就跑完,所以「排空中」指的是 send() 還在 drain 的那段。
-    /// 那段的可觀察訊號是 endpoint 的 retainCount 升到基準 +1(lease 被拿走、尚未 defer 還回):
-    /// 等到它出現才 cancel,而且要求 reader 以失敗結束,證明取消真的打斷了進行中的 RPC。
-    /// 之後 retainCount 必須回到基準 —— 「之後的 append 能成功」擋不住 retain 洩漏
-    /// (acquire 照樣復用那個 entry)。
+    /// A buffered read's RPC runs entirely inside send(), so "mid-drain" means the window in
+    /// which send() is still draining. Its observable signal is the endpoint's retainCount
+    /// rising to baseline + 1 (lease taken, not yet returned by defer): wait for it before
+    /// cancelling, and require the reader to end in failure to prove the cancellation
+    /// interrupted an in-flight RPC. Afterwards retainCount must return to baseline — "the next
+    /// append succeeds" cannot catch a leaked retain (acquire would simply reuse that entry).
     @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
     func cancellingReadMidDrainReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -211,7 +216,7 @@ struct ConnectionReuseLiveTests: Sendable {
 
         #expect(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == baseline)
 
-        // 共用連線若被弄壞,下一個 append 會失敗或新開連線。
+        // If the shared connection were broken, the next append would fail or open a new one.
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
         #expect(client.selector.connections.createdSharedConnectionCount == warmed)
         #expect(client.selector.connections.createdDedicatedConnectionCount == 0)
