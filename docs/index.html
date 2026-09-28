@@ -67,7 +67,7 @@
   <p lang="en">Add to your <code>Package.swift</code>:</p>
   <p lang="zh-Hant">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.2")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.3")
 ]</code></pre>
   <p class="note" lang="en">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note" lang="zh-Hant">🎉 <strong>2.0 已上線</strong> —— 目前推薦使用 target-based API。仍在 1.x？改用 <code>KurrentDB_V1</code>，原本的程式碼可以繼續運作，遷移節奏由你決定。</p>
@@ -92,7 +92,7 @@
 
   <!-- ===================================================================== -->
   <article class="release" id="v2.4">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.4.2</span><span lang="zh-Hant">最新 · v2.4.2</span></div>
+    <div class="whats-new-tag"><span lang="en">Latest · v2.4.3</span><span lang="zh-Hant">最新 · v2.4.3</span></div>
     <h3 class="release-title"><span lang="en">Connection reuse — faster and more solid</span><span lang="zh-Hant">連線復用 —— 更快，也更穩</span></h3>
     <p class="lead" lang="en">
       Up to 2.3, every single call — each append, each read, each delete — dialled a brand-new
@@ -261,6 +261,15 @@ try client.shutdown()</code></pre>
       <li lang="en">Every Swift example in the docs is now compiled in CI.</li>
       <li lang="zh-Hant">文件裡的每個 Swift 範例現在都會在 CI 編譯檢查。</li>
     </ul>
+
+    <h4 class="subsection-title"><span lang="en">2.4.3: reads share the connection</span><span lang="zh-Hant">2.4.3：讀取共用連線</span></h4>
+    <ul>
+      <li lang="en"><code>read()</code>, <code>readAll()</code>, projection statistics and user details now use the per-node shared connection instead of opening a TCP connection for every call. Only subscriptions, persistent subscriptions and server statistics keep a dedicated one.</li>
+      <li lang="zh-Hant"><code>read()</code>、<code>readAll()</code>、projection statistics 與 user details 現在走每個節點的共用連線，不再每次呼叫都開一條 TCP 連線。只有訂閱、persistent subscription 與 server statistics 維持獨立連線。</li>
+      <li lang="en">A burst of reads beyond the server's concurrent-stream limit queues on the shared connection alongside appends instead of opening more sockets.</li>
+      <li lang="zh-Hant">超過伺服器並行 stream 上限的讀取會在共用連線上跟 append 一起排隊，不再多開 socket。</li>
+    </ul>
+    <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.4.3" target="_blank" rel="noopener"><span lang="en">Full 2.4.3 release notes →</span><span lang="zh-Hant">2.4.3 完整 release notes →</span></a></p>
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.4.2" target="_blank" rel="noopener"><span lang="en">Full 2.4.2 release notes →</span><span lang="zh-Hant">2.4.2 完整 release notes →</span></a></p>
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.4.0" target="_blank" rel="noopener"><span lang="en">Full 2.4.0 release notes →</span><span lang="zh-Hant">2.4.0 完整 release notes →</span></a></p>
   </article>
