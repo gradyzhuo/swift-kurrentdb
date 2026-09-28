@@ -1,7 +1,20 @@
 // swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
+import Foundation
 import PackageDescription
+
+// Offline benchmarks (Benchmarks/OfflineBenchmarks) are enabled by default on macOS.
+// On other platforms they are opt-in via `KURRENTDB_BENCHMARKS=1`, because the
+// benchmark package needs jemalloc (libjemalloc-dev on Linux), which the offline
+// distribution builds in CI do not install.
+let benchmarksEnabled: Bool = {
+    #if os(macOS)
+    return true
+    #else
+    return ProcessInfo.processInfo.environment["KURRENTDB_BENCHMARKS"] == "1"
+    #endif
+}()
 
 let package = Package(
     name: "swift-kurrentdb",
@@ -48,13 +61,9 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
-    ] + {
-        #if os(macOS)
-        return [Package.Dependency.package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.22.0")]
-        #else
-        return []
-        #endif
-    }(),
+    ] + (benchmarksEnabled
+        ? [Package.Dependency.package(url: "https://github.com/ordo-one/benchmark.git", from: "1.36.2")]
+        : []),
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
@@ -92,25 +101,20 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ]
         ),
-        // Benchmarks are macOS-only — package-benchmark requires jemalloc on Linux.
-        // Use the dedicated benchmark workflow to run these locally or on macOS CI.
-    ] + {
-        #if os(macOS)
-        return [Target.executableTarget(
+        // See `benchmarksEnabled` above; `.github/workflows/benchmarks.yml` runs these on Linux.
+    ] + (benchmarksEnabled
+        ? [Target.executableTarget(
             name: "OfflineBenchmarks",
             dependencies: [
                 "KurrentDB",
-                .product(name: "Benchmark", package: "package-benchmark"),
+                .product(name: "Benchmark", package: "benchmark"),
             ],
             path: "Benchmarks/OfflineBenchmarks",
             plugins: [
-                .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+                .plugin(name: "BenchmarkPlugin", package: "benchmark"),
             ]
         )]
-        #else
-        return []
-        #endif
-    }() + [
+        : []) + [
         .testTarget(
             name: "KurrentCoreTests",
             dependencies: [
