@@ -98,26 +98,46 @@ All benchmarks use [ordo-one/package-benchmark](https://github.com/ordo-one/pack
 
 ### Prerequisites
 
+The benchmark package needs jemalloc for malloc tracking.
+
 ```bash
-# macOS only — jemalloc is required for malloc tracking
+# macOS
 brew install jemalloc
+
+# Ubuntu / Debian
+sudo apt-get install -y libjemalloc-dev
 ```
+
+On macOS the `OfflineBenchmarks` target is always declared. On Linux it is
+opt-in: set `KURRENTDB_BENCHMARKS=1` for every `swift package` invocation
+below, otherwise `Package.swift` leaves the target (and the jemalloc
+dependency) out so plain `swift build` keeps working without jemalloc.
 
 ### Run all offline benchmarks
 
 ```bash
+# macOS
 PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig \
+  swift package --disable-sandbox benchmark --target OfflineBenchmarks
+
+# Linux
+KURRENTDB_BENCHMARKS=1 \
   swift package --disable-sandbox benchmark --target OfflineBenchmarks
 ```
 
+Add `--format markdown` to get the tables in the format used by this file.
+
 ### Filter by name
+
+`--filter` is a regular expression matched against the whole benchmark name,
+so wrap partial names in `.*`.
 
 ```bash
 # All EventData benchmarks
 PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig \
   swift package --disable-sandbox benchmark \
   --target OfflineBenchmarks \
-  --filter "EventData"
+  --filter ".*EventData.*"
 
 # Exact benchmark
 PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig \
@@ -146,3 +166,13 @@ PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig \
   swift package --disable-sandbox benchmark \
   --target OfflineBenchmarks baseline compare main
 ```
+
+### Linux results via GitHub Actions
+
+The `Benchmarks` workflow (`.github/workflows/benchmarks.yml`) runs the
+same suite on `ubuntu-latest`. It runs on every push to `main` and can be
+started by hand from the Actions tab. Each run writes the runner
+description and the full markdown report to the job summary and uploads
+them as the `offline-benchmarks-*` artifact. Numbers are copied into this
+file by hand: GitHub-hosted runners do not guarantee identical hardware
+between runs, so a person checks a run before it becomes the reference.
