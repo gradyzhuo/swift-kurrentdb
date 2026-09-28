@@ -1,0 +1,71 @@
+# Runs the offline benchmarks (Benchmarks/OfflineBenchmarks) on Linux.
+#
+# Results are not committed automatically: GitHub-hosted runners do not
+# guarantee identical hardware between runs, so numbers are reviewed by a
+# person before they land in BENCHMARKS.md. Each run publishes the full
+# markdown report to the job summary and as a downloadable artifact.
+name: Benchmarks
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  offline-benchmarks:
+    name: Offline benchmarks / Swift ${{ matrix.swift }} / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        swift: ["6.4"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      # Package.swift only declares the benchmark target on Linux when this is set.
+      KURRENTDB_BENCHMARKS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift }}
+
+      - name: Install jemalloc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libjemalloc-dev
+
+      - name: Describe runner
+        # The numbers below are what BENCHMARKS.md's "Environment" table needs.
+        run: |
+          {
+            echo "## Environment"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Runner** | ${{ matrix.os }} (${{ runner.arch }}) |"
+            echo "| **CPU** | $(lscpu | awk -F': *' '/Model name/ {print $2; exit}') |"
+            echo "| **Cores** | $(nproc) |"
+            echo "| **Memory** | $(awk '/MemTotal/ {printf "%.0f GB", $2/1024/1024}' /proc/meminfo) |"
+            echo "| **OS** | $(lsb_release -ds) ($(uname -r)) |"
+            echo "| **Swift** | $(swift --version 2>&1 | head -n 1) |"
+            echo "| **Build** | Release |"
+            echo
+          } | tee environment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run offline benchmarks
+        run: |
+          swift package --disable-sandbox benchmark \
+            --target OfflineBenchmarks \
+            --format markdown \
+            --no-progress \
+            | tee results.md
+          cat results.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-benchmarks-swift-${{ matrix.swift }}-${{ matrix.os }}
+          path: |
+            environment.md
+            results.md
+          if-no-files-found: error
