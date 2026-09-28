@@ -8,7 +8,8 @@ name: Benchmarks
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    # TEMPORARY: verify the Bencher upload before it lands on main; remove before merge.
+    branches: [ "main", "feat/linux-benchmarks-workflow" ]
 
 jobs:
   offline-benchmarks:
@@ -23,6 +24,8 @@ jobs:
     env:
       # Package.swift only declares the benchmark target on Linux when this is set.
       KURRENTDB_BENCHMARKS: "1"
+      # Bencher project that keeps the history: https://bencher.dev/perf/gradyzhuo-s-project
+      BENCHER_PROJECT: gradyzhuo-s-project
     steps:
       - uses: actions/checkout@v4
       - uses: SwiftyLab/setup-swift@latest
@@ -61,6 +64,50 @@ jobs:
             | tee results.md
           cat results.md >> "$GITHUB_STEP_SUMMARY"
 
+      # A second pass in JMH format: it carries every percentile of every metric,
+      # which scripts/bench_to_bmf.py turns into Bencher Metric Format.
+      - name: Export benchmark percentiles
+        run: |
+          mkdir -p bench-out
+          swift package --disable-sandbox benchmark \
+            --target OfflineBenchmarks \
+            --format jmh \
+            --path bench-out \
+            --no-progress
+          python3 scripts/bench_to_bmf.py bench-out/Current_run.jmh.json > bmf.json
+          python3 -c 'import json; d=json.load(open("bmf.json")); print(len(d), "benchmarks converted")'
+
+      - uses: bencherdev/bencher@main
+
+      # Uploads to Bencher; the perf page (see BENCHER_PROJECT) keeps the history per commit.
+      # On main a t-test threshold flags a run whose latency falls outside the 99% band of
+      # the last 64 runs, and --error-on-alert turns that alert into a failed job. Other branches
+      # (manual runs) are uploaded without thresholds so they never fail on noise.
+      - name: Upload to Bencher
+        env:
+          BENCHER_API_KEY: ${{ secrets.BENCHER_API_KEY }}
+        run: |
+          threshold_args=()
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            threshold_args=(
+              --threshold-measure latency
+              --threshold-test t_test
+              --threshold-max-sample-size 64
+              --threshold-upper-boundary 0.99
+              --thresholds-reset
+              --error-on-alert
+            )
+          fi
+          bencher run \
+            --project "$BENCHER_PROJECT" \
+            --branch "${GITHUB_REF_NAME}" \
+            --hash "${GITHUB_SHA}" \
+            --testbed "${{ matrix.os }}" \
+            --adapter json \
+            --file bmf.json \
+            "${threshold_args[@]}" \
+            --github-actions "${{ secrets.GITHUB_TOKEN }}"
+
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
@@ -68,4 +115,5 @@ jobs:
           path: |
             environment.md
             results.md
+            bmf.json
           if-no-files-found: error

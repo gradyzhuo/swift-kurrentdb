@@ -185,3 +185,34 @@ description and the full markdown report to the job summary and uploads
 them as the `offline-benchmarks-*` artifact. Numbers are copied into this
 file by hand: GitHub-hosted runners do not guarantee identical hardware
 between runs, so a person checks a run before it becomes the reference.
+
+### History on Bencher
+
+Every workflow run also uploads its results to
+[Bencher](https://bencher.dev/perf/gradyzhuo-s-project), which keeps one
+data point per commit and draws them over time. Two measures are tracked
+per benchmark:
+
+| Measure | Value | Bounds | Source |
+|---|---|---|---|
+| `latency` | p50 wall clock, ns | p0 / p90 | `Time (wall clock)` |
+| `allocations` | p50 malloc count | p0 / p90 | `Malloc (total)` |
+
+The conversion lives in `scripts/bench_to_bmf.py` (tests in
+`scripts/test_bench_to_bmf.py`): the workflow exports a second run in JMH
+format, which carries every percentile, and normalises the per-benchmark
+units package-benchmark picks (ns / μs, # / K) before upload.
+
+A threshold on `latency` (t-test, upper boundary 0.99 over the last 64
+runs) raises an alert and fails the job when a push to `main` lands
+outside the band of recent history. Runs on other branches are uploaded
+without thresholds. Allocation counts are deterministic on a given
+platform, so compare them by eye on the perf page.
+
+To reproduce the upload locally:
+
+```bash
+python3 -m unittest scripts/test_bench_to_bmf.py
+swift package --disable-sandbox benchmark --target OfflineBenchmarks --format jmh --path bench-out
+python3 scripts/bench_to_bmf.py bench-out/Current_run.jmh.json > bmf.json
+```
