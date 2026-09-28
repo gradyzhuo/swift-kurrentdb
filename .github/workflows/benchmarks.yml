@@ -8,7 +8,8 @@ name: Benchmarks
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    # TEMPORARY: verify the workflow before it lands on main; remove before merge.
+    branches: [ "main", "feat/linux-benchmarks-workflow" ]
 
 jobs:
   offline-benchmarks:
