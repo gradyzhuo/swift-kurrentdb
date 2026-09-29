@@ -408,6 +408,22 @@ table.compat th {
   color: var(--text-dim);
 }
 
+/* Benchmark charts (Bencher perf images) */
+.bench-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.bench-charts img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
 /* Footer */
 footer {
   padding: 40px 0 32px;

@@ -35,6 +35,7 @@
     <li><a href="#quick-start"><span lang="en">Quick Start</span><span lang="zh-Hant">快速上手</span></a></li>
     <li><a href="#api"><span lang="en">API at a glance</span><span lang="zh-Hant">API 一覽</span></a></li>
     <li><a href="#compat"><span lang="en">Server Compatibility</span><span lang="zh-Hant">伺服器相容性</span></a></li>
+    <li><a href="#benchmarks"><span lang="en">Benchmarks</span><span lang="zh-Hant">效能基準</span></a></li>
   </ol>
 </nav>
 
@@ -652,6 +653,17 @@ let members = try await client.readCluster()</code></pre>
   </div>
   <p lang="en">Tested in CI across Swift 6.0 / 6.1 / 6.2 / 6.3 / 6.4 against every supported server version.</p>
   <p lang="zh-Hant">CI 在 Swift 6.0 / 6.1 / 6.2 / 6.3 / 6.4 對所有支援的伺服器版本進行完整整合測試。</p>
+</section>
+
+<section id="benchmarks" class="container">
+  <h2><span lang="en">Benchmarks</span><span lang="zh-Hant">效能基準</span></h2>
+  <p lang="en">Offline benchmarks run on every push to <code>main</code> on Linux and are recorded on <a href="https://bencher.dev/perf/gradyzhuo-s-project" target="_blank" rel="noopener">Bencher</a>, one point per commit. The charts below are live; click one to open the interactive view. Method and numbers: <a href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/BENCHMARKS.md" target="_blank" rel="noopener">BENCHMARKS.md</a>.</p>
+  <p lang="zh-Hant">離線效能基準每次 push 到 <code>main</code> 都會在 Linux 上執行並記錄到 <a href="https://bencher.dev/perf/gradyzhuo-s-project" target="_blank" rel="noopener">Bencher</a>，每個 commit 一個資料點。下方圖表即時更新，點擊可開啟互動頁面。量測方法與數據見 <a href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/BENCHMARKS.md" target="_blank" rel="noopener">BENCHMARKS.md</a>。</p>
+  <div class="bench-charts">
+  <a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faab-7733-9355-2ef2f7b115db%2C01a0e754-faaf-7af2-84ec-fd7447d6dc41%2C01a0e754-faae-77c1-b5bc-7a5bcad4816e%2C01a0e754-fab2-73e2-8f13-8ffb14560311%2C01a0e754-fab0-7461-a35c-6f636d765682&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4" target="_blank" rel="noopener"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faab-7733-9355-2ef2f7b115db%2C01a0e754-faaf-7af2-84ec-fd7447d6dc41%2C01a0e754-faae-77c1-b5bc-7a5bcad4816e%2C01a0e754-fab2-73e2-8f13-8ffb14560311%2C01a0e754-fab0-7461-a35c-6f636d765682&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=EventData" alt="EventData latency on Bencher" loading="lazy" /></a>
+  <a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faad-7e33-a4ee-443d47bf215c%2C01a0e754-faad-7e33-a4ee-43df829ca25f%2C01a0e754-fab0-7461-a35c-6f3345f3852c%2C01a0e754-faae-77c1-b5bc-7a262cc56e29&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4" target="_blank" rel="noopener"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faad-7e33-a4ee-443d47bf215c%2C01a0e754-faad-7e33-a4ee-43df829ca25f%2C01a0e754-fab0-7461-a35c-6f3345f3852c%2C01a0e754-faae-77c1-b5bc-7a262cc56e29&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=ClientSettings" alt="ClientSettings latency on Bencher" loading="lazy" /></a>
+  <a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-fab2-73e2-8f13-8fcef1c0ed1d%2C01a0e754-faaf-7af2-84ec-fdac6fe74861%2C01a0e754-faad-7e33-a4ee-4405b51dc87b%2C01a0e754-fab1-7d52-b4d6-967d2b3726c5%2C01a0e754-fab1-7d52-b4d6-964933258a4e&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4" target="_blank" rel="noopener"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-fab2-73e2-8f13-8fcef1c0ed1d%2C01a0e754-faaf-7af2-84ec-fdac6fe74861%2C01a0e754-faad-7e33-a4ee-4405b51dc87b%2C01a0e754-fab1-7d52-b4d6-967d2b3726c5%2C01a0e754-fab1-7d52-b4d6-964933258a4e&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=Options+and+StreamIdentifier" alt="Options and StreamIdentifier latency on Bencher" loading="lazy" /></a>
+  </div>
 </section>
 
 <footer class="container">
