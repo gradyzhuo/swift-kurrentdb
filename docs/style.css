@@ -385,22 +385,27 @@ section:last-of-type { border-bottom: none; }
 
 /* Compat table */
 .table-scroll { overflow-x: auto; }
-table.compat {
+table.compat,
+table.results {
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
   font-size: 0.95rem;
 }
 table.compat th,
-table.compat td {
+table.compat td,
+table.results th,
+table.results td {
   text-align: left;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
-table.compat thead {
+table.compat thead,
+table.results thead {
   background: var(--bg-alt);
 }
-table.compat th {
+table.compat th,
+table.results th {
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;

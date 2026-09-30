@@ -14,7 +14,7 @@
 
 Built for Server-Side Swift and Event Sourcing
 
-[Documentation](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions)
+[Documentation](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions) | [Benchmark](https://gradyzhuo.github.io/swift-kurrentdb/benchmarks.html)
 
 </div>
 
@@ -445,19 +445,6 @@ Streams write-side error paths are explicitly covered:
 | Update settings → getInfo confirms change | ✓ |
 | park → replayParked → re-delivered → ACK | ✓ |
 | Dropping the subscription handle closes its connection | ✓ |
-
-## Benchmarks
-
-Offline benchmarks (no server) run on every push to `main` on Linux and are recorded on
-[Bencher](https://bencher.dev/perf/gradyzhuo-s-project), one data point per commit. Latency is
-the p50 wall clock per iteration on `ubuntu-latest`; a t-test threshold fails the run on a
-regression. Numbers, environment and method: [BENCHMARKS.md](BENCHMARKS.md).
-
-<a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faab-7733-9355-2ef2f7b115db%2C01a0e754-faaf-7af2-84ec-fd7447d6dc41%2C01a0e754-faae-77c1-b5bc-7a5bcad4816e%2C01a0e754-fab2-73e2-8f13-8ffb14560311%2C01a0e754-fab0-7461-a35c-6f636d765682&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faab-7733-9355-2ef2f7b115db%2C01a0e754-faaf-7af2-84ec-fd7447d6dc41%2C01a0e754-faae-77c1-b5bc-7a5bcad4816e%2C01a0e754-fab2-73e2-8f13-8ffb14560311%2C01a0e754-fab0-7461-a35c-6f636d765682&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=EventData" alt="EventData latency on Bencher" width="100%" /></a>
-
-<a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faad-7e33-a4ee-443d47bf215c%2C01a0e754-faad-7e33-a4ee-43df829ca25f%2C01a0e754-fab0-7461-a35c-6f3345f3852c%2C01a0e754-faae-77c1-b5bc-7a262cc56e29&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faad-7e33-a4ee-443d47bf215c%2C01a0e754-faad-7e33-a4ee-43df829ca25f%2C01a0e754-fab0-7461-a35c-6f3345f3852c%2C01a0e754-faae-77c1-b5bc-7a262cc56e29&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=ClientSettings" alt="ClientSettings latency on Bencher" width="100%" /></a>
-
-<a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-fab2-73e2-8f13-8fcef1c0ed1d%2C01a0e754-faaf-7af2-84ec-fdac6fe74861%2C01a0e754-faad-7e33-a4ee-4405b51dc87b%2C01a0e754-fab1-7d52-b4d6-967d2b3726c5%2C01a0e754-fab1-7d52-b4d6-964933258a4e&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-fab2-73e2-8f13-8fcef1c0ed1d%2C01a0e754-faaf-7af2-84ec-fdac6fe74861%2C01a0e754-faad-7e33-a4ee-4405b51dc87b%2C01a0e754-fab1-7d52-b4d6-967d2b3726c5%2C01a0e754-fab1-7d52-b4d6-964933258a4e&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=Options+and+StreamIdentifier" alt="Options and StreamIdentifier latency on Bencher" width="100%" /></a>
 
 ## Requirements
 
