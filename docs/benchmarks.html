@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>swift-kurrentdb — Benchmarks</title>
+  <meta name="description" content="Offline benchmark results for swift-kurrentdb on macOS and Linux, with live history on Bencher.">
+  <meta property="og:title" content="swift-kurrentdb benchmarks">
+  <meta property="og:description" content="Offline benchmark results for swift-kurrentdb on macOS and Linux, with live history on Bencher.">
+  <meta property="og:url" content="https://gradyzhuo.github.io/swift-kurrentdb/benchmarks.html">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:fikpipzuggbnuqew3treexnn/bafkreiadjakshxna7sn2gtwxdibew7e66vp3xplpghr72sxpwptsq7gf3i@jpeg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="topbar" aria-label="Site">
+  <div class="container topbar-inner">
+    <a class="topbar-brand" href="index.html">swift-kurrentdb</a>
+    <div class="lang-switch" role="group" aria-label="Language · 語言">
+      <button type="button" data-lang-switch="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang-switch="zh" aria-pressed="false">中文</button>
+    </div>
+  </div>
+</nav>
+
+<nav class="toc" aria-label="On this page · 本頁目錄">
+  <p class="toc-title"><span lang="en">On this page</span><span lang="zh-Hant">本頁目錄</span></p>
+  <ol>
+    <li><a href="#history"><span lang="en">History</span><span lang="zh-Hant">歷史趨勢</span></a></li>
+    <li><a href="#environment"><span lang="en">Environment</span><span lang="zh-Hant">量測環境</span></a></li>
+    <li><a href="#results"><span lang="en">Results</span><span lang="zh-Hant">量測結果</span></a></li>
+    <li><a href="#method"><span lang="en">Method</span><span lang="zh-Hant">量測方法</span></a></li>
+  </ol>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container">
+    <h1><span lang="en">Benchmarks</span><span lang="zh-Hant">效能基準</span></h1>
+    <p class="tagline" lang="en">Client-side code paths that need no server, measured in release mode on macOS and Linux</p>
+    <p class="tagline" lang="zh-Hant">不需要伺服器的客戶端程式路徑，在 macOS 與 Linux 上以 release 模式量測</p>
+    <p class="subtagline" lang="en">Every push to <code>main</code> reruns the suite on Linux and records one data point per commit</p>
+    <p class="subtagline" lang="zh-Hant">每次 push 到 <code>main</code> 都會在 Linux 重跑一次，每個 commit 記錄一個資料點</p>
+    <div class="cta">
+      <a class="btn primary" href="https://bencher.dev/perf/gradyzhuo-s-project" target="_blank" rel="noopener"><span lang="en">Open on Bencher</span><span lang="zh-Hant">在 Bencher 開啟</span></a>
+      <a class="btn" href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/BENCHMARKS.md" target="_blank" rel="noopener">BENCHMARKS.md</a>
+      <a class="btn" href="index.html"><span lang="en">Back to overview</span><span lang="zh-Hant">回到首頁</span></a>
+    </div>
+  </div>
+</header>
+
+<section id="history" class="container">
+  <h2><span lang="en">History</span><span lang="zh-Hant">歷史趨勢</span></h2>
+  <p lang="en">Live charts from <a href="https://bencher.dev/perf/gradyzhuo-s-project" target="_blank" rel="noopener">Bencher</a>: p50 wall clock per iteration on the <code>main</code> branch, <code>ubuntu-latest</code> testbed, log scale. Click a chart to open the interactive view with allocation counts and per-commit details.</p>
+  <p lang="zh-Hant">來自 <a href="https://bencher.dev/perf/gradyzhuo-s-project" target="_blank" rel="noopener">Bencher</a> 的即時圖表：<code>main</code> 分支在 <code>ubuntu-latest</code> 上每次迭代的 p50 wall clock，對數軸。點擊圖表可開啟互動頁面，查看記憶體配置次數與每個 commit 的細節。</p>
+  <div class="bench-charts">
+    <a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faab-7733-9355-2ef2f7b115db%2C01a0e754-faaf-7af2-84ec-fd7447d6dc41%2C01a0e754-faae-77c1-b5bc-7a5bcad4816e%2C01a0e754-fab2-73e2-8f13-8ffb14560311%2C01a0e754-fab0-7461-a35c-6f636d765682&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4" target="_blank" rel="noopener"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faab-7733-9355-2ef2f7b115db%2C01a0e754-faaf-7af2-84ec-fd7447d6dc41%2C01a0e754-faae-77c1-b5bc-7a5bcad4816e%2C01a0e754-fab2-73e2-8f13-8ffb14560311%2C01a0e754-fab0-7461-a35c-6f636d765682&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=EventData" alt="EventData latency on Bencher" loading="lazy" /></a>
+    <a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faad-7e33-a4ee-443d47bf215c%2C01a0e754-faad-7e33-a4ee-43df829ca25f%2C01a0e754-fab0-7461-a35c-6f3345f3852c%2C01a0e754-faae-77c1-b5bc-7a262cc56e29&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4" target="_blank" rel="noopener"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-faad-7e33-a4ee-443d47bf215c%2C01a0e754-faad-7e33-a4ee-43df829ca25f%2C01a0e754-fab0-7461-a35c-6f3345f3852c%2C01a0e754-faae-77c1-b5bc-7a262cc56e29&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=ClientSettings" alt="ClientSettings latency on Bencher" loading="lazy" /></a>
+    <a href="https://bencher.dev/perf/gradyzhuo-s-project?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-fab2-73e2-8f13-8fcef1c0ed1d%2C01a0e754-faaf-7af2-84ec-fdac6fe74861%2C01a0e754-faad-7e33-a4ee-4405b51dc87b%2C01a0e754-fab1-7d52-b4d6-967d2b3726c5%2C01a0e754-fab1-7d52-b4d6-964933258a4e&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4" target="_blank" rel="noopener"><img src="https://api.bencher.dev/v0/projects/gradyzhuo-s-project/perf/img?branches=01a0eaad-85a6-7c13-9ec6-1e19cbda98c9&testbeds=01a0e754-faaa-7ef1-b98d-259f4d966fd0&benchmarks=01a0e754-fab2-73e2-8f13-8fcef1c0ed1d%2C01a0e754-faaf-7af2-84ec-fdac6fe74861%2C01a0e754-faad-7e33-a4ee-4405b51dc87b%2C01a0e754-fab1-7d52-b4d6-967d2b3726c5%2C01a0e754-fab1-7d52-b4d6-964933258a4e&measures=01a0e754-faac-75c2-a020-4d67be3bd7c4&title=Options+and+StreamIdentifier" alt="Options and StreamIdentifier latency on Bencher" loading="lazy" /></a>
+  </div>
+</section>
+
+<section id="environment" class="container">
+  <h2><span lang="en">Environment</span><span lang="zh-Hant">量測環境</span></h2>
+  <p lang="en">Both columns below were measured on the same commit with Swift 6.4 on 2026-09-28. Linux numbers come from a shared GitHub-hosted runner and vary between runs; treat differences under about 10% as noise.</p>
+  <p lang="zh-Hant">下表兩欄在同一個 commit、同樣 Swift 6.4 於 2026-09-28 量測。Linux 數字來自共用的 GitHub-hosted runner，每次會有浮動，10% 以內的差異視為雜訊。</p>
+  <div class="table-scroll">
+    <table class="results">
+      <thead>
+        <tr><th></th><th>macOS</th><th>Linux</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span lang="en">Machine</span><span lang="zh-Hant">機器</span></td><td>Apple M1 Max (arm64), 10 cores, 64 GB</td><td>GitHub <code>ubuntu-latest</code>, AMD EPYC 9V74 (x86_64), 4 vCPU, 16 GB</td></tr>
+        <tr><td><span lang="en">OS</span><span lang="zh-Hant">作業系統</span></td><td>macOS 27.0 (Darwin 27.0.0)</td><td>Ubuntu 24.04.5 LTS (6.17.0-azure)</td></tr>
+        <tr><td>Swift</td><td>6.4 (swiftlang-6.4.0.34.1)</td><td>6.4 (swift-6.4-RELEASE)</td></tr>
+        <tr><td><span lang="en">Build</span><span lang="zh-Hant">建置模式</span></td><td>Release</td><td>Release</td></tr>
+        <tr><td><span lang="en">Source</span><span lang="zh-Hant">來源</span></td><td><span lang="en">local run</span><span lang="zh-Hant">本機執行</span></td><td><a href="https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/benchmarks.yml" target="_blank" rel="noopener">Benchmarks workflow</a>, run 36375693340</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="results" class="container">
+  <h2><span lang="en">Results</span><span lang="zh-Hant">量測結果</span></h2>
+  <p lang="en"><strong>p50</strong> is the median wall clock per iteration; <strong>Malloc</strong> the heap allocations per iteration; <strong>Instructions</strong> the CPU instructions per iteration (macOS only: Linux needs <code>perf_event</code>, which GitHub runners do not expose). Lower is better everywhere. On Linux the benchmark runtime interposer adds a fixed floor of 16 allocations to every benchmark, so a zero-allocation benchmark reports 16 there.</p>
+  <p lang="zh-Hant"><strong>p50</strong> 是每次迭代 wall clock 的中位數；<strong>Malloc</strong> 是每次迭代的堆積配置次數；<strong>Instructions</strong> 是每次迭代的 CPU 指令數（僅 macOS：Linux 需要 <code>perf_event</code>，GitHub runner 不開放）。所有數字都是越低越好。Linux 上 benchmark runtime 的 interposer 會對每個 benchmark 固定多算 16 次配置，所以零配置的 benchmark 在 Linux 會顯示 16。</p>
+
+  <h3>EventData</h3>
+  <div class="table-scroll">
+    <table class="results">
+      <thead>
+        <tr><th>Benchmark</th><th>macOS p50</th><th>macOS Malloc</th><th>macOS Instructions</th><th>Linux p50</th><th>Linux Malloc</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>EventData/create-raw-data</code></td><td>1,125 ns</td><td>1</td><td>5,911</td><td>3,635 ns</td><td>17</td></tr>
+        <tr><td><code>EventData/create-codable-model</code></td><td>1,167 ns</td><td>2</td><td>6,891</td><td>3,817 ns</td><td>18</td></tr>
+        <tr><td><code>EventData/encode-codable-payload</code></td><td>3,459 ns</td><td>13</td><td>34 K</td><td>5,779 ns</td><td>29</td></tr>
+        <tr><td><code>EventData/create-batch-100-raw</code></td><td>73 µs</td><td>501</td><td>906 K</td><td>365 µs</td><td>517</td></tr>
+        <tr><td><code>EventData/create-batch-100-codable</code></td><td>51 µs</td><td>201</td><td>581 K</td><td>337 µs</td><td>217</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul lang="en">
+    <li>Creating a raw <code>EventData</code> from <code>Data</code> costs about 1.1 µs on macOS with 1 allocation (the internal <code>Data</code> copy).</li>
+    <li>A <code>Codable</code> model adds 1 allocation to box the model; encoding is deferred until <code>.data</code> is read, so construction cost is almost the same as the raw case.</li>
+    <li><code>encode-codable-payload</code> is the full <code>JSONEncoder().encode()</code> path and the hot path when serialising events to the wire.</li>
+    <li><code>EventData</code> construction is 3–5× slower on Linux. Allocation counts match, so this is the cost of swift-foundation's <code>Data</code> and <code>UUID</code> on that runner, not extra work in the SDK.</li>
+  </ul>
+  <ul lang="zh-Hant">
+    <li>從 <code>Data</code> 建立 <code>EventData</code> 在 macOS 約 1.1 µs、1 次配置（內部的 <code>Data</code> 複製）。</li>
+    <li>用 <code>Codable</code> model 多 1 次配置來裝箱 model；編碼延後到讀取 <code>.data</code> 時才發生，所以建構成本跟 raw 幾乎相同。</li>
+    <li><code>encode-codable-payload</code> 是完整的 <code>JSONEncoder().encode()</code> 路徑，也是事件送上線路時的熱路徑。</li>
+    <li><code>EventData</code> 建構在 Linux 慢 3–5 倍。配置次數一致，所以差在該 runner 上 swift-foundation 的 <code>Data</code> 與 <code>UUID</code>，不是 SDK 多做了事。</li>
+  </ul>
+
+  <h3>ClientSettings</h3>
+  <div class="table-scroll">
+    <table class="results">
+      <thead>
+        <tr><th>Benchmark</th><th>macOS p50</th><th>macOS Malloc</th><th>macOS Instructions</th><th>Linux p50</th><th>Linux Malloc</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>ClientSettings/localhost</code></td><td>875 ns</td><td>2</td><td>3,891</td><td>350 ns</td><td>18</td></tr>
+        <tr><td><code>ClientSettings/builder-chain</code></td><td>959 ns</td><td>2</td><td>5,399</td><td>601 ns</td><td>18</td></tr>
+        <tr><td><code>ClientSettings/parse-single-node</code></td><td>396 µs</td><td>1,242</td><td>3,445 K</td><td>242 µs</td><td>1,247</td></tr>
+        <tr><td><code>ClientSettings/parse-cluster-seeds</code></td><td>431 µs</td><td>1,313</td><td>3,717 K</td><td>268 µs</td><td>1,318</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul lang="en">
+    <li><code>ClientSettings.localhost()</code> and the builder chain are cheap: under 1 µs, 2 allocations. Safe to call at startup or in tests.</li>
+    <li>Connection string parsing is comparatively expensive (hundreds of µs, about 1,200 allocations) because of <code>RegexBuilder</code> and <code>URLComponents</code>. <strong>Parse once and reuse</strong>; never call <code>parse(connectionString:)</code> in a hot path.</li>
+  </ul>
+  <ul lang="zh-Hant">
+    <li><code>ClientSettings.localhost()</code> 與 builder 鏈很便宜：不到 1 µs、2 次配置，啟動時或測試裡隨意呼叫都沒問題。</li>
+    <li>連線字串解析相對昂貴（數百 µs、約 1,200 次配置），原因是 <code>RegexBuilder</code> 和 <code>URLComponents</code>。<strong>解析一次後重用</strong>，不要在熱路徑呼叫 <code>parse(connectionString:)</code>。</li>
+  </ul>
+
+  <h3><span lang="en">Options builders</span><span lang="zh-Hant">Options 建構</span></h3>
+  <div class="table-scroll">
+    <table class="results">
+      <thead>
+        <tr><th>Benchmark</th><th>macOS p50</th><th>macOS Malloc</th><th>macOS Instructions</th><th>Linux p50</th><th>Linux Malloc</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>Streams.Append.Options/default</code></td><td>584 ns</td><td>0</td><td>965</td><td>110 ns</td><td>16</td></tr>
+        <tr><td><code>Streams.Append.Options/with-revision</code></td><td>625 ns</td><td>0</td><td>908</td><td>110 ns</td><td>16</td></tr>
+        <tr><td><code>Streams.Read.Options/default</code></td><td>584 ns</td><td>0</td><td>942</td><td>110 ns</td><td>16</td></tr>
+        <tr><td><code>Streams.Read.Options/configure-chain</code></td><td>584 ns</td><td>0</td><td>852</td><td>110 ns</td><td>16</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul lang="en">
+    <li>All <code>Options</code> values are <strong>zero-allocation</strong>: the <code>inout</code> configuration closure mutates a stack-allocated value type.</li>
+    <li>The macOS wall-clock figures sit at the timer's resolution (about 42 ns per tick), so differences between rows are not significant; instruction counts are the better signal.</li>
+  </ul>
+  <ul lang="zh-Hant">
+    <li>所有 <code>Options</code> 都是<strong>零配置</strong>：<code>inout</code> 設定閉包直接修改堆疊上的 value type。</li>
+    <li>macOS 的 wall clock 數字已在計時器解析度邊緣（每格約 42 ns），列與列之間的差異沒有意義，看指令數比較準。</li>
+  </ul>
+
+  <h3>StreamIdentifier</h3>
+  <div class="table-scroll">
+    <table class="results">
+      <thead>
+        <tr><th>Benchmark</th><th>macOS p50</th><th>macOS Malloc</th><th>macOS Instructions</th><th>Linux p50</th><th>Linux Malloc</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>StreamIdentifier/create</code></td><td>625 ns</td><td>0</td><td>948</td><td>110 ns</td><td>16</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p lang="en"><code>StreamIdentifier</code> creation is zero-allocation: the name string is stored by value.</p>
+  <p lang="zh-Hant"><code>StreamIdentifier</code> 的建立是零配置：名稱字串以值的方式儲存。</p>
+</section>
+
+<section id="method" class="container">
+  <h2><span lang="en">Method</span><span lang="zh-Hant">量測方法</span></h2>
+  <p lang="en">The suite is <code>Benchmarks/OfflineBenchmarks</code>, built with <a href="https://github.com/ordo-one/benchmark" target="_blank" rel="noopener">ordo-one/benchmark</a> in release mode. The <a href="https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/benchmarks.yml" target="_blank" rel="noopener">Benchmarks workflow</a> runs it on <code>ubuntu-latest</code> on every push to <code>main</code>, publishes the markdown report to the job summary, and uploads two measures per benchmark to Bencher: <code>latency</code> (p50 wall clock in ns, bounds p0/p90) and <code>allocations</code> (p50 malloc count). A t-test threshold on latency (upper boundary 0.99 over the last 64 runs) fails the run when a push to <code>main</code> lands outside the band of recent history.</p>
+  <p lang="zh-Hant">套件是 <code>Benchmarks/OfflineBenchmarks</code>，用 <a href="https://github.com/ordo-one/benchmark" target="_blank" rel="noopener">ordo-one/benchmark</a> 以 release 模式建置。<a href="https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/benchmarks.yml" target="_blank" rel="noopener">Benchmarks workflow</a> 每次 push 到 <code>main</code> 就在 <code>ubuntu-latest</code> 執行，把 markdown 報表寫進 job summary，並對每個 benchmark 上傳兩個 measure 到 Bencher：<code>latency</code>（p50 wall clock，單位 ns，區間 p0/p90）與 <code>allocations</code>（p50 配置次數）。latency 上的 t-test 門檻（最近 64 次、上界 0.99）會在 push 到 <code>main</code> 的結果落在歷史區間外時讓該次執行失敗。</p>
+  <p lang="en">How to run the suite locally on macOS or Linux, filter benchmarks and compare baselines: <a href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/BENCHMARKS.md" target="_blank" rel="noopener">BENCHMARKS.md</a>.</p>
+  <p lang="zh-Hant">在 macOS 或 Linux 本機執行、篩選 benchmark 與比較 baseline 的步驟見 <a href="https://github.com/gradyzhuo/swift-kurrentdb/blob/main/BENCHMARKS.md" target="_blank" rel="noopener">BENCHMARKS.md</a>。</p>
+</section>
+
+<footer class="container">
+  <div class="footer-links">
+    <a href="index.html"><span lang="en">Overview</span><span lang="zh-Hant">首頁</span></a>
+    <a href="https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb" target="_blank" rel="noopener"><span lang="en">Documentation</span><span lang="zh-Hant">文件</span></a>
+    <a href="https://github.com/gradyzhuo/swift-kurrentdb" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://bencher.dev/perf/gradyzhuo-s-project" target="_blank" rel="noopener">Bencher</a>
+  </div>
+  <p class="footer-meta"><span lang="en">MIT License · Made by</span><span lang="zh-Hant">MIT 授權 · 作者</span> <a href="https://github.com/gradyzhuo" target="_blank" rel="noopener">Grady Zhuo</a></p>
+</footer>
+
+<script src="site.js"></script>
+</body>
+</html>
