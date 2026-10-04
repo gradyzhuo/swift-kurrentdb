@@ -3,7 +3,25 @@
 //  KurrentStreams
 //
 
-extension Streams {
+extension Streams where Target: SpecifiedStreamTarget {
+    /// Returns an interface whose reads deliver events to a closure with backpressure.
+    ///
+    /// ```swift
+    /// let total = try await client.streams(specified: "orders")
+    ///     .delivery(.scoped)
+    ///     .read { events in
+    ///         try await events.reduce(0) { count, _ in count + 1 }
+    ///     }
+    /// ```
+    ///
+    /// - Parameter delivery: `.scoped`.
+    /// - Returns: A ``ScopedStreams`` bound to the same target, credentials and call options.
+    public func delivery(_ delivery: ScopedDelivery) -> ScopedStreams<Target> {
+        ScopedStreams(base: self)
+    }
+}
+
+extension Streams where Target == AllStreamsTarget {
     /// Returns an interface whose reads deliver events to a closure with backpressure.
     ///
     /// ```swift
@@ -58,12 +76,13 @@ extension ScopedStreams where Target: SpecifiedStreamTarget {
     /// a response message), surface while `body` iterates, as with `read()`. Errors thrown by
     /// `body` itself are rethrown unchanged.
     ///
-    /// If the caller's task is cancelled while waiting for the server to accept the call,
-    /// `read` throws `KurrentError.connectionClosed`; if it is cancelled after `body` started,
-    /// the `events` stream simply ends.
+    /// If the caller's task is cancelled, `read` throws `CancellationError` (whether while
+    /// waiting for the server to accept the call or after `body` started); `body` sees the
+    /// stream end and its result is discarded.
     ///
-    /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
-    /// backpressure meanwhile.
+    /// A `body` that stops iterating keeps the RPC open until it returns; meanwhile buffered
+    /// memory is bounded by the hand-off capacity plus one HTTP/2 stream flow-control window,
+    /// after which the server stops sending.
     ///
     /// - Parameters:
     ///   - configure: Configures ``Streams/Read/Options`` (direction, limit, starting revision).
@@ -108,12 +127,13 @@ extension ScopedStreams where Target == AllStreamsTarget {
     /// a response message), surface while `body` iterates, as with `read()`. Errors thrown by
     /// `body` itself are rethrown unchanged.
     ///
-    /// If the caller's task is cancelled while waiting for the server to accept the call,
-    /// `read` throws `KurrentError.connectionClosed`; if it is cancelled after `body` started,
-    /// the `events` stream simply ends.
+    /// If the caller's task is cancelled, `read` throws `CancellationError` (whether while
+    /// waiting for the server to accept the call or after `body` started); `body` sees the
+    /// stream end and its result is discarded.
     ///
-    /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
-    /// backpressure meanwhile.
+    /// A `body` that stops iterating keeps the RPC open until it returns; meanwhile buffered
+    /// memory is bounded by the hand-off capacity plus one HTTP/2 stream flow-control window,
+    /// after which the server stops sending.
     ///
     /// - Parameters:
     ///   - configure: Configures ``Streams/ReadAll/Options`` (position, direction, filter, limit).

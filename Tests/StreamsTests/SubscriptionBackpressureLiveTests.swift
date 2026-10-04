@@ -77,11 +77,16 @@ struct SubscriptionBackpressureLiveTests: Sendable {
     func allStreamsSlowConsumer() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
+        // Make sure $all holds far more events than the bound below, whatever the cluster state.
+        let filler = client.streams(specified: "Backpressure-\(UUID().uuidString)")
+        _ = try await filler.append(events: (0 ..< 300).map { _ in event() }) { $0.expectedRevision = .any }
         let subscription = try await client.allStreams.subscribe { $0.position = .start }
         var iterator = subscription.events.makeAsyncIterator()
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
         #expect(subscription.messages.sentCount - subscription.messages.deliveredCount <= subscription.messages.capacity)
+        // Hundreds of events exist from .start; an unbounded buffer would have taken them all.
+        #expect(subscription.messages.sentCount < 100)
         subscription.cancel()
     }
 }

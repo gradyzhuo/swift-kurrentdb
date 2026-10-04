@@ -190,8 +190,10 @@ A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without s
 
 `read()` returns once the whole result has arrived: memory grows with the result, and the RPC
 is already over when you iterate. For large reads, use scoped delivery. Events reach your
-closure as they arrive, the server is paused while you are busy, and when the closure returns
-or throws the RPC has ended and its connection is released.
+closure as they arrive, buffered memory is bounded by the hand-off capacity plus one HTTP/2
+stream flow-control window (after which the server stops sending), and when the closure returns
+or throws the RPC has ended and its connection is released. If your task is cancelled, `read`
+throws `CancellationError` and the closure's result is discarded.
 
 ```swift
 let total = try await client.streams(specified: "orders")
