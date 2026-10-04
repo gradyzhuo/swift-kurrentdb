@@ -76,9 +76,9 @@ extension ScopedStreams where Target: SpecifiedStreamTarget {
     /// a response message), surface while `body` iterates, as with `read()`. Errors thrown by
     /// `body` itself are rethrown unchanged.
     ///
-    /// If the caller's task is cancelled, `read` throws `CancellationError` (whether while
-    /// waiting for the server to accept the call or after `body` started); `body` sees the
-    /// stream end and its result is discarded.
+    /// If the caller's task is cancelled, `read` throws `CancellationError` at whatever stage
+    /// the cancellation lands (node selection, waiting for the server to accept the call, or
+    /// after `body` started); `body` sees the stream end and its result is discarded.
     ///
     /// A `body` that stops iterating keeps the RPC open until it returns; meanwhile buffered
     /// memory is bounded by the hand-off capacity plus one HTTP/2 stream flow-control window,
@@ -127,9 +127,9 @@ extension ScopedStreams where Target == AllStreamsTarget {
     /// a response message), surface while `body` iterates, as with `read()`. Errors thrown by
     /// `body` itself are rethrown unchanged.
     ///
-    /// If the caller's task is cancelled, `read` throws `CancellationError` (whether while
-    /// waiting for the server to accept the call or after `body` started); `body` sees the
-    /// stream end and its result is discarded.
+    /// If the caller's task is cancelled, `read` throws `CancellationError` at whatever stage
+    /// the cancellation lands (node selection, waiting for the server to accept the call, or
+    /// after `body` started); `body` sees the stream end and its result is discarded.
     ///
     /// A `body` that stops iterating keeps the RPC open until it returns; meanwhile buffered
     /// memory is bounded by the hand-off capacity plus one HTTP/2 stream flow-control window,

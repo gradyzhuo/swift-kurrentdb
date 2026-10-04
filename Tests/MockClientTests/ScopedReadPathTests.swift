@@ -161,4 +161,48 @@ struct ScopedReadPathTests {
         #expect(bodyCalls.value == 0)
         #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
     }
+
+    /// A selector with no cached node: the first call goes through node discovery.
+    private func makeUncachedSelector() -> NodeSelector {
+        var policy = OperationRetryPolicy.default
+        policy.maxAttempts = 1
+        let settings = ClientSettings(clusterMode: .standalone(endpoint: Self.refused)).operationRetryPolicy(policy)
+        return NodeSelector(settings: settings)
+    }
+
+    @Test("A caller that is already cancelled gets CancellationError even before node discovery")
+    func preCancelledBeforeDiscovery() async throws {
+        let usecase = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
+        let selector = makeUncachedSelector()
+        defer { selector.connections.shutdown() }
+        let bodyCalls = CallCounter()
+
+        let reader = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await usecase.performScoped(selector: selector, callOptions: .defaults) { _ in
+                bodyCalls.hit()
+            }
+        }
+        await #expect(throws: CancellationError.self) { try await reader.value }
+        #expect(bodyCalls.value == 0)
+    }
+
+    @Test("Cancelling the caller during node discovery surfaces CancellationError")
+    func cancelDuringDiscovery() async throws {
+        let usecase = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
+        let selector = makeUncachedSelector()
+        defer { selector.connections.shutdown() }
+        let bodyCalls = CallCounter()
+
+        let reader = Task {
+            try await usecase.performScoped(selector: selector, callOptions: .defaults) { _ in
+                bodyCalls.hit()
+            }
+        }
+        // Discovery against the refused port retries for ~1s (10 attempts, 100ms apart).
+        try await Task.sleep(for: .milliseconds(200))
+        reader.cancel()
+        await #expect(throws: CancellationError.self) { try await reader.value }
+        #expect(bodyCalls.value == 0)
+    }
 }
