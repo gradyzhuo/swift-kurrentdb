@@ -198,12 +198,19 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     package func makeStream<T: Sendable>(_ transform: @escaping @Sendable (Element) throws -> T?) -> AsyncThrowingStream<T, any Error> {
         let sentinel = CancelOnDeinit(self)
         return AsyncThrowingStream(unfolding: {
-            while let element = try await sentinel.handoff.next() {
-                if let value = try transform(element) {
-                    return value
+            // `unfolding` keeps its closure after the closure throws, so the sentinel would
+            // never deinit: end the hand-off explicitly on any error.
+            do {
+                while let element = try await sentinel.handoff.next() {
+                    if let value = try transform(element) {
+                        return value
+                    }
                 }
+                return nil
+            } catch {
+                sentinel.handoff.cancel()
+                throw error
             }
-            return nil
         })
     }
 

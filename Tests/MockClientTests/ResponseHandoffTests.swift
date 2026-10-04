@@ -24,6 +24,14 @@ struct ResponseHandoffTests {
         for _ in 0 ..< 200 { await Task.yield() }
     }
 
+    /// Polls until `condition` holds (up to 2s) so positive waits do not depend on a fixed yield count.
+    private func waitUntil(_ condition: () -> Bool) async {
+        let deadline = ContinuousClock.now + .seconds(2)
+        while !condition(), ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+    }
+
     @Test("Delivers in order and ends with nil after finish")
     func deliversInOrder() async throws {
         let handoff = ResponseHandoff<Int>(capacity: 2)
@@ -56,10 +64,12 @@ struct ResponseHandoffTests {
             for i in 1 ... 10 { try await handoff.send(i) }
             handoff.finish()
         }
+        await waitUntil { handoff.sentCount == 1 }
         await settle()
         #expect(handoff.sentCount == 1)
 
         #expect(try await handoff.next() == 1)
+        await waitUntil { handoff.sentCount == 2 }
         await settle()
         #expect(handoff.sentCount == 2)
         #expect(handoff.sentCount - handoff.deliveredCount <= 1)
@@ -189,5 +199,18 @@ struct ResponseHandoffTests {
         handoff.finish(throwing: Boom())
         await #expect(throws: Boom.self) { _ = try await consumer.value }
         #expect(try await handoff.next() == nil)
+    }
+
+    @Test("A throwing stream transform ends the hand-off")
+    func throwingTransformEndsHandoff() async throws {
+        let probe = TerminationProbe()
+        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
+        try await handoff.send(1)
+        let stream = handoff.makeStream { _ -> Int? in throw Boom() }
+        var iterator = stream.makeAsyncIterator()
+        await #expect(throws: Boom.self) { _ = try await iterator.next() }
+        #expect(probe.count == 1)
+        await #expect(throws: CancellationError.self) { try await handoff.send(2) }
+        #expect(try await iterator.next() == nil)
     }
 }
