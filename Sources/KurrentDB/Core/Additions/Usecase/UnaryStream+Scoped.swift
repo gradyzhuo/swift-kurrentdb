@@ -87,6 +87,12 @@ package final class ScopedCall<Response: Sendable>: Sendable {
 
 /// Scoped delivery: the RPC lives exactly as long as the caller's `body`.
 extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
+    /// Runs the call for the duration of `body`.
+    ///
+    /// A call the server rejects before accepting it (status-only response such as
+    /// unauthenticated or access denied), or that fails to connect, is thrown here as
+    /// `KurrentError` before `body` runs and is retried per the retry policy. Errors after the
+    /// call was accepted, including stream-not-found, surface while `body` iterates, as with `read()`.
     package func performScoped<R>(
         selector: NodeSelector,
         callOptions: CallOptions,
@@ -168,6 +174,9 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
             }
         } catch {
             await call.close()
+            // A cancelled caller is not an internal failure; map it the way withRetry's backoff
+            // does. connectionClosed is not a node failure, so it is never retried.
+            if Task.isCancelled { throw .connectionClosed }
             throw error
         }
         return call

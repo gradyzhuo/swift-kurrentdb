@@ -139,7 +139,7 @@ perform(scoped:)
 
 ## 5. 錯誤與邊界
 
-- RPC 錯誤（unauthenticated、stream deleted、deadline…）在 `body` 迭代 stream 時拋出，與現行 `read()` 一致。
+- 伺服器在接受呼叫前就拒絕（只回 status，例如 unauthenticated / access denied / unavailable），或連線失敗：由 `read(...)` 在 `body` 執行前以 `KurrentError` 拋出，並依 retry policy 重試。呼叫被接受之後的錯誤（包含以 response message 形式到達的 stream-not-found）在 `body` 迭代 stream 時浮現，與現行 `read()` 一致。
 - Setup 錯誤（unsupported feature、metadata、租約失敗）由 `read(...)` 直接拋出，`body` 不會被呼叫。
 - `body` 內卡住不迭代：背壓讓伺服器停送，但 RPC 仍持有到 body 返回。這是呼叫端程式的責任；S08 修好 `defaultDeadline` 後可由 deadline 收掉。spec 在 API 文件註明。
 - 消費端提早 `break`：body 繼續執行到返回為止，返回時 child 被取消。
