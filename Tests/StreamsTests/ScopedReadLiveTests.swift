@@ -53,26 +53,61 @@ struct ScopedReadLiveTests: Sendable {
         let lease = try node.connections.acquire(node.endpoint)
         defer { lease.release() }
 
+        // RPC A is a live subscription from the start of the stream: the server can never finish it,
+        // so it stays in flight until cancelled.
+        var options = Streams<SpecifiedStream>.Subscribe.Options()
+        options.revision = .start
         let request = ClientRequest(
-            message: try Streams<SpecifiedStream>.Read(from: .init(name: name), options: .init()).requestMessage(),
+            message: try Streams<SpecifiedStream>.Subscribe(from: .init(name: name), options: options).requestMessage(),
             metadata: try Metadata(from: node.settings)
         )
 
-        // RPC A: read one message, then park until cancelled.
+        // A signals once its first event arrived, then keeps draining until cancelled.
+        let (firstEvent, firstEventSignal) = AsyncStream<Void>.makeStream()
         let parked = Task {
             let service = Streams<SpecifiedStream>.UnderlyingClient(wrapping: lease.client)
             try await service.read(request: request) { response in
-                var iterator = response.messages.makeAsyncIterator()
-                _ = try await iterator.next()
-                try await Task.sleep(for: .seconds(60))
+                var signalled = false
+                for try await message in response.messages {
+                    if !signalled, case .event = message.content {
+                        signalled = true
+                        firstEventSignal.yield()
+                        firstEventSignal.finish()
+                    }
+                }
             }
         }
 
-        // RPC B runs on the same shared connection while A is parked, and again after A is cancelled.
+        // Wait (bounded) until A is provably in flight and has received data.
+        let arrived = await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                for await _ in firstEvent { return true }
+                return false
+            }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(10))
+                return false
+            }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
+        }
+        try #require(arrived, "RPC A never received its first event")
+
+        // RPC B runs on the same shared connection while A is in flight, and again after A is cancelled.
         let before = try await stream.read().reduce(0) { count, _ in count + 1 }
         parked.cancel()
-        _ = await parked.result
+        let outcome = await parked.result
         let after = try await stream.read().reduce(0) { count, _ in count + 1 }
+
+        // A must have ended by cancellation, not by completing or an unrelated failure.
+        switch outcome {
+        case .success:
+            Issue.record("RPC A finished normally; expected it to be cancelled")
+        case let .failure(error):
+            let cancelled = error is CancellationError || (error as? RPCError)?.code == .cancelled
+            #expect(cancelled, "unexpected error for cancelled RPC A: \(error)")
+        }
 
         #expect(before == 200)
         #expect(after == 200)
