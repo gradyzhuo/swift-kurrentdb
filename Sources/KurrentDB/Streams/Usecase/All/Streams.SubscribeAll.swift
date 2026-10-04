@@ -43,14 +43,7 @@ extension Streams where Target == AllStreamsTarget {
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
-            let responses = AsyncThrowingStream.makeStream(of: UnderlyingResponse.self)
-            responses.continuation.onTermination = { termination in
-                if case let .finished(error) = termination {
-                    completion(error)
-                } else {
-                    completion(nil)
-                }
-            }
+            let messages = ResponseHandoff<UnderlyingResponse>(onTermination: completion)
 
             Task {
                 do {
@@ -58,15 +51,15 @@ extension Streams where Target == AllStreamsTarget {
                     try await client.read(request: request, options: callOptions) {
                         // An infinite loop must be executed inside the `onResponse` closure; if you leave the onResponse closure, the connection will end.
                         for try await message in $0.messages.cancelOnGracefulShutdown() {
-                            responses.continuation.yield(message)
+                            try await messages.send(message)
                         }
-                        responses.continuation.finish()
+                        messages.finish()
                     }
                 } catch {
-                    responses.continuation.finish(throwing: error)
+                    messages.finish(throwing: error)
                 }
             }
-            return try await .init(messages: responses)
+            return try await .init(messages: messages)
         }
     }
 }
@@ -210,41 +203,33 @@ extension Streams.SubscribeAll where Target == AllStreamsTarget {
 }
 
 extension Streams.Subscription where Target == AllStreamsTarget {
-    package init(messages: (stream: AsyncThrowingStream<Streams.SubscribeAll.UnderlyingResponse, any Error>, continuation: AsyncThrowingStream<Streams.SubscribeAll.UnderlyingResponse, any Error>.Continuation)) async throws {
-        var iterator = messages.stream.makeAsyncIterator()
-
-        guard case let .confirmation(confirmation) = try await iterator.next()?.content else {
+    package init(messages: ResponseHandoff<Streams.SubscribeAll.UnderlyingResponse>) async throws {
+        let first: Streams.SubscribeAll.UnderlyingResponse?
+        do {
+            first = try await messages.next()
+        } catch {
+            messages.cancel()
+            throw error
+        }
+        guard case let .confirmation(confirmation) = first?.content else {
+            messages.cancel()
             throw KurrentError.subscriptionTerminated(subscriptionId: nil)
         }
 
-        let (events, continuation) = AsyncThrowingStream.makeStream(of: ReadEvent.self)
-        continuation.onTermination = { termination in
-            if case let .finished(error) = termination {
-                messages.continuation.finish(throwing: error)
-            } else {
-                messages.continuation.finish()
+        let events = messages.makeStream { message -> ReadEvent? in
+            switch message.content {
+            case let .event(value):
+                return try ReadEvent(message: value)
+            case .caughtUp:
+                logger.debug("[Streams.SubscribeAll] Subscription caught up with the $all stream.")
+                return nil
+            case let content?:
+                logger.debug("[Streams.SubscribeAll] Received non-event subscription message: \(content)")
+                return nil
+            case nil:
+                return nil
             }
         }
-
-        let innerTask = Task {
-            do {
-                while let message = try await iterator.next() {
-                    switch message.content {
-                    case let .event(value):
-                        try continuation.yield(.init(message: value))
-                    case .caughtUp:
-                        logger.debug("[Streams.SubscribeAll] Subscription caught up with the $all stream.")
-                    case let content?:
-                        logger.debug("[Streams.SubscribeAll] Received non-event subscription message: \(content)")
-                    case nil:
-                        break
-                    }
-                }
-                continuation.finish()
-            } catch {
-                continuation.finish(throwing: error)
-            }
-        }
-        self.init(events: events, continuation: continuation, subscriptionId: confirmation.subscriptionID, task: innerTask)
+        self.init(events: events, subscriptionId: confirmation.subscriptionID, messages: messages)
     }
 }
