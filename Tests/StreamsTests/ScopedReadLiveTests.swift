@@ -8,6 +8,7 @@
 import Foundation
 import GRPCCore
 @testable import KurrentDB
+import Synchronization
 import Testing
 
 @Suite("Scoped read (live)", .serialized, .timeLimit(.minutes(3)))
@@ -149,7 +150,11 @@ struct ScopedReadLiveTests: Sendable {
         try await appendEvents(count: 300, to: stream)
 
         let first = try await stream.delivery(.scoped).read { events -> UUID? in
-            for try await response in events { return try response.event.record.id }
+            for try await response in events {
+                // Positive control: the lease is held while body runs, so the later 0 is meaningful.
+                #expect(try await sharedRetainCount(client) == 1)
+                return try response.event.record.id
+            }
             return nil
         }
         #expect(first != nil)
@@ -189,16 +194,31 @@ struct ScopedReadLiveTests: Sendable {
         let stream = client.streams(specified: "ScopedRead-\(UUID().uuidString)")
         try await appendEvents(count: 300, to: stream)
 
+        // The body signals after its first element, so the cancellation provably lands after
+        // the server accepted the call. Waiting between elements never throws, so the only way
+        // the loop can end early is the SDK ending the events stream.
+        let (firstElement, firstElementSignal) = AsyncStream<Void>.makeStream()
         let reader = Task {
-            try await stream.delivery(.scoped).read { events in
+            try await stream.delivery(.scoped).read { events -> Int in
+                var count = 0
                 for try await _ in events {
-                    try await Task.sleep(for: .milliseconds(50))
+                    count += 1
+                    if count == 1 { firstElementSignal.yield() }
+                    try? await Task.sleep(for: .milliseconds(50))
                 }
+                return count
             }
         }
-        try await Task.sleep(for: .milliseconds(200))
+        for await _ in firstElement { break }
         reader.cancel()
-        _ = await reader.result
+        let outcome = await reader.result
+        switch outcome {
+        case let .success(count):
+            #expect(count >= 1)
+            #expect(count < 300, "the events stream drained instead of ending on cancellation")
+        case let .failure(error):
+            Issue.record("expected the events stream to end, but read threw: \(error)")
+        }
         #expect(try await sharedRetainCount(client) == 0)
     }
 
@@ -241,6 +261,33 @@ struct ScopedReadLiveTests: Sendable {
             try await events.reduce(0) { total, _ in total + 1 }
         }
         #expect(count == 5)
+        #expect(try await sharedRetainCount(client) == 0)
+    }
+
+    @Test("Wrong credentials set after or before delivery are rejected before body runs")
+    func authenticatedChaining() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "ScopedRead-\(UUID().uuidString)")
+        try await appendEvents(count: 5, to: stream)
+        let wrong = Authentication.credentials(username: "admin", password: "wrong-password")
+
+        for (label, scoped) in [
+            ("delivery then authenticated", stream.delivery(.scoped).authenticated(wrong)),
+            ("authenticated then delivery", stream.authenticated(wrong).delivery(.scoped)),
+        ] {
+            let bodyEntered = Mutex(false)
+            do {
+                try await scoped.read { events in
+                    bodyEntered.withLock { $0 = true }
+                    for try await _ in events {}
+                }
+                Issue.record("\(label): read unexpectedly succeeded")
+            } catch {
+                #expect(error is KurrentError, "\(label): unexpected error \(error)")
+            }
+            #expect(bodyEntered.withLock { $0 } == false, "\(label): body ran")
+        }
         #expect(try await sharedRetainCount(client) == 0)
     }
 }

@@ -14,7 +14,7 @@ extension Streams {
     ///     }
     /// ```
     ///
-    /// - Parameter delivery: ``ScopedDelivery/scoped``.
+    /// - Parameter delivery: `.scoped`.
     /// - Returns: A ``ScopedStreams`` bound to the same target, credentials and call options.
     public func delivery(_ delivery: ScopedDelivery) -> ScopedStreams<Target> {
         ScopedStreams(base: self)
@@ -27,6 +27,11 @@ extension Streams {
 /// Only `read` is scoped; use the `Streams` instance for every other operation.
 public struct ScopedStreams<Target: StreamsTarget>: Sendable {
     let base: Streams<Target>
+
+    /// Returns a copy that sends `credentials` with its reads instead of the client's default.
+    public func authenticated(_ credentials: Authentication) -> ScopedStreams<Target> {
+        ScopedStreams(base: base.authenticated(credentials))
+    }
 }
 
 extension ScopedStreams where Target: SpecifiedStreamTarget {
@@ -57,6 +62,9 @@ extension ScopedStreams where Target: SpecifiedStreamTarget {
     /// `read` throws `KurrentError.connectionClosed`; if it is cancelled after `body` started,
     /// the `events` stream simply ends.
     ///
+    /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
+    /// backpressure meanwhile.
+    ///
     /// - Parameters:
     ///   - configure: Configures ``Streams/Read/Options`` (direction, limit, starting revision).
     ///   - body: Consumes the events. Its return value is returned by `read`.
@@ -72,6 +80,7 @@ extension ScopedStreams where Target: SpecifiedStreamTarget {
             selector: base.selector,
             callOptions: base.callOptions,
             credentials: base.overrideCredentials,
+            isolation: isolation,
             body: body
         )
     }
@@ -103,6 +112,12 @@ extension ScopedStreams where Target == AllStreamsTarget {
     /// `read` throws `KurrentError.connectionClosed`; if it is cancelled after `body` started,
     /// the `events` stream simply ends.
     ///
+    /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
+    /// backpressure meanwhile.
+    ///
+    /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
+    /// backpressure meanwhile.
+    ///
     /// - Parameters:
     ///   - configure: Configures ``Streams/ReadAll/Options`` (position, direction, filter, limit).
     ///   - body: Consumes the events. Its return value is returned by `read`.
@@ -118,6 +133,7 @@ extension ScopedStreams where Target == AllStreamsTarget {
             selector: base.selector,
             callOptions: base.callOptions,
             credentials: base.overrideCredentials,
+            isolation: isolation,
             body: body
         )
     }
