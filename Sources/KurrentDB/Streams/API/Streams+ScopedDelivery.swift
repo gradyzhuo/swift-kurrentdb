@@ -90,7 +90,7 @@ extension ScopedStreams where Target: SpecifiedStreamTarget {
     public func read<R>(
         configure: @Sendable (inout Streams<Target>.Read.Options) -> Void = { _ in },
         isolation: isolated (any Actor)? = #isolation,
-        body: (AsyncThrowingStream<Streams<Target>.Read.Response, any Error>) async throws -> R
+        body: (AsyncThrowingStream<Streams<Target>.Read.Response, any Error>) async throws -> sending R
     ) async throws -> R {
         var options = Streams<Target>.Read.Options()
         configure(&options)
@@ -141,7 +141,7 @@ extension ScopedStreams where Target == AllStreamsTarget {
     public func read<R>(
         configure: @Sendable (inout Streams<AllStreamsTarget>.ReadAll.Options) -> Void = { _ in },
         isolation: isolated (any Actor)? = #isolation,
-        body: (AsyncThrowingStream<Streams<AllStreamsTarget>.ReadAll.Response, any Error>) async throws -> R
+        body: (AsyncThrowingStream<Streams<AllStreamsTarget>.ReadAll.Response, any Error>) async throws -> sending R
     ) async throws -> R {
         var options = Streams<AllStreamsTarget>.ReadAll.Options()
         configure(&options)

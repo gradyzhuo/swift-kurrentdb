@@ -91,7 +91,7 @@ extension ScopedStreams where Target == AllStreamsTarget {
 ```
 
 - `ScopedStreams` 只提供 `read`。append／delete／subscribe 等不受 delivery 影響，不在此型別上（避免為一個軸複製整個 surface）。呼叫端要做其他操作就用原本的 `Streams`。
-- `body` 非 `@Sendable`、在呼叫端 isolation 執行，`R` 不要求 `Sendable`。
+- `body` 非 `@Sendable`、在呼叫端 isolation 執行，`R` 不要求 `Sendable`。`body` 的回傳型別標為 `sending R`：Swift 6.0／6.1 無法推斷 `body` 與 `isolated` 參數同一 isolation，會把非 Sendable 的 `R` 視為跨越 actor 邊界而拒絕編譯；`sending` 讓所有支援的編譯器版本都接受，代價是 `body` 回傳的值必須是獨立 region（不能是呼叫端 actor 仍持有的參考）。
 - 錯誤型別用**無型別 `throws`**（偏離 SDK 慣用的 `throws(KurrentError)`）：`body` 是使用者程式碼，它拋出的錯誤原樣傳出，不包成 `KurrentError`。SDK 自身的 setup 錯誤仍是 `KurrentError`。
 - 傳進 `body` 的 stream 若被逃逸到 closure 外，closure 結束後它只會讀到結束（handoff 已 finish），不會持有 RPC。
 

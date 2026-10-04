@@ -102,7 +102,7 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
         callOptions: CallOptions,
         credentials: Authentication? = nil,
         isolation: isolated (any Actor)? = #isolation,
-        body: (AsyncThrowingStream<Response, any Error>) async throws -> R
+        body: (AsyncThrowingStream<Response, any Error>) async throws -> sending R
     ) async throws -> R {
         // Retry covers only establishing the call: once body has seen events, a retry would
         // hand them to it a second time.
