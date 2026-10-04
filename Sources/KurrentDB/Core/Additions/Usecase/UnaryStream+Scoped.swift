@@ -93,6 +93,10 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
     /// unauthenticated or access denied), or that fails to connect, is thrown here as
     /// `KurrentError` before `body` runs and is retried per the retry policy. Errors after the
     /// call was accepted, including stream-not-found, surface while `body` iterates, as with `read()`.
+    ///
+    /// If the caller's task is cancelled, this throws `CancellationError` (whether while waiting
+    /// for the server to accept the call or after `body` started); `body` sees the stream end and
+    /// its result is discarded, so a truncated result is never returned as success.
     package func performScoped<R>(
         selector: NodeSelector,
         callOptions: CallOptions,
@@ -102,12 +106,19 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
     ) async throws -> R {
         // Retry covers only establishing the call: once body has seen events, a retry would
         // hand them to it a second time.
-        let call = try await withRetry(
-            policy: selector.retryPolicy,
-            selectNode: { try await selector.select() },
-            invalidate: { await selector.invalidate() }
-        ) { node in
-            try await open(node: node, callOptions: callOptions, credentials: credentials)
+        let call: ScopedCall<Response>
+        do {
+            call = try await withRetry(
+                policy: selector.retryPolicy,
+                selectNode: { try await selector.select() },
+                invalidate: { await selector.invalidate() }
+            ) { node in
+                try await open(node: node, callOptions: callOptions, credentials: credentials)
+            }
+        } catch {
+            // open maps a cancelled caller to connectionClosed; surface it as cancellation.
+            if case .connectionClosed = error, Task.isCancelled { throw CancellationError() }
+            throw error
         }
 
         let result: R
@@ -118,6 +129,7 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
             throw error
         }
         await call.close()
+        try Task.checkCancellation()
         return result
     }
 

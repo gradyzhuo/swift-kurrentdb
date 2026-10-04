@@ -2,7 +2,8 @@
 //  ScopedReadPathTests.swift
 //  swift-kurrentdb
 //
-//  No server needed: everything points at 127.0.0.1:1 (ECONNREFUSED). Verifies that the scoped
+//  No server needed: most tests point at 127.0.0.1:1 (ECONNREFUSED), and the acceptance-cancel
+//  test at a local listener that accepts connections but never answers. Verifies that the scoped
 //  path uses the shared connection, fails before calling body, and returns the lease.
 //
 
@@ -156,7 +157,7 @@ struct ScopedReadPathTests {
             Issue.record("expected a failure")
             return
         }
-        #expect(error as? KurrentError == .connectionClosed)
+        #expect(error is CancellationError)
         #expect(bodyCalls.value == 0)
         #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
     }

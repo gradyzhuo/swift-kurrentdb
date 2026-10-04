@@ -187,7 +187,7 @@ struct ScopedReadLiveTests: Sendable {
         #expect(try await sharedRetainCount(client) == 0)
     }
 
-    @Test("Cancelling the caller's task while body iterates ends the read and returns the lease")
+    @Test("Cancelling the caller's task while body iterates throws CancellationError and returns the lease")
     func callerCancellation() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
@@ -199,7 +199,8 @@ struct ScopedReadLiveTests: Sendable {
         // the loop can end early is the SDK ending the events stream.
         let (firstElement, firstElementSignal) = AsyncStream<Void>.makeStream()
         let reader = Task {
-            try await stream.delivery(.scoped).read { events -> Int in
+            defer { firstElementSignal.finish() }
+            return try await stream.delivery(.scoped).read { events -> Int in
                 var count = 0
                 for try await _ in events {
                     count += 1
@@ -209,15 +210,16 @@ struct ScopedReadLiveTests: Sendable {
                 return count
             }
         }
-        for await _ in firstElement { break }
+        var bodyReceivedElement = false
+        for await _ in firstElement { bodyReceivedElement = true; break }
+        #expect(bodyReceivedElement, "body never received an element")
         reader.cancel()
         let outcome = await reader.result
         switch outcome {
         case let .success(count):
-            #expect(count >= 1)
-            #expect(count < 300, "the events stream drained instead of ending on cancellation")
+            Issue.record("expected CancellationError, but read returned \(count)")
         case let .failure(error):
-            Issue.record("expected the events stream to end, but read threw: \(error)")
+            #expect(error is CancellationError)
         }
         #expect(try await sharedRetainCount(client) == 0)
     }
