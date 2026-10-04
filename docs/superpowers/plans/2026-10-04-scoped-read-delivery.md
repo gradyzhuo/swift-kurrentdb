@@ -1597,3 +1597,22 @@ Expected: 5 clean runs.
 git add docs/superpowers/plans/2026-10-04-scoped-read-delivery.md
 git commit -m "[UPDATE] record verification results for scoped read delivery"
 ```
+
+## Review
+
+Date: 2026-10-04. Branch `feat/scoped-read-delivery`, 3-node TLS cluster (ports 2111-2113) healthy.
+
+| Command | Result |
+| --- | --- |
+| `swift test --filter "MockClientTests\|KurrentCoreTests"` | PASS: 149 tests in 13 suites, 0 failures |
+| `swift build --target KurrentDB_V1` | PASS |
+| `scripts/check-doc-snippets.sh` | PASS: 189 snippets generated and compiled |
+| `swift test -v --no-parallel --disable-xctest --enable-swift-testing` | PASS (exit 0), 0 failures. Per-run counts: 3, 7, 79, 16, 20, 6, 3, 65, 11, 149, 3, 1 tests |
+| 5x `swift test --filter "ResponseHandoffTests\|ScopedReadLiveTests\|SubscriptionBackpressureLiveTests"` | 5 clean runs; each run 12 live tests in 2 suites (Scoped read, Subscription backpressure) plus the ResponseHandoff suite, all passed |
+
+Skipped suites in the full run (skipped by the suites themselves, not failures):
+- `X509Tests`: needs a licensed node (KURRENTDB_LICENSE_KEY).
+- `KurrentDBPoolLiveTests`: needs independent KurrentDB instances.
+- `AppendRecordsTests` (DCB): gated on env `KURRENTDB_SUPPORTS_APPEND_RECORDS=true`, which is not set locally.
+
+Classified failures: none. `StreamsTests/testSubscribeAllExcludeSystemEvents` (previously flaky on cross-writer races) passed in this full run.
