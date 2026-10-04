@@ -6,8 +6,9 @@
 //  path uses the shared connection, fails before calling body, and returns the lease.
 //
 
-import Foundation
 import GRPCCore
+import NIOCore
+import NIOPosix
 import Synchronization
 import Testing
 @testable import KurrentDB
@@ -19,32 +20,26 @@ private final class CallCounter: Sendable {
     func hit() { count.withLock { $0 += 1 } }
 }
 
-/// A TCP listener that completes handshakes (kernel backlog) but never speaks HTTP/2, so a call
-/// on it waits for the connection indefinitely.
-private final class SilentListener: Sendable {
-    let fd: Int32
+/// A TCP listener that accepts connections but never speaks HTTP/2, so a call on it waits for
+/// the connection indefinitely.
+private struct SilentListener: Sendable {
+    let channel: any Channel
     let port: Int
 
-    init() {
-        let fd = socket(AF_INET, SOCK_STREAM, 0)
-        var address = sockaddr_in()
-        address.sin_family = sa_family_t(AF_INET)
-        address.sin_addr.s_addr = UInt32(0x7F00_0001).bigEndian
-        address.sin_port = 0
-        withUnsafePointer(to: &address) {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { _ = bind(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) }
+    static func start() async throws -> SilentListener {
+        let channel = try await ServerBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+            .bind(host: "127.0.0.1", port: 0)
+            .get()
+        guard let port = channel.localAddress?.port else {
+            try await channel.close()
+            throw KurrentError.internalClientError(reason: "listener has no bound port")
         }
-        listen(fd, 16)
-        var bound = sockaddr_in()
-        var length = socklen_t(MemoryLayout<sockaddr_in>.size)
-        withUnsafeMutablePointer(to: &bound) {
-            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { _ = getsockname(fd, $0, &length) }
-        }
-        self.fd = fd
-        port = Int(UInt16(bigEndian: bound.sin_port))
+        return SilentListener(channel: channel, port: port)
     }
 
-    deinit { close(fd) }
+    func stop() async {
+        try? await channel.close()
+    }
 }
 
 @Suite("Scoped read path", .serialized, .timeLimit(.minutes(1)))
@@ -134,7 +129,7 @@ struct ScopedReadPathTests {
 
     @Test("Cancelling the caller while waiting for acceptance ends the call and returns the lease")
     func cancelDuringAcceptance() async throws {
-        let listener = SilentListener()
+        let listener = try await SilentListener.start()
         let endpoint = Endpoint(host: "127.0.0.1", port: UInt32(listener.port))
         let usecase = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
         var policy = OperationRetryPolicy.default
@@ -155,6 +150,7 @@ struct ScopedReadPathTests {
         try await Task.sleep(for: .milliseconds(300))
         task.cancel()
         let outcome = await task.result
+        await listener.stop()
 
         guard case let .failure(error) = outcome else {
             Issue.record("expected a failure")
@@ -163,6 +159,5 @@ struct ScopedReadPathTests {
         #expect(error as? KurrentError == .connectionClosed)
         #expect(bodyCalls.value == 0)
         #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
-        withExtendedLifetime(listener) {}
     }
 }
