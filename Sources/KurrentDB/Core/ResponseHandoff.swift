@@ -12,6 +12,12 @@ import Synchronization
 /// server. ``finish(throwing:)`` is called by the producer, ``cancel()`` by the consumer side
 /// (directly, on task cancellation, or when the stream from ``makeStream()`` is released).
 /// `onTermination` runs exactly once, on whichever of the two happens first.
+///
+/// Cancellation is split by side. Consumer-side cancellation ends quietly: the buffer is dropped
+/// and `next()` returns `nil`. Cancelling the producer's task inside ``send(_:)`` instead behaves
+/// like `finish(throwing: CancellationError())`: the consumer drains the buffer and then receives
+/// `CancellationError`, so truncated data never looks like a clean end. ``finish(throwing:)`` also
+/// wakes a suspended producer with `CancellationError`.
 package final class ResponseHandoff<Element: Sendable>: Sendable {
     private enum Terminal {
         case finished((any Error)?)
@@ -91,7 +97,9 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 }
             }
         } onCancel: {
-            cancel()
+            // Producer-side cancellation must not look like a clean end: the consumer drains
+            // the buffer and then receives CancellationError.
+            finish(throwing: CancellationError())
         }
     }
 
@@ -119,6 +127,7 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                     case .finished(nil)?, .cancelled?:
                         return .end
                     case nil:
+                        precondition(state.consumer == nil, "ResponseHandoff supports a single consumer")
                         state.consumer = continuation
                         return .suspend
                     }
@@ -141,13 +150,16 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     }
 
     package func finish(throwing error: (any Error)? = nil) {
-        let (first, consumer): (Bool, CheckedContinuation<Element?, any Error>?) = state.withLock { state in
-            guard state.terminal == nil else { return (false, nil) }
+        let (first, consumer, producer): (Bool, CheckedContinuation<Element?, any Error>?, CheckedContinuation<Void, any Error>?) = state.withLock { state in
+            guard state.terminal == nil else { return (false, nil, nil) }
             let consumer = state.consumer
             state.consumer = nil
+            // A suspended producer's element is dropped (not counted); it is woken below.
+            let producer = state.producer?.continuation
+            state.producer = nil
             // A waiting consumer means the buffer is empty: hand it the outcome directly.
             state.terminal = (consumer != nil && error != nil) ? .finished(nil) : .finished(error)
-            return (true, consumer)
+            return (true, consumer, producer)
         }
         guard first else { return }
         if let consumer {
@@ -157,6 +169,7 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 consumer.resume(returning: nil)
             }
         }
+        producer?.resume(throwing: CancellationError())
         onTermination(error)
     }
 

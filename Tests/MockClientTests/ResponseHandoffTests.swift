@@ -131,7 +131,8 @@ struct ResponseHandoffTests {
         }
         await settle()
         consumer.cancel()
-        _ = await consumer.result
+        let outcome = await consumer.result
+        #expect(try outcome.get() == 0)
         #expect(probe.count == 1)
         await #expect(throws: CancellationError.self) { try await handoff.send(1) }
     }
@@ -145,5 +146,48 @@ struct ResponseHandoffTests {
         var received: [Int] = []
         for try await value in evens { received.append(value) }
         #expect(received == [2, 4])
+    }
+
+    @Test("Cancelling the producer task surfaces CancellationError to the consumer after the buffer drains")
+    func producerCancellationIsNotACleanEnd() async throws {
+        let probe = TerminationProbe()
+        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
+        try await handoff.send(1)
+        let producer = Task { try await handoff.send(2) }
+        await settle()
+
+        producer.cancel()
+        await #expect(throws: CancellationError.self) { try await producer.value }
+        #expect(try await handoff.next() == 1)
+        await #expect(throws: CancellationError.self) { _ = try await handoff.next() }
+        #expect(try await handoff.next() == nil)
+        #expect(probe.count == 1)
+        #expect(probe.last != "nil")
+    }
+
+    @Test("finish() wakes a suspended producer with CancellationError")
+    func finishReleasesPendingProducer() async throws {
+        let handoff = ResponseHandoff<Int>(capacity: 1)
+        try await handoff.send(1)
+        let producer = Task { try await handoff.send(2) }
+        await settle()
+
+        handoff.finish()
+        handoff.cancel()
+        await #expect(throws: CancellationError.self) { try await producer.value }
+        #expect(handoff.sentCount == 1)
+        #expect(try await handoff.next() == 1)
+        #expect(try await handoff.next() == nil)
+    }
+
+    @Test("A consumer suspended in next() receives the error from finish(throwing:), then nil")
+    func waitingConsumerReceivesFinishError() async throws {
+        let handoff = ResponseHandoff<Int>()
+        let consumer = Task { try await handoff.next() }
+        await settle()
+
+        handoff.finish(throwing: Boom())
+        await #expect(throws: Boom.self) { _ = try await consumer.value }
+        #expect(try await handoff.next() == nil)
     }
 }
