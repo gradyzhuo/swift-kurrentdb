@@ -9,7 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 
 extension Streams {
-    public struct Read: UnaryStream, BufferedStreamResponse {
+    public struct Read: UnaryStream, BufferedStreamResponse, ScopedStreamResponse {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
@@ -37,6 +37,15 @@ extension Streams {
                 $0.options = options.build()
                 $0.options.stream.streamIdentifier = try streamIdentifier.build()
             }
+        }
+
+        package func call<Result: Sendable>(
+            connection: GRPCClient<Transport>,
+            request: ClientRequest<UnderlyingRequest>,
+            callOptions: CallOptions,
+            onResponse: @Sendable @escaping (StreamingClientResponse<UnderlyingResponse>) async throws -> Result
+        ) async throws -> Result {
+            try await ServiceClient(wrapping: connection).read(request: request, options: callOptions, onResponse: onResponse)
         }
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<ServiceClient.UnderlyingService.Method.Read.Input>, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> AsyncThrowingStream<Response, any Error> {
