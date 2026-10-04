@@ -115,9 +115,6 @@ extension ScopedStreams where Target == AllStreamsTarget {
     /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
     /// backpressure meanwhile.
     ///
-    /// A `body` that stops iterating keeps the RPC open until it returns; the server is paused by
-    /// backpressure meanwhile.
-    ///
     /// - Parameters:
     ///   - configure: Configures ``Streams/ReadAll/Options`` (position, direction, filter, limit).
     ///   - body: Consumes the events. Its return value is returned by `read`.

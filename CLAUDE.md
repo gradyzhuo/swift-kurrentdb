@@ -149,6 +149,14 @@ let responses = try await client.streams(specified: "orders").read {
 
 `ClientSettings` is configured by chaining builder methods (`.secure(_:)`, `.authenticated(_:)`, ...).
 
+#### Type Axes vs Options
+Only a setting that changes the API's shape — return type, available operations, or the
+lifetime of the RPC — becomes a type-level axis (e.g. `streams(specified:).delivery(.scoped)`
+returns `ScopedStreams`, whose `read` takes a `body` closure). Settings that only change a
+value (`limit`, `direction`, `filter`, credentials) stay in the `inout` options closure.
+One axis, one meaning; name the axis after its meaning (`delivery`, a future `version` for the
+server protocol), never `mode`/`policy`. Every axis keeps a parameterless default path.
+
 #### Node Selection & Connection Management
 - `NodeSelector` handles cluster discovery via gossip protocol
 - `NodeDiscover` finds the best node based on `NodePreference` (leader/follower/random)

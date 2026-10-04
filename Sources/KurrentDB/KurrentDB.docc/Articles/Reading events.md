@@ -186,6 +186,45 @@ for try await response in responses {
 
 A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without sending them to the client.
 
+## Reading with scoped delivery
+
+`read()` returns once the whole result has arrived: memory grows with the result, and the RPC
+is already over when you iterate. For large reads, use scoped delivery. Events reach your
+closure as they arrive, the server is paused while you are busy, and when the closure returns
+or throws the RPC has ended and its connection is released.
+
+```swift
+let total = try await client.streams(specified: "orders")
+    .delivery(.scoped)
+    .read {
+        $0.limit = 10_000
+    } body: { events in
+        var total = 0.0
+        for try await response in events {
+            let order = try response.event.record.decode(to: OrderPlaced.self)
+            total += order?.total ?? 0
+        }
+        return total
+    }
+```
+
+The same works on `$all`:
+
+```swift
+let count = try await client.allStreams
+    .delivery(.scoped)
+    .read { events in
+        try await events.reduce(0) { total, _ in total + 1 }
+    }
+```
+
+The `events` stream is valid only inside the closure. Errors your closure throws are rethrown
+unchanged. A call the server rejects before accepting it (for example bad credentials) or a
+connection failure is thrown by `read` before your closure runs and follows the client's retry
+policy; errors after that, including a missing stream, surface while you iterate, as with
+`read()`. `authenticated(_:)` works on either side of `delivery(.scoped)`. Subscriptions apply
+the same backpressure, with no API change.
+
 ## Architecture
 
 For details on the target-based design of the Streams API, see <doc:StreamsTarget-design>.
