@@ -183,7 +183,6 @@ struct ResponseHandoffTests {
         await settle()
 
         handoff.finish()
-        handoff.cancel()
         await #expect(throws: CancellationError.self) { try await producer.value }
         #expect(handoff.sentCount == 1)
         #expect(try await handoff.next() == 1)
@@ -212,5 +211,32 @@ struct ResponseHandoffTests {
         #expect(probe.count == 1)
         await #expect(throws: CancellationError.self) { try await handoff.send(2) }
         #expect(try await iterator.next() == nil)
+    }
+
+    @Test("cancel() after finish() discards buffered elements so an escaped stream ends at once")
+    func cancelAfterFinishDiscardsBuffer() async throws {
+        let probe = TerminationProbe()
+        let handoff = ResponseHandoff<Int>(capacity: 2, onTermination: { probe.record($0) })
+        let escaped = handoff.makeStream()
+        try await handoff.send(42)
+        handoff.finish()
+        handoff.cancel()
+
+        var iterator = escaped.makeAsyncIterator()
+        #expect(try await iterator.next() == nil)
+        #expect(probe.count == 1)
+    }
+
+    @Test("cancel() after finish(throwing:) discards the pending error too")
+    func cancelAfterFinishDiscardsError() async throws {
+        let probe = TerminationProbe()
+        let handoff = ResponseHandoff<Int>(capacity: 2, onTermination: { probe.record($0) })
+        try await handoff.send(1)
+        handoff.finish(throwing: Boom())
+        handoff.cancel()
+
+        #expect(try await handoff.next() == nil)
+        #expect(probe.count == 1)
+        #expect(probe.last == "\(Boom())")
     }
 }

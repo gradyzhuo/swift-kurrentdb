@@ -175,7 +175,19 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
 
     package func cancel() {
         let (first, consumer, producer): (Bool, CheckedContinuation<Element?, any Error>?, CheckedContinuation<Void, any Error>?) = state.withLock { state in
-            guard state.terminal == nil else { return (false, nil, nil) }
+            switch state.terminal {
+            case .cancelled?:
+                return (false, nil, nil)
+            case .finished?:
+                // The producer already ended and onTermination already fired, but the consumer
+                // side still drops whatever it has not taken: a stream that escapes its scope
+                // must end at once instead of delivering the tail or a pending error.
+                state.terminal = .cancelled
+                state.buffer.removeAll()
+                return (false, nil, nil)
+            case nil:
+                break
+            }
             state.terminal = .cancelled
             state.buffer.removeAll()
             let consumer = state.consumer
