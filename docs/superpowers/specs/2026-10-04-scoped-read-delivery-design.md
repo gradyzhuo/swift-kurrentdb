@@ -21,7 +21,7 @@
 
 ### 非目標
 
-- 不改既有 `read()` 的行為（維持 buffered，標 deprecated 留待 3.0 決定）。
+- 不改既有 `read()` 的行為（維持 buffered，**不加 `@available(deprecated)`**；文件改為推薦 scoped，是否 deprecate 留待 3.0 規劃時決定）。
 - 不做分頁讀取（方案 D，見 §8）。
 - 不處理 `PersistentSubscriptions.Read`、`Monitoring.Stats`、`Projections.Statistics`、`Users.Details`（見 §7）。
 - 不處理 S08 `defaultDeadline`，但 §5 註明互動。
@@ -164,7 +164,7 @@ perform(scoped:)
 
 - `PersistentSubscriptions.Read`、`Monitoring.Stats`：同樣的無上限 Task 寫法，之後可共用 `ResponseHandoff`。
 - `Projections.Statistics`、`Users.Details`：回應小，維持 buffered。
-- 舊 `read()` 的去留：2.x 標 deprecated 指向 `delivery(.scoped)`；3.0 是否讓 scoped 成為預設 `read`，另案決定。
+- 舊 `read()` 的去留：2.x 不 deprecate，只在文件推薦 `delivery(.scoped)`；3.0 是否 deprecate 或讓 scoped 成為預設 `read`，另案決定。
 - `version` 軸：待伺服器提供 v2 Read RPC 時依 §2 原則新增。
 
 ## 8. 曾考慮的方案
