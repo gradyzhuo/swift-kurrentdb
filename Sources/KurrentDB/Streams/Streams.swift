@@ -24,8 +24,10 @@ import NIO
 /// try await client.streams(specified: "orders").append(events: [event])
 ///
 /// // Read from $all
-/// for try await response in try await client.allStreams.read() {
-///     print(response)
+/// try await client.allStreams.read { events in
+///     for try await response in events {
+///         print(response)
+///     }
 /// }
 /// ```
 public final class Streams<Target: StreamsTarget>: GRPCConcreteService {

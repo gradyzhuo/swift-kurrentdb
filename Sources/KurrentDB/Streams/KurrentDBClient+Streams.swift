@@ -12,7 +12,9 @@ extension KurrentDBClient {
     /// let orders = client.streams(of: .specified("orders"))
     /// try await orders.append(events: events)
     ///
-    /// for try await response in try await client.streams(of: .all).read() { }
+    /// try await client.streams(of: .all).read { events in
+    ///     for try await response in events { }
+    /// }
     /// ```
     ///
     /// - Parameter target: The stream target. Use static factories such as `.specified(_:)`, `.all`, or `.multiple`.

@@ -85,14 +85,14 @@ package final class ScopedCall<Response: Sendable>: Sendable {
     }
 }
 
-/// Scoped delivery: the RPC lives exactly as long as the caller's `body`.
+/// The closure-based `read`: the RPC lives exactly as long as the caller's `body`.
 extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
     /// Runs the call for the duration of `body`.
     ///
     /// A call the server rejects before accepting it (status-only response such as
     /// unauthenticated or access denied), or that fails to connect, is thrown here as
     /// `KurrentError` before `body` runs and is retried per the retry policy. Errors after the
-    /// call was accepted, including stream-not-found, surface while `body` iterates, as with `read()`.
+    /// call was accepted, including stream-not-found, surface while `body` iterates, as with `read(configure:)`.
     ///
     /// If the caller's task is cancelled, this throws `CancellationError` at whatever stage the
     /// cancellation lands (node selection, waiting for the server to accept the call, or after

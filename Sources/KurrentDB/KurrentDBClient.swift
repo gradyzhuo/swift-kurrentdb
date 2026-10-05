@@ -28,8 +28,10 @@ import Synchronization
 /// try await client.streams(specified: "orders").append(events: events)
 ///
 /// // Read from the global $all stream
-/// for try await event in try await client.allStreams.read() {
-///     print(event)
+/// try await client.allStreams.read { events in
+///     for try await event in events {
+///         print(event)
+///     }
 /// }
 /// ```
 ///

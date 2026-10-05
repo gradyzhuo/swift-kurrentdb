@@ -109,7 +109,9 @@ extension Streams where Target: SpecifiedStreamTarget {
         try await append(events: events, configure: configure)
     }
 
-    /// Reads events from the stream.
+    /// Reads events from the stream, buffering the whole result.
+    ///
+    /// Deprecated: the result is fully buffered before this returns; use ``read(configure:isolation:body:)``.
     ///
     /// ```swift
     /// let responses = try await client.streams(specified: "orders").read {
@@ -124,11 +126,62 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// - Parameter configure: Closure to configure ``Read/Options`` (direction, limit, starting revision). Defaults to no-op.
     /// - Returns: An async throwing stream of ``Streams/ReadResponse`` values.
     /// - Throws: `KurrentError` if the stream is not found or the read fails.
+    @available(*, deprecated, message: "Buffers the whole result before returning. Use read(configure:body:): events are delivered to the closure with backpressure and the RPC ends when it returns.")
     public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
         var options = Read.Options()
         configure(&options)
         let usecase = Read(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
+    }
+
+    /// Reads events from the stream and hands them to `body` as they arrive.
+    ///
+    /// ```swift
+    /// let count = try await client.streams(specified: "orders").read {
+    ///     $0.limit = 100
+    /// } body: { events in
+    ///     var count = 0
+    ///     for try await _ in events { count += 1 }
+    ///     return count
+    /// }
+    /// ```
+    ///
+    /// Events arrive as `body` consumes them: memory is bounded by the hand-off capacity plus one
+    /// HTTP/2 stream flow-control window. When `body` returns or throws, the RPC has ended and
+    /// its connection lease is released. The stream is valid only inside `body`; iterated after
+    /// `read` returned, it ends at once. Errors thrown by `body` are rethrown unchanged.
+    ///
+    /// A call the server rejects before accepting it (a status-only response such as
+    /// unauthenticated, access denied or unavailable), or a connection failure, is thrown before
+    /// `body` runs as `KurrentError` and is retried per the client's retry policy. Errors after
+    /// the call was accepted, including stream-not-found (which arrives as a response message),
+    /// surface while `body` iterates.
+    ///
+    /// If the caller's task is cancelled, `read` throws `CancellationError` at whatever stage the
+    /// cancellation lands (node selection, waiting for the server to accept the call, or after
+    /// `body` started); `body` sees the stream end and its result is discarded.
+    ///
+    /// A `body` that stops iterating keeps the RPC open until it returns; the server stops
+    /// sending once the buffers are full.
+    ///
+    /// - Parameters:
+    ///   - configure: Configures ``Read/Options```` Defaults to no-op.
+    ///   - body: Consumes the events. Its return value is returned by `read`.
+    public func read<R>(
+        configure: @Sendable (inout Read.Options) -> Void = { _ in },
+        isolation: isolated (any Actor)? = #isolation,
+        body: (AsyncThrowingStream<Read.Response, any Error>) async throws -> sending R
+    ) async throws -> R {
+        var options = Read.Options()
+        configure(&options)
+        let usecase = Read(from: identifier, options: options)
+        return try await usecase.performScoped(
+            selector: selector,
+            callOptions: callOptions,
+            credentials: overrideCredentials,
+            isolation: isolation,
+            body: body
+        )
     }
 
     /// Subscribes to live events from the stream.

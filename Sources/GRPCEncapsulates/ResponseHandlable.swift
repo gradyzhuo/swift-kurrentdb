@@ -57,7 +57,7 @@ package protocol BufferedStreamResponse: StreamResponseHandlable
     where Response: GRPCResponse<UnderlyingResponse> {}
 
 /// A buffered stream usecase that can also hand its server-streaming call to a caller-owned
-/// handler, for KurrentDB's scoped delivery (`streams(...).delivery(.scoped).read`).
+/// handler, for KurrentDB's closure-based `read`.
 ///
 /// `call` must invoke this usecase's generated client method and pass `onResponse` through
 /// unchanged; the scoped driver owns iteration, backpressure and the RPC's lifetime.
