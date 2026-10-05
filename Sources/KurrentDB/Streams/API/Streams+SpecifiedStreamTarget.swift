@@ -153,7 +153,8 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// A call the server rejects before accepting it (a status-only response such as
     /// unauthenticated, access denied or unavailable), or a connection failure, is thrown before
-    /// `body` runs as `KurrentError` and is retried per the client's retry policy. Errors after
+    /// `body` runs as `KurrentError`; node failures among them are retried per the client's retry
+    /// policy. Errors after
     /// the call was accepted, including stream-not-found (which arrives as a response message),
     /// surface while `body` iterates.
     ///
@@ -165,7 +166,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// sending once the buffers are full.
     ///
     /// - Parameters:
-    ///   - configure: Configures ``Read/Options```` Defaults to no-op.
+    ///   - configure: Configures ``Read/Options``. Defaults to no-op.
     ///   - body: Consumes the events. Its return value is returned by `read`.
     public func read<R>(
         configure: @Sendable (inout Read.Options) -> Void = { _ in },

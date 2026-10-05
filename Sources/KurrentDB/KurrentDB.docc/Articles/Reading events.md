@@ -48,7 +48,7 @@ let total = try await client.streams(specified: "orders").read { events in
 
 ### Errors and cancellation
 
-Errors your closure throws are rethrown unchanged. A call the server rejects before accepting it (for example bad credentials) or a connection failure is thrown by `read` before your closure runs, as ``KurrentError``, and follows the client's retry policy. Errors after that, including a missing stream, surface while you iterate. If your task is cancelled, `read` throws `CancellationError` and the closure's result is discarded. A closure that stops iterating keeps the RPC open until it returns.
+Errors your closure throws are rethrown unchanged. A call the server rejects before accepting it (for example bad credentials) or a connection failure is thrown by `read` before your closure runs, as ``KurrentError``; node failures among them follow the client's retry policy. Errors after that, including a missing stream, surface while you iterate. If your task is cancelled, `read` throws `CancellationError` and the closure's result is discarded. A closure that stops iterating keeps the RPC open until it returns.
 
 ### Read options
 

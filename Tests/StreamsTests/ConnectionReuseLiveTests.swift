@@ -372,6 +372,9 @@ struct ConnectionReuseLiveTests: Sendable {
         await #expect(throws: KurrentError.connectionClosed) {
             for try await _ in try await stream.read() {}
         }
+        await #expect(throws: KurrentError.connectionClosed) {
+            try await stream.read { events in for try await _ in events {} }
+        }
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
     }
 }
