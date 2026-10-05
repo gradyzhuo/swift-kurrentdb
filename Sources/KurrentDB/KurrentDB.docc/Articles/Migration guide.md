@@ -81,10 +81,12 @@ In 2.x, options are configured through an `inout` closure passed directly to the
 
 ```swift
 // 2.x
-let responses = try await client.streams(specified: "orders").read {
+try await client.streams(specified: "orders").read {
     $0.limit = 10
     $0.direction = .backward
     $0.revision = .end
+} body: { events in
+    for try await response in events { print(response) }
 }
 ```
 
@@ -121,10 +123,12 @@ let responses = try await client.readStream("orders") {
 
 ```swift
 // 2.x
-let responses = try await client.streams(of: .specified("orders")).read {
+try await client.streams(of: .specified("orders")).read {
     $0.limit = 10
     $0.direction = .backward
     $0.revision = .end
+} body: { events in
+    for try await response in events { print(response) }
 }
 ```
 
@@ -140,8 +144,10 @@ let responses = try await client.readAllStreams {
 
 ```swift
 // 2.x
-let responses = try await client.allStreams.read {
+try await client.allStreams.read {
     $0.limit = 50
+} body: { events in
+    for try await response in events { print(response) }
 }
 ```
 
@@ -450,8 +456,8 @@ try await client.operations(of: .node).setNodePriority(priority: 3)
 | 1.x | 2.x |
 |-----|-----|
 | `client.appendToStream("s", events:)` | `client.streams(of: .specified("s")).append(events:)` |
-| `client.readStream("s")` | `client.streams(of: .specified("s")).read()` |
-| `client.readAllStreams()` | `client.allStreams.read()` |
+| `client.readStream("s")` | `client.streams(of: .specified("s")).read { events in ... }` |
+| `client.readAllStreams()` | `client.allStreams.read { events in ... }` |
 | `client.subscribeStream("s")` | `client.streams(of: .specified("s")).subscribe()` |
 | `client.subscribeAllStreams()` | `client.allStreams.subscribe()` |
 | `client.deleteStream("s")` | `client.streams(of: .specified("s")).delete()` |

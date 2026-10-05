@@ -40,8 +40,10 @@ let client = KurrentDBClient(settings: settings)
 try await client.streams(specified: "orders").append(events: [eventData])
 
 // Read it back
-for try await response in try await client.streams(specified: "orders").read() {
-    print(try response.event.record)
+try await client.streams(specified: "orders").read { events in
+    for try await response in events {
+        print(try response.event.record)
+    }
 }
 ```
 
@@ -101,8 +103,10 @@ try await client.multiStreams.appendRecords(
     checks: [.streamState("customer-42", .streamExists)]
 )
 
-let filtered = try await client.allStreams.read {
+let filteredCount = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
+} body: { events in
+    try await events.reduce(0) { count, _ in count + 1 }
 }
 
 try await client.streams(specified: "orders")

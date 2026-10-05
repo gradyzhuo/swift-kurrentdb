@@ -118,14 +118,14 @@ try await client.streams(specified: "orders").append(events: [event]) {
 }
 
 // Read events
-let responses = try await client.streams(specified: "orders").read {
+try await client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 10
-}
-
-for try await response in responses {
-    let readEvent = try response.event
-    print("Event: \(readEvent.record.eventType)")
+} body: { events in
+    for try await response in events {
+        let readEvent = try response.event
+        print("Event: \(readEvent.record.eventType)")
+    }
 }
 ```
 
@@ -141,27 +141,37 @@ try await client.streams(specified: "orders").append(events: [event]) {
     $0.expectedRevision = .streamExists
 }
 
-// Read forward
-let forward = try await client.streams(specified: "orders").read {
+// Read forward: events reach the closure as they arrive, with backpressure
+let forwardCount = try await client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 50
+} body: { events in
+    try await events.reduce(0) { count, _ in count + 1 }
 }
 
 // Read backward
-let backward = try await client.streams(specified: "orders").read {
+try await client.streams(specified: "orders").read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 10
+} body: { events in
+    for try await response in events {
+        print(try response.event.record.eventType)
+    }
 }
 
 // Read $all
-let allResponses = try await client.allStreams.read {
+let allCount = try await client.allStreams.read {
     $0.limit = 100
+} body: { events in
+    try await events.reduce(0) { count, _ in count + 1 }
 }
 
 // Read $all with server-side filtering
-let filtered = try await client.allStreams.read {
+let filteredCount = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
+} body: { events in
+    try await events.reduce(0) { count, _ in count + 1 }
 }
 
 // Subscribe (catch-up)

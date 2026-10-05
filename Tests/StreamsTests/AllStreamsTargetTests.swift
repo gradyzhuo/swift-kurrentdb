@@ -35,13 +35,13 @@ struct AllStreamsTargetTests: Sendable {
         _ = try await client.streams(specified: streamIdentifier.name)
             .append(events: events) { $0.expectedRevision = .any }
 
-        let responses = try await client.allStreams.read()
-
-        let allEvents = try await responses.reduce(into: [RecordedEvent]()) {
-            guard try !($1.event.record).eventType.hasPrefix("$") else {
-                return
+        let allEvents = try await client.allStreams.read { responses in
+            try await responses.reduce(into: [RecordedEvent]()) {
+                guard try !($1.event.record).eventType.hasPrefix("$") else {
+                    return
+                }
+                try $0.append($1.event.record)
             }
-            try $0.append($1.event.record)
         }
 
         let responsedEventIds = allEvents.map(\.id)
@@ -69,17 +69,17 @@ struct AllStreamsTargetTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         let appendedPosition = try #require(appendResponse.position)
-        let responses = try await client.allStreams.read {
+        let allEvents = try await client.allStreams.read {
             $0.limit = 1
             $0.direction = .forward
             $0.position = .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare)
-        }
-
-        let allEvents = try await responses.reduce(into: [RecordedEvent]()) {
-            guard try !($1.event.record).eventType.hasPrefix("$") else {
-                return
+        } body: { responses in
+            try await responses.reduce(into: [RecordedEvent]()) {
+                guard try !($1.event.record).eventType.hasPrefix("$") else {
+                    return
+                }
+                try $0.append($1.event.record)
             }
-            try $0.append($1.event.record)
         }
 
         let testEventIds = events.map(\.id)

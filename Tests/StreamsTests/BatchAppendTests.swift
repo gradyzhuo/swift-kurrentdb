@@ -54,8 +54,12 @@ struct BatchAppendTests: Sendable {
         #expect(response.results[1].success?.streamIdentifier.name == streamB)
 
         // Confirm both streams actually received the event.
-        let aEvents = try await client.streams(specified: streamA).read().reduce(into: 0) { c, _ in c += 1 }
-        let bEvents = try await client.streams(specified: streamB).read().reduce(into: 0) { c, _ in c += 1 }
+        let aEvents = try await client.streams(specified: streamA).read { events in
+            try await events.reduce(into: 0) { c, _ in c += 1 }
+        }
+        let bEvents = try await client.streams(specified: streamB).read { events in
+            try await events.reduce(into: 0) { c, _ in c += 1 }
+        }
         #expect(aEvents == 1)
         #expect(bEvents == 1)
 

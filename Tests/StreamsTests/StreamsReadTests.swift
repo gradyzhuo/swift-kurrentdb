@@ -35,11 +35,12 @@ struct StreamsReadTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         var readTypes: [String] = []
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .start }
-        for try await response in responses {
-            if case let .event(event) = response {
-                readTypes.append(event.record.eventType)
+        try await client.streams(specified: streamName)
+            .read { $0.direction = .forward; $0.revision = .start } body: { responses in
+            for try await response in responses {
+                if case let .event(event) = response {
+                    readTypes.append(event.record.eventType)
+                }
             }
         }
 
@@ -60,11 +61,12 @@ struct StreamsReadTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         var readTypes: [String] = []
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .backward; $0.revision = .end }
-        for try await response in responses {
-            if case let .event(event) = response {
-                readTypes.append(event.record.eventType)
+        try await client.streams(specified: streamName)
+            .read { $0.direction = .backward; $0.revision = .end } body: { responses in
+            for try await response in responses {
+                if case let .event(event) = response {
+                    readTypes.append(event.record.eventType)
+                }
             }
         }
 
@@ -84,10 +86,11 @@ struct StreamsReadTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         var count = 0
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 }
-        for try await response in responses {
-            if case .event = response { count += 1 }
+        try await client.streams(specified: streamName)
+            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 } body: { responses in
+            for try await response in responses {
+                if case .event = response { count += 1 }
+            }
         }
 
         #expect(count == 3)
@@ -108,11 +111,12 @@ struct StreamsReadTests: Sendable {
 
         // Read from revision 2 → should get events at revisions 2, 3, 4
         var readRevisions: [UInt64] = []
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .specified(2) }
-        for try await response in responses {
-            if case let .event(event) = response {
-                readRevisions.append(event.record.revision)
+        try await client.streams(specified: streamName)
+            .read { $0.direction = .forward; $0.revision = .specified(2) } body: { responses in
+            for try await response in responses {
+                if case let .event(event) = response {
+                    readRevisions.append(event.record.revision)
+                }
             }
         }
 
@@ -137,9 +141,10 @@ struct StreamsReadTests: Sendable {
         try await client.streams(specified: streamName).delete()
 
         await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamName)' of streams not found.")) {
-            let responses = try await client.streams(specified: streamName).read()
-            var iter = responses.makeAsyncIterator()
-            _ = try await iter.next()
+            try await client.streams(specified: streamName).read { responses in
+                var iter = responses.makeAsyncIterator()
+                _ = try await iter.next()
+            }
         }
     }
 

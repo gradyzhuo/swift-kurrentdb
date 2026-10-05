@@ -3,7 +3,7 @@
 //  swift-kurrentdb
 //
 //  No server needed: most tests point at 127.0.0.1:1 (ECONNREFUSED), and the acceptance-cancel
-//  test at a local listener that accepts connections but never answers. Verifies that the scoped
+//  test at a local listener that accepts connections but never answers. Verifies that the closure-based
 //  path uses the shared connection, fails before calling body, and returns the lease.
 //
 

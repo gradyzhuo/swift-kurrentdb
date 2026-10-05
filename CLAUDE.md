@@ -140,22 +140,21 @@ try await client.streams(specified: "orders").append(events: events) {
     $0.expectedRevision = .streamExists
 }
 
-let responses = try await client.streams(specified: "orders").read {
+try await client.streams(specified: "orders").read {
     $0.direction = .backward
     $0.revision = .end
     $0.limit = 10
+} body: { events in
+    for try await response in events { ... }
 }
 ```
 
 `ClientSettings` is configured by chaining builder methods (`.secure(_:)`, `.authenticated(_:)`, ...).
 
-#### Type Axes vs Options
-Only a setting that changes the API's shape — return type, available operations, or the
-lifetime of the RPC — becomes a type-level axis (e.g. `streams(specified:).delivery(.scoped)`
-returns `ScopedStreams`, whose `read` takes a `body` closure). Settings that only change a
-value (`limit`, `direction`, `filter`, credentials) stay in the `inout` options closure.
-One axis, one meaning; name the axis after its meaning (`delivery`, a future `version` for the
-server protocol), never `mode`/`policy`. Every axis keeps a parameterless default path.
+#### Closure-Scoped Operations
+Closure-scoped operations are a plain overload of the verb (`read { events in }`); options stay in the `inout` closure.
+A setting becomes a type-level axis only when it changes the API's shape AND must coexist long-term
+(e.g. a future `version` for the server protocol). The buffered `read()` is deprecated in 2.x.
 
 #### Node Selection & Connection Management
 - `NodeSelector` handles cluster discovery via gossip protocol

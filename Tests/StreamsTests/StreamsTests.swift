@@ -31,9 +31,10 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         let streamIdentifier = UUID().uuidString
         await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamIdentifier)' of streams not found.")) {
-            let responses = try await client.streams(specified: streamIdentifier).read()
-            var responsesIterator = responses.makeAsyncIterator()
-            _ = try await responsesIterator.next()
+            try await client.streams(specified: streamIdentifier).read { responses in
+                var responsesIterator = responses.makeAsyncIterator()
+                _ = try await responsesIterator.next()
+            }
         }
     }
 
@@ -51,10 +52,12 @@ struct StreamTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         let appendedRevision = try #require(appendResponse.currentRevision)
-        let readResponses = try await client.streams(specified: streamIdentifier.name)
-            .read { $0.direction = .forward; $0.revision = .specified(appendedRevision) }
-
-        let firstResponse = try await readResponses.first { _ in true }
+        let firstResponse = try await client.streams(specified: streamIdentifier.name)
+            .read {
+                $0.direction = .forward; $0.revision = .specified(appendedRevision)
+            } body: { readResponses in
+                try await readResponses.first { _ in true }
+            }
         guard case let .event(readEvent: readEvent) = firstResponse,
               let readPosition = readEvent.commitPosition,
               let position = appendResponse.position
@@ -89,10 +92,12 @@ struct StreamTests: Sendable {
                     })
                     let appendedRevision = result.currentRevision
 
-                    let readResponses = try await client.streams(specified: event.streamIdentifier.name)
-                        .read { $0.direction = .forward; $0.revision = .specified(appendedRevision) }
-
-                    let firstResponse = try await readResponses.first { _ in true }
+                    let firstResponse = try await client.streams(specified: event.streamIdentifier.name)
+                        .read {
+                            $0.direction = .forward; $0.revision = .specified(appendedRevision)
+                        } body: { readResponses in
+                            try await readResponses.first { _ in true }
+                        }
                     guard case let .event(readEvent: readEvent) = firstResponse,
                           let readPosition = readEvent.commitPosition
                     else {
@@ -304,16 +309,16 @@ struct StreamTests: Sendable {
         _ = try await client.streams(specified: streamIdentifier.name)
             .append(events: events) { $0.expectedRevision = .any }
 
-        let responses = try await client.allStreams.read {
+        var matched: [RecordedEvent] = []
+        try await client.allStreams.read {
             $0.filter = .onEventType(prefixes: unique)
             $0.position = .start
             $0.direction = .forward
-        }
-
-        var matched: [RecordedEvent] = []
-        for try await response in responses {
-            let record = try response.event.record
-            matched.append(record)
+        } body: { responses in
+            for try await response in responses {
+                let record = try response.event.record
+                matched.append(record)
+            }
         }
 
         // Every returned event matches the filter, and both appended events are present.
@@ -339,16 +344,16 @@ struct StreamTests: Sendable {
         _ = try await client.streams(specified: otherName)
             .append(events: [otherEvent]) { $0.expectedRevision = .any }
 
-        let responses = try await client.allStreams.read {
+        var matched: [RecordedEvent] = []
+        try await client.allStreams.read {
             $0.filter = .onStreamName(prefixes: prefix)
             $0.position = .start
             $0.direction = .forward
-        }
-
-        var matched: [RecordedEvent] = []
-        for try await response in responses {
-            let record = try response.event.record
-            matched.append(record)
+        } body: { responses in
+            for try await response in responses {
+                let record = try response.event.record
+                matched.append(record)
+            }
         }
 
         let ids = Set(matched.map(\.id))
@@ -374,15 +379,15 @@ struct StreamTests: Sendable {
 
         // A low checkpoint multiplier forces the server to interleave checkpoint frames while
         // scanning the sparse filter across all of $all — these must be skipped, not thrown.
-        let responses = try await client.allStreams.read {
+        var matched: [RecordedEvent] = []
+        try await client.allStreams.read {
             $0.filter = .onEventType(prefixes: unique).checkpointIntervalMultiplier(1)
             $0.position = .start
             $0.direction = .forward
-        }
-
-        var matched: [RecordedEvent] = []
-        for try await response in responses {
-            matched.append(try response.event.record)
+        } body: { responses in
+            for try await response in responses {
+                matched.append(try response.event.record)
+            }
         }
 
         let ids = Set(matched.map(\.id))

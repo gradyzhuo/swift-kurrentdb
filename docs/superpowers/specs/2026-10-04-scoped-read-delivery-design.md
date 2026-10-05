@@ -1,5 +1,30 @@
 # Scoped Read Delivery 與訂閱背壓 — 設計
 
+> **Revision 2026-10-06 — the marker API was replaced by a `read` overload.**
+> `streams(...).delivery(.scoped).read { } body: { }`, `ScopedDelivery`, `ResponseDelivery` and
+> `ScopedStreams` are gone. The same implementation is exposed as a plain overload,
+> `read(configure:isolation:body:)`, on `Streams where Target: SpecifiedStreamTarget` and
+> `Streams where Target == AllStreamsTarget`, and the buffered `read(configure:)` is **deprecated
+> in 2.x** (behaviour unchanged, removal no earlier than 3.0).
+> Reason: the `delivery` naming never became self-explanatory; the closure form is what `read`
+> should have meant all along.
+> Affected sections: §1 non-goals (buffered `read()` is now deprecated, no longer "untouched"),
+> §2 (the `delivery` axis no longer exists; the type-axis rule stays, with `version` as the only
+> candidate), §3 (API is the overload, `authenticated(_:)` is `Streams.authenticated(_:)`),
+> §7 (the "deprecate or not" question is settled: deprecate).
+> Overload-resolution corner case: a single-expression body that is also valid as a `Void`
+> `configure` closure (for example `read { events in events }`) resolves to the non-generic
+> deprecated overload, because non-generic beats generic. Use explicit labels
+> (`read(configure: { _ in }, body: { events in events })`) when such a body is really intended.
+> `read()` and `read { $0.limit = 10 }` resolve to the deprecated overload (with a warning);
+> `read { events in for try await ... }`, `read { events in try await events.reduce(...) }` and
+> `read { $0.limit = 10 } body: { ... }` resolve to the new one. Verified with a compile probe
+> on Swift 6.4.
+>
+> The text below is the original design, kept as history; read `delivery(.scoped)` as the
+> `read(configure:body:)` overload.
+
+
 日期：2026-10-04
 來源：`SECURITY-AUDIT-2026-10-04.md` S02（無上限串流緩衝）
 狀態：待審
@@ -21,7 +46,7 @@
 
 ### 非目標
 
-- 不改既有 `read()` 的行為（維持 buffered，**不加 `@available(deprecated)`**；文件改為推薦 scoped，是否 deprecate 留待 3.0 規劃時決定）。
+- ~~不改既有 `read()` 的行為（維持 buffered，**不加 `@available(deprecated)`**；文件改為推薦 scoped，是否 deprecate 留待 3.0 規劃時決定）。~~ *(Revision 2026-10-06: 行為不變，但已加 `@available(*, deprecated)`。)*
 - 不做分頁讀取（方案 D，見 §8）。
 - 不處理 `PersistentSubscriptions.Read`、`Monitoring.Stats`、`Projections.Statistics`、`Users.Details`（見 §7）。
 - 不處理 S08 `defaultDeadline`，但 §5 註明互動。
@@ -164,7 +189,7 @@ perform(scoped:)
 
 - `PersistentSubscriptions.Read`、`Monitoring.Stats`：同樣的無上限 Task 寫法，之後可共用 `ResponseHandoff`。
 - `Projections.Statistics`、`Users.Details`：回應小，維持 buffered。
-- 舊 `read()` 的去留：2.x 不 deprecate，只在文件推薦 `delivery(.scoped)`；3.0 是否 deprecate 或讓 scoped 成為預設 `read`，另案決定。
+- ~~舊 `read()` 的去留：2.x 不 deprecate，只在文件推薦 `delivery(.scoped)`；3.0 是否 deprecate 或讓 scoped 成為預設 `read`，另案決定。~~ *(Revision 2026-10-06: deprecated in 2.x.)*
 - `version` 軸：待伺服器提供 v2 Read RPC 時依 §2 原則新增。
 
 ## 8. 曾考慮的方案

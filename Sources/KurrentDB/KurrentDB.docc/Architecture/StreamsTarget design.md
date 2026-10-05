@@ -25,8 +25,8 @@ Each target type represents a different scope for stream operations:
 
 | Target | Purpose | Operations |
 |--------|---------|------------|
-| ``SpecifiedStream`` | A single named stream | `append(events:configure:)`, `read(configure:)`, `subscribe(configure:)`, `delete(configure:)`, `tombstone(configure:)`, `getMetadata()`, `setMetadata(metadata:expectedRevision:)` |
-| ``AllStreamsTarget`` | The global `$all` stream | `read(configure:)`, `subscribe(configure:)` |
+| ``SpecifiedStream`` | A single named stream | `append(events:configure:)`, `read(configure:body:)`, `subscribe(configure:)`, `delete(configure:)`, `tombstone(configure:)`, `getMetadata()`, `setMetadata(metadata:expectedRevision:)` |
+| ``AllStreamsTarget`` | The global `$all` stream | `read(configure:body:)`, `subscribe(configure:)` |
 | ``MultiStreamsTarget`` | Writes across several streams | `append(events:)`, `appendRecords(events:checks:)`, `batchAppend(events:)` |
 | ``ProjectionStream`` | Streams produced by system projections | Everything ``SpecifiedStreamTarget`` offers |
 
@@ -79,8 +79,11 @@ try await client.streams(of: .specified("orders"))
     .append(events: [eventData])
 
 // ✓ Read from $all
-let responses = try await client.streams(of: .all)
-    .read { $0.direction = .forward }
+try await client.streams(of: .all).read {
+    $0.direction = .forward
+} body: { events in
+    for try await response in events { print(response) }
+}
 
 // ✓ Append to several streams at once
 try await client.streams(of: .multiple)

@@ -50,7 +50,9 @@ struct X509Tests {
         defer { try? client.shutdown() }
 
         await #expect(throws: KurrentError.accessDenied) {
-            for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }) {}
+            try await client.allStreams.read(configure: { $0.limit = 1 }) { events in
+                for try await _ in events {}
+            }
         }
     }
 
@@ -60,9 +62,11 @@ struct X509Tests {
         defer { try? client.shutdown() }
 
         var count = 0
-        for try await response in try await client.allStreams.read(configure: { $0.limit = 1 }) {
-            _ = try response.event
-            count += 1
+        try await client.allStreams.read(configure: { $0.limit = 1 }) { events in
+            for try await response in events {
+                _ = try response.event
+                count += 1
+            }
         }
         #expect(count == 1)
     }
@@ -78,8 +82,10 @@ struct X509Tests {
         }
 
         var eventTypes: [String] = []
-        for try await response in try await stream.read() {
-            try eventTypes.append(response.event.record.eventType)
+        try await stream.read { events in
+            for try await response in events {
+                try eventTypes.append(response.event.record.eventType)
+            }
         }
         #expect(eventTypes == ["X509Tested"])
     }

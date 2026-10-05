@@ -89,6 +89,8 @@ struct ConnectionReuseLiveTests: Sendable {
     /// A finite stream response (Read) is drained inside send(), so it uses the shared
     /// connection: neither success nor failure opens a dedicated one, and a failed read must
     /// not break the shared connection — the following append has to complete on the same one.
+    // Covers the deprecated buffered read() (BufferedStreamResponse path) until it is removed in 3.0.
+    @available(*, deprecated)
     @Test("成功與失敗的 read 都走共用連線,且不影響之後的 append")
     func finiteReadsUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -120,6 +122,8 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
+    // Covers the deprecated buffered read() (BufferedStreamResponse path) until it is removed in 3.0.
+    @available(*, deprecated)
     @Test("readAll、projection statistics、user details 都走共用連線")
     func otherBufferedUsecasesUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -147,6 +151,8 @@ struct ConnectionReuseLiveTests: Sendable {
     /// Beyond the server's per-connection concurrent-stream limit, extra reads queue on the
     /// client instead of failing, and do not starve appends on the same connection. This is
     /// the tradeoff #143 accepts; pin it here.
+    // Covers the deprecated buffered read() (BufferedStreamResponse path) until it is removed in 3.0.
+    @available(*, deprecated)
     @Test("150 個並行 read 全部完成,期間的 append 也完成,且不新開共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -186,6 +192,8 @@ struct ConnectionReuseLiveTests: Sendable {
     /// cancelling, and require the reader to end in failure to prove the cancellation
     /// interrupted an in-flight RPC. Afterwards retainCount must return to baseline — "the next
     /// append succeeds" cannot catch a leaked retain (acquire would simply reuse that entry).
+    // Covers the deprecated buffered read() (BufferedStreamResponse path) until it is removed in 3.0.
+    @available(*, deprecated)
     @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
     func cancellingReadMidDrainReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -223,6 +231,8 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
+    // Covers the deprecated buffered read() (BufferedStreamResponse path) until it is removed in 3.0.
+    @available(*, deprecated)
     @Test("shutdown 期間的 read 會在有限時間內結束,不會掛住")
     func shutdownDuringReadEndsIteration() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -325,6 +335,8 @@ struct ConnectionReuseLiveTests: Sendable {
 
     // MARK: - Shutdown
 
+    // Covers the deprecated buffered read() (BufferedStreamResponse path) until it is removed in 3.0.
+    @available(*, deprecated)
     @Test("shutdown 會結束進行中的訂閱,並拒絕之後所有的呼叫(node 仍在快取中)")
     func shutdownEndsSubscriptionsAndRejectsCalls() async throws {
         let client = KurrentDBClient(settings: settings)

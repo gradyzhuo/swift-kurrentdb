@@ -10,29 +10,45 @@ Every event has a stream revision and a position. The revision is an unsigned 64
 
 ## Reading from a stream
 
-Get a ``Streams`` value for the stream with ``KurrentDBClient/streams(specified:)`` and call `read(configure:)`. The closure receives the read options as an `inout` value; anything you don't set keeps its default (forwards, from the start, no limit).
+Get a ``Streams`` value for the stream with ``KurrentDBClient/streams(specified:)`` and call `read`. Events reach the closure you pass as `body` while they arrive, with backpressure: buffered memory is bounded by the hand-off capacity plus one HTTP/2 stream flow-control window (after which the server stops sending). When the closure returns or throws, the RPC has ended and its connection is released.
+
+An optional first closure receives the read options as an `inout` value; anything you don't set keeps its default (forwards, from the start, no limit).
 
 ### Reading forwards
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+try await client.streams(specified: "some-stream").read {
     $0.revision = .start
-}
-```
-
-`read` returns an `AsyncThrowingStream` you iterate with `for try await`:
-
-<!-- snippet:continue -->
-```swift
-for try await response in responses {
-    let readEvent = try response.event
-    if let order = try readEvent.record.decode(to: OrderPlaced.self) {
-        print(order)
+} body: { events in
+    for try await response in events {
+        let readEvent = try response.event
+        if let order = try readEvent.record.decode(to: OrderPlaced.self) {
+            print(order)
+        }
     }
 }
 ```
 
-`response.event` throws if the server sent a link whose target event no longer exists.
+`events` is an `AsyncThrowingStream` you iterate with `for try await`. It is valid only inside the closure. `response.event` throws if the server sent a link whose target event no longer exists.
+
+The closure's return value is returned by `read`, so you can compute a result without keeping the events:
+
+```swift
+let total = try await client.streams(specified: "orders").read { events in
+    var total = 0.0
+    for try await response in events {
+        let order = try response.event.record.decode(to: OrderPlaced.self)
+        total += order?.total ?? 0
+    }
+    return total
+}
+```
+
+> Note: A closure that is a single expression and also valid as the options closure (for example `{ events in events }`) resolves to the deprecated buffered `read(configure:)`. Pass the labels explicitly, `read(configure: { _ in }, body: { events in ... })`, if you need that form. Escaping the stream out of the closure is not useful anyway: it ends as soon as the closure returns.
+
+### Errors and cancellation
+
+Errors your closure throws are rethrown unchanged. A call the server rejects before accepting it (for example bad credentials) or a connection failure is thrown by `read` before your closure runs, as ``KurrentError``, and follows the client's retry policy. Errors after that, including a missing stream, surface while you iterate. If your task is cancelled, `read` throws `CancellationError` and the closure's result is discarded. A closure that stops iterating keeps the RPC open until it returns.
 
 ### Read options
 
@@ -48,9 +64,13 @@ for try await response in responses {
 Credentials set on ``ClientSettings`` apply to every call. To use different credentials for a single operation, call `authenticated(_:)` on the ``Streams`` value:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream")
+try await client.streams(specified: "some-stream")
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .read()
+    .read { events in
+        for try await response in events {
+            print(try response.event.record)
+        }
+    }
 ```
 
 ## Reading from a revision
@@ -58,9 +78,13 @@ let responses = try await client.streams(specified: "some-stream")
 Pass a specific revision to start from it:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+try await client.streams(specified: "some-stream").read {
     $0.revision = .specified(10)
     $0.limit = 20
+} body: { events in
+    for try await response in events {
+        print(try response.event.record)
+    }
 }
 ```
 
@@ -69,13 +93,13 @@ let responses = try await client.streams(specified: "some-stream").read {
 To read a stream backwards, start from the end and set the direction:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+try await client.streams(specified: "some-stream").read {
     $0.revision = .end
     $0.direction = .backward
-}
-
-for try await response in responses {
-    print(try response.event.record)
+} body: { events in
+    for try await response in events {
+        print(try response.event.record)
+    }
 }
 ```
 
@@ -83,15 +107,16 @@ for try await response in responses {
 
 ## Checking if the stream exists
 
-Reading a stream that doesn't exist throws ``KurrentError/resourceNotFound(reason:)``. The error arrives while you iterate the results, not when you call `read`:
+Reading a stream that doesn't exist throws ``KurrentError/resourceNotFound(reason:)``. The error arrives while you iterate the results, not when you call `read`, so it is thrown out of your closure and `read` rethrows it:
 
 ```swift
 do {
-    let responses = try await client.streams(specified: "some-stream").read {
+    try await client.streams(specified: "some-stream").read {
         $0.revision = .specified(10)
-    }
-    for try await response in responses {
-        print(try response.event.record)
+    } body: { events in
+        for try await response in events {
+            print(try response.event.record)
+        }
     }
 } catch KurrentError.resourceNotFound(let reason) {
     print("reason:", reason)
@@ -108,12 +133,12 @@ Reading `$all` works like reading an individual stream, with two differences: it
 ### Reading forwards
 
 ```swift
-let responses = try await client.allStreams.read {
+try await client.allStreams.read {
     $0.position = .start
-}
-
-for try await response in responses {
-    print("Event>", try response.event.record)
+} body: { events in
+    for try await response in events {
+        print("Event>", try response.event.record)
+    }
 }
 ```
 
@@ -122,29 +147,41 @@ for try await response in responses {
 To resolve link events, set `resolveLinksEnabled`:
 
 ```swift
-let responses = try await client.allStreams.read {
+try await client.allStreams.read {
     $0.position = .start
     $0.resolveLinksEnabled = true
+} body: { events in
+    for try await response in events {
+        print(try response.event.record)
+    }
 }
 ```
 
 To start from a known position:
 
 ```swift
-let responses = try await client.allStreams
+try await client.allStreams
     .authenticated(.credentials(username: "admin", password: "changeit"))
     .read {
         $0.position = .specified(commit: 1110, prepare: 1110)
+    } body: { events in
+        for try await response in events {
+            print(try response.event.record)
+        }
     }
 ```
 
 ### Reading backwards
 
 ```swift
-let responses = try await client.allStreams.read {
+try await client.allStreams.read {
     $0.position = .end
     $0.direction = .backward
     $0.limit = 1
+} body: { events in
+    for try await response in events {
+        print(try response.event.record)
+    }
 }
 ```
 
@@ -156,13 +193,17 @@ Set `filter` to a ``StreamFilter`` to have the server return only events whose s
 
 ```swift
 // Events whose type starts with "Order"
-let orderEvents = try await client.allStreams.read {
+let orderEventCount = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "Order")
+} body: { events in
+    try await events.reduce(0) { count, _ in count + 1 }
 }
 
 // Events from streams whose name matches a regular expression
-let customerEvents = try await client.allStreams.read {
+let customerEventCount = try await client.allStreams.read {
     $0.filter = .onStreamName(regex: "^customer-")
+} body: { events in
+    try await events.reduce(0) { count, _ in count + 1 }
 }
 ```
 
@@ -171,61 +212,36 @@ let customerEvents = try await client.allStreams.read {
 `$all` also returns system events. Their event types start with `$`, so you can skip them by checking `eventType`:
 
 ```swift
-let responses = try await client.allStreams.read {
+try await client.allStreams.read {
     $0.position = .start
-}
-
-for try await response in responses {
-    let readEvent = try response.event
-    guard !readEvent.record.eventType.hasPrefix("$") else {
-        continue
+} body: { events in
+    for try await response in events {
+        let readEvent = try response.event
+        guard !readEvent.record.eventType.hasPrefix("$") else {
+            continue
+        }
+        print("Event>", readEvent.record)
     }
-    print("Event>", readEvent.record)
 }
 ```
 
 A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without sending them to the client.
 
-## Reading with scoped delivery
+Subscriptions apply the same backpressure, with no API change.
 
-`read()` returns once the whole result has arrived: memory grows with the result, and the RPC
-is already over when you iterate. For large reads, use scoped delivery. Events reach your
-closure as they arrive, buffered memory is bounded by the hand-off capacity plus one HTTP/2
-stream flow-control window (after which the server stops sending), and when the closure returns
-or throws the RPC has ended and its connection is released. If your task is cancelled, `read`
-throws `CancellationError` and the closure's result is discarded.
+## Deprecated: read() returning a stream
+
+`read(configure:)` without a closure body returns an `AsyncThrowingStream` and is deprecated. It buffers the whole result before returning: memory grows with the result, and the RPC is already over when you iterate. It remains available, with unchanged behaviour, until 3.0; use the closure form above instead.
 
 ```swift
-let total = try await client.streams(specified: "orders")
-    .delivery(.scoped)
-    .read {
-        $0.limit = 10_000
-    } body: { events in
-        var total = 0.0
-        for try await response in events {
-            let order = try response.event.record.decode(to: OrderPlaced.self)
-            total += order?.total ?? 0
-        }
-        return total
-    }
+let responses = try await client.streams(specified: "some-stream").read {
+    $0.revision = .start
+}
+
+for try await response in responses {
+    print(try response.event.record)
+}
 ```
-
-The same works on `$all`:
-
-```swift
-let count = try await client.allStreams
-    .delivery(.scoped)
-    .read { events in
-        try await events.reduce(0) { total, _ in total + 1 }
-    }
-```
-
-The `events` stream is valid only inside the closure. Errors your closure throws are rethrown
-unchanged. A call the server rejects before accepting it (for example bad credentials) or a
-connection failure is thrown by `read` before your closure runs and follows the client's retry
-policy; errors after that, including a missing stream, surface while you iterate, as with
-`read()`. `authenticated(_:)` works on either side of `delivery(.scoped)`. Subscriptions apply
-the same backpressure, with no API change.
 
 ## Architecture
 

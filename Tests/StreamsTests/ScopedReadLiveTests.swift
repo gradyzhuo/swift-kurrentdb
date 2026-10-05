@@ -96,10 +96,10 @@ struct ScopedReadLiveTests: Sendable {
         try #require(arrived, "RPC A never received its first event")
 
         // RPC B runs on the same shared connection while A is in flight, and again after A is cancelled.
-        let before = try await stream.read().reduce(0) { count, _ in count + 1 }
+        let before = try await stream.read { events in try await events.reduce(0) { count, _ in count + 1 } }
         parked.cancel()
         let outcome = await parked.result
-        let after = try await stream.read().reduce(0) { count, _ in count + 1 }
+        let after = try await stream.read { events in try await events.reduce(0) { count, _ in count + 1 } }
 
         // A must have ended by cancellation, not by completing or an unrelated failure.
         switch outcome {
@@ -122,7 +122,9 @@ struct ScopedReadLiveTests: Sendable {
         return client.selector.connections.sharedEntrySnapshot(for: node.endpoint)?.retainCount
     }
 
-    @Test("Scoped read returns the same events as read()")
+    // Compares against the deprecated buffered read() until it is removed in 3.0.
+    @available(*, deprecated)
+    @Test("Closure-based read returns the same events as the buffered read()")
     func scopedMatchesBuffered() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
@@ -132,7 +134,7 @@ struct ScopedReadLiveTests: Sendable {
         let buffered = try await stream.read().reduce(into: [UUID]()) { ids, response in
             ids.append(try response.event.record.id)
         }
-        let scoped = try await stream.delivery(.scoped).read { events in
+        let scoped = try await stream.read { events in
             try await events.reduce(into: [UUID]()) { ids, response in
                 ids.append(try response.event.record.id)
             }
@@ -149,7 +151,7 @@ struct ScopedReadLiveTests: Sendable {
         let stream = client.streams(specified: name)
         try await appendEvents(count: 300, to: stream)
 
-        let first = try await stream.delivery(.scoped).read { events -> UUID? in
+        let first = try await stream.read { events -> UUID? in
             for try await response in events {
                 // Positive control: the lease is held while body runs, so the later 0 is meaningful.
                 #expect(try await sharedRetainCount(client) == 1)
@@ -180,7 +182,7 @@ struct ScopedReadLiveTests: Sendable {
         try await appendEvents(count: 10, to: stream)
 
         await #expect(throws: BodyError.self) {
-            try await stream.delivery(.scoped).read { events in
+            try await stream.read { events in
                 for try await _ in events { throw BodyError() }
             }
         }
@@ -200,7 +202,7 @@ struct ScopedReadLiveTests: Sendable {
         let (firstElement, firstElementSignal) = AsyncStream<Void>.makeStream()
         let reader = Task {
             defer { firstElementSignal.finish() }
-            return try await stream.delivery(.scoped).read { events -> Int in
+            return try await stream.read { events -> Int in
                 var count = 0
                 for try await _ in events {
                     count += 1
@@ -231,14 +233,16 @@ struct ScopedReadLiveTests: Sendable {
         let stream = client.streams(specified: "ScopedRead-\(UUID().uuidString)")
         try await appendEvents(count: 20, to: stream)
 
-        let escaped = try await stream.delivery(.scoped).read { events in events }
+        let escaped = try await stream.read(configure: { _ in }) { events in events }
         var count = 0
         for try await _ in escaped { count += 1 }
         #expect(count == 0)
         #expect(try await sharedRetainCount(client) == 0)
     }
 
-    @Test("Reading a missing stream fails the same way as read()")
+    // Compares against the deprecated buffered read() until it is removed in 3.0.
+    @available(*, deprecated)
+    @Test("Reading a missing stream fails the same way as the buffered read()")
     func missingStream() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
@@ -247,7 +251,7 @@ struct ScopedReadLiveTests: Sendable {
         var bufferedError: (any Error)?
         do { for try await _ in try await stream.read() {} } catch { bufferedError = error }
         var scopedError: (any Error)?
-        do { try await stream.delivery(.scoped).read { events in for try await _ in events {} } } catch { scopedError = error }
+        do { try await stream.read { events in for try await _ in events {} } } catch { scopedError = error }
 
         #expect(bufferedError != nil)
         #expect(scopedError.map { "\($0)" } == bufferedError.map { "\($0)" })
@@ -257,7 +261,7 @@ struct ScopedReadLiveTests: Sendable {
     func allStreamsScoped() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
-        let count = try await client.allStreams.delivery(.scoped).read {
+        let count = try await client.allStreams.read {
             $0.limit = 5
         } body: { events in
             try await events.reduce(0) { total, _ in total + 1 }
@@ -266,7 +270,7 @@ struct ScopedReadLiveTests: Sendable {
         #expect(try await sharedRetainCount(client) == 0)
     }
 
-    @Test("Wrong credentials set after or before delivery are rejected before body runs")
+    @Test("Wrong credentials are rejected before body runs")
     func authenticatedChaining() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
@@ -274,22 +278,17 @@ struct ScopedReadLiveTests: Sendable {
         try await appendEvents(count: 5, to: stream)
         let wrong = Authentication.credentials(username: "admin", password: "wrong-password")
 
-        for (label, scoped) in [
-            ("delivery then authenticated", stream.delivery(.scoped).authenticated(wrong)),
-            ("authenticated then delivery", stream.authenticated(wrong).delivery(.scoped)),
-        ] {
-            let bodyEntered = Mutex(false)
-            do {
-                try await scoped.read { events in
-                    bodyEntered.withLock { $0 = true }
-                    for try await _ in events {}
-                }
-                Issue.record("\(label): read unexpectedly succeeded")
-            } catch {
-                #expect(error is KurrentError, "\(label): unexpected error \(error)")
+        let bodyEntered = Mutex(false)
+        do {
+            try await stream.authenticated(wrong).read { events in
+                bodyEntered.withLock { $0 = true }
+                for try await _ in events {}
             }
-            #expect(bodyEntered.withLock { $0 } == false, "\(label): body ran")
+            Issue.record("read unexpectedly succeeded")
+        } catch {
+            #expect(error is KurrentError, "unexpected error \(error)")
         }
+        #expect(bodyEntered.withLock { $0 } == false, "body ran")
         #expect(try await sharedRetainCount(client) == 0)
     }
 }

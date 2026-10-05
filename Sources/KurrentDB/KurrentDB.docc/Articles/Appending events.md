@@ -116,15 +116,18 @@ try await stream.append(events: EventData(eventType: "some-event", model: TestEv
 ```swift
 let stream = client.streams(specified: "concurrency-stream")
 
-let responses = try await stream.read {
+let lastRevision = try await stream.read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 1
+} body: { events -> UInt64? in
+    for try await response in events {
+        return try response.event.record.revision
+    }
+    return nil
 }
 
-for try await response in responses {
-    let revision = try response.event.record.revision
-
+if let revision = lastRevision {
     // Succeeds: nobody else has written since we read `revision`.
     try await stream.append(events: EventData(eventType: "some-event", model: TestEvent(id: "1", note: "clientOne"))) {
         $0.expectedRevision = .at(revision)

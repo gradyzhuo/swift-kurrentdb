@@ -308,15 +308,15 @@ This appends without checking whether the stream exists or what revision it's at
 Read the events back from `some-stream`:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+try await client.streams(specified: "some-stream").read {
     $0.revision = .start
     $0.limit = 10
-}
-
-for try await response in responses {
-    let readEvent = try response.event
-    let testEvent = try readEvent.record.decode(to: TestEvent.self)
-    print(testEvent as Any)
+} body: { events in
+    for try await response in events {
+        let readEvent = try response.event
+        let testEvent = try readEvent.record.decode(to: TestEvent.self)
+        print(testEvent as Any)
+    }
 }
 ```
 
