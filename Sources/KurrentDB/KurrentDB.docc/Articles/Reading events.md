@@ -186,6 +186,52 @@ for try await response in responses {
 
 A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without sending them to the client.
 
+## Bounded memory: `read().lazy`
+
+`read()` fetches the whole result before it returns, so memory grows with the result. For large
+reads use the lazy form: events arrive as you iterate, memory is bounded by a small hand-off plus
+one HTTP/2 flow-control window, and the RPC ends when the loop does.
+
+```swift
+var total = 0.0
+for try await response in client.streams(specified: "orders").read().lazy {
+    if let order = try response.event.record.decode(to: OrderPlaced.self) {
+        total += order.total
+    }
+}
+```
+
+`lazy` is an `AsyncSequence`, so the usual operations apply and stop the RPC as soon as they are
+done:
+
+```swift
+let cancelled = try await client.allStreams.read().lazy.first {
+    try $0.event.record.eventType == "OrderCancelled"
+}
+let count = try await client.streams(specified: "orders").read { $0.limit = 1000 }.lazy.reduce(0) { n, _ in n + 1 }
+```
+
+The RPC ends when the iterator is released: after the loop, on `break`, on a thrown error, or when
+your task is cancelled (`next()` then throws `CancellationError`). Only an iterator you obtain with
+`makeAsyncIterator()` and keep keeps the RPC open. A call the server rejects before accepting it
+(for example bad credentials) fails at the first element and follows the client's retry policy;
+later errors, including a missing stream, surface while you iterate, as with `read()`.
+
+`read().buffered` is the explicit spelling of what `read()` does today:
+
+```swift
+let responses = try await client.streams(specified: "orders").read { $0.limit = 10 }.buffered
+```
+
+To hold a prepared read without iterating, spell its type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
+
+### Roadmap
+
+In 3.0 `read()` itself delivers lazily; code that needs the whole result up front will write
+`.buffered`. See `docs/adr/0001-read-becomes-lazy-in-3-0.md`. Subscriptions already apply the same
+backpressure: a slow consumer pauses the server instead of growing client memory.
+`Subscription.cancel()` now ends the stream without delivering an already-buffered event (at most one).
+
 ## Architecture
 
 For details on the target-based design of the Streams API, see <doc:StreamsTarget-design>.

@@ -127,6 +127,11 @@ for try await response in responses {
     let readEvent = try response.event
     print("Event: \(readEvent.record.eventType)")
 }
+
+// Bounded memory: events arrive as you iterate and the RPC ends with the loop
+for try await response in client.streams(specified: "orders").read().lazy {
+    _ = response
+}
 ```
 
 ---
