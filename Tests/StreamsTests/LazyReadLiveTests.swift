@@ -306,11 +306,11 @@ struct LazyReadLiveTests: Sendable {
         defer { try? client.shutdown() }
         let name = "LazyRead-Deadline-\(UUID().uuidString)"
         try await appendEvents(count: 300, to: client.streams(specified: name))
-        let timed = streams(client, name: name, timeout: .seconds(1))
+        let timed = streams(client, name: name, timeout: .seconds(2))
 
         let iterator = timed.read().lazy.makeAsyncIterator()
         _ = try await iterator.next()
-        try await Task.sleep(for: .seconds(2))   // the producer is suspended in send; the deadline expires
+        try await Task.sleep(for: .seconds(4))   // the producer is suspended in send; the deadline expires
         var failure: (any Error)?
         do { while try await iterator.next() != nil {} } catch { failure = error }
 
@@ -326,17 +326,33 @@ struct LazyReadLiveTests: Sendable {
         defer { try? client.shutdown() }
         let name = "LazyRead-SubDeadline-\(UUID().uuidString)"
         try await appendEvents(count: 300, to: client.streams(specified: name))
-        let timed = streams(client, name: name, timeout: .seconds(1))
+        let timed = streams(client, name: name, timeout: .seconds(2))
 
         let subscription = try await timed.subscribe { $0.revision = .start }
         var iterator = subscription.events.makeAsyncIterator()
         _ = try await iterator.next()
-        try await Task.sleep(for: .seconds(2))
+        try await Task.sleep(for: .seconds(4))
         var failure: (any Error)?
         do { while try await iterator.next() != nil {} } catch { failure = error }
 
         let error = try #require(failure)
         #expect(!(error is CancellationError))
+        #expect((error as? RPCError)?.code == .deadlineExceeded)
+    }
+
+    @Test("A caught-up subscription whose deadline expires while the consumer waits ends with the deadline error")
+    func caughtUpSubscriptionDeadline() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let name = "LazyRead-CaughtUp-\(UUID().uuidString)"
+        try await appendEvents(count: 1, to: client.streams(specified: name))
+        let timed = streams(client, name: name, timeout: .seconds(2))
+
+        let subscription = try await timed.subscribe { $0.revision = .start }
+        var failure: (any Error)?
+        do { for try await _ in subscription.events {} } catch { failure = error }
+
+        let error = try #require(failure, "the loop ended cleanly instead of with the deadline error")
         #expect((error as? RPCError)?.code == .deadlineExceeded)
     }
 }

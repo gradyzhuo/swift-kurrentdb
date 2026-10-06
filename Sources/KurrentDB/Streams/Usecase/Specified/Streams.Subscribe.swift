@@ -58,8 +58,12 @@ extension Streams where Target: SpecifiedStreamTarget {
                         for try await message in $0.messages.cancelOnGracefulShutdown() {
                             try await messages.send(message)
                         }
-                        messages.finish()
                     }
+                    // After the RPC returned: a deadline cancels the handler and ends the loop above
+                    // quietly (the merge behind cancelOnGracefulShutdown yields nil on cancellation),
+                    // so finishing inside the handler would commit a clean end before client.read
+                    // throws its deadlineExceeded.
+                    messages.finish()
                 } catch {
                     messages.finish(throwing: error)
                 }
