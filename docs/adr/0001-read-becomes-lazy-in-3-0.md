@@ -66,6 +66,10 @@ resolve to `ReadCall`. Both conditions are hard requirements for the 2.x line.
 Known 2.x limitation: `let call = stream.read()` without `try await` and without `.lazy` /
 `.buffered` resolves to the old overload and fails to compile; write `let call: Streams<SpecifiedStream>.ReadCall = …`.
 
+An unannotated function reference `stream.read` formed in an async context keeps selecting the buffered
+overload; one formed in a synchronous context selects the `ReadCall` overload, so spell the type if that
+matters. `@_disfavoredOverload` does not change this (verified).
+
 ## Migration guide — to be written before 3.0
 
 A "Migrating from 2.x to 3.0" DocC article must cover:

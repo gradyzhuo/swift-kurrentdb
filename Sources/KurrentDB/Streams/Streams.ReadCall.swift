@@ -23,9 +23,9 @@ extension Streams {
     /// to the buffered overload without ambiguity. To hold one in a variable without iterating,
     /// spell the type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
     ///
-    /// The `ReadCall` overload is `@_disfavoredOverload`, so unannotated function references
-    /// (`let read = stream.read`) and bare calls keep selecting the buffered `read`; `.lazy` /
-    /// `.buffered` chains and an explicit `: ReadCall` annotation select the `ReadCall` overload.
+    /// An unannotated function reference `stream.read` formed in an async context keeps selecting the
+    /// buffered overload; one formed in a synchronous context selects the `ReadCall` overload, so spell
+    /// the type if that matters. `@_disfavoredOverload` does not change this (verified).
     public struct ReadCall: Sendable {
         let selector: NodeSelector
         let openCall: @Sendable (Node) async throws(KurrentError) -> ScopedCall<ReadResponse>

@@ -145,7 +145,6 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// ```
     ///
     /// - Parameter configure: Configures ``Read/Options`` (direction, limit, starting revision). Defaults to no-op.
-    @_disfavoredOverload
     public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) -> ReadCall {
         var options = Read.Options()
         configure(&options)
