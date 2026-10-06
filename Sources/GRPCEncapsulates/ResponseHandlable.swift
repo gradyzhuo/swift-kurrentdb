@@ -68,4 +68,14 @@ package protocol ScopedStreamResponse: UnaryStream, BufferedStreamResponse {
         callOptions: CallOptions,
         onResponse: @Sendable @escaping (StreamingClientResponse<UnderlyingResponse>) async throws -> Result
     ) async throws -> Result
+
+    /// Maps one server message to a response, or `nil` to skip it. The default delivers every
+    /// message; `$all` reads override it to drop control frames exactly like their buffered path.
+    func scopedResponse(for message: UnderlyingResponse) throws -> Response?
+}
+
+extension ScopedStreamResponse {
+    package func scopedResponse(for message: UnderlyingResponse) throws -> Response? {
+        try handle(message: message)
+    }
 }
