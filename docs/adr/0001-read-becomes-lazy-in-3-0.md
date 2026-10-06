@@ -27,8 +27,9 @@ meaning or type.
 ## Decision
 
 In **3.0** the default delivery of `read()` becomes **lazy**: iterating pulls events from the
-server as they are consumed, memory is bounded by the hand-off capacity plus one HTTP/2 stream
-flow-control window, and the RPC ends when the iterator is released (loop finished, `break`,
+server as they are consumed, memory per read is bounded by the hand-off (one buffered element plus one held by the
+suspended producer), the transport's inbound message queue (10 messages by default) and one HTTP/2
+stream flow-control window (about 8 MiB by default), not by the result size, and the RPC ends when the iterator is released (loop finished, `break`,
 `throw`, or task cancellation). Code that needs the whole result up front writes `.buffered`
 explicitly.
 
