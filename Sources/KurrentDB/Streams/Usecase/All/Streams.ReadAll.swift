@@ -77,6 +77,18 @@ extension Streams where Target == AllStreamsTarget {
             }
         }
 
+        package func scopedResponse(for message: UnderlyingResponse) throws -> Response? {
+            // Filtered `$all` reads interleave control frames (checkpoint, caught-up,
+            // fell-behind, positions). The read stream yields events only, so skip
+            // anything that isn't an event or a stream-not-found signal.
+            switch message.content {
+            case .event, .streamNotFound:
+                return try handle(message: message)
+            default:
+                return nil
+            }
+        }
+
         package func call<Result: Sendable>(
             connection: GRPCClient<Transport>,
             request: ClientRequest<UnderlyingRequest>,
