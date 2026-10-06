@@ -120,4 +120,102 @@ struct LazyReadPathTests {
         }
         #expect(node.connections.sharedEntrySnapshot(for: Endpoint(host: "127.0.0.1", port: port))?.retainCount == 0)
     }
+
+    // MARK: ReadCall.lazy
+
+    /// Seed and cached node both point at the refused port; retries are off.
+    private func makeSelector(supporting descriptors: [GRPCCore.MethodDescriptor]) async -> NodeSelector {
+        var policy = OperationRetryPolicy.default
+        policy.maxAttempts = 1
+        let settings = ClientSettings(clusterMode: .standalone(endpoint: Self.refused)).operationRetryPolicy(policy)
+        let selector = NodeSelector(settings: settings)
+        let node = Node(endpoint: Self.refused, settings: settings, serverInfo: makeInfo(supporting: descriptors), connections: selector.connections)
+        await selector.cacheNodeForTesting(node)
+        return selector
+    }
+
+    /// No cached node: the first call goes through node discovery.
+    private func makeUncachedSelector() -> NodeSelector {
+        var policy = OperationRetryPolicy.default
+        policy.maxAttempts = 1
+        return NodeSelector(settings: ClientSettings(clusterMode: .standalone(endpoint: Self.refused)).operationRetryPolicy(policy))
+    }
+
+    private func makeStreams(_ selector: NodeSelector) -> Streams<SpecifiedStream> {
+        Streams(target: .specified("any"), selector: selector, callOptions: boundedCallOptions)
+    }
+
+    @Test("lazy: a refused connection throws KurrentError at the first next(), shared path, lease returned")
+    func lazyRefused() async throws {
+        let selector = await makeSelector(supporting: [Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init()).methodDescriptor])
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        await #expect(throws: KurrentError.self) {
+            for try await _ in streams.read().lazy {}
+        }
+        #expect(selector.connections.createdSharedConnectionCount == 1)
+        #expect(selector.connections.createdDedicatedConnectionCount == 0)
+        #expect(selector.connections.sharedEntrySnapshot(for: Self.refused)?.retainCount == 0)
+    }
+
+    @Test("lazy: an iterator that is never advanced takes no lease")
+    func droppedIteratorTakesNoLease() async throws {
+        let selector = await makeSelector(supporting: [Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init()).methodDescriptor])
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        do { _ = streams.read().lazy.makeAsyncIterator() }
+        #expect(selector.connections.createdSharedConnectionCount == 0)
+        #expect(selector.connections.sharedEntrySnapshot(for: Self.refused) == nil)
+    }
+
+    @Test("lazy: a caller that is already cancelled gets CancellationError before node discovery")
+    func lazyPreCancelled() async throws {
+        let selector = makeUncachedSelector()
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        let reader = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            for try await _ in streams.read().lazy {}
+        }
+        await #expect(throws: CancellationError.self) { try await reader.value }
+        #expect(selector.connections.createdSharedConnectionCount == 0)
+    }
+
+    @Test("lazy: cancelling the caller during node discovery surfaces CancellationError")
+    func lazyCancelDuringDiscovery() async throws {
+        let selector = makeUncachedSelector()
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        let reader = Task { for try await _ in streams.read().lazy {} }
+        try await Task.sleep(for: .milliseconds(200))   // discovery against the refused port retries for ~1s
+        reader.cancel()
+        await #expect(throws: CancellationError.self) { try await reader.value }
+    }
+
+    @Test("lazy: cancelling the caller while waiting for acceptance surfaces CancellationError and returns the lease")
+    func lazyCancelDuringAcceptance() async throws {
+        let listener = try await SilentListener.start()
+        let endpoint = Endpoint(host: "127.0.0.1", port: UInt32(listener.port))
+        var policy = OperationRetryPolicy.default
+        policy.maxAttempts = 1
+        let settings = ClientSettings(clusterMode: .standalone(endpoint: endpoint)).operationRetryPolicy(policy)
+        let selector = NodeSelector(settings: settings)
+        defer { selector.connections.shutdown() }
+        let descriptor = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init()).methodDescriptor
+        await selector.cacheNodeForTesting(Node(endpoint: endpoint, settings: settings, serverInfo: makeInfo(supporting: [descriptor]), connections: selector.connections))
+        let streams = Streams<SpecifiedStream>(target: .specified("any"), selector: selector, callOptions: .defaults)
+
+        let reader = Task { for try await _ in streams.read().lazy {} }
+        try await Task.sleep(for: .milliseconds(300))
+        reader.cancel()
+        let outcome = await reader.result
+        await listener.stop()
+
+        #expect(throws: CancellationError.self) { try outcome.get() }
+        #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
+    }
 }
