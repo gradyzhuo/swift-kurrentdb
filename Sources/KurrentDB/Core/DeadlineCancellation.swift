@@ -25,8 +25,8 @@ package final class HandlerCancellation: Sendable {
 /// Maps a `CancellationError` that the owner's task did not request to the deadline error.
 ///
 /// Our own `close()` cancels the owner's task, so `Task.isCancelled` is true for a requested
-/// cancellation; a `CancellationError` seen while the task is not cancelled can only have been raised
-/// inside grpc-swift to enforce the call deadline. Must be called from the owner's task.
+/// cancellation; a `CancellationError` seen while the task is not cancelled was
+/// raised either by grpc-swift enforcing the call deadline, or by the consumer cancelling the hand-off; the latter is harmless because the hand-off is already terminal, so `finish(throwing:)` is a no-op and the mapped error is dropped. Must be called from the owner's task.
 package func deadlineOrOriginal(_ error: any Error) -> any Error {
     if error is CancellationError, !Task.isCancelled {
         return deadlineExceededError()

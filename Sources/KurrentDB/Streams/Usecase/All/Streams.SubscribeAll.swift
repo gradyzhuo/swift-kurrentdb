@@ -71,7 +71,9 @@ extension Streams where Target == AllStreamsTarget {
                     messages.finish()
                 } catch {
                     // Older grpc-swift rethrows the handler's CancellationError instead of the
-                    // deadline error; nothing cancels this task on purpose, so map it.
+                    // deadline error. An unrequested CancellationError is raised either by grpc-swift enforcing the call deadline,
+                    // or by the consumer cancelling the hand-off; the latter is harmless because the
+                    // hand-off is already terminal, so finish(throwing:) is a no-op.
                     messages.finish(throwing: deadlineOrOriginal(error))
                 }
             }
