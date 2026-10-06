@@ -142,7 +142,7 @@ struct LazyReadLiveTests: Sendable {
         #expect(try await sharedRetainCount(client) == 1)             // positive control: the lease is held
         try await Task.sleep(for: .milliseconds(500))
         // The RPC task feeds a capacity-1 hand-off; nothing is pulled, so production has stalled.
-        // Observe through a second lazy iteration whose counters we can read: open directly.
+        // Observe the hand-off counters through a separately opened ScopedCall, since the iterator's own call is private.
         let node = try await client.selector.select()
         let usecase = Streams<SpecifiedStream>.Read(from: stream.identifier, options: .init())
         let call = try await usecase.open(node: node, callOptions: .defaults, credentials: nil)
@@ -226,9 +226,11 @@ struct LazyReadLiveTests: Sendable {
         try await appendEvents(count: 5, to: stream)
 
         let unauthorised = stream.authenticated(.credentials(username: "admin", password: "wrong-password"))
+        var count = 0
         await #expect(throws: KurrentError.self) {
-            for try await _ in unauthorised.read().lazy {}
+            for try await _ in unauthorised.read().lazy { count += 1 }
         }
+        #expect(count == 0)
         #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
     }
 
@@ -238,6 +240,7 @@ struct LazyReadLiveTests: Sendable {
         defer { try? client.shutdown() }
         let count = try await client.allStreams.read { $0.limit = 5 }.lazy.reduce(0) { total, _ in total + 1 }
         #expect(count == 5)
+        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
     }
 
     @Test("After shutdown, the first next() throws connectionClosed")
@@ -249,5 +252,44 @@ struct LazyReadLiveTests: Sendable {
         await #expect(throws: KurrentError.connectionClosed) {
             for try await _ in stream.read().lazy {}
         }
+    }
+
+    @Test("Cancelling one lazy read leaves a concurrent read on the shared connection intact")
+    func cancellingLazyKeepsSharedConnection() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
+        try await appendEvents(count: 300, to: stream)
+        let createdBefore = client.selector.connections.createdSharedConnectionCount
+
+        let (firstElement, signal) = AsyncStream.makeStream(of: Void.self)
+        let reader = Task {
+            defer { signal.finish() }
+            var count = 0
+            for try await _ in stream.read().lazy {
+                count += 1
+                if count == 1 { signal.yield() }
+                try? await Task.sleep(for: .milliseconds(50))   // non-throwing: cancellation must come from the SDK
+            }
+            return count
+        }
+        let arrived = await withTaskGroup(of: Bool.self) { group in
+            group.addTask { for await _ in firstElement { return true }; return false }
+            group.addTask { try? await Task.sleep(for: .seconds(10)); return false }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
+        }
+        try #require(arrived, "the lazy read never produced its first element")
+
+        let before = try await stream.read().reduce(0) { n, _ in n + 1 }
+        reader.cancel()
+        await #expect(throws: CancellationError.self) { _ = try await reader.value }
+        let after = try await stream.read().reduce(0) { n, _ in n + 1 }
+
+        #expect(before == 300)
+        #expect(after == 300)
+        #expect(client.selector.connections.createdSharedConnectionCount == createdBefore)
+        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
     }
 }
