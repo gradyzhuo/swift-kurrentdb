@@ -50,22 +50,34 @@ extension Streams where Target: SpecifiedStreamTarget {
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
             let messages = ResponseHandoff<UnderlyingResponse>(onTermination: completion)
 
+            let handlerCancellation = HandlerCancellation()
             Task {
                 do {
                     let client = ServiceClient(wrapping: connection)
                     try await client.read(request: request, options: callOptions) {
                         // An infinite loop must be executed inside the `onResponse` closure; if you leave the onResponse closure, the connection will end.
-                        for try await message in $0.messages.cancelOnGracefulShutdown() {
-                            try await messages.send(message)
+                        do {
+                            for try await message in $0.messages.cancelOnGracefulShutdown() {
+                                try await messages.send(message)
+                            }
+                        } catch is CancellationError {
+                            handlerCancellation.mark()
+                            throw CancellationError()
                         }
+                        // Graceful shutdown does not cancel this task, a deadline does.
+                        if Task.isCancelled { handlerCancellation.mark() }
                     }
+                    // Older grpc-swift returns normally when the deadline cancelled the handler.
+                    if handlerCancellation.isMarked { throw deadlineExceededError() }
                     // After the RPC returned: a deadline cancels the handler and ends the loop above
                     // quietly (the merge behind cancelOnGracefulShutdown yields nil on cancellation),
                     // so finishing inside the handler would commit a clean end before client.read
                     // throws its deadlineExceeded.
                     messages.finish()
                 } catch {
-                    messages.finish(throwing: error)
+                    // Older grpc-swift rethrows the handler's CancellationError instead of the
+                    // deadline error; nothing cancels this task on purpose, so map it.
+                    messages.finish(throwing: deadlineOrOriginal(error))
                 }
             }
             return try await .init(messages: messages)
