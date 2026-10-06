@@ -19,7 +19,7 @@
 
 ### 目標
 
-1. 提供一種讀法：記憶體有上限（交接容量 + 一個 HTTP/2 stream flow-control window），且**迭代結束（跑完、`break`、`throw`、呼叫端 Task 取消）RPC 就關閉、租約就歸還**。
+1. 提供一種讀法：記憶體有上限（交接通道：一個已緩衝元素加上被暫停的 producer 手上持有的一個元素；傳輸層 `NIOAsyncChannel` 的 inbound 訊息佇列，grpc-swift-nio-transport 預設 high watermark 為 10 則完整訊息；以及一個 HTTP/2 stream flow-control window，預設約 8 MiB），不與結果大小成正比；不宣稱測試未量測的位元組上限，且**迭代結束（跑完、`break`、`throw`、呼叫端 Task 取消）RPC 就關閉、租約就歸還**。
 2. 訂閱改為有背壓，不再無上限累積。
 3. 2.x 內完成，**不改變任何既有公開符號的簽名或行為、不 deprecate**；既有的呼叫（`try await read()`、`read { … }`、`for try await … in read()`、`.reduce` 等）一字不改、語意不變。**明文接受的唯一例外**（2026-10-06 決定，見 §6）：在同步 context 把 `stream.read` 當函式值存起來的寫法，其型別會改為 `ReadCall` factory——這在實務上極少見，且後果是編譯錯誤而非靜默改變；不為它另設入口名稱。
 4. 為 3.0「`read()` 預設 lazy」鋪路（ADR 0001）。
@@ -75,6 +75,7 @@ public struct Lazy: AsyncSequence, Sendable {
 ```
 
 - 每次 `makeAsyncIterator()` 代表一條新的 RPC；sequence 本身是冷的、可重複迭代。
+- 記憶體上限（每條 lazy read）：交接通道（一個已緩衝元素 + 被暫停 producer 持有的一個元素）、傳輸層 inbound 訊息佇列（預設 10 則訊息）、一個 HTTP/2 stream flow-control window（預設約 8 MiB）；不與結果大小成正比，不宣稱測試未量測的位元組上限。
 - `Iterator` 是 reference type。第一次 `next()`：`Task.checkCancellation()` → `withRetry(policy:) { node in open(node) }`（選節點、檢查 `serverInfo.isSupported`、`acquire` 共用租約、建 request、起 Task 跑 `client.read`、等伺服器接受）→ 取得 `ScopedCall`。之後每次 `next()` 就是 `handoff.next()`。
 - 退場（§4.3）：iterator `deinit` 時 `handoff.cancel()`、`task.cancel()`，並以一個 unstructured `Task` 執行 `await task.value; lease.release()`（deinit 不能 await）。所以迴圈跑完、`break`、`throw`、呼叫端 Task 取消都會關 RPC。唯一守不住的情況：呼叫端手動 `makeAsyncIterator()` 後把 iterator 存起來——文件註明。
 - 取消：呼叫端 Task 被取消時 `next()` 拋 `CancellationError`（不是安靜回 `nil`），不論取消發生在選節點、等接受、或迭代中。
@@ -109,7 +110,7 @@ public var buffered: AsyncThrowingStream<ReadResponse, any Error> { get async th
 單一 producer / 單一 consumer、固定容量（預設 1）的交接通道，`Mutex` + `CheckedContinuation` 實作，不新增依賴。
 
 - `init(capacity: Int = 1, onTermination: @escaping @Sendable ((any Error)?) -> Void = { _ in })`，`precondition(capacity >= 1)`。
-- `send(_:) async throws`：滿則 suspend；通道終止後 throw `CancellationError`。**producer 的 Task 在 `send` 中被取消 ≡ `finish(throwing: CancellationError())`**（consumer 排空 buffer 後收到 `CancellationError`，被截斷的資料不能長得像正常結束）。
+- `send(_:) async throws`：滿則 suspend；通道終止後 throw `CancellationError`。**producer 的 Task 在 `send` 中被取消只喚醒 producer**：suspended 的 `send` 以 `CancellationError` 返回，之後的 `send` 立即拋 `CancellationError`（記錄 `producerCancelled`），但**通道保持開啟、不設 terminal**；終結錯誤由 producer 的擁有者以 `finish(throwing:)` / `finish()` 決定，或由 consumer 取消。原因：grpc-swift 以取消 response handler 的 Task 來執行 RPC deadline，若在此直接以 `CancellationError` 終結，之後擁有者帶來的真正錯誤（`RPCError.deadlineExceeded`）會因冪等而被丟棄，閒置的 `.lazy` / 訂閱消費者就會把逾時當成取消；RPC 自己的最終錯誤必須贏過 grpc-swift 用來強制 deadline 的 Task 取消。
 - `next() async throws -> Element?`：空則 suspend；須 cancellation-aware（`withTaskCancellationHandler`），consumer Task 取消 → `cancel()`。`precondition(state.consumer == nil)`：單一 consumer。
 - `finish(throwing:)`（producer 側，冪等）：設 terminal；喚醒等待中的 consumer；**也喚醒 pending 的 producer（以 `CancellationError`）**，其元素丟棄不計數；`onTermination(error)` 一次。consumer 先排空 buffer 再收到 `nil` / error；error 只拋一次，之後 `nil`。
 - `cancel()`（consumer 側，冪等）：
@@ -124,7 +125,7 @@ public var buffered: AsyncThrowingStream<ReadResponse, any Error> { get async th
 - `package protocol ScopedStreamResponse: UnaryStream, BufferedStreamResponse`（`GRPCEncapsulates/ResponseHandlable.swift`），要求 `call<Result: Sendable>(connection:request:callOptions:onResponse:)`：呼叫 generated client 的 `read(request:options:onResponse:)` 並原樣轉傳 `onResponse`。`Streams.Read`、`Streams.ReadAll` 遵守。4 個 wire-shape protocol 不動。
 - `AcceptanceGate`（private）：一次性 open / fail 信號，`wait()` cancellation-aware，continuation 恰好 resume 一次。
 - `package final class ScopedCall<Response>`：持有 `handoff`、`lease: SharedLease`、`task: Task<Void, Never>`。`close() async`：`handoff.cancel()` → `task.cancel()` → `await task.value` → `lease.release()`（順序不可變：先 consumer 側終止，退場才是安靜的）。另提供給 iterator deinit 用的非 await 版本（`cancel()` + 背景 Task 收尾）。
-- `open(node:callOptions:credentials:) async throws(KurrentError) -> ScopedCall<Response>`（`UnaryStream+Scoped.swift`，extension on `ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix`）：`isSupported` 檢查 → `acquire` 租約 → 建 request（失敗則 release） → 起 Task 跑 `call(...)`：`response.accepted` 成功則 `gate.open()` 後 `for try await message in response.messages { try await handoff.send(handle(message)) }`，結束 `finish()`，錯誤 `finish(throwing:)`；失敗則 `gate.fail(error)` → 等 `gate.wait()`，失敗則 `close()` 後拋出。呼叫端在等待接受時被取消 → 映成 `KurrentError.connectionClosed`（typed throws 限制；`withRetry` 不重試它），由 iterator 層再轉成 `CancellationError`。
+- `open(node:callOptions:credentials:) async throws(KurrentError) -> ScopedCall<Response>`（`UnaryStream+Scoped.swift`，extension on `ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix`）：`isSupported` 檢查 → `acquire` 租約 → 建 request（失敗則 release） → 起 Task 跑 `call(...)`：`response.accepted` 成功則 `gate.open()` 後 `for try await message in response.messages { try await handoff.send(handle(message)) }`，結束 `finish()`；handler 內不 catch：`send` / `handle` / `messages` 拋出的錯誤傳出 handler，由外層 `do/catch` 在 `call(...)` 最終拋出什麼就 `finish(throwing:)` 什麼（deadline 時為 `RPCError.deadlineExceeded`），`call(...)` 正常返回後再 `finish()` 一次（冪等的保險）；失敗則 `gate.fail(error)` → 等 `gate.wait()`，失敗則 `close()` 後拋出。呼叫端在等待接受時被取消 → 映成 `KurrentError.connectionClosed`（typed throws 限制；`withRetry` 不重試它），由 iterator 層再轉成 `CancellationError`。
 - `.lazy` 的 iterator 第一次 `next()` 走 `withRetry { open }`；setup 任一階段若 `Task.isCancelled` 一律拋 `CancellationError`（節點探索會把取消包成 `internalClientError`，不能只認 `connectionClosed`）。
 
 ### 4.3 `.lazy` iterator 的生命週期
@@ -155,7 +156,7 @@ deinit:        call.handoff.cancel(); call.task.cancel(); Task { await call.task
 | 中途 `break` | stream 留著直到釋放（RPC 早已結束） | iterator 釋放 → RPC 關、租約（非同步）歸還 |
 | 存起來不迭代 | 無 RPC 可佔 | sequence 無害；iterator 若被存起來則 RPC 持續佔用 |
 | 迭代中 body 卡在別的 await | — | RPC 持續開啟，伺服器被背壓暫停 |
-| 記憶體 | ∝ 結果大小 | ≤ 容量 + 一個 HTTP/2 stream window |
+| 記憶體 | ∝ 結果大小 | 有界：交接通道（1 個緩衝 + 1 個被暫停 producer 持有）+ 傳輸層 inbound 佇列（預設 10 則訊息）+ 一個 HTTP/2 stream window（預設約 8 MiB）；不與結果大小成正比 |
 
 ## 6. Overload 解析的硬規定與已知限制
 
@@ -173,13 +174,13 @@ deinit:        call.handoff.cancel(); call.task.cancel(); Task { await call.task
 **Task 1 spike（live）**：在共用租約上開一條 Subscribe 作為「不會結束的 RPC」，等它收到第一筆事件後，於同一連線上跑完整的 buffered read；取消前者；再跑一次 read；斷言兩次都讀到全部事件、`createdSharedConnectionCount` 未增加、前者以 cancellation 結束。不成立則 `.lazy` 改用獨立連線。
 
 **離線（`Tests/MockClientTests`）**
-- `ResponseHandoffTests`：順序交付；`finish(throwing:)` 排空後拋一次再 `nil`；producer 最多領先容量筆（用 poll-until，不用固定 yield 次數）；`cancel()` 喚醒 suspended producer 且 `onTermination` 一次；finish 後 cancel 不再觸發 `onTermination` **且丟棄 buffer 與待交付 error**；未迭代即丟棄的 stream 會 cancel；break 後釋放會 cancel；consumer Task 取消會 cancel 且 consumer 以 success 結束；producer Task 取消 → consumer 排空後收 `CancellationError`、`onTermination` 帶非 nil error；`finish` 喚醒 pending producer；suspended consumer 收到 `finish(throwing:)` 的 error；transform throw → handoff 被 cancel、後續 `send` 拋 `CancellationError`、`next()` 回 `nil`。
+- `ResponseHandoffTests`：順序交付；`finish(throwing:)` 排空後拋一次再 `nil`；producer 最多領先容量筆（用 poll-until，不用固定 yield 次數）；`cancel()` 喚醒 suspended producer 且 `onTermination` 一次；finish 後 cancel 不再觸發 `onTermination` **且丟棄 buffer 與待交付 error**；未迭代即丟棄的 stream 會 cancel；break 後釋放會 cancel；consumer Task 取消會 cancel 且 consumer 以 success 結束；producer Task 取消 → producer 以 `CancellationError` 返回但通道仍開啟，擁有者 `finish(throwing:)` 後 consumer 排空再收到該錯誤、`onTermination` 一次；取消後再 `send` 立即拋 `CancellationError`；`finish` 喚醒 pending producer；suspended consumer 收到 `finish(throwing:)` 的 error；transform throw → handoff 被 cancel、後續 `send` 拋 `CancellationError`、`next()` 回 `nil`。
 - `LazyReadPathTests`（127.0.0.1:1 拒絕連線 + NIO `ServerBootstrap` silent listener）：拒絕連線 → 第一次 `next()` 拋 `KurrentError`、走共用路徑（`createdSharedConnectionCount == 1`、dedicated 0）、`retainCount` 最終 0；unsupported method → `.unsupportedFeature`、不取租約；等接受時取消（silent listener、無 timeout）→ `CancellationError`、retainCount 0；未快取節點、預先取消 → `CancellationError`；探索中取消 → `CancellationError`；iterator 被丟棄（未 `next()`）不留任何租約。
 - 既有 `UnaryStreamConnectionPathTests`：證明 `read()` / `.buffered` 仍走 buffered 共用路徑。
 - Overload 解析的編譯測試（§6）。
 
 **Live（`Tests/StreamsTests`，3 節點 TLS cluster）**
-- `LazyReadLiveTests`：`.lazy` 與 `read()` / `.buffered` 讀同一 stream 結果相同；只取第一筆就 `break` → `eventually(retainCount == 0)`，且 `sentCount - deliveredCount <= capacity`、`sentCount < 總筆數`（背壓）；迭代中 `break` 前 `retainCount == 1`（正向對照）；呼叫端 Task 取消（第一筆到達後再取消，用 signal 不用固定 sleep）→ `CancellationError`、retainCount 0；不存在的 stream → `.lazy` 與 `read()` 錯誤描述一致，且錯誤在迭代中浮現；`$all` `.lazy` 配 `limit`；錯誤帳密 → 第一次 `next()` 前拋 `KurrentError`；`shutdown()` 後 `.lazy` 第一次 `next()` 拋 `.connectionClosed`；同一共用連線上取消一條 `.lazy` 不影響並行的 read（Task 1 spike 的 API 層版本）。
+- `LazyReadLiveTests`：短 deadline（1s）+ 閒置消費者 → `.lazy` 與訂閱收到 `RPCError.deadlineExceeded` 而非 `CancellationError`；`.lazy` 與 `read()` / `.buffered` 讀同一 stream 結果相同；只取第一筆就 `break` → `eventually(retainCount == 0)`，且 `sentCount - deliveredCount <= capacity`、`sentCount < 總筆數`（背壓）；迭代中 `break` 前 `retainCount == 1`（正向對照）；呼叫端 Task 取消（第一筆到達後再取消，用 signal 不用固定 sleep）→ `CancellationError`、retainCount 0；不存在的 stream → `.lazy` 與 `read()` 錯誤描述一致，且錯誤在迭代中浮現；`$all` `.lazy` 配 `limit`；錯誤帳密 → 第一次 `next()` 前拋 `KurrentError`；`shutdown()` 後 `.lazy` 第一次 `next()` 拋 `.connectionClosed`；同一共用連線上取消一條 `.lazy` 不影響並行的 read（Task 1 spike 的 API 層版本）。
 - `SubscriptionBackpressureLiveTests`：慢消費者 → `sentCount - deliveredCount <= capacity` 且 `sentCount < N`（先 append N 筆、從 `.start` 訂閱）；`cancel()` 於消費端等待時 → 迴圈正常結束、獨立連線 `eventually` 歸零；`$all` 版本同樣有真實上限斷言。
 - 既有 `StreamsTests`、`AllStreamsTargetTests`、`ConnectionReuseLiveTests` 不改（它們測的是 `read()`，行為不變）。
 
