@@ -110,6 +110,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     }
 
     /// Reads events from the stream.
+    /// The whole result is fetched before this returns, so memory grows with the result; this is the same as ``ReadCall/buffered``. For large reads use `read().lazy`.
     ///
     /// ```swift
     /// let responses = try await client.streams(specified: "orders").read {
@@ -129,6 +130,28 @@ extension Streams where Target: SpecifiedStreamTarget {
         configure(&options)
         let usecase = Read(from: identifier, options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
+    }
+
+    /// Prepares a read whose delivery you choose with ``ReadCall/lazy`` or ``ReadCall/buffered``.
+    /// Nothing happens until one of them is used.
+    ///
+    /// ```swift
+    /// for try await response in client.streams(specified: "orders").read().lazy {
+    ///     print(try response.event.record.eventType)
+    /// }
+    /// ```
+    ///
+    /// - Parameter configure: Configures ``Read/Options`` (direction, limit, starting revision). Defaults to no-op.
+    public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) -> ReadCall {
+        var options = Read.Options()
+        configure(&options)
+        let usecase = Read(from: identifier, options: options)
+        let selector = selector, callOptions = callOptions, credentials = overrideCredentials
+        return ReadCall(
+            selector: selector,
+            openCall: { node throws(KurrentError) in try await usecase.open(node: node, callOptions: callOptions, credentials: credentials) },
+            bufferedRead: { () throws(KurrentError) in try await usecase.perform(selector: selector, callOptions: callOptions, credentials: credentials) }
+        )
     }
 
     /// Subscribes to live events from the stream.
