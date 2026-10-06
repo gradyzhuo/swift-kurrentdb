@@ -124,22 +124,21 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
                     switch response.accepted {
                     case .success:
                         accepted.open()
-                        // Same as the buffered send(): errors from the messages or from
-                        // handle(message:) reach the consumer as they are.
-                        do {
-                            for try await message in response.messages {
-                                if let response = try self.scopedResponse(for: message) {
-                                    try await handoff.send(response)
-                                }
+                        // An error from the messages, from handle(message:) or from send() propagates
+                        // to the catch below, so whatever call(...) finally throws (the RPC's own
+                        // error, e.g. deadlineExceeded, when grpc-swift cancels this task to enforce
+                        // a deadline) is the terminal error.
+                        for try await message in response.messages {
+                            if let response = try self.scopedResponse(for: message) {
+                                try await handoff.send(response)
                             }
-                            handoff.finish()
-                        } catch {
-                            handoff.finish(throwing: error)
                         }
+                        handoff.finish()
                     case let .failure(error):
                         accepted.fail(error)
                     }
                 }
+                handoff.finish()   // defensive; no-op when already finished
             } catch {
                 // No-op for whichever side already resolved.
                 accepted.fail(error)

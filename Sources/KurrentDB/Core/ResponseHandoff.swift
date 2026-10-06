@@ -14,10 +14,14 @@ import Synchronization
 /// `onTermination` runs exactly once, on whichever of the two happens first.
 ///
 /// Cancellation is split by side. Consumer-side cancellation ends quietly: the buffer is dropped
-/// and `next()` returns `nil`. Cancelling the producer's task inside ``send(_:)`` instead behaves
-/// like `finish(throwing: CancellationError())`: the consumer drains the buffer and then receives
-/// `CancellationError`, so truncated data never looks like a clean end. ``finish(throwing:)`` also
-/// wakes a suspended producer with `CancellationError`.
+/// and `next()` returns `nil`. Cancelling the producer's task wakes a producer suspended in
+/// ``send(_:)`` with `CancellationError` and makes every later `send` fail the same way, but it
+/// does not end the hand-off: the owner of the producer decides the terminal error. That matters
+/// because grpc-swift enforces an RPC deadline by cancelling the response handler's task, so the
+/// owner can still finish with the RPC's real final error (for example `deadlineExceeded`) instead
+/// of a `CancellationError`. The consumer drains the buffer and then receives whatever the owner
+/// passes to ``finish(throwing:)``. ``finish(throwing:)`` also wakes a suspended producer with
+/// `CancellationError`.
 package final class ResponseHandoff<Element: Sendable>: Sendable {
     private enum Terminal {
         case finished((any Error)?)
@@ -29,6 +33,7 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         var terminal: Terminal?
         var consumer: CheckedContinuation<Element?, any Error>?
         var producer: (element: Element, continuation: CheckedContinuation<Void, any Error>)?
+        var producerCancelled = false
         var sentCount = 0
         var deliveredCount = 0
         /// Released as soon as it is taken, so whatever it captures is not kept alive by a finished hand-off.
@@ -70,7 +75,7 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
                 let action: SendAction = state.withLock { state in
-                    if state.terminal != nil { return .fail }
+                    if state.terminal != nil || state.producerCancelled { return .fail }
                     if let consumer = state.consumer {
                         state.consumer = nil
                         state.sentCount += 1
@@ -93,8 +98,15 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 }
             }
         } onCancel: {
-            // The producer's task was cancelled: that is an abnormal end, not a quiet one.
-            finish(throwing: CancellationError())
+            // Wake the suspended producer and refuse further sends, but leave the hand-off open:
+            // the producer's owner finishes it with the RPC's real final error.
+            let producer: CheckedContinuation<Void, any Error>? = state.withLock { state in
+                state.producerCancelled = true
+                let producer = state.producer?.continuation
+                state.producer = nil
+                return producer
+            }
+            producer?.resume(throwing: CancellationError())
         }
     }
 

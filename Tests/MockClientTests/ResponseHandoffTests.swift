@@ -166,8 +166,8 @@ struct ResponseHandoffTests {
         await #expect(throws: CancellationError.self) { try await handoff.send(1) }
     }
 
-    @Test("Cancelling the producer's task is not a clean end for the consumer")
-    func producerCancellationIsNotACleanEnd() async throws {
+    @Test("Cancelling the producer's task wakes it but leaves the hand-off open for its owner's error")
+    func producerCancellationLeavesHandoffOpen() async throws {
         let probe = TerminationProbe()
         let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
         try await handoff.send(1)
@@ -175,11 +175,28 @@ struct ResponseHandoffTests {
         await settle()
         producer.cancel()
         await #expect(throws: CancellationError.self) { try await producer.value }
+        #expect(probe.count == 0)
+        handoff.finish(throwing: Boom())
         #expect(try await handoff.next() == 1)
-        await #expect(throws: CancellationError.self) { _ = try await handoff.next() }
+        await #expect(throws: Boom.self) { _ = try await handoff.next() }
         #expect(try await handoff.next() == nil)
         #expect(probe.count == 1)
-        #expect(probe.last == "\(CancellationError())")
+        #expect(probe.last == "\(Boom())")
+    }
+
+    @Test("After the producer's task was cancelled, a further send throws CancellationError at once")
+    func sendAfterProducerCancellationFails() async throws {
+        let handoff = ResponseHandoff<Int>(capacity: 4)
+        try await handoff.send(1)
+        let producer = Task {
+            while !Task.isCancelled { try? await Task.sleep(for: .milliseconds(5)) }
+            try await handoff.send(2)   // the task is cancelled when it gets here
+        }
+        await settle()
+        producer.cancel()
+        await #expect(throws: CancellationError.self) { try await producer.value }
+        await #expect(throws: CancellationError.self) { try await handoff.send(3) }
+        #expect(handoff.sentCount == 1)
     }
 
     @Test("finish() wakes a suspended producer with CancellationError")
