@@ -35,7 +35,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
             return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
                 let metadata = try Metadata(from: node.settings, overriding: credentials)
                 let request = try request(metadata: metadata)
-                return try await send(connection: connection.client, request: request, callOptions: callOptions) { error in
+                let responses = try await send(connection: connection.client, request: request, callOptions: callOptions) { error in
                     if let error {
                         logger.error("The error is thrown in the response of UnaryStream: \(error)")
                     }
@@ -43,6 +43,12 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
                     // 也因此結束。不能用 graceful shutdown:它會等無限期的訂閱結束。
                     connection.close()
                 }
+                // A shutdown closes the connection from outside; tell the response so a producer
+                // suspended on a slow consumer is released instead of waiting for it.
+                if let terminable = responses as? any ConnectionTerminable {
+                    connection.onClose { terminable.connectionDidClose() }
+                }
+                return responses
             }
         } catch {
             // setup 失敗(metadata、request、呼叫本身):stream 永遠不會終止,由這裡收尾。

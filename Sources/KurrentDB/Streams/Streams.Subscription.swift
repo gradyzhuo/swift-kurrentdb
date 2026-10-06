@@ -33,3 +33,11 @@ extension Streams {
         }
     }
 }
+
+extension Streams.Subscription: ConnectionTerminable {
+    /// The dedicated connection closed (client shutdown): wakes a producer suspended in `send`
+    /// and delivers `connectionClosed` once the buffer drains. No-op if the hand-off already ended.
+    package func connectionDidClose() {
+        messages.finish(throwing: KurrentError.connectionClosed)
+    }
+}

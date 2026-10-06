@@ -67,7 +67,7 @@ package final class ConnectionProvider: Sendable {
 
     private struct State {
         var shared: [Endpoint: SharedEntry] = [:]
-        var dedicated: [UInt64: Task<Void, Never>] = [:]
+        var dedicated: [UInt64: DedicatedLifecycle] = [:]
         var nextID: UInt64 = 0
         var isShutdown = false
         var createdSharedConnectionCount = 0
@@ -265,8 +265,9 @@ package final class ConnectionProvider: Sendable {
             let runTask = Task {
                 await Self.run(client, endpoint: endpoint)
             }
-            state.dedicated[id] = runTask
-            return DedicatedConnection(provider: self, id: id, client: client, runTask: runTask)
+            let lifecycle = DedicatedLifecycle(runTask: runTask)
+            state.dedicated[id] = lifecycle
+            return DedicatedConnection(provider: self, id: id, client: client, lifecycle: lifecycle)
         }
     }
 
@@ -282,22 +283,26 @@ package final class ConnectionProvider: Sendable {
     ///
     /// 這是**發起**關閉:返回時連線不保證已經關閉完成。
     package func shutdown() {
-        let tasks = state.withLock { state -> [Task<Void, Never>] in
+        let (tasks, dedicated) = state.withLock { state -> ([Task<Void, Never>], [DedicatedLifecycle]) in
             guard !state.isShutdown else {
-                return []
+                return ([], [])
             }
             state.isShutdown = true
-            var tasks = state.shared.values.map(\.runTask) + Array(state.dedicated.values)
+            var tasks = state.shared.values.map(\.runTask)
             if let sweeper = state.sweeper {
                 tasks.append(sweeper)
             }
+            let dedicated = Array(state.dedicated.values)
             state.shared.removeAll()
             state.dedicated.removeAll()
             state.sweeper = nil
-            return tasks
+            return (tasks, dedicated)
         }
         for task in tasks {
             task.cancel()
+        }
+        for lifecycle in dedicated {
+            lifecycle.terminate()
         }
     }
 
@@ -414,33 +419,84 @@ package final class SharedLease: Sendable {
     }
 }
 
+/// The part of a dedicated connection that both its handle and the provider's registry need:
+/// the run task plus the hooks to run when it is terminated. It holds no reference to the
+/// provider, so the registry -> lifecycle edge cannot form a cycle.
+package final class DedicatedLifecycle: Sendable {
+    private struct State {
+        var terminated = false
+        var hooks: [@Sendable () -> Void] = []
+    }
+
+    private let runTask: Task<Void, Never>
+    private let state = Mutex(State())
+
+    fileprivate init(runTask: Task<Void, Never>) {
+        self.runTask = runTask
+    }
+
+    /// Idempotent. Runs the registered hooks (outside the lock), then cancels the run task.
+    /// Hooks go first: cancelling the run task makes the transport fail the call, and that
+    /// failure would reach a hand-off before the hook could tell it the close was deliberate.
+    fileprivate func terminate() {
+        let hooks: [@Sendable () -> Void]? = state.withLock { state in
+            guard !state.terminated else { return nil }
+            state.terminated = true
+            let hooks = state.hooks
+            state.hooks = []
+            return hooks
+        }
+        guard let hooks else { return }
+        for hook in hooks { hook() }
+        runTask.cancel()
+    }
+
+    /// Runs `hook` once after termination; immediately if already terminated.
+    fileprivate func onTerminate(_ hook: @escaping @Sendable () -> Void) {
+        let runNow: Bool = state.withLock { state in
+            if state.terminated { return true }
+            state.hooks.append(hook)
+            return false
+        }
+        if runNow { hook() }
+    }
+}
+
 /// 一條獨立連線的 handle。呼叫結束時(stream 終止、setup 失敗)``close()``。
 package final class DedicatedConnection: Sendable {
     package let client: ConnectionProvider.Client
     private let provider: ConnectionProvider
     private let id: UInt64
-    private let runTask: Task<Void, Never>
-    private let closed = Mutex(false)
+    private let lifecycle: DedicatedLifecycle
 
-    fileprivate init(provider: ConnectionProvider, id: UInt64, client: ConnectionProvider.Client, runTask: Task<Void, Never>) {
+    fileprivate init(provider: ConnectionProvider, id: UInt64, client: ConnectionProvider.Client, lifecycle: DedicatedLifecycle) {
         self.provider = provider
         self.id = id
         self.client = client
-        self.runTask = runTask
+        self.lifecycle = lifecycle
     }
 
     /// 冪等。取消這條連線的 runTask(中止其上所有進行中的 RPC)並從 provider 註銷。
+    /// Registered ``onClose(_:)`` hooks run first, once. Also reached by the provider's
+    /// `shutdown()`, which terminates the lifecycle directly.
     package func close() {
-        let first = closed.withLock { closed in
-            defer { closed = true }
-            return !closed
-        }
-        guard first else { return }
         provider.deregisterDedicated(id)
-        runTask.cancel()
+        lifecycle.terminate()
+    }
+
+    /// Registers a hook that runs once when the connection closes, by ``close()`` or by the
+    /// provider's shutdown, outside any lock. A hook registered after the close runs immediately.
+    package func onClose(_ hook: @escaping @Sendable () -> Void) {
+        lifecycle.onTerminate(hook)
     }
 
     deinit {
         close()
     }
+}
+
+/// A response value that must be told when the dedicated connection carrying it has closed,
+/// so a producer suspended on the consumer can be released.
+package protocol ConnectionTerminable: Sendable {
+    func connectionDidClose()
 }
