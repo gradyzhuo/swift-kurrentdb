@@ -113,6 +113,11 @@ extension Duration {
 /// attempts, `invalidate` is called, the backoff delay is applied, and a new
 /// node is selected for the next attempt. Any other error propagates immediately.
 ///
+/// A cancelled task never retries: the transport reports a cancelled call as a node
+/// failure (`unknown: "The transport threw an unexpected error."`), and treating it as one
+/// would drop the cached node for every other caller and run discovery on a task that is
+/// going away. The error is rethrown as-is.
+///
 /// Closure parameters use untyped `throws` (matching the `withRethrowingError`
 /// convention) because Swift 6 does not support typed throws inside `@Sendable`
 /// closures. Non-`KurrentError` throws are wrapped as `.internalClientError`.
@@ -148,7 +153,7 @@ package func withRetry<NodeType: Sendable, T: Sendable>(
 
         do {
             return try await operation(node)
-        } catch let error as KurrentError where error.isNodeFailure && attempt < policy.maxAttempts {
+        } catch let error as KurrentError where error.isNodeFailure && !Task.isCancelled && attempt < policy.maxAttempts {
             await invalidate()
 
             if currentDelay > .zero {

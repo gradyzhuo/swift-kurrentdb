@@ -285,4 +285,38 @@ struct RetryPolicyTests {
         #expect(invalidateCalled.value == 1)   // invalidated after first failure
         #expect(thrownError == .notLeaderException)
     }
+
+    /// The transport reports a cancelled call as a node failure. Retrying it would invalidate
+    /// the cached node for every other caller and run discovery on a dying task — seen on CI as
+    /// an extra shared connection after a cancelled read (PR #152).
+    @Test("a cancelled task is not retried and does not invalidate the node")
+    func testCancelledTaskDoesNotRetry() async throws {
+        let attempts = Counter()
+        let invalidateCalled = Counter()
+
+        let task = Task {
+            try await withRetry(
+                policy: .default,
+                selectNode: { "node" },
+                invalidate: { invalidateCalled.increment() }
+            ) { _ in
+                attempts.increment()
+                // Wait until the cancellation below has landed, then fail the way the transport does.
+                while !Task.isCancelled { await Task.yield() }
+                throw KurrentError.grpcError(cause: .init(code: .unknown, message: "The transport threw an unexpected error."))
+            }
+        }
+        task.cancel()
+
+        var thrownError: KurrentError?
+        do {
+            _ = try await task.value
+        } catch {
+            thrownError = error as? KurrentError
+        }
+
+        #expect(attempts.value == 1)
+        #expect(invalidateCalled.value == 0)
+        #expect(thrownError == .grpcError(cause: .init(code: .unknown, message: "The transport threw an unexpected error.")))
+    }
 }
