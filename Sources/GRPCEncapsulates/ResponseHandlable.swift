@@ -55,3 +55,17 @@ package protocol StreamResponseHandlable: UnaryResponseHandlable where Self: Use
 /// constraint if one is introduced.
 package protocol BufferedStreamResponse: StreamResponseHandlable
     where Response: GRPCResponse<UnderlyingResponse> {}
+
+/// A buffered stream usecase that can also hand its server-streaming call to a caller-owned
+/// handler. KurrentDB's lazy read (`ReadCall.lazy`) drives the call from its own iterator.
+///
+/// `call` must invoke this usecase's generated client method and pass `onResponse` through
+/// unchanged; the caller owns iteration, backpressure and the RPC's lifetime.
+package protocol ScopedStreamResponse: UnaryStream, BufferedStreamResponse {
+    func call<Result: Sendable>(
+        connection: GRPCClient<Transport>,
+        request: ClientRequest<UnderlyingRequest>,
+        callOptions: CallOptions,
+        onResponse: @Sendable @escaping (StreamingClientResponse<UnderlyingResponse>) async throws -> Result
+    ) async throws -> Result
+}

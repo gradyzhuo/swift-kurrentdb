@@ -10,7 +10,7 @@ import GRPCEncapsulates
 
 extension Streams where Target == AllStreamsTarget {
     /// Usecase that reads events from the global `$all` stream.
-    public struct ReadAll: UnaryStream, BufferedStreamResponse {
+    public struct ReadAll: UnaryStream, BufferedStreamResponse, ScopedStreamResponse {
         package typealias ServiceClient = UnderlyingClient
         package typealias UnderlyingRequest = ServiceClient.UnderlyingService.Method.Read.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.Read.Output
@@ -75,6 +75,15 @@ extension Streams where Target == AllStreamsTarget {
                 }
                 return stream
             }
+        }
+
+        package func call<Result: Sendable>(
+            connection: GRPCClient<Transport>,
+            request: ClientRequest<UnderlyingRequest>,
+            callOptions: CallOptions,
+            onResponse: @Sendable @escaping (StreamingClientResponse<UnderlyingResponse>) async throws -> Result
+        ) async throws -> Result {
+            try await ServiceClient(wrapping: connection).read(request: request, options: callOptions, onResponse: onResponse)
         }
     }
 }
