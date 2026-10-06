@@ -46,7 +46,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
                 // A shutdown closes the connection from outside; tell the response so a producer
                 // suspended on a slow consumer is released instead of waiting for it.
                 if let terminable = responses as? any ConnectionTerminable {
-                    connection.onClose { terminable.connectionDidClose() }
+                    connection.onClose(terminable.connectionCloseHandler)
                 }
                 return responses
             }
