@@ -9,7 +9,7 @@ import Synchronization
 ///
 /// The producer (a gRPC response handler) suspends in ``send(_:)`` while `capacity` elements
 /// are waiting, so it stops pulling from the transport; HTTP/2 flow control then stops the
-/// server. ``finish(throwing:)`` is called by the producer, ``cancel()`` by the consumer side
+/// server. ``finish(throwing:)`` is called by the producer's owner, ``cancel()`` by the consumer side
 /// (directly, on task cancellation, or when the stream from ``makeStream()`` is released).
 /// `onTermination` runs exactly once, on whichever of the two happens first.
 ///
