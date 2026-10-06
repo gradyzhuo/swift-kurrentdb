@@ -96,7 +96,10 @@ struct SubscriptionBackpressureLiveTests: Sendable {
 
         let subscription = try await stream.subscribe { $0.revision = .start }
         // Consume nothing: the producer fills the buffer and suspends in send.
-        #expect(try await eventually { subscription.messages.sentCount >= 1 })
+        // Wait until the producer is provably suspended in send (buffer full, one more waiting).
+        // The test proves the release indirectly, through the error type: `connectionClosed`
+        // comes from the close hook, whereas the transport's own failure would be `unavailable`.
+        #expect(try await eventually { subscription.messages.sentCount - subscription.messages.deliveredCount == subscription.messages.capacity })
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
         try client.shutdown()
@@ -109,5 +112,23 @@ struct SubscriptionBackpressureLiveTests: Sendable {
             thrown = error
         }
         #expect(thrown as? KurrentError == .connectionClosed, "thrown: \(String(describing: thrown))")
+    }
+
+    @Test("Dropping a subscription without cancel() closes its dedicated connection")
+    func droppedSubscriptionClosesConnection() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "Backpressure-\(UUID().uuidString)")
+        _ = try await stream.append(events: events(3)) { $0.expectedRevision = .any }
+
+        try await receiveOneEventThenDrop(stream)
+        #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
+    }
+
+    /// Scopes the subscription and its iterator so every reference is gone on return.
+    private func receiveOneEventThenDrop(_ stream: Streams<SpecifiedStream>) async throws {
+        let subscription = try await stream.subscribe { $0.revision = .start }
+        var iterator = subscription.events.makeAsyncIterator()
+        _ = try await iterator.next()
     }
 }
