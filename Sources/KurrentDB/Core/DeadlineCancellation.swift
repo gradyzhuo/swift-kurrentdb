@@ -1,0 +1,39 @@
+//
+//  DeadlineCancellation.swift
+//  KurrentCore
+//
+
+import GRPCCore
+import Synchronization
+
+/// Records that an RPC handler observed task cancellation.
+///
+/// grpc-swift enforces a call deadline by cancelling the handler. Newer releases then throw
+/// `RPCError(.deadlineExceeded)` from the call; older ones (resolved under Swift 6.0) rethrow the
+/// handler's own `CancellationError`, or return normally when the handler's loop just ended on
+/// cancellation. The owner of the call cannot tell these apart from the call's result alone, so the
+/// handler marks what it saw and the owner maps it with `deadlineOrOriginal(_:)`.
+package final class HandlerCancellation: Sendable {
+    private let observed = Mutex(false)
+
+    package init() {}
+
+    package func mark() { observed.withLock { $0 = true } }
+    package var isMarked: Bool { observed.withLock { $0 } }
+}
+
+/// Maps a `CancellationError` that the owner's task did not request to the deadline error.
+///
+/// Our own `close()` cancels the owner's task, so `Task.isCancelled` is true for a requested
+/// cancellation; a `CancellationError` seen while the task is not cancelled can only have been raised
+/// inside grpc-swift to enforce the call deadline. Must be called from the owner's task.
+package func deadlineOrOriginal(_ error: any Error) -> any Error {
+    if error is CancellationError, !Task.isCancelled {
+        return deadlineExceededError()
+    }
+    return error
+}
+
+package func deadlineExceededError() -> RPCError {
+    RPCError(code: .deadlineExceeded, message: "RPC timed out before completing")
+}
