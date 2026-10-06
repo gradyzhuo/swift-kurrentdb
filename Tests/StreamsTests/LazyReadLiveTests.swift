@@ -72,15 +72,18 @@ struct LazyReadLiveTests: Sendable {
             defer { firstEventSignal.finish() }
             let service = Streams<SpecifiedStream>.UnderlyingClient(wrapping: lease.client)
             try await service.read(request: request) { response in
+                // Keep draining: a subscription never ends on its own, so only cancelling the
+                // task ends this loop, and the cancellation must surface through the RPC path.
+                var signalled = false
                 for try await message in response.messages {
-                    if case .event = message.content {
+                    if !signalled, case .event = message.content {
+                        signalled = true
                         firstEventSignal.yield()
-                        break
                     }
                 }
-                try await Task.sleep(for: .seconds(60))   // park until cancelled
             }
         }
+        defer { parked.cancel() }
 
         // Wait until A is provably in flight (bounded).
         let arrived = await withTaskGroup(of: Bool.self) { group in
