@@ -18,21 +18,18 @@ extension Streams {
         /// Server-assigned identifier for this subscription, if provided.
         public let subscriptionId: String?
 
-        package let continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation
+        /// Bounded hand-off between the gRPC response handler and ``events``.
+        package let messages: ResponseHandoff<Read.UnderlyingResponse>
 
-        package let task: Task<Void, Never>?
-
-        package init(events: AsyncThrowingStream<ReadEvent, Error>, continuation: AsyncThrowingStream<ReadEvent, any Error>.Continuation, subscriptionId: String?, task: Task<Void, Never>? = nil) {
+        package init(events: AsyncThrowingStream<ReadEvent, Error>, subscriptionId: String?, messages: ResponseHandoff<Read.UnderlyingResponse>) {
             self.events = events
-            self.continuation = continuation
             self.subscriptionId = subscriptionId
-            self.task = task
+            self.messages = messages
         }
 
         /// Cancels the subscription and terminates the event stream.
         public func cancel() {
-            task?.cancel()
-            continuation.finish()
+            messages.cancel()
         }
     }
 }
