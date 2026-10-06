@@ -128,7 +128,9 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
                         // handle(message:) reach the consumer as they are.
                         do {
                             for try await message in response.messages {
-                                try await handoff.send(self.handle(message: message))
+                                if let response = try self.scopedResponse(for: message) {
+                                    try await handoff.send(response)
+                                }
                             }
                             handoff.finish()
                         } catch {

@@ -232,3 +232,23 @@ struct LazyReadPathTests {
         #expect(selector.connections.createdSharedConnectionCount == 1)
     }
 }
+
+@Suite("Lazy read control frames")
+struct LazyReadControlFrameTests {
+    @Test("ReadAll's scoped path skips control frames like its buffered path")
+    func readAllScopedSkipsControlFrames() throws {
+        let all = Streams<AllStreamsTarget>.ReadAll(options: .init())
+        var checkpoint = Streams<AllStreamsTarget>.ReadAll.UnderlyingResponse()
+        checkpoint.content = .checkpoint(.init())
+        #expect(try all.scopedResponse(for: checkpoint) == nil)
+
+        var notFound = Streams<AllStreamsTarget>.ReadAll.UnderlyingResponse()
+        notFound.content = .streamNotFound(.init())
+        // Not skipped: handle(message:) maps it to a resource-not-found error, as the buffered path does.
+        #expect(throws: KurrentError.self) { _ = try all.scopedResponse(for: notFound) }
+
+        // Specified-stream reads do not expect control frames, same as read() today.
+        let specified = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
+        #expect(throws: (any Error).self) { _ = try specified.scopedResponse(for: checkpoint) }
+    }
+}
