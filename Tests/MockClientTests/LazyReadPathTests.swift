@@ -219,6 +219,29 @@ struct LazyReadPathTests {
         #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
     }
 
+    @Test("lazy: a pre-cancelled first next() finishes the iterator; a later next() opens nothing")
+    func lazyPreCancelledFirstNextFinishes() async throws {
+        let selector = makeUncachedSelector()
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        let iterator = streams.read().lazy.makeAsyncIterator()
+        let reader = Task { () -> (firstThrewCancellation: Bool, second: Streams<SpecifiedStream>.ReadResponse?) in
+            withUnsafeCurrentTask { $0?.cancel() }
+            var firstThrewCancellation = false
+            do {
+                _ = try await iterator.next()
+            } catch is CancellationError {
+                firstThrewCancellation = true
+            }
+            return (firstThrewCancellation, try await iterator.next())   // finished: nil, no RPC
+        }
+        let outcome = try await reader.value
+        #expect(outcome.firstThrewCancellation)
+        #expect(outcome.second == nil)
+        #expect(selector.connections.createdSharedConnectionCount == 0)
+    }
+
     @Test("lazy: after the open fails once, next() returns nil and opens no second RPC")
     func lazyFinishedAfterOpenFailure() async throws {
         let selector = await makeSelector(supporting: [Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init()).methodDescriptor])
