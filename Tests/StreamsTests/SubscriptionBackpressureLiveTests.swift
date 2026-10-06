@@ -64,7 +64,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
             for try await _ in subscription.events { count += 1 }
             return count
         }
-        #expect(try await eventually { subscription.messages.deliveredCount >= 2 })   // event + caughtUp consumed
+        #expect(try await eventually { subscription.messages.deliveredCount >= 2 })   // confirmation + event consumed
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
         subscription.cancel()

@@ -22,6 +22,9 @@ extension Streams {
     /// and non-throwing: both are what keeps the existing `try await read()` call sites resolving
     /// to the buffered overload without ambiguity. To hold one in a variable without iterating,
     /// spell the type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
+    ///
+    /// A bare function reference such as `stream.read` now resolves to the `ReadCall` overload,
+    /// so such references must spell the intended type.
     public struct ReadCall: Sendable {
         let selector: NodeSelector
         let openCall: @Sendable (Node) async throws(KurrentError) -> ScopedCall<ReadResponse>

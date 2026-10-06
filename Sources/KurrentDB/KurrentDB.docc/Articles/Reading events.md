@@ -190,7 +190,7 @@ A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without s
 
 `read()` fetches the whole result before it returns, so memory grows with the result. For large
 reads use the lazy form: events arrive as you iterate, memory is bounded by a small hand-off plus
-one HTTP/2 flow-control window, and the RPC ends when the loop does.
+one HTTP/2 flow-control window (about 8 MiB with the transport's default window), and the RPC ends when the loop does.
 
 ```swift
 var total = 0.0
@@ -217,7 +217,7 @@ let latest = try await client.streams(specified: "orders").read {
 
 The RPC ends when the iterator is released: after the loop, on `break`, on a thrown error, or when
 your task is cancelled (`next()` then throws `CancellationError`). Only an iterator you obtain with
-`makeAsyncIterator()` and keep keeps the RPC open. A loop body that stops iterating (stuck on another `await`) also keeps the RPC open until it continues or exits; the server is held by backpressure meanwhile. A call the server rejects before accepting it
+`makeAsyncIterator()` and keep keeps the RPC open. A loop body that stops iterating (stuck on another `await`) also keeps the RPC open until it continues or exits; the server is held by backpressure meanwhile. Many concurrent `.lazy` reads with slow loop bodies each hold an HTTP/2 stream on the shared connection for as long as they iterate. A call the server rejects before accepting it
 (for example bad credentials) fails at the first element; only node failures are retried under the client's retry policy.
 Later errors, including a missing stream, surface while you iterate, as with `read()`.
 
@@ -229,7 +229,7 @@ let responses = try await client.streams(specified: "orders").read { $0.limit = 
 
 To hold a prepared read without iterating, spell its type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
 
-### Behaviour changes in this release
+### Behaviour changes (since the backpressured subscription)
 
 `Subscription.cancel()` now ends the stream without delivering an already-buffered event (at most one).
 

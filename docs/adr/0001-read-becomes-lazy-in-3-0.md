@@ -12,7 +12,7 @@ whose RPC has already finished, at the cost of memory proportional to the result
 design was intentional: "when the read loop is done, the connection is closed" was the property
 the author wanted, and a stream handed out lazily could not promise it.
 
-PR #148 adds a bounded, backpressured hand-off (`ResponseHandoff`) and a `ReadCall` descriptor
+The `feat/read-call-lazy-buffered` branch adds a bounded, backpressured hand-off (`ResponseHandoff`) and a `ReadCall` descriptor
 with two explicit delivery modes:
 
 ```swift
@@ -64,7 +64,7 @@ synchronous, non-throwing and returns a type that is **not** an `AsyncSequence`:
 resolve to `ReadCall`. Both conditions are hard requirements for the 2.x line.
 
 Known 2.x limitation: `let call = stream.read()` without `try await` and without `.lazy` /
-`.buffered` resolves to the old overload and fails to compile; write `let call: ReadCall = …`.
+`.buffered` resolves to the old overload and fails to compile; write `let call: Streams<SpecifiedStream>.ReadCall = …`.
 
 ## Migration guide — to be written before 3.0
 
@@ -77,7 +77,7 @@ A "Migrating from 2.x to 3.0" DocC article must cover:
 - `try await stream.read()` → `stream.read()` (the `try await` on a now-synchronous `read()` is
   a warning, not an error; remove it).
 - The "stored iterator keeps the RPC open" edge and the recommendation to iterate directly.
-- Subscription backpressure (already in 2.x since PR #148; mention for completeness).
+- Subscription backpressure (already in 2.x on the `feat/read-call-lazy-buffered` branch; mention for completeness).
 - The last 2.x minor should mark the old overload `@available(*, deprecated, message:)` pointing
   at this article.
 
