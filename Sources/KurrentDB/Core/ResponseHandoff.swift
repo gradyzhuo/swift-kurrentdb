@@ -31,6 +31,8 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         var producer: (element: Element, continuation: CheckedContinuation<Void, any Error>)?
         var sentCount = 0
         var deliveredCount = 0
+        /// Released as soon as it is taken, so whatever it captures is not kept alive by a finished hand-off.
+        var onTermination: (@Sendable ((any Error)?) -> Void)?
     }
 
     private enum SendAction {
@@ -48,13 +50,14 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     }
 
     package let capacity: Int
-    private let state = Mutex(State())
-    private let onTermination: @Sendable ((any Error)?) -> Void
+    private let state: Mutex<State>
 
     package init(capacity: Int = 1, onTermination: @escaping @Sendable ((any Error)?) -> Void = { _ in }) {
         precondition(capacity >= 1, "ResponseHandoff capacity must be at least 1")
         self.capacity = capacity
-        self.onTermination = onTermination
+        var initial = State()
+        initial.onTermination = onTermination
+        state = Mutex(initial)
     }
 
     /// Number of elements accepted from the producer.
@@ -136,8 +139,8 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     }
 
     package func finish(throwing error: (any Error)? = nil) {
-        let (first, consumer, producer): (Bool, CheckedContinuation<Element?, any Error>?, CheckedContinuation<Void, any Error>?) = state.withLock { state in
-            guard state.terminal == nil else { return (false, nil, nil) }
+        let (callback, consumer, producer): ((@Sendable ((any Error)?) -> Void)?, CheckedContinuation<Element?, any Error>?, CheckedContinuation<Void, any Error>?) = state.withLock { state in
+            guard state.terminal == nil else { return (nil, nil, nil) }
             let consumer = state.consumer
             let producer = state.producer?.continuation
             state.consumer = nil
@@ -145,28 +148,30 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
             // A waiting consumer means the buffer is empty: hand it the outcome directly and
             // leave the terminal error-free so the error is not delivered twice.
             state.terminal = (consumer != nil && error != nil) ? .finished(nil) : .finished(error)
-            return (true, consumer, producer)
+            let callback = state.onTermination
+            state.onTermination = nil
+            return (callback, consumer, producer)
         }
-        guard first else { return }
+        guard let callback else { return }
         if let consumer {
             if let error { consumer.resume(throwing: error) } else { consumer.resume(returning: nil) }
         }
         producer?.resume(throwing: CancellationError())
-        onTermination(error)
+        callback(error)
     }
 
     package func cancel() {
-        let (first, consumer, producer): (Bool, CheckedContinuation<Element?, any Error>?, CheckedContinuation<Void, any Error>?) = state.withLock { state in
+        let (callback, consumer, producer): ((@Sendable ((any Error)?) -> Void)?, CheckedContinuation<Element?, any Error>?, CheckedContinuation<Void, any Error>?) = state.withLock { state in
             switch state.terminal {
             case .cancelled?:
-                return (false, nil, nil)
+                return (nil, nil, nil)
             case .finished?:
                 // The producer already ended and onTermination already fired, but the consumer
                 // side still drops whatever it has not taken: a stream that escapes its scope
                 // must end at once instead of delivering the tail or a pending error.
                 state.terminal = .cancelled
                 state.buffer.removeAll()
-                return (false, nil, nil)
+                return (nil, nil, nil)
             case nil:
                 state.terminal = .cancelled
                 state.buffer.removeAll()
@@ -174,13 +179,15 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 let producer = state.producer?.continuation
                 state.consumer = nil
                 state.producer = nil
-                return (true, consumer, producer)
+                let callback = state.onTermination
+                state.onTermination = nil
+                return (callback, consumer, producer)
             }
         }
-        guard first else { return }
+        guard let callback else { return }
         consumer?.resume(returning: nil)
         producer?.resume(throwing: CancellationError())
-        onTermination(nil)
+        callback(nil)
     }
 
     /// Wraps the hand-off as a pull-based stream. Call at most once per hand-off.

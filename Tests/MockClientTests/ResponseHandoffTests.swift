@@ -17,6 +17,19 @@ private final class TerminationProbe: Sendable {
     func record(_ error: (any Error)?) { calls.withLock { $0.append(error.map { "\($0)" } ?? "nil") } }
 }
 
+/// Flips a flag when deallocated.
+private final class ReleaseFlag: Sendable {
+    private let flag = Mutex(false)
+    var isSet: Bool { flag.withLock { $0 } }
+    func set() { flag.withLock { $0 = true } }
+}
+
+private final class DeinitToken: Sendable {
+    let released: ReleaseFlag
+    init(_ released: ReleaseFlag) { self.released = released }
+    deinit { released.set() }
+}
+
 @Suite("ResponseHandoff", .timeLimit(.minutes(1)))
 struct ResponseHandoffTests {
     /// Polls until the condition holds (bounded); used for positive waits so the test does not
@@ -213,5 +226,29 @@ struct ResponseHandoffTests {
         #expect(probe.count == 1)
         await #expect(throws: CancellationError.self) { try await handoff.send(2) }
         #expect(try await iterator.next() == nil)
+    }
+
+    @Test("finish releases the onTermination callback while the hand-off stays alive")
+    func finishReleasesCallback() {
+        let released = ReleaseFlag()
+        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: makeCallback(released))
+        #expect(!released.isSet)
+        handoff.finish()
+        #expect(released.isSet)
+        withExtendedLifetime(handoff) {}
+    }
+
+    @Test("cancel releases the onTermination callback while the hand-off stays alive")
+    func cancelReleasesCallback() {
+        let released = ReleaseFlag()
+        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: makeCallback(released))
+        handoff.cancel()
+        #expect(released.isSet)
+        withExtendedLifetime(handoff) {}
+    }
+
+    private func makeCallback(_ released: ReleaseFlag) -> @Sendable ((any Error)?) -> Void {
+        let token = DeinitToken(released)
+        return { _ in _ = token }
     }
 }
