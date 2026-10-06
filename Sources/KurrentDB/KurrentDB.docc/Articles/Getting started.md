@@ -206,6 +206,45 @@ let settings = ClientSettings(
 | `.dns(domain)` | DNS-based cluster discovery |
 | `.seeds([endpoints])` | Gossip-based cluster discovery with seed nodes |
 
+### Leader changes and retries
+
+A cluster elects a new leader whenever the current one restarts, resigns or loses contact with the other nodes. An election takes a few seconds, and during that window:
+
+- Leader-only commands (appends, deletes, persistent-subscription management) sent to the old leader are rejected. The server answers with gRPC status `UNAVAILABLE` and the metadata `exception: not-leader`; the client surfaces this as ``KurrentError/grpcConnectionError(cause:)``.
+- Reads keep working: a demoted node still serves them. A `.lazy` read that is already streaming is not retried — only establishing the call is.
+- `grpcConnectionError`, `grpcError`, `grpcRuntimeError`, `deadlineExceeded` and `notLeaderException` count as node failures. For those, the client drops the cached node, rediscovers the leader through gossip and retries the operation according to ``ClientSettings/operationRetryPolicy``.
+
+The default policy is **2 attempts with no delay** — one immediate retry. That covers the common case where the new leader is already elected when the first call fails. If the election is still in progress when the retry runs, the error reaches your code:
+
+```swift
+do {
+    try await client.streams(specified: "orders").append(events: [eventData]) {
+        $0.expectedRevision = .streamExists
+    }
+} catch KurrentError.grpcConnectionError(let cause) {
+    // The leader moved and the retry policy was exhausted.
+    // `cause.metadata` carries `exception: not-leader` when the node rejected the command.
+    print("append failed while the cluster was electing a leader: \(cause)")
+}
+```
+
+To ride out an election inside the client instead, opt into a policy with backoff. ``OperationRetryPolicy/default`` makes 3 attempts with 100 ms initial delay, 2× backoff, a 10 s cap and full jitter; or build your own:
+
+```swift
+let resilient = ClientSettings.localhost()
+    .operationRetryPolicy(.default)
+
+let custom = ClientSettings.localhost()
+    .operationRetryPolicy(OperationRetryPolicy(
+        maxAttempts: 5,
+        initialDelay: .milliseconds(200),
+        maxDelay: .seconds(30),
+        multiplier: 1.5,
+        jitter: .full
+    ))
+```
+
+Set an `expectedRevision` on appends you let the client retry: if a connection drops after the leader applied the write but before the response arrived, the retry is then rejected with ``KurrentError/wrongExpectedVersion(expected:current:)`` instead of appending the events twice.
 
 ## Authentication
 

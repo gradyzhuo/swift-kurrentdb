@@ -60,6 +60,10 @@ public struct ClientSettings: Sendable {
     /// Duration for which a discovered node is cached before re-validation.
     public var nodeCacheTTL: Duration
     /// Retry policy applied to operations that fail due to node-level errors.
+    ///
+    /// Defaults to 2 attempts with no delay (one immediate retry), which covers a leader change
+    /// that has already completed when the first call fails. To ride out an election still in
+    /// progress, opt into ``OperationRetryPolicy/default`` or a custom policy with backoff.
     public var operationRetryPolicy: OperationRetryPolicy
 
     /// Creates settings with explicit values for all configurable options.
@@ -80,7 +84,8 @@ public struct ClientSettings: Sendable {
     ///   - discoveryInterval: Interval between discovery polls. Defaults to 100 ms.
     ///   - maxDiscoveryAttempts: Maximum discovery retries. Defaults to 10.
     ///   - nodeCacheTTL: How long to cache a discovered node. Defaults to 30 seconds.
-    ///   - operationRetryPolicy: Retry behaviour for node-failure errors.
+    ///   - operationRetryPolicy: Retry behaviour for node-failure errors. Defaults to 2 attempts
+    ///     with no delay; ``OperationRetryPolicy/default`` adds backoff and jitter.
     public init(
         clusterMode: TopologyClusterMode? = nil,
         certificates: [TLSConfig.CertificateSource] = [],
