@@ -35,6 +35,17 @@ struct ReadOverloadResolutionTests {
             _ = try await specified.read().reduce(0) { count, _ in count + 1 }
         }
 
+        // Unannotated function references keep binding to the buffered overload (@_disfavoredOverload).
+        let _: () async throws -> Void = {
+            let readRef = specified.read
+            let allReadRef = all.read
+            acceptsOldStream(try await readRef({ _ in }))
+            acceptsOldStream(try await readRef({ $0.limit = 10 }))
+            acceptsOldAllStream(try await allReadRef({ _ in }))
+            acceptsOldAllStream(try await allReadRef({ $0.limit = 10 }))
+        }
+        let _: () async throws -> Void = { _ = try await specified.read() }
+
         // New shapes.
         acceptsLazy(specified.read().lazy)
         acceptsLazy(specified.read { $0.limit = 10 }.lazy)
