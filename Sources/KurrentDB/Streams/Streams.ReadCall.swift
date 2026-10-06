@@ -13,8 +13,8 @@ extension Streams {
     /// - ``buffered``: the whole result is fetched first, exactly like `read()`.
     ///
     /// ```swift
-    /// for try await response in client.streams(specified: "orders").read().lazy { … }
-    /// let total = try await client.allStreams.read { $0.limit = 1000 }.lazy.reduce(0) { $0 + 1 }
+    /// for try await response in client.streams(specified: "orders").read().lazy { _ = response }
+    /// let total = try await client.allStreams.read { $0.limit = 1000 }.lazy.reduce(0) { count, _ in count + 1 }
     /// ```
     ///
     /// Creating a `ReadCall` performs no network activity. It is deliberately **not** an
@@ -67,6 +67,12 @@ extension Streams.ReadCall {
 
             public func next() async throws -> Streams.ReadResponse? {
                 if finished { return nil }
+                if let scoped, Task.isCancelled {
+                    // Cancelled between two next() calls: end the RPC now instead of at deinit.
+                    finished = true
+                    await scoped.close()
+                    throw CancellationError()
+                }
                 try Task.checkCancellation()
 
                 let active: ScopedCall<Streams.ReadResponse>
@@ -84,6 +90,7 @@ extension Streams.ReadCall {
                             try await call.openCall(node)
                         }
                     } catch {
+                        finished = true   // one throw ends the sequence; never reopen on the next call
                         // Node discovery wraps a cancelled task as internalClientError and open()
                         // as connectionClosed; the caller asked to stop either way.
                         if Task.isCancelled { throw CancellationError() }

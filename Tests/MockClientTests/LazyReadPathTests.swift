@@ -218,4 +218,17 @@ struct LazyReadPathTests {
         #expect(throws: CancellationError.self) { try outcome.get() }
         #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
     }
+
+    @Test("lazy: after the open fails once, next() returns nil and opens no second RPC")
+    func lazyFinishedAfterOpenFailure() async throws {
+        let selector = await makeSelector(supporting: [Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init()).methodDescriptor])
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        var iterator = streams.read().lazy.makeAsyncIterator()
+        await #expect(throws: KurrentError.self) { _ = try await iterator.next() }
+        let second = try await iterator.next()
+        #expect(second == nil)
+        #expect(selector.connections.createdSharedConnectionCount == 1)
+    }
 }
