@@ -292,4 +292,51 @@ struct LazyReadLiveTests: Sendable {
         #expect(client.selector.connections.createdSharedConnectionCount == createdBefore)
         #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
     }
+
+    /// A `Streams` value whose every call carries the given deadline.
+    func streams(_ client: KurrentDBClient, name: String, timeout: Duration) -> Streams<SpecifiedStream> {
+        var options = CallOptions.defaults
+        options.timeout = timeout
+        return Streams<SpecifiedStream>(target: .specified(name), selector: client.selector, callOptions: options)
+    }
+
+    @Test("An RPC deadline surfaces as the RPC's error, not CancellationError, for an idle lazy consumer")
+    func deadlineIsNotCancellation() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let name = "LazyRead-Deadline-\(UUID().uuidString)"
+        try await appendEvents(count: 300, to: client.streams(specified: name))
+        let timed = streams(client, name: name, timeout: .seconds(1))
+
+        let iterator = timed.read().lazy.makeAsyncIterator()
+        _ = try await iterator.next()
+        try await Task.sleep(for: .seconds(2))   // the producer is suspended in send; the deadline expires
+        var failure: (any Error)?
+        do { while try await iterator.next() != nil {} } catch { failure = error }
+
+        let error = try #require(failure)
+        #expect(!(error is CancellationError))
+        // Post-acceptance errors reach the iterator as the RPC's own error, like a buffered read's stream.
+        #expect((error as? RPCError)?.code == .deadlineExceeded)
+    }
+
+    @Test("A subscription whose deadline expires while its consumer is idle ends with the deadline error")
+    func subscriptionDeadlineIsNotCancellation() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let name = "LazyRead-SubDeadline-\(UUID().uuidString)"
+        try await appendEvents(count: 300, to: client.streams(specified: name))
+        let timed = streams(client, name: name, timeout: .seconds(1))
+
+        let subscription = try await timed.subscribe { $0.revision = .start }
+        var iterator = subscription.events.makeAsyncIterator()
+        _ = try await iterator.next()
+        try await Task.sleep(for: .seconds(2))
+        var failure: (any Error)?
+        do { while try await iterator.next() != nil {} } catch { failure = error }
+
+        let error = try #require(failure)
+        #expect(!(error is CancellationError))
+        #expect((error as? RPCError)?.code == .deadlineExceeded)
+    }
 }
