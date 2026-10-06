@@ -21,7 +21,7 @@
 
 1. 提供一種讀法：記憶體有上限（交接容量 + 一個 HTTP/2 stream flow-control window），且**迭代結束（跑完、`break`、`throw`、呼叫端 Task 取消）RPC 就關閉、租約就歸還**。
 2. 訂閱改為有背壓，不再無上限累積。
-3. 2.x 內完成，**不破壞、不 deprecate 任何公開 API**；既有程式碼一字不改、語意不變。
+3. 2.x 內完成，**不改變任何既有公開符號的簽名或行為、不 deprecate**；既有的呼叫（`try await read()`、`read { … }`、`for try await … in read()`、`.reduce` 等）一字不改、語意不變。**明文接受的唯一例外**（2026-10-06 決定，見 §6）：在同步 context 把 `stream.read` 當函式值存起來的寫法，其型別會改為 `ReadCall` factory——這在實務上極少見，且後果是編譯錯誤而非靜默改變；不為它另設入口名稱。
 4. 為 3.0「`read()` 預設 lazy」鋪路（ADR 0001）。
 
 ### 非目標
@@ -163,7 +163,7 @@ deinit:        call.handoff.cancel(); call.task.cancel(); Task { await call.task
 
 - 若兩者 effects 相同（都 `async throws`），所有沒寫型別的呼叫點（`for try await r in read()`、`let s = read()`、`read().reduce`）皆 ambiguous。
 - 若新 overload 為 **sync、non-throwing**、且 `ReadCall` **不是 `AsyncSequence`**：既有呼叫（一律帶 `try await`）全部解析到舊 overload；`.lazy` / `.buffered` 鏈（成員只有 `ReadCall` 有）解析到新 overload。無歧義。兩個條件缺一不可，是 2.x 的硬規定，須在 `ReadCall` 的文件註解寫明。
-- 沒有型別標註的 function reference `stream.read`：在 async context 中形成時仍綁定 buffered overload；在同步 context 中形成時綁定 `ReadCall` overload，需要時請明寫型別。`@_disfavoredOverload` 對此沒有影響（已驗證），因此不使用。
+- 沒有型別標註的 function reference `stream.read`：在 async context 中形成時仍綁定 buffered overload；在同步 context 中形成時綁定 `ReadCall` overload，需要時請明寫型別。`@_disfavoredOverload` 對此沒有影響（已驗證），因此不使用。**這是刻意接受的 2.x source change**（外部 review 第二輪指出；決定：接受並記錄，而非為 factory 另取名字）：任何與既有 `read` 同名的新 overload 都會改變裸 `stream.read` 參照在某些 context 下的意義，唯一能完全避免的方法是不同的名字，而保留 `read` 的價值高於這個罕見寫法。release notes 要寫明。
 - 已知限制：`let call = stream.read()`（不加 `try await`、不接成員）解析到舊 overload 並因缺 `try await` 報錯；要單獨持有需寫 `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`。3.0 移除舊 overload 後消失。
 - `for try await r in stream.read { … }.buffered { … }` 觸發 Swift 的 trailing-closure-confusable 警告；文件示範 `read(configure: { … })` 或先存變數。
 - 以上四點要有編譯層級的測試（offline target 內實際寫出這些呼叫並斷言型別），避免日後有人把新 overload 改成 async 而不自知。

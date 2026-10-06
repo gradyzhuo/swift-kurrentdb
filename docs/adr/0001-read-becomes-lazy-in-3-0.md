@@ -68,7 +68,10 @@ Known 2.x limitation: `let call = stream.read()` without `try await` and without
 
 An unannotated function reference `stream.read` formed in an async context keeps selecting the buffered
 overload; one formed in a synchronous context selects the `ReadCall` overload, so spell the type if that
-matters. `@_disfavoredOverload` does not change this (verified).
+matters. `@_disfavoredOverload` does not change this (verified). This is the one accepted source change in
+the 2.x line: storing `stream.read` as a function value in a synchronous context is rare, the failure is a
+compile error rather than a silent change, and keeping the name `read` was judged worth more than a
+separate factory name.
 
 ## Migration guide — to be written before 3.0
 
