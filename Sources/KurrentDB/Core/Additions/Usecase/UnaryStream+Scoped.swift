@@ -133,12 +133,13 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
                                 try await handoff.send(response)
                             }
                         }
-                        handoff.finish()
                     case let .failure(error):
                         accepted.fail(error)
                     }
                 }
-                handoff.finish()   // defensive; no-op when already finished
+                // Finish only after the RPC returned, so a deadline that ends the loop above quietly
+                // still surfaces as call(...)'s error. No-op when already finished.
+                handoff.finish()
             } catch {
                 // No-op for whichever side already resolved.
                 accepted.fail(error)
