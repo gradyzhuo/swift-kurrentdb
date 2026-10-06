@@ -209,13 +209,17 @@ let cancelled = try await client.allStreams.read().lazy.first {
     try $0.event.record.eventType == "OrderCancelled"
 }
 let count = try await client.streams(specified: "orders").read { $0.limit = 1000 }.lazy.reduce(0) { n, _ in n + 1 }
+let latest = try await client.streams(specified: "orders").read {
+    $0.direction = .backward
+    $0.revision = .end
+}.lazy.prefix(10).reduce(into: [RecordedEvent]()) { $0.append(try $1.event.record) }
 ```
 
 The RPC ends when the iterator is released: after the loop, on `break`, on a thrown error, or when
 your task is cancelled (`next()` then throws `CancellationError`). Only an iterator you obtain with
-`makeAsyncIterator()` and keep keeps the RPC open. A call the server rejects before accepting it
-(for example bad credentials) fails at the first element and follows the client's retry policy;
-later errors, including a missing stream, surface while you iterate, as with `read()`.
+`makeAsyncIterator()` and keep keeps the RPC open. A loop body that stops iterating (stuck on another `await`) also keeps the RPC open until it continues or exits; the server is held by backpressure meanwhile. A call the server rejects before accepting it
+(for example bad credentials) fails at the first element; only node failures are retried under the client's retry policy.
+Later errors, including a missing stream, surface while you iterate, as with `read()`.
 
 `read().buffered` is the explicit spelling of what `read()` does today:
 
@@ -225,12 +229,15 @@ let responses = try await client.streams(specified: "orders").read { $0.limit = 
 
 To hold a prepared read without iterating, spell its type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
 
+### Behaviour changes in this release
+
+`Subscription.cancel()` now ends the stream without delivering an already-buffered event (at most one).
+
 ### Roadmap
 
 In 3.0 `read()` itself delivers lazily; code that needs the whole result up front will write
 `.buffered`. See `docs/adr/0001-read-becomes-lazy-in-3-0.md`. Subscriptions already apply the same
-backpressure: a slow consumer pauses the server instead of growing client memory.
-`Subscription.cancel()` now ends the stream without delivering an already-buffered event (at most one).
+backpressure: a slow consumer is backpressured through HTTP/2 flow control instead of growing client memory.
 
 ## Architecture
 
