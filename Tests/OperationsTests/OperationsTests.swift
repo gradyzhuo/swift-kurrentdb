@@ -9,7 +9,9 @@ import Foundation
 @testable import KurrentDB
 import Testing
 
-@Suite("Operations Tests", .serialized)
+// Six short admin RPCs; a hang here cost a full 30-minute job timeout on CI (run 37438212406)
+// with no output to say which test it was. The time limit names the test and ends the step.
+@Suite("Operations Tests", .serialized, .timeLimit(.minutes(2)))
 struct OperationsTests: Sendable {
     let settings: ClientSettings
 
