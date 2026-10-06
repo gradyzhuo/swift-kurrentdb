@@ -171,8 +171,14 @@ struct ResponseHandoffTests {
         let probe = TerminationProbe()
         let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
         try await handoff.send(1)
-        let producer = Task { try await handoff.send(2) }
+        let (started, startedSignal) = AsyncStream.makeStream(of: Void.self)
+        let producer = Task {
+            startedSignal.yield()   // just before the send that suspends
+            try await handoff.send(2)
+        }
+        for await _ in started { break }
         await settle()
+        #expect(handoff.sentCount == 1)   // the second send is parked, not accepted
         producer.cancel()
         await #expect(throws: CancellationError.self) { try await producer.value }
         #expect(probe.count == 0)
@@ -186,7 +192,8 @@ struct ResponseHandoffTests {
 
     @Test("After the producer's task was cancelled, a further send throws CancellationError at once")
     func sendAfterProducerCancellationFails() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 4)
+        let probe = TerminationProbe()
+        let handoff = ResponseHandoff<Int>(capacity: 4, onTermination: { probe.record($0) })
         try await handoff.send(1)
         let producer = Task {
             while !Task.isCancelled { try? await Task.sleep(for: .milliseconds(5)) }
@@ -197,6 +204,11 @@ struct ResponseHandoffTests {
         await #expect(throws: CancellationError.self) { try await producer.value }
         await #expect(throws: CancellationError.self) { try await handoff.send(3) }
         #expect(handoff.sentCount == 1)
+        #expect(probe.count == 0)   // the hand-off is still open
+        #expect(try await handoff.next() == 1)
+        handoff.finish(throwing: Boom())
+        await #expect(throws: Boom.self) { _ = try await handoff.next() }
+        #expect(probe.count == 1)
     }
 
     @Test("finish() wakes a suspended producer with CancellationError")
