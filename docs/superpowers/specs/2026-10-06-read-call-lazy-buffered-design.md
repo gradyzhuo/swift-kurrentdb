@@ -166,7 +166,7 @@ deinit:        call.handoff.cancel(); call.task.cancel(); Task { await call.task
 - 沒有型別標註的 function reference `stream.read`：在 async context 中形成時仍綁定 buffered overload；在同步 context 中形成時綁定 `ReadCall` overload，需要時請明寫型別。`@_disfavoredOverload` 對此沒有影響（已驗證），因此不使用。
 - 已知限制：`let call = stream.read()`（不加 `try await`、不接成員）解析到舊 overload 並因缺 `try await` 報錯；要單獨持有需寫 `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`。3.0 移除舊 overload 後消失。
 - `for try await r in stream.read { … }.buffered { … }` 觸發 Swift 的 trailing-closure-confusable 警告；文件示範 `read(configure: { … })` 或先存變數。
-- 以上三點要有編譯層級的測試（offline target 內實際寫出這些呼叫並斷言型別），避免日後有人把新 overload 改成 async 而不自知。
+- 以上四點要有編譯層級的測試（offline target 內實際寫出這些呼叫並斷言型別），避免日後有人把新 overload 改成 async 而不自知。
 
 ## 7. 測試
 

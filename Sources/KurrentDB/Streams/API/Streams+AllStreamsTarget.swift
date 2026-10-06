@@ -26,8 +26,9 @@ extension Streams where Target == AllStreamsTarget {
     /// Prepares a read whose delivery you choose with ``ReadCall/lazy`` or ``ReadCall/buffered``.
     /// Nothing happens until one of them is used.
     ///
-    /// An unannotated function reference `stream.read` formed in an async context keeps selecting the buffered
-    /// overload; one formed in a synchronous context selects this one, so spell the type if that matters.
+    /// Bare `try await read()` calls and function references formed in an async context keep selecting the
+    /// buffered overload; a `.lazy` / `.buffered` chain or an explicit `: ReadCall` annotation selects this one,
+    /// and so does a function reference formed in a synchronous context, so spell the type if that matters.
     ///
     /// ```swift
     /// for try await response in client.allStreams.read().lazy {

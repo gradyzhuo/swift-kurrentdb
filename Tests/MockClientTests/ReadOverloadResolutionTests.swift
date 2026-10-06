@@ -45,7 +45,7 @@ struct ReadOverloadResolutionTests {
             acceptsOldAllStream(try await allReadRef({ _ in }))
             acceptsOldAllStream(try await allReadRef({ $0.limit = 10 }))
         }
-        let _: () async throws -> Void = { _ = try await specified.read() }
+        let _: () async throws -> Void = { acceptsOldStream(try await specified.read()) }
 
         // Known limitation: a reference formed in a synchronous context binds to the ReadCall overload.
         let syncRef = specified.read
