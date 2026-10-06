@@ -148,14 +148,16 @@ struct ConnectionReuseLiveTests: Sendable {
     /// client instead of failing, and do not starve appends on the same connection. This is
     /// the tradeoff #143 accepts; pin it here.
     ///
-    /// The load of this test has made a CI cluster elect a new leader mid-run (run 37428841325:
-    /// 2111 → 2112 while the reads were in flight). The client then fails over — a node-failure
-    /// retry invalidates the cached node and rediscovers, which legitimately opens a gossip
-    /// connection and one to the new leader — so the total connection count is only comparable
-    /// when the selected node is still the one that was warmed up. What the reads must never do,
-    /// leader change or not, is replace the shared entry of the node that served them; that is
-    /// pinned through the entry's generation, which only changes when a new connection is
-    /// created for that endpoint.
+    /// The load of this test has made a CI cluster elect a new leader mid-run (runs 37428841325
+    /// and 37434185712: 2111 → 2112 while the reads were in flight). The old leader then resets
+    /// some in-flight read streams ("Stream unexpectedly closed"), and the client fails over — a
+    /// node-failure retry invalidates the cached node and rediscovers, which legitimately opens
+    /// a gossip connection and one to the new leader. The election itself is prevented on the
+    /// server side (`KURRENTDB_GOSSIP_TIMEOUT_MS` in server/vars.env tolerates CPU stalls);
+    /// should one still happen, the total connection count is only comparable when the selected
+    /// node is still the one that was warmed up. What the reads must never do, leader change or
+    /// not, is replace the shared entry of the node that served them; that is pinned through the
+    /// entry's generation, which only changes when a new connection is created for that endpoint.
     @Test("150 個並行 read 全部完成,期間的 append 也完成,且不新開共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
