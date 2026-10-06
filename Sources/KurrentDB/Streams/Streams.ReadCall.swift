@@ -71,13 +71,13 @@ extension Streams.ReadCall {
 
             public func next() async throws -> Streams.ReadResponse? {
                 if finished { return nil }
-                if let scoped, Task.isCancelled {
-                    // Cancelled between two next() calls: end the RPC now instead of at deinit.
+                if Task.isCancelled {
+                    // Cancelled before the first call or between two: finish for good, and end an
+                    // open RPC now instead of at deinit.
                     finished = true
-                    await scoped.close()
+                    if let scoped { await scoped.close() }
                     throw CancellationError()
                 }
-                try Task.checkCancellation()
 
                 let active: ScopedCall<Streams.ReadResponse>
                 if let scoped {
