@@ -118,6 +118,7 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
 
         let handoff = ResponseHandoff<Response>()
         let accepted = AcceptanceGate()
+        let handlerCancellation = HandlerCancellation()
         let task = Task {
             do {
                 try await self.call(connection: lease.client, request: request, callOptions: callOptions) { response in
@@ -128,19 +129,31 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
                         // to the catch below, so whatever call(...) finally throws (the RPC's own
                         // error, e.g. deadlineExceeded, when grpc-swift cancels this task to enforce
                         // a deadline) is the terminal error.
-                        for try await message in response.messages {
-                            if let response = try self.scopedResponse(for: message) {
-                                try await handoff.send(response)
+                        do {
+                            for try await message in response.messages {
+                                if let response = try self.scopedResponse(for: message) {
+                                    try await handoff.send(response)
+                                }
                             }
+                        } catch is CancellationError {
+                            handlerCancellation.mark()
+                            throw CancellationError()
                         }
+                        if Task.isCancelled { handlerCancellation.mark() }
                     case let .failure(error):
                         accepted.fail(error)
                     }
                 }
+                // Older grpc-swift returns normally when the deadline cancelled the handler; this
+                // task itself was not cancelled, so that is the deadline, not a clean end.
+                if handlerCancellation.isMarked, !Task.isCancelled { throw deadlineExceededError() }
                 // Finish only after the RPC returned, so a deadline that ends the loop above quietly
                 // still surfaces as call(...)'s error. No-op when already finished.
                 handoff.finish()
             } catch {
+                // Older grpc-swift rethrows the handler's CancellationError instead of the deadline
+                // error; map it unless this task was cancelled on purpose (close()).
+                let error = deadlineOrOriginal(error)
                 // No-op for whichever side already resolved.
                 accepted.fail(error)
                 handoff.finish(throwing: error)
