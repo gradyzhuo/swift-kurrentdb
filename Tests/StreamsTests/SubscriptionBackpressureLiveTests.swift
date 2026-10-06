@@ -87,4 +87,27 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         #expect(subscription.messages.sentCount < 100)
         subscription.cancel()
     }
+
+    @Test("Client shutdown releases a producer blocked on an idle consumer")
+    func shutdownReleasesBlockedProducer() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = client.streams(specified: "Backpressure-\(UUID().uuidString)")
+        _ = try await stream.append(events: events(300)) { $0.expectedRevision = .any }
+
+        let subscription = try await stream.subscribe { $0.revision = .start }
+        // Consume nothing: the producer fills the buffer and suspends in send.
+        #expect(try await eventually { subscription.messages.sentCount >= 1 })
+        #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
+
+        try client.shutdown()
+        #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
+
+        var thrown: (any Error)?
+        do {
+            for try await _ in subscription.events {}
+        } catch {
+            thrown = error
+        }
+        #expect(thrown as? KurrentError == .connectionClosed, "thrown: \(String(describing: thrown))")
+    }
 }
