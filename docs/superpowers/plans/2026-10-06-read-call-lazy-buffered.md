@@ -1851,3 +1851,24 @@ git commit -m "[UPDATE] document read().lazy and read().buffered"
 - [ ] **Step 4: Swift 6.0** — on a clean worktree (`git worktree add --detach <scratch>/wt60 HEAD`), `docker run --rm --platform linux/arm64 -v <scratch>/wt60:/w -w /w swift:6.0-jammy swift build --build-tests` → `Build complete`, no errors. Remove the worktree afterwards.
 - [ ] **Step 5: Docs** — `scripts/check-doc-snippets.sh` exit 0; `swift build --target KurrentDB_V1` builds.
 - [ ] **Step 6: Record** — append a "## Review" section to this plan (commands, counts, skips, Swift 6.0 result) and commit: `[UPDATE] record verification results for ReadCall`.
+
+## Review
+
+Verified at 87b74d43 against the local 3-node cluster (2111-2113).
+
+1. Offline (`swift test --no-parallel --filter "MockClientTests|KurrentCoreTests"`):
+   - `✔ Test run with 75 tests in 7 suites passed after 0.919 seconds.`
+   - `✔ Test run with 149 tests in 13 suites passed after 0.039 seconds.`
+2. Full live run (`swift test -v --no-parallel --disable-xctest --enable-swift-testing`), exit 0, no failures:
+   - `✔ Test run with 80 tests in 10 suites passed after 84.771 seconds.`
+   - `✔ Test run with 16 tests in 2 suites passed after 12.775 seconds.`
+   - `✔ Test run with 20 tests in 4 suites passed after 15.997 seconds.`
+   - `✔ Test run with 75 tests in 7 suites passed after 0.909 seconds.`
+   - `✔ Test run with 11 tests in 2 suites passed after 0.478 seconds.`
+   - `✔ Test run with 149 tests in 13 suites passed after 0.034 seconds.`
+   - (plus 6 smaller runs of 1-7 tests, all passed)
+   - Skipped as expected: `X509Tests` (no license), `AppendRecords (DCB) Tests` (env-gated), `KurrentDBPool Live Tests` (independent instances).
+3. Flakiness loop x5 (`ResponseHandoffTests|LazyReadPathTests|LazyReadLiveTests|SubscriptionBackpressureLiveTests`): 5/5 clean, each run
+   `✔ Test run with 13 tests in 2 suites passed after ~3.1 seconds.` and `✔ Test run with 25 tests in 2 suites passed after ~0.87 seconds.`
+4. Swift 6.0 (`swift:6.0-jammy`, linux/arm64, clean worktree): `Build complete! (138.26s)`; no errors, no ReadCall/ResponseHandoff/Scoped/LazyRead warnings. Worktree removed.
+5. Docs: `scripts/check-doc-snippets.sh` exit 0 (`wrote 190 snippets`); `swift build --target KurrentDB_V1` -> `Build complete! (1.81 sec)`.
