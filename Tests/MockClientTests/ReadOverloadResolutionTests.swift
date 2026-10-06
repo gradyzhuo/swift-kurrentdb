@@ -16,6 +16,7 @@ struct ReadOverloadResolutionTests {
     private func acceptsOldStream(_: AsyncThrowingStream<Streams<SpecifiedStream>.ReadResponse, any Error>) {}
     private func acceptsOldAllStream(_: AsyncThrowingStream<Streams<AllStreamsTarget>.ReadResponse, any Error>) {}
     private func acceptsLazy(_: Streams<SpecifiedStream>.ReadCall.Lazy) {}
+    private func acceptsSpecifiedCall(_: Streams<SpecifiedStream>.ReadCall) {}
     private func acceptsCall(_: Streams<AllStreamsTarget>.ReadCall) {}
 
     @Test("Existing call shapes resolve to the buffered overload; member chains resolve to ReadCall")
@@ -35,7 +36,7 @@ struct ReadOverloadResolutionTests {
             _ = try await specified.read().reduce(0) { count, _ in count + 1 }
         }
 
-        // Unannotated function references keep binding to the buffered overload (@_disfavoredOverload).
+        // Unannotated function references keep binding to the buffered overload (async context).
         let _: () async throws -> Void = {
             let readRef = specified.read
             let allReadRef = all.read
@@ -45,6 +46,10 @@ struct ReadOverloadResolutionTests {
             acceptsOldAllStream(try await allReadRef({ $0.limit = 10 }))
         }
         let _: () async throws -> Void = { _ = try await specified.read() }
+
+        // Known limitation: a reference formed in a synchronous context binds to the ReadCall overload.
+        let syncRef = specified.read
+        acceptsSpecifiedCall(syncRef({ _ in }))
 
         // New shapes.
         acceptsLazy(specified.read().lazy)
