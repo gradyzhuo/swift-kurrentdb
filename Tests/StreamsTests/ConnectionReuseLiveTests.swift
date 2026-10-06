@@ -147,6 +147,15 @@ struct ConnectionReuseLiveTests: Sendable {
     /// Beyond the server's per-connection concurrent-stream limit, extra reads queue on the
     /// client instead of failing, and do not starve appends on the same connection. This is
     /// the tradeoff #143 accepts; pin it here.
+    ///
+    /// The load of this test has made a CI cluster elect a new leader mid-run (run 37428841325:
+    /// 2111 → 2112 while the reads were in flight). The client then fails over — a node-failure
+    /// retry invalidates the cached node and rediscovers, which legitimately opens a gossip
+    /// connection and one to the new leader — so the total connection count is only comparable
+    /// when the selected node is still the one that was warmed up. What the reads must never do,
+    /// leader change or not, is replace the shared entry of the node that served them; that is
+    /// pinned through the entry's generation, which only changes when a new connection is
+    /// created for that endpoint.
     @Test("150 個並行 read 全部完成,期間的 append 也完成,且不新開共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
@@ -154,6 +163,8 @@ struct ConnectionReuseLiveTests: Sendable {
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         _ = try await stream.append(events: (0 ..< 200).map { _ in event() }) { $0.expectedRevision = .any }
         let warmed = client.selector.connections.createdSharedConnectionCount
+        let endpoint = try #require(await client.selector.selectedNode?.endpoint)
+        let generation = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.generation)
 
         let readCounts = try await withThrowingTaskGroup(of: Int.self) { group in
             for _ in 0 ..< 150 {
@@ -175,7 +186,12 @@ struct ConnectionReuseLiveTests: Sendable {
 
         #expect(readCounts.filter { $0 >= 200 }.count == 150)
         #expect(readCounts.contains(-1))
-        #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+        #expect(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.generation == generation)
+        if await client.selector.selectedNode?.endpoint == endpoint {
+            #expect(client.selector.connections.createdSharedConnectionCount == warmed)
+        } else {
+            logger.warning("[ConnectionReuseLiveTests] Leader moved away from \(endpoint.debugDescription) mid-test; total connection count not compared.")
+        }
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
         try await stream.delete()
     }
