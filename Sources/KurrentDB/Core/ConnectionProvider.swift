@@ -497,6 +497,10 @@ package final class DedicatedConnection: Sendable {
 
 /// A response value that must be told when the dedicated connection carrying it has closed,
 /// so a producer suspended on the consumer can be released.
+///
+/// The handler is stored in the connection's lifecycle, which the provider's registry holds, so it
+/// must capture only what it needs (the hand-off) and never the response value itself: the value
+/// owns the stream whose release cancels the call, and capturing it would form a retain cycle.
 package protocol ConnectionTerminable: Sendable {
-    func connectionDidClose()
+    var connectionCloseHandler: @Sendable () -> Void { get }
 }
