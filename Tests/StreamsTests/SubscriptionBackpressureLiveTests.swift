@@ -96,7 +96,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
 
         let subscription = try await stream.subscribe { $0.revision = .start }
         // Consume nothing: the producer fills the buffer and suspends in send.
-        // Wait until the producer is provably suspended in send (buffer full, one more waiting).
+        // Wait until the buffer is full; the next send suspends.
         // The test proves the release indirectly, through the error type: `connectionClosed`
         // comes from the close hook, whereas the transport's own failure would be `unavailable`.
         #expect(try await eventually { subscription.messages.sentCount - subscription.messages.deliveredCount == subscription.messages.capacity })
@@ -121,14 +121,15 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         let stream = client.streams(specified: "Backpressure-\(UUID().uuidString)")
         _ = try await stream.append(events: events(3)) { $0.expectedRevision = .any }
 
-        try await receiveOneEventThenDrop(stream)
+        try await receiveOneEventThenDrop(stream, client: client)
         #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
     }
 
     /// Scopes the subscription and its iterator so every reference is gone on return.
-    private func receiveOneEventThenDrop(_ stream: Streams<SpecifiedStream>) async throws {
+    private func receiveOneEventThenDrop(_ stream: Streams<SpecifiedStream>, client: KurrentDBClient) async throws {
         let subscription = try await stream.subscribe { $0.revision = .start }
         var iterator = subscription.events.makeAsyncIterator()
         _ = try await iterator.next()
+        #expect(client.selector.connections.activeDedicatedConnectionCount == 1)   // positive control
     }
 }
