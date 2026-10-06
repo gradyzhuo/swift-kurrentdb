@@ -190,17 +190,27 @@ We love code contributions! Here's how to get started.
 ```
 swift-kurrentdb/
 ├── Sources/
-│   └── KurrentDB/
-│       ├── Client/          # Client implementation
-│       ├── Models/          # Data models
-│       ├── Operations/      # Stream operations
-│       ├── Projections/     # Projection management
-│       └── Subscriptions/   # Subscription handling
+│   ├── KurrentDB/               # Public client: target-based Streams, Projections,
+│   │   ├── Core/                #   PersistentSubscriptions, Users, Monitoring, Operations, Gossip
+│   │   ├── Streams/
+│   │   ├── Projections/
+│   │   ├── PersistentSubscriptions/
+│   │   └── KurrentDB.docc/      # DocC articles (every Swift example is compiled by DocSnippetsTests)
+│   ├── KurrentDB_V1/            # Deprecated 1.x flat-method API
+│   ├── KurrentDBPool/           # withBorrowedClient(_:) for independent instances
+│   ├── GRPCEncapsulates/        # gRPC call-shape protocols (UnaryUnary, UnaryStream, …)
+│   └── _GRPCProtobufGenerated/  # Generated from proto/ — never hand-edit
 ├── Tests/
-│   └── KurrentDBTests/      # Test files
-├── Documentation/
-│   └── KurrentDB.docc/      # DocC documentation
-└── Examples/                # Example projects (if any)
+│   ├── StreamsTests, ProjectionsTests, PersistentSubscriptionsTests, UsersTests,
+│   │   OperationsTests, MonitoringTests, GossipTests      # live suites (3-node TLS cluster)
+│   ├── KurrentCoreTests, MockClientTests                  # offline suites
+│   ├── KurrentDBPoolTests, X509Tests                      # need extra infrastructure
+│   └── DocSnippetsTests/        # compiles the documentation examples
+├── proto/                       # Protobuf sources + regeneration notes
+├── server/                      # Docker Compose for the local cluster and X.509 setup
+├── scripts/                     # check-doc-snippets.sh, benchmark helpers
+├── Benchmarks/                  # swift-benchmark suites (results on Bencher)
+└── docs/adr/                    # Architecture decision records
 ```
 
 ## 🔄 Pull Request Process
@@ -416,11 +426,17 @@ We follow the [Swift API Design Guidelines](https://swift.org/documentation/api-
 ### Running Tests
 
 ```bash
-# Run all tests
-swift test
+# Start the local 3-node TLS cluster first (ports 2111–2113)
+docker compose -f server/docker-compose.yaml up -d
 
-# Run specific test
+# Run all tests the way CI does (suites are serialized)
+swift test -v --no-parallel --disable-xctest --enable-swift-testing
+
+# Run one suite (MockClientTests and KurrentCoreTests work without a cluster)
 swift test --filter StreamsTests
+
+# Compile every documentation example
+scripts/check-doc-snippets.sh
 
 # Run with coverage
 swift test --enable-code-coverage
