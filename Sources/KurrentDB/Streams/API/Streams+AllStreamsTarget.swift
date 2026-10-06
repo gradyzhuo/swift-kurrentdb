@@ -26,6 +26,10 @@ extension Streams where Target == AllStreamsTarget {
     /// Prepares a read whose delivery you choose with ``ReadCall/lazy`` or ``ReadCall/buffered``.
     /// Nothing happens until one of them is used.
     ///
+    /// This overload is `@_disfavoredOverload` so that unannotated function references (`let read = stream.read`)
+    /// and bare `try await read()` calls keep selecting the buffered `read`. A `.lazy` / `.buffered` chain or an
+    /// explicit `: ReadCall` annotation selects this one.
+    ///
     /// ```swift
     /// for try await response in client.allStreams.read().lazy {
     ///     print(try response.event.record.eventType)
@@ -33,6 +37,7 @@ extension Streams where Target == AllStreamsTarget {
     /// ```
     ///
     /// - Parameter configure: Configures ``ReadAll/Options`` (position, direction, filter, limit). Defaults to no-op.
+    @_disfavoredOverload
     public func read(configure: @Sendable (inout ReadAll.Options) -> Void = { _ in }) -> ReadCall {
         var options = ReadAll.Options()
         configure(&options)

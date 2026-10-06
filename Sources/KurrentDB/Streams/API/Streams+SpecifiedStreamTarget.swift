@@ -135,6 +135,9 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// Prepares a read whose delivery you choose with ``ReadCall/lazy`` or ``ReadCall/buffered``.
     /// Nothing happens until one of them is used.
     ///
+    /// and bare `try await read()` calls keep selecting the buffered `read`. A `.lazy` / `.buffered` chain or an
+    /// explicit `: ReadCall` annotation selects this one.
+    ///
     /// ```swift
     /// for try await response in client.streams(specified: "orders").read().lazy {
     ///     print(try response.event.record.eventType)
@@ -142,6 +145,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// ```
     ///
     /// - Parameter configure: Configures ``Read/Options`` (direction, limit, starting revision). Defaults to no-op.
+    @_disfavoredOverload
     public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) -> ReadCall {
         var options = Read.Options()
         configure(&options)
