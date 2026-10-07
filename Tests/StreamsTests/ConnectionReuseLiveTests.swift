@@ -155,12 +155,18 @@ struct ConnectionReuseLiveTests: Sendable {
     /// legitimately opens connections that have nothing to do with the reads. What the reads must
     /// never do is replace the shared entry of the node that served them; that is pinned through
     /// the entry's generation, which only changes when a new connection is created for that endpoint.
+    ///
+    /// What matters is the number of concurrent reads (150, above the 100-stream limit), not their
+    /// size. With 200 events per read the 30,000 storage reads saturated the leader on a shared
+    /// runner (run 37591445038: reads queued 1.6–3.6 s on the server's reader bus) until the
+    /// concurrent append failed server-side with "Commit phase timeout" on both attempts. 20 events
+    /// per read keep the client-side queueing this test is about while cutting the server load tenfold.
     @Test("150 個並行 read 全部完成,期間的 append 也完成,且不替換服務它們的共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
-        _ = try await stream.append(events: (0 ..< 200).map { _ in event() }) { $0.expectedRevision = .any }
+        _ = try await stream.append(events: (0 ..< 20).map { _ in event() }) { $0.expectedRevision = .any }
         let endpoint = try #require(await client.selector.selectedNode?.endpoint)
         let generation = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.generation)
 
@@ -182,7 +188,7 @@ struct ConnectionReuseLiveTests: Sendable {
             return counts
         }
 
-        #expect(readCounts.filter { $0 >= 200 }.count == 150)
+        #expect(readCounts.filter { $0 >= 20 }.count == 150)
         #expect(readCounts.contains(-1))
         // Only the serving endpoint's entry is pinned. The total count is not: any transient
         // node-failure retry rediscovers through the first reachable seed, which opens a gossip
