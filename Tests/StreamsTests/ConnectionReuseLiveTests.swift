@@ -149,22 +149,18 @@ struct ConnectionReuseLiveTests: Sendable {
     /// the tradeoff #143 accepts; pin it here.
     ///
     /// The load of this test has made a CI cluster elect a new leader mid-run (runs 37428841325
-    /// and 37434185712: 2111 → 2112 while the reads were in flight). The old leader then resets
-    /// some in-flight read streams ("Stream unexpectedly closed"), and the client fails over — a
-    /// node-failure retry invalidates the cached node and rediscovers, which legitimately opens
-    /// a gossip connection and one to the new leader. The election itself is prevented on the
-    /// server side (`KURRENTDB_GOSSIP_TIMEOUT_MS` in server/vars.env tolerates CPU stalls);
-    /// should one still happen, the total connection count is only comparable when the selected
-    /// node is still the one that was warmed up. What the reads must never do, leader change or
-    /// not, is replace the shared entry of the node that served them; that is pinned through the
-    /// entry's generation, which only changes when a new connection is created for that endpoint.
-    @Test("150 個並行 read 全部完成,期間的 append 也完成,且不新開共用連線")
+    /// and 37434185712: 2111 → 2112 while the reads were in flight; the election itself is now
+    /// prevented by `KURRENTDB_GOSSIP_TIMEOUT_MS` in server/vars.env) and has made single calls
+    /// hit a transient node failure (run 37563292652). Both make the client rediscover, which
+    /// legitimately opens connections that have nothing to do with the reads. What the reads must
+    /// never do is replace the shared entry of the node that served them; that is pinned through
+    /// the entry's generation, which only changes when a new connection is created for that endpoint.
+    @Test("150 個並行 read 全部完成,期間的 append 也完成,且不替換服務它們的共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { try? client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         _ = try await stream.append(events: (0 ..< 200).map { _ in event() }) { $0.expectedRevision = .any }
-        let warmed = client.selector.connections.createdSharedConnectionCount
         let endpoint = try #require(await client.selector.selectedNode?.endpoint)
         let generation = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.generation)
 
@@ -188,12 +184,12 @@ struct ConnectionReuseLiveTests: Sendable {
 
         #expect(readCounts.filter { $0 >= 200 }.count == 150)
         #expect(readCounts.contains(-1))
+        // Only the serving endpoint's entry is pinned. The total count is not: any transient
+        // node-failure retry rediscovers through the first reachable seed, which opens a gossip
+        // connection to a node that is not the leader (+1, leader unchanged — CI run 37563292652),
+        // and a leader election adds the new leader's connection on top. Neither is a read
+        // opening a connection.
         #expect(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.generation == generation)
-        if await client.selector.selectedNode?.endpoint == endpoint {
-            #expect(client.selector.connections.createdSharedConnectionCount == warmed)
-        } else {
-            logger.warning("[ConnectionReuseLiveTests] Leader moved away from \(endpoint.debugDescription) mid-test; total connection count not compared.")
-        }
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
         try await stream.delete()
     }
