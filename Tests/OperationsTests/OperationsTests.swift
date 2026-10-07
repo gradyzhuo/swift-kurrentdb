@@ -44,12 +44,14 @@ struct OperationsTests: Sendable {
     }
 
     /// On a near-empty database a scavenge completes within ~150 ms, so stopping it right after
-    /// starting races its completion. CI run 37559453261 hit that window: the server never
-    /// answered the stop and the test ran into the suite's time limit, whereas stopping an
-    /// already-completed id otherwise returns `stopped` at once (checked against 26.1). A per-call
-    /// deadline turns a lost stop into `deadlineExceeded`, and one retry then lands on the
-    /// completed scavenge.
-    @Test("Start then stop a scavenge returns a stopped result.")
+    /// starting races its completion, and the server's answer inside that window is not stable:
+    /// CI run 37559453261 never answered the stop (the suite hit its time limit), run 37561720849
+    /// answered the retry with `notFound` ("Scavenge id was invalid"), while locally a stop of an
+    /// already-completed id returns `stopped`. The test therefore bounds the call with a deadline,
+    /// retries once, and accepts every outcome that means "the stop reached the server and the
+    /// scavenge is no longer running". The wiring of the RPC itself is pinned by the unknown-id
+    /// test below, which does not depend on timing.
+    @Test("Start then stop a scavenge leaves no running scavenge.")
     func testStopScavenge() async throws {
         var options = CallOptions.defaults
         options.timeout = .seconds(10)
@@ -61,15 +63,32 @@ struct OperationsTests: Sendable {
         #expect(!scavengeId.isEmpty)
 
         let scavenge = client.operations(of: .activeScavenge(scavengeId: scavengeId))
-        let stopResponse = try await retryingOnDeadline { () async throws(KurrentError) in
-            try await scavenge.stopScavenge()
+        do throws(KurrentError) {
+            let stopResponse = try await retryingOnDeadline { () async throws(KurrentError) in
+                try await scavenge.stopScavenge()
+            }
+            switch stopResponse.scavengeResult {
+            case .stopped, .inProgress:
+                break
+            default:
+                Issue.record("Unexpected stop result: \(stopResponse.scavengeResult)")
+            }
+        } catch .resourceNotFound {
+            // The scavenge completed between the start and the (retried) stop.
         }
+    }
 
-        switch stopResponse.scavengeResult {
-        case .stopped, .inProgress:
-            break
-        default:
-            Issue.record("Unexpected stop result: \(stopResponse.scavengeResult)")
+    @Test("Stopping an unknown scavenge id reports resourceNotFound.")
+    func testStopUnknownScavenge() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let unknown = client.operations(of: .activeScavenge(scavengeId: UUID().uuidString.lowercased()))
+        do throws(KurrentError) {
+            _ = try await unknown.stopScavenge()
+            Issue.record("stopScavenge on an unknown id returned instead of throwing")
+        } catch .resourceNotFound {
+            // expected
+        } catch {
+            Issue.record("Unexpected error: \(error)")
         }
     }
 
