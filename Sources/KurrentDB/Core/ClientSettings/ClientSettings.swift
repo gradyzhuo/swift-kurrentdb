@@ -246,7 +246,8 @@ extension ClientSettings {
         let userCredentialParser = UserCredentialsParser()
 
         guard let scheme = schemeParser.parse(connectionString) else {
-            throw KurrentError.internalParsingError(reason: "Unknown URL scheme: \(connectionString)")
+            // Never echo the connection string: it may carry credentials.
+            throw KurrentError.internalParsingError(reason: "Unknown or missing URL scheme; expected esdb://, kurrentdb://, kurrent:// or kdb:// (optionally with +discover).")
         }
 
         guard let endpoints = endpointParser.parse(connectionString),

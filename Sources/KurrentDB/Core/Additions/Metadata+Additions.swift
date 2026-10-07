@@ -19,6 +19,9 @@ extension Metadata {
     ///   is supplied. Mutual TLS identity is established when the TLS connection is built, so it
     ///   cannot be swapped per request via metadata — failing loudly beats silently authenticating
     ///   as the client-level identity.
+    ///   ``KurrentError/encodingError(message:encoding:)`` when the credentials cannot be encoded
+    ///   into an `Authorization` header (Basic credentials must be ASCII). The request is not sent:
+    ///   sending it without the header would run it anonymously.
     package init(from settings: ClientSettings, overriding overrideAuthentication: Authentication? = nil) throws(KurrentError) {
         self.init()
 
@@ -36,10 +39,6 @@ extension Metadata {
             return
         }
 
-        do {
-            try replaceOrAddString(authentication.makeAuthHeader(), forKey: "Authorization")
-        } catch {
-            logger.error("Could not setting Authorization with credentials: \(authentication).\n Original error:\(error).")
-        }
+        try replaceOrAddString(authentication.makeAuthHeader(), forKey: "Authorization")
     }
 }

@@ -120,10 +120,15 @@ extension Streams.AppendRecords {
         }
 
         package init(from message: UnderlyingMessage) throws(KurrentError) {
-            revisions = message.revisions.map {
-                .init(streamIdentifier: .init(name: $0.stream), revision: UInt64($0.revision))
+            var revisions: [StreamAppendResult] = []
+            for revision in message.revisions {
+                revisions.append(.init(
+                    streamIdentifier: .init(name: revision.stream),
+                    revision: try unsignedWireValue(revision.revision, field: "stream revision")
+                ))
             }
-            position = .at(commitPosition: UInt64(message.position))
+            self.revisions = revisions
+            position = .at(commitPosition: try unsignedWireValue(message.position, field: "commit position"))
         }
     }
 }
