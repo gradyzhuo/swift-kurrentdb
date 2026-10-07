@@ -154,6 +154,8 @@ package func withRetry<NodeType: Sendable, T: Sendable>(
         do {
             return try await operation(node)
         } catch let error as KurrentError where error.isNodeFailure && !Task.isCancelled && attempt < policy.maxAttempts {
+            // Visible in the client's log so a rediscovery can be traced to the call that caused it.
+            logger.info("[withRetry] attempt \(attempt) of \(policy.maxAttempts) failed with a node failure, invalidating the cached node and retrying: \(error)")
             await invalidate()
 
             if currentDelay > .zero {
