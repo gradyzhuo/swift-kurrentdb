@@ -41,7 +41,12 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
 
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             let metadata = try Metadata(from: node.settings, overriding: credentials)
-            return try await send(connection: lease.client, metadata: metadata, callOptions: callOptions)
+            do {
+                return try await send(connection: lease.client, metadata: metadata, callOptions: callOptions.applyingDefaultDeadline(from: node.settings))
+            } catch {
+                // Older grpc-swift reports an exceeded deadline as the handler's CancellationError.
+                throw deadlineOrOriginal(error)
+            }
         }
     }
 }
