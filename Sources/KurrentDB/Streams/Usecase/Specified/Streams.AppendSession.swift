@@ -93,15 +93,16 @@ extension Streams.AppendSession {
         }
 
         package init(from message: UnderlyingMessage) throws(KurrentError) {
-            let results: [AppendedResult] = message.output.map {
-                .init(
-                    streamIdentifier: .init(name: $0.stream),
-                    currentRevision: UInt64($0.streamRevision),
-                    position: $0.hasPosition ?.at(commitPosition: UInt64($0.position)) : nil
-                )
+            var results: [AppendedResult] = []
+            for output in message.output {
+                results.append(.init(
+                    streamIdentifier: .init(name: output.stream),
+                    currentRevision: try unsignedWireValue(output.streamRevision, field: "stream revision"),
+                    position: output.hasPosition ? .at(commitPosition: try unsignedWireValue(output.position, field: "commit position")) : nil
+                ))
             }
 
-            self.init(results: results, position: .at(commitPosition: UInt64(message.position)))
+            self.init(results: results, position: .at(commitPosition: try unsignedWireValue(message.position, field: "commit position")))
         }
     }
 }
