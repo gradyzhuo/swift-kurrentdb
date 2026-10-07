@@ -49,13 +49,18 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: Buffe
         let responses = try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             let metadata = try Metadata(from: node.settings, overriding: credentials)
             let request = try request(metadata: metadata)
-            return try await send(connection: lease.client, request: request, callOptions: callOptions) { error in
-                // Log only. Never touch lease.client: shutting down the shared GRPCClient
-                // would fail every later call on this endpoint.
-                completed.set()
-                if let error {
-                    logger.error("The error is thrown in the response of \(Self.name): \(error)")
+            do {
+                return try await send(connection: lease.client, request: request, callOptions: callOptions.applyingDefaultDeadline(from: node.settings)) { error in
+                    // Log only. Never touch lease.client: shutting down the shared GRPCClient
+                    // would fail every later call on this endpoint.
+                    completed.set()
+                    if let error {
+                        logger.error("The error is thrown in the response of \(Self.name): \(error)")
+                    }
                 }
+            } catch {
+                // Older grpc-swift reports an exceeded deadline as the handler's CancellationError.
+                throw deadlineOrOriginal(error)
             }
         }
 

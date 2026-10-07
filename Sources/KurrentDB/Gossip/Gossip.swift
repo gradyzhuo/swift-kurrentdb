@@ -40,13 +40,15 @@ extension Gossip {
     /// - Parameter notAllowedStates: Node states excluded from the result.
     /// - Returns: An array of ``MemberInfo`` sorted by preference priority, excluding any disallowed states.
     /// - Throws: `KurrentError` if the gRPC call fails or the response cannot be decoded.
-    public func read(timeout _: Duration, notAllowedStates: [Gossip.VNodeState] = []) async throws(KurrentError) -> [MemberInfo] {
+    public func read(timeout: Duration, notAllowedStates: [Gossip.VNodeState] = []) async throws(KurrentError) -> [MemberInfo] {
         let usecase = Read()
         let lease = try connections.acquire(endpoint)
         defer { lease.release() }
+        // The gossip timeout is the call's deadline; it was accepted and then ignored before.
+        let timedOptions: CallOptions = { var options = callOptions; options.timeout = timeout; return options }()
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             let metadata = try Metadata(from: settings)
-            let memberInfos = try await usecase.send(connection: lease.client, metadata: metadata, callOptions: callOptions)
+            let memberInfos = try await usecase.send(connection: lease.client, metadata: metadata, callOptions: timedOptions)
             return memberInfos
                 .filter { !notAllowedStates.contains($0.state) }
                 .sorted { settings.nodePreference.priority(state: $0.state) < settings.nodePreference.priority(state: $1.state)
