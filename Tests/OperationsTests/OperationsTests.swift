@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GRPCCore
 @testable import KurrentDB
 import Testing
 
@@ -42,23 +43,42 @@ struct OperationsTests: Sendable {
         }
     }
 
+    /// On a near-empty database a scavenge completes within ~150 ms, so stopping it right after
+    /// starting races its completion. CI run 37559453261 hit that window: the server never
+    /// answered the stop and the test ran into the suite's time limit, whereas stopping an
+    /// already-completed id otherwise returns `stopped` at once (checked against 26.1). A per-call
+    /// deadline turns a lost stop into `deadlineExceeded`, and one retry then lands on the
+    /// completed scavenge.
     @Test("Start then stop a scavenge returns a stopped result.")
     func testStopScavenge() async throws {
-        let client = KurrentDBClient(settings: settings)
+        var options = CallOptions.defaults
+        options.timeout = .seconds(10)
+        let client = KurrentDBClient(settings: settings, defaultCallOptions: options)
 
         let startResponse = try await client.operations(of: .scavenge)
             .startScavenge(threadCount: 1, startFromChunk: 0)
         let scavengeId = startResponse.scavengeId
         #expect(!scavengeId.isEmpty)
 
-        let stopResponse = try await client.operations(of: .activeScavenge(scavengeId: scavengeId))
-            .stopScavenge()
+        let scavenge = client.operations(of: .activeScavenge(scavengeId: scavengeId))
+        let stopResponse = try await retryingOnDeadline { () async throws(KurrentError) in
+            try await scavenge.stopScavenge()
+        }
 
         switch stopResponse.scavengeResult {
         case .stopped, .inProgress:
             break
         default:
             Issue.record("Unexpected stop result: \(stopResponse.scavengeResult)")
+        }
+    }
+
+    /// Runs `operation` again once if the first attempt timed out at the call deadline.
+    private func retryingOnDeadline<T>(_ operation: () async throws(KurrentError) -> T) async throws(KurrentError) -> T {
+        do throws(KurrentError) {
+            return try await operation()
+        } catch .deadlineExceeded {
+            return try await operation()
         }
     }
 
