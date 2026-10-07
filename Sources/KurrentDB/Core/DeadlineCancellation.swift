@@ -28,7 +28,13 @@ package final class HandlerCancellation: Sendable {
 /// cancellation; a `CancellationError` seen while the task is not cancelled was
 /// raised either by grpc-swift enforcing the call deadline, or by the consumer cancelling the hand-off; the latter is harmless because the hand-off is already terminal, so `finish(throwing:)` is a no-op and the mapped error is dropped. Must be called from the owner's task.
 package func deadlineOrOriginal(_ error: any Error) -> any Error {
-    if error is CancellationError, !Task.isCancelled {
+    guard !Task.isCancelled else { return error }
+    if error is CancellationError {
+        return deadlineExceededError()
+    }
+    // Unary calls under the older grpc-swift wrap the handler's cancellation:
+    // RPCError(.unknown, "The transport threw an unexpected error.", cause: CancellationError()).
+    if let rpcError = error as? RPCError, rpcError.cause is CancellationError {
         return deadlineExceededError()
     }
     return error

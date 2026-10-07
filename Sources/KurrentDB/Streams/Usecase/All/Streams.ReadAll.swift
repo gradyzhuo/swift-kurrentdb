@@ -73,6 +73,10 @@ extension Streams where Target == AllStreamsTarget {
                 } catch {
                     continuation.finish(throwing: error)
                 }
+                // Older grpc-swift ends the loop above quietly when the call deadline cancels this
+                // handler, and the call then returns a truncated result as if it were complete.
+                // Throw instead; the owner maps an unrequested cancellation to deadlineExceeded.
+                if Task.isCancelled { throw CancellationError() }
                 return stream
             }
         }
