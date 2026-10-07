@@ -65,7 +65,7 @@ There are a number of query parameters that can be used in the connection string
 | ^ | false |   ^  |     ^     |
 |tlsCaFile|String|None|Path to the CA file when connecting to a secure cluster with a certificate that's not signed by a trusted CA.|
 | ^ | file path |   ^  |     ^     |
-|defaultDeadline|Number|None|Default timeout for client operations, in milliseconds. Most clients allow overriding the deadline per operation.|
+|defaultDeadline|Number|None|Default deadline, in milliseconds, for calls that complete before they return — appends, deletes, management calls, `read()`. Subscriptions and `read().lazy` are not bounded by it; a `CallOptions.timeout` set on the client wins.|
 |keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds.|
 |keepAliveTimeout|Number|10|Keep-alive ping call timeout, in seconds.|
 |userCertFile|String|None|User certificate file (PEM) for X.509 authentication. Requires TLS.|
@@ -174,7 +174,7 @@ Available builder methods:
 | `.certificate(source:)` | Add a TLS certificate source |
 | `.certificate(path:)` | Add a TLS certificate from a file path |
 | `.connectionName(_:)` | Set a connection name |
-| `.defaultDeadline(_:)` | Set default operation timeout |
+| `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return; not subscriptions or `.lazy` reads |
 | `.keepAlive(_:)` | Configure keep-alive settings |
 | `.discoveryInterval(_:)` | Set cluster discovery polling interval |
 | `.maxDiscoveryAttempts(_:)` | Set maximum cluster discovery attempts |
