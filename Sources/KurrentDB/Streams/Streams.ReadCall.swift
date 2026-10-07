@@ -46,7 +46,7 @@ extension Streams.ReadCall {
     ///
     /// The RPC ends when the iterator is released — after the loop finishes, on `break`, on a
     /// thrown error, or when the iterating task is cancelled. Memory per lazy read is bounded by
-    /// the hand-off (one buffered element plus one held by the suspended producer), the transport's
+    /// the hand-off (one element, held by the suspended producer), the transport's
     /// inbound message queue (10 messages by default) and one HTTP/2 stream flow-control window
     /// (about 8 MiB by default) — not proportional to the result size. The only way to keep the RPC open is
     /// to call `makeAsyncIterator()` yourself and hold on to the iterator.

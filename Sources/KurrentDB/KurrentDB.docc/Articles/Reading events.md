@@ -190,7 +190,7 @@ A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without s
 
 `read()` fetches the whole result before it returns, so memory grows with the result. For large
 reads use the lazy form: events arrive as you iterate, and the RPC ends when the loop does. Memory per lazy read is
-bounded by the hand-off (one buffered element plus one held by the suspended producer), the
+bounded by the hand-off (one element, held by the suspended producer), the
 transport's inbound message queue (10 messages by default) and one HTTP/2 stream flow-control
 window (about 8 MiB by default) — not proportional to the result size.
 
