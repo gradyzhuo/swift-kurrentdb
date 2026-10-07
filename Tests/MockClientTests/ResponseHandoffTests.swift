@@ -43,38 +43,37 @@ struct ResponseHandoffTests {
 
     @Test("Delivers in order and ends with nil after finish")
     func deliversInOrder() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 2)
+        let handoff = ResponseHandoff<Int>()
         let producer = Task { for i in 1 ... 5 { try await handoff.send(i) }; handoff.finish() }
         var received: [Int] = []
         while let value = try await handoff.next() { received.append(value) }
         try await producer.value
         #expect(received == [1, 2, 3, 4, 5])
-        #expect(handoff.sentCount == 5)
         #expect(handoff.deliveredCount == 5)
     }
 
-    @Test("finish(throwing:) surfaces the error after the buffer drains, then nil")
+    @Test("finish(throwing:) surfaces the error after the last delivered element, then nil")
     func finishWithError() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 2)
-        try await handoff.send(1)
-        handoff.finish(throwing: Boom())
+        let handoff = ResponseHandoff<Int>()
+        let producer = Task { try await handoff.send(1); handoff.finish(throwing: Boom()) }
         #expect(try await handoff.next() == 1)
         await #expect(throws: Boom.self) { _ = try await handoff.next() }
         #expect(try await handoff.next() == nil)
+        try await producer.value
     }
 
-    @Test("The producer can run at most `capacity` elements ahead")
-    func producerSuspendsWhenFull() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 1)
+    @Test("send suspends holding the element until the consumer takes it")
+    func producerSuspendsUntilTaken() async throws {
+        let handoff = ResponseHandoff<Int>()
         let producer = Task { for i in 1 ... 10 { try await handoff.send(i) }; handoff.finish() }
-        await waitUntil { handoff.sentCount == 1 }
+        await waitUntil { handoff.isProducerWaiting }
         await settle()
-        #expect(handoff.sentCount == 1)
+        #expect(handoff.isProducerWaiting)
+        #expect(handoff.deliveredCount == 0)
         #expect(try await handoff.next() == 1)
-        await waitUntil { handoff.sentCount == 2 }
+        await waitUntil { handoff.isProducerWaiting }
         await settle()
-        #expect(handoff.sentCount == 2)
-        #expect(handoff.sentCount - handoff.deliveredCount <= 1)
+        #expect(handoff.deliveredCount == 1)   // the second send is parked, not accepted
         handoff.cancel()
         _ = await producer.result
     }
@@ -82,10 +81,9 @@ struct ResponseHandoffTests {
     @Test("cancel() wakes a suspended producer with CancellationError and fires onTermination once")
     func cancelWakesProducer() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
-        try await handoff.send(1)
-        let producer = Task { try await handoff.send(2) }
-        await settle()
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
+        let producer = Task { try await handoff.send(1) }
+        await waitUntil { handoff.isProducerWaiting }
         handoff.cancel()
         handoff.cancel()
         await #expect(throws: CancellationError.self) { try await producer.value }
@@ -104,12 +102,11 @@ struct ResponseHandoffTests {
         #expect(probe.last == "\(Boom())")
     }
 
-    @Test("cancel() after finish() discards buffered elements so an escaped stream ends at once")
-    func cancelAfterFinishDiscardsBuffer() async throws {
+    @Test("cancel() after finish() ends an escaped stream at once")
+    func cancelAfterFinishEndsEscapedStream() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 2, onTermination: { probe.record($0) })
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
         let escaped = handoff.makeStream()
-        try await handoff.send(42)
         handoff.finish()
         handoff.cancel()
         var iterator = escaped.makeAsyncIterator()
@@ -117,10 +114,9 @@ struct ResponseHandoffTests {
         #expect(probe.count == 1)
     }
 
-    @Test("cancel() after finish(throwing:) discards the pending error too")
+    @Test("cancel() after finish(throwing:) discards the pending error")
     func cancelAfterFinishDiscardsError() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 2)
-        try await handoff.send(1)
+        let handoff = ResponseHandoff<Int>()
         handoff.finish(throwing: Boom())
         handoff.cancel()
         #expect(try await handoff.next() == nil)
@@ -138,7 +134,7 @@ struct ResponseHandoffTests {
     @Test("Breaking out of the loop cancels the hand-off once the stream goes out of scope")
     func breakCancels() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
         let producer = Task { for i in 1 ... 100 { try await handoff.send(i) }; handoff.finish() }
         func consumeFirst() async throws -> Int? {
             for try await value in handoff.makeStream() { return value }
@@ -152,7 +148,7 @@ struct ResponseHandoffTests {
     @Test("Cancelling the consumer task cancels the hand-off and the consumer ends cleanly")
     func consumerTaskCancellation() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
         let consumer = Task {
             var count = 0
             for try await _ in handoff.makeStream() { count += 1 }
@@ -169,21 +165,15 @@ struct ResponseHandoffTests {
     @Test("Cancelling the producer's task wakes it but leaves the hand-off open for its owner's error")
     func producerCancellationLeavesHandoffOpen() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: { probe.record($0) })
-        try await handoff.send(1)
-        let (started, startedSignal) = AsyncStream.makeStream(of: Void.self)
-        let producer = Task {
-            startedSignal.yield()   // just before the send that suspends
-            try await handoff.send(2)
-        }
-        for await _ in started { break }
-        await settle()
-        #expect(handoff.sentCount == 1)   // the second send is parked, not accepted
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
+        let producer = Task { try await handoff.send(1) }
+        await waitUntil { handoff.isProducerWaiting }
+        #expect(handoff.deliveredCount == 0)   // parked, not accepted
         producer.cancel()
         await #expect(throws: CancellationError.self) { try await producer.value }
+        #expect(!handoff.isProducerWaiting)   // the held element is dropped with its producer
         #expect(probe.count == 0)
         handoff.finish(throwing: Boom())
-        #expect(try await handoff.next() == 1)
         await #expect(throws: Boom.self) { _ = try await handoff.next() }
         #expect(try await handoff.next() == nil)
         #expect(probe.count == 1)
@@ -193,34 +183,30 @@ struct ResponseHandoffTests {
     @Test("After the producer's task was cancelled, a further send throws CancellationError at once")
     func sendAfterProducerCancellationFails() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 4, onTermination: { probe.record($0) })
-        try await handoff.send(1)
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
         let producer = Task {
             while !Task.isCancelled { try? await Task.sleep(for: .milliseconds(5)) }
-            try await handoff.send(2)   // the task is cancelled when it gets here
+            try await handoff.send(1)   // the task is cancelled when it gets here
         }
         await settle()
         producer.cancel()
         await #expect(throws: CancellationError.self) { try await producer.value }
-        await #expect(throws: CancellationError.self) { try await handoff.send(3) }
-        #expect(handoff.sentCount == 1)
+        await #expect(throws: CancellationError.self) { try await handoff.send(2) }
+        #expect(handoff.deliveredCount == 0)
         #expect(probe.count == 0)   // the hand-off is still open
-        #expect(try await handoff.next() == 1)
         handoff.finish(throwing: Boom())
         await #expect(throws: Boom.self) { _ = try await handoff.next() }
         #expect(probe.count == 1)
     }
 
-    @Test("finish() wakes a suspended producer with CancellationError")
+    @Test("finish() wakes a suspended producer with CancellationError and drops its element")
     func finishReleasesPendingProducer() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 1)
-        try await handoff.send(1)
-        let producer = Task { try await handoff.send(2) }
-        await settle()
+        let handoff = ResponseHandoff<Int>()
+        let producer = Task { try await handoff.send(1) }
+        await waitUntil { handoff.isProducerWaiting }
         handoff.finish()
         await #expect(throws: CancellationError.self) { try await producer.value }
-        #expect(handoff.sentCount == 1)
-        #expect(try await handoff.next() == 1)
+        #expect(handoff.deliveredCount == 0)
         #expect(try await handoff.next() == nil)
     }
 
@@ -234,24 +220,35 @@ struct ResponseHandoffTests {
         #expect(try await handoff.next() == nil)
     }
 
+    @Test("A consumer suspended in next() receives the element the producer sends")
+    func waitingConsumerReceivesDirectly() async throws {
+        let handoff = ResponseHandoff<Int>()
+        let consumer = Task { try await handoff.next() }
+        await settle()
+        try await handoff.send(7)   // returns at once: the consumer was already waiting
+        #expect(try await consumer.value == 7)
+        #expect(handoff.deliveredCount == 1)
+    }
+
     @Test("makeStream(_:) skips elements the transform maps to nil")
     func transformSkips() async throws {
-        let handoff = ResponseHandoff<Int>(capacity: 4)
-        for i in 1 ... 4 { try await handoff.send(i) }
-        handoff.finish()
+        let handoff = ResponseHandoff<Int>()
+        let producer = Task { for i in 1 ... 4 { try await handoff.send(i) }; handoff.finish() }
         var received: [Int] = []
         for try await value in handoff.makeStream({ $0 % 2 == 0 ? $0 : nil }) { received.append(value) }
         #expect(received == [2, 4])
+        try await producer.value
     }
 
     @Test("A throwing stream transform ends the hand-off")
     func throwingTransformEndsHandoff() async throws {
         let probe = TerminationProbe()
-        let handoff = ResponseHandoff<Int>(capacity: 2, onTermination: { probe.record($0) })
-        try await handoff.send(1)
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
+        let producer = Task { try await handoff.send(1) }
         let stream: AsyncThrowingStream<Int, any Error> = handoff.makeStream { _ in throw Boom() }
         var iterator = stream.makeAsyncIterator()
         await #expect(throws: Boom.self) { _ = try await iterator.next() }
+        try await producer.value   // the element was taken before the transform threw
         #expect(probe.count == 1)
         await #expect(throws: CancellationError.self) { try await handoff.send(2) }
         #expect(try await iterator.next() == nil)
@@ -260,7 +257,7 @@ struct ResponseHandoffTests {
     @Test("finish releases the onTermination callback while the hand-off stays alive")
     func finishReleasesCallback() {
         let released = ReleaseFlag()
-        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: makeCallback(released))
+        let handoff = ResponseHandoff<Int>(onTermination: makeCallback(released))
         #expect(!released.isSet)
         handoff.finish()
         #expect(released.isSet)
@@ -270,7 +267,7 @@ struct ResponseHandoffTests {
     @Test("cancel releases the onTermination callback while the hand-off stays alive")
     func cancelReleasesCallback() {
         let released = ReleaseFlag()
-        let handoff = ResponseHandoff<Int>(capacity: 1, onTermination: makeCallback(released))
+        let handoff = ResponseHandoff<Int>(onTermination: makeCallback(released))
         handoff.cancel()
         #expect(released.isSet)
         withExtendedLifetime(handoff) {}

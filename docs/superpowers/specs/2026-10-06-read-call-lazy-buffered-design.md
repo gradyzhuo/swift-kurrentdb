@@ -105,6 +105,9 @@ public var buffered: AsyncThrowingStream<ReadResponse, any Error> { get async th
 
 ## 4. 內部元件
 
+> **修訂 2026-10-07**：`ResponseHandoff` 改為純交接（rendezvous），移除 `capacity` 與 buffer。理由：server 一則訊息一個事件、producer 一筆一筆轉送，buffer 只能平滑雙方速度抖動，而 transport 的 inbound 佇列已經在做這件事；live 訂閱時 consumer 幾乎永遠在等（直接交付，buffer 用不到），read / catch-up 則由 consumer 決定速度（buffer 滿了容量多大都一樣）。記憶體上限因此從「1 筆 buffer + 1 筆在 producer 手上」變成「1 筆在 producer 手上」。下文 4.x 中關於 `capacity`、`sentCount` 的描述以程式碼為準。
+
+
 ### 4.1 `ResponseHandoff<Element>`（package，`Sources/KurrentDB/Core/ResponseHandoff.swift`）
 
 單一 producer / 單一 consumer、固定容量（預設 1）的交接通道，`Mutex` + `CheckedContinuation` 實作，不新增依賴。

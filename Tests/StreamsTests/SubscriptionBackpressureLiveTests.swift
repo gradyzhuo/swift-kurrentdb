@@ -46,8 +46,8 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
 
-        #expect(subscription.messages.sentCount - subscription.messages.deliveredCount <= subscription.messages.capacity)
-        #expect(subscription.messages.sentCount < 100)
+        #expect(subscription.messages.isProducerWaiting)
+        #expect(subscription.messages.deliveredCount < 100)
         subscription.cancel()
     }
 
@@ -83,8 +83,8 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         var iterator = subscription.events.makeAsyncIterator()
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
-        #expect(subscription.messages.sentCount - subscription.messages.deliveredCount <= subscription.messages.capacity)
-        #expect(subscription.messages.sentCount < 100)
+        #expect(subscription.messages.isProducerWaiting)
+        #expect(subscription.messages.deliveredCount < 100)
         subscription.cancel()
     }
 
@@ -95,11 +95,10 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         _ = try await stream.append(events: events(300)) { $0.expectedRevision = .any }
 
         let subscription = try await stream.subscribe { $0.revision = .start }
-        // Consume nothing: the producer fills the buffer and suspends in send.
-        // Wait until the buffer is full; the next send suspends.
+        // Consume nothing: the producer suspends in send holding the first message.
         // The test proves the release indirectly, through the error type: `connectionClosed`
         // comes from the close hook, whereas the transport's own failure would be `unavailable`.
-        #expect(try await eventually { subscription.messages.sentCount - subscription.messages.deliveredCount == subscription.messages.capacity })
+        #expect(try await eventually { subscription.messages.isProducerWaiting })
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
         try client.shutdown()

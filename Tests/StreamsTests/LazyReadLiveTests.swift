@@ -141,15 +141,15 @@ struct LazyReadLiveTests: Sendable {
         #expect(first != nil)
         #expect(try await sharedRetainCount(client) == 1)             // positive control: the lease is held
         try await Task.sleep(for: .milliseconds(500))
-        // The RPC task feeds a capacity-1 hand-off; nothing is pulled, so production has stalled.
+        // The RPC task feeds a rendezvous hand-off; nothing is pulled, so the producer is parked on the second element.
         // Observe the hand-off counters through a separately opened ScopedCall, since the iterator's own call is private.
         let node = try await client.selector.select()
         let usecase = Streams<SpecifiedStream>.Read(from: stream.identifier, options: .init())
         let call = try await usecase.open(node: node, callOptions: .defaults, credentials: nil)
         _ = try await call.handoff.next()
         try await Task.sleep(for: .milliseconds(500))
-        #expect(call.handoff.sentCount - call.handoff.deliveredCount <= call.handoff.capacity)
-        #expect(call.handoff.sentCount < 300)
+        #expect(call.handoff.isProducerWaiting)
+        #expect(call.handoff.deliveredCount == 1)
         await call.close()
 
         iterator = stream.read().lazy.makeAsyncIterator()   // release the first iterator → its RPC ends

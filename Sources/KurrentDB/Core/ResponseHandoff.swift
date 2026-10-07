@@ -5,23 +5,28 @@
 
 import Synchronization
 
-/// Single-producer / single-consumer hand-off with a fixed capacity.
+/// Single-producer / single-consumer rendezvous: an element changes hands only when both sides
+/// are present.
 ///
-/// The producer (a gRPC response handler) suspends in ``send(_:)`` while `capacity` elements
-/// are waiting, so it stops pulling from the transport; HTTP/2 flow control then stops the
-/// server. ``finish(throwing:)`` is called by the producer's owner, ``cancel()`` by the consumer side
+/// The producer (a gRPC response handler) hands its element to a consumer waiting in ``next()``;
+/// if none is waiting it suspends in ``send(_:)`` holding the element, so it stops pulling from
+/// the transport and HTTP/2 flow control stops the server. There is deliberately no buffer: the
+/// server sends one event per message and the producer forwards them one at a time, so a buffer
+/// could only smooth speed jitter between the two sides — and the transport's own inbound queue
+/// already does that. Memory held here is therefore at most one element.
+///
+/// ``finish(throwing:)`` is called by the producer's owner, ``cancel()`` by the consumer side
 /// (directly, on task cancellation, or when the stream from ``makeStream()`` is released).
 /// `onTermination` runs exactly once, on whichever of the two happens first.
 ///
-/// Cancellation is split by side. Consumer-side cancellation ends quietly: the buffer is dropped
-/// and `next()` returns `nil`. Cancelling the producer's task wakes a producer suspended in
-/// ``send(_:)`` with `CancellationError` and makes every later `send` fail the same way, but it
-/// does not end the hand-off: the owner of the producer decides the terminal error. That matters
-/// because grpc-swift enforces an RPC deadline by cancelling the response handler's task, so the
-/// owner can still finish with the RPC's real final error (for example `deadlineExceeded`) instead
-/// of a `CancellationError`. The consumer drains the buffer and then receives whatever the owner
-/// passes to ``finish(throwing:)``. ``finish(throwing:)`` also wakes a suspended producer with
-/// `CancellationError`.
+/// Cancellation is split by side. Consumer-side cancellation ends quietly: `next()` returns `nil`.
+/// Cancelling the producer's task wakes a producer suspended in ``send(_:)`` with
+/// `CancellationError` and makes every later `send` fail the same way, but it does not end the
+/// hand-off: the owner of the producer decides the terminal error. That matters because grpc-swift
+/// enforces an RPC deadline by cancelling the response handler's task, so the owner can still
+/// finish with the RPC's real final error (for example `deadlineExceeded`) instead of a
+/// `CancellationError`. ``finish(throwing:)`` also wakes a suspended producer with
+/// `CancellationError`; the element it was holding is dropped.
 package final class ResponseHandoff<Element: Sendable>: Sendable {
     private enum Terminal {
         case finished((any Error)?)
@@ -29,12 +34,10 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     }
 
     private struct State {
-        var buffer: [Element] = []
         var terminal: Terminal?
         var consumer: CheckedContinuation<Element?, any Error>?
         var producer: (element: Element, continuation: CheckedContinuation<Void, any Error>)?
         var producerCancelled = false
-        var sentCount = 0
         var deliveredCount = 0
         /// Released as soon as it is taken, so whatever it captures is not kept alive by a finished hand-off.
         var onTermination: (@Sendable ((any Error)?) -> Void)?
@@ -43,33 +46,30 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     private enum SendAction {
         case fail
         case resumeConsumer(CheckedContinuation<Element?, any Error>)
-        case done
         case suspend
     }
 
     private enum NextAction {
-        case deliver(Element, wake: CheckedContinuation<Void, any Error>?)
+        case deliver(Element, wake: CheckedContinuation<Void, any Error>)
         case fail(any Error)
         case end
         case suspend
     }
 
-    package let capacity: Int
     private let state: Mutex<State>
 
-    package init(capacity: Int = 1, onTermination: @escaping @Sendable ((any Error)?) -> Void = { _ in }) {
-        precondition(capacity >= 1, "ResponseHandoff capacity must be at least 1")
-        self.capacity = capacity
+    package init(onTermination: @escaping @Sendable ((any Error)?) -> Void = { _ in }) {
         var initial = State()
         initial.onTermination = onTermination
         state = Mutex(initial)
     }
 
-    /// Number of elements accepted from the producer.
-    package var sentCount: Int { state.withLock { $0.sentCount } }
-
     /// Number of elements handed to the consumer.
     package var deliveredCount: Int { state.withLock { $0.deliveredCount } }
+
+    /// Whether the producer is suspended in ``send(_:)`` holding an element — the observable
+    /// form of backpressure: nothing more is pulled from the transport until the consumer calls ``next()``.
+    package var isProducerWaiting: Bool { state.withLock { $0.producer != nil } }
 
     package func send(_ element: Element) async throws {
         try await withTaskCancellationHandler {
@@ -78,22 +78,16 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                     if state.terminal != nil || state.producerCancelled { return .fail }
                     if let consumer = state.consumer {
                         state.consumer = nil
-                        state.sentCount += 1
                         state.deliveredCount += 1
                         return .resumeConsumer(consumer)
                     }
-                    if state.buffer.count < capacity {
-                        state.buffer.append(element)
-                        state.sentCount += 1
-                        return .done
-                    }
+                    precondition(state.producer == nil, "ResponseHandoff supports a single producer")
                     state.producer = (element, continuation)
                     return .suspend
                 }
                 switch action {
                 case .fail: continuation.resume(throwing: CancellationError())
                 case let .resumeConsumer(consumer): consumer.resume(returning: element); continuation.resume()
-                case .done: continuation.resume()
                 case .suspend: break
                 }
             }
@@ -114,17 +108,10 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Element?, any Error>) in
                 let action: NextAction = state.withLock { state in
-                    if !state.buffer.isEmpty {
-                        let element = state.buffer.removeFirst()
+                    if let pending = state.producer {
+                        state.producer = nil
                         state.deliveredCount += 1
-                        var wake: CheckedContinuation<Void, any Error>?
-                        if let pending = state.producer {
-                            state.producer = nil
-                            state.buffer.append(pending.element)
-                            state.sentCount += 1
-                            wake = pending.continuation
-                        }
-                        return .deliver(element, wake: wake)
+                        return .deliver(pending.element, wake: pending.continuation)
                     }
                     switch state.terminal {
                     case let .finished(error?)?:
@@ -139,7 +126,7 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                     }
                 }
                 switch action {
-                case let .deliver(element, wake): wake?.resume(); continuation.resume(returning: element)
+                case let .deliver(element, wake): wake.resume(); continuation.resume(returning: element)
                 case let .fail(error): continuation.resume(throwing: error)
                 case .end: continuation.resume(returning: nil)
                 case .suspend: break
@@ -157,8 +144,8 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
             let producer = state.producer?.continuation
             state.consumer = nil
             state.producer = nil
-            // A waiting consumer means the buffer is empty: hand it the outcome directly and
-            // leave the terminal error-free so the error is not delivered twice.
+            // A waiting consumer is handed the outcome directly; leave the terminal error-free so
+            // the error is not delivered twice.
             state.terminal = (consumer != nil && error != nil) ? .finished(nil) : .finished(error)
             let callback = state.onTermination
             state.onTermination = nil
@@ -179,14 +166,12 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 return (nil, nil, nil)
             case .finished?:
                 // The producer already ended and onTermination already fired, but the consumer
-                // side still drops whatever it has not taken: a stream that escapes its scope
-                // must end at once instead of delivering the tail or a pending error.
+                // side still drops a pending error: a stream that escapes its scope must end at
+                // once instead of delivering it.
                 state.terminal = .cancelled
-                state.buffer.removeAll()
                 return (nil, nil, nil)
             case nil:
                 state.terminal = .cancelled
-                state.buffer.removeAll()
                 let consumer = state.consumer
                 let producer = state.producer?.continuation
                 state.consumer = nil
