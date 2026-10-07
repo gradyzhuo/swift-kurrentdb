@@ -14,21 +14,6 @@ import Synchronization
 import Testing
 @testable import KurrentDB
 
-/// Accepts TCP connections and never writes, so an RPC on it waits for acceptance forever.
-private struct SilentListener {
-    let channel: any Channel
-    var port: Int { channel.localAddress!.port! }
-
-    static func start() async throws -> SilentListener {
-        let channel = try await ServerBootstrap(group: MultiThreadedEventLoopGroup.singleton)
-            .bind(host: "127.0.0.1", port: 0)
-            .get()
-        return SilentListener(channel: channel)
-    }
-
-    func stop() async { try? await channel.close() }
-}
-
 @Suite("Lazy read path", .serialized, .timeLimit(.minutes(1)))
 struct LazyReadPathTests {
     private static let refused = Endpoint(host: "127.0.0.1", port: 1)

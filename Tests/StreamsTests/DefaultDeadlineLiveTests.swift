@@ -2,10 +2,10 @@
 //  DefaultDeadlineLiveTests.swift
 //  swift-kurrentdb
 //
-//  Needs the 3-node cluster from server/docker-compose.yaml. `defaultDeadline` applies to calls
-//  that complete before they return; subscriptions and lazy reads, whose lifetime is the
-//  caller's iteration, are not bounded by it. A 1 ms deadline cannot be met by any round trip,
-//  so it separates the two groups without timing assumptions.
+//  Needs the 3-node cluster from server/docker-compose.yaml. Subscriptions and lazy reads, whose
+//  lifetime is the caller's iteration, are not bounded by `defaultDeadline`: under a 1 ms default
+//  deadline they must still work. That the deadline does bound completing calls is verified
+//  offline in MockClientTests/DefaultDeadlinePathTests, against a listener that never answers.
 //
 
 import Foundation
@@ -29,20 +29,6 @@ struct DefaultDeadlineLiveTests: Sendable {
 
     private func event() -> EventData {
         EventData(eventType: "DefaultDeadline-Test", model: ["Description": "default deadline"])
-    }
-
-    @Test("An append and a buffered read fail with deadlineExceeded under a 1 ms default deadline")
-    func completingCallsAreBounded() async throws {
-        let client = KurrentDBClient(settings: impatient)
-        defer { try? client.shutdown() }
-        let stream = client.streams(specified: "DefaultDeadline-\(UUID().uuidString)")
-
-        await #expect(throws: KurrentError.deadlineExceeded) {
-            _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
-        }
-        await #expect(throws: KurrentError.deadlineExceeded) {
-            _ = try await stream.read()
-        }
     }
 
     @Test("A subscription outlives the default deadline and still receives events")

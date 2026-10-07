@@ -40,6 +40,20 @@ package func deadlineOrOriginal(_ error: any Error) -> any Error {
     return error
 }
 
+/// Classifies a cancellation that ends a call which completes before returning (unary, client
+/// streaming, buffered server streaming).
+///
+/// A cancellation — bare, or wrapped as an `RPCError` cause by older grpc-swift — is the caller
+/// cancelling its own task when `Task.isCancelled`, and becomes `KurrentError.connectionClosed`
+/// (as `withRetry`'s backoff does) rather than falling through `withRethrowingError` as an
+/// `internalClientError`; otherwise grpc-swift cancelled the handler to enforce the call deadline.
+/// Any other error is returned unchanged. Must be called from the caller's task.
+package func completingCallError(_ error: any Error) -> any Error {
+    let isCancellation = error is CancellationError || (error as? RPCError)?.cause is CancellationError
+    guard isCancellation else { return error }
+    return Task.isCancelled ? KurrentError.connectionClosed : deadlineExceededError()
+}
+
 package func deadlineExceededError() -> RPCError {
     RPCError(code: .deadlineExceeded, message: "RPC timed out before completing")
 }
