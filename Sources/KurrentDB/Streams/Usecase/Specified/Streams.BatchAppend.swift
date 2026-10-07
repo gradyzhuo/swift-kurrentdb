@@ -127,57 +127,65 @@ extension Streams {
                     for await _ in keepOpen { break }
                 }
 
-                return try await serviceClient.batchAppend(request: request, options: callOptions) { response in
-                    var byCorrelation: [UUID: Response.ItemResult] = [:]
+                do {
+                    return try await serviceClient.batchAppend(request: request, options: callOptions.applyingDefaultDeadline(from: node.settings)) { response in
+                        var byCorrelation: [UUID: Response.ItemResult] = [:]
 
-                    for try await message in response.messages {
-                        guard let correlationId = message.correlationID.toUUID() else { continue }
-                        let event = eventByCorrelation[correlationId]
-                        let stream = (try? message.streamIdentifier.toIdentifier())
-                            ?? event?.streamIdentifier
-                            ?? .init(name: "")
+                        for try await message in response.messages {
+                            guard let correlationId = message.correlationID.toUUID() else { continue }
+                            let event = eventByCorrelation[correlationId]
+                            let stream = (try? message.streamIdentifier.toIdentifier())
+                                ?? event?.streamIdentifier
+                                ?? .init(name: "")
 
-                        switch message.result {
-                        case let .success(success):
-                            let revision: UInt64? = {
-                                if case let .currentRevision(value)? = success.currentRevisionOption { return value }
-                                return nil
-                            }()
-                            let position: StreamPosition? = {
-                                if case let .position(pos)? = success.positionOption {
-                                    return .at(commitPosition: pos.commitPosition, preparePosition: pos.preparePosition)
-                                }
-                                return nil
-                            }()
-                            byCorrelation[correlationId] = .success(.init(
-                                streamIdentifier: stream,
-                                currentRevision: revision,
-                                position: position
-                            ))
-                        case let .error(status):
-                            byCorrelation[correlationId] = .failure(.init(
-                                streamIdentifier: stream,
-                                message: status.message,
-                                expectedRevision: event?.expectedRevision ?? .any
-                            ))
-                        case .none:
-                            continue
+                            switch message.result {
+                            case let .success(success):
+                                let revision: UInt64? = {
+                                    if case let .currentRevision(value)? = success.currentRevisionOption { return value }
+                                    return nil
+                                }()
+                                let position: StreamPosition? = {
+                                    if case let .position(pos)? = success.positionOption {
+                                        return .at(commitPosition: pos.commitPosition, preparePosition: pos.preparePosition)
+                                    }
+                                    return nil
+                                }()
+                                byCorrelation[correlationId] = .success(.init(
+                                    streamIdentifier: stream,
+                                    currentRevision: revision,
+                                    position: position
+                                ))
+                            case let .error(status):
+                                byCorrelation[correlationId] = .failure(.init(
+                                    streamIdentifier: stream,
+                                    message: status.message,
+                                    expectedRevision: event?.expectedRevision ?? .any
+                                ))
+                            case .none:
+                                continue
+                            }
+
+                            if byCorrelation.count == streamEvents.count {
+                                releaseRequest.finish()
+                                break
+                            }
                         }
 
-                        if byCorrelation.count == streamEvents.count {
-                            releaseRequest.finish()
-                            break
-                        }
-                    }
+                        // Older grpc-swift ends the loop above quietly when the call deadline cancels
+                        // this handler; reporting every missing item as "no response" would hide that.
+                        if Task.isCancelled { throw CancellationError() }
 
-                    let ordered = zip(streamEvents, correlationIds).map { streamEvent, correlationId in
-                        byCorrelation[correlationId] ?? .failure(.init(
-                            streamIdentifier: streamEvent.streamIdentifier,
-                            message: "No response received for this item.",
-                            expectedRevision: streamEvent.expectedRevision
-                        ))
+                        let ordered = zip(streamEvents, correlationIds).map { streamEvent, correlationId in
+                            byCorrelation[correlationId] ?? .failure(.init(
+                                streamIdentifier: streamEvent.streamIdentifier,
+                                message: "No response received for this item.",
+                                expectedRevision: streamEvent.expectedRevision
+                            ))
+                        }
+                        return Response(results: ordered)
                     }
-                    return Response(results: ordered)
+                } catch {
+                    throw completingCallError(error)
                 }
             }
         }
