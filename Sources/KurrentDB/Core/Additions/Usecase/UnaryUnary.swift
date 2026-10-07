@@ -44,8 +44,7 @@ extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
             do {
                 return try await send(connection: lease.client, metadata: metadata, callOptions: callOptions.applyingDefaultDeadline(from: node.settings))
             } catch {
-                // Older grpc-swift reports an exceeded deadline as the handler's CancellationError.
-                throw deadlineOrOriginal(error)
+                throw completingCallError(error)
             }
         }
     }

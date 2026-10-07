@@ -59,8 +59,7 @@ extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: Buffe
                     }
                 }
             } catch {
-                // Older grpc-swift reports an exceeded deadline as the handler's CancellationError.
-                throw deadlineOrOriginal(error)
+                throw completingCallError(error)
             }
         }
 
