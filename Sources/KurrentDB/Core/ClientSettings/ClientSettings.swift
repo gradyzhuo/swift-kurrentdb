@@ -238,7 +238,7 @@ extension ClientSettings {
     ///
     /// - Parameter connectionString: A well-formed KurrentDB connection string.
     /// - Returns: Fully populated `ClientSettings`.
-    /// - Throws: `KurrentError.internalParsingError` if the string is malformed or missing required components.
+    /// - Throws: `KurrentError.internalParsingError` if the string is malformed, lacks a host, or has an unknown, duplicate or invalid parameter. The reason names the component or parameter, never its value.
     public static func parse(connectionString: String) throws(KurrentError) -> Self {
         let parsed = try ConnectionString(parsing: connectionString)
         let parameters = try ConnectionStringParameters(parsed.parameters)
