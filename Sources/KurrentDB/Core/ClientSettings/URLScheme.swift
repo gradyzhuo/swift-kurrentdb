@@ -7,11 +7,11 @@
 
 import Foundation
 
-enum URLScheme: String {
+package enum URLScheme: String {
     case kurrentdb
     case dnsDiscover
 
-    init?(rawValue: String) {
+    package init?(rawValue: String) {
         switch rawValue {
         case "esdb", "kurrentdb", "kurrent", "kdb":
             self = .kurrentdb
