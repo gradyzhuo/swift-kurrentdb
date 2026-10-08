@@ -240,88 +240,74 @@ extension ClientSettings {
     /// - Returns: Fully populated `ClientSettings`.
     /// - Throws: `KurrentError.internalParsingError` if the string is malformed or missing required components.
     public static func parse(connectionString: String) throws(KurrentError) -> Self {
-        let schemeParser = URLSchemeParser()
-        let endpointParser = EndpointParser()
-        let queryItemParser = QueryItemParser()
-        let userCredentialParser = UserCredentialsParser()
+        let parsed = try ConnectionString(parsing: connectionString)
+        let parameters = try ConnectionStringParameters(parsed.parameters)
 
-        guard let scheme = schemeParser.parse(connectionString) else {
-            // Never echo the connection string: it may carry credentials.
-            throw KurrentError.internalParsingError(reason: "Unknown or missing URL scheme; expected esdb://, kurrentdb://, kurrent:// or kdb:// (optionally with +discover).")
-        }
-
-        guard let endpoints = endpointParser.parse(connectionString),
-              endpoints.count > 0
-        else {
-            throw KurrentError.internalParsingError(reason: "Connection string doesn't have an host")
-        }
-
-        let parsedResult = queryItemParser.parse(connectionString) ?? []
-
-        let queryItems: [String: URLQueryItem] = .init(uniqueKeysWithValues: parsedResult.map {
-            ($0.name.lowercased(), $0)
-        })
-
-        let clusterMode: TopologyClusterMode = if scheme == .dnsDiscover {
-            .dns(domain: endpoints[0])
-        } else if endpoints.count > 1 {
-            .seeds(endpoints)
+        let clusterMode: TopologyClusterMode = if parsed.scheme == .dnsDiscover {
+            .dns(domain: parsed.endpoints[0])
+        } else if parsed.endpoints.count > 1 {
+            .seeds(parsed.endpoints)
         } else {
-            .standalone(endpoint: endpoints[0])
+            .standalone(endpoint: parsed.endpoints[0])
         }
 
-        let nodePreference = queryItems["nodepreference"]?.value.flatMap {
-            NodePreference(rawValue: $0.lowercased())
-        } ?? .leader
+        let nodePreference: NodePreference
+        if let raw = try parameters.string("nodepreference") {
+            guard let preference = NodePreference(rawValue: raw.lowercased()) else {
+                throw .internalParsingError(reason: "Parameter 'nodepreference' must be leader, follower, random or readOnlyReplica.")
+            }
+            nodePreference = preference
+        } else {
+            nodePreference = .leader
+        }
 
-        let gossipTimeout: Duration = queryItems["gossiptimeout"]
-            .flatMap({ $0.value.flatMap { Int64($0) } })
-            .map { .seconds($0) } ?? .seconds(5)
+        let gossipTimeout = try parameters.duration("gossiptimeout", unit: .seconds) ?? .seconds(5)
+        let maxDiscoveryAttempts = try parameters.positiveInteger("maxdiscoverattempts", as: UInt16.self) ?? 10
+        let discoveryInterval = try parameters.duration("discoveryinterval", unit: .milliseconds) ?? .milliseconds(100)
 
-        let maxDiscoveryAttempts: UInt16 = queryItems["maxdiscoverattempts"]
-            .flatMap({ $0.value.flatMap { UInt16($0) } }) ?? 10
-
-        let discoveryInterval: Duration = queryItems["discoveryinterval"]
-            .flatMap({ $0.value.flatMap { Int64($0) } })
-            .map { .milliseconds($0) } ?? .milliseconds(100)
-
+        let certFile = try parameters.string("usercertfile")
+        let keyFile = try parameters.string("userkeyfile")
         let authentication: Authentication?
-        if let certFile = queryItems["usercertfile"].flatMap(\.value),
-           let keyFile = queryItems["userkeyfile"].flatMap(\.value)
-        {
+        switch (certFile, keyFile) {
+        case let (certFile?, keyFile?):
             authentication = .x509(certFile: certFile, keyFile: keyFile)
-        } else {
-            authentication = userCredentialParser.parse(connectionString)
+        case (nil, nil):
+            authentication = parsed.credentials.map { .credentials(username: $0.username, password: $0.password) }
+        default:
+            throw .internalParsingError(reason: "Parameters 'usercertfile' and 'userkeyfile' must be given together.")
         }
 
-        let keepAlive: KeepAlive = if let keepAliveInterval: UInt64 = (queryItems["keepaliveinterval"].flatMap { $0.value.flatMap { .init($0) } }),
-                                      let keepAliveTimeout: UInt64 = (queryItems["keepalivetimeout"].flatMap { $0.value.flatMap { .init($0) } })
-        {
-            // Connection string values are in seconds; convert to milliseconds
-            .init(intervalMs: keepAliveInterval * 1000, timeoutMs: keepAliveTimeout * 1000)
+        // Connection string values are in seconds. Only both together replace the default.
+        let keepAliveInterval = try parameters.duration("keepaliveinterval", unit: .seconds)
+        let keepAliveTimeout = try parameters.duration("keepalivetimeout", unit: .seconds)
+        let keepAlive: KeepAlive = if let keepAliveInterval, let keepAliveTimeout {
+            .init(interval: keepAliveInterval, timeout: keepAliveTimeout)
         } else {
             .default
         }
 
-        let connectionName = queryItems["connectionname"]?.value
-
-        let secure: Bool = (queryItems["tls"].flatMap { $0.value.flatMap { .init($0) } }) ?? true
+        let connectionName = try parameters.string("connectionname")
+        let secure = try parameters.bool("tls") ?? true
 
         // The client certificate is presented in the TLS handshake, so X.509 needs TLS.
         if case .x509 = authentication, !secure {
             throw .internalParsingError(reason: "X.509 authentication (userCertFile/userKeyFile) requires a TLS connection; remove tls=false.")
         }
 
-        let tlsVerifyCert: Bool = (queryItems["tlsverifycert"].flatMap { $0.value.flatMap { .init($0) } }) ?? true
+        let tlsVerifyCert = try parameters.bool("tlsverifycert") ?? true
 
         var certificates: [TLSConfig.CertificateSource] = []
-        if let tlsCaFilePath: String = queryItems["tlscafile"].flatMap(\.value) {
-            if let certificate = parseCertificate(path: tlsCaFilePath) {
-                certificates.append(certificate)
-            }
+        if let tlsCaFilePath = try parameters.string("tlscafile"),
+           let certificate = parseCertificate(path: tlsCaFilePath) {
+            certificates.append(certificate)
         }
 
-        let defaultDeadline: Int = (queryItems["defaultdeadline"].flatMap { $0.value.flatMap { .init($0) } }) ?? .max
+        // Validated as a duration so a deadline computed from it cannot overflow; stored in ms.
+        let defaultDeadline: Int = if let deadline = try parameters.duration("defaultdeadline", unit: .milliseconds) {
+            Int(deadline.components.seconds) * 1000 + Int(deadline.components.attoseconds / 1_000_000_000_000_000)
+        } else {
+            .max
+        }
 
         return Self(
             clusterMode: clusterMode,
@@ -595,5 +581,77 @@ extension ClientSettings {
             config.privateKey = .file(path: keyFile, format: .pem)
         }
         return config
+    }
+}
+
+/// Typed, validated access to a connection string's query parameters.
+///
+/// Every getter returns nil for an absent parameter and throws for a present but malformed one,
+/// naming the parameter, never its value.
+private struct ConnectionStringParameters {
+    enum DurationUnit {
+        case seconds, milliseconds
+
+        var nanoseconds: Int64 {
+            switch self {
+            case .seconds: 1_000_000_000
+            case .milliseconds: 1_000_000
+            }
+        }
+    }
+
+    static let known: Set<String> = [
+        "tls", "tlsverifycert", "tlscafile", "connectionname", "nodepreference",
+        "gossiptimeout", "maxdiscoverattempts", "discoveryinterval", "defaultdeadline",
+        "keepaliveinterval", "keepalivetimeout", "usercertfile", "userkeyfile",
+    ]
+
+    private let values: [String: String]
+
+    init(_ values: [String: String]) throws(KurrentError) {
+        if let unknown = values.keys.sorted().first(where: { !Self.known.contains($0) }) {
+            throw .internalParsingError(reason: "Unknown connection string parameter '\(unknown)'.")
+        }
+        self.values = values
+    }
+
+    func string(_ key: String) throws(KurrentError) -> String? {
+        guard let value = values[key] else { return nil }
+        guard !value.isEmpty else {
+            throw .internalParsingError(reason: "Parameter '\(key)' must not be empty.")
+        }
+        return value
+    }
+
+    func bool(_ key: String) throws(KurrentError) -> Bool? {
+        guard let value = values[key] else { return nil }
+        switch value.lowercased() {
+        case "true": return true
+        case "false": return false
+        default: throw .internalParsingError(reason: "Parameter '\(key)' must be true or false.")
+        }
+    }
+
+    func positiveInteger<T: FixedWidthInteger>(_ key: String, as _: T.Type) throws(KurrentError) -> T? {
+        guard let value = values[key] else { return nil }
+        guard let number = T(value), number > 0 else {
+            throw .internalParsingError(reason: "Parameter '\(key)' must be a positive integer no larger than \(T.max).")
+        }
+        return number
+    }
+
+    /// A positive duration whose nanosecond value fits in `Int64`, so nothing downstream
+    /// (NIO `TimeAmount`, deadline arithmetic) can overflow.
+    func duration(_ key: String, unit: DurationUnit) throws(KurrentError) -> Duration? {
+        guard let value = values[key] else { return nil }
+        guard let number = Int64(value), number > 0,
+              !number.multipliedReportingOverflow(by: unit.nanoseconds).overflow
+        else {
+            throw .internalParsingError(reason: "Parameter '\(key)' must be a positive integer within range.")
+        }
+        return switch unit {
+        case .seconds: .seconds(number)
+        case .milliseconds: .milliseconds(number)
+        }
     }
 }
