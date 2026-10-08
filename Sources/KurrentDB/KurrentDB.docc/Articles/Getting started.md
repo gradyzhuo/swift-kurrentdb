@@ -73,6 +73,16 @@ There are a number of query parameters that can be used in the connection string
 |userKeyFile|String|None|Key file (PEM) for the user certificate used for X.509 authentication. Requires TLS.|
 | ^ | file path |   ^  |     ^     |
 
+Parameter names and the scheme are case-insensitive. A parameter the client does not know, a parameter given twice, or a value it cannot use (for example `tls=yes` or `gossipTimeout=0`) makes `ClientSettings.parse(connectionString:)` throw; the error names the parameter, never its value.
+
+The username, the password and parameter values are percent-decoded. Encode `/`, `?`, `#` and `%` in a password — other characters, including `@`, `:` and `&`, may be written as they are. The simplest way is to encode the whole password:
+
+```swift
+let password = "p@ss/w%rd#1"
+let encoded = password.addingPercentEncoding(withAllowedCharacters: .urlPasswordAllowed)!
+let parsed = try ClientSettings.parse(connectionString: "kurrentdb://admin:\(encoded)@localhost:2113")
+```
+
 When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `kurrentdb://localhost:2113?tls=false`. Note that `usernames` and `passwords` aren't provided there because insecure deployments don't support authentication and authorisation.
 
 
