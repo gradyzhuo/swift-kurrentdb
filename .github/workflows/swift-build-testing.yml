@@ -7,6 +7,13 @@ on:
     branches: [ "main" ]
   pull_request:
 
+# Least privilege for every job: read the repository, nothing else. The repository default is
+# already read-only; stating it here keeps the workflow safe if that default ever changes.
+# Third-party actions are pinned to full commit SHAs (version in the trailing comment) so an
+# upstream tag or branch that moves cannot run new code with this repository's secrets.
+permissions:
+  contents: read
+
 jobs:
   # Full integration test suite (Ubuntu + KurrentDB cluster)
   build:
@@ -27,8 +34,8 @@ jobs:
       KURRENTDB_SUPPORTS_MULTI_STREAMS: ${{ matrix.kurrentdb.supports_multi_streams }}
       KURRENTDB_SUPPORTS_APPEND_RECORDS: ${{ matrix.kurrentdb.supports_append_records }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: SwiftyLab/setup-swift@latest
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
         with:
            swift-version: ${{ matrix.swift }}
       - run: ulimit -n 10000
@@ -82,10 +89,10 @@ jobs:
       - name: Dump cluster logs
         if: failure() || cancelled()
         run: docker compose -f ${{ matrix.kurrentdb.compose_file }} logs --tail 200
-      - uses: sersoft-gmbh/swift-coverage-action@v4
+      - uses: sersoft-gmbh/swift-coverage-action@33c46a78bc78e0746a3d9fe2f5372a47736399b4 # v4.0.0
         id: coverage-files
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
@@ -102,15 +109,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: SwiftyLab/setup-swift@latest
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
         with:
           swift-version: "6.2"
 
       - name: Start two independent KurrentDB instances
         run: |
           for port in 2114 2115; do
-            docker run --rm -d --name "kurrentdb-pool-$port" -p ${port}:2113 \
+            docker run --rm -d --name "kurrentdb-pool-$port" -p 127.0.0.1:${port}:2113 \
               -e KURRENTDB_CLUSTER_SIZE=1 \
               -e KURRENTDB_RUN_PROJECTIONS=All \
               -e KURRENTDB_START_STANDARD_PROJECTIONS=true \
@@ -169,10 +176,10 @@ jobs:
             echo "::notice title=X.509 tests skipped::Set the KURRENTDB_LICENSE_KEY repository secret to run the X.509 user certificate tests."
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         if: steps.license.outputs.available == 'true'
 
-      - uses: SwiftyLab/setup-swift@latest
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
         if: steps.license.outputs.available == 'true'
         with:
           swift-version: "6.2"
@@ -217,7 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Build and Offline Tests (MockClientTests)
         run: |
           docker run --rm \

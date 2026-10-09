@@ -46,7 +46,7 @@ services:
       timeout: 5s
       retries: 24
     ports:
-      - 2111:2113
+      - 127.0.0.1:2111:2113
     volumes:
       - certs:/certs
       - node1-data:/var/lib/kurrentdb
@@ -79,7 +79,7 @@ services:
       timeout: 5s
       retries: 24
     ports:
-      - 2112:2113
+      - 127.0.0.1:2112:2113
     volumes:
       - certs:/certs
       - node2-data:/var/lib/kurrentdb
@@ -107,7 +107,7 @@ services:
       timeout: 5s
       retries: 24
     ports:
-      - 2113:2113
+      - 127.0.0.1:2113:2113
     volumes:
       - certs:/certs
       - node3-data:/var/lib/kurrentdb

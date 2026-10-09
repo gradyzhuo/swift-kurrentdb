@@ -10,6 +10,13 @@ on:
   push:
     branches: [ "main" ]
 
+# Least privilege for every job: read the repository, nothing else. The repository default is
+# already read-only; stating it here keeps the workflow safe if that default ever changes.
+# Third-party actions are pinned to full commit SHAs (version in the trailing comment) so an
+# upstream tag or branch that moves cannot run new code with this repository's secrets.
+permissions:
+  contents: read
+
 jobs:
   offline-benchmarks:
     name: Offline benchmarks / Swift ${{ matrix.swift }} / ${{ matrix.os }}
@@ -26,8 +33,8 @@ jobs:
       # Bencher project that keeps the history: https://bencher.dev/perf/gradyzhuo-s-project
       BENCHER_PROJECT: gradyzhuo-s-project
     steps:
-      - uses: actions/checkout@v4
-      - uses: SwiftyLab/setup-swift@latest
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
         with:
           swift-version: ${{ matrix.swift }}
 
@@ -76,8 +83,7 @@ jobs:
           python3 scripts/bench_to_bmf.py bench-out/Current_run.jmh.json > bmf.json
           python3 -c 'import json; d=json.load(open("bmf.json")); print(len(d), "benchmarks converted")'
 
-      - uses: bencherdev/bencher@main
-
+      - uses: bencherdev/bencher@f80847436d7157936b40525db4c2a1064124f04a # v0.6.13 (was @main)
       # Uploads to Bencher; the perf page (see BENCHER_PROJECT) keeps the history per commit.
       # On main a t-test threshold flags a run whose latency falls outside the 99% band of
       # the last 64 runs, and --error-on-alert turns that alert into a failed job. Other branches
@@ -108,7 +114,7 @@ jobs:
             --github-actions "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Upload report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: offline-benchmarks-swift-${{ matrix.swift }}-${{ matrix.os }}
           path: |
