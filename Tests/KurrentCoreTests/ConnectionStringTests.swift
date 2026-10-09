@@ -203,8 +203,31 @@ struct ConnectionStringTests {
     ])
     func queryErrorsNameParameter(input: String, value: String) {
         let message = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: input) }
-        #expect(message?.contains("connectionname") == true)
+        #expect(message?.contains("connectionName") == true)
         #expect(message?.contains(value) == false)
+    }
+
+    @Test("A combining mark after '=' or '&' neither hides the separator nor leaks the value")
+    func combiningMarksDoNotLeak() {
+        let a = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?connectionName=\u{0301}s3cr3t") }
+        #expect(a != nil)
+        #expect(a?.contains("s3cr3t") == false)
+        let b = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?tls=false&connectionName=a\u{0301}b") }
+        #expect(b?.contains("connectionName") == true)
+        #expect(b?.contains("a\u{0301}b") == false)
+        let c = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?tls=false&\u{0301}connectionName=s3cr3t") }
+        #expect(c != nil)
+        #expect(c?.contains("s3cr3t") == false)
+    }
+
+    @Test("Malformed parameter names are named in the reason")
+    func malformedNamesAreNamed() {
+        let a = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?t%zzls=true") }
+        #expect(a?.contains("t%zzls") == true)
+        #expect(a?.contains("percent-encoding") == true)
+        let b = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?tls VerifyCert=false") }
+        #expect(b?.contains("tls VerifyCert") == true)
+        #expect(b?.contains("false") == false)
     }
 
     @Test("An item without '=' names the parameter")
