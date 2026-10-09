@@ -116,3 +116,42 @@ percent-decoding：`%XX`（十六進位）解碼成位元組，結果必須是�
 - 重複參數、格式錯誤的值、溢位，現在都會丟 `KurrentError`。以前分別是程序崩潰或靜默改用預設值。
 - 未知的參數會被拒絕（`KurrentError.internalParsingError`，訊息裡列出參數名稱）。
 - 只給 `userCertFile` 或只給 `userKeyFile` 現在會報錯；以前會靜默忽略，改用帳密認證。
+
+
+## 9. 修訂（2026-10-09，final review 後，已確認）
+
+最終 review 發現：寬鬆的寫法（authority 以**最後一個** `@` 切開、query 值什麼字元都收）會留下 S01 的殘留。例如 `esdb://admin:2113?tls=false&connectionName=x@db.example.com` 會被解析成 host `admin:2113`、沒有帳密、`tls=false`，不報錯、直接用明文連到錯的 host。owner 決定改成嚴格依 RFC 3986，並保留一個 policy 參數作為統一入口。
+
+### 9.1 Policy 參數
+
+- `public struct ConnectionStringPolicy: Sendable, Equatable`，目前只有 `public static let rfc3986`（預設值）。用 struct 加 static 成員而不是 enum：日後新增 policy 不會讓使用者端窮舉的 `switch` 編譯失敗。
+- `ClientSettings.parse(connectionString: String, policy: ConnectionStringPolicy = .rfc3986)`、`ClientSettings.fromEnv(key: String = …, policy: ConnectionStringPolicy = .rfc3986)`；`init(stringLiteral:)` 使用預設值。既有呼叫不需要改。
+- 不提供不安全或寬鬆的 policy。需要任意字元密碼的使用者，可以 percent-encode，或改用 `ClientSettings.authenticated(.credentials(username:password:))`，完全不經過連線字串。
+
+### 9.2 `.rfc3986` 的字元規則（取代 §3 第 3、5 點的寬鬆部分）
+
+- 解析前先 trim 掉字串**頭尾**的空白和換行（`fromEnv` 讀到的 k8s secret 常帶結尾換行）；字串中間出現的空白一律報錯。
+- authority 裡最多只能有**一個** `@`。userinfo 的原始位元組只接受 RFC 3986 userinfo 允許的字元：`A–Z a–z 0–9 - . _ ~`、`! $ & ' ( ) * + , ; =`、`:` 和 `%XX`。username 與 password 以第一個 `:` 分開，所以 password 可以含 `:`。
+- query 的 key 和 value，原始位元組只接受 `A–Z a–z 0–9 - . _ ~`、`! $ ' ( ) * + , ;`、`:`、`/`、`?`、`%XX`；value 另外可以含 `=`。`&` 是分隔符號。**沒編碼的 `@` 刻意拒絕**（RFC 允許，但這正是上面攻擊需要的條件），要寫成 `%40`。
+- 其他字元，包括空白、非 ASCII、控制字元、`"` `<` `>` `\` `^` `` ` `` `{` `|` `}`，只要沒編碼都會報錯。
+- 錯誤訊息要給出修法。例如 query 裡有 `@` 時：說明要寫成 `%40`，並指出任意字元的密碼可以改用 `.authenticated(.credentials(...))`。
+
+### 9.3 其他修正
+
+- `defaultDeadline` 不能在 32 位元 `Int` 平台（watchOS arm64_32）trap：用 `Int(exactly:)` 轉換，失敗就報錯。
+- 錯誤訊息裡回顯的 key 名稱：跳脫非可列印字元與非 ASCII 字元，並限制在 64 個字元以內。
+- host 以 `[` 開頭時，錯誤訊息要明確說「不支援 IPv6 位址字面值」。
+- host 最後一個字元是 `.` 時（FQDN，例如 `node.svc.cluster.local.`）照樣接受，舊 parser 也接受這種寫法。
+- `ConnectionString.swift` 要明確 `import Foundation`。
+
+### 9.4 對 §1 表格與既有測試的影響
+
+- `admin:p@ss@host` → 報錯，要寫成 `p%40ss`。舊 parser 遇到它會 trap，所以不會讓原本能用的寫法壞掉。
+- `host:2113?connectionName=svc:a@b` → 報錯。`ClientSettingsParsingTests.testAtSignInQueryParam`（`connectionname=user@domain`）改成斷言會報錯，另外新增 `user%40domain` 的成功案例。這是 owner 同意的相容性代價。
+
+### 9.5 Release note 補充
+
+- 連線字串依 RFC 3986 嚴格解析：帳號、密碼和參數值裡的 `@ / ? # %`、空白、非 ASCII 都必須 percent-encode。字串頭尾的空白和換行會被忽略。
+- 新增 `policy:` 參數（目前只有 `.rfc3986`，也是預設值）。
+- 其他 client 才有的參數（例如 `throwOnAppendFailure`），以及 `keepAliveInterval=-1` 這種用 -1 停用的寫法，現在都會報錯。
+- 只寫 `admin@host`（有 `@` 但沒有 `:`）現在會報錯；以前是靜默地不帶帳密連線。
