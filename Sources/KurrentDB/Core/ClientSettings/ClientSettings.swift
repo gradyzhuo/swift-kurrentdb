@@ -19,7 +19,7 @@ import RegexBuilder
 /// Default TCP port number for KurrentDB connections.
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 
-/// Default environment variable name consulted by ``ClientSettings/fromEnv(key:policy:)``.
+/// Default environment variable name consulted by ``ClientSettings/fromEnv(key:)``.
 public let DEFAULT_ENV_KEY_NAME: String = "SWIFT_KURRENT_DB_URL"
 
 /// Connection and transport configuration for a KurrentDB client.
@@ -223,6 +223,11 @@ extension ClientSettings {
         return Self(clusterMode: clusterMode, secure: secure)
     }
 
+    /// Parses with ``RFC3986Policy`` (`.rfc3986`); see ``parse(connectionString:policy:)``.
+    public static func parse(connectionString: String) throws(KurrentError) -> Self {
+        try parse(connectionString: connectionString, policy: .rfc3986)
+    }
+
     /// Parses a KurrentDB connection string into `ClientSettings`.
     ///
     /// Supported schemes are `esdb://` and `esdb+discover://`. Recognised query parameters include
@@ -239,12 +244,12 @@ extension ClientSettings {
     /// - Parameters:
     ///   - connectionString: A well-formed KurrentDB connection string. Leading and trailing
     ///     whitespace and newlines are ignored.
-    ///   - policy: The parsing rules to apply. Defaults to ``RFC3986Policy``, which requires
+    ///   - policy: The parsing rules to apply. ``RFC3986Policy`` requires
     ///     `@ / ? # %` in credentials and `@ # %` in parameter values to be percent-encoded, as well
     ///     as whitespace and non-ASCII characters anywhere. Parameter values may contain `/` and `?`.
     /// - Returns: Fully populated `ClientSettings`.
     /// - Throws: `KurrentError.internalParsingError` if the string is malformed, lacks a host, or has an unknown, duplicate or invalid parameter. The reason names the component or parameter, never its value.
-    public static func parse(connectionString: String, policy: RFC3986Policy = .rfc3986) throws(KurrentError) -> Self {
+    public static func parse(connectionString: String, policy: RFC3986Policy) throws(KurrentError) -> Self {
         let parsed = try ConnectionString(
             parsing: connectionString.trimmingCharacters(in: .whitespacesAndNewlines),
             policy: policy
@@ -333,6 +338,11 @@ extension ClientSettings {
         )
     }
 
+    /// Parses with ``RFC3986Policy`` (`.rfc3986`); see ``fromEnv(key:policy:)``.
+    public static func fromEnv(key: String = DEFAULT_ENV_KEY_NAME) throws(KurrentError) -> Self {
+        try fromEnv(key: key, policy: .rfc3986)
+    }
+
     /// Builds `ClientSettings` by parsing a KurrentDB connection string read from an environment variable.
     ///
     /// ```swift
@@ -345,10 +355,10 @@ extension ClientSettings {
     ///
     /// - Parameters:
     ///   - key: Name of the environment variable holding the connection string. Defaults to `DEFAULT_ENV_KEY_NAME` (`"SWIFT_KURRENT_DB_URL"`).
-    ///   - policy: The parsing rules to apply; see ``ClientSettings/parse(connectionString:policy:)``. Defaults to ``RFC3986Policy``. Trailing newlines in the variable (common with mounted secrets) are ignored.
+    ///   - policy: The parsing rules to apply; see ``ClientSettings/parse(connectionString:policy:)``. Trailing newlines in the variable (common with mounted secrets) are ignored.
     /// - Returns: Fully populated `ClientSettings`.
     /// - Throws: `KurrentError.internalParsingError` if the environment variable is unset or the connection string is malformed.
-    public static func fromEnv(key: String = DEFAULT_ENV_KEY_NAME, policy: RFC3986Policy = .rfc3986) throws(KurrentError) -> Self {
+    public static func fromEnv(key: String = DEFAULT_ENV_KEY_NAME, policy: RFC3986Policy) throws(KurrentError) -> Self {
         guard let connectionString = ProcessInfo.processInfo.environment[key] else {
             throw KurrentError.internalParsingError(reason: "Environment variable \(key) is not set")
         }

@@ -31,7 +31,10 @@ package struct ConnectionString: Sendable, Equatable {
 
     /// - Parameter policy: Only `.rfc3986` exists today, so it needs no branching yet.
     package init(parsing string: String, policy: RFC3986Policy = .rfc3986) throws(KurrentError) {
+        // The raw bytes must be an RFC 3986 scheme before lowercasing: `lowercased()` is Unicode
+        // aware (the Kelvin sign would become "k"), so validation has to come first.
         guard let schemeEnd = string.range(of: "://"),
+              Self.isValidSchemeBytes(string[..<schemeEnd.lowerBound]),
               let scheme = URLScheme(rawValue: string[..<schemeEnd.lowerBound].lowercased())
         else {
             throw Self.failure("Unknown or missing URL scheme; expected esdb://, kurrentdb://, kurrent:// or kdb:// (optionally with +discover).")
@@ -126,17 +129,18 @@ package struct ConnectionString: Sendable, Equatable {
         var parameters: [String: String] = [:]
         for item in query.split(separator: "&", omittingEmptySubsequences: true) {
             guard let equals = item.firstIndex(of: "=") else {
-                throw failure("Every connection string parameter must be 'name=value'.")
+                throw failure("Parameter '\(displayName(String(item)))' has no value; expected 'name=value'.")
             }
             let rawKey = item[..<equals]
             let rawValue = item[item.index(after: equals)...]
             try validateBytes(rawKey, allowed: queryKeySpecials, component: "parameter name")
-            try validateBytes(rawValue, allowed: queryKeySpecials + "=", component: "parameter value")
             let key = try percentDecoded(rawKey, field: "parameter name").lowercased()
             guard !key.isEmpty else {
                 throw failure("A connection string parameter has an empty name.")
             }
-            let value = try percentDecoded(rawValue, field: "value of '\(displayName(key))'")
+            let valueContext = "value of '\(displayName(key))'"
+            try validateBytes(rawValue, allowed: queryKeySpecials + "=", component: valueContext)
+            let value = try percentDecoded(rawValue, field: valueContext)
             guard parameters.updateValue(value, forKey: key) == nil else {
                 throw failure("Duplicate connection string parameter '\(displayName(key))'.")
             }
@@ -161,10 +165,36 @@ package struct ConnectionString: Sendable, Equatable {
                 || byte == UInt8(ascii: "-") || byte == UInt8(ascii: "_") || byte == UInt8(ascii: ".")
         }
         guard allowedBytes else { return false }
-        if labels.allSatisfy({ $0.utf8.allSatisfy(isDigit) }) {
-            return labels.count == 4 && labels.allSatisfy { UInt8($0) != nil }
+        // Resolvers (inet_aton, getaddrinfo) read leading-zero labels as octal and "0x" labels as
+        // hex, so a host made only of such labels must be a strict dotted-quad: four decimal
+        // labels, 0...255, no leading zero.
+        if labels.allSatisfy(isNumericLike) {
+            return labels.count == 4 && labels.allSatisfy { label in
+                label.utf8.allSatisfy(isDigit)
+                    && (label.count == 1 || label.first != "0")
+                    && UInt8(label) != nil
+            }
         }
         return true
+    }
+
+    /// All decimal digits, or `0x`/`0X` followed by zero or more hex digits.
+    private static func isNumericLike(_ label: Substring) -> Bool {
+        if label.utf8.allSatisfy(isDigit) { return true }
+        let bytes = Array(label.utf8)
+        return bytes.count >= 2 && bytes[0] == UInt8(ascii: "0")
+            && (bytes[1] == UInt8(ascii: "x") || bytes[1] == UInt8(ascii: "X"))
+            && bytes[2...].allSatisfy { hexValue($0) != nil }
+    }
+
+    /// RFC 3986 `scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )`, ASCII only.
+    private static func isValidSchemeBytes(_ scheme: Substring) -> Bool {
+        guard let first = scheme.utf8.first, isAlpha(first) else { return false }
+        return scheme.utf8.allSatisfy { isAlpha($0) || isDigit($0) || $0 == UInt8(ascii: "+") || $0 == UInt8(ascii: "-") || $0 == UInt8(ascii: ".") }
+    }
+
+    private static func isAlpha(_ byte: UInt8) -> Bool {
+        (UInt8(ascii: "a") ... UInt8(ascii: "z")).contains(byte) || (UInt8(ascii: "A") ... UInt8(ascii: "Z")).contains(byte)
     }
 
     private static let userinfoSpecials = "-._~!$&'()*+,;=:%"

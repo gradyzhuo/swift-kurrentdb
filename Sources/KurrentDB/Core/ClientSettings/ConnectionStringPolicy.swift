@@ -12,7 +12,7 @@
 /// Use it through the static members, e.g. `.rfc3986`.
 public protocol ConnectionStringPolicy: Sendable {}
 
-/// Strict RFC 3986 parsing. This is the default policy.
+/// Strict RFC 3986 parsing. The `parse(connectionString:)` and `fromEnv(key:)` overloads without `policy:` use it.
 ///
 /// - Leading and trailing whitespace and newlines around the whole string are ignored; whitespace
 ///   anywhere else is an error.

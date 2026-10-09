@@ -27,6 +27,24 @@ struct ConnectionStringValidationTests {
         return nil
     }
 
+    // MARK: Source compatibility of the original signatures
+
+    @Test("parse(connectionString:) stays usable as a function reference and equals the policy overload")
+    func originalSignatureKept() throws {
+        let f: (String) throws(KurrentError) -> ClientSettings = ClientSettings.parse(connectionString:)
+        let input = "esdb://admin:changeit@localhost:2113?tls=false"
+        let viaReference = try f(input)
+        let viaPolicy = try ClientSettings.parse(connectionString: input, policy: .rfc3986)
+        #expect(viaReference.secure == viaPolicy.secure)
+        #expect(viaReference.secure == false)
+        #expect(password(viaReference) == "changeit")
+        #expect(password(viaPolicy) == "changeit")
+        #expect("\(viaReference.clusterMode)" == "\(viaPolicy.clusterMode)")
+
+        let mapped = try ["esdb://localhost:2113?tls=false"].map(ClientSettings.parse(connectionString:))
+        #expect(mapped.count == 1)
+    }
+
     // MARK: S01 — characters in the password never change settings
 
     @Test("'&tls=false' inside the password stays in the password and TLS stays on")

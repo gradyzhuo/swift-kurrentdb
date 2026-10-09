@@ -46,7 +46,28 @@ struct ConnectionStringTests {
         #expect(reason { () throws(KurrentError) in _ = try ConnectionString(parsing: input) } != nil)
     }
 
+    @Test("Schemes with non-ASCII or non-RFC 3986 bytes are rejected before lowercasing", arguments: [
+        "\u{212A}db://localhost:2113", "ésdb://localhost", "+esdb://localhost",
+    ])
+    func nonAsciiSchemesRejected(input: String) {
+        #expect(reason { () throws(KurrentError) in _ = try ConnectionString(parsing: input) } != nil)
+    }
+
     // MARK: Hosts
+
+    @Test("Numeric hosts a resolver would reinterpret are rejected", arguments: [
+        "010.0.0.1", "1.2.3.04", "00.0.0.1", "0x7f.0.0.1", "0X7F.0.0.1", "0x7f000001", "127.1",
+    ])
+    func reinterpretableNumericHosts(host: String) {
+        #expect(reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://\(host):2113") } != nil)
+    }
+
+    @Test("Strict dotted-quads and names with an ordinary label are accepted", arguments: [
+        "0.0.0.0", "10.0.0.1", "255.255.255.255", "0x7f.example.com", "8node.org",
+    ])
+    func acceptedHosts(host: String) throws {
+        #expect(try ConnectionString(parsing: "esdb://\(host):2113").endpoints == [Endpoint(host: host, port: 2113)])
+    }
 
     @Test("Hosts and ports", arguments: [
         ("esdb://localhost:2113", [Endpoint(host: "localhost", port: 2113)]),
@@ -174,6 +195,22 @@ struct ConnectionStringTests {
         let message = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?tls=true&TLS=s3cr3t") }
         #expect(message?.contains("tls") == true)
         #expect(message?.contains("s3cr3t") == false)
+    }
+
+    @Test("Query errors name the parameter and never echo the value", arguments: [
+        ("esdb://localhost?tls=false&connectionName=a b", "a b"),
+        ("esdb://localhost?connectionName=user@domain", "user@domain"),
+    ])
+    func queryErrorsNameParameter(input: String, value: String) {
+        let message = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: input) }
+        #expect(message?.contains("connectionname") == true)
+        #expect(message?.contains(value) == false)
+    }
+
+    @Test("An item without '=' names the parameter")
+    func itemWithoutEqualsNamesParameter() {
+        let message = reason { () throws(KurrentError) in _ = try ConnectionString(parsing: "esdb://localhost?tls") }
+        #expect(message?.contains("tls") == true)
     }
 
     @Test("Malformed query items are rejected", arguments: [
