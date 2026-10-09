@@ -89,11 +89,11 @@ struct ConnectionStringTests {
 
     // MARK: Credentials
 
-    @Test("Credentials split at the last '@' and the first ':' and are percent-decoded", arguments: [
+    @Test("Credentials split at the '@' and the first ':' and are percent-decoded", arguments: [
         ("esdb://admin:changeit@localhost", "admin", "changeit"),
-        ("esdb://admin:p@ss@localhost", "admin", "p@ss"),
         ("esdb://admin:p:ss@localhost", "admin", "p:ss"),
         ("esdb://admin:pa&tls=false&x=y@localhost", "admin", "pa&tls=false&x=y"),
+        ("esdb://admin:p%40ss@localhost", "admin", "p@ss"),
         ("esdb://admin:p%26ss@localhost", "admin", "p&ss"),
         ("esdb://admin:p%40ss%2F%3F%23%25@localhost", "admin", "p@ss/?#%"),
         ("esdb://ad%3Amin:x@localhost", "ad:min", "x"),
@@ -107,12 +107,22 @@ struct ConnectionStringTests {
         #expect(parsed.parameters.isEmpty)
     }
 
-    @Test("No '@' means no credentials, even when the query contains ':' and '@'")
-    func atSignInQueryIsNotCredentials() throws {
-        let parsed = try ConnectionString(parsing: "esdb://db.example.com:2113?connectionName=svc:a@b")
+    @Test("A percent-encoded '@' in a query value is decoded and is not credentials")
+    func encodedAtInQueryIsNotCredentials() throws {
+        let parsed = try ConnectionString(parsing: "esdb://db.example.com:2113?connectionName=svc:a%40b")
         #expect(parsed.credentials == nil)
         #expect(parsed.endpoints == [Endpoint(host: "db.example.com", port: 2113)])
         #expect(parsed.parameters == ["connectionname": "svc:a@b"])
+    }
+
+    @Test("An unencoded '@' in the credentials or the query is rejected", arguments: [
+        "esdb://admin:p@ss@localhost",
+        "esdb://a@b:c@localhost",
+        "esdb://db.example.com:2113?connectionName=svc:a@b",
+        "esdb://admin:2113?tls=false&connectionName=x@db.example.com",
+    ])
+    func unencodedAtIsRejected(input: String) {
+        #expect(reason { () throws(KurrentError) in _ = try ConnectionString(parsing: input) } != nil)
     }
 
     @Test("Malformed credentials are rejected", arguments: [
@@ -148,10 +158,15 @@ struct ConnectionStringTests {
         #expect(try ConnectionString(parsing: "esdb://localhost?connectionName=a=b").parameters == ["connectionname": "a=b"])
     }
 
-    @Test("Empty query segments are ignored", arguments: ["esdb://localhost?", "esdb://localhost?&", "esdb://localhost?tls=false&", "esdb://localhost/?tls=false"])
-    func emptyQuerySegmentsIgnored(input: String) throws {
-        let parameters = try ConnectionString(parsing: input).parameters
-        #expect(parameters.isEmpty || parameters == ["tls": "false"])
+    @Test("Empty query segments are ignored", arguments: [
+        ("esdb://localhost?", [String: String]()),
+        ("esdb://localhost?&", [:]),
+        ("esdb://localhost?tls=false&", ["tls": "false"]),
+        ("esdb://localhost/?tls=false", ["tls": "false"]),
+        ("esdb://localhost?&&tls=false&&", ["tls": "false"]),
+    ])
+    func emptyQuerySegmentsIgnored(input: String, expected: [String: String]) throws {
+        #expect(try ConnectionString(parsing: input).parameters == expected)
     }
 
     @Test("Duplicate keys are rejected regardless of case, and the error names the key, not the value")

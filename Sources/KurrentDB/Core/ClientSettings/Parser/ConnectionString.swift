@@ -3,13 +3,17 @@
 //  KurrentCore
 //
 
+import Foundation
+
 /// A KurrentDB connection string split into its RFC 3986 components.
 ///
 /// The input is cut in a fixed order — scheme, authority (up to the first `/`, `?` or `#`),
-/// userinfo (left of the authority's last `@`), hosts, query — and each component is parsed only
-/// from its own slice, so characters in a password can never change hosts or parameters.
-/// Userinfo and query items are percent-decoded. Meaning and validation of the parameters belong
-/// to `ClientSettings.parse(connectionString:)`.
+/// userinfo (left of the authority's single `@`), hosts, query — and each component is parsed only
+/// from its own slice. Under `.rfc3986` the raw bytes of every component are restricted to the
+/// characters RFC 3986 allows there (everything else, including `@` in the query, must be
+/// percent-encoded), so a character in a password or value cannot change the hosts, the
+/// credentials or the parameters. Userinfo and query items are percent-decoded. Meaning and
+/// validation of the parameters belong to `ClientSettings.parse(connectionString:policy:)`.
 ///
 /// Error reasons name the component that is wrong and never echo input text: a connection string
 /// may carry credentials.
@@ -25,7 +29,8 @@ package struct ConnectionString: Sendable, Equatable {
     /// Query parameters. Keys are lower-cased, values percent-decoded; a key appears at most once.
     package let parameters: [String: String]
 
-    package init(parsing string: String) throws(KurrentError) {
+    /// - Parameter policy: Only `.rfc3986` exists today, so it needs no branching yet.
+    package init(parsing string: String, policy: RFC3986Policy = .rfc3986) throws(KurrentError) {
         guard let schemeEnd = string.range(of: "://"),
               let scheme = URLScheme(rawValue: string[..<schemeEnd.lowerBound].lowercased())
         else {
@@ -52,8 +57,11 @@ package struct ConnectionString: Sendable, Equatable {
             throw Self.failure("Connection strings take no path; only '/' may follow the hosts. Percent-encode '/' as %2F in credentials.")
         }
 
+        guard authority.utf8.filter { $0 == UInt8(ascii: "@") }.count <= 1 else {
+            throw Self.failure("The authority holds more than one '@'; percent-encode '@' as %40 in credentials.")
+        }
         let hostList: Substring
-        if let at = authority.lastIndex(of: "@") {
+        if let at = authority.firstIndex(of: "@") {
             credentials = try Self.parseCredentials(authority[..<at])
             hostList = authority[authority.index(after: at)...]
         } else {
@@ -72,6 +80,7 @@ package struct ConnectionString: Sendable, Equatable {
         guard let colon = userinfo.firstIndex(of: ":") else {
             throw failure("Credentials must be 'username:password'; percent-encode ':' in the username as %3A.")
         }
+        try validateBytes(userinfo, allowed: userinfoSpecials, component: "credentials")
         let username = try percentDecoded(userinfo[..<colon], field: "username")
         let password = try percentDecoded(userinfo[userinfo.index(after: colon)...], field: "password")
         guard !username.isEmpty else {
@@ -86,6 +95,9 @@ package struct ConnectionString: Sendable, Equatable {
         }
         var endpoints: [Endpoint] = []
         for entry in hostList.split(separator: ",", omittingEmptySubsequences: false) {
+            guard !entry.hasPrefix("[") else {
+                throw failure("IPv6 address literals are not supported.")
+            }
             let host: Substring
             var port: UInt32?
             if let colon = entry.firstIndex(of: ":") {
@@ -116,13 +128,17 @@ package struct ConnectionString: Sendable, Equatable {
             guard let equals = item.firstIndex(of: "=") else {
                 throw failure("Every connection string parameter must be 'name=value'.")
             }
-            let key = try percentDecoded(item[..<equals], field: "parameter name").lowercased()
+            let rawKey = item[..<equals]
+            let rawValue = item[item.index(after: equals)...]
+            try validateBytes(rawKey, allowed: queryKeySpecials, component: "parameter name")
+            try validateBytes(rawValue, allowed: queryKeySpecials + "=", component: "parameter value")
+            let key = try percentDecoded(rawKey, field: "parameter name").lowercased()
             guard !key.isEmpty else {
                 throw failure("A connection string parameter has an empty name.")
             }
-            let value = try percentDecoded(item[item.index(after: equals)...], field: "value of '\(key)'")
+            let value = try percentDecoded(rawValue, field: "value of '\(displayName(key))'")
             guard parameters.updateValue(value, forKey: key) == nil else {
-                throw failure("Duplicate connection string parameter '\(key)'.")
+                throw failure("Duplicate connection string parameter '\(displayName(key))'.")
             }
         }
         return parameters
@@ -132,7 +148,9 @@ package struct ConnectionString: Sendable, Equatable {
 
     /// Host names (ASCII letters, digits, '-', '_', '.') or dotted-quad IPv4. A name whose labels
     /// are all numeric must be a valid IPv4 address, so "192.168" is rejected.
-    private static func isValidHost(_ host: Substring) -> Bool {
+    private static func isValidHost(_ written: Substring) -> Bool {
+        // One trailing '.' marks a fully qualified name; it is kept as written but not validated.
+        let host = written.hasSuffix(".") ? written.dropLast() : written
         guard !host.isEmpty else { return false }
         let labels = host.split(separator: ".", omittingEmptySubsequences: false)
         guard labels.allSatisfy({ !$0.isEmpty }) else { return false }
@@ -147,6 +165,43 @@ package struct ConnectionString: Sendable, Equatable {
             return labels.count == 4 && labels.allSatisfy { UInt8($0) != nil }
         }
         return true
+    }
+
+    private static let userinfoSpecials = "-._~!$&'()*+,;=:%"
+    private static let queryKeySpecials = "-._~!$'()*+,;:/?%"
+
+    /// Rejects any raw byte outside the RFC 3986 set for a component. Works on the UTF-8 view, so a
+    /// non-ASCII scalar (including a combining mark after a delimiter) is always rejected.
+    /// The reason never echoes the offending text.
+    private static func validateBytes(_ text: Substring, allowed specials: String, component: String) throws(KurrentError) {
+        let special = Set(specials.utf8)
+        for byte in text.utf8 {
+            let alphanumeric = isDigit(byte)
+                || (UInt8(ascii: "a") ... UInt8(ascii: "z")).contains(byte)
+                || (UInt8(ascii: "A") ... UInt8(ascii: "Z")).contains(byte)
+            if alphanumeric || special.contains(byte) { continue }
+            if byte == UInt8(ascii: "@") {
+                throw failure("An unencoded '@' is not allowed in the \(component); write it as %40. For an arbitrary password use ClientSettings.authenticated(.credentials(username:password:)).")
+            }
+            throw failure("The \(component) contains a character that must be percent-encoded (whitespace, non-ASCII, control characters and \" < > \\ ^ ` { | } are not allowed raw).")
+        }
+    }
+
+    /// A key name made safe to put in an error reason: non-printable and non-ASCII scalars are
+    /// escaped as `\u{XX}` and the result is capped at 64 characters with a trailing `…`.
+    package static func displayName(_ key: String) -> String {
+        let limit = 64
+        var result = ""
+        for scalar in key.unicodeScalars {
+            let piece = (0x20 ... 0x7E).contains(scalar.value)
+                ? String(Character(scalar))
+                : "\\u{" + (scalar.value < 0x10 ? "0" : "") + String(scalar.value, radix: 16, uppercase: true) + "}"
+            if result.count + piece.count > limit {
+                return result + "…"
+            }
+            result += piece
+        }
+        return result
     }
 
     private static func percentDecoded(_ text: Substring, field: String) throws(KurrentError) -> String {

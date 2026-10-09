@@ -84,7 +84,7 @@ for try await result in subscription.events {
 
 ### 2.2
 
-- **`ClientSettings.fromEnv(key:)`** builds settings from a connection string in an environment variable.
+- **`ClientSettings.fromEnv(key:policy:)`** builds settings from a connection string in an environment variable.
 
 ### 2.1
 

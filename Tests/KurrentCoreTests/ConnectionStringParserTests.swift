@@ -262,9 +262,16 @@ struct ClientSettingsParsingTests {
 
     // MARK: query params with '@' in value don't corrupt credential parsing
 
-    @Test("query param value containing '@' does not break credential parsing")
-    func testAtSignInQueryParam() throws {
-        let settings = try ClientSettings.parse(connectionString: "esdb://admin:changeit@localhost:2113?connectionname=user@domain")
+    @Test("an unencoded '@' in a query value is rejected")
+    func testAtSignInQueryParam() {
+        #expect(throws: KurrentError.self) {
+            try ClientSettings.parse(connectionString: "esdb://admin:changeit@localhost:2113?connectionname=user@domain")
+        }
+    }
+
+    @Test("a percent-encoded '@' in a query value does not break credential parsing")
+    func testEncodedAtSignInQueryParam() throws {
+        let settings = try ClientSettings.parse(connectionString: "esdb://admin:changeit@localhost:2113?connectionname=user%40domain")
         if case .credentials(let username, _) = settings.authentication {
             #expect(username == "admin")
         } else {

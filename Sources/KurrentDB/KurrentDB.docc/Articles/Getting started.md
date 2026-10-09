@@ -73,14 +73,21 @@ There are a number of query parameters that can be used in the connection string
 |userKeyFile|String|None|Key file (PEM) for the user certificate used for X.509 authentication. Requires TLS.|
 | ^ | file path |   ^  |     ^     |
 
-Parameter names and the scheme are case-insensitive. A parameter the client does not know, a parameter given twice, or a value it cannot use (for example `tls=yes` or `gossipTimeout=0`) makes `ClientSettings.parse(connectionString:)` throw; the error names the parameter, never its value.
+Parameter names and the scheme are case-insensitive. A parameter the client does not know, a parameter given twice, or a value it cannot use (for example `tls=yes` or `gossipTimeout=0`) makes `ClientSettings.parse(connectionString:policy:)` throw; the error names the parameter, never its value.
 
-The username, the password and parameter values are percent-decoded. Encode `/`, `?`, `#` and `%` in a password — other characters, including `@`, `:` and `&`, may be written as they are. The simplest way is to encode the whole password:
+Connection strings are parsed strictly according to RFC 3986 (`policy: .rfc3986`, the default of `parse(connectionString:policy:)` and `fromEnv(key:policy:)`). The username, the password and parameter values are percent-decoded. In credentials only letters, digits and ``-._~!$&'()*+,;=:`` may be written as they are; in parameter names and values only letters, digits and ``-._~!$'()*+,;:/?`` (and `=` in values) may. Everything else must be percent-encoded: `@` (an unencoded `@` in a parameter is rejected, write `%40`), `/`, `?`, `#`, `%`, whitespace, non-ASCII characters and control characters. Leading and trailing whitespace and newlines around the whole string are ignored. The simplest way to encode a password is to encode all of it:
 
 ```swift
 let password = "p@ss/w%rd#1"
 let encoded = password.addingPercentEncoding(withAllowedCharacters: .urlPasswordAllowed)!
-let parsed = try ClientSettings.parse(connectionString: "kurrentdb://admin:\(encoded)@localhost:2113")
+let parsed = try ClientSettings.parse(connectionString: "kurrentdb://admin:\(encoded)@localhost:2113", policy: .rfc3986)
+```
+
+If a password can contain arbitrary characters, skip the connection string for it and set the credentials with the builder instead:
+
+```swift
+let settings = ClientSettings.localhost()
+    .authenticated(.credentials(username: "admin", password: "p@ss/w%rd#1"))
 ```
 
 When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `kurrentdb://localhost:2113?tls=false`. Note that `usernames` and `passwords` aren't provided there because insecure deployments don't support authentication and authorisation.
@@ -105,7 +112,7 @@ let settings: ClientSettings = "kurrentdb://admin:changeit@localhost:2113"
 
 ### Environment variable
 
-Use `fromEnv(key:)` to build client settings from a connection string stored in an environment variable. This keeps connection details out of source code, which is useful for containerized deployments and CI.
+Use `fromEnv(key:policy:)` to build client settings from a connection string stored in an environment variable. This keeps connection details out of source code, which is useful for containerized deployments and CI.
 
 ```swift
 // Reads the connection string from SWIFT_KURRENT_DB_URL (the default key)
@@ -115,7 +122,7 @@ let fromDefaultKey = try ClientSettings.fromEnv()
 let fromCustomKey = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
 ```
 
-`fromEnv(key:)` defaults to ``DEFAULT_ENV_KEY_NAME`` (`"SWIFT_KURRENT_DB_URL"`) and parses the variable's value the same way as `parse(connectionString:)`. It throws `KurrentError.internalParsingError` if the variable is unset or the connection string is malformed.
+`fromEnv(key:policy:)` defaults to ``DEFAULT_ENV_KEY_NAME`` (`"SWIFT_KURRENT_DB_URL"`) and parses the variable's value the same way as `parse(connectionString:policy:)`. It throws `KurrentError.internalParsingError` if the variable is unset or the connection string is malformed.
 
 ### Localhost (development)
 

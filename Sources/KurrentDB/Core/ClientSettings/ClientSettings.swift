@@ -19,7 +19,7 @@ import RegexBuilder
 /// Default TCP port number for KurrentDB connections.
 public let DEFAULT_PORT_NUMBER: UInt32 = 2113
 
-/// Default environment variable name consulted by ``ClientSettings/fromEnv(key:)``.
+/// Default environment variable name consulted by ``ClientSettings/fromEnv(key:policy:)``.
 public let DEFAULT_ENV_KEY_NAME: String = "SWIFT_KURRENT_DB_URL"
 
 /// Connection and transport configuration for a KurrentDB client.
@@ -236,11 +236,19 @@ extension ClientSettings {
     /// )
     /// ```
     ///
-    /// - Parameter connectionString: A well-formed KurrentDB connection string.
+    /// - Parameters:
+    ///   - connectionString: A well-formed KurrentDB connection string. Leading and trailing
+    ///     whitespace and newlines are ignored.
+    ///   - policy: The parsing rules to apply. Defaults to ``RFC3986Policy``, which
+    ///     requires `@ / ? # %`, whitespace and non-ASCII characters in credentials and parameter
+    ///     values to be percent-encoded.
     /// - Returns: Fully populated `ClientSettings`.
     /// - Throws: `KurrentError.internalParsingError` if the string is malformed, lacks a host, or has an unknown, duplicate or invalid parameter. The reason names the component or parameter, never its value.
-    public static func parse(connectionString: String) throws(KurrentError) -> Self {
-        let parsed = try ConnectionString(parsing: connectionString)
+    public static func parse(connectionString: String, policy: RFC3986Policy = .rfc3986) throws(KurrentError) -> Self {
+        let parsed = try ConnectionString(
+            parsing: connectionString.trimmingCharacters(in: .whitespacesAndNewlines),
+            policy: policy
+        )
         let parameters = try ConnectionStringParameters(parsed.parameters)
 
         let clusterMode: TopologyClusterMode = if parsed.scheme == .dnsDiscover {
@@ -303,8 +311,8 @@ extension ClientSettings {
         }
 
         // Validated as a duration so a deadline computed from it cannot overflow; stored in ms.
-        let defaultDeadline: Int = if let deadline = try parameters.duration("defaultdeadline", unit: .milliseconds) {
-            Int(deadline.components.seconds) * 1000 + Int(deadline.components.attoseconds / 1_000_000_000_000_000)
+        let defaultDeadline: Int = if let milliseconds = try parameters.milliseconds("defaultdeadline") {
+            milliseconds
         } else {
             .max
         }
@@ -335,14 +343,16 @@ extension ClientSettings {
     /// let customSettings = try ClientSettings.fromEnv(key: "MY_KURRENTDB_URL")
     /// ```
     ///
-    /// - Parameter key: Name of the environment variable holding the connection string. Defaults to `DEFAULT_ENV_KEY_NAME` (`"SWIFT_KURRENT_DB_URL"`).
+    /// - Parameters:
+    ///   - key: Name of the environment variable holding the connection string. Defaults to `DEFAULT_ENV_KEY_NAME` (`"SWIFT_KURRENT_DB_URL"`).
+    ///   - policy: The parsing rules to apply; see ``ClientSettings/parse(connectionString:policy:)``. Defaults to ``RFC3986Policy``. Trailing newlines in the variable (common with mounted secrets) are ignored.
     /// - Returns: Fully populated `ClientSettings`.
     /// - Throws: `KurrentError.internalParsingError` if the environment variable is unset or the connection string is malformed.
-    public static func fromEnv(key: String = DEFAULT_ENV_KEY_NAME) throws(KurrentError) -> Self {
+    public static func fromEnv(key: String = DEFAULT_ENV_KEY_NAME, policy: RFC3986Policy = .rfc3986) throws(KurrentError) -> Self {
         guard let connectionString = ProcessInfo.processInfo.environment[key] else {
             throw KurrentError.internalParsingError(reason: "Environment variable \(key) is not set")
         }
-        return try parse(connectionString: connectionString)
+        return try parse(connectionString: connectionString, policy: policy)
     }
 }
 
@@ -610,7 +620,7 @@ private struct ConnectionStringParameters {
 
     init(_ values: [String: String]) throws(KurrentError) {
         if let unknown = values.keys.sorted().first(where: { !Self.known.contains($0) }) {
-            throw .internalParsingError(reason: "Unknown connection string parameter '\(unknown)'.")
+            throw .internalParsingError(reason: "Unknown connection string parameter '\(ConnectionString.displayName(unknown))'.")
         }
         self.values = values
     }
@@ -643,15 +653,30 @@ private struct ConnectionStringParameters {
     /// A positive duration whose nanosecond value fits in `Int64`, so nothing downstream
     /// (NIO `TimeAmount`, deadline arithmetic) can overflow.
     func duration(_ key: String, unit: DurationUnit) throws(KurrentError) -> Duration? {
+        guard let number = try boundedNumber(key, unit: unit) else { return nil }
+        return switch unit {
+        case .seconds: .seconds(number)
+        case .milliseconds: .milliseconds(number)
+        }
+    }
+
+    /// A positive millisecond count that fits in `Int` on this platform (32-bit included) and
+    /// whose nanosecond value fits in `Int64`.
+    func milliseconds(_ key: String) throws(KurrentError) -> Int? {
+        guard let number = try boundedNumber(key, unit: .milliseconds) else { return nil }
+        guard let milliseconds = Int(exactly: number) else {
+            throw .internalParsingError(reason: "Parameter '\(key)' must be a positive integer within range.")
+        }
+        return milliseconds
+    }
+
+    private func boundedNumber(_ key: String, unit: DurationUnit) throws(KurrentError) -> Int64? {
         guard let value = values[key] else { return nil }
         guard let number = Int64(value), number > 0,
               !number.multipliedReportingOverflow(by: unit.nanoseconds).overflow
         else {
             throw .internalParsingError(reason: "Parameter '\(key)' must be a positive integer within range.")
         }
-        return switch unit {
-        case .seconds: .seconds(number)
-        case .milliseconds: .milliseconds(number)
-        }
+        return number
     }
 }
