@@ -239,9 +239,9 @@ extension ClientSettings {
     /// - Parameters:
     ///   - connectionString: A well-formed KurrentDB connection string. Leading and trailing
     ///     whitespace and newlines are ignored.
-    ///   - policy: The parsing rules to apply. Defaults to ``RFC3986Policy``, which
-    ///     requires `@ / ? # %`, whitespace and non-ASCII characters in credentials and parameter
-    ///     values to be percent-encoded.
+    ///   - policy: The parsing rules to apply. Defaults to ``RFC3986Policy``, which requires
+    ///     `@ / ? # %` in credentials and `@ # %` in parameter values to be percent-encoded, as well
+    ///     as whitespace and non-ASCII characters anywhere. Parameter values may contain `/` and `?`.
     /// - Returns: Fully populated `ClientSettings`.
     /// - Throws: `KurrentError.internalParsingError` if the string is malformed, lacks a host, or has an unknown, duplicate or invalid parameter. The reason names the component or parameter, never its value.
     public static func parse(connectionString: String, policy: RFC3986Policy = .rfc3986) throws(KurrentError) -> Self {
