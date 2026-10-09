@@ -45,7 +45,7 @@ openssl x509 -req -in "$certs/user-admin/user.csr" \
 chmod 644 "$certs"/*/*
 
 docker rm -f "$name" >/dev/null 2>&1 || true
-docker run -d --name "$name" -p "$port:2113" -v "$certs:/certs:ro" \
+docker run -d --name "$name" -p "127.0.0.1:$port:2113" -v "$certs:/certs:ro" \
     -e KURRENTDB_CLUSTER_SIZE=1 \
     -e KURRENTDB_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca \
     -e KURRENTDB_CERTIFICATE_FILE=/certs/node/node.crt \
