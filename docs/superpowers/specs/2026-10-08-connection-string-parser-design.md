@@ -122,11 +122,12 @@ percent-decoding：`%XX`（十六進位）解碼成位元組，結果必須是�
 
 最終 review 發現：寬鬆的寫法（authority 以**最後一個** `@` 切開、query 值什麼字元都收）會留下 S01 的殘留。例如 `esdb://admin:2113?tls=false&connectionName=x@db.example.com` 會被解析成 host `admin:2113`、沒有帳密、`tls=false`，不報錯、直接用明文連到錯的 host。owner 決定改成嚴格依 RFC 3986，並保留一個 policy 參數作為統一入口。
 
-### 9.1 Policy 參數
+### 9.1 Policy 參數（依 Target pattern）
 
-- `public struct ConnectionStringPolicy: Sendable, Equatable`，目前只有 `public static let rfc3986`（預設值）。用 struct 加 static 成員而不是 enum：日後新增 policy 不會讓使用者端窮舉的 `switch` 編譯失敗。
-- `ClientSettings.parse(connectionString: String, policy: ConnectionStringPolicy = .rfc3986)`、`ClientSettings.fromEnv(key: String = …, policy: ConnectionStringPolicy = .rfc3986)`；`init(stringLiteral:)` 使用預設值。既有呼叫不需要改。
-- 不提供不安全或寬鬆的 policy。需要任意字元密碼的使用者，可以 percent-encode，或改用 `ClientSettings.authenticated(.credentials(username:password:))`，完全不經過連線字串。
+- 照 `StreamsTarget` 的寫法：`public protocol ConnectionStringPolicy: Sendable {}` 是**沒有任何 requirement 的 marker protocol**；`public struct RFC3986Policy: ConnectionStringPolicy`；`extension ConnectionStringPolicy where Self == RFC3986Policy { public static var rfc3986: RFC3986Policy }`。
+- 入口是每個 policy 各自一個具體的 overload，不是對 protocol 泛型：`ClientSettings.parse(connectionString: String, policy: RFC3986Policy = .rfc3986)`、`ClientSettings.fromEnv(key: String = …, policy: RFC3986Policy = .rfc3986)`；`init(stringLiteral:)` 使用預設值。既有呼叫不需要改。
+- 為什麼不做泛型、protocol 也沒有 requirement：package 外的型別雖然可以遵循這個 marker protocol，但不會有對應的 `parse` overload，所以沒有人能塞進一個放寬安全規則的 policy。要新增 policy，就是在 package 內新增一個 struct 和一個 overload。這也是 Target pattern 的作法：哪些操作可用，由 constrained extension 決定。
+- 不提供不安全或寬鬆的 policy。需要任意字元密碼的使用者，可以 percent-encode，或改用 `ClientSettings.authenticated(.credentials(username:password:))`。
 
 ### 9.2 `.rfc3986` 的字元規則（取代 §3 第 3、5 點的寬鬆部分）
 
@@ -152,6 +153,6 @@ percent-decoding：`%XX`（十六進位）解碼成位元組，結果必須是�
 ### 9.5 Release note 補充
 
 - 連線字串依 RFC 3986 嚴格解析：帳號、密碼和參數值裡的 `@ / ? # %`、空白、非 ASCII 都必須 percent-encode。字串頭尾的空白和換行會被忽略。
-- 新增 `policy:` 參數（目前只有 `.rfc3986`，也是預設值）。
+- 新增 `policy:` 參數：`ConnectionStringPolicy` protocol 加上 `RFC3986Policy`，用 `.rfc3986` 傳入，也是預設值。
 - 其他 client 才有的參數（例如 `throwOnAppendFailure`），以及 `keepAliveInterval=-1` 這種用 -1 停用的寫法，現在都會報錯。
 - 只寫 `admin@host`（有 `@` 但沒有 `:`）現在會報錯；以前是靜默地不帶帳密連線。
