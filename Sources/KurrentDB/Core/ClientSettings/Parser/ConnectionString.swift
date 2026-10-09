@@ -127,20 +127,25 @@ package struct ConnectionString: Sendable, Equatable {
 
     private static func parseParameters(_ query: Substring) throws(KurrentError) -> [String: String] {
         var parameters: [String: String] = [:]
-        for item in query.split(separator: "&", omittingEmptySubsequences: true) {
-            guard let equals = item.firstIndex(of: "=") else {
-                throw failure("Parameter '\(displayName(String(item)))' has no value; expected 'name=value'.")
+        // Everything here works on UTF-8 bytes: a Character-based split would let a combining mark
+        // after '&' or '=' glue itself to the delimiter, hide the separator and leak the value.
+        for itemBytes in query.utf8.split(separator: UInt8(ascii: "&"), omittingEmptySubsequences: true) {
+            let item = Substring(itemBytes)
+            let equals = itemBytes.firstIndex(of: UInt8(ascii: "="))
+            // The name is everything before the first '=' byte; it never holds any of the value.
+            let name = displayName(String(decoding: itemBytes[..<(equals ?? itemBytes.endIndex)], as: UTF8.self))
+            guard let equals else {
+                throw failure("Parameter '\(name)' has no value; expected 'name=value'.")
             }
-            let rawKey = item[..<equals]
-            let rawValue = item[item.index(after: equals)...]
-            try validateBytes(rawKey, allowed: queryKeySpecials, component: "parameter name")
-            let key = try percentDecoded(rawKey, field: "parameter name").lowercased()
+            try validateBytes(item, allowed: queryKeySpecials + "=", component: "parameter '\(name)'")
+            // The item is pure ASCII now, so splitting at the '=' is safe.
+            let rawKey = Substring(itemBytes[..<equals])
+            let rawValue = Substring(itemBytes[itemBytes.index(after: equals)...])
+            let key = try percentDecoded(rawKey, field: "parameter '\(name)'").lowercased()
             guard !key.isEmpty else {
                 throw failure("A connection string parameter has an empty name.")
             }
-            let valueContext = "value of '\(displayName(key))'"
-            try validateBytes(rawValue, allowed: queryKeySpecials + "=", component: valueContext)
-            let value = try percentDecoded(rawValue, field: valueContext)
+            let value = try percentDecoded(rawValue, field: "value of '\(displayName(key))'")
             guard parameters.updateValue(value, forKey: key) == nil else {
                 throw failure("Duplicate connection string parameter '\(displayName(key))'.")
             }
