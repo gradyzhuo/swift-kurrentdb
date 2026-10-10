@@ -310,8 +310,12 @@ extension ClientSettings {
         let tlsVerifyCert = try parameters.bool("tlsverifycert") ?? true
 
         var certificates: [TLSConfig.CertificateSource] = []
-        if let tlsCaFilePath = try parameters.string("tlscafile"),
-           let certificate = parseCertificate(path: tlsCaFilePath) {
+        if let tlsCaFilePath = try parameters.string("tlscafile") {
+            // A CA the caller named but the client cannot read must not quietly become "trust the
+            // system roots".
+            guard let certificate = readableCertificate(path: tlsCaFilePath) else {
+                throw .internalParsingError(reason: "Parameter 'tlsCaFile' names a CA file that cannot be read.")
+            }
             certificates.append(certificate)
         }
 
@@ -398,6 +402,17 @@ extension ClientSettings {
             return nil
         }
     }
+
+    /// A certificate source for a CA file the client can actually read, or nil when the file is
+    /// missing, not readable, a directory, or empty. Logs nothing: each caller reports the failure
+    /// in its own way, without the path.
+    package static func readableCertificate(path: String) -> TLSConfig.CertificateSource? {
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)), !data.isEmpty else {
+            return nil
+        }
+        let isPEM = String(data: data.prefix(27), encoding: .ascii) == "-----BEGIN CERTIFICATE-----"
+        return .file(path: path, format: isPEM ? .pem : .der)
+    }
 }
 
 extension ClientSettings: ExpressibleByStringLiteral {
@@ -431,6 +446,28 @@ extension ClientSettings: Buildable {
     public func certificate(source: TLSConfig.CertificateSource) -> Self {
         withCopy {
             $0.certificates.append(source)
+        }
+    }
+
+    /// Returns a copy with a CA certificate loaded from a file appended.
+    ///
+    /// - Parameters:
+    ///   - path: File-system path to the certificate (PEM or DER).
+    ///   - fallback: What to do when the file is missing, not readable or empty. `.none` throws;
+    ///     `.systemTrustRoots` leaves it out, so the system's root certificates are trusted if no
+    ///     other CA is configured. There is no default on purpose.
+    /// - Throws: `KurrentError.initializationError` when the file cannot be read and `fallback` is `.none`.
+    @discardableResult
+    public func certificate(path: String, fallback: CertificateFallback) throws(KurrentError) -> Self {
+        if let certificate = Self.readableCertificate(path: path) {
+            return withCopy { $0.certificates.append(certificate) }
+        }
+        switch fallback {
+        case .none:
+            throw .initializationError(reason: "The CA certificate file passed to certificate(path:fallback:) cannot be read.")
+        case .systemTrustRoots:
+            logger.warning("Configured CA certificate file is unreadable; using the system trust roots as requested (fallback: .systemTrustRoots).")
+            return self
         }
     }
 
