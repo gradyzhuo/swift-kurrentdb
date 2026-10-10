@@ -68,7 +68,7 @@
   <p lang="en">Add to your <code>Package.swift</code>:</p>
   <p lang="zh-Hant">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.3")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.5.0")
 ]</code></pre>
   <p class="note" lang="en">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note" lang="zh-Hant">🎉 <strong>2.0 已上線</strong> —— 目前推薦使用 target-based API。仍在 1.x？改用 <code>KurrentDB_V1</code>，原本的程式碼可以繼續運作，遷移節奏由你決定。</p>
@@ -82,7 +82,8 @@
     <div class="release-picker">
       <label class="visually-hidden" for="release-select"><span lang="en">Choose a release</span><span lang="zh-Hant">選擇版本</span></label>
       <select id="release-select">
-        <option value="v2.4" data-en="2.4 (latest)" data-zh="2.4（最新）">2.4 (latest)</option>
+        <option value="v2.5" data-en="2.5 (latest)" data-zh="2.5（最新）">2.5 (latest)</option>
+        <option value="v2.4" data-en="2.4" data-zh="2.4">2.4</option>
         <option value="v2.3" data-en="2.3" data-zh="2.3">2.3</option>
         <option value="v2.2" data-en="2.2" data-zh="2.2">2.2</option>
         <option value="v2.1" data-en="2.1" data-zh="2.1">2.1</option>
@@ -92,8 +93,59 @@
   </div>
 
   <!-- ===================================================================== -->
+  <article class="release" id="v2.5">
+    <div class="whats-new-tag"><span lang="en">Latest · v2.5.0</span><span lang="zh-Hant">最新 · v2.5.0</span></div>
+    <h3 class="release-title"><span lang="en">Reads that stream, and inputs that can't hurt you</span><span lang="zh-Hant">邊讀邊用的讀取，以及傷不了你的輸入</span></h3>
+    <p class="lead" lang="en">
+      2.5 lets a read hand you events as you iterate instead of loading the whole result first,
+      puts a bound on subscription memory, and closes every finding of a security review —
+      connection strings, credentials, CA certificates and server responses can no longer crash
+      the process, leak a password, or quietly weaken TLS. The public API is source compatible
+      with 2.4, but some inputs 2.4 accepted now throw: read the upgrade notes below.
+    </p>
+    <p class="lead" lang="zh-Hant">
+      2.5 讓讀取可以邊迭代邊交出事件，不必先把整批結果載入；訂閱的記憶體也有了上限。
+      同時處理完一次安全盤點的所有項目 —— 連線字串、帳密、CA 憑證和伺服器回應，都不會再讓程序崩潰、
+      洩漏密碼，或悄悄降低 TLS 的保護。公開 API 與 2.4 原始碼相容，但有些 2.4 接受的輸入現在會報錯：
+      升級前請先看下面的升級注意事項。
+    </p>
+
+    <h4 class="subsection-title"><span lang="en">Lazy reads and bounded subscriptions</span><span lang="zh-Hant">Lazy 讀取與有上限的訂閱</span></h4>
+    <p lang="en"><code>read().lazy</code> pulls events from the server as your loop consumes them, and the call ends as soon as the loop does — on completion, <code>break</code>, a thrown error or cancellation. Plain <code>read()</code> keeps the 2.4 behaviour (the whole result first). Subscriptions now wait for your code instead of piling events up in memory.</p>
+    <p lang="zh-Hant"><code>read().lazy</code> 會隨著你的迴圈消費，才向伺服器拉下一筆事件；迴圈一結束（跑完、<code>break</code>、丟錯或取消），這次呼叫就跟著結束。一般的 <code>read()</code> 維持 2.4 的行為（先拿完整批結果）。訂閱現在會等你的程式消費，不會把事件一直堆在記憶體裡。</p>
+    <pre><code class="lang-swift">for try await response in client.streams(specified: "orders").read().lazy {
+    // events arrive as you iterate; memory does not grow with the stream
+}</code></pre>
+
+    <h4 class="subsection-title"><span lang="en">Strict connection strings</span><span lang="zh-Hant">嚴格的連線字串</span></h4>
+    <p lang="en">Connection strings are parsed according to RFC 3986. A character in your password can no longer turn off TLS or point the client at another host; unknown, duplicate or invalid parameters throw instead of being ignored; and error messages name the parameter, never its value. Percent-encode a password that contains <code>@ / ? # %</code> — or pass it with <code>.authenticated(.credentials(username:password:))</code> and skip the connection string.</p>
+    <p lang="zh-Hant">連線字串改成依照 RFC 3986 解析。密碼裡的字元再也不能關掉 TLS，或讓 client 連到別的 host；未知、重複或格式錯誤的參數會直接報錯，不會被默默忽略；錯誤訊息只寫參數名稱，不會帶出值。密碼含 <code>@ / ? # %</code> 時請先 percent-encode，或改用 <code>.authenticated(.credentials(username:password:))</code>，完全不經過連線字串。</p>
+
+    <h4 class="subsection-title"><span lang="en">More fixes</span><span lang="zh-Hant">其他修正</span></h4>
+    <ul>
+      <li lang="en"><code>defaultDeadline</code> now takes effect for calls that complete before they return (appends, deletes, management calls, <code>read()</code>); subscriptions and <code>read().lazy</code> are not bounded by it.</li>
+      <li lang="zh-Hant"><code>defaultDeadline</code> 現在真的會生效，套用在回傳前就完成的呼叫（append、delete、管理類呼叫、<code>read()</code>）；訂閱和 <code>read().lazy</code> 不受它限制。</li>
+      <li lang="en">A CA certificate that can't be read is reported instead of silently trusting the system's root certificates. Use <code>certificate(path:fallback:)</code>; <code>certificate(path:)</code> is deprecated.</li>
+      <li lang="zh-Hant">CA 憑證讀不到時會直接報錯，不再悄悄改成信任系統的根憑證。請改用 <code>certificate(path:fallback:)</code>；<code>certificate(path:)</code> 已標成 deprecated。</li>
+      <li lang="en">Negative revisions or positions from the server and credentials that can't be encoded fail with an error instead of crashing the process or sending the request anonymously.</li>
+      <li lang="zh-Hant">伺服器回傳負數 revision 或 position、帳密無法編碼時，會回傳錯誤，不再讓程序崩潰，也不會不帶認證就把請求送出去。</li>
+    </ul>
+
+    <h4 class="subsection-title"><span lang="en">Upgrade notes</span><span lang="zh-Hant">升級注意事項</span></h4>
+    <ul>
+      <li lang="en">Connection strings with unknown parameters (including other clients' parameters such as <code>throwOnAppendFailure</code>), malformed values, or unencoded <code>@</code> in a value (write <code>%40</code>) now throw.</li>
+      <li lang="zh-Hant">連線字串裡有未知參數（包括其他 client 才有的參數，例如 <code>throwOnAppendFailure</code>）、格式錯誤的值，或參數值裡有沒編碼的 <code>@</code>（要寫成 <code>%40</code>），現在都會報錯。</li>
+      <li lang="en">If you set <code>defaultDeadline</code>, calls that run longer now fail with <code>deadlineExceeded</code>.</li>
+      <li lang="zh-Hant">如果你有設定 <code>defaultDeadline</code>，超過時間的呼叫現在會以 <code>deadlineExceeded</code> 失敗。</li>
+      <li lang="en">An unreadable <code>tlsCaFile</code> makes <code>parse</code> throw; an unreadable file given to <code>certificate(path:)</code> makes the client refuse to connect.</li>
+      <li lang="zh-Hant"><code>tlsCaFile</code> 讀不到時 <code>parse</code> 會報錯；交給 <code>certificate(path:)</code> 的檔案讀不到時，client 會拒絕連線。</li>
+    </ul>
+    <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.5.0" target="_blank" rel="noopener"><span lang="en">Full 2.5.0 release notes →</span><span lang="zh-Hant">2.5.0 完整 release notes →</span></a></p>
+  </article>
+
+  <!-- ===================================================================== -->
   <article class="release" id="v2.4">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.4.3</span><span lang="zh-Hant">最新 · v2.4.3</span></div>
+    <div class="whats-new-tag">v2.4.3</div>
     <h3 class="release-title"><span lang="en">Connection reuse — faster and more solid</span><span lang="zh-Hant">連線復用 —— 更快，也更穩</span></h3>
     <p class="lead" lang="en">
       Up to 2.3, every single call — each append, each read, each delete — dialled a brand-new
