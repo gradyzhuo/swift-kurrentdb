@@ -68,6 +68,14 @@ for try await result in subscription.events {
 
 ## What's new
 
+### 2.5
+
+- **Lazy reads and backpressured subscriptions.** `read().lazy` streams events as you iterate and ends the RPC when the loop does, so memory no longer grows with the result; `read().buffered` (and plain `read()`) keep today's behaviour. Subscriptions are now backpressured with bounded memory. See <doc:Reading-events>.
+- **Strict connection strings.** Connection strings are parsed according to RFC 3986: unknown, duplicate or invalid parameters throw, credentials and values are percent-decoded, and characters in a password can no longer change hosts or TLS settings. New `policy:` entry point (`.rfc3986`). **Upgrade note:** strings that used to be accepted may now throw — see <doc:Getting-started>.
+- **`defaultDeadline` takes effect.** It now bounds calls that complete before they return (appends, deletes, management calls, `read()`); subscriptions and `read().lazy` are not bounded by it.
+- **Unreadable CA certificates are reported.** An unreadable `tlsCaFile` makes `parse` throw; `certificate(path:fallback:)` replaces `certificate(path:)`, which is deprecated and now refuses to connect instead of trusting the system roots.
+- **Untrusted input no longer crashes or leaks.** Negative revisions or positions from the server, credentials that cannot be encoded, and connection strings in error messages are handled safely.
+
 ### 2.4
 
 - **Reads share the connection.** `read()`, `readAll()`, projection statistics and user details now use the per-node shared connection instead of opening one connection per call; only subscriptions, persistent subscriptions and server statistics keep a dedicated connection. See <doc:Getting-started> (2.4.3).
