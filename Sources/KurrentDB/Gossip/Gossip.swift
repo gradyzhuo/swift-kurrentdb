@@ -44,7 +44,7 @@ extension Gossip {
         let usecase = Read()
         let lease = try connections.acquire(endpoint)
         defer { lease.release() }
-        // The gossip timeout is the call's deadline; it was accepted and then ignored before.
+        // The gossip timeout is the call's deadline.
         let timedOptions: CallOptions = { var options = callOptions; options.timeout = timeout; return options }()
         return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
             let metadata = try Metadata(from: settings)
