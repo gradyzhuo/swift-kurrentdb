@@ -58,6 +58,10 @@ public actor NodeSelector: Sendable {
         guard !connections.isShutdown else {
             throw .connectionClosed
         }
+        // Discovery swallows every error and reports "node not found", so refuse up front.
+        guard !settings.hasUnreadableCertificate else {
+            throw .initializationError(reason: ClientSettings.unreadableCertificateRefusalReason)
+        }
         if let node = selectedNode, let expiry = selectedNodeExpiry, Date.now < expiry {
             return node
         }

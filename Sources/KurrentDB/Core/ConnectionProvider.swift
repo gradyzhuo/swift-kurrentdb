@@ -371,7 +371,7 @@ package final class ConnectionProvider: Sendable {
         // The deprecated certificate(path:) could not read its CA. Refuse rather than connect
         // with a trust set the caller did not ask for.
         guard !settings.hasUnreadableCertificate else {
-            throw .initializationError(reason: "A CA certificate file passed to certificate(path:) cannot be read; refusing to fall back to the system trust roots.")
+            throw .initializationError(reason: ClientSettings.unreadableCertificateRefusalReason)
         }
         let settings = settings
         let transport: HTTP2ClientTransport.Posix = try withRethrowingError(usage: "ConnectionProvider.makeClient(for:)") {

@@ -11,7 +11,8 @@
 public enum CertificateFallback: Sendable, Equatable {
     /// No fallback: throw `KurrentError.initializationError`.
     case none
-    /// Leave the configured CA out and trust the system's root certificates instead. Use it only
+    /// Leave the configured CA out, so the system's root certificates are trusted if no other CA
+    /// is configured. Use it only
     /// when one configuration is shared by environments where the CA file is legitimately absent.
     case systemTrustRoots
 }
