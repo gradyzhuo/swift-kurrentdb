@@ -30,6 +30,10 @@ public struct ClientSettings: Sendable {
     /// TLS certificate sources used to verify the server.
     public var certificates: [TLSConfig.CertificateSource]
 
+    /// Set by the deprecated ``certificate(path:)`` when its file cannot be read. The client then
+    /// refuses to connect and ``trustRoots`` never falls back to the system roots.
+    package var hasUnreadableCertificate: Bool = false
+
     /// Whether DNS-based cluster discovery is active.
     public private(set) var dnsDiscover: Bool
     /// Preferred node role to connect to in a cluster.
@@ -161,7 +165,8 @@ extension ClientSettings {
         guard secure else {
             return nil
         }
-        return if certificates.isEmpty {
+        // A CA that was named but could not be read must not become "trust the system roots".
+        return if certificates.isEmpty && !hasUnreadableCertificate {
             .systemDefault
         } else {
             .certificates(certificates)
@@ -473,12 +478,18 @@ extension ClientSettings: Buildable {
 
     /// Returns a copy with a certificate loaded from the given file path appended.
     ///
+    /// When the file cannot be read it is not silently replaced by the system trust roots: the
+    /// client refuses to connect with `KurrentError.initializationError`.
+    ///
     /// - Parameter path: File-system path to the certificate file.
+    @available(*, deprecated, message: "Use certificate(path:fallback:), which reports an unreadable file instead of widening trust.")
     @discardableResult
     public func certificate(path: String) -> Self {
         withCopy {
-            if let certificate = Self.parseCertificate(path: path) {
+            if let certificate = Self.readableCertificate(path: path) {
                 $0.certificates.append(certificate)
+            } else {
+                $0.hasUnreadableCertificate = true
             }
         }
     }
@@ -497,8 +508,8 @@ extension ClientSettings: Buildable {
         certificate(source: source)
     }
 
-    /// Deprecated. Use ``certificate(path:)`` instead.
-    @available(*, deprecated, renamed: "certificate(path:)")
+    /// Deprecated. Use ``certificate(path:fallback:)`` instead.
+    @available(*, deprecated, message: "Use certificate(path:fallback:).")
     @discardableResult
     public func cerificate(path: String) -> Self {
         certificate(path: path)

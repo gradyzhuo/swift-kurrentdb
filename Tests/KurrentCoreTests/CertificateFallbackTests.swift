@@ -40,14 +40,12 @@ struct CertificateFallbackTests {
     }
 
     private func isSystemDefault(_ settings: ClientSettings) -> Bool {
-        if case .systemDefault = settings.trustRoots { return true }
-        return false
+        settings.trustRoots == .systemDefault
     }
 
     private func trustedCertificateCount(_ settings: ClientSettings) -> Int? {
-        // `TLSConfig.TrustRootsSource.certificates` is a factory, not an enum case, so it cannot be
-        // pattern-matched: a non-nil, non-system trust-roots source means "exactly these certificates".
-        guard settings.trustRoots != nil, !isSystemDefault(settings) else { return nil }
+        // `TLSConfig.TrustRootsSource` is an Equatable struct, so compare instead of pattern matching.
+        guard settings.trustRoots == .certificates(settings.certificates) else { return nil }
         return settings.certificates.count
     }
 
