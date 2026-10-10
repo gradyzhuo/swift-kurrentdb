@@ -21,7 +21,8 @@ import Synchronization
 ///   `UnaryStream` usecases whose `send()` drains the stream before returning (marked
 ///   `BufferedStreamResponse`: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
 ///   `Users.Details`). One long-lived connection per endpoint; these calls share that
-///   connection's HTTP/2 stream budget.
+///   connection's HTTP/2 stream budget. A lazy read (`ScopedStreamResponse`, `read().lazy`)
+///   also uses it, holding its lease for as long as the iterator lives.
 /// - **Dedicated** (``openDedicated(for:)``): RPCs that carry the stream out of `perform`
 ///   (subscriptions, persistent subscriptions, `Monitoring.Stats`, `StreamStream`). They may
 ///   hold an HTTP/2 stream slot indefinitely, so each call gets its own connection and never
