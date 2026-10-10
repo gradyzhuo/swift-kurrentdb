@@ -70,11 +70,11 @@ let settings = ClientSettings.localhost()
     .authenticated(.credentials(username: "admin", password: "changeit"))
 
 // Local development — multi-node TLS cluster
-let localCluster = ClientSettings.localhost(ports: 2111, 2112, 2113)
+let localCluster = try ClientSettings.localhost(ports: 2111, 2112, 2113)
     .secure(true)
     .tlsVerifyCert(false)
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .certificate(path: "/path/to/ca.crt")
+    .certificate(path: "/path/to/ca.crt", fallback: .none)
 
 // Production — remote cluster (TLS enabled by default)
 let production = ClientSettings.remote(

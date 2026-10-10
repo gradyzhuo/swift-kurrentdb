@@ -63,7 +63,7 @@ There are a number of query parameters that can be used in the connection string
 | ^ | readOnlyReplica |   ^  |     ^     |
 |tlsVerifyCert|true|true|In secure mode, set to true when using an untrusted connection to the node if you don't have the CA file available. Don't use in production.|
 | ^ | false |   ^  |     ^     |
-|tlsCaFile|String|None|Path to the CA file when connecting to a secure cluster with a certificate that's not signed by a trusted CA.|
+|tlsCaFile|String|None|Path to the CA file when connecting to a secure cluster with a certificate that's not signed by a trusted CA. If the file cannot be read, `parse` throws instead of trusting the system's root certificates.|
 | ^ | file path |   ^  |     ^     |
 |defaultDeadline|Number|None|Default deadline, in milliseconds, for calls that complete before they return — appends, deletes, management calls, `read()`. Subscriptions and `read().lazy` are not bounded by it; a `CallOptions.timeout` set on the client wins.|
 |keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds.|
@@ -189,7 +189,7 @@ Available builder methods:
 | `.tlsVerifyCert(_:)` | Enable or disable TLS certificate verification |
 | `.authenticated(_:)` | Set authentication credentials |
 | `.certificate(source:)` | Add a TLS certificate source |
-| `.certificate(path:)` | Add a TLS certificate from a file path |
+| `.certificate(path:fallback:)` | Add a CA certificate from a file. `fallback: .none` throws when the file cannot be read; `fallback: .systemTrustRoots` leaves it out and trusts the system roots instead (only for configurations shared with environments that legitimately have no CA file) |
 | `.connectionName(_:)` | Set a connection name |
 | `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return; not subscriptions or `.lazy` reads |
 | `.keepAlive(_:)` | Configure keep-alive settings |
