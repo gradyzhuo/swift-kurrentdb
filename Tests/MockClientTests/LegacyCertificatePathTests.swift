@@ -74,8 +74,20 @@ struct LegacyCertificatePathTests {
         #expect(settings.trustRoots == .certificates(settings.certificates))
     }
 
-    @Test("The refusal is not retried as a node failure")
-    func refusalIsNotANodeFailure() {
-        #expect(!KurrentError.initializationError(reason: "x").isNodeFailure)
+    @Test("A real operation surfaces initializationError, not serverError")
+    func operationsSurfaceTheRefusal() async throws {
+        let client = KurrentDBClient(settings: ClientSettings.localhost().secure(true).certificate(path: missingPath))
+        var appendError: (any Error)?
+        do {
+            _ = try await client.streams(specified: "s").append(events: [EventData(eventType: "T", model: ["k": "v"])])
+        } catch { appendError = error }
+        #expect(appendError.map(isInitializationError) == true)
+
+        var clusterError: (any Error)?
+        do {
+            _ = try await client.readCluster()
+        } catch { clusterError = error }
+        #expect(clusterError.map(isInitializationError) == true)
+        try client.shutdown()
     }
 }

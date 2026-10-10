@@ -189,7 +189,7 @@ Available builder methods:
 | `.tlsVerifyCert(_:)` | Enable or disable TLS certificate verification |
 | `.authenticated(_:)` | Set authentication credentials |
 | `.certificate(source:)` | Add a TLS certificate source |
-| `.certificate(path:fallback:)` | Add a CA certificate from a file. `fallback: .none` throws when the file cannot be read; `fallback: .systemTrustRoots` leaves it out and trusts the system roots instead (only for configurations shared with environments that legitimately have no CA file) |
+| `.certificate(path:fallback:)` | Add a CA certificate from a file. `fallback: .none` throws when the file cannot be read; `fallback: .systemTrustRoots` leaves it out, so the system roots are trusted if no other CA is configured (only for configurations shared with environments that legitimately have no CA file) |
 | `.connectionName(_:)` | Set a connection name |
 | `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return; not subscriptions or `.lazy` reads |
 | `.keepAlive(_:)` | Configure keep-alive settings |

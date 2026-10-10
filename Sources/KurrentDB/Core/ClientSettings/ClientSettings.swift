@@ -34,6 +34,9 @@ public struct ClientSettings: Sendable {
     /// refuses to connect and ``trustRoots`` never falls back to the system roots.
     package var hasUnreadableCertificate: Bool = false
 
+    /// Reason carried by the `initializationError` thrown while ``hasUnreadableCertificate`` is set.
+    package static let unreadableCertificateRefusalReason = "A CA certificate file passed to certificate(path:) cannot be read; refusing to fall back to the system trust roots."
+
     /// Whether DNS-based cluster discovery is active.
     public private(set) var dnsDiscover: Bool
     /// Preferred node role to connect to in a cluster.
@@ -381,6 +384,8 @@ extension ClientSettings {
     /// Detects PEM format automatically by inspecting the file header; falls back to DER.
     /// Returns `nil` and logs a warning if the file is missing or empty.
     ///
+    /// - Important: A `nil` result must not be ignored. Appending nothing makes ``trustRoots`` fall
+    ///   back to the system roots; prefer ``certificate(path:fallback:)``.
     /// - Parameter path: File-system path to the CA certificate.
     /// - Returns: A `TLSConfig.CertificateSource` for the file, or `nil` on failure.
     public static func parseCertificate(path: String) -> TLSConfig.CertificateSource? {
@@ -471,7 +476,7 @@ extension ClientSettings: Buildable {
         case .none:
             throw .initializationError(reason: "The CA certificate file passed to certificate(path:fallback:) cannot be read.")
         case .systemTrustRoots:
-            logger.warning("Configured CA certificate file is unreadable; using the system trust roots as requested (fallback: .systemTrustRoots).")
+            logger.warning("Configured CA certificate file is unreadable; leaving it out as requested (fallback: .systemTrustRoots) — the system trust roots apply if no other CA is configured.")
             return self
         }
     }
@@ -490,6 +495,7 @@ extension ClientSettings: Buildable {
                 $0.certificates.append(certificate)
             } else {
                 $0.hasUnreadableCertificate = true
+                logger.warning("A CA certificate file passed to certificate(path:) cannot be read; the client will refuse to connect. Use certificate(path:fallback:).")
             }
         }
     }
