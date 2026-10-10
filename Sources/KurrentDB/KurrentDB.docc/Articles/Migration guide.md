@@ -51,6 +51,8 @@ let client = KurrentDBClient(settings: settings)
 
 The `cerificates` property and `cerificate(source:)` / `cerificate(path:)` builder methods were misspelled in 1.x. They are corrected in 2.x and the old names are kept as deprecated aliases.
 
+In 2.5, `certificate(path:)` (and its alias `cerificate(path:)`) is deprecated as well: when its file cannot be read, the client refuses to connect instead of trusting the system's root certificates. Use `certificate(path:fallback:)`, which throws right away (`fallback: .none`) or, only when you ask for it, leaves the file out (`fallback: .systemTrustRoots`).
+
 <!-- snippet:skip -->
 ```swift
 // 1.x (misspelled — still compiles but emits a deprecation warning)

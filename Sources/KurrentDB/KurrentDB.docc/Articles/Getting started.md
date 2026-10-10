@@ -11,7 +11,7 @@ Add the package dependency to your `Package.swift`:
 <!-- snippet:skip -->
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.4.3")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.5.0")
 ]
 ```
 
@@ -56,7 +56,7 @@ There are a number of query parameters that can be used in the connection string
 |connectionName|String|None|Connection name|
 |maxDiscoverAttempts|Number|10|Number of attempts to discover the cluster.|
 |discoveryInterval|Number|100|Cluster discovery polling interval in milliseconds.|
-|gossipTimeout|Number|3|Gossip timeout in seconds, when the gossip call times out, it will be retried.|
+|gossipTimeout|Number|5|Gossip timeout in seconds, when the gossip call times out, it will be retried. (Settings built in code default to 3 seconds.)|
 |nodePreference|leader|leader|Preferred node role. When creating a client for write operations, always use leader.|
 | ^ | follower |   ^  |     ^     |
 | ^ | random |   ^  |     ^     |
@@ -65,9 +65,9 @@ There are a number of query parameters that can be used in the connection string
 | ^ | false |   ^  |     ^     |
 |tlsCaFile|String|None|Path to the CA file when connecting to a secure cluster with a certificate that's not signed by a trusted CA. If the file cannot be read, `parse` throws instead of trusting the system's root certificates.|
 | ^ | file path |   ^  |     ^     |
-|defaultDeadline|Number|None|Default deadline, in milliseconds, for calls that complete before they return — appends, deletes, management calls, `read()`. Subscriptions and `read().lazy` are not bounded by it; a `CallOptions.timeout` set on the client wins.|
-|keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds.|
-|keepAliveTimeout|Number|10|Keep-alive ping call timeout, in seconds.|
+|defaultDeadline|Number|None|Default deadline, in milliseconds, for calls that complete before they return — appends, deletes, management calls, `read()`. Subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it; a `CallOptions.timeout` set on the client wins.|
+|keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds. Takes effect only together with `keepAliveTimeout`.|
+|keepAliveTimeout|Number|10|Keep-alive ping call timeout, in seconds. Takes effect only together with `keepAliveInterval`.|
 |userCertFile|String|None|User certificate file (PEM) for X.509 authentication. Requires TLS.|
 | ^ | file path |   ^  |     ^     |
 |userKeyFile|String|None|Key file (PEM) for the user certificate used for X.509 authentication. Requires TLS.|
@@ -191,7 +191,7 @@ Available builder methods:
 | `.certificate(source:)` | Add a TLS certificate source |
 | `.certificate(path:fallback:)` | Add a CA certificate from a file. `fallback: .none` throws when the file cannot be read; `fallback: .systemTrustRoots` leaves it out, so the system roots are trusted if no other CA is configured (only for configurations shared with environments that legitimately have no CA file) |
 | `.connectionName(_:)` | Set a connection name |
-| `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return; not subscriptions or `.lazy` reads |
+| `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return; not subscriptions, persistent-subscription reads, server statistics or `.lazy` reads |
 | `.keepAlive(_:)` | Configure keep-alive settings |
 | `.discoveryInterval(_:)` | Set cluster discovery polling interval |
 | `.maxDiscoveryAttempts(_:)` | Set maximum cluster discovery attempts |
@@ -229,7 +229,7 @@ A cluster elects a new leader whenever the current one restarts, resigns or lose
 
 - Leader-only commands (appends, deletes, persistent-subscription management) sent to the old leader are rejected. The server answers with gRPC status `UNAVAILABLE` and the metadata `exception: not-leader`; the client surfaces this as ``KurrentError/grpcConnectionError(cause:)``.
 - Reads keep working: a demoted node still serves them. A `.lazy` read that is already streaming is not retried — only establishing the call is.
-- `grpcConnectionError`, `grpcError`, `grpcRuntimeError`, `deadlineExceeded` and `notLeaderException` count as node failures. For those, the client drops the cached node, rediscovers the leader through gossip and retries the operation according to ``ClientSettings/operationRetryPolicy``.
+- `grpcConnectionError`, `grpcError`, `grpcRuntimeError`, `deadlineExceeded` and `notLeaderException` count as node failures. For those, the client drops the cached node, rediscovers the leader through gossip and retries the operation according to ``ClientSettings/operationRetryPolicy``. A task that was cancelled is never retried; a cancelled `read()` throws ``KurrentError/connectionClosed``.
 
 The default policy is **2 attempts with no delay** — one immediate retry. That covers the common case where the new leader is already elected when the first call fails. If the election is still in progress when the retry runs, the error reaches your code:
 
