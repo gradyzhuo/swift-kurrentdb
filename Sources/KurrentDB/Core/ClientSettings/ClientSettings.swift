@@ -51,7 +51,10 @@ public struct ClientSettings: Sendable {
     /// Whether server certificate verification is enforced when TLS is active.
     public private(set) var tlsVerifyCert: Bool
 
-    /// Default operation deadline in milliseconds; `.max` means no deadline.
+    /// Default deadline in milliseconds for calls that complete before they return (single
+    /// responses, appends, buffered reads, batch appends); `.max` means no deadline. Subscriptions,
+    /// persistent-subscription reads, server statistics and `read().lazy` are not bounded by it, and
+    /// a `CallOptions.timeout` set on the client wins.
     public private(set) var defaultDeadline: Int
     /// Optional human-readable label for this connection.
     public private(set) var connectionName: String?
@@ -84,7 +87,8 @@ public struct ClientSettings: Sendable {
     ///     a node. Defaults to `.gossipReported`.
     ///   - secure: Enables TLS. Defaults to `true`.
     ///   - tlsVerifyCert: Enables certificate verification when TLS is active. Defaults to `true`.
-    ///   - defaultDeadline: Operation deadline in milliseconds. Defaults to `.max`.
+    ///   - defaultDeadline: Deadline in milliseconds for calls that complete before they return; see
+    ///     ``defaultDeadline``. Defaults to `.max` (no deadline).
     ///   - connectionName: Optional label for this connection.
     ///   - keepAlive: Keep-alive timing. Defaults to `.default`.
     ///   - authentication: Credentials or certificate for authentication.
@@ -238,10 +242,12 @@ extension ClientSettings {
 
     /// Parses a KurrentDB connection string into `ClientSettings`.
     ///
-    /// Supported schemes are `esdb://` and `esdb+discover://`. Recognised query parameters include
+    /// Supported schemes are `kurrentdb`, `kurrent`, `kdb` and `esdb`, each also with `+discover`
+    /// (case-insensitive). Recognised query parameters are
     /// `tls`, `tlsVerifyCert`, `nodePreference`, `keepAliveInterval` and `keepAliveTimeout` (both
     /// required for either to take effect), `gossipTimeout`, `maxDiscoverAttempts`, `discoveryInterval`,
-    /// `userCertFile`, `userKeyFile`, `connectionName`, `tlsCaFile`, and `defaultDeadline`.
+    /// `userCertFile`, `userKeyFile`, `connectionName`, `tlsCaFile`, and `defaultDeadline`; any other
+    /// parameter throws.
     ///
     /// ```swift
     /// let settings = try ClientSettings.parse(

@@ -36,7 +36,8 @@ extension Streams {
 
 extension Streams.Subscription: ConnectionTerminable {
     /// Run when the dedicated connection closes (client shutdown): wakes a producer suspended in
-    /// `send` and delivers `connectionClosed` once the buffer drains. No-op if the hand-off already
+    /// `send` and ends the stream with `connectionClosed`; an element the producer was holding is
+    /// dropped. No-op if the hand-off already
     /// ended. Captures only the hand-off, never the subscription (see ``ConnectionTerminable``).
     package var connectionCloseHandler: @Sendable () -> Void {
         { [messages] in messages.finish(throwing: KurrentError.connectionClosed) }

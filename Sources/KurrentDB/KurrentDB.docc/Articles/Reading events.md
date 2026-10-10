@@ -231,9 +231,9 @@ let responses = try await client.streams(specified: "orders").read { $0.limit = 
 
 To hold a prepared read without iterating, spell its type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
 
-### Behaviour changes (since the backpressured subscription)
+### Behaviour changes in 2.5
 
-`Subscription.cancel()` now ends the stream without delivering an already-buffered event (at most one).
+Subscriptions are backpressured: the client takes the next event from the server only when your code asks for it. `Subscription.cancel()` ends the stream immediately; an event that had arrived but was not yet handed to your code is dropped.
 
 ### Roadmap
 
