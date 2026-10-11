@@ -288,7 +288,8 @@ extension ClientSettings {
             nodePreference = .leader
         }
 
-        let gossipTimeout = try parameters.duration("gossiptimeout", unit: .seconds) ?? .seconds(5)
+        // Same default as settings built in code (`init(gossipTimeout:)`).
+        let gossipTimeout = try parameters.duration("gossiptimeout", unit: .seconds) ?? .seconds(3)
         let maxDiscoveryAttempts = try parameters.positiveInteger("maxdiscoverattempts", as: UInt16.self) ?? 10
         let discoveryInterval = try parameters.duration("discoveryinterval", unit: .milliseconds) ?? .milliseconds(100)
 
