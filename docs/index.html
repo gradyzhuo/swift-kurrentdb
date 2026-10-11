@@ -135,6 +135,8 @@
     <ul>
       <li lang="en">Connection strings with unknown parameters (including other clients' parameters such as <code>throwOnAppendFailure</code>), malformed values, or unencoded <code>@</code> in a value (write <code>%40</code>) now throw.</li>
       <li lang="zh-Hant">連線字串裡有未知參數（包括其他 client 才有的參數，例如 <code>throwOnAppendFailure</code>）、格式錯誤的值，或參數值裡有沒編碼的 <code>@</code>（要寫成 <code>%40</code>），現在都會報錯。</li>
+      <li lang="en">Connection strings without <code>gossipTimeout</code> now use 3 seconds, like settings built in code (it was 5).</li>
+      <li lang="zh-Hant">沒有寫 <code>gossipTimeout</code> 的連線字串，現在預設 3 秒，跟用程式建立的設定一致（以前是 5 秒）。</li>
       <li lang="en">If you set <code>defaultDeadline</code>, calls that run longer now fail with <code>deadlineExceeded</code>.</li>
       <li lang="zh-Hant">如果你有設定 <code>defaultDeadline</code>，超過時間的呼叫現在會以 <code>deadlineExceeded</code> 失敗。</li>
       <li lang="en">An unreadable <code>tlsCaFile</code> makes <code>parse</code> throw; an unreadable file given to <code>certificate(path:)</code> makes the client refuse to connect.</li>

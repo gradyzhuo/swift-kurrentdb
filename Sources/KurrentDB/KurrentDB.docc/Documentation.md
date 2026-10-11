@@ -74,6 +74,7 @@ for try await result in subscription.events {
 - **Strict connection strings.** Connection strings are parsed according to RFC 3986: unknown, duplicate or invalid parameters throw, credentials and values are percent-decoded, and characters in a password can no longer change hosts or TLS settings. New `policy:` entry point (`.rfc3986`). **Upgrade note:** strings that used to be accepted may now throw — see <doc:Getting-started>.
 - **`defaultDeadline` takes effect.** It now bounds calls that complete before they return (appends, deletes, management calls, `read()`); subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it.
 - **Unreadable CA certificates are reported.** An unreadable `tlsCaFile` makes `parse` throw; `certificate(path:fallback:)` replaces `certificate(path:)`, which is deprecated and now refuses to connect instead of trusting the system roots.
+- **One `gossipTimeout` default.** Connection strings now default to 3 seconds, like settings built in code (they used to default to 5).
 - **Untrusted input no longer crashes or leaks.** Negative revisions or positions from the server, credentials that cannot be encoded, and connection strings in error messages are handled safely.
 
 ### 2.4

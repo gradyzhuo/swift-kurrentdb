@@ -56,7 +56,7 @@ There are a number of query parameters that can be used in the connection string
 |connectionName|String|None|Connection name|
 |maxDiscoverAttempts|Number|10|Number of attempts to discover the cluster.|
 |discoveryInterval|Number|100|Cluster discovery polling interval in milliseconds.|
-|gossipTimeout|Number|5|Gossip timeout in seconds, when the gossip call times out, it will be retried. (Settings built in code default to 3 seconds.)|
+|gossipTimeout|Number|3|Gossip timeout in seconds, when the gossip call times out, it will be retried.|
 |nodePreference|leader|leader|Preferred node role. When creating a client for write operations, always use leader.|
 | ^ | follower |   ^  |     ^     |
 | ^ | random |   ^  |     ^     |
