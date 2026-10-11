@@ -265,10 +265,10 @@ section[id], header[id] { scroll-margin-top: 64px; }
 }
 
 .hero-icon {
-  width: 96px;
-  height: 96px;
-  border-radius: 22px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  width: 112px;
+  height: 112px;
+  /* The logo draws its own rounded tile with transparent margins, so shadow the shape, not the box. */
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12));
 }
 
 .hero h1 {

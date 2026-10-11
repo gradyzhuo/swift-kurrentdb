@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".65" stop-color="#fffaf6"/><stop offset="1" stop-color="#fff2e8"/></linearGradient>
+<linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd8ae"/><stop offset=".55" stop-color="#ffae8a"/><stop offset="1" stop-color="#f7cba9"/></linearGradient>
+<linearGradient id="orange" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#ffc475"/><stop offset=".53" stop-color="#ff743a"/><stop offset="1" stop-color="#ff493c"/></linearGradient>
+<linearGradient id="peach" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe1b7"/><stop offset=".65" stop-color="#ffae78"/><stop offset="1" stop-color="#c75a7b"/></linearGradient>
+<linearGradient id="rose" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f4a0a0"/><stop offset=".5" stop-color="#c75e7d"/><stop offset="1" stop-color="#ffb58d"/></linearGradient>
+<linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffc68d"/><stop offset=".48" stop-color="#fff1db"/><stop offset=".8" stop-color="#f8a5a2"/><stop offset="1" stop-color="#f66a49"/></linearGradient>
+</defs>
+<rect x="30" y="30" width="964" height="964" rx="190" fill="url(#bg)" stroke="url(#edge)" stroke-width="7"/>
+<rect x="164" y="585" width="126" height="112" rx="27" fill="url(#orange)"/><rect x="204" y="467" width="72" height="72" rx="17" fill="url(#peach)"/>
+<rect x="350" y="322" width="122" height="512" rx="60" fill="url(#peach)"/>
+<rect x="506" y="184" width="126" height="732" rx="63" fill="url(#orange)"/>
+<rect x="660" y="356" width="124" height="470" rx="61" fill="url(#rose)"/>
+<rect x="834" y="467" width="77" height="77" rx="17" fill="url(#rose)"/><rect x="820" y="580" width="118" height="113" rx="27" fill="url(#rose)"/>
+<path d="M302 620 C395 728 468 625 548 544 S708 446 802 520 L840 556 C725 468 645 504 558 591 S387 754 302 664 Z" fill="url(#ribbon)"/>
+<path d="M302 671 C397 777 472 680 552 599 S714 500 803 575 L840 609 C731 527 647 562 559 647 S390 805 302 716 Z" fill="url(#ribbon)"/>
+<path d="M302 620 C395 728 468 625 548 544 S708 446 802 520" fill="none" stroke="#fff4e4" stroke-width="5" opacity=".85"/>
+</svg>
