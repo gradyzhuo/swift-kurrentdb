@@ -73,10 +73,11 @@ struct ClientSettingsParsingTests {
         #expect(settings.gossipTimeout == .seconds(10))
     }
 
-    @Test("gossipTimeout defaults to 5s when absent")
+    @Test("gossipTimeout defaults to 3s when absent, like settings built in code")
     func testGossipTimeoutDefault() throws {
         let settings = try ClientSettings.parse(connectionString: "esdb://localhost:2113")
-        #expect(settings.gossipTimeout == .seconds(5))
+        #expect(settings.gossipTimeout == .seconds(3))
+        #expect(settings.gossipTimeout == ClientSettings().gossipTimeout)
     }
 
     // MARK: maxDiscoveryAttempts
