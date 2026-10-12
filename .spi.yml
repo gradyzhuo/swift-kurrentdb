@@ -3,5 +3,4 @@ builder:
   configs:
     - platform: linux
       documentation_targets: [KurrentDB]
-      swift_version: 6.0
       custom_documentation_parameters: [--exclude-extended-types]
