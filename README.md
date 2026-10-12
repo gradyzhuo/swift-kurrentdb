@@ -14,7 +14,7 @@
 
 Built for Server-Side Swift and Event Sourcing
 
-[Documentation](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions) | [Benchmark](https://gradyzhuo.github.io/swift-kurrentdb/benchmarks.html)
+[Documentation](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb) | [Getting Started](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/getting-started) | [Discussions](https://github.com/gradyzhuo/swift-kurrentdb/discussions) | [Benchmark](https://gradyzhuo.github.io/swift-kurrentdb/benchmarks.html)
 
 </div>
 
@@ -28,7 +28,7 @@ Event Sourcing is a powerful pattern for building scalable, auditable systems. s
 - **Modern Concurrency** — Full async/await with Swift 6 data-race safety
 - **Compile-Time Safety** — Swift 6 strict concurrency compliance with typed throws
 - **Cluster-Ready** — First-class support for multi-node TLS clusters
-- **Well-Documented** — Comprehensive guides on [Swift Package Index](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb)
+- **Well-Documented** — Comprehensive guides in the [documentation](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb)
 - **Typed Errors** — All operations throw `KurrentError` for precise error handling
 
 ---
@@ -94,7 +94,7 @@ let client = KurrentDBClient(settings: settings)
 
 Create one client per application and reuse it. Calls that complete before they return — appends, deletes, metadata, reads, projection statistics, management operations — share one connection per node. Calls that hand you a live stream — subscriptions and persistent subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`; calling it again does nothing.
 
-Need a database per test? The `KurrentDBPool` library lends out clients for a set of independent KurrentDB instances, one caller per instance at a time — see [Client pools](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/client-pools).
+Need a database per test? The `KurrentDBPool` library lends out clients for a set of independent KurrentDB instances, one caller per instance at a time — see [Client pools](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/client-pools).
 
 ---
 
@@ -389,7 +389,7 @@ import KurrentDB_V1   // was: import KurrentDB
 
 `KurrentDB_V1` gives you access to all 1.x methods (marked `@deprecated`) while you migrate to the new API at your own pace.
 
-👉 [Full Migration Guide — 1.x to 2.x](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide)
+👉 [Full Migration Guide — 1.x to 2.x](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migration-guide)
 
 ---
 
@@ -492,18 +492,18 @@ docker run --rm -d -p 2113:2113 \
 
 | Guide | Description |
 |-------|-------------|
-| [Migration Guide (1.x → 2.x)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code |
-| [Getting Started](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
-| [Appending Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency, multi-stream writes |
-| [Reading Events](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, server-side filters |
-| [Projections](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/managing-projections) | Create, manage, and query projection state |
-| [Persistent Subscriptions](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/persistent-subscriptions) | Competing consumers, ACK/NAK, subscription groups |
-| [User Management](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/user-management) | Create, enable, disable, password management |
-| [Cluster Gossip](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/cluster-gossip) | Cluster discovery, node health monitoring |
-| [Monitoring](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/server-statistics) | Real-time server statistics |
-| [Server Operations](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/server-operations) | Scavenge, index merge, shutdown, node management |
-| [Client Pools](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb/client-pools) | `KurrentDBPool`: borrow a client per test from independent instances |
-| [Full API Reference](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb) | Complete API documentation |
+| [Migration Guide (1.x → 2.x)](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code |
+| [Getting Started](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
+| [Appending Events](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency, multi-stream writes |
+| [Reading Events](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, server-side filters |
+| [Projections](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/managing-projections) | Create, manage, and query projection state |
+| [Persistent Subscriptions](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/persistent-subscriptions) | Competing consumers, ACK/NAK, subscription groups |
+| [User Management](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/user-management) | Create, enable, disable, password management |
+| [Cluster Gossip](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/cluster-gossip) | Cluster discovery, node health monitoring |
+| [Monitoring](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/server-statistics) | Real-time server statistics |
+| [Server Operations](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/server-operations) | Scavenge, index merge, shutdown, node management |
+| [Client Pools](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/client-pools) | `KurrentDBPool`: borrow a client per test from independent instances |
+| [Full API Reference](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb) | Complete API documentation |
 
 ## Contributing
 
