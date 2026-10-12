@@ -303,6 +303,8 @@ GitHub Actions workflow (`.github/workflows/swift-build-testing.yml`):
 
 Documentation workflow (`.github/workflows/documentation.yml`):
 - Builds the DocC catalog (symbol graph + the toolchain's `docc`, no swift-docc-plugin) and deploys it with `docs/` to GitHub Pages (source: GitHub Actions)
+- Versioned: the latest patch of every minor from 1.12 (`scripts/doc-versions.py`) at `/<major.minor>/`, main at `/main/`, the latest release also at the root; `scripts/build-docs-site.py` assembles the site and `docs/doc-versions.js` draws the version menu
+- Release symbol graphs are cached per commit; runs on pushes to main and on `*.*.*` tags (the `github-pages` environment allows both)
 - Swift Package Index links to it through `external_links` in `.spi.yml` instead of building its own
 
 ## Workflow Orchestration

@@ -1,23 +1,31 @@
-# Builds the KurrentDB DocC catalog and publishes it to GitHub Pages together with the
-# landing page in docs/:
+# Builds the KurrentDB DocC documentation for every published version and deploys it to
+# GitHub Pages together with the landing page in docs/:
 #
-#   https://gradyzhuo.github.io/swift-kurrentdb/                          ← docs/index.html
-#   https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb   ← DocC
+#   https://gradyzhuo.github.io/swift-kurrentdb/                                 ← docs/index.html
+#   https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/         ← latest release
+#   https://gradyzhuo.github.io/swift-kurrentdb/<major.minor>/documentation/kurrentdb/
+#   https://gradyzhuo.github.io/swift-kurrentdb/main/documentation/kurrentdb/
 #
-# GitHub Pages must use "GitHub Actions" as its source (Settings → Pages); this workflow
-# replaces the old "deploy from main /docs" setup. docs/ is copied as-is (it carries
-# .nojekyll, so nothing was being processed before either).
+# The published releases are the latest patch of every minor (scripts/doc-versions.py), and
+# docs/doc-versions.js adds a version menu to every page. GitHub Pages must use "GitHub
+# Actions" as its source, and the github-pages environment must allow `*.*.*` tags so that
+# a release deploys as soon as it is tagged.
 #
 # The DocC is built without swift-docc-plugin, so the package gains no dependency: the
 # compiler emits the symbol graph and the toolchain's own `docc` converts it. Only
 # KurrentDB.symbols.json is used, which leaves out extensions on other modules — the same
 # result as `--exclude-extended-types` on Swift Package Index.
 #
-# Pull requests only build the documentation; pushes to main also deploy it.
+# Compiling a symbol graph takes minutes, converting it takes about a second. Each release's
+# symbol graph is therefore kept in the Actions cache (keyed by commit and toolchain) and
+# only main is compiled on every run; an evicted entry is simply rebuilt.
+#
+# Pull requests only build the site; pushes to main, release tags and manual runs deploy it.
 name: Documentation
 on:
   push:
     branches: [ "main" ]
+    tags: [ "*.*.*" ]
   pull_request:
   workflow_dispatch:
 
@@ -25,52 +33,97 @@ on:
 permissions:
   contents: read
 
-# One deployment at a time; a newer push replaces a queued one, a running one finishes.
-concurrency:
-  group: pages-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  build:
-    name: Build documentation
+  versions:
+    name: List versions
+    runs-on: ubuntu-latest
+    outputs:
+      releases: ${{ steps.list.outputs.releases }}
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - id: list
+        env:
+          # A tag's run documents the main branch as "main", not the tagged commit.
+          MAIN_REF: ${{ github.ref_type == 'tag' && 'main' || github.sha }}
+        run: |
+          releases=$(scripts/doc-versions.py)
+          echo "$releases" | jq .
+          echo "releases=$releases" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(echo "$releases" | jq -c --arg ref "$MAIN_REF" '. + [{label: "main", ref: $ref, commit: ""}]')" >> "$GITHUB_OUTPUT"
+
+  symbol-graph:
+    name: Symbol graph (${{ matrix.label }})
+    needs: versions
+    runs-on: ubuntu-latest
+    container: swift:6.4-bookworm
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.versions.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ matrix.ref }}
+
+      - id: cache
+        if: matrix.label != 'main'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: symbol-graph
+          # Keep the toolchain in the key in sync with `container:`, so a new toolchain rebuilds every release.
+          key: docc-symbol-graph-swift-6.4-bookworm-${{ matrix.commit }}
+
+      - name: Emit the KurrentDB symbol graph
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          swift build --target KurrentDB \
+            -Xswiftc -emit-symbol-graph \
+            -Xswiftc -emit-symbol-graph-dir -Xswiftc "$RUNNER_TEMP/symbol-graphs"
+          mkdir -p symbol-graph
+          cp "$RUNNER_TEMP/symbol-graphs/KurrentDB.symbols.json" symbol-graph/
+
+      - name: Collect the symbol graph and the catalog
+        run: |
+          mkdir doc-input
+          cp symbol-graph/KurrentDB.symbols.json doc-input/
+          cp -R Sources/KurrentDB/KurrentDB.docc doc-input/
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: doc-input-${{ matrix.label }}
+          path: doc-input
+          retention-days: 1
+
+  site:
+    name: Build site
+    needs: [versions, symbol-graph]
     runs-on: ubuntu-latest
     container: swift:6.4-bookworm
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Emit the KurrentDB symbol graph
-        run: |
-          swift build --target KurrentDB \
-            -Xswiftc -emit-symbol-graph \
-            -Xswiftc -emit-symbol-graph-dir -Xswiftc "$RUNNER_TEMP/symbol-graphs"
-          mkdir -p "$RUNNER_TEMP/kurrentdb-symbol-graph"
-          cp "$RUNNER_TEMP/symbol-graphs/KurrentDB.symbols.json" "$RUNNER_TEMP/kurrentdb-symbol-graph/"
-
-      - name: Convert the DocC catalog
-        run: |
-          docc convert Sources/KurrentDB/KurrentDB.docc \
-            --additional-symbol-graph-dir "$RUNNER_TEMP/kurrentdb-symbol-graph" \
-            --fallback-display-name KurrentDB \
-            --fallback-bundle-identifier KurrentDB \
-            --transform-for-static-hosting \
-            --hosting-base-path swift-kurrentdb \
-            --output-path "$RUNNER_TEMP/docc"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: doc-input-*
+          path: doc-input
 
       - name: Assemble the site
+        env:
+          RELEASES: ${{ needs.versions.outputs.releases }}
         run: |
-          # The landing page owns index.html; DocC's root index.html is an empty shell.
-          # Any other name clash would silently overwrite one side, so fail instead.
-          rm "$RUNNER_TEMP/docc/index.html"
-          for entry in docs/* docs/.[!.]*; do
-            if [ -e "$RUNNER_TEMP/docc/$(basename "$entry")" ]; then
-              echo "::error::docs/$(basename "$entry") collides with a DocC output path"
-              exit 1
-            fi
+          apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 > /dev/null
+          # Each artifact downloads into doc-input/doc-input-<label>; the script expects doc-input/<label>.
+          for artifact in doc-input/doc-input-*; do
+            mv "$artifact" "doc-input/${artifact#doc-input/doc-input-}"
           done
-          mkdir _site
-          cp -R "$RUNNER_TEMP/docc/." _site/
-          cp -R docs/. _site/
+          python3 scripts/build-docs-site.py --inputs doc-input --releases "$RELEASES" --output _site
           test -f _site/documentation/kurrentdb/index.html
+          test -f _site/main/documentation/kurrentdb/index.html
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
@@ -78,15 +131,19 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: build
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    needs: site
     runs-on: ubuntu-latest
+    # Deployments from main and from tags take turns; a newer one replaces a queued one.
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}documentation/kurrentdb
+      url: ${{ steps.deployment.outputs.page_url }}documentation/kurrentdb/
     steps:
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - id: deployment
