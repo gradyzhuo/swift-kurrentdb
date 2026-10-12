@@ -27,7 +27,7 @@ The pool reads its instances from the `KURRENTDB_POOL_URLS` environment variable
 KURRENTDB_POOL_URLS=["kurrentdb://admin:changeit@localhost:2114?tls=false","kurrentdb://admin:changeit@localhost:2115?tls=false"]
 ```
 
-A JSON array rather than a separator character, because a password may contain any character except `:` and `@`.
+A JSON array rather than a separator character, because a password in a connection string may itself contain `,` or `;`.
 
 > Important: If the variable is set but isn't a JSON array of strings, or one of its connection strings doesn't parse, the process stops with a fatal error. The message names the entry's position but never echoes the connection string, so passwords don't end up in logs.
 
