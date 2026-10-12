@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 swift-kurrentdb is a modern, type-safe Swift client for Kurrent (formerly EventStoreDB), designed for Event Sourcing applications in Server-Side Swift. The package is built on top of grpc-swift 2.x and uses Swift Concurrency (async/await) with full Swift 6 data-race safety compliance.
 
 **Key Links:**
-- Documentation: https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb/documentation/kurrentdb
+- Documentation: https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb
 - GitHub: https://github.com/gradyzhuo/swift-kurrentdb
 
 ## Build & Testing Commands
@@ -300,6 +300,10 @@ GitHub Actions workflow (`.github/workflows/swift-build-testing.yml`):
 - Separate jobs: `KurrentDBPool` live suite, X.509 user certificates (runs only when the `KURRENTDB_LICENSE_KEY` secret is set), offline builds on Amazon Linux / Debian
 - Enables code coverage reporting to Codecov
 - Uses Swift Testing framework with parallel execution disabled
+
+Documentation workflow (`.github/workflows/documentation.yml`):
+- Builds the DocC catalog (symbol graph + the toolchain's `docc`, no swift-docc-plugin) and deploys it with `docs/` to GitHub Pages (source: GitHub Actions)
+- Swift Package Index links to it through `external_links` in `.spi.yml` instead of building its own
 
 ## Workflow Orchestration
 ### 1. Plan Node Default
