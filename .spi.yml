@@ -1,6 +1,5 @@
 version: 1
-builder:
-  configs:
-    - platform: linux
-      documentation_targets: [KurrentDB]
-      custom_documentation_parameters: [--exclude-extended-types]
+# The documentation is built by .github/workflows/documentation.yml and hosted on GitHub Pages;
+# Swift Package Index links to it instead of building its own copy.
+external_links:
+  documentation: "https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/"
