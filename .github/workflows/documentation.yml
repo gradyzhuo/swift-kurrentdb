@@ -1,0 +1,93 @@
+# Builds the KurrentDB DocC catalog and publishes it to GitHub Pages together with the
+# landing page in docs/:
+#
+#   https://gradyzhuo.github.io/swift-kurrentdb/                          ← docs/index.html
+#   https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb   ← DocC
+#
+# GitHub Pages must use "GitHub Actions" as its source (Settings → Pages); this workflow
+# replaces the old "deploy from main /docs" setup. docs/ is copied as-is (it carries
+# .nojekyll, so nothing was being processed before either).
+#
+# The DocC is built without swift-docc-plugin, so the package gains no dependency: the
+# compiler emits the symbol graph and the toolchain's own `docc` converts it. Only
+# KurrentDB.symbols.json is used, which leaves out extensions on other modules — the same
+# result as `--exclude-extended-types` on Swift Package Index.
+#
+# Pull requests only build the documentation; pushes to main also deploy it.
+name: Documentation
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: the deploy job asks for the Pages permissions it needs.
+permissions:
+  contents: read
+
+# One deployment at a time; a newer push replaces a queued one, a running one finishes.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    container: swift:6.4-bookworm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Emit the KurrentDB symbol graph
+        run: |
+          swift build --target KurrentDB \
+            -Xswiftc -emit-symbol-graph \
+            -Xswiftc -emit-symbol-graph-dir -Xswiftc "$RUNNER_TEMP/symbol-graphs"
+          mkdir -p "$RUNNER_TEMP/kurrentdb-symbol-graph"
+          cp "$RUNNER_TEMP/symbol-graphs/KurrentDB.symbols.json" "$RUNNER_TEMP/kurrentdb-symbol-graph/"
+
+      - name: Convert the DocC catalog
+        run: |
+          docc convert Sources/KurrentDB/KurrentDB.docc \
+            --additional-symbol-graph-dir "$RUNNER_TEMP/kurrentdb-symbol-graph" \
+            --fallback-display-name KurrentDB \
+            --fallback-bundle-identifier KurrentDB \
+            --transform-for-static-hosting \
+            --hosting-base-path swift-kurrentdb \
+            --output-path "$RUNNER_TEMP/docc"
+
+      - name: Assemble the site
+        run: |
+          # The landing page owns index.html; DocC's root index.html is an empty shell.
+          # Any other name clash would silently overwrite one side, so fail instead.
+          rm "$RUNNER_TEMP/docc/index.html"
+          for entry in docs/* docs/.[!.]*; do
+            if [ -e "$RUNNER_TEMP/docc/$(basename "$entry")" ]; then
+              echo "::error::docs/$(basename "$entry") collides with a DocC output path"
+              exit 1
+            fi
+          done
+          mkdir _site
+          cp -R "$RUNNER_TEMP/docc/." _site/
+          cp -R docs/. _site/
+          test -f _site/documentation/kurrentdb/index.html
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}documentation/kurrentdb
+    steps:
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
