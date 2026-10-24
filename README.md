@@ -460,6 +460,7 @@ Streams write-side error paths are explicitly covered:
 
 | Server Version | Status | Notes |
 |:--------------:|:------:|-------|
+| **KurrentDB 26.2** | ✅ Supported | Everything except creating transient projections, which the server rejects as deprecated. A multi-node cluster needs a Kurrent license; CI tests a single node |
 | **KurrentDB 26.1** | ✅ Supported | Full feature support |
 | **KurrentDB 26.0** | ✅ Supported | Everything except AppendRecords (26.1+) |
 | **KurrentDB 25.1** | ✅ Supported | Everything except AppendRecords (26.1+) |

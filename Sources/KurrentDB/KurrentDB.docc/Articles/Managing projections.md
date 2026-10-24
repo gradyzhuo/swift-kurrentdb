@@ -26,6 +26,8 @@ Every operation starts from a ``Projections`` value for a target. The target dec
 | `client.projections(of: .anyMode)` | `list()`, `restartSubsystem()` |
 | `client.projections(of: .anyContinuous)` / `.anyTransient` | `list()` for that mode |
 
+> Note: KurrentDB 26.2 rejects creating transient projections as deprecated and points to the secondary indexing query API; `create(query:)` on a `.transient(name:)` target then throws.
+
 ## Create a projection
 
 A continuous projection processes every event up to the end of the store, then keeps processing new events as they are appended. The query is the projection's JavaScript. Projections have names, which you use to enable, disable or query them.
