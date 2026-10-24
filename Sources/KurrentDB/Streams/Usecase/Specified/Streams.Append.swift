@@ -29,7 +29,7 @@ extension Streams {
         /// Options controlling the append behaviour (e.g. expected revision).
         public private(set) var options: Options
 
-        init(to identifier: StreamIdentifier, events: [EventData], options: Options = .init()) {
+        package init(to identifier: StreamIdentifier, events: [EventData], options: Options = .init()) {
             self.events = events
             self.options = options
             self.identifier = identifier
