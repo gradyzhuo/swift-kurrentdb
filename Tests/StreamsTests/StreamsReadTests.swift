@@ -282,4 +282,61 @@ struct StreamsReadTests: Sendable {
             for try await _ in client.streams(specified: streamName).read().lazy {}
         }
     }
+
+    // MARK: - Delete / tombstone revision conflicts
+
+    private func isWrongExpectedVersion(_ error: any Error, expected isExpected: (KurrentError.ExpectedRevisionOption) -> Bool, current isCurrent: (UInt64?) -> Bool) -> Bool {
+        guard case let .wrongExpectedVersion(expected, current) = error as? KurrentError else { return false }
+        let currentRevision: UInt64? = switch current {
+        case .noStream: nil
+        case let .revision(revision): revision
+        }
+        return isExpected(expected) && isCurrent(currentRevision)
+    }
+
+    @Test("Deleting a missing stream with .streamExists throws wrongExpectedVersion with current .noStream")
+    func testDeleteMissingStreamThrowsWrongExpectedVersion() async throws {
+        let client = KurrentDBClient(settings: settings)
+        await #expect {
+            try await client.streams(specified: UUID().uuidString).delete { $0.expectedRevision = .streamExists }
+        } throws: { error in
+            isWrongExpectedVersion(error, expected: { if case .streamExists = $0 { true } else { false } }, current: { $0 == nil })
+        }
+    }
+
+    @Test("Tombstoning a missing stream with .streamExists throws wrongExpectedVersion and leaves the name usable")
+    func testTombstoneMissingStreamThrowsWrongExpectedVersion() async throws {
+        let streamName = UUID().uuidString
+        let client = KurrentDBClient(settings: settings)
+        await #expect {
+            try await client.streams(specified: streamName).tombstone { $0.expectedRevision = .streamExists }
+        } throws: { error in
+            isWrongExpectedVersion(error, expected: { if case .streamExists = $0 { true } else { false } }, current: { $0 == nil })
+        }
+
+        // The server rejected the call, so no tombstone was written.
+        try await client.streams(specified: streamName)
+            .append(events: [EventData(eventType: "AfterRejectedTombstone", data: Data(), contentType: .json)]) {
+                $0.expectedRevision = .noStream
+            }
+        try await client.streams(specified: streamName).delete()
+    }
+
+    @Test("Tombstoning a stream at a stale revision throws wrongExpectedVersion with its actual revision")
+    func testTombstoneStaleRevisionThrowsWrongExpectedVersion() async throws {
+        let streamName = UUID().uuidString
+        let client = KurrentDBClient(settings: settings)
+        try await client.streams(specified: streamName)
+            .append(events: [EventData(eventType: "Tombstone-Stale", data: Data(), contentType: .json)]) {
+                $0.expectedRevision = .any
+            }
+
+        await #expect {
+            try await client.streams(specified: streamName).tombstone { $0.expectedRevision = .at(5) }
+        } throws: { error in
+            isWrongExpectedVersion(error, expected: { if case .revision(5) = $0 { true } else { false } }, current: { $0 == 0 })
+        }
+
+        try await client.streams(specified: streamName).delete()
+    }
 }

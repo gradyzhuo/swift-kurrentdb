@@ -43,8 +43,16 @@ extension Streams {
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions) async throws -> Response {
             let client = ServiceClient(wrapping: connection)
-            return try await client.tombstone(request: request, options: callOptions) {
-                try handle(response: $0)
+            do {
+                return try await client.tombstone(request: request, options: callOptions) {
+                    try handle(response: $0)
+                }
+            } catch let error as RPCError {
+                // A revision conflict comes back as a rejected call, not in the response message.
+                if let conflict = KurrentError.wrongExpectedVersion(from: error, expected: options.expectedRevision) {
+                    throw conflict
+                }
+                throw error
             }
         }
     }
