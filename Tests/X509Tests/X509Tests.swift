@@ -4,9 +4,9 @@
 //
 //  Authenticates with an X.509 user certificate against a live KurrentDB node.
 //
-//  User certificates are a licensed KurrentDB feature, so this suite needs the node
-//  that `server/x509/start.sh` starts. Without KURRENTDB_X509_CERTS_DIR the suite
-//  is skipped rather than failed.
+//  This suite needs the node that `server/x509/start.sh` starts. KurrentDB 26.2+ accepts
+//  user certificates without a license; older servers need KURRENTDB_LICENSE_KEY. Without
+//  KURRENTDB_X509_CERTS_DIR the suite is skipped rather than failed.
 //
 
 import Foundation

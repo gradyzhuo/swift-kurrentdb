@@ -164,52 +164,34 @@ jobs:
           KURRENTDB_POOL_URLS: '["esdb://admin:changeit@localhost:2114?tls=false","esdb://admin:changeit@localhost:2115?tls=false"]'
         run: swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "KurrentDBPoolTests"
 
-  # X.509 user certificate authentication against a live node. User certificates
-  # are a licensed KurrentDB feature, so this job needs the KURRENTDB_LICENSE_KEY
-  # repository secret; without it (including on pull requests from forks, which
-  # don't receive secrets) the job reports a notice and skips the tests.
+  # X.509 user certificate authentication against a live node. KurrentDB 26.2+ accepts user
+  # certificates without a license (older servers treat them as a licensed feature), so this job
+  # runs on every push and pull request against a single unlicensed 26.2 node.
   x509-live-tests:
     name: X.509 user certificates
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      KURRENTDB_LICENSE_KEY: ${{ secrets.KURRENTDB_LICENSE_KEY }}
     steps:
-      - name: Check for a license key
-        id: license
-        run: |
-          if [ -n "$KURRENTDB_LICENSE_KEY" ]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=X.509 tests skipped::Set the KURRENTDB_LICENSE_KEY repository secret to run the X.509 user certificate tests."
-          fi
-
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        if: steps.license.outputs.available == 'true'
 
       - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
-        if: steps.license.outputs.available == 'true'
         with:
           swift-version: "6.2"
 
       - name: Start KurrentDB with user certificates
-        if: steps.license.outputs.available == 'true'
-        run: CERTS_DIR="$RUNNER_TEMP/x509-certs" KURRENTDB_X509_PORT=2116 server/x509/start.sh
+        run: KURRENTDB_IMAGE=docker.io/kurrentplatform/kurrentdb:26.2 CERTS_DIR="$RUNNER_TEMP/x509-certs" KURRENTDB_X509_PORT=2116 server/x509/start.sh
 
       - name: Build
-        if: steps.license.outputs.available == 'true'
         run: swift build --build-tests
 
       - name: Swift Testing
-        if: steps.license.outputs.available == 'true'
         env:
           KURRENTDB_X509_CERTS_DIR: ${{ runner.temp }}/x509-certs
           KURRENTDB_X509_PORT: "2116"
         run: swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter X509Tests
 
       - name: Server logs
-        if: failure() && steps.license.outputs.available == 'true'
+        if: failure()
         run: docker logs kurrentdb-x509
 
   # Offline build + MockClientTests on additional Linux distributions.
