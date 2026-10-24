@@ -74,14 +74,6 @@ let benchmarks: @Sendable () -> Void = {
         }
     }
 
-    // MARK: ClientSettings — localhost factory
-
-    Benchmark("ClientSettings/localhost") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(ClientSettings.localhost())
-        }
-    }
-
     // MARK: ClientSettings — parse single-node connection string
 
     Benchmark("ClientSettings/parse-single-node") { benchmark in
@@ -100,68 +92,5 @@ let benchmarks: @Sendable () -> Void = {
         }
     }
 
-    // MARK: ClientSettings — builder chaining
-
-    Benchmark("ClientSettings/builder-chain") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(
-                ClientSettings.localhost()
-                    .secure(false)
-                    .tlsVerifyCert(false)
-                    .authenticated(.credentials(username: "admin", password: "changeit"))
-                    .connectionName("benchmark-client")
-            )
-        }
-    }
-
-    // MARK: Streams.Append.Options — default construction
-
-    Benchmark("Streams.Append.Options/default") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(Streams<SpecifiedStream>.Append.Options())
-        }
-    }
-
-    // MARK: Streams.Append.Options — with revision
-
-    Benchmark("Streams.Append.Options/with-revision") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole({
-                var options = Streams<SpecifiedStream>.Append.Options()
-                options.expectedRevision = .streamExists
-                return options
-            }())
-        }
-    }
-
-    // MARK: Streams.Read.Options — default construction
-
-    Benchmark("Streams.Read.Options/default") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(Streams<SpecifiedStream>.Read.Options())
-        }
-    }
-
-    // MARK: Streams.Read.Options — configure chain
-
-    Benchmark("Streams.Read.Options/configure-chain") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole({
-                var options = Streams<SpecifiedStream>.Read.Options()
-                options.direction = .backward
-                options.revision = .end
-                options.limit = 100
-                options.resolveLinks = true
-                return options
-            }())
-        }
-    }
-
-    // MARK: StreamIdentifier — creation
-
-    Benchmark("StreamIdentifier/create") { benchmark in
-        for _ in benchmark.scaledIterations {
-            blackHole(StreamIdentifier(name: "orders-aggregate-abc-123"))
-        }
-    }
+    codecBenchmarks()
 }
