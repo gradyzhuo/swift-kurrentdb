@@ -485,7 +485,7 @@ cp .env.example .env    # set KURRENTDB_ADMIN_PASSWORD and KURRENTDB_OPS_PASSWOR
 docker compose up -d
 ```
 
-The first start writes a CA to `server/standalone/certs/ca/ca.crt`; connect with `esdb://admin:<password>@localhost:2113?tls=true&tlsCaFile=<path to ca.crt>`. Manage users in the Admin UI at https://localhost:2113 or with `client.users`.
+The first start writes a CA to `server/standalone/certs/ca/ca.crt`; connect with `esdb://admin:<password>@localhost:2113?tls=true&tlsCaFile=<path to ca.crt>`, percent-encoding the password if it holds characters such as `@`, `/`, `?`, `#`, `%` or spaces. Manage users in the Admin UI at https://localhost:2113 or with `client.users`. If `.env` sets `KURRENTDB_PORT`, use that port instead of 2113.
 
 Or a single insecure node for quick testing:
 

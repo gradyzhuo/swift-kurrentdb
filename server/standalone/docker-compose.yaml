@@ -8,6 +8,9 @@
 #
 #   esdb://admin:<password>@localhost:2113?tls=true&tlsCaFile=<path to>/certs/ca/ca.crt
 #
+# Replace 2113 with KURRENTDB_PORT if .env changes it, and percent-encode the password if it
+# holds characters such as '@', '/', '?', '#', '%' or spaces ('@' as %40, and so on).
+#
 # The admin and ops passwords from .env are applied when the node creates those users, on its
 # first start with an empty data volume. Change them later in the Admin UI
 # (https://localhost:2113, Users) or with client.users; editing .env afterwards has no effect
@@ -21,12 +24,18 @@ services:
     image: eventstore/es-gencert-cli:1.0.2
     entrypoint: bash
     user: "0:0"
-    # Keeps existing certificates, so clients holding ca.crt keep working across restarts.
+    # Keeps existing certificates, so clients holding ca.crt keep working across restarts. A new
+    # CA also replaces the node certificate, which must be signed by it. The node only gets
+    # ./certs/node and a copy of ca.crt in ./certs/trusted, never the CA key; the node key
+    # belongs to the user the KurrentDB image runs as (1001).
     command: >
       -c "cd /certs
-      && if [ ! -f ca/ca.crt ]; then es-gencert-cli create-ca; fi
-      && if [ ! -f node/node.crt ]; then es-gencert-cli create-node -ca-certificate ca/ca.crt -ca-key ca/ca.key -out ./node -ip-addresses 127.0.0.1 -dns-names localhost; fi
-      && chmod 755 ca node && chmod 644 ca/* node/*"
+      && if [ ! -f ca/ca.crt ] || [ ! -f ca/ca.key ]; then rm -rf ca node && es-gencert-cli create-ca; fi
+      && if [ ! -f node/node.crt ] || [ ! -f node/node.key ]; then rm -rf node && es-gencert-cli create-node -ca-certificate ca/ca.crt -ca-key ca/ca.key -out ./node -ip-addresses 127.0.0.1 -dns-names localhost; fi
+      && mkdir -p trusted && cp ca/ca.crt trusted/ca.crt
+      && chmod 755 ca node trusted && chmod 644 ca/ca.crt node/node.crt trusted/ca.crt
+      && chown 0:0 ca/ca.key && chmod 600 ca/ca.key
+      && chown 1001:1001 node/node.key && chmod 600 node/node.key"
     volumes:
       - ./certs:/certs
 
@@ -37,7 +46,7 @@ services:
       - KURRENTDB_CLUSTER_SIZE=1
       - KURRENTDB_RUN_PROJECTIONS=All
       - KURRENTDB_START_STANDARD_PROJECTIONS=true
-      - KURRENTDB_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
+      - KURRENTDB_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/trusted
       - KURRENTDB_CERTIFICATE_FILE=/certs/node/node.crt
       - KURRENTDB_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node/node.key
       - KURRENTDB_ADVERTISE_HOST_TO_CLIENT_AS=localhost
@@ -52,7 +61,8 @@ services:
     ports:
       - 127.0.0.1:${KURRENTDB_PORT:-2113}:2113
     volumes:
-      - ./certs:/certs:ro
+      - ./certs/node:/certs/node:ro
+      - ./certs/trusted:/certs/trusted:ro
       - data:/var/lib/kurrentdb
     depends_on:
       certs:
