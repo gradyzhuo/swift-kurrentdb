@@ -174,7 +174,10 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameter configure: Closure to configure ``Delete/Options`` (expected revision). Defaults to no-op.
     /// - Returns: A `Delete.Response` with the resulting stream position.
-    /// - Throws: `KurrentError` if the delete fails or a revision conflict occurs.
+    /// - Throws: `KurrentError.wrongExpectedVersion(expected:current:)` when the stream does not match
+    ///   the expected revision, with `current` set to `.noStream` when the stream does not exist;
+    ///   `KurrentError.resourceDeleted` when the stream is already deleted or tombstoned; another
+    ///   `KurrentError` for any other failure.
     @discardableResult
     public func delete(configure: @Sendable (inout Delete.Options) -> Void = { _ in }) async throws(KurrentError) -> Delete.Response {
         var options = Delete.Options()
@@ -187,7 +190,13 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///
     /// - Parameter configure: Closure to configure ``Tombstone/Options`` (expected revision). Defaults to no-op.
     /// - Returns: A `Tombstone.Response` with the resulting stream position.
-    /// - Throws: `KurrentError` if the tombstone operation fails or a revision conflict occurs.
+    /// - Throws: `KurrentError.wrongExpectedVersion(expected:current:)` when the stream does not match
+    ///   the expected revision, with `current` set to `.noStream` when the stream does not exist;
+    ///   `KurrentError.resourceDeleted` when the stream is already tombstoned, or soft-deleted and
+    ///   `expectedRevision` is `.streamExists`; another `KurrentError` for any other failure.
+    ///
+    /// With `.any` or `.noStream` the server tombstones a stream that never existed, which reserves
+    /// the name for good. Use `.streamExists` to require that the stream exists.
     @discardableResult
     public func tombstone(configure: @Sendable (inout Tombstone.Options) -> Void = { _ in }) async throws(KurrentError) -> Tombstone.Response {
         var options = Tombstone.Options()
