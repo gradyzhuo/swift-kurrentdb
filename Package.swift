@@ -107,6 +107,9 @@ let package = Package(
             name: "OfflineBenchmarks",
             dependencies: [
                 "KurrentDB",
+                // The codec benchmarks build and parse the wire messages directly.
+                "GRPCEncapsulates",
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "Benchmark", package: "benchmark"),
             ],
             path: "Benchmarks/OfflineBenchmarks",
