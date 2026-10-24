@@ -50,7 +50,7 @@ public enum KurrentError: Error, Sendable {
     /// The client or server is in an invalid state for the requested operation.
     case illegalStateError(reason: String)
     /// The append was rejected because the stream revision did not match the expectation.
-    case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionOption)
+    case wrongExpectedVersion(expected: ExpectedRevisionOption, current: CurrentRevisionState)
     /// An `AppendRecords` transaction was rejected because one or more pre-commit consistency checks
     /// failed. All failing checks are reported so stale state can be refreshed in a single round trip.
     case consistencyViolation(violations: [ConsistencyViolation])
