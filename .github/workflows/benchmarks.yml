@@ -85,9 +85,12 @@ jobs:
 
       - uses: bencherdev/bencher@f80847436d7157936b40525db4c2a1064124f04a # v0.6.13 (was @main)
       # Uploads to Bencher; the perf page (see BENCHER_PROJECT) keeps the history per commit.
-      # On main a t-test threshold flags a run whose latency falls outside the 99% band of
-      # the last 64 runs, and --error-on-alert turns that alert into a failed job. Other branches
-      # (manual runs) are uploaded without thresholds so they never fail on noise.
+      # On main two thresholds apply, and --error-on-alert turns either alert into a failed job:
+      # - latency: a t-test flags a run outside the 99% band of the last 64 runs.
+      # - allocations: malloc counts are deterministic on a given platform, so a percentage test
+      #   against the previous run alone flags any increase over 1%. A deliberate increase alerts
+      #   once; the next run compares against the new count.
+      # Other branches (manual runs) are uploaded without thresholds so they never fail on noise.
       - name: Upload to Bencher
         env:
           BENCHER_API_KEY: ${{ secrets.BENCHER_API_KEY }}
@@ -99,6 +102,10 @@ jobs:
               --threshold-test t_test
               --threshold-max-sample-size 64
               --threshold-upper-boundary 0.99
+              --threshold-measure allocations
+              --threshold-test percentage
+              --threshold-max-sample-size 1
+              --threshold-upper-boundary 0.01
               --thresholds-reset
               --error-on-alert
             )
