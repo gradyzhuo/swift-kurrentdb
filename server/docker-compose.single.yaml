@@ -34,7 +34,7 @@ services:
       - volumes-provisioner
 
   node1.kurrentdb:
-    image: ${KURRENTDB_IMAGE:-kurrentplatform/kurrentdb:26.2}
+    image: ${KURRENTDB_IMAGE:-docker.io/kurrentplatform/kurrentdb:26.2}
     container_name: node1.kurrentdb
     env_file:
       - vars.env

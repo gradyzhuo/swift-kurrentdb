@@ -64,7 +64,7 @@ docker run --rm -d -p 2113:2113 \
   -e KURRENTDB_START_STANDARD_PROJECTIONS=true \
   -e KURRENTDB_INSECURE=true \
   -e KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true \
-  docker.kurrent.io/kurrent-latest/kurrentdb:25.1
+  docker.io/kurrentplatform/kurrentdb:25.1
 ```
 
 ## Architecture

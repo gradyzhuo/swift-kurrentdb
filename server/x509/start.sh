@@ -17,7 +17,7 @@ set -euo pipefail
 : "${KURRENTDB_LICENSE_KEY:?KURRENTDB_LICENSE_KEY must be set: user certificates are a licensed KurrentDB feature}"
 
 here="$(cd "$(dirname "$0")" && pwd)"
-image="${KURRENTDB_IMAGE:-docker.kurrent.io/kurrent-latest/kurrentdb:26.1}"
+image="${KURRENTDB_IMAGE:-docker.io/kurrentplatform/kurrentdb:26.1}"
 port="${KURRENTDB_X509_PORT:-2116}"
 certs="${CERTS_DIR:-$here/certs}"
 name="kurrentdb-x509"

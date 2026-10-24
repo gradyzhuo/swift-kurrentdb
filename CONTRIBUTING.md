@@ -171,7 +171,7 @@ We love code contributions! Here's how to get started.
    ```bash
    docker run -d -p 2113:2113 \
      --name kurrent-test \
-     eventstore/eventstore:latest \
+     docker.io/kurrentplatform/kurrentdb:latest \
      --insecure --enable-atom-pub-over-http
    ```
 
