@@ -261,4 +261,25 @@ struct StreamsReadTests: Sendable {
                 }
         }
     }
+
+    @Test("Reading a tombstoned stream throws resourceDeleted, buffered and lazy")
+    func testReadTombstonedStreamThrowsResourceDeleted() async throws {
+        let streamName = UUID().uuidString
+        let client = KurrentDBClient(settings: settings)
+
+        try await client.streams(specified: streamName)
+            .append(events: [EventData(eventType: "Tombstone-Event", data: Data(), contentType: .json)]) {
+                $0.expectedRevision = .any
+            }
+        try await client.streams(specified: streamName).tombstone()
+
+        // The buffered read receives the server's stream-deleted status inside the response
+        // stream; it used to surface there as a raw RPCError.
+        await #expect(throws: KurrentError.resourceDeleted(resource: streamName)) {
+            for try await _ in try await client.streams(specified: streamName).read() {}
+        }
+        await #expect(throws: KurrentError.resourceDeleted(resource: streamName)) {
+            for try await _ in client.streams(specified: streamName).read().lazy {}
+        }
+    }
 }

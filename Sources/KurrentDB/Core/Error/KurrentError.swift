@@ -231,20 +231,9 @@ extension Error where Self: Equatable {
 
 extension RPCError {
     func rethrow(usage: String) throws(KurrentError) {
-        // 0. AppendRecords (v2) reports failed consistency checks as packed status details.
-        if let violation = KurrentError.consistencyViolation(from: self) {
-            throw violation
-        }
-
-        // 1. Check metadata exception (server-specific error types)
-        if let exception = metadata.first(where: { $0.key == "exception" })?.value {
-            switch exception {
-            case "stream-deleted":
-                let streamName = metadata.first(where: { $0.key == "stream-name" })?.value.encoded() ?? "unknown"
-                throw .resourceDeleted(resource: streamName)
-            default:
-                break
-            }
+        // 0–1. Server-specific errors carried in status details or the `exception` trailer.
+        if let serverException = KurrentError.serverException(from: self) {
+            throw serverException
         }
 
         // 2. Map gRPC status codes to specific KurrentError cases
@@ -283,6 +272,38 @@ extension RPCError {
             throw .grpcError(cause: self)
         }
     }
+}
+
+extension KurrentError {
+    /// The domain error the server reported in `rpcError`, or `nil` when it carries none.
+    ///
+    /// Covers what the server attaches beyond the status code: AppendRecords consistency
+    /// violations packed in the status details, and the `exception` trailer.
+    static func serverException(from rpcError: RPCError) -> KurrentError? {
+        // AppendRecords (v2) reports failed consistency checks as packed status details.
+        if let violation = consistencyViolation(from: rpcError) {
+            return violation
+        }
+
+        let metadata = rpcError.metadata
+        switch metadata.first(where: { $0.key == "exception" })?.value {
+        case "stream-deleted":
+            let streamName = metadata.first(where: { $0.key == "stream-name" })?.value.encoded() ?? "unknown"
+            return .resourceDeleted(resource: streamName)
+        default:
+            return nil
+        }
+    }
+}
+
+/// Maps an error that ends a streamed response to the server's domain error, when it carries one.
+///
+/// A read's response stream can end with a status the server rejected the call with, e.g.
+/// `stream-deleted` for a tombstoned stream. Only those server exceptions are mapped; every other
+/// error, including a post-acceptance deadline, reaches the consumer unchanged.
+package func serverExceptionOrOriginal(_ error: any Error) -> any Error {
+    guard let rpcError = error as? RPCError else { return error }
+    return KurrentError.serverException(from: rpcError) ?? error
 }
 
 extension IOError {
