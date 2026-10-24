@@ -104,6 +104,8 @@ jobs:
     needs: [versions, symbol-graph]
     runs-on: ubuntu-latest
     container: swift:6.4-bookworm
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact_id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
@@ -125,7 +127,8 @@ jobs:
           test -f _site/documentation/kurrentdb/index.html
           test -f _site/main/documentation/kurrentdb/index.html
 
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - id: upload
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
 
@@ -146,5 +149,44 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}documentation/kurrentdb/
     steps:
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      # Deploys the artifact the way actions/deploy-pages does, but with a build version unique to
+      # this run. deploy-pages uses the commit SHA, so a release tag on the commit main already
+      # deployed (the usual release flow) reported success while Pages kept serving main's
+      # artifact, which lists no such release.
       - id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          ARTIFACT_ID: ${{ needs.site.outputs.artifact_id }}
+        with:
+          script: |
+            const version = `${context.sha}-${context.runId}-${process.env.GITHUB_RUN_ATTEMPT}`
+            const { data: created } = await github.request('POST /repos/{owner}/{repo}/pages/deployments', {
+              ...context.repo,
+              artifact_id: Number(process.env.ARTIFACT_ID),
+              pages_build_version: version,
+              oidc_token: await core.getIDToken(),
+            })
+            const id = created.id ?? created.status_url.split('/').pop()
+            core.info(`Created Pages deployment ${id} for build version ${version}`)
+            core.setOutput('page_url', created.page_url)
+
+            const failed = ['deployment_failed', 'deployment_content_failed', 'deployment_cancelled', 'deployment_lost']
+            const deadline = Date.now() + 10 * 60 * 1000
+            while (true) {
+              await new Promise(resolve => setTimeout(resolve, 5000))
+              const { data } = await github.request('GET /repos/{owner}/{repo}/pages/deployments/{id}', { ...context.repo, id })
+              if (data.status === 'succeed') {
+                core.info('Deployed')
+                return
+              }
+              if (failed.includes(data.status)) {
+                core.setFailed(`Pages deployment ${id} ended with ${data.status}`)
+                return
+              }
+              if (Date.now() > deadline) {
+                await github.request('POST /repos/{owner}/{repo}/pages/deployments/{id}/cancel', { ...context.repo, id })
+                core.setFailed(`Pages deployment ${id} timed out (last status: ${data.status}) and was cancelled`)
+                return
+              }
+              core.info(`Status: ${data.status}`)
+            }
