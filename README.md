@@ -43,7 +43,7 @@ Add to your `Package.swift`:
 ```swift
 // 2.x — current stable, target-based API
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.5.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.0")
 ]
 ```
 
