@@ -24,7 +24,7 @@ extension KurrentError {
             }
         } ?? .any
 
-        let currentRevision: CurrentRevisionOption = wrongResult.currentRevisionOption.map {
+        let currentRevision: CurrentRevisionState = wrongResult.currentRevisionOption.map {
             switch $0 {
             case .currentNoStream:
                 .noStream
