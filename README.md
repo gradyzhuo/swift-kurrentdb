@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgradyzhuo%2Fswift-kurrentdb%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](Licence)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Swift Package Index](https://img.shields.io/badge/Swift%20Package%20Index-available-brightgreen)](https://swiftpackageindex.com/gradyzhuo/swift-kurrentdb)
 [![Swift-build-testing](https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml/badge.svg)](https://github.com/gradyzhuo/swift-kurrentdb/actions/workflows/swift-build-testing.yml)
 [![codecov](https://codecov.io/gh/gradyzhuo/swift-kurrentdb/graph/badge.svg)](https://codecov.io/gh/gradyzhuo/swift-kurrentdb)
@@ -516,7 +516,7 @@ Contributions are welcome! Whether it's bug reports, feature requests, documenta
 
 ## License
 
-MIT License — see [Licence](Licence) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
