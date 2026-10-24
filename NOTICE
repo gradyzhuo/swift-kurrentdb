@@ -1,0 +1,103 @@
+# NOTICE
+
+swift-kurrentdb is licensed under the MIT License; see `LICENSE`.
+
+The package redistributes Protocol Buffer definitions it does not own. They
+live under `proto/` and are the input to the generated code in
+`Sources/_GRPCProtobufGenerated/`. This file records where each group of
+files came from, the license it was published under, and how the copies in
+this repository differ from upstream.
+
+## proto/kurrentdb/v1/ — KurrentDB v1 gRPC API
+
+Files: `cluster.proto`, `gossip.proto`, `monitoring.proto`,
+`operations.proto`, `persistent.proto`, `projections.proto`,
+`redaction.proto`, `serverfeatures.proto`, `shared.proto`, `streams.proto`,
+`users.proto`.
+
+Source: https://github.com/EventStore/EventStore, directory
+`src/Protos/Grpc/`, tag `oss-v23.10.0`.
+
+License: the EventStoreDB License as published at that tag, which is the
+3-clause BSD license. Copyright (c) 2011-2023, Event Store Ltd. All rights
+reserved. The license text is reproduced at the end of this file.
+
+Local changes: `import` paths are prefixed with `kurrentdb/v1/` and the
+`java_package` option differs. Messages and services are unchanged.
+
+The same service definitions are also published by Kurrent, Inc. under the
+Apache License 2.0 in the official client repositories, for example
+https://github.com/kurrent-io/KurrentDB-Client-Dotnet and
+https://github.com/kurrent-io/KurrentDB-Client-Go, and under the MIT License
+in https://github.com/kurrent-io/KurrentDB-Client-Rust.
+
+## proto/kurrent/rpc/ and proto/kurrentdb/v2/streams/ — KurrentDB v2 gRPC API
+
+Files: `kurrent/rpc/errors.proto`, `kurrent/rpc/rpc.proto`,
+`kurrentdb/v2/streams/errors.proto`, `kurrentdb/v2/streams/streams.proto`.
+
+Source: https://github.com/kurrent-io/KurrentDB-Client-Dotnet, directory
+`src/KurrentDB.Client/Core/proto/`, as of commit `0407e281` (2026-05-19).
+
+License: Apache License 2.0. Copyright 2011-2025 Kurrent, Inc. The license
+text is in `LICENSES/Apache-2.0.txt`.
+
+Local changes: the files are copied verbatim except that in
+`kurrent/rpc/rpc.proto` the `ErrorMetadata error` extension of
+`google.protobuf.EnumValueOptions` uses field number 50000 instead of 2113.
+
+## proto/google/rpc/code.proto and proto/kurrentdb/v1/status.proto
+
+These are Google API common protos. Each file carries its own Apache License
+2.0 header, Copyright Google LLC; the license text is in
+`LICENSES/Apache-2.0.txt`.
+
+`google/rpc/code.proto`: from https://github.com/googleapis/googleapis,
+`google/rpc/code.proto`. It matches the current upstream file except for the
+year in the copyright header (2022 here).
+
+`kurrentdb/v1/status.proto`: from https://github.com/EventStore/EventStore,
+`src/Protos/Grpc/status.proto`, tag `oss-v23.10.0` — the same source as the
+v1 API above. That file is Event Store's modified copy of Google's
+`google/rpc/status.proto`: `code` is a `google.rpc.Code` instead of an
+`int32`, `details` is a single `google.protobuf.Any` instead of a repeated
+field, and it imports `code.proto` and sets `cc_enable_arenas`. Our only
+change to Event Store's copy is that it imports `google/rpc/code.proto` by
+that path.
+
+## Affiliation
+
+Kurrent, KurrentDB and EventStoreDB are product names of Kurrent, Inc.
+(formerly Event Store Ltd). swift-kurrentdb is an independent client
+library and is not affiliated with or endorsed by Kurrent, Inc.
+
+---
+
+## EventStoreDB License (3-clause BSD), as applied to proto/kurrentdb/v1/
+
+Copyright (c) 2011-2023, Event Store Ltd. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+Neither the name of Event Store Ltd nor the names of its contributors may be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

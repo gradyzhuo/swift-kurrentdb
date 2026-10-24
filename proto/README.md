@@ -9,3 +9,5 @@ swift package --allow-writing-to-package-directory \
         proto/kurrent/rpc \
         proto/kurrentdb/v1 \
         proto/kurrentdb/v2/streams
+
+The `.proto` files in this directory are copied from upstream Kurrent, Event Store and Google repositories; see `NOTICE` at the repository root for their sources, licenses and local modifications.
