@@ -1,0 +1,70 @@
+# A single TLS node for servers that refuse to form an unlicensed cluster.
+#
+# KurrentDB 26.2+ shuts down a multi-node cluster that has no license ("A license is required to
+# use the Multi-Node Cluster feature"), while a single node runs without one. This file runs that
+# single node with the same certificates, credentials and settings as docker-compose.yaml, and
+# publishes it on host ports 2111, 2112 and 2113. Tests and CI written against the 3-node layout
+# therefore reach the same node through every seed, and gossip reports one member advertised as
+# 127.0.0.1:2113.
+# Its own project name keeps its volumes apart from the cluster's when both files are used locally.
+name: kurrentdb-single
+
+services:
+  volumes-provisioner:
+    image: hasnat/volumes-provisioner
+    environment:
+      PROVISION_DIRECTORIES: "1000:1000:0755:/tmp/certs"
+    volumes:
+      - certs:/tmp/certs
+    network_mode: none
+
+  setup:
+    image: eventstore/es-gencert-cli:1.0.2
+    entrypoint: bash
+    user: "1000:1000"
+    command: >
+      -c "mkdir -p ./certs && cd /certs
+      && es-gencert-cli create-ca
+      && es-gencert-cli create-node -out ./node1 -ip-addresses 127.0.0.1 -dns-names localhost,node1.kurrentdb
+      && find . -type f -print0 | xargs -0 chmod 666"
+    container_name: setup
+    volumes:
+      - certs:/certs
+    depends_on:
+      - volumes-provisioner
+
+  node1.kurrentdb:
+    image: ${KURRENTDB_IMAGE:-kurrentplatform/kurrentdb:26.2}
+    container_name: node1.kurrentdb
+    env_file:
+      - vars.env
+    environment:
+      # Overrides vars.env, which is written for the 3-node cluster.
+      - KURRENTDB_CLUSTER_SIZE=1
+      - KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS=2113
+      - KURRENTDB_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
+      - KURRENTDB_CERTIFICATE_FILE=/certs/node1/node.crt
+      - KURRENTDB_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node1/node.key
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail --insecure https://localhost:2113/health/live || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    ports:
+      - 127.0.0.1:2111:2113
+      - 127.0.0.1:2112:2113
+      - 127.0.0.1:2113:2113
+    volumes:
+      - certs:/certs
+      - node1-data:/var/lib/kurrentdb
+    depends_on:
+      - setup
+    restart: always
+
+volumes:
+  certs:
+  node1-data:

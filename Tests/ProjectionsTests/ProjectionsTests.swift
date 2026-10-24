@@ -246,7 +246,10 @@ struct ProjectionsTests: Sendable {
         }
     }
 
-    @Test("List transient projections via UnspecifiedTransientProjectionTarget")
+    // KurrentDB 26.2 rejects creating transient projections ("Transient projections are deprecated.
+    // Use the secondary indexing query API."); CI sets the flag to false on that row only.
+    @Test("List transient projections via UnspecifiedTransientProjectionTarget",
+          .disabled(if: ProcessInfo.processInfo.environment["KURRENTDB_SUPPORTS_TRANSIENT_PROJECTIONS"] == "false"))
     func listTransientProjections() async throws {
         let name = "test_listTransient_\(UUID())"
         try await client.projections(of: .transient(name: name)).create(query: "fromAll().outputState()")

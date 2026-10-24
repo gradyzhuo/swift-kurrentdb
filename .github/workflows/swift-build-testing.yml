@@ -28,11 +28,20 @@ jobs:
           - { version: "25.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:25.1",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true",  supports_append_records: "false" }
           - { version: "26.0",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.0",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true",  supports_append_records: "false" }
           - { version: "26.1",   image: "docker.kurrent.io/kurrent-latest/kurrentdb:26.1",            compose_file: "server/docker-compose.yaml",             supports_multi_streams: "true",  supports_append_records: "true"  }
+          # 26.2+ shuts down an unlicensed multi-node cluster ("A license is required to use the Multi-Node Cluster
+          # feature"), so 26.2 runs as one TLS node published on 2111-2113 (server/docker-compose.single.yaml). 26.2
+          # also rejects creating transient projections ("Transient projections are deprecated"). docker.kurrent.io has
+          # no x64 26.2 release image yet (kurrent-latest stops at 26.1.1, kurrent-preview has only arm64 builds and an
+          # x64 rc), so the image comes from Kurrent's official Docker Hub namespace; move it to
+          # docker.kurrent.io/kurrent-latest once that tag exists.
+          - { version: "26.2",   image: "kurrentplatform/kurrentdb:26.2",                             compose_file: "server/docker-compose.single.yaml",      supports_multi_streams: "true",  supports_append_records: "true", supports_transient_projections: "false" }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
       KURRENTDB_SUPPORTS_MULTI_STREAMS: ${{ matrix.kurrentdb.supports_multi_streams }}
       KURRENTDB_SUPPORTS_APPEND_RECORDS: ${{ matrix.kurrentdb.supports_append_records }}
+      # Unset on every row but 26.2, so the transient projection test runs everywhere else.
+      KURRENTDB_SUPPORTS_TRANSIENT_PROJECTIONS: ${{ matrix.kurrentdb.supports_transient_projections }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)

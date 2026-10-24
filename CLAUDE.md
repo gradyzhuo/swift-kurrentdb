@@ -295,7 +295,7 @@ The `Sources/_GRPCProtobufGenerated/` directory contains auto-generated code fro
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/swift-build-testing.yml`):
-- Tests against Swift 6.0–6.4 and KurrentDB 24.10, 25.1, 26.0, 26.1 (3-node TLS cluster)
+- Tests against Swift 6.0–6.4 and KurrentDB 24.10, 25.1, 26.0, 26.1 (3-node TLS cluster) and 26.2 (single TLS node, since 26.2 needs a license for a multi-node cluster)
 - Compiles the documentation examples (`scripts/generate-doc-snippets.py` + `DocSnippetsTests`)
 - Separate jobs: `KurrentDBPool` live suite, X.509 user certificates (runs only when the `KURRENTDB_LICENSE_KEY` secret is set), offline builds on Amazon Linux / Debian
 - Enables code coverage reporting to Codecov
