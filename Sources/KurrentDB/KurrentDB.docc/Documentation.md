@@ -68,6 +68,13 @@ for try await result in subscription.events {
 
 ## What's new
 
+### 2.6
+
+- **Typed errors for deleted streams and revision conflicts.** A `read()` the server rejects throws the same `KurrentError` as `read().lazy` already did, instead of a raw `RPCError`: `resourceDeleted` for a tombstoned stream, `accessDenied` without permission. `delete` and `tombstone` report a revision conflict as `KurrentError.wrongExpectedVersion(expected:current:)`, the same case `append` throws, with `current` set to `.noStream` when the stream does not exist. **Upgrade note:** code that matched `KurrentError.grpcError` for a delete or tombstone revision conflict now receives `wrongExpectedVersion`.
+- **`CurrentRevisionState`.** `KurrentError.CurrentRevisionOption` is renamed `KurrentError.CurrentRevisionState`, because it is the server's observed state, not an option. The old name remains as a deprecated typealias.
+- **KurrentDB 26.2.** CI now also tests against KurrentDB 26.2, on a single node: 26.2 needs a Kurrent license to run a multi-node cluster. 26.2 rejects creating transient projections as deprecated, so `create(query:)` on a `.transient(name:)` target throws there.
+- **Licensing.** The license file is now `LICENSE`, and a new `NOTICE` records the source and license of every bundled `.proto` file. The unused schema registry protos, the only ones under the Kurrent License v1, are removed. They were package-level only.
+
 ### 2.5
 
 - **Lazy reads and backpressured subscriptions.** `read().lazy` streams events as you iterate and ends the RPC when the loop does, so memory no longer grows with the result; `read().buffered` (and plain `read()`) keep today's behaviour. Subscriptions are now backpressured with bounded memory. See <doc:Reading-events>.
