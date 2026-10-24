@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Starts a single KurrentDB node that accepts X.509 user certificates, for X509Tests.
 #
-# User certificate authentication is a licensed KurrentDB feature: the node refuses to
-# start without a valid key in KURRENTDB_LICENSE_KEY.
+# KurrentDB 26.2+ accepts user certificates without a license. Older servers treat them as a
+# licensed feature and refuse to start without a key: set KURRENTDB_LICENSE_KEY for those.
 #
 # Writes to $CERTS_DIR (default: server/x509/certs):
 #   ca/ca.crt, ca/ca.key         CA shared by the node and the user
@@ -14,10 +14,9 @@
 #     swift test --filter X509Tests
 set -euo pipefail
 
-: "${KURRENTDB_LICENSE_KEY:?KURRENTDB_LICENSE_KEY must be set: user certificates are a licensed KurrentDB feature}"
 
 here="$(cd "$(dirname "$0")" && pwd)"
-image="${KURRENTDB_IMAGE:-docker.io/kurrentplatform/kurrentdb:26.1}"
+image="${KURRENTDB_IMAGE:-docker.io/kurrentplatform/kurrentdb:26.2}"
 port="${KURRENTDB_X509_PORT:-2116}"
 certs="${CERTS_DIR:-$here/certs}"
 name="kurrentdb-x509"
@@ -44,6 +43,12 @@ openssl x509 -req -in "$certs/user-admin/user.csr" \
     -extfile <(printf "keyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=clientAuth\n")
 chmod 644 "$certs"/*/*
 
+# Pass a license only when one is given; 26.2+ does not need it for user certificates.
+license=()
+if [ -n "${KURRENTDB_LICENSE_KEY:-}" ]; then
+    license=(-e "KURRENTDB_LICENSING__LICENSE_KEY=$KURRENTDB_LICENSE_KEY")
+fi
+
 docker rm -f "$name" >/dev/null 2>&1 || true
 docker run -d --name "$name" -p "127.0.0.1:$port:2113" -v "$certs:/certs:ro" \
     -e KURRENTDB_CLUSTER_SIZE=1 \
@@ -53,7 +58,7 @@ docker run -d --name "$name" -p "127.0.0.1:$port:2113" -v "$certs:/certs:ro" \
     -e KURRENTDB_ADVERTISE_HOST_TO_CLIENT_AS=127.0.0.1 \
     -e KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS="$port" \
     -e KURRENTDB_USER_CERTIFICATES__ENABLED=true \
-    -e KURRENTDB_LICENSING__LICENSE_KEY="$KURRENTDB_LICENSE_KEY" \
+    ${license[@]+"${license[@]}"} \
     "$image" >/dev/null
 
 for _ in $(seq 1 60); do

@@ -220,7 +220,7 @@ Tests/
 ├── PersistentSubscriptionsTests/# Persistent subscription tests
 ├── UsersTests, OperationsTests, GossipTests, MonitoringTests
 ├── KurrentDBPoolTests/          # Pool tests (need independent instances)
-├── X509Tests/                   # User certificate auth (needs a licensed node: server/x509/start.sh)
+├── X509Tests/                   # User certificate auth (needs the node from server/x509/start.sh; 26.2+ needs no license)
 ├── MockClientTests/             # Offline tests against KurrentDBClientProtocol
 ├── KurrentCoreTests/            # Core functionality tests
 └── DocSnippetsTests/            # Compiles every Swift example in the docs
@@ -297,7 +297,7 @@ The `Sources/_GRPCProtobufGenerated/` directory contains auto-generated code fro
 GitHub Actions workflow (`.github/workflows/swift-build-testing.yml`):
 - Tests against Swift 6.0–6.4 and KurrentDB 24.10, 25.1, 26.0, 26.1 (3-node TLS cluster) and 26.2 (single TLS node, since 26.2 needs a license for a multi-node cluster)
 - Compiles the documentation examples (`scripts/generate-doc-snippets.py` + `DocSnippetsTests`)
-- Separate jobs: `KurrentDBPool` live suite, X.509 user certificates (runs only when the `KURRENTDB_LICENSE_KEY` secret is set), offline builds on Amazon Linux / Debian
+- Separate jobs: `KurrentDBPool` live suite, X.509 user certificates (against an unlicensed 26.2 node), offline builds on Amazon Linux / Debian
 - Enables code coverage reporting to Codecov
 - Uses Swift Testing framework with parallel execution disabled
 
