@@ -306,6 +306,22 @@ package func serverExceptionOrOriginal(_ error: any Error) -> any Error {
     return KurrentError.serverException(from: rpcError) ?? error
 }
 
+/// Maps the error that ends a buffered read's response stream.
+///
+/// A call the server rejected before accepting it (a status-only response, such as access denied
+/// or a tombstoned stream) is mapped like any rejected call, the same as `read().lazy` maps it.
+/// After the server accepted the call, only server exceptions are mapped
+/// (``serverExceptionOrOriginal(_:)``), so a post-acceptance deadline stays the RPC's own error.
+package func bufferedReadFailure(_ error: any Error, rejected: Bool) -> any Error {
+    guard rejected, let rpcError = error as? RPCError else { return serverExceptionOrOriginal(error) }
+    do {
+        try rpcError.rethrow(usage: "read")
+    } catch {
+        return error
+    }
+    return error
+}
+
 extension IOError {
     func rethrow(usage: String, origin: RPCError) throws(KurrentError) {
         switch errnoCode {

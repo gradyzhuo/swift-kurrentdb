@@ -40,4 +40,25 @@ struct ServerExceptionMappingTests {
             Issue.record("expected KurrentError.connectionClosed to pass through")
         }
     }
+
+    @Test("A rejected buffered read is mapped like any rejected call")
+    func rejectedReadIsFullyMapped() {
+        let denied = bufferedReadFailure(RPCError(code: .permissionDenied, message: "Access Denied"), rejected: true)
+        if case .accessDenied? = denied as? KurrentError {} else { Issue.record("expected accessDenied, got \(denied)") }
+
+        let deleted = bufferedReadFailure(streamDeleted("orders-1"), rejected: true)
+        if case .resourceDeleted("orders-1")? = deleted as? KurrentError {} else { Issue.record("expected resourceDeleted, got \(deleted)") }
+    }
+
+    @Test("After acceptance a buffered read maps only server exceptions")
+    func acceptedReadMapsOnlyServerExceptions() {
+        let denied = bufferedReadFailure(RPCError(code: .permissionDenied, message: "Access Denied"), rejected: false)
+        #expect((denied as? RPCError)?.code == .permissionDenied)
+
+        let deadline = bufferedReadFailure(RPCError(code: .deadlineExceeded, message: "RPC timed out"), rejected: false)
+        #expect((deadline as? RPCError)?.code == .deadlineExceeded)
+
+        let deleted = bufferedReadFailure(streamDeleted("orders-1"), rejected: false)
+        if case .resourceDeleted? = deleted as? KurrentError {} else { Issue.record("expected resourceDeleted, got \(deleted)") }
+    }
 }

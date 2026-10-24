@@ -41,7 +41,7 @@ extension Streams {
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<ServiceClient.UnderlyingService.Method.Read.Input>, callOptions: CallOptions, completion: @escaping @Sendable ((any Error)?) -> Void) async throws -> AsyncThrowingStream<Response, any Error> {
             let client = ServiceClient(wrapping: connection)
-            return try await client.read(request: request, options: callOptions) {
+            return try await client.read(request: request, options: callOptions) { response in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 continuation.onTermination = { termination in
                     if case let .finished(error) = termination {
@@ -51,12 +51,13 @@ extension Streams {
                     }
                 }
                 do {
-                    for try await message in $0.messages {
+                    for try await message in response.messages {
                         try continuation.yield(handle(message: message))
                     }
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: serverExceptionOrOriginal(error))
+                    let rejected = if case .failure = response.accepted { true } else { false }
+                    continuation.finish(throwing: bufferedReadFailure(error, rejected: rejected))
                 }
                 // Older grpc-swift ends the loop above quietly when the call deadline cancels this
                 // handler, and the call then returns a truncated result as if it were complete.
