@@ -477,6 +477,16 @@ docker compose up -d
 
 This generates TLS certificates automatically and starts nodes on ports 2111, 2112, and 2113.
 
+Or a single TLS node with your own admin and ops passwords, for developing an application against it:
+
+```bash
+cd server/standalone
+cp .env.example .env    # set KURRENTDB_ADMIN_PASSWORD and KURRENTDB_OPS_PASSWORD
+docker compose up -d
+```
+
+The first start writes a CA to `server/standalone/certs/ca/ca.crt`; connect with `esdb://admin:<password>@localhost:2113?tls=true&tlsCaFile=<path to ca.crt>`. Manage users in the Admin UI at https://localhost:2113 or with `client.users`.
+
 Or a single insecure node for quick testing:
 
 ```bash

@@ -1,0 +1,63 @@
+# A single KurrentDB node with TLS and authentication, for developing an application against it.
+#
+#   cp .env.example .env    # then set the passwords
+#   docker compose up -d
+#
+# The first start generates a CA and a node certificate into ./certs. Point the client at
+# ./certs/ca/ca.crt to verify the node, for example:
+#
+#   esdb://admin:<password>@localhost:2113?tls=true&tlsCaFile=<path to>/certs/ca/ca.crt
+#
+# The admin and ops passwords from .env are applied when the node creates those users, on its
+# first start with an empty data volume. Change them later in the Admin UI
+# (https://localhost:2113, Users) or with client.users; editing .env afterwards has no effect
+# until `docker compose down -v` deletes the data.
+#
+# KurrentDB 26.2+ runs a single node without a license.
+name: kurrentdb-standalone
+
+services:
+  certs:
+    image: eventstore/es-gencert-cli:1.0.2
+    entrypoint: bash
+    user: "0:0"
+    # Keeps existing certificates, so clients holding ca.crt keep working across restarts.
+    command: >
+      -c "cd /certs
+      && if [ ! -f ca/ca.crt ]; then es-gencert-cli create-ca; fi
+      && if [ ! -f node/node.crt ]; then es-gencert-cli create-node -ca-certificate ca/ca.crt -ca-key ca/ca.key -out ./node -ip-addresses 127.0.0.1 -dns-names localhost; fi
+      && chmod 755 ca node && chmod 644 ca/* node/*"
+    volumes:
+      - ./certs:/certs
+
+  kurrentdb:
+    image: ${KURRENTDB_IMAGE:-docker.io/kurrentplatform/kurrentdb:26.2}
+    container_name: kurrentdb-standalone
+    environment:
+      - KURRENTDB_CLUSTER_SIZE=1
+      - KURRENTDB_RUN_PROJECTIONS=All
+      - KURRENTDB_START_STANDARD_PROJECTIONS=true
+      - KURRENTDB_TRUSTED_ROOT_CERTIFICATES_PATH=/certs/ca
+      - KURRENTDB_CERTIFICATE_FILE=/certs/node/node.crt
+      - KURRENTDB_CERTIFICATE_PRIVATE_KEY_FILE=/certs/node/node.key
+      - KURRENTDB_ADVERTISE_HOST_TO_CLIENT_AS=localhost
+      - KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS=${KURRENTDB_PORT:-2113}
+      - KURRENTDB_DEFAULT_ADMIN_PASSWORD=${KURRENTDB_ADMIN_PASSWORD:?set KURRENTDB_ADMIN_PASSWORD in .env}
+      - KURRENTDB_DEFAULT_OPS_PASSWORD=${KURRENTDB_OPS_PASSWORD:?set KURRENTDB_OPS_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --insecure https://localhost:2113/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    ports:
+      - 127.0.0.1:${KURRENTDB_PORT:-2113}:2113
+    volumes:
+      - ./certs:/certs:ro
+      - data:/var/lib/kurrentdb
+    depends_on:
+      certs:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  data:
