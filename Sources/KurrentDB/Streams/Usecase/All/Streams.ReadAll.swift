@@ -71,7 +71,7 @@ extension Streams where Target == AllStreamsTarget {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: serverExceptionOrOriginal(error))
                 }
                 // Older grpc-swift ends the loop above quietly when the call deadline cancels this
                 // handler, and the call then returns a truncated result as if it were complete.

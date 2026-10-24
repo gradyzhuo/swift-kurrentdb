@@ -153,7 +153,7 @@ extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
             } catch {
                 // Older grpc-swift rethrows the handler's CancellationError instead of the deadline
                 // error; map it unless this task was cancelled on purpose (close()).
-                let error = deadlineOrOriginal(error)
+                let error = serverExceptionOrOriginal(deadlineOrOriginal(error))
                 // No-op for whichever side already resolved.
                 accepted.fail(error)
                 handoff.finish(throwing: error)
