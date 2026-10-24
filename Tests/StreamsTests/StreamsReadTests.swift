@@ -283,6 +283,26 @@ struct StreamsReadTests: Sendable {
         }
     }
 
+    @Test("A read of $all without credentials throws accessDenied, buffered and lazy")
+    func testRejectedReadThrowsAccessDenied() async throws {
+        // Same node and CA, but no credentials: the server rejects reading $all.
+        let anonymous = ClientSettings.localhost(ports: 2111, 2112, 2113)
+            .secure(true)
+            .tlsVerifyCert(false)
+            .certificate(source: .crtInBundle("ca", inBundle: .module)!)
+        let client = KurrentDBClient(settings: anonymous)
+        defer { try? client.shutdown() }
+
+        // A buffered read receives the rejection inside its response stream; it used to surface
+        // there as a raw RPCError while read().lazy already threw accessDenied.
+        await #expect(throws: KurrentError.accessDenied) {
+            for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }) {}
+        }
+        await #expect(throws: KurrentError.accessDenied) {
+            for try await _ in client.allStreams.read(configure: { $0.limit = 1 }).lazy {}
+        }
+    }
+
     // MARK: - Delete / tombstone revision conflicts
 
     private func isWrongExpectedVersion(_ error: any Error, expected isExpected: (KurrentError.ExpectedRevisionOption) -> Bool, current isCurrent: (UInt64?) -> Bool) -> Bool {

@@ -40,7 +40,7 @@ extension Streams where Target == AllStreamsTarget {
 
         package func send(connection: GRPCClient<Transport>, request: ClientRequest<UnderlyingRequest>, callOptions: CallOptions, completion: @Sendable @escaping ((any Error)?) -> Void) async throws -> Responses {
             let client = ServiceClient(wrapping: connection)
-            return try await client.read(request: request, options: callOptions) {
+            return try await client.read(request: request, options: callOptions) { response in
                 let (stream, continuation) = AsyncThrowingStream.makeStream(of: Response.self)
                 continuation.onTermination = { termination in
                     if case let .finished(error) = termination {
@@ -50,7 +50,7 @@ extension Streams where Target == AllStreamsTarget {
                     }
                 }
                 do {
-                    for try await message in $0.messages {
+                    for try await message in response.messages {
                         // Filtered `$all` reads interleave control frames (checkpoint, caught-up,
                         // fell-behind, positions). The read stream yields events only, so skip
                         // anything that isn't an event or a stream-not-found signal.
@@ -71,7 +71,8 @@ extension Streams where Target == AllStreamsTarget {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: serverExceptionOrOriginal(error))
+                    let rejected = if case .failure = response.accepted { true } else { false }
+                    continuation.finish(throwing: bufferedReadFailure(error, rejected: rejected))
                 }
                 // Older grpc-swift ends the loop above quietly when the call deadline cancels this
                 // handler, and the call then returns a truncated result as if it were complete.
