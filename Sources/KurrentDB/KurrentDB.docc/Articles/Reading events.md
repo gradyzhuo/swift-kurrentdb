@@ -98,6 +98,8 @@ do {
 }
 ```
 
+A stream that was tombstoned throws ``KurrentError/resourceDeleted(resource:)`` instead, and a read the server refuses — for example `$all` without credentials — throws ``KurrentError/accessDenied``. These also arrive while you iterate, whether you use `read()` or `read().lazy`.
+
 > Console:
 > reason: The name 'some-stream' of streams not found.
 

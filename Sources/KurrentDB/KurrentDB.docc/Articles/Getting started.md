@@ -277,7 +277,7 @@ let bearer = ClientSettings.localhost()
     .authenticated(.bearer(token: "eyJhbGciOi..."))
 ```
 
-With a client certificate (X.509), the client presents the certificate during the TLS handshake instead of sending an `Authorization` header. It needs a TLS connection, and it can only be set for the whole client, not per call. When `userCertFile` and `userKeyFile` are present, username and password in the connection string are ignored.
+With a client certificate (X.509), the client presents the certificate during the TLS handshake instead of sending an `Authorization` header. It needs a TLS connection, and it can only be set for the whole client, not per call. When `userCertFile` and `userKeyFile` are present, username and password in the connection string are ignored. KurrentDB 26.2 accepts user certificates without a license; older servers need one.
 
 ```swift
 let x509: ClientSettings = try .parse(
