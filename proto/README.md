@@ -8,5 +8,4 @@ swift package --allow-writing-to-package-directory \
         proto/google/rpc \
         proto/kurrent/rpc \
         proto/kurrentdb/v1 \
-        proto/kurrentdb/v2/registry \
         proto/kurrentdb/v2/streams
