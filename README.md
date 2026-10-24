@@ -516,7 +516,7 @@ Contributions are welcome! Whether it's bug reports, feature requests, documenta
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details. The Protocol Buffer definitions under `proto/` come from Kurrent and Event Store repositories; [NOTICE](NOTICE) lists their sources and licenses.
 
 ---
 
