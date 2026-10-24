@@ -139,6 +139,22 @@ for try await response in responses {
 
 The ``Streams/Append/Response`` returned by `append` carries the stream's new `currentRevision` and the commit `position`.
 
+### Deleting and tombstoning with an expected revision
+
+`delete` and `tombstone` take the same `expectedRevision`, and fail with the same ``KurrentError/wrongExpectedVersion(expected:current:)`` when the stream isn't in that state. `current` is the server's observed ``KurrentError/CurrentRevisionState``: `.noStream` when the stream doesn't exist, otherwise `.revision(_:)` with its last revision.
+
+```swift
+do {
+    try await client.streams(specified: "orders").delete {
+        $0.expectedRevision = .streamExists
+    }
+} catch KurrentError.wrongExpectedVersion(_, .noStream) {
+    // The stream does not exist, so there was nothing to delete.
+}
+```
+
+With `.any` or `.noStream`, tombstoning a stream that never existed succeeds and reserves the name for good; pass `.streamExists` to require that the stream exists.
+
 ## User credentials
 
 Credentials set on ``ClientSettings`` apply to every call:

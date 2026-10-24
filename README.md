@@ -431,13 +431,17 @@ Coverage is measured on every CI run against a live 3-node TLS KurrentDB cluster
 
 ### Optimistic Concurrency
 
-Streams write-side error paths are explicitly covered:
+Stream error paths are explicitly covered:
 
 | Scenario | Expected Error |
 |----------|---------------|
 | Append at stale revision (`.at(99)`, stream at 0) | `wrongExpectedVersion` |
 | Append with `.noStream` to an existing stream | `wrongExpectedVersion` |
 | Two concurrent writers at the same revision | One succeeds, one `wrongExpectedVersion` |
+| Delete or tombstone a missing stream with `.streamExists` | `wrongExpectedVersion` with `current: .noStream` |
+| Tombstone at stale revision (`.at(5)`, stream at 0) | `wrongExpectedVersion` with `current: .revision(0)` |
+| Read a tombstoned stream, buffered and lazy | `resourceDeleted` |
+| Read `$all` without credentials, buffered and lazy | `accessDenied` |
 
 ### Persistent Subscription Lifecycle
 
