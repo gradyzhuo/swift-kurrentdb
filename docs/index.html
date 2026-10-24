@@ -71,7 +71,7 @@
   <p lang="en">Add to your <code>Package.swift</code>:</p>
   <p lang="zh-Hant">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.5.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.0")
 ]</code></pre>
   <p class="note" lang="en">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note" lang="zh-Hant">🎉 <strong>2.0 已上線</strong> —— 目前推薦使用 target-based API。仍在 1.x？改用 <code>KurrentDB_V1</code>，原本的程式碼可以繼續運作，遷移節奏由你決定。</p>
@@ -85,7 +85,8 @@
     <div class="release-picker">
       <label class="visually-hidden" for="release-select"><span lang="en">Choose a release</span><span lang="zh-Hant">選擇版本</span></label>
       <select id="release-select">
-        <option value="v2.5" data-en="2.5 (latest)" data-zh="2.5（最新）">2.5 (latest)</option>
+        <option value="v2.6" data-en="2.6 (latest)" data-zh="2.6（最新）">2.6 (latest)</option>
+        <option value="v2.5" data-en="2.5" data-zh="2.5">2.5</option>
         <option value="v2.4" data-en="2.4" data-zh="2.4">2.4</option>
         <option value="v2.3" data-en="2.3" data-zh="2.3">2.3</option>
         <option value="v2.2" data-en="2.2" data-zh="2.2">2.2</option>
@@ -96,8 +97,59 @@
   </div>
 
   <!-- ===================================================================== -->
+  <article class="release" id="v2.6">
+    <div class="whats-new-tag"><span lang="en">Latest · v2.6.0</span><span lang="zh-Hant">最新 · v2.6.0</span></div>
+    <h3 class="release-title"><span lang="en">Typed errors for deleted streams and conflicts, and KurrentDB 26.2</span><span lang="zh-Hant">刪除的 stream 與版本衝突改成型別化錯誤，並支援 KurrentDB 26.2</span></h3>
+    <p class="lead" lang="en">
+      2.6 turns server errors that used to surface as raw gRPC errors into typed
+      <code>KurrentError</code>s, adds KurrentDB 26.2 to the tested servers, and documents the
+      source and license of every bundled <code>.proto</code> file. The public API is source
+      compatible with 2.5; read the upgrade notes if you match errors from <code>delete</code>,
+      <code>tombstone</code> or a buffered <code>read()</code>.
+    </p>
+    <p class="lead" lang="zh-Hant">
+      2.6 把原本以原始 gRPC 錯誤冒出來的伺服器錯誤，改成型別化的 <code>KurrentError</code>；
+      測試的伺服器加入 KurrentDB 26.2；並記錄每個內附 <code>.proto</code> 檔的來源與授權。
+      公開 API 與 2.5 原始碼相容；如果你有比對 <code>delete</code>、<code>tombstone</code>
+      或一般 <code>read()</code> 丟出的錯誤，請先看下面的升級注意事項。
+    </p>
+
+    <h4 class="subsection-title"><span lang="en">Typed errors</span><span lang="zh-Hant">型別化錯誤</span></h4>
+    <p lang="en">A <code>read()</code> the server rejects now throws the same <code>KurrentError</code> as <code>read().lazy</code>: <code>resourceDeleted</code> for a tombstoned stream, <code>accessDenied</code> without permission. <code>delete</code> and <code>tombstone</code> report a revision conflict as <code>wrongExpectedVersion(expected:current:)</code>, the same case <code>append</code> throws, with <code>current</code> set to <code>.noStream</code> when the stream does not exist.</p>
+    <p lang="zh-Hant">被伺服器拒絕的 <code>read()</code>，現在會丟出跟 <code>read().lazy</code> 一樣的 <code>KurrentError</code>：stream 被 tombstone 時是 <code>resourceDeleted</code>，沒有權限時是 <code>accessDenied</code>。<code>delete</code> 和 <code>tombstone</code> 遇到版本衝突時，改丟 <code>wrongExpectedVersion(expected:current:)</code>，跟 <code>append</code> 同一個 case；stream 不存在時 <code>current</code> 是 <code>.noStream</code>。</p>
+    <pre><code class="lang-swift">do {
+    try await client.streams(specified: "orders").delete {
+        $0.expectedRevision = .at(3)
+    }
+} catch KurrentError.wrongExpectedVersion(_, let current) {
+    // current is .noStream or .revision(n)
+}</code></pre>
+
+    <h4 class="subsection-title"><span lang="en">KurrentDB 26.2</span><span lang="zh-Hant">KurrentDB 26.2</span></h4>
+    <p lang="en">CI now tests KurrentDB 26.2 across Swift 6.0–6.4, on a single TLS node: 26.2 needs a Kurrent license to run a multi-node cluster. X.509 user certificates are tested on every run against an unlicensed 26.2 node. 26.2 rejects creating transient projections as deprecated.</p>
+    <p lang="zh-Hant">CI 現在在 Swift 6.0–6.4 上測試 KurrentDB 26.2，使用單一 TLS 節點，因為 26.2 的多節點 cluster 需要 Kurrent license。X.509 使用者憑證每次都會對一個沒有 license 的 26.2 節點測試。26.2 會以 deprecated 為由拒絕建立 transient projection。</p>
+
+    <h4 class="subsection-title"><span lang="en">More changes</span><span lang="zh-Hant">其他變更</span></h4>
+    <ul>
+      <li lang="en"><code>KurrentError.CurrentRevisionOption</code> is renamed <code>CurrentRevisionState</code>, because it is the server's observed state, not an option. The old name remains as a deprecated typealias.</li>
+      <li lang="zh-Hant"><code>KurrentError.CurrentRevisionOption</code> 改名為 <code>CurrentRevisionState</code>，因為它是伺服器觀察到的狀態，不是呼叫端的選項。舊名稱保留為 deprecated typealias。</li>
+      <li lang="en">The license file is now <code>LICENSE</code>, and a new <code>NOTICE</code> records the source and license of every bundled <code>.proto</code> file. The unused schema registry protos, the only ones under the Kurrent License v1, are removed; they were package-level only.</li>
+      <li lang="zh-Hant">授權檔改名為 <code>LICENSE</code>，新增的 <code>NOTICE</code> 記錄每個內附 <code>.proto</code> 檔的來源與授權。沒用到的 schema registry protos（唯一採用 Kurrent License v1 的檔案）已移除；它們只有 package 層級，不影響公開 API。</li>
+    </ul>
+
+    <h4 class="subsection-title"><span lang="en">Upgrade notes</span><span lang="zh-Hant">升級注意事項</span></h4>
+    <ul>
+      <li lang="en">Code that matched <code>KurrentError.grpcError</code> for a <code>delete</code> or <code>tombstone</code> revision conflict now receives <code>wrongExpectedVersion</code>.</li>
+      <li lang="zh-Hant">原本用 <code>KurrentError.grpcError</code> 比對 <code>delete</code> 或 <code>tombstone</code> 版本衝突的程式，現在會收到 <code>wrongExpectedVersion</code>。</li>
+      <li lang="en">A buffered <code>read()</code> the server rejects throws <code>resourceDeleted</code> or <code>accessDenied</code> instead of a raw <code>RPCError</code>, still while iterating. Errors after the server accepted the call are unchanged.</li>
+      <li lang="zh-Hant">被伺服器拒絕的一般 <code>read()</code>，改丟 <code>resourceDeleted</code> 或 <code>accessDenied</code>，不再是原始的 <code>RPCError</code>；一樣是在迭代時丟出。伺服器接受呼叫之後發生的錯誤不變。</li>
+    </ul>
+    <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.6.0" target="_blank" rel="noopener"><span lang="en">Full 2.6.0 release notes →</span><span lang="zh-Hant">2.6.0 完整 release notes →</span></a></p>
+  </article>
+
+  <!-- ===================================================================== -->
   <article class="release" id="v2.5">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.5.0</span><span lang="zh-Hant">最新 · v2.5.0</span></div>
+    <div class="whats-new-tag">v2.5.0</div>
     <h3 class="release-title"><span lang="en">Reads that stream, and inputs that can't hurt you</span><span lang="zh-Hant">邊讀邊用的讀取，以及傷不了你的輸入</span></h3>
     <p class="lead" lang="en">
       2.5 lets a read hand you events as you iterate instead of loading the whole result first,
@@ -701,6 +753,7 @@ let members = try await client.readCluster()</code></pre>
         </tr>
       </thead>
       <tbody>
+        <tr><td><strong>KurrentDB 26.2</strong></td><td>✅</td><td><span lang="en">Everything except creating transient projections (rejected as deprecated) · a multi-node cluster needs a Kurrent license</span><span lang="zh-Hant">建立 transient projection 以外全部支援（伺服器視為 deprecated 而拒絕）· 多節點 cluster 需要 Kurrent license</span></td></tr>
         <tr><td><strong>KurrentDB 26.1</strong></td><td>✅</td><td><span lang="en">Full feature support</span><span lang="zh-Hant">全功能支援</span></td></tr>
         <tr><td><strong>KurrentDB 26.0</strong></td><td>✅</td><td><span lang="en">Everything except AppendRecords (26.1+)</span><span lang="zh-Hant">AppendRecords（26.1+）以外全部支援</span></td></tr>
         <tr><td><strong>KurrentDB 25.1</strong></td><td>✅</td><td><span lang="en">Everything except AppendRecords (26.1+)</span><span lang="zh-Hant">AppendRecords（26.1+）以外全部支援</span></td></tr>
