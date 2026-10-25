@@ -135,33 +135,33 @@ between the in-process transport's `[UInt8]` and the Posix transport's bytes typ
 per message), which a real connection does not make.
 
 Measured on 2026-10-25 on the commit that added them: macOS on the machine above, Linux in
-`Benchmarks` run 40167369711 (AMD EPYC 9V74, 4 vCPU).
+`Benchmarks` run 40168799307 (Intel Xeon Platinum 8573C, 4 vCPU).
 
 | Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
 |---|---|---|---|---|---|
-| `Client/append/1x100B` | 58 µs | 108 | 645 K | 101 µs | 121 |
-| `Client/append/100x100B` | 325 µs | 1,107 | 4,882 K | 441 µs | 823 |
-| `Client/append-with-deadline/1x100B` | 84 µs | 142 | 866 K | 152 µs | 158 |
-| `Client/read-buffered/1x100B` | 63 µs | 104 | 631 K | 117 µs | 127 |
-| `Client/read-buffered/100x100B` | 759 µs | 1,606 | 10.3 M | 908 µs | 1,633 |
-| `Client/read-buffered/1000x100B` | 6.97 ms | 15,119 | 96.5 M | 8.34 ms | 15,147 |
-| `Client/read-lazy/1x100B` | 74 µs | 114 | 723 K | 132 µs | 135 |
-| `Client/read-lazy/100x100B` | 1.09 ms | 1,805 | 12.7 M | 1.69 ms | 1,868 |
-| `Client/read-lazy/1000x100B` | 10.63 ms | 17,111 | 125.9 M | 16.62 ms | 18,655 |
+| `Client/append/1x100B` | 54 µs | 108 | 646 K | 115 µs | 121 |
+| `Client/append/100x100B` | 303 µs | 1,107 | 4,891 K | 515 µs | 823 |
+| `Client/append-with-deadline/1x100B` | 74 µs | 142 | 871 K | 169 µs | 158 |
+| `Client/read-buffered/1x100B` | 49 µs | 103 | 634 K | 120 µs | 127 |
+| `Client/read-buffered/100x100B` | 770 µs | 1,606 | 10.2 M | 948 µs | 1,633 |
+| `Client/read-buffered/1000x100B` | 7.07 ms | 15,119 | 96.7 M | 8.59 ms | 15,151 |
+| `Client/read-lazy/1x100B` | 79 µs | 114 | 750 K | 162 µs | 136 |
+| `Client/read-lazy/100x100B` | 1.11 ms | 1,804 | 13.9 M | 2.03 ms | 1,829 |
+| `Client/read-lazy/1000x100B` | 10.00 ms | 17,113 | 132.3 M | 19.74 ms | 17,999 |
 
 | Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
 |---|---|---|---|---|---|
-| `GRPC/append/1x100B` | 55 µs | 98 | 593 K | 85 µs | 105 |
-| `GRPC/append/100x100B` | 282 µs | 996 | 4,542 K | 373 µs | 708 |
-| `GRPC/read/1x100B` | 47 µs | 81 | 519 K | 79 µs | 97 |
-| `GRPC/read/100x100B` | 536 µs | 1,475 | 7,664 K | 564 µs | 1,492 |
-| `GRPC/read/1000x100B` | 4.77 ms | 14,081 | 71.3 M | 5.16 ms | 14,103 |
+| `GRPC/append/1x100B` | 46 µs | 96 | 615 K | 100 µs | 105 |
+| `GRPC/append/100x100B` | 282 µs | 996 | 4,616 K | 413 µs | 708 |
+| `GRPC/read/1x100B` | 45 µs | 81 | 545 K | 93 µs | 98 |
+| `GRPC/read/100x100B` | 520 µs | 1,475 | 7,684 K | 624 µs | 1,493 |
+| `GRPC/read/1000x100B` | 4.86 ms | 14,087 | 72.0 M | 5.20 ms | 14,103 |
 
 **Observations:**
-- The fixed cost of a call is grpc-swift's: one append takes 58 µs through the client and 55 µs with gRPC alone on macOS (101 µs and 85 µs on Linux). The SDK adds 10 allocations to an append (16 on Linux) and 23 to a read (30): node selection, the retry wrapper, the connection lease, the call metadata and, for a read, the response stream.
-- Per event, a buffered read costs ~6.9 µs and 15 allocations on macOS. gRPC alone costs ~4.7 µs and 14: protobuf decoding (`Read/decode-response` above) plus the in-process transport and its copy. The SDK adds ~2.2 µs and 1 allocation.
-- A lazy read costs ~3.7 µs and 2 allocations more per event than a buffered one on macOS (~8.3 µs on Linux): each element waits in the hand-off for the iterating task instead of being queued. `.lazy` buys bounded memory at that price.
-- A default deadline adds ~26 µs and 34 allocations to a call on macOS (~50 µs and 37 on Linux): grpc-swift runs every call it bounds in a task group next to a timer task.
+- The fixed cost of a call is grpc-swift's: one append takes 54 µs through the client and 46 µs with gRPC alone on macOS (115 µs and 100 µs on Linux). The SDK adds 12 allocations to an append (16 on Linux) and 22 to a read (29): node selection, the retry wrapper, the connection lease, the call metadata and, for a read, the response stream.
+- Per event, a buffered read costs ~7.0 µs and 15 allocations on macOS. gRPC alone costs ~4.8 µs and 14: protobuf decoding (`Read/decode-response` above) plus the in-process transport and its copy. The SDK adds ~2.2 µs and 1 allocation.
+- A lazy read costs ~2.9 µs and 2 allocations more per event than a buffered one on macOS (~11.1 µs on Linux): each element waits in the hand-off for the iterating task instead of being queued. `.lazy` buys bounded memory at that price.
+- A default deadline adds ~20 µs and 34 allocations to a call on macOS (~54 µs and 37 on Linux): grpc-swift runs every call it bounds in a task group next to a timer task.
 - These benchmarks allocate on several concurrent tasks, so their counts depend on scheduling. On the 4-vCPU Linux runner a lazy read's count per iteration spreads over about 10% (each element either finds the consumer waiting or suspends in the hand-off), so its Linux `Malloc` is a median of two modes. Bencher records them without a threshold (see [History on Bencher](#history-on-bencher)).
 
 ---
@@ -177,10 +177,10 @@ Measured on 2026-10-25 on the commit that added them: macOS on the machine above
 | Read response, per event | ~3.2 µs | ~3.0 µs | 9 | Bytes to `ReadResponse` |
 | Model decoding, per event | ~2.4 µs | ~1.8 µs | 12 | `RecordedEvent.decode(to:)` |
 | Connection string parsing | 9–20 µs | 9–18 µs | 11–29 | Parse once, reuse the result |
-| Client call, fixed | 58 µs | 101 µs | 108 | In-process; gRPC alone: 55 µs (85 µs on Linux) |
-| Buffered read, per event | ~6.9 µs | ~8.2 µs | 15 | gRPC alone: ~4.7 µs and 14 on macOS |
-| Lazy read, per event | ~10.6 µs | ~16.5 µs | 17 | The hand-off per element; memory stays bounded |
-| Default deadline, per call | +26 µs | +50 µs | +34 | grpc-swift's timer task |
+| Client call, fixed | 54 µs | 115 µs | 108 | In-process; gRPC alone: 46 µs (100 µs on Linux) |
+| Buffered read, per event | ~7.0 µs | ~8.5 µs | 15 | gRPC alone: ~4.8 µs and 14 on macOS |
+| Lazy read, per event | ~9.9 µs | ~19.6 µs | 17 | The hand-off per element; memory stays bounded |
+| Default deadline, per call | +20 µs | +54 µs | +34 | grpc-swift's timer task |
 
 ---
 
