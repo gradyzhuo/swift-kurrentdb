@@ -223,3 +223,34 @@ jobs:
             -w /workspace \
             ${{ matrix.image }} \
             bash -c "swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
+
+  # Release readiness. The owner announces a release with a `pre/X.Y.Z` tag; while the `X.Y.Z`
+  # tag does not exist, scripts/check-release-readiness.py reports the documentation surfaces
+  # the release tag will lock into `/X.Y/` (README, Getting started, What's new) and the
+  # landing page that must flip to the new version. Unrelated pushes only get warning
+  # annotations; the Prepare PR itself (`[UPDATE] prepare X.Y.Z: …` as title and last commit)
+  # must pass, and names the version so it is checked even before the `pre/` tag exists.
+  release-readiness:
+    name: Release readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Script tests
+        run: python3 -m unittest scripts/test_check_release_readiness.py
+
+      - name: Check the open release
+        env:
+          SUBJECT: ${{ github.event_name == 'pull_request' && github.event.pull_request.title || github.event.head_commit.message }}
+        run: |
+          version=$(printf '%s' "$SUBJECT" | sed -n 's/^\[UPDATE\] prepare \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p')
+          if [ -n "$version" ]; then
+            echo "Prepare PR for $version: every row must pass"
+            scripts/check-release-readiness.py --version "$version" --strict
+          else
+            scripts/check-release-readiness.py
+          fi

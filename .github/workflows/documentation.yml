@@ -20,7 +20,8 @@
 # symbol graph is therefore kept in the Actions cache (keyed by commit and toolchain) and
 # only main is compiled on every run; an evicted entry is simply rebuilt.
 #
-# Pull requests only build the site; pushes to main, release tags and manual runs deploy it.
+# Pull requests only build the site; pushes to main, release tags and manual runs deploy it,
+# except the Prepare commit of a release, whose deploy is left to the release tag (see deploy).
 name: Documentation
 on:
   push:
@@ -45,6 +46,17 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      # A release tag locks the catalog and README into /X.Y/ and the site root for good, so a
+      # tag whose documentation is not ready fails here instead of publishing a stale "latest".
+      - name: Release readiness
+        if: github.ref_type == 'tag'
+        run: |
+          if [[ "$GITHUB_REF_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            scripts/check-release-readiness.py --version "$GITHUB_REF_NAME" --strict
+          else
+            echo "$GITHUB_REF_NAME is not a release tag; nothing to check"
+          fi
 
       - id: list
         env:
@@ -131,7 +143,14 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    # Pages keys deployments by commit SHA and ignores a second deploy of a SHA it already
+    # serves, so a release tag on the commit main just deployed never reached the site. The
+    # Prepare commit (`[UPDATE] prepare X.Y.Z: …`, the last one merged before the owner tags
+    # it) therefore skips the deploy from main: the tag's run is the first deploy of that SHA.
+    if: >-
+      github.event_name != 'pull_request'
+      && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+      && !(github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, '[UPDATE] prepare '))
     needs: site
     runs-on: ubuntu-latest
     # Deployments from main and from tags take turns; a newer one replaces a queued one.
