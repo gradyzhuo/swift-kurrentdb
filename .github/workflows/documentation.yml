@@ -41,6 +41,7 @@ jobs:
     outputs:
       releases: ${{ steps.list.outputs.releases }}
       matrix: ${{ steps.list.outputs.matrix }}
+      prepare: ${{ steps.prepare.outputs.prepare }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -67,6 +68,18 @@ jobs:
           echo "$releases" | jq .
           echo "releases=$releases" >> "$GITHUB_OUTPUT"
           echo "matrix=$(echo "$releases" | jq -c --arg ref "$MAIN_REF" '. + [{label: "main", ref: $ref, commit: ""}]')" >> "$GITHUB_OUTPUT"
+
+      # The deploy job leaves the Prepare commit (`[UPDATE] prepare X.Y.Z: …`) to the release
+      # tag. A rebase or squash merge makes it main's head; a merge commit makes it the merged
+      # branch's tip, the second parent, so both are looked at.
+      - id: prepare
+        run: |
+          is_prepare() {
+            git rev-parse -q --verify "$1^{commit}" > /dev/null \
+              && [[ "$(git log -1 --format=%s "$1")" == '[UPDATE] prepare '* ]]
+          }
+          if is_prepare HEAD || is_prepare HEAD^2; then prepare=true; else prepare=false; fi
+          echo "prepare=$prepare" >> "$GITHUB_OUTPUT"
 
   symbol-graph:
     name: Symbol graph (${{ matrix.label }})
@@ -146,12 +159,13 @@ jobs:
     # Pages keys deployments by commit SHA and ignores a second deploy of a SHA it already
     # serves, so a release tag on the commit main just deployed never reached the site. The
     # Prepare commit (`[UPDATE] prepare X.Y.Z: …`, the last one merged before the owner tags
-    # it) therefore skips the deploy from main: the tag's run is the first deploy of that SHA.
+    # it; the `prepare` step of the versions job finds it whichever way it was merged)
+    # therefore skips the deploy from main: the tag's run is the first deploy of that SHA.
     if: >-
       github.event_name != 'pull_request'
       && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
-      && !(github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, '[UPDATE] prepare '))
-    needs: site
+      && !(github.ref == 'refs/heads/main' && needs.versions.outputs.prepare == 'true')
+    needs: [versions, site]
     runs-on: ubuntu-latest
     # Deployments from main and from tags take turns; a newer one replaces a queued one.
     concurrency:
