@@ -87,9 +87,10 @@ jobs:
       # Uploads to Bencher; the perf page (see BENCHER_PROJECT) keeps the history per commit.
       # On main two thresholds apply, and --error-on-alert turns either alert into a failed job:
       # - latency: a t-test flags a run outside the 99% band of the last 64 runs.
-      # - allocations: malloc counts are deterministic on a given platform, so a percentage test
-      #   against the previous run alone flags any increase over 1%. A deliberate increase alerts
-      #   once; the next run compares against the new count.
+      # - allocations: malloc counts are deterministic for a given toolchain and runner image, so a
+      #   percentage test against the previous run alone flags any increase over 1%. A deliberate
+      #   increase, a new Swift patch or a new runner image alerts once; the next run compares
+      #   against the new count.
       # Other branches (manual runs) are uploaded without thresholds so they never fail on noise.
       - name: Upload to Bencher
         env:
