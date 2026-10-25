@@ -136,8 +136,13 @@ private struct StreamFixture {
 private struct GRPCFixture {
     private let streams: StreamsService.Client<AnyClientTransport>
     private let appendRequest: [EventStore_Client_Streams_AppendReq]
+    private let readRequest: EventStore_Client_Streams_ReadReq
 
-    private init(readResponses: [[UInt8]] = [], appendRequest: [EventStore_Client_Streams_AppendReq] = []) throws {
+    private init(
+        readResponses: [[UInt8]] = [],
+        appendRequest: [EventStore_Client_Streams_AppendReq] = [],
+        readRequest: EventStore_Client_Streams_ReadReq = .init()
+    ) throws {
         let endpoint = ClientSettings.localhost().endpoints[0]
         let transports = try InProcessTransportProvider(server: FakeKurrentDB(endpoint: endpoint, readResponses: readResponses))
         let client = try GRPCClient(transport: AnyClientTransport(transports.makeTransport(for: endpoint)))
@@ -145,6 +150,7 @@ private struct GRPCFixture {
         _ = Task { try await client.runConnections() }
         streams = StreamsService.Client(wrapping: client)
         self.appendRequest = appendRequest
+        self.readRequest = readRequest
     }
 
     /// Sends the request messages of one append and returns the response.
@@ -155,9 +161,9 @@ private struct GRPCFixture {
         })
     }
 
-    /// Reads the whole response stream and returns how many messages arrived.
+    /// Sends the read request and returns how many response messages arrived.
     func read() async throws -> Int {
-        try await streams.read(request: ClientRequest(message: EventStore_Client_Streams_ReadReq())) { response in
+        try await streams.read(request: ClientRequest(message: readRequest)) { response in
             var count = 0
             for try await message in response.messages {
                 blackHole(message)
@@ -177,9 +183,12 @@ private struct GRPCFixture {
         return fixture
     }
 
-    /// Reads a stream of `count` events of 100 bytes per call.
+    /// Reads a stream of `count` events of 100 bytes per call: the request the SDK sends for `read()`.
     static func reading(_ count: Int) async throws -> Self {
-        let fixture = try Self(readResponses: serializedReadResponses(count: count, payload: payload))
+        let fixture = try Self(
+            readResponses: serializedReadResponses(count: count, payload: payload),
+            readRequest: Streams<SpecifiedStream>.Read(from: "orders-abc-123", options: .init()).requestMessage()
+        )
         let received = try await fixture.read()
         guard received == count else {
             throw FixtureError("the warm-up read returned \(received) messages")
