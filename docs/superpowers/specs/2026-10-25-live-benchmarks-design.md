@@ -68,12 +68,15 @@ gRPC, in two layers:
 ### Server
 
 - Single node. From 26.2 onward single-node deployments are the main use case.
-- Image pinned to an exact tag (target: the current 26.2.x) and recorded in every report.
-  It must start on a GitHub runner without a license key; if 26.2 needs one for the
-  features used here, fall back to the newest version that does not, and say so.
+- Image pinned to an exact 26.2.x tag, its digest recorded in every report. 26.2
+  single-node deployments need no license key.
 - TLS and authentication on for the main runs (that is what production looks like, and
-  each SDK's TLS/HTTP/2 stack is part of its cost). One extra run with TLS off isolates
-  TLS cost.
+  each SDK's TLS/HTTP/2 stack is part of its cost). Certificates come from
+  `es-gencert-cli`, as `server/docker-compose.yaml` already does.
+- One extra run with TLS off **and authentication still on** isolates TLS cost. It must
+  not use `Insecure` mode, which also disables authentication and would confound the
+  comparison; use the 26.2 options that disable only TLS (documented as `DisableTls`
+  with a `ClusterSecret`; the builder confirms them against the 26.2 docs).
 - `$by_category` system projection enabled (subscription scenarios read `$ce-` streams).
 - Fresh data directory per job.
 
@@ -102,21 +105,36 @@ needs), metadata 60 B.
    - Events are JSON-decoded, not just received as bytes.
 3. **Persistent subscription (primary subscription scenario)**
    - Group on `$ce-<Category>`, `resolveLinkTos` on, ack on receipt.
-   - Writer appends to category A at a fixed rate; consumer group handles and acks.
-   - Measure append-to-delivery latency, ack throughput, and several consumers with
-     RoundRobin.
+   - The writer runs inside the driver under test, using that same SDK, and appends to
+     the category on an open-loop schedule. Both clients therefore pay for writing and
+     consuming in one process, symmetrically, and the reported CPU covers both.
+   - Delivery latency is measured from the append's **scheduled** time to receipt.
+   - Two throughput numbers, never conflated: the rate at which the client hands acks
+     to its transport (Swift's `ack()` only enqueues locally), and server-observed
+     progress (the group's processed count/checkpoint from the subscription info API,
+     polled by the orchestrator). Server-observed progress is the headline.
+   - Several consumers with RoundRobin is an appendix variant.
 4. **Catch-up subscription (secondary)**
    - On `$ce-<Category>`, not `$all`.
+   - **Link resolution explicitly enabled for every client.** `$ce-` streams hold link
+     events, and the Swift SDK defaults to not resolving links; without this every
+     event size would transfer the same small links.
    - Catch-up throughput from the start over 1,000,000 pre-seeded events, and live
      append-to-delivery latency once caught up. No multi-consumer variants.
 
-All clients read identical pre-seeded data, written by one seeding tool.
+All clients read identical pre-seeded data, written by one seeding tool. Every
+subscription and read scenario validates received event counts and payload sizes
+against what was seeded; a mismatch fails the trial.
 
 ### Clients and reference points (phase 1)
 
 - **Swift** — this SDK, built from the commit under test.
 - **.NET** — `KurrentDB.Client`, pinned exact NuGet version.
-- **ghz** — sends byte-identical gRPC messages with no SDK on top: the floor.
+- **ghz** — sends byte-identical gRPC messages with no SDK on top. It is a separately
+  labelled **transport reference**, not a latency floor: ghz times from RPC initiation,
+  not from scheduled send time, runs on the Go runtime, and skips JSON decoding, so its
+  latency is never put in a ratio with the SDKs. Its achieved rate and server-side
+  behaviour at each step are shown beside them for orientation.
 
 No grpc-swift-only driver in the live suite (maintainer's decision): the generated
 client is not exported from the root package, and the offline `GRPC/*` group of PR #182
@@ -134,6 +152,37 @@ already separates grpc-swift cost from SDK cost.
   the numbers justify it (maintainer's decision).
 - Reports publish whatever the numbers are. Missing the 1.2× target blocks nothing; the
   report states it.
+
+### Measurement rules
+
+These close the gaps that would make percentiles or parity misleading.
+
+- **Every scheduled operation is accounted for**: completed, failed, dropped (in-flight
+  cap reached) or timed out. All clients share the same in-flight cap and per-operation
+  deadline. At the end of a measured window the driver drains for a bounded time;
+  anything still unfinished counts as timed out and is reported, never silently
+  excluded from percentiles.
+- **A step is sustained** only when achieved rate ≥ 99% of target, drops + timeouts ≤
+  0.1%, and the backlog does not grow over the window (exact thresholds are the
+  builder's, but fixed before the first published run).
+- **Server headroom.** The orchestrator records server container CPU, disk usage and
+  `$by_category` projection backlog per step. A step where the server's 2 cores are
+  near saturation or the projection backlog grows is labelled **system-limited**: it is
+  shown, but no SDK conclusion is drawn from it. Parity is judged only at steps both
+  clients sustain with server headroom, so a saturated server cannot manufacture parity.
+- **Equivalent starting state for every trial.**
+  - Warmup uses separate streams/categories from the measured data, so it cannot consume
+    or pre-cache the measured corpus (notably the 1M-event catch-up corpus).
+  - Each persistent subscription trial creates a fresh group; checkpoints never carry
+    over between clients.
+  - Before any trial, wait for `$by_category` to reach the seed's last position.
+  - Between trials, drain until the server is idle (no in-flight work, projection backlog
+    zero).
+- **Statistics.** Each round yields one paired ratio per metric (Swift ÷ .NET, both
+  measured in that round). The interval is a 95% confidence interval over the
+  round-level log-ratios. Minimum 5 rounds for headline cells, 3 for appendix cells.
+  Verdict against 1.2×: **meets** when the upper bound ≤ 1.2, **misses** when the lower
+  bound > 1.2, otherwise **inconclusive**, and the report says which.
 
 ### Fairness
 
@@ -154,6 +203,17 @@ already separates grpc-swift cost from SDK cost.
   with the runner's CPU model.
 - Network is loopback: the report states that real network effects are not included.
 - Triggered by `workflow_dispatch` and by release tags.
+- **Resource budget.** A standard runner has about 14 GB of free disk and a 6-hour job
+  limit; 4 KB appends at 100 batches/s add about 1.2 GB per minute. Each cell has a
+  fixed schedule and a disk budget (seed size, writes, builds, measurement time) that
+  fits both; the server data directory is recreated between cells, and the orchestrator
+  checks free space before each step and stops the cell, recording why, rather than
+  running out mid-step.
+- **Reproducibility metadata** archived with every result bundle: the resolved
+  dependency graph of `Benchmarks/Live` (its `Package.resolved` is committed, overriding
+  the repository-wide `.gitignore` entry), Swift toolchain, .NET runtime and
+  `KurrentDB.Client` version, ghz version, build flags, server image digest, scenario
+  random seed, and runner image version and CPU model.
 
 ### Trend layer
 
@@ -220,9 +280,9 @@ clients interleaved, collects results, and renders the report. Histograms via or
 ## Open risks
 
 - The 1.2× parity target is an assumption until real numbers exist.
-- Co-locating server and client on 4 vCPU shares memory bandwidth and L3 cache even with
-  CPU pinning; interleaving keeps the comparison fair but absolute numbers are
-  conservative.
+- Co-locating server and client on 4 vCPU shares memory bandwidth, L3 cache and disk
+  even with CPU pinning. The interference is not necessarily in either client's favour;
+  the headroom rule above limits conclusions to steps where it is unlikely to dominate.
 - PR #142 (stress-test v2, closed 2026-09-30) is superseded by this design
   (maintainer's decision). Build from scratch; its code (open-loop scheduling, HDR
   histogram, saturation detection, HTML report) may be consulted for individual pieces,
