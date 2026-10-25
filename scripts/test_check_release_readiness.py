@@ -2,7 +2,6 @@
 """Tests for check-release-readiness.py (run with `python3 -m unittest scripts/test_check_release_readiness.py`)."""
 
 import importlib.util
-import os
 import subprocess
 import sys
 import tempfile
@@ -128,56 +127,33 @@ class ChecksTests(unittest.TestCase):
         )
 
 
-class OpenReleasesTests(unittest.TestCase):
-    def test_pre_tag_without_release_tag_is_open(self):
-        self.assertEqual(readiness.open_releases(["2.6.0", "pre/2.7.0"]), ["2.7.0"])
-
-    def test_release_tag_closes_it(self):
-        self.assertEqual(readiness.open_releases(["2.6.0", "pre/2.7.0", "2.7.0"]), [])
-
-    def test_other_tags_are_ignored_and_order_is_by_version(self):
-        tags = ["archive/main-before-rewrite", "pre/2.10.0", "pre/2.7.1", "2.0.0-beta.5", "pre/x"]
-        self.assertEqual(readiness.open_releases(tags), ["2.7.1", "2.10.0"])
-
-
 class CommandLineTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)
         self.addCleanup(self.directory.cleanup)
-        env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
-        for command in (["git", "init", "-q"], ["git", "commit", "-q", "--allow-empty", "-m", "init"]):
-            subprocess.run(command, cwd=self.root, check=True, env=env)
 
     def run_script(self, *arguments: str) -> subprocess.CompletedProcess:
         return subprocess.run(
             [sys.executable, str(SCRIPT), "--root", str(self.root), *arguments], capture_output=True, text=True
         )
 
-    def test_no_open_release_is_a_no_op(self):
-        result = self.run_script()
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("no release open", result.stdout)
-
-    def test_open_release_warns_by_default_and_fails_with_strict(self):
-        subprocess.run(["git", "tag", "pre/2.7.0"], cwd=self.root, check=True)
-        ready_tree(self.root, "2.6.0")
-        lenient = self.run_script()
-        self.assertEqual(lenient.returncode, 0)
-        self.assertIn("::warning file=README.md::release 2.7.0: missing", lenient.stdout)
-        strict = self.run_script("--strict")
-        self.assertEqual(strict.returncode, 1)
-        self.assertIn("::error file=README.md::", strict.stdout)
-
-    def test_explicit_version_ignores_tags(self):
+    def test_ready_tree_passes(self):
         ready_tree(self.root, "2.7.0")
-        result = self.run_script("--version", "2.7.0", "--strict")
+        result = self.run_script("2.7.0")
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertNotIn("missing", result.stdout)
 
+    def test_missing_rows_fail_with_error_annotations(self):
+        ready_tree(self.root, "2.6.0")
+        result = self.run_script("2.7.0")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("::error file=README.md::release 2.7.0: missing", result.stdout)
+        self.assertIn("8 missing", result.stderr)
+
     def test_version_must_be_a_release_number(self):
-        result = self.run_script("--version", "pre/2.7.0")
-        self.assertEqual(result.returncode, 2)
+        for version in ("v2.7.0", "2.7", "pre/2.7.0"):
+            self.assertEqual(self.run_script(version).returncode, 2, version)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Check that the documentation is ready for the release a `pre/X.Y.Z` tag announces.
+"""Check that the documentation is ready for release X.Y.Z.
 
-A release is open while a `pre/X.Y.Z` tag exists and the `X.Y.Z` tag does not. The release tag
-locks the DocC catalog and the README into `/X.Y/` and the site root for good, and the landing
-page must flip to the new version in the same release, so this script checks the mechanical
-rows of the release checklist on every push and prints one line per check:
+The release tag locks the DocC catalog and the README into `/X.Y/` and the site root for good,
+and the landing page must flip to the new version in the same release, so this script checks
+the mechanical rows of the release checklist and prints one line per check:
 
     ok       README.md: from: "2.7.0"
     missing  docs/index.html: <option value="v2.7"> is the first option and marked (latest)
@@ -12,39 +11,24 @@ rows of the release checklist on every push and prints one line per check:
 What it cannot check is whether each What's new bullet is also documented in the article that
 covers the behaviour; that stays a review step.
 
-Exit status: 0 when nothing is missing or no release is open. When something is missing:
-1 with --strict (the Prepare PR itself and release tags), otherwise 0 with GitHub `::warning::`
-annotations so the gap is visible on every run without failing unrelated work.
+Exit status: 0 when nothing is missing, 1 otherwise, with a GitHub `::error::` annotation per
+missing row. CI runs it on the Prepare PR (`[UPDATE] prepare X.Y.Z: …`) and on the release tag.
 
-Usage: scripts/check-release-readiness.py [--version X.Y.Z] [--strict] [--root DIR]
+Usage: scripts/check-release-readiness.py X.Y.Z [--root DIR]
 """
 
 import argparse
 import html
 import re
-import subprocess
 import sys
 from pathlib import Path
 
-RELEASE_TAG = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
-PRE_TAG = re.compile(r"^pre/(\d+\.\d+\.\d+)$")
+RELEASE_VERSION = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 README = "README.md"
 GETTING_STARTED = "Sources/KurrentDB/KurrentDB.docc/Articles/Getting started.md"
 WHATS_NEW = "Sources/KurrentDB/KurrentDB.docc/Documentation.md"
 LANDING_PAGE = "docs/index.html"
-
-
-def git_tags(root: Path) -> list[str]:
-    result = subprocess.run(["git", "tag", "--list"], cwd=root, check=True, capture_output=True, text=True)
-    return result.stdout.split()
-
-
-def open_releases(tags: list[str]) -> list[str]:
-    """Versions announced by a `pre/` tag whose release tag does not exist yet, oldest first."""
-    released = {tag for tag in tags if RELEASE_TAG.match(tag)}
-    announced = [match.group(1) for match in map(PRE_TAG.match, tags) if match]
-    return sorted((version for version in announced if version not in released), key=version_key)
 
 
 def version_key(version: str) -> tuple[int, ...]:
@@ -111,35 +95,23 @@ def checks(root: Path, version: str) -> list[tuple[bool, str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--version", help="release to check; default: every open pre/X.Y.Z tag")
-    parser.add_argument("--strict", action="store_true", help="exit 1 when something is missing")
+    parser.add_argument("version", help="release to check, X.Y.Z")
     parser.add_argument("--root", default=".", help="repository root")
     arguments = parser.parse_args()
-    root = Path(arguments.root)
+    if not RELEASE_VERSION.match(arguments.version):
+        parser.error(f"version must be X.Y.Z, got {arguments.version!r}")
 
-    if arguments.version:
-        if not RELEASE_TAG.match(arguments.version):
-            parser.error(f"--version must be X.Y.Z, got {arguments.version!r}")
-        versions = [arguments.version]
-    else:
-        versions = open_releases(git_tags(root))
-        if not versions:
-            print("no release open: no pre/X.Y.Z tag without its X.Y.Z tag")
-            return 0
-
+    print(f"release {arguments.version}")
     missing = 0
-    for version in versions:
-        print(f"release {version}")
-        for passed, description in checks(root, version):
-            print(f"  {'ok     ' if passed else 'missing'}  {description}")
-            if not passed:
-                missing += 1
-                file = description.split(":", 1)[0]
-                level = "error" if arguments.strict else "warning"
-                print(f"::{level} file={file}::release {version}: missing {description}")
+    for passed, description in checks(Path(arguments.root), arguments.version):
+        print(f"  {'ok     ' if passed else 'missing'}  {description}")
+        if not passed:
+            missing += 1
+            file = description.split(":", 1)[0]
+            print(f"::error file={file}::release {arguments.version}: missing {description}")
     if missing:
         print(f"{missing} missing", file=sys.stderr)
-    return 1 if missing and arguments.strict else 0
+    return 1 if missing else 0
 
 
 if __name__ == "__main__":
