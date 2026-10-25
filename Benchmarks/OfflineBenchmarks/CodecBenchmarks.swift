@@ -21,7 +21,7 @@ private let payloadSizes: [(label: String, bytes: Int)] = [
 private let orderPlacedJSON = Data(#"{"orderId":"abc-123","amount":99.99,"items":3}"#.utf8)
 
 /// One serialized `ReadResp` per event, as the server streams them.
-private func serializedReadResponses(count: Int, payload: Data) throws -> [[UInt8]] {
+func serializedReadResponses(count: Int, payload: Data) throws -> [[UInt8]] {
     try (0 ..< count).map { index in
         let message = ReadResp.with {
             $0.event = .with {

@@ -95,6 +95,11 @@ jobs:
       #   percentage test against the previous run alone flags any increase over 1%. A deliberate
       #   increase, a new Swift patch or a new runner image alerts once; the next run compares
       #   against the new count.
+      # The client-stack benchmarks (Client/*, GRPC/*) report their count as allocations-concurrent
+      # (scripts' bench-to-bmf), which has no threshold: they allocate on several tasks, and on a
+      # 4-vCPU runner a lazy read's count per iteration spreads over 10% depending on whether each
+      # element finds the consumer waiting, so its median moves between runs by more than a useful
+      # boundary. The latency test still covers them.
       # Each --threshold-* option pairs with the --threshold-measure values in order; `_` leaves
       # that option unset for its measure.
       # Other branches (manual runs) are uploaded without thresholds so they never fail on noise.
