@@ -160,7 +160,7 @@ extension Streams where Target: SpecifiedStreamTarget {
 
     /// Subscribes to live events from the stream.
     ///
-    /// - Parameter configure: Closure to configure ``Subscribe/Options`` (starting position, filter). Defaults to no-op.
+    /// - Parameter configure: Closure to configure ``Subscribe/Options`` (starting revision, link resolution). Defaults to no-op.
     /// - Returns: A ``Streams/Subscription`` that delivers events as they are appended.
     /// - Throws: `KurrentError` if the subscription cannot be established.
     public func subscribe(configure: @Sendable (inout Subscribe.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {

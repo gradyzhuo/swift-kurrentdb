@@ -1,6 +1,6 @@
 # Reading events
 
-There are two ways to read events from KurrentDB: read from an individual stream, or read from the `$all` stream, which returns every event in the store.
+There are two ways to read events from KurrentDB: read from an individual stream, or read from the `$all` stream, which returns every event in the store. A catch-up subscription reads the same two ways and then keeps delivering new events as they are written (see Catch-up subscriptions below).
 
 Each event belongs to an individual stream. When reading, you pick the stream and whether to read it forwards or backwards.
 
@@ -188,6 +188,107 @@ for try await response in responses {
 
 A server-side filter such as `.onEventType(regex: "^[^$]")` skips them without sending them to the client.
 
+## Catch-up subscriptions
+
+A subscription is a read that does not end. It starts where you tell it, delivers the events that are already there (the catch-up), then keeps delivering new events as they are written, all through one `AsyncThrowingStream`. Projections and read models follow the store this way. Call `subscribe(configure:)` on the same ``Streams`` values you read from; the closure receives the options as an `inout` value.
+
+By default a subscription starts at the **end** of the stream, so `subscribe()` with no options delivers new events only. Set `revision` (`position` for `$all`) to catch up first.
+
+### Subscribing to a stream
+
+```swift
+let subscription = try await client.streams(specified: "orders").subscribe {
+    $0.revision = .start
+}
+
+for try await readEvent in subscription.events {
+    if let order = try readEvent.record.decode(to: OrderPlaced.self) {
+        print(order)
+    }
+}
+```
+
+`subscribe` returns once the server has confirmed the subscription and throws if it cannot be established, for example ``KurrentError/accessDenied`` for `$all` without credentials. After that, every error surfaces from `events` while you iterate: the connection dropping, or ``KurrentError/connectionClosed`` after ``KurrentDBClient/shutdown()``. The stream does not have to exist yet: a subscription to a stream that is created later delivers its first event. A soft delete does not end it either; events appended to the recreated stream keep arriving. Tombstoning the stream delivers its final `$streamDeleted` event, after which `events` throws.
+
+The options are `revision` (`.start`, `.end`, or `.specified(UInt64)`), `resolveLinksEnabled` and `uuidOption`. `.specified(n)` starts **after** revision `n`, so the first event delivered is `n + 1`; a read with `.specified(n)` starts at `n`.
+
+### Subscribing to $all
+
+Subscribing to `$all` needs the same credentials as reading it, starts from a log position, and takes the same `filter` as a filtered read (see Filtering on the server):
+
+```swift
+let subscription = try await client.allStreams.subscribe {
+    $0.position = .start
+    $0.filter = .onEventType(prefixes: "Order")
+}
+
+for try await readEvent in subscription.events {
+    print(readEvent.record.streamIdentifier.name, readEvent.record.eventType)
+}
+```
+
+Without a filter, `$all` also delivers system events; `.excludeSystemEvents()` leaves them out on the server (see Handling system events). `.specified(commit:prepare:)` starts after that position, like `.specified(n)` on a stream.
+
+### Resuming from a checkpoint
+
+A subscription lives as long as its connection and your process. To carry on after a restart, store the revision of the last event you handled, together with the read model it updated so the two cannot drift apart, and start the next subscription from it. Because `.specified` starts after the given revision, the stored value is used as it is:
+
+```swift
+// The last revision handled, persisted with the read model; nil before the first run.
+let checkpoint: UInt64? = nil
+
+let subscription = try await client.streams(specified: "orders").subscribe {
+    $0.revision = checkpoint.map { .specified($0) } ?? .start
+}
+
+for try await readEvent in subscription.events {
+    // Update the read model, then store readEvent.record.revision as the new checkpoint.
+    print("handled revision", readEvent.record.revision)
+}
+```
+
+For `$all`, store `readEvent.record.position`, a ``StreamPosition`` with `commit` and `prepare`:
+
+```swift
+let checkpoint: StreamPosition? = nil
+
+let subscription = try await client.allStreams.subscribe {
+    $0.position = checkpoint.map { .specified(commit: $0.commit, prepare: $0.prepare) } ?? .start
+    $0.filter = .excludeSystemEvents()
+}
+
+for try await readEvent in subscription.events {
+    // Update the read model, then store readEvent.record.position as the new checkpoint.
+    print("handled position", readEvent.record.position.commit)
+}
+```
+
+Establishing a subscription is retried across nodes under the client's retry policy, like any other call; an established one is not re-established by the client. When `events` throws, decide whether to subscribe again from your checkpoint.
+
+### Stopping
+
+```swift
+let subscription = try await client.streams(specified: "orders").subscribe()
+
+Task {
+    try await Task.sleep(for: .seconds(60))
+    subscription.cancel()
+}
+
+for try await readEvent in subscription.events {
+    print(readEvent.record.eventType)
+}
+// cancel() ended `events`; the loop exited normally.
+```
+
+``Streams/Subscription/cancel()`` ends `events` at once and the loop exits normally, as it does when your task is cancelled. An event that had already arrived from the server but was not yet handed to your code is dropped. After a `break` the subscription stays open while you hold it: call `cancel()` or let it go out of scope, which ends it too. ``KurrentDBClient/shutdown()`` ends every subscription the client opened.
+
+### Backpressure
+
+Subscriptions are backpressured: the client takes the next event from the server only when your code asks for it, so a slow consumer holds the server back through HTTP/2 flow control instead of growing client memory. The memory one subscription holds is bounded like a lazy read's (next section). Each subscription has its own connection (see <doc:Getting-started>), so a long-lived subscription never competes with other calls.
+
+The server's caught-up and fell-behind notifications are not surfaced to your code; the client logs them at `debug` level and drops them.
+
 ## Bounded memory: `read().lazy`
 
 `read()` fetches the whole result before it returns, so memory grows with the result. For large
@@ -233,15 +334,10 @@ let responses = try await client.streams(specified: "orders").read { $0.limit = 
 
 To hold a prepared read without iterating, spell its type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
 
-### Behaviour changes in 2.5
-
-Subscriptions are backpressured: the client takes the next event from the server only when your code asks for it. `Subscription.cancel()` ends the stream immediately; an event that had arrived but was not yet handed to your code is dropped.
-
 ### Roadmap
 
 In 3.0 `read()` itself delivers lazily; code that needs the whole result up front will write
-`.buffered`. See `docs/adr/0001-read-becomes-lazy-in-3-0.md`. Subscriptions already apply the same
-backpressure: a slow consumer is backpressured through HTTP/2 flow control instead of growing client memory.
+`.buffered`. See `docs/adr/0001-read-becomes-lazy-in-3-0.md`. Subscriptions already deliver this way (see Catch-up subscriptions above).
 
 ## Architecture
 
