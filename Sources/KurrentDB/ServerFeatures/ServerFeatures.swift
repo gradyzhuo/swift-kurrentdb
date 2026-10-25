@@ -13,7 +13,7 @@ import Logging
 import NIO
 
 public final class ServerFeatures: GRPCConcreteService {
-    package typealias UnderlyingClient = EventStore_Client_ServerFeatures_ServerFeatures.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_ServerFeatures_ServerFeatures.Client<AnyClientTransport>
 
     internal let endpoint: Endpoint
     internal let settings: ClientSettings

@@ -76,6 +76,11 @@ public struct ClientSettings: Sendable {
     /// progress, opt into ``OperationRetryPolicy/default`` or a custom policy with backoff.
     public var operationRetryPolicy: OperationRetryPolicy
 
+    /// Builds the transport for every connection in place of HTTP/2 over Posix sockets; `nil`, the
+    /// default, keeps the Posix transport configured from these settings. Package level: it lets
+    /// benchmarks and tests run the client against an in-process server.
+    package var transportProvider: (any TransportProvider)?
+
     /// Creates settings with explicit values for all configurable options.
     ///
     /// - Parameters:

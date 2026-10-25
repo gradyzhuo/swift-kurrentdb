@@ -13,7 +13,7 @@ import NIO
 
 /// Performs gossip protocol requests against a single Kurrent cluster endpoint.
 public final class Gossip: Sendable {
-    package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Gossip_Gossip.Client<AnyClientTransport>
 
     internal let endpoint: Endpoint
     internal let settings: ClientSettings

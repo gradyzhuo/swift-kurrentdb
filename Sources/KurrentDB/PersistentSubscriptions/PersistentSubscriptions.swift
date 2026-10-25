@@ -15,7 +15,7 @@ import NIO
 /// Service facade for persistent subscription operations scoped to a specific target.
 public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>: GRPCConcreteService {
     package typealias UnderlyingService = EventStore_Client_PersistentSubscriptions_PersistentSubscriptions
-    package typealias UnderlyingClient = UnderlyingService.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = UnderlyingService.Client<AnyClientTransport>
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions

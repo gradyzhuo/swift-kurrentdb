@@ -56,7 +56,7 @@ import Synchronization
 /// `idleTimeout`。後者是必要的 —— transport 的 `maxIdleTime` 只關 socket,不會結束
 /// runTask;gossip 回報的舊 endpoint 與死掉的 seed 若不回收,會在背景永遠重連。
 package final class ConnectionProvider: Sendable {
-    package typealias Client = GRPCClient<HTTP2ClientTransport.Posix>
+    package typealias Client = GRPCClient<AnyClientTransport>
 
     private struct SharedEntry {
         let generation: UInt64
@@ -375,8 +375,11 @@ package final class ConnectionProvider: Sendable {
             throw .initializationError(reason: ClientSettings.unreadableCertificateRefusalReason)
         }
         let settings = settings
-        let transport: HTTP2ClientTransport.Posix = try withRethrowingError(usage: "ConnectionProvider.makeClient(for:)") {
-            try .http2NIOPosix(
+        let transport: AnyClientTransport = try withRethrowingError(usage: "ConnectionProvider.makeClient(for:)") {
+            if let provider = settings.transportProvider {
+                return try AnyClientTransport(provider.makeTransport(for: endpoint))
+            }
+            let posix: HTTP2ClientTransport.Posix = try .http2NIOPosix(
                 target: endpoint.target,
                 transportSecurity: settings.transportSecurity,
                 config: .defaults { config in
@@ -390,6 +393,7 @@ package final class ConnectionProvider: Sendable {
                     )
                 }
             )
+            return AnyClientTransport(posix)
         }
         return GRPCClient(transport: transport)
     }

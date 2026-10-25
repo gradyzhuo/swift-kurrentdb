@@ -15,7 +15,7 @@ extension UnaryUnary where UnderlyingResponse == EventStore_Client_Empty {
     }
 }
 
-extension UnaryUnary where Transport == HTTP2ClientTransport.Posix {
+extension UnaryUnary where Transport == AnyClientTransport {
     package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Response {
         try await send(connection: connection, request: request(metadata: metadata), callOptions: callOptions)
     }

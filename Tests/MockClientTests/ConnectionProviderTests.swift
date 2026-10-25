@@ -13,6 +13,9 @@
 //  裡累積對不可達目標無限期掛著的 runConnections()。
 //
 
+import GRPCCore
+import GRPCNIOTransportHTTP2
+import Synchronization
 import Testing
 @testable import KurrentDB
 
@@ -254,6 +257,52 @@ struct ConnectionProviderTests {
         #expect(weakProvider == nil)
     }
 
+    // MARK: - Transport provider
+
+    @Test("Every new connection is built by the settings' transport provider, for the endpoint it serves")
+    func connectionsComeFromTransportProvider() throws {
+        let transports = RecordingTransportProvider()
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = transports
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(1), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        let first = try provider.acquire(Self.endpointA)
+        let reused = try provider.acquire(Self.endpointA)
+        first.release()
+        reused.release()
+        #expect(transports.endpoints == [Self.endpointA])
+
+        let dedicated = try provider.openDedicated(for: Self.endpointB)
+        dedicated.close()
+        #expect(transports.endpoints == [Self.endpointA, Self.endpointB])
+
+        // A retired shared connection is rebuilt through the provider too.
+        let lastUsed = try #require(provider.sharedEntrySnapshot(for: Self.endpointA)).lastUsed
+        #expect(provider.sweep(now: lastUsed + .seconds(2)) == 1)
+        let rebuilt = try provider.acquire(Self.endpointA)
+        rebuilt.release()
+        #expect(transports.endpoints == [Self.endpointA, Self.endpointB, Self.endpointA])
+    }
+
+    @Test("A transport provider that throws fails the call with a KurrentError and registers no connection")
+    func throwingTransportProviderFailsCall() throws {
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = ThrowingTransportProvider()
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(3600), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        #expect(throws: KurrentError.self) {
+            try provider.acquire(Self.endpointA)
+        }
+        #expect(throws: KurrentError.self) {
+            try provider.openDedicated(for: Self.endpointA)
+        }
+        #expect(provider.createdSharedConnectionCount == 0)
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(provider.createdDedicatedConnectionCount == 0)
+    }
+
     // MARK: - Shutdown
 
     @Test("shutdown 之後共用與獨立連線的准入都會被拒絕")
@@ -367,5 +416,29 @@ struct KurrentDBClientShutdownTests {
         await #expect(throws: KurrentError.connectionClosed) {
             try await client.selector.select()
         }
+    }
+}
+
+/// Records the endpoint of every transport it builds. The transports are the default Posix ones,
+/// so the connections behave as they would without a provider. (`Endpoint` alone is ambiguous in
+/// this file: grpc-swift-nio-transport declares one too.)
+private final class RecordingTransportProvider: TransportProvider {
+    private let recorded = Mutex<[KurrentDB.Endpoint]>([])
+
+    var endpoints: [KurrentDB.Endpoint] {
+        recorded.withLock { $0 }
+    }
+
+    func makeTransport(for endpoint: KurrentDB.Endpoint) throws -> any ClientTransport<AnyClientTransport.Bytes> {
+        recorded.withLock { $0.append(endpoint) }
+        return try HTTP2ClientTransport.Posix(target: endpoint.target, transportSecurity: .plaintext)
+    }
+}
+
+private struct ThrowingTransportProvider: TransportProvider {
+    struct Failure: Error {}
+
+    func makeTransport(for _: KurrentDB.Endpoint) throws -> any ClientTransport<AnyClientTransport.Bytes> {
+        throw Failure()
     }
 }

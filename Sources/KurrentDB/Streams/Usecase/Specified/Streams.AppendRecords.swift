@@ -18,7 +18,7 @@ extension Streams {
     /// records are written and every failing check is reported together via
     /// ``KurrentError/consistencyViolation(violations:)``.
     public struct AppendRecords: UnaryUnary {
-        package typealias ServiceClient = Kurrentdb_Protocol_V2_Streams_StreamsService.Client<HTTP2ClientTransport.Posix>
+        package typealias ServiceClient = Kurrentdb_Protocol_V2_Streams_StreamsService.Client<AnyClientTransport>
         package typealias UnderlyingRequest = Kurrentdb_Protocol_V2_Streams_StreamsService.Method.AppendRecords.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.AppendRecords.Output
 
