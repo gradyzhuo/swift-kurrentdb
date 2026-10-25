@@ -27,7 +27,7 @@ extension Streams {
         public let streamIdentifier: StreamIdentifier
         public let options: Options
 
-        init(from streamIdentifier: StreamIdentifier, options: Options) {
+        package init(from streamIdentifier: StreamIdentifier, options: Options) {
             self.streamIdentifier = streamIdentifier
             self.options = options
         }
