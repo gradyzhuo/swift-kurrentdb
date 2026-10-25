@@ -300,11 +300,12 @@ GitHub Actions workflow (`.github/workflows/swift-build-testing.yml`):
 - Separate jobs: `KurrentDBPool` live suite, X.509 user certificates (against an unlicensed 26.2 node), offline builds on Amazon Linux / Debian
 - Enables code coverage reporting to Codecov
 - Uses Swift Testing framework with parallel execution disabled
+- `Release readiness` job: while a `pre/X.Y.Z` tag has no `X.Y.Z` tag, `scripts/check-release-readiness.py` annotates what the release documentation still lacks; strict on the `[UPDATE] prepare X.Y.Z` PR (see AGENTS.md, *Releases*)
 
 Documentation workflow (`.github/workflows/documentation.yml`):
 - Builds the DocC catalog (symbol graph + the toolchain's `docc`, no swift-docc-plugin) and deploys it with `docs/` to GitHub Pages (source: GitHub Actions)
 - Versioned: the latest patch of every minor from 1.12 (`scripts/doc-versions.py`) at `/<major.minor>/`, main at `/main/`, the latest release also at the root; `scripts/build-docs-site.py` assembles the site and `docs/doc-versions.js` draws the version menu
-- Release symbol graphs are cached per commit; runs on pushes to main and on `*.*.*` tags (the `github-pages` environment allows both)
+- Release symbol graphs are cached per commit; runs on pushes to main and on `*.*.*` tags (the `github-pages` environment allows both); the Prepare commit of a release skips the deploy from main so the release tag's deploy of the same SHA is the first one Pages sees
 - Swift Package Index links to it through `external_links` in `.spi.yml` instead of building its own
 
 ## Workflow Orchestration
