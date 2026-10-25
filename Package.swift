@@ -110,6 +110,9 @@ let package = Package(
                 // The codec benchmarks build and parse the wire messages directly.
                 "GRPCEncapsulates",
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+                // The client benchmarks run the client against an in-process server.
+                .product(name: "GRPCCore", package: "grpc-swift-2"),
+                .product(name: "GRPCInProcessTransport", package: "grpc-swift-2"),
                 .product(name: "Benchmark", package: "benchmark"),
             ],
             path: "Benchmarks/OfflineBenchmarks",

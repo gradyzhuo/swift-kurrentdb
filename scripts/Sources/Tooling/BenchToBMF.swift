@@ -10,6 +10,11 @@ import Foundation
 ///     latency      p50 wall clock in nanoseconds, bounds = p0 and p90
 ///     allocations  p50 `Malloc (total)`, bounds = p0 and p90
 ///
+/// Benchmarks that run the client against an in-process server (`Client/`, `GRPC/`)
+/// allocate on several concurrent tasks, so their counts depend on scheduling. They
+/// report the same statistic under `allocations-concurrent` instead, which keeps them
+/// out of the threshold on the deterministic counts.
+///
 /// Benchmarks without a wall clock metric are skipped; the conversion fails if no
 /// benchmark was converted so a broken run cannot upload an empty report.
 public enum BenchToBMF {
@@ -20,6 +25,8 @@ public enum BenchToBMF {
     static let mallocTotal = "Malloc (total)"
     static let timeScale: [String: Double] = ["ns": 1, "μs": 1e3, "µs": 1e3, "us": 1e3, "ms": 1e6, "s": 1e9]
     static let countScale: [String: Double] = ["#": 1, "K": 1e3, "M": 1e6]
+    // See the type's documentation.
+    static let concurrentPrefixes = ["Client/", "GRPC/"]
 
     public struct Metric: Decodable, Equatable, Sendable {
         public var scoreUnit: String
@@ -67,6 +74,11 @@ public enum BenchToBMF {
         return String(rest[rest.index(after: dot)...])
     }
 
+    /// The measure a benchmark's allocation count is reported under.
+    public static func allocationsMeasure(_ name: String) -> String {
+        concurrentPrefixes.contains { name.hasPrefix($0) } ? "allocations-concurrent" : "allocations"
+    }
+
     public static func nanoseconds(_ value: Double, unit: String) throws(ToolError) -> Double {
         guard let scale = timeScale[unit] else { throw ToolError(message: "unknown time unit '\(unit)'") }
         return value * scale
@@ -83,11 +95,12 @@ public enum BenchToBMF {
         for entry in entries {
             let secondary = entry.secondaryMetrics ?? [:]
             guard let wall = secondary[wallClock] else { continue }
+            let name = benchmarkName(entry.benchmark)
             var measures = ["latency": try measure(wall, scale: nanoseconds)]
             if let mallocs = secondary[mallocTotal] {
-                measures["allocations"] = try measure(mallocs, scale: count)
+                measures[allocationsMeasure(name)] = try measure(mallocs, scale: count)
             }
-            bmf[benchmarkName(entry.benchmark)] = measures
+            bmf[name] = measures
         }
         return bmf
     }

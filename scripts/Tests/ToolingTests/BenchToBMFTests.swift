@@ -48,6 +48,18 @@ import Testing
         #expect(bmf["ClientSettings/parse-single-node"]?["allocations"] == BenchToBMF.Measure(value: 1242.0, lowerValue: 1240.0, upperValue: 1243.0))
     }
 
+    @Test func concurrentBenchmarksReportAllocationsUnderTheirOwnMeasure() throws {
+        let bmf = try BenchToBMF.convert([
+            Self.entry("Client/append/1x100B", wall: Self.metric("μs", 1, 2, 3), mallocs: Self.metric("#", 117, 121, 127)),
+            Self.entry("GRPC/read/1x100B", wall: Self.metric("μs", 1, 2, 3), mallocs: Self.metric("#", 78, 81, 93)),
+            Self.entry("ClientSettings/parse-single-node", wall: Self.metric("μs", 1, 2, 3), mallocs: Self.metric("#", 11, 11, 11)),
+        ])
+        #expect(bmf["Client/append/1x100B"]?.keys.sorted() == ["allocations-concurrent", "latency"])
+        #expect(bmf["GRPC/read/1x100B"]?["allocations-concurrent"] == BenchToBMF.Measure(value: 81.0, lowerValue: 78.0, upperValue: 93.0))
+        // Only the `Client/` prefix with its slash: `ClientSettings/` keeps the deterministic measure.
+        #expect(bmf["ClientSettings/parse-single-node"]?.keys.sorted() == ["allocations", "latency"])
+    }
+
     @Test func benchmarkWithoutWallClockIsSkipped() throws {
         #expect(try BenchToBMF.convert([Self.entry("NoWall", mallocs: Self.metric("#", 0, 0, 0))]).isEmpty)
     }

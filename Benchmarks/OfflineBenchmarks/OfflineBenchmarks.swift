@@ -93,4 +93,5 @@ let benchmarks: @Sendable () -> Void = {
     }
 
     codecBenchmarks()
+    clientBenchmarks()
 }
