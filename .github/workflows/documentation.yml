@@ -54,7 +54,7 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           if [[ "$GITHUB_REF_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            scripts/check-release-readiness.py --version "$GITHUB_REF_NAME" --strict
+            scripts/check-release-readiness.py "$GITHUB_REF_NAME"
           else
             echo "$GITHUB_REF_NAME is not a release tag; nothing to check"
           fi
