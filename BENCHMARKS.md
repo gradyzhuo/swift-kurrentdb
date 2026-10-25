@@ -5,7 +5,8 @@ All benchmarks use [ordo-one/benchmark](https://github.com/ordo-one/benchmark) a
 
 ## Environment
 
-Both columns were measured on the same commit on 2026-10-25.
+Both columns were measured on the same commit on 2026-10-25; the client-stack section on a later
+commit the same day (see there).
 
 | | macOS | Linux |
 |---|---|---|
@@ -113,7 +114,55 @@ then decodes the `RecordedEvent`s of such a read into a three-field `Codable` st
 - Decoding a response costs ~3.2 µs and 9 allocations per event on macOS (~3.0 µs and 11 allocations on Linux): 2.4–3.6× the time and 4.5–5.5× the allocations of encoding an event for an append.
 - Payload size again changes only the time: 64 KB adds ~2.4 µs per event on macOS (~2.0 µs on Linux).
 - `decode(to:)` adds ~2.4 µs and 12 allocations per event on macOS (~1.8 µs on Linux).
-- Rebuilding an aggregate from 1,000 small events therefore costs ~5.6 ms of client CPU on macOS and ~4.8 ms on Linux. HTTP/2 framing and the per-element cost of the `AsyncSequence` come on top; these benchmarks leave them out.
+- Rebuilding an aggregate from 1,000 small events therefore costs ~5.6 ms of client CPU on macOS and ~4.8 ms on Linux. HTTP/2 framing and the per-element cost of the response sequence come on top; the client-stack benchmarks below measure the latter.
+
+---
+
+### Client stack against an in-process server
+
+`Client/*` runs a real `KurrentDBClient` against an in-process server
+(`Benchmarks/OfflineBenchmarks/InProcessServer.swift`), plugged in through the package-level
+`ClientSettings.transportProvider`. Node selection, the retry wrapper, the shared connection, the
+generated gRPC client and the response sequences run as they do against a node. The server answers
+from responses serialised in advance and never parses a request, and there are no sockets and no
+HTTP/2 framing, so what is left is the cost of the client and of grpc-swift. Setup makes one call
+and checks its result, so discovery and the connection happen before measuring, and the node stays
+cached for the whole run.
+
+`GRPC/*` makes the same calls with the generated gRPC client alone, on the same kind of in-process
+connection: `Client/*` minus `GRPC/*` is what the SDK adds. Both include one copy of every message
+between the in-process transport's `[UInt8]` and the Posix transport's bytes type (one allocation
+per message), which a real connection does not make.
+
+Measured on 2026-10-25 on the commit that added them: macOS on the machine above, Linux in
+`Benchmarks` run 40167369711 (AMD EPYC 9V74, 4 vCPU).
+
+| Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
+|---|---|---|---|---|---|
+| `Client/append/1x100B` | 58 µs | 108 | 645 K | 101 µs | 121 |
+| `Client/append/100x100B` | 325 µs | 1,107 | 4,882 K | 441 µs | 823 |
+| `Client/append-with-deadline/1x100B` | 84 µs | 142 | 866 K | 152 µs | 158 |
+| `Client/read-buffered/1x100B` | 63 µs | 104 | 631 K | 117 µs | 127 |
+| `Client/read-buffered/100x100B` | 759 µs | 1,606 | 10.3 M | 908 µs | 1,633 |
+| `Client/read-buffered/1000x100B` | 6.97 ms | 15,119 | 96.5 M | 8.34 ms | 15,147 |
+| `Client/read-lazy/1x100B` | 74 µs | 114 | 723 K | 132 µs | 135 |
+| `Client/read-lazy/100x100B` | 1.09 ms | 1,805 | 12.7 M | 1.69 ms | 1,868 |
+| `Client/read-lazy/1000x100B` | 10.63 ms | 17,111 | 125.9 M | 16.62 ms | 18,655 |
+
+| Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
+|---|---|---|---|---|---|
+| `GRPC/append/1x100B` | 55 µs | 98 | 593 K | 85 µs | 105 |
+| `GRPC/append/100x100B` | 282 µs | 996 | 4,542 K | 373 µs | 708 |
+| `GRPC/read/1x100B` | 47 µs | 81 | 519 K | 79 µs | 97 |
+| `GRPC/read/100x100B` | 536 µs | 1,475 | 7,664 K | 564 µs | 1,492 |
+| `GRPC/read/1000x100B` | 4.77 ms | 14,081 | 71.3 M | 5.16 ms | 14,103 |
+
+**Observations:**
+- The fixed cost of a call is grpc-swift's: one append takes 58 µs through the client and 55 µs with gRPC alone on macOS (101 µs and 85 µs on Linux). The SDK adds 10 allocations to an append (16 on Linux) and 23 to a read (30): node selection, the retry wrapper, the connection lease, the call metadata and, for a read, the response stream.
+- Per event, a buffered read costs ~6.9 µs and 15 allocations on macOS. gRPC alone costs ~4.7 µs and 14: protobuf decoding (`Read/decode-response` above) plus the in-process transport and its copy. The SDK adds ~2.2 µs and 1 allocation.
+- A lazy read costs ~3.7 µs and 2 allocations more per event than a buffered one on macOS (~8.3 µs on Linux): each element waits in the hand-off for the iterating task instead of being queued. `.lazy` buys bounded memory at that price.
+- A default deadline adds ~26 µs and 34 allocations to a call on macOS (~50 µs and 37 on Linux): grpc-swift runs every call it bounds in a task group next to a timer task.
+- These benchmarks allocate on several concurrent tasks, so their counts depend on scheduling. On the 4-vCPU Linux runner a lazy read's count per iteration spreads over about 10% (each element either finds the consumer waiting or suspends in the hand-off), so its Linux `Malloc` is a median of two modes. Bencher records them without a threshold (see [History on Bencher](#history-on-bencher)).
 
 ---
 
@@ -128,6 +177,10 @@ then decodes the `RecordedEvent`s of such a read into a three-field `Codable` st
 | Read response, per event | ~3.2 µs | ~3.0 µs | 9 | Bytes to `ReadResponse` |
 | Model decoding, per event | ~2.4 µs | ~1.8 µs | 12 | `RecordedEvent.decode(to:)` |
 | Connection string parsing | 9–20 µs | 9–18 µs | 11–29 | Parse once, reuse the result |
+| Client call, fixed | 58 µs | 101 µs | 108 | In-process; gRPC alone: 55 µs (85 µs on Linux) |
+| Buffered read, per event | ~6.9 µs | ~8.2 µs | 15 | gRPC alone: ~4.7 µs and 14 on macOS |
+| Lazy read, per event | ~10.6 µs | ~16.5 µs | 17 | The hand-off per element; memory stays bounded |
+| Default deadline, per call | +26 µs | +50 µs | +34 | grpc-swift's timer task |
 
 ---
 
@@ -218,13 +271,14 @@ between runs, so a person checks a run before it becomes the reference.
 
 Every workflow run also uploads its results to
 [Bencher](https://bencher.dev/perf/gradyzhuo-s-project), which keeps one
-data point per commit and draws them over time. Two measures are tracked
-per benchmark:
+data point per commit and draws them over time. Each benchmark has a
+latency and an allocation measure:
 
 | Measure | Value | Bounds | Source |
 |---|---|---|---|
 | `latency` | p50 wall clock, ns | p0 / p90 | `Time (wall clock)` |
 | `allocations` | p50 malloc count | p0 / p90 | `Malloc (total)` |
+| `allocations-concurrent` | p50 malloc count of `Client/*` and `GRPC/*` | p0 / p90 | `Malloc (total)` |
 
 The conversion is `bench-to-bmf` in the `scripts/` package (tests in
 `scripts/Tests/ToolingTests`): the workflow exports a second run in JMH
@@ -250,6 +304,15 @@ patch on `ubuntu-24.04`, so a new patch release or runner image can shift
 the counts too. A deliberate increase or such an environment change alerts
 once, and the next run compares against the new count. Runs on other
 branches are uploaded without thresholds.
+
+The client-stack benchmarks (`Client/*`, `GRPC/*`) are the exception: they
+allocate on several concurrent tasks, so their counts depend on scheduling.
+Most move by an allocation or two between runs, but on the 4-vCPU runner a
+lazy read's count per iteration spreads over about 10%, depending on whether
+each element finds the consumer waiting, and its median moves with the mix.
+`scripts/bench_to_bmf.py` therefore reports them as `allocations-concurrent`,
+which keeps the history but has no threshold; the latency test still covers
+these benchmarks.
 
 To reproduce the upload locally:
 
