@@ -238,12 +238,14 @@ Two thresholds apply to pushes to `main`, and either alert fails the job:
 | `latency` | t-test, upper boundary 0.99, last 64 runs | the run lands outside the band of recent history |
 | `allocations` | percentage, upper boundary 0.01, previous run only | the count grows by more than 1% |
 
-Allocation counts are deterministic on a given platform: over 35 runs on
-`main` every benchmark reported the same count each time, except when the
-code under it changed. So the allocation threshold compares against the
-previous run alone. A deliberate increase alerts once, and the next run
-compares against the new count. Runs on other branches are uploaded
-without thresholds.
+Allocation counts are deterministic for a given toolchain and runner image:
+over 35 runs on `main` every benchmark reported the same count each time,
+except when the code under it changed. So the allocation threshold compares
+against the previous run alone. The workflow installs the latest Swift 6.4
+patch on `ubuntu-latest`, so a new patch release or runner image can shift
+the counts too. A deliberate increase or such an environment change alerts
+once, and the next run compares against the new count. Runs on other
+branches are uploaded without thresholds.
 
 To reproduce the upload locally:
 
