@@ -92,7 +92,7 @@ package final class ScopedCall<Response: Sendable>: Sendable {
     }
 }
 
-extension ScopedStreamResponse where Transport == HTTP2ClientTransport.Posix {
+extension ScopedStreamResponse where Transport == AnyClientTransport {
     /// Starts the RPC on the shared connection and returns once the server accepted it.
     ///
     /// A call the server rejects before accepting it (status-only response) or that fails to

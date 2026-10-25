@@ -14,7 +14,7 @@ import NIO
 
 /// gRPC service for KurrentDB server administration scoped to a specific operations target.
 public final class Operations<Target: OperationsTarget>: GRPCConcreteService {
-    package typealias UnderlyingClient = EventStore_Client_Operations_Operations.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Operations_Operations.Client<AnyClientTransport>
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions

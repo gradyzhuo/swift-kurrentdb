@@ -24,7 +24,7 @@ private final class CompletionFlag: Sendable {
 /// `perform(selector:)` is bound statically in generic context, so overriding only
 /// `perform(node:)` would leave the base extension's `perform(selector:)` calling the
 /// dedicated-connection version.
-extension UnaryStream where Transport == HTTP2ClientTransport.Posix, Self: BufferedStreamResponse {
+extension UnaryStream where Transport == AnyClientTransport, Self: BufferedStreamResponse {
     package func perform(selector: NodeSelector, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Responses {
         try await withRetry(
             policy: selector.retryPolicy,

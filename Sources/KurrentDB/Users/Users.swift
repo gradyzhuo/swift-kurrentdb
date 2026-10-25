@@ -13,7 +13,7 @@ import NIO
 
 /// gRPC service for managing KurrentDB user accounts scoped to a specific target.
 public final class Users<Target: UsersTarget>: GRPCConcreteService {
-    package typealias UnderlyingClient = EventStore_Client_Users_Users.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Users_Users.Client<AnyClientTransport>
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions

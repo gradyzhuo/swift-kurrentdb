@@ -30,7 +30,7 @@ import NIO
 /// ```
 public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The underlying client type used for gRPC communication.
-    package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Streams_Streams.Client<AnyClientTransport>
 
     /// Node selector used to resolve the target gRPC endpoint.
     internal let selector: NodeSelector

@@ -12,7 +12,7 @@ import SwiftProtobuf
 extension Streams {
     /// Usecase that appends events to one or more streams in a single session call.
     public struct AppendSession: StreamUnary {
-        package typealias ServiceClient = Kurrentdb_Protocol_V2_Streams_StreamsService.Client<HTTP2ClientTransport.Posix>
+        package typealias ServiceClient = Kurrentdb_Protocol_V2_Streams_StreamsService.Client<AnyClientTransport>
         package typealias UnderlyingRequest = Kurrentdb_Protocol_V2_Streams_StreamsService.Method.AppendSession.Input
         package typealias UnderlyingResponse = ServiceClient.UnderlyingService.Method.AppendSession.Output
 

@@ -21,7 +21,7 @@ import NIO
 /// ```
 public final class Projections<Target: ProjectionsTarget>: GRPCConcreteService {
     /// The underlying gRPC client type used for communication.
-    package typealias UnderlyingClient = EventStore_Client_Projections_Projections.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Projections_Projections.Client<AnyClientTransport>
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions

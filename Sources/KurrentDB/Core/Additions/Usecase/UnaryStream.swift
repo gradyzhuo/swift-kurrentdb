@@ -9,7 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
-extension UnaryStream where Transport == HTTP2ClientTransport.Posix {
+extension UnaryStream where Transport == AnyClientTransport {
     package func perform(selector: NodeSelector, callOptions: CallOptions, credentials: Authentication? = nil) async throws(KurrentError) -> Responses {
         try await withRetry(
             policy: selector.retryPolicy,

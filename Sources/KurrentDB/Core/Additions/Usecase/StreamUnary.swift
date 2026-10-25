@@ -9,7 +9,7 @@ import GRPCCore
 import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 
-extension StreamUnary where Transport == HTTP2ClientTransport.Posix {
+extension StreamUnary where Transport == AnyClientTransport {
     package func send(connection: GRPCClient<Transport>, metadata: Metadata, callOptions: CallOptions) async throws -> Response {
         try await send(connection: connection, request: request(metadata: metadata), callOptions: callOptions)
     }

@@ -14,7 +14,7 @@ import NIO
 
 /// gRPC service for retrieving real-time KurrentDB server statistics.
 public final class Monitoring: GRPCConcreteService {
-    package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<HTTP2ClientTransport.Posix>
+    package typealias UnderlyingClient = EventStore_Client_Monitoring_Monitoring.Client<AnyClientTransport>
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions
