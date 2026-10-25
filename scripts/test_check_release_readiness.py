@@ -76,6 +76,16 @@ class ChecksTests(unittest.TestCase):
             [f"{readiness.WHATS_NEW}: a bullet under ### 2.7 ends with (2.7.1)"],
         )
 
+    def test_patch_bullet_must_end_with_the_version(self):
+        ready_tree(self.root, "2.7.1")
+        expected = [f"{readiness.WHATS_NEW}: a bullet under ### 2.7 ends with (2.7.1)"]
+        # A mention in prose is not an entry for the patch.
+        write(self.root, readiness.WHATS_NEW, "## What's new\n\n### 2.7\n\nAlso fixed in (2.7.1).\n\n- **Thing.** Done.\n")
+        self.assertEqual(failures(self.root, "2.7.1"), expected)
+        # Neither is a bullet that names the version before its text.
+        write(self.root, readiness.WHATS_NEW, "## What's new\n\n### 2.7\n\n- **Thing (2.7.1).** Done.\n")
+        self.assertEqual(failures(self.root, "2.7.1"), expected)
+
     def test_untouched_tree_reports_every_surface(self):
         ready_tree(self.root, "2.6.0")
         missing = failures(self.root, "2.7.0")

@@ -76,7 +76,8 @@ def checks(root: Path, version: str) -> list[tuple[bool, str]]:
     if patch > 0:
         own = re.split(r"^### ", section, flags=re.MULTILINE)
         entry = next((part for part in own if part.startswith(series + "\n") or part.startswith(series + " ")), "")
-        check(f"({version})" in entry, WHATS_NEW, f"a bullet under ### {series} ends with ({version})")
+        bullet = re.compile(rf"^\s*[-*] .*\({re.escape(version)}\)\.?\s*$", re.MULTILINE)
+        check(bullet.search(entry) is not None, WHATS_NEW, f"a bullet under ### {series} ends with ({version})")
 
     page = html.unescape(read(root, LANDING_PAGE))
     check(pin in page, LANDING_PAGE, pin)
