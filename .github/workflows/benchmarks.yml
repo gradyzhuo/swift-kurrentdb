@@ -86,11 +86,15 @@ jobs:
       - uses: bencherdev/bencher@f80847436d7157936b40525db4c2a1064124f04a # v0.6.13 (was @main)
       # Uploads to Bencher; the perf page (see BENCHER_PROJECT) keeps the history per commit.
       # On main two thresholds apply, and --error-on-alert turns either alert into a failed job:
-      # - latency: a t-test flags a run outside the 99% band of the last 64 runs.
+      # - latency: a t-test flags a run outside the 99% band of the last 64 runs, once a benchmark
+      #   has 10 runs of history. Runners land on different CPUs (two runs of the same code differed
+      #   by up to 63%), so a shorter history gives too narrow a band.
       # - allocations: malloc counts are deterministic for a given toolchain and runner image, so a
       #   percentage test against the previous run alone flags any increase over 1%. A deliberate
       #   increase, a new Swift patch or a new runner image alerts once; the next run compares
       #   against the new count.
+      # Each --threshold-* option pairs with the --threshold-measure values in order; `_` leaves
+      # that option unset for its measure.
       # Other branches (manual runs) are uploaded without thresholds so they never fail on noise.
       - name: Upload to Bencher
         env:
@@ -101,10 +105,12 @@ jobs:
             threshold_args=(
               --threshold-measure latency
               --threshold-test t_test
+              --threshold-min-sample-size 10
               --threshold-max-sample-size 64
               --threshold-upper-boundary 0.99
               --threshold-measure allocations
               --threshold-test percentage
+              --threshold-min-sample-size _
               --threshold-max-sample-size 1
               --threshold-upper-boundary 0.01
               --thresholds-reset

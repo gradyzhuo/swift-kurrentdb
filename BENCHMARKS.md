@@ -235,8 +235,12 @@ Two thresholds apply to pushes to `main`, and either alert fails the job:
 
 | Measure | Test | Alerts when |
 |---|---|---|
-| `latency` | t-test, upper boundary 0.99, last 64 runs | the run lands outside the band of recent history |
+| `latency` | t-test, upper boundary 0.99, last 64 runs, at least 10 | the run lands outside the band of recent history |
 | `allocations` | percentage, upper boundary 0.01, previous run only | the count grows by more than 1% |
+
+The latency test waits until a benchmark has 10 runs of history. Runners
+land on different CPUs, and two runs of the same code differed by up to
+63%, so a shorter history gives too narrow a band and alerts on noise.
 
 Allocation counts are deterministic for a given toolchain and runner image:
 over 35 runs on `main` every benchmark reported the same count each time,
