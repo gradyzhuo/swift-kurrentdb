@@ -134,9 +134,32 @@ struct OpenLoopTests {
         expectAccounted(r)
     }
 
+    @Test func lateLaunchIsChargedFromTheSchedule() async {
+        // Every sleep on this clock returns 50 ms late, so op #1 (due at 100 ms) launches about 50 ms late. Measuring
+        // from the launch would hide that lag (coordinated omission); it must be charged from the schedule.
+        let r = await runOpenLoop(.init(rate: 10, duration: .milliseconds(200), inFlightCap: 10, deadline: .seconds(2), drain: .seconds(1)), clock: OffsetSleepClock(offset: .milliseconds(50))) { _ in }
+        #expect(r.scheduled == 2)
+        #expect(r.succeeded == 2)
+        #expect(r.histogram.valueAtPercentile(100) >= 45_000)
+        expectAccounted(r)
+    }
+
+    @Test func earlyLaunchIsChargedFromTheLaunch() async {
+        // Every sleep on this clock returns 20 ms early, so op #1 (due at 100 ms) launches about 20 ms early. Each op
+        // takes 30 ms; measuring from the due instant would report about 10 ms for op #1, from the launch at least 30 ms.
+        let r = await runOpenLoop(.init(rate: 10, duration: .milliseconds(200), inFlightCap: 10, deadline: .seconds(2), drain: .seconds(1)), clock: OffsetSleepClock(offset: .milliseconds(-20))) { _ in
+            try await Task.sleep(for: .milliseconds(30))
+        }
+        #expect(r.scheduled == 2)
+        #expect(r.succeeded == 2)
+        #expect(r.histogram.valueAtPercentile(0) >= 29_000)
+        expectAccounted(r)
+    }
+
     /// Harness floor: latency of a no-op operation, i.e. what the scheduler itself adds to every measurement.
     /// Bounds are deliberately loose (debug build, loaded CI); the printed numbers are what to compare against the
-    /// .NET driver's floor. A release build on an Apple Silicon Mac measures p50 2-4 µs, p99 under 40 µs.
+    /// .NET driver's floor. A release build on an Apple Silicon Mac measures p50 / p99 of 4-7 / 150-190 µs at 1000/s and
+    /// 6-7 / 126-380 µs at 8000/s.
     @Test(arguments: [1000.0, 8000.0])
     func noOpCalibrationFloor(rate: Double) async {
         let r = await runOpenLoop(.init(rate: rate, duration: .milliseconds(500), inFlightCap: 256, deadline: .seconds(5), drain: .seconds(1))) { _ in }
@@ -172,5 +195,21 @@ private final class SkewedClock: Clock, Sendable {
 
     func sleep(until deadline: Instant, tolerance: Duration?) async throws {
         try await base.sleep(until: deadline, tolerance: tolerance)
+    }
+}
+
+/// A real-time clock whose sleeps all end `offset` after (or, if negative, before) the requested instant.
+private struct OffsetSleepClock: Clock {
+    typealias Instant = ContinuousClock.Instant
+    let offset: Duration
+    private let base = ContinuousClock()
+
+    init(offset: Duration) { self.offset = offset }
+
+    var now: Instant { base.now }
+    var minimumResolution: Duration { base.minimumResolution }
+
+    func sleep(until deadline: Instant, tolerance: Duration?) async throws {
+        try await base.sleep(until: deadline.advanced(by: offset), tolerance: tolerance)
     }
 }
