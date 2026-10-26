@@ -40,7 +40,7 @@ this contract. The orchestrator knows nothing else about a driver. The reference
 | `metadataSize` | int | bytes of event metadata (60) |
 | `batchSize` | int | events per append (1 for latency, 50 for throughput) |
 | `streamCount` | int | number of streams, `<streamPrefix>-<n>` for `n` in `0..<streamCount` |
-| `streamPrefix` | string | stream name prefix |
+| `streamPrefix` | string | stream name prefix; equal to `category` and free of `-` (see below) |
 | `category` | string | category of the streams (`$ce-<category>`) |
 | `groupName` | string? | persistent subscription group (persistentSubscription only) |
 | `consumers` | int? | persistent subscription consumers (RoundRobin); absent means 1 |
@@ -69,9 +69,13 @@ Warmup never touches measured data. Warmup streams are named `<streamPrefix>w-<n
 `<category>w` (that is, `streamPrefix + "w"` and `category + "w"`, then `-<n>` as usual). Warmup appends go only to
 those streams; warmup reads (rebuild) use the same shape against `<streamPrefix>w-*` streams; warmup subscriptions
 (persistent and catch-up) use the `$ce-<category>w` stream. The harness seeds whatever warmup data a kind needs before
-`run`, exactly as for the measured data. For persistent subscriptions the harness also creates a second group for the
-warmup category; the driver does not create groups (see below). Measured streams, the measured category and the measured
+`run`, exactly as for the measured data. For persistent subscriptions the harness also creates a second group,
+`groupName + "w"`, on `$ce-<category>w`; the driver does not create groups (see below). Measured streams, the measured category and the measured
 group are untouched until the measure window starts.
+
+`$by_category` takes everything before the **first** `-` of a stream name as its category, so `<streamPrefix>-<n>` is
+in `$ce-<category>` and `<streamPrefix>w-<n>` in `$ce-<category>w` only when `streamPrefix == category` and neither
+contains `-`. Whoever writes the scenario (orchestrator, test harness) keeps them that way.
 
 ### Common client settings
 
@@ -97,7 +101,10 @@ draw(): state = state + 0x9E3779B97F4A7C15            (mod 2^64)
 
 The stream for operation *i* is index `z % streamCount`, i.e. `<streamPrefix>-<z % streamCount>` for append and
 persistent-subscription/catch-up writes. Rebuild picks `rebuildStreams[z % rebuildStreams.count]`. Warmup uses the same
-generator, restarted at `state = seed`, with the `w` names.
+generator, restarted at `state = seed`, with the `w` names (rebuild warmup reads `<streamPrefix>w-<z % rebuildStreams.count>`,
+so the harness seeds `<streamPrefix>w-0 ..< <streamPrefix>w-<rebuildStreams.count>` like the measured streams).
+Draw *i* only depends on `seed` and *i*: it is the mix of `seed + (i + 1) * 0x9E3779B97F4A7C15`. Reference:
+`Sources/LiveBenchCore/SeededDraw.swift`.
 
 ### Event bytes
 
@@ -124,6 +131,10 @@ repeat fillerCount times:
 
 Data uses `seed' = seed`; metadata uses `seed' = seed + 0x9E3779B97F4A7C15 (mod 2^64)`. Reference:
 `Sources/LiveBenchCore/Payload.swift`.
+
+Building these bytes (one splitmix64 step per filler byte) is harness work, not client work: a driver should build an
+operation's events before its due instant (the Swift driver prepares them on a background task about half a second
+ahead and builds inline only when that falls behind), so payload generation does not end up in the latency.
 
 1. Operation *i* (0-based) is **due at `start + i / rate`**. Operations are scheduled only while the due instant is before
    `start + duration`. Nothing new is scheduled after that.
@@ -174,6 +185,9 @@ The append outcome is the operation outcome for accounting; the latency of a suc
 subscriber's receipt: origin is `min(scheduled instant of the append, actual launch of the append)` (rule 3), end is the
 first receipt of that event (matched by the event's index `k`). An append that succeeds but whose event is never received
 by `scheduled + deadline` is a timeout (rule 5). Receipts of an event already received count as `redeliveries`.
+The operation therefore completes at the receipt, which may come before the append's response: the Swift driver
+registers the event as awaited, starts the append, and completes the operation on the first receipt, or fails it if the
+append throws first. A receipt is matched by parsing `k` from the data prefix `{"i":<k>,`.
 
 ### Persistent subscription
 
@@ -182,6 +196,8 @@ by `scheduled + deadline` is a timeout (rule 5). Receipts of an event already re
 - The driver connects `consumers` (absent = 1) consumers to the group in the same process, with default client
   options, and **acks each event on receipt** (one ack per event; `ackEnqueued` counts acks handed to the client).
 - `uniqueDeliveries` counts distinct events across all consumers.
+- Warmup runs the same way against group `groupName + "w"` on `$ce-<category>w`; its consumers are stopped before the
+  measured group is first connected, right before the measure window.
 
 ### Catch-up
 
@@ -196,7 +212,10 @@ subscription from the start** of that stream (not a stream read), with link reso
 - Phase 2 keeps the **same subscription live**: when the corpus is consumed the subscription continues to receive the
   events the writer appends at `rate` during measure; the open-loop rules and latency definition are those of the
   persistent subscription kind, with the catch-up subscription as the receiver. The corpus events are not counted in
-  phase 2.
+  phase 2: the first `catchUpExpectedEvents` events the subscription receives are the corpus, everything after them is
+  matched to the writer. `uniqueDeliveries` and `redeliveries` cover phase 2 only.
+- The bounded wait for phase 1 is `max(120 s, catchUpExpectedEvents / 1000 s)` (at least 1,000 events/s). If it
+  expires, the driver skips phase 2 and writes zero outcome counters and `catchUpSeconds: null`.
 
 ## Output: `result.json` (`TrialResult`)
 
@@ -226,7 +245,7 @@ Optional fields may be omitted or `null`.
 | `kind` | `expectedEvents` | `receivedEvents` | Class |
 |---|---|---|---|
 | `appendLatency`, `appendThroughput` | `succeeded * batchSize` | the same events confirmed by the driver's own bookkeeping | informational |
-| `rebuild` | streams read by succeeded reads `* streamLength` | events decoded | **hard** (seeded count) |
+| `rebuild` | (succeeded reads + reads that completed with a count other than `streamLength`) `* streamLength` | `succeeded * streamLength` + events of those wrong-count reads (a wrong-count read is a failure, so any one makes the two differ) | **hard** (seeded count) |
 | `persistentSubscription` | events the writer appended successfully | unique deliveries | reported |
 | `catchUp` | phase 1: `catchUpExpectedEvents` (hard, seeded count; the trial fails if fewer arrive); live phase: events the writer appended successfully (reported). Report `expectedEvents` and `receivedEvents` as the sums over both phases | unique events received | mixed, see below |
 
