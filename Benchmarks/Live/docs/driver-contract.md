@@ -60,8 +60,8 @@ Unknown fields must be ignored; absent optional fields are `null`/absent.
 Applies to the warmup window and the measure window alike. Warmup runs at the step's rate and its outcomes are
 discarded. Counters and histogram in the result cover the measure window only. CPU is the delta of process CPU time
 between the start of measure and the end of drain. `maxRssBytes` is the process-lifetime peak resident set size
-(`ru_maxrss`, not a delta; includes warmup); a .NET driver must report its process peak too (`Process.PeakWorkingSet64`),
-not a managed-heap figure.
+(`ru_maxrss`, not a delta; includes warmup); a .NET driver must report its process peak too (`ru_maxrss`, or
+`Process.PeakWorkingSet64`, which reads the same kernel peak on Linux), not a managed-heap figure.
 
 ### Warmup isolation
 
@@ -118,7 +118,7 @@ Every appended event has:
 decimal and `fillerCount = size - len(prefix) - len(suffix)` (prefix `{"i":<k>,"p":"`, suffix `"}`; size is always large
 enough). The filler comes from a **pool of 1024 bodies** per payload kind, computed once before warmup:
 
-- `width = size - len("{\"i\":0,\"p\":\"") - len("\"}") = size - 13` (the filler length of a one-digit index, the
+- `width = size - len("{\"i\":0,\"p\":\"") - len("\"}") = size - 12 - 2 = size - 14` (the filler length of a one-digit index, the
   longest any index gets).
 - Pool entry `j` (`0 <= j < 1024`) is `width` bytes over
   `alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"` (62 bytes):
@@ -351,3 +351,43 @@ How the orchestrator interprets it:
   marker on stderr, plus the tail of stderr on failure. Logs go either to stderr (unbuffered) or to stdout flushed after each line, so the log of a killed driver is
   complete. The Swift driver writes each stdout line unbuffered.
 - Do not write outside `--out`.
+
+## .NET notes
+
+The .NET driver (`drivers/dotnet`, `KurrentDB.Client` pinned exactly in `LiveDriver.DotNet.csproj` and
+`packages.lock.json`, .NET 8) follows every rule above. Where the .NET client's API or runtime shapes the mapping, it
+does this:
+
+- **Clients.** `KurrentDBClientSettings.Create(<connection string>)` with nothing changed. Streams go through
+  `KurrentDBClient`; persistent subscriptions need the separate `KurrentDBPersistentSubscriptionsClient` built from the
+  same settings, so a persistent-subscription trial has two gRPC channels (the Swift driver uses one client).
+- **Persistent subscription consumers.** `SubscribeToStream(stream, group)` with the client's default `bufferSize` of
+  **10** (the Swift SDK's default is 1000). Both are client defaults and stay as they are in headline runs; the buffer
+  bounds the unacked events the server sends one consumer. Each event is acked on receipt with one `Ack(resolvedEvent)`
+  call (no batching), and `ackEnqueued` counts completed `Ack` calls. The driver waits for each consumer's
+  `SubscriptionConfirmation` before the window starts. Link resolution is the group's setting (created by the harness).
+- **Catch-up.** `SubscribeToStream($ce-<category>, FromStream.Start, resolveLinkTos: true)`, read through `Messages`;
+  only `StreamMessage.Event` messages count as receipts.
+- **Rebuild.** `ReadStreamAsync(Forwards, stream, Start)` with defaults; each event's data goes through
+  `JsonDocument.Parse`. A read of a stream that does not exist is a failure (the Swift SDK throws), not a short read.
+- **Scheduler.** A dedicated thread sleeps with `nanosleep(2)` (nanosecond resolution, no millisecond rounding as in
+  `Thread.Sleep` / `Task.Delay`) and applies the same overshoot estimate as the Swift waker (EWMA 1/16, capped at 1 ms,
+  no spinning). Each launch is queued to the thread pool (`ThreadPool.UnsafeQueueUserWorkItem`), as the Swift driver
+  starts a `Task`. The deadline timer is `CancellationTokenSource.CancelAfter` (millisecond timer): it only decides when
+  a still-outstanding operation is recorded as a timeout and leaves the cap; a completion is judged against the deadline
+  by its own instant, as in rule 5.
+- **Process figures.** CPU and peak RSS come from `getrusage(RUSAGE_SELF)` (P/Invoke), the Swift driver's source;
+  on Linux `ru_maxrss` is the kernel's VmHWM, which `Process.PeakWorkingSet64` also reports.
+- **Runtime defaults.** No GC, thread-pool or tiered-compilation settings are changed. The .NET thread pool's workers
+  spin briefly before sleeping (`ThreadPool_UnfairSemaphoreSpinLimit` default), which keeps wake-ups short but costs
+  process CPU even with a no-op operation: about 0.2 cores at 1000/s and 1.3 cores at 8000/s on an Apple Silicon Mac
+  (about 0.03 and 0.12 cores with the spin limit set to 0). That CPU is part of a default .NET process and is counted in
+  `cpuUserSeconds`/`cpuSystemSeconds`; read the CPU ratios with it in mind.
+- **Harness floor** (rule 10): `dotnet LiveDriver.DotNet.dll floor --rate <r> [--seconds <s>] [--warmup <s>]` runs the
+  same scheduler with a no-op operation after a warmup window and prints p50/p99. Release build, Apple Silicon Mac,
+  5 s after a 2 s warmup, p50 / p99: 1000/s 5-7 / 111-153 µs, 8000/s 5-6 / 73-138 µs (Swift on the same machine,
+  `OpenLoopTests.noOpCalibrationFloor` in release: 1000/s 7 / 241-282 µs, 8000/s 3-6 / 31-88 µs). Without warmup
+  (0.5 s windows, JIT still tiering) the .NET p99 is sometimes several ms, which is why the floor is taken after a
+  warmup, as every trial has one. In a Linux container on the same Mac (Docker Desktop VM, not CI-representative) both
+  harnesses are much noisier and similar: .NET 1000/s 204 / 2945 µs, 8000/s 281 / 3521 µs; Swift 1000/s 220-443 /
+  2579-2829 µs, 8000/s 460-521 / 4083-16559 µs.
