@@ -213,7 +213,10 @@ reference is the `runOpenLoop` overload whose operation returns its completion i
   measured group is first connected, right before the measure window.
 - After the drain the measured consumers **stay connected for 3 s** (outside the CPU window) before they are closed:
   an ack still in transit when its connection closes is lost (the event goes back to be retried), and the server's
-  acknowledged progress, which the orchestrator reads after the driver exits, would fall short.
+  acknowledged progress, which the orchestrator reads after the driver exits, would fall short. During the settle the
+  consumers keep receiving and acking as before (a late delivery or redelivery is acked), but the delivery counters
+  (`uniqueDeliveries`, `redeliveries`, `validation.receivedEvents`) are **snapshotted at the end of the drain, before
+  the settle**; only `ackEnqueued` is read after it.
 
 #### Group settings and acknowledged progress (orchestrator)
 
@@ -337,7 +340,14 @@ How the orchestrator interprets it:
 ## Process rules
 
 - One process, one trial. No state is carried between trials; the orchestrator pins the process to its CPUs.
-- stdout is free for logging; the orchestrator reads only the two files (and `version` stdout) plus the tail of stderr on
-  failure. Logs go either to stderr (unbuffered) or to stdout flushed after each line, so the log of a killed driver is
+- **Measure-start marker (mandatory):** at the instant the measure window starts (immediately before the open loop of
+  the measured window; catch-up: the start of phase 2's measure window, after phase 1), the driver writes the exact
+  line `LIVE_BENCH_MEASURE_START` to **stderr, unbuffered**, once per run. The orchestrator watches the driver's stderr,
+  starts the headroom monitor on that line and stops it `measureSeconds` later (or when the driver exits, if earlier).
+  If the marker never appears the trial's headroom is unavailable (null) and the trial carries a note saying so. A
+  catch-up driver that ends with a phase-1 shortfall writes no marker. (ghz writes none; its measured run is a separate
+  process whose launch starts the window.)
+- stdout is free for logging; the orchestrator reads only the two files (and `version` stdout), the measure-start
+  marker on stderr, plus the tail of stderr on failure. Logs go either to stderr (unbuffered) or to stdout flushed after each line, so the log of a killed driver is
   complete. The Swift driver writes each stdout line unbuffered.
 - Do not write outside `--out`.

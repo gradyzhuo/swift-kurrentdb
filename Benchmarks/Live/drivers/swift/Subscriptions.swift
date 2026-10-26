@@ -31,6 +31,7 @@ func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBC
     let board = DeliveryBoard(scenario)
     // The measured group is first touched here, right before the window starts.
     let readers = try await PersistentConsumers.start(client, stream: measured.categoryStream, group: group, count: consumers, board: board)
+    markMeasureStart()
     let window = await writerWindow(scenario, client: client, payloads: payloads, names: measured, seconds: scenario.measureSeconds, board: board)
     let deliveries = board.snapshot()
     // Stay connected (outside the CPU window) so the last acks reach the server and get checkpointed: an ack still in
@@ -124,6 +125,7 @@ func runCatchUp(_ scenario: EffectiveScenario, client: KurrentDBClient) async th
     let catchUpSeconds = durationSeconds(started.duration(to: caughtUp))
 
     log("phase 2: measure")
+    markMeasureStart()
     let window = await writerWindow(scenario, client: client, payloads: payloads, names: measured, seconds: scenario.measureSeconds, board: board)
     let deliveries = board.snapshot()
     return Trial(
