@@ -1,6 +1,6 @@
 # Live benchmarks against a real KurrentDB server — design
 
-Status: draft, open questions resolved, awaiting approval · Date: 2026-10-25
+Status: reviewed (builder check + 4 Codex rounds, clean), awaiting approval · Date: 2026-10-25
 
 ## Intent
 
