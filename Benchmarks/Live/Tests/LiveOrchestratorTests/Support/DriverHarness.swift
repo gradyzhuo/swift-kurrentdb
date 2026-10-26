@@ -4,26 +4,57 @@ import LiveBenchCore
 import Synchronization
 
 /// The client whose driver a test runs. Only the launch command differs between them; preparation is shared.
-enum Client {
+enum Client: CustomStringConvertible, Sendable {
     case swift, dotnet
 
-    /// The driver executable. `LIVE_BENCH_SWIFT_DRIVER` overrides the Swift driver's location (e.g. another scratch path).
-    var driverExecutable: URL {
+    var description: String {
+        switch self {
+        case .swift: "swift"
+        case .dotnet: "dotnet"
+        }
+    }
+
+    /// The driver's command line before its own arguments: an executable and the arguments that select the driver.
+    /// `LIVE_BENCH_SWIFT_DRIVER` overrides the Swift driver's location (e.g. another scratch path). The .NET driver runs
+    /// as `dotnet <dll>`; it is built (`dotnet build -c Release`) once per test process, so a stale build is never run.
+    var driverCommand: (executable: URL, arguments: [String]) {
         get throws {
             switch self {
             case .swift:
                 if let path = ProcessInfo.processInfo.environment["LIVE_BENCH_SWIFT_DRIVER"] {
-                    return URL(fileURLWithPath: path)
+                    return (URL(fileURLWithPath: path), [])
                 }
                 // `swift test` builds every product of the package, the driver included.
                 let built = livePackageDirectory.appendingPathComponent(".build/debug/LiveDriverSwift")
                 guard FileManager.default.isExecutableFile(atPath: built.path) else {
                     throw HarnessError("\(built.path) is missing: run `swift build --product LiveDriverSwift` first")
                 }
-                return built
+                return (built, [])
             case .dotnet:
-                throw HarnessError("the .NET driver is not built yet (Task 10)")
+                let dll = try DotNetDriverBuild.dll()
+                return (URL(fileURLWithPath: "/usr/bin/env"), ["dotnet", dll.path])
             }
+        }
+    }
+}
+
+/// Builds the .NET driver in Release once per test process (`dotnet` from `PATH`).
+enum DotNetDriverBuild {
+    static let projectDirectory = livePackageDirectory.appendingPathComponent("drivers/dotnet")
+    static let dllPath = projectDirectory.appendingPathComponent("bin/Release/net8.0/LiveDriver.DotNet.dll")
+    private static let built = Mutex<Result<URL, HarnessError>?>(nil)
+
+    static func dll() throws -> URL {
+        try built.withLock { state in
+            if state == nil {
+                do {
+                    try runTool("dotnet", ["build", projectDirectory.path, "-c", "Release", "-nologo", "-v", "q"])
+                    state = .success(dllPath)
+                } catch {
+                    state = .failure(HarnessError("dotnet build of the .NET driver failed: \(error)"))
+                }
+            }
+            return try state!.get()
         }
     }
 }
@@ -36,6 +67,8 @@ struct DriverRun {
     var scenario: EffectiveScenario
     /// The last few KB of the driver's stdout, for failure messages.
     var log: String
+    /// The driver's whole stderr (the measure-start marker, plus logs of a driver that logs there).
+    var stderr: String
 }
 
 /// Runs one trial of `client`'s driver against `LiveServer.current` and returns its `result.json`.
@@ -60,9 +93,10 @@ func runDriverDetailed(_ client: Client, scenario: EffectiveScenario) async thro
     try JSONEncoder().encode(scenario).write(to: scenarioFile)
 
     let limit = scenario.warmupSeconds + scenario.measureSeconds + scenario.drainSeconds + 180
+    let command = try client.driverCommand
     let (status, stderr) = try await launch(
-        try client.driverExecutable,
-        ["run", "--scenario", scenarioFile.path, "--connection", server.connectionString, "--out", outDirectory.path],
+        command.executable,
+        command.arguments + ["run", "--scenario", scenarioFile.path, "--connection", server.connectionString, "--out", outDirectory.path],
         logDirectory: workDirectory,
         timeout: .seconds(limit)
     )
@@ -74,7 +108,8 @@ func runDriverDetailed(_ client: Client, scenario: EffectiveScenario) async thro
         result: try decoder.decode(TrialResult.self, from: Data(contentsOf: outDirectory.appendingPathComponent("result.json"))),
         histogram: try decoder.decode(HistogramFile.self, from: Data(contentsOf: outDirectory.appendingPathComponent("histogram.json"))),
         scenario: scenario,
-        log: String(((try? String(contentsOf: workDirectory.appendingPathComponent("stdout.log"), encoding: .utf8)) ?? "").suffix(4000))
+        log: String(((try? String(contentsOf: workDirectory.appendingPathComponent("stdout.log"), encoding: .utf8)) ?? "").suffix(4000)),
+        stderr: stderr
     )
 }
 
@@ -83,7 +118,8 @@ func driverVersion(_ client: Client) async throws -> DriverVersion {
     let workDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("live-driver-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: workDirectory, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: workDirectory) }
-    let (status, stderr) = try await launch(try client.driverExecutable, ["version"], logDirectory: workDirectory, timeout: .seconds(60))
+    let command = try client.driverCommand
+    let (status, stderr) = try await launch(command.executable, command.arguments + ["version"], logDirectory: workDirectory, timeout: .seconds(60))
     guard status == 0 else { throw HarnessError("version exited \(status): \(stderr)") }
     return try JSONDecoder().decode(DriverVersion.self, from: Data(contentsOf: workDirectory.appendingPathComponent("stdout.log")))
 }
