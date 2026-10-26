@@ -63,20 +63,22 @@ jobs:
             echo
           } | tee environment.md >> "$GITHUB_STEP_SUMMARY"
 
+      # package-benchmark exits 0 when a benchmark's setup or body throws: it prints the error and
+      # leaves the benchmark out of that pass's output. The next step checks both passes before
+      # it publishes the report, so a broken benchmark fails the job instead of going missing.
       - name: Run offline benchmarks
         run: |
+          set -o pipefail
           swift package --disable-sandbox benchmark \
             --target OfflineBenchmarks \
             --format markdown \
             --no-progress \
             | tee results.md
-          cat results.md >> "$GITHUB_STEP_SUMMARY"
 
       # A second pass in JMH format: it carries every percentile of every metric,
       # which `bench-to-bmf` (scripts/) turns into Bencher Metric Format.
-      # package-benchmark exits 0 when a benchmark's setup or body throws: it leaves the
-      # benchmark out of the export and lists it at the end. Fail on that list instead of
-      # uploading a report without the benchmark.
+      # The JMH pass lists a failed benchmark at the end; the markdown pass prints no such list,
+      # so its report has to hold one section (`### <name>`) per benchmark the export holds.
       - name: Export benchmark percentiles
         run: |
           set -o pipefail
@@ -88,6 +90,13 @@ jobs:
             --no-progress \
             2>&1 | tee jmh.log
           if grep -q "The following benchmarks failed" jmh.log; then exit 1; fi
+          exported=$(jq length bench-out/Current_run.jmh.json)
+          reported=$(grep -c '^### ' results.md)
+          if [ "$reported" -ne "$exported" ]; then
+            echo "results.md reports $reported benchmarks, the JMH export $exported"
+            exit 1
+          fi
+          cat results.md >> "$GITHUB_STEP_SUMMARY"
           swift run --package-path scripts bench-to-bmf bench-out/Current_run.jmh.json > bmf.json
           echo "$(jq length bmf.json) benchmarks converted"
 
