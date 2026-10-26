@@ -173,6 +173,42 @@ struct OpenLoopTests {
         expectAccounted(r)
     }
 
+    @Test func returnedCompletionInstantEndsTheLatency() async {
+        // The operation reports that it completed 5 ms after its scheduled instant, then keeps running for 100 ms: the
+        // latency must end at the reported instant, not when the operation returns.
+        let clock = ContinuousClock()
+        let start = clock.now
+        let r = await runOpenLoop(.init(rate: 10, duration: .milliseconds(100), inFlightCap: 10, deadline: .seconds(2), drain: .seconds(1)), clock: clock) { _ -> ContinuousClock.Instant? in
+            let completed = start.advanced(by: .milliseconds(5))
+            try await Task.sleep(for: .milliseconds(100))
+            return completed
+        }
+        #expect(r.succeeded == 1)
+        #expect(r.histogram.valueAtPercentile(100) < 50_000)
+        expectAccounted(r)
+    }
+
+    @Test func nilCompletionInstantMeansNow() async {
+        let r = await runOpenLoop(.init(rate: 10, duration: .milliseconds(100), inFlightCap: 10, deadline: .seconds(2), drain: .seconds(1)), clock: ContinuousClock()) { _ -> ContinuousClock.Instant? in
+            try await Task.sleep(for: .milliseconds(100))
+            return nil
+        }
+        #expect(r.succeeded == 1)
+        #expect(r.histogram.valueAtPercentile(0) >= 95_000)
+        expectAccounted(r)
+    }
+
+    @Test func returnedInstantAtOrPastTheDeadlineIsATimeout() async {
+        let clock = ContinuousClock()
+        let start = clock.now
+        let r = await runOpenLoop(.init(rate: 10, duration: .milliseconds(100), inFlightCap: 10, deadline: .milliseconds(500), drain: .seconds(1)), clock: clock) { _ -> ContinuousClock.Instant? in
+            start.advanced(by: .seconds(1))
+        }
+        #expect(r.timedOut == 1)
+        #expect(r.succeeded == 0)
+        expectAccounted(r)
+    }
+
     @Test func fractionalScheduleCount() async {
         // 30 ops/s for 0.1 s: offsets 0, 33.3, 66.7 ms are before the end; 100 ms is not.
         let r = await runOpenLoop(.init(rate: 30, duration: .milliseconds(100), inFlightCap: 10, deadline: .seconds(1), drain: .milliseconds(200))) { _ in }
