@@ -26,12 +26,14 @@ public struct OpenLoopConfig: Sendable {
 ///
 /// - Operation *i* is due at `start + i / rate`. The scheduling loop only sleeps until each due instant and never waits
 ///   for completions, so a slow operation cannot delay later ones (no coordinated omission).
-/// - Latency is completion time minus the **scheduled** instant, so scheduler lag counts against the client. The only
-///   exception is a launch slightly *before* the due instant (see `DueInstantWaker`), which is measured from the
-///   launch so it is never under-charged.
+/// - Latency is completion time minus the **earlier** of the scheduled instant and the actual launch. A late launch is
+///   charged from the schedule, so scheduler lag counts against the client (no coordinated omission). A launch
+///   slightly before the due instant (see `DueInstantWaker`) is charged from the launch, so its head start is charged
+///   too.
 /// - Completing at or past `scheduled + deadline` is a `.timeout`, never a success, even if the deadline timer has
 ///   not fired yet.
-/// - If `inFlightCap` operations are outstanding at the due instant, the index is recorded as `.drop` and not run.
+/// - If `inFlightCap` operations are outstanding at the launch, the index is recorded as `.drop` and not run. The
+///   launch, and so this check, may run up to the waker's overshoot estimate (at most 1 ms) before the due instant.
 /// - A thrown error is `.failure`. An operation still outstanding at `scheduled + deadline` is `.timeout` and its
 ///   task is cancelled; the timeout is recorded at the deadline even if the operation ignores cancellation, and its
 ///   later completion is ignored. A timed-out operation stops counting toward `inFlightCap` once it is recorded.
@@ -40,9 +42,11 @@ public struct OpenLoopConfig: Sendable {
 ///   cancellation: they are unstructured tasks whose results are discarded.
 /// - If the calling task is cancelled, scheduling stops; indices already scheduled are still accounted for.
 ///
-/// Harness floor: every latency includes the scheduler's own wake-up and task-start cost. Measured on an Apple Silicon
-/// Mac in a release build with a no-op operation at 250-8000/s: p50 2-4 µs, p99 under 40 µs (see
-/// `OpenLoopTests.noOpCalibrationFloor`). Any other driver compared against this one (the .NET driver, Task 10) must
+/// Harness floor: every latency includes the scheduler's own wake-up error (early or late) and task-start cost.
+/// Measured on an Apple Silicon Mac (macOS) in a release build with a no-op operation, p50 / p99:
+/// 1000/s 4-7 / 150-190 µs, 4000/s 4-6 / 57-77 µs, 8000/s 6-7 / 126-380 µs. At 250/s the idle timer's jitter dominates:
+/// about 350 / 1100 µs (a dedicated thread with a blocking sleep is worse, about 1.3 ms). See
+/// `OpenLoopTests.noOpCalibrationFloor`. Any other driver compared against this one (the .NET driver, Task 10) must
 /// use the same timing rules (latency from the scheduled instant, an untoleranced timer or equivalent overshoot
 /// compensation) and meet a comparable no-op floor. Otherwise a ratio partly measures harness timers, not clients.
 public func runOpenLoop(
@@ -71,11 +75,11 @@ public func runOpenLoop(
             break // the caller was cancelled: stop scheduling
         }
         let i = index
-        // The waker may return a little before the due instant (see `DueInstantWaker`). Latency runs from the later of
-        // the due instant and the actual launch, so an early launch is never under-charged and a late one is charged
-        // from the schedule (no coordinated omission).
+        // The waker may return a little before or after the due instant (see `DueInstantWaker`). Latency runs from the
+        // earlier of the two: a late launch is charged from the schedule (no coordinated omission), an early one from
+        // the launch (its head start is not free).
         let launched = clock.now
-        let latencyOrigin = max(scheduled, launched)
+        let latencyOrigin = min(scheduled, launched)
         ledger.launch(i, cap: config.inFlightCap) {
             Task {
                 await withTaskGroup(of: Void.self) { group in
@@ -122,13 +126,13 @@ public func runOpenLoop(
 
 /// Wakes the scheduling loop close to each due instant without spinning.
 ///
-/// Latency is measured from the scheduled instant, so a late wake-up is charged to the client under test. A timer
+/// The caller charges latency from `min(due, actual launch)`, so any wake-up error, early or late, ends up in the
+/// measured latency; this type exists to keep that error small. A timer
 /// with the default leeway wakes ~0.5-1 ms late. Even with `.zero` tolerance, an idle process overshoots by a roughly
 /// constant amount (~350 µs on macOS at 1000/s, ~50 µs at 8000/s). The waker keeps an exponentially weighted estimate
 /// of that overshoot and sleeps until `due - estimate`, so it usually wakes within tens of µs of `due`, sometimes
 /// slightly before it. It does not spin to the exact instant: a spin cost 60-100% of a core at 4000-8000/s, which
-/// would distort the client CPU figures. The caller measures latency from `max(due, actual launch)` instead. The
-/// estimate is capped at `maxEstimate`, which bounds how early a launch can be.
+/// would distort the client CPU figures. The estimate is capped at `maxEstimate`, which bounds how early a launch can be.
 private struct DueInstantWaker<C: Clock<Duration>> {
     private static var maxEstimate: Duration { .milliseconds(1) }
     let clock: C
