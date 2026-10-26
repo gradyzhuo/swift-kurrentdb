@@ -19,29 +19,30 @@ enum ScenarioKind
     CatchUp,
 }
 
-/// `EffectiveScenario` (Scenario.swift). Unknown fields are ignored; absent optional fields are null.
+/// `EffectiveScenario` (Scenario.swift). Unknown fields are ignored; absent optional fields are null; a missing
+/// non-optional field fails deserialization (`required`), as Swift's decoder does.
 sealed class EffectiveScenario
 {
-    public string CellId { get; set; } = "";
-    public ScenarioKind Kind { get; set; }
-    public int EventSize { get; set; }
-    public int MetadataSize { get; set; }
-    public int BatchSize { get; set; }
-    public int StreamCount { get; set; }
-    public string StreamPrefix { get; set; } = "";
-    public string Category { get; set; } = "";
+    public required string CellId { get; set; }
+    public required ScenarioKind Kind { get; set; }
+    public required int EventSize { get; set; }
+    public required int MetadataSize { get; set; }
+    public required int BatchSize { get; set; }
+    public required int StreamCount { get; set; }
+    public required string StreamPrefix { get; set; }
+    public required string Category { get; set; }
     public string? GroupName { get; set; }
     public int? Consumers { get; set; }
     public int? StreamLength { get; set; }
     public List<string>? RebuildStreams { get; set; }
     public int? CatchUpExpectedEvents { get; set; }
-    public double Rate { get; set; }
-    public double WarmupSeconds { get; set; }
-    public double MeasureSeconds { get; set; }
-    public double DrainSeconds { get; set; }
-    public int DeadlineMillis { get; set; }
-    public int InFlightCap { get; set; }
-    public ulong Seed { get; set; }
+    public required double Rate { get; set; }
+    public required double WarmupSeconds { get; set; }
+    public required double MeasureSeconds { get; set; }
+    public required double DrainSeconds { get; set; }
+    public required int DeadlineMillis { get; set; }
+    public required int InFlightCap { get; set; }
+    public required ulong Seed { get; set; }
 
     /// Rejects scenarios the driver cannot run as the contract describes (exit non-zero before connecting), like the
     /// Swift driver's `EffectiveScenario.validate()`.
