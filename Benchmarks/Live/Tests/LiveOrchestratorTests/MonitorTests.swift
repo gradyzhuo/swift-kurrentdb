@@ -1,6 +1,7 @@
 import Foundation
 @testable import LiveBenchCore
 @testable import LiveOrchestrator
+import Synchronization
 import Testing
 
 /// `/proc` fixtures for the headroom monitor. Columns of a `cpuN` line: user nice system idle iowait irq softirq steal guest guest_nice.
@@ -216,5 +217,31 @@ private final class Script: @unchecked Sendable {
             readBuffered: { self.next(self.buffered, &self.bufferedIndex) },
             wallClockMillis: { self.next(self.wallMillis, &self.wallIndex) ?? 0 }
         )
+    }
+}
+
+@Suite("Headroom monitor restarts")
+struct MonitorRestartTests {
+    @Test func startingTwiceKeepsOneSampler() async {
+        final class Reads: Sendable { let count = Mutex(0) }
+        func counted(_ reads: Reads) -> Monitor {
+            Monitor(
+                cores: [0], device: "sda", interval: .milliseconds(20),
+                readProcStat: { reads.count.withLock { $0 += 1 }; return "cpu0 1 0 0 1 0 0 0 0 0 0\n" },
+                readDiskStats: { "   8       0 sda 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n" },
+                readBuffered: { 0 }
+            )
+        }
+        let once = Reads(), twice = Reads()
+        let single = counted(once), double = counted(twice)
+        await single.start()
+        await double.start()
+        await double.start()
+        try? await Task.sleep(for: .milliseconds(500))
+        _ = await single.stop(eventsWritten: 0)
+        _ = await double.stop(eventsWritten: 0)
+        // Same window and interval: a second sampler would read about twice as often as the single one.
+        let (a, b) = (once.count.withLock { $0 }, twice.count.withLock { $0 })
+        #expect(Double(b) < 1.5 * Double(a), "single start read \(a) times, double start \(b)")
     }
 }
