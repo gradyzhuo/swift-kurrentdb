@@ -246,7 +246,7 @@ Allocation counts are deterministic for a given toolchain and runner image:
 over 35 runs on `main` every benchmark reported the same count each time,
 except when the code under it changed. So the allocation threshold compares
 against the previous run alone. The workflow installs the latest Swift 6.4
-patch on `ubuntu-latest`, so a new patch release or runner image can shift
+patch on `ubuntu-24.04`, so a new patch release or runner image can shift
 the counts too. A deliberate increase or such an environment change alerts
 once, and the next run compares against the new count. Runs on other
 branches are uploaded without thresholds.
