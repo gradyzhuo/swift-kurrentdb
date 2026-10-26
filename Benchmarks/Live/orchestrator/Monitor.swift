@@ -113,8 +113,16 @@ actor Monitor {
         Double(DispatchTime.now().uptimeNanoseconds) / 1_000_000
     }
 
-    /// Takes the baseline reading and the projection's starting backlog, then samples every `interval`.
+    /// Takes the baseline reading and the projection's starting backlog, then samples every `interval`. A second
+    /// call without `stop` replaces the running window (its sampler is stopped and its totals discarded), so there is
+    /// never more than one sampler.
     func start() async {
+        if let running = loop {
+            running.cancel()
+            await running.value
+            loop = nil
+        }
+        reset()
         await begin()
         guard let interval else { return }
         loop = Task { [weak self] in
