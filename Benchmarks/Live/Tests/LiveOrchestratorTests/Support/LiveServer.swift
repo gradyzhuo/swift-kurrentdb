@@ -98,7 +98,7 @@ extension Trait where Self == LiveServerTrait {
 }
 
 /// A TCP port on 127.0.0.1 that was free a moment ago (bound to port 0, then released).
-private func freeLocalPort() throws -> Int {
+func freeLocalPort() throws -> Int {
     #if os(Linux)
     let fd = socket(AF_INET, Int32(SOCK_STREAM.rawValue), 0)
     #else
