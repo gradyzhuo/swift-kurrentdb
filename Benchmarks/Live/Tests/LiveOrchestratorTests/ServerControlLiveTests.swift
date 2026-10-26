@@ -38,7 +38,7 @@ struct ServerControlLiveTests {
                 try await seeder.seed(cell: .fixture(kind: .rebuild, streamLength: 10), client: client)
             }
             #expect(manifest.rebuildStreams == ["bench-0"])
-            #expect(manifest.lastCommitPosition > 0)
+            #expect(manifest.lastCommitPosition > 0 && manifest.lastPreparePosition > 0)
             try server.stop()
             try server.snapshot()
 
@@ -50,13 +50,22 @@ struct ServerControlLiveTests {
                 #expect(try await count(client, "bench-0") == 15)
             }
             try server.stop()
+            // Junk the restore must remove (a stale file and directory left in the data directory).
+            let junk = server.dataDirectory.appendingPathComponent("junk")
+            try FileManager.default.createDirectory(at: junk, withIntermediateDirectories: true)
+            try Data("stale".utf8).write(to: junk.appendingPathComponent("stale.chk"))
             try server.restoreSnapshot()
+            #expect(!FileManager.default.fileExists(atPath: junk.path))
+            #expect(!FileManager.default.fileExists(atPath: server.dataDirectory.appendingPathComponent("snapshot").path))
+            #expect(try directoryListing(server.dataDirectory) == directoryListing(server.snapshotDirectory))
             try server.dropCaches()
 
             try await server.start()
             try await server.waitReady()
             try await withClient(server) { client in
-                try await waitForByCategory(client: client, toReach: manifest.lastCommitPosition, timeout: .seconds(120))
+                try await waitForByCategory(
+                    client: client, toReach: manifest.lastCommitPosition, prepare: manifest.lastPreparePosition, timeout: .seconds(120)
+                )
                 #expect(try await count(client, "bench-0") == 10)
                 #expect(try await count(client, "benchw-0") == 10)
             }
@@ -126,6 +135,20 @@ private func temporaryWorkDir() throws -> URL {
         .appendingPathComponent("live-server-\(UUID().uuidString)").resolvingSymlinksInPath()
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
+}
+
+/// Relative paths and sizes of every file under `root`, sorted.
+func directoryListing(_ root: URL) throws -> [String] {
+    let files = FileManager.default
+    guard let enumerator = files.enumerator(at: root, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) else { return [] }
+    var listing: [String] = []
+    let prefix = root.resolvingSymlinksInPath().path + "/"
+    for case let url as URL in enumerator {
+        let values = try url.resolvingSymlinksInPath().resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
+        let path = url.resolvingSymlinksInPath().path.replacingOccurrences(of: prefix, with: "")
+        listing.append(values.isRegularFile == true ? "\(path) \(values.fileSize ?? -1)" : "\(path)/")
+    }
+    return listing.sorted()
 }
 
 private func removeWorkDir(_ url: URL) {

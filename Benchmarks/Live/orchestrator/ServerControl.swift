@@ -17,14 +17,19 @@ enum ServerError: Error, CustomStringConvertible {
     case notReady(reason: String)
     /// A data-directory operation needs the server stopped.
     case stillRunning(String)
-    case missingSnapshot(String)
+    case missingDirectory(String)
+    /// The server did not exit cleanly on `stop()`; its data directory is not fit for a snapshot.
+    case uncleanStop(reason: String)
+    case dataDirectory(String)
     case noImageDigest(String)
 
     var description: String {
         switch self {
         case let .notReady(reason): "server not ready: \(reason)"
         case let .stillRunning(name): "container \(name) is still running; stop the server first"
-        case let .missingSnapshot(path): "no snapshot at \(path); call snapshot() after seeding"
+        case let .missingDirectory(path): "\(path) does not exist (snapshot() needs data/, restoreSnapshot() needs snapshot/)"
+        case let .uncleanStop(reason): "server did not stop cleanly: \(reason)"
+        case let .dataDirectory(problem): "data directory: \(problem)"
         case let .noImageDigest(image): "image \(image) has no repository digest (pull it from the registry)"
         }
     }
@@ -93,10 +98,18 @@ struct ServerControl: Sendable {
         }
     }
 
-    /// The server settings passed to the container, with the cluster secret redacted (for the run metadata).
+    /// The server settings passed to the container (cluster secret redacted) plus the container-level settings
+    /// (`docker.image`, `docker.cpuset`, `docker.network`, `docker.user`), for the run metadata.
     var effectiveConfiguration: [String: String] {
         var settings = environment
         if settings["KURRENTDB_CLUSTER_SECRET"] != nil { settings["KURRENTDB_CLUSTER_SECRET"] = "<redacted>" }
+        settings["docker.image"] = image
+        settings["docker.cpuset"] = cpuset
+        switch networking {
+        case .host: settings["docker.network"] = "host"
+        case .portMapped: settings["docker.network"] = "bridge, port \(port) mapped to 2113"
+        }
+        settings["docker.user"] = Self.hostUser
         return settings
     }
 
@@ -200,7 +213,9 @@ struct ServerControl: Sendable {
     }
 
     /// Stops the server gracefully (so the data directory is consistent) and removes its container. Does nothing
-    /// when there is no container.
+    /// when there is no container. Throws `ServerError.uncleanStop` (after removing the container) when the server
+    /// did not exit cleanly (exit code other than 0 or 143, e.g. 137 when `docker stop` had to kill it after 60 s):
+    /// its data directory must not be snapshotted.
     func stop() throws {
         let stopped = try Shell.capture("docker", ["stop", "-t", "60", containerName])
         if stopped.status != 0 {
@@ -209,26 +224,47 @@ struct ServerControl: Sendable {
             }
             return
         }
+        let state = try containerState()
+        let tail = logTail()
         try Shell.run("docker", ["rm", "-f", containerName])
+        guard let state else { return }
+        guard state.status == "exited", Self.cleanExitCodes.contains(state.exitCode) else {
+            throw ServerError.uncleanStop(reason: "container \(state.status) with exit code \(state.exitCode); log tail:\n\(tail)")
+        }
     }
+
+    /// 0: the server shut down on its own; 143: 128 + SIGTERM, the signal `docker stop` sends first.
+    static let cleanExitCodes: Set<Int> = [0, 143]
 
     // MARK: - Data directory
 
     /// Copies the stopped server's `data/` to `snapshot/` (`cp -a`), replacing an earlier snapshot.
     func snapshot() throws {
         try requireStopped()
-        try? FileManager.default.removeItem(at: snapshotDirectory)
-        try Shell.run("cp", ["-a", dataDirectory.path, snapshotDirectory.path])
+        try Self.copyReplacing(dataDirectory, with: snapshotDirectory)
     }
 
     /// Replaces the stopped server's `data/` with a copy of `snapshot/` (`cp -a`).
     func restoreSnapshot() throws {
         try requireStopped()
-        guard FileManager.default.fileExists(atPath: snapshotDirectory.path) else {
-            throw ServerError.missingSnapshot(snapshotDirectory.path)
+        try Self.copyReplacing(snapshotDirectory, with: dataDirectory)
+    }
+
+    /// `cp -a source destination` after removing `destination`. A removal that fails throws, and the destination is
+    /// checked to be gone first: `cp -a` into an existing directory would nest the copy inside it (`data/snapshot/…`)
+    /// and leave the old files in place, so a server would silently restart on stale data.
+    static func copyReplacing(_ source: URL, with destination: URL) throws {
+        let files = FileManager.default
+        guard files.fileExists(atPath: source.path) else {
+            throw ServerError.missingDirectory(source.path)
         }
-        try? FileManager.default.removeItem(at: dataDirectory)
-        try Shell.run("cp", ["-a", snapshotDirectory.path, dataDirectory.path])
+        if files.fileExists(atPath: destination.path) {
+            try files.removeItem(at: destination)
+        }
+        guard !files.fileExists(atPath: destination.path) else {
+            throw ServerError.dataDirectory("\(destination.path) still exists after removal")
+        }
+        try Shell.run("cp", ["-a", source.path, destination.path])
     }
 
     /// Drops the OS page cache so no trial inherits another's warm cache (Linux, passwordless `sudo`). Elsewhere it
