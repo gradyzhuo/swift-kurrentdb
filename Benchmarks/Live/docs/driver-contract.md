@@ -57,9 +57,73 @@ Unknown fields must be ignored; absent optional fields are `null`/absent.
 
 ## Load model (open loop)
 
-Applies to the warmup window and the measure window alike (warmup runs at the step's rate and is discarded; counters,
-histogram, CPU and RSS reported in the result cover the measure window only: CPU is the difference of process usage
-between the start and end of measure+drain).
+Applies to the warmup window and the measure window alike. Warmup runs at the step's rate and its outcomes are
+discarded. Counters and histogram in the result cover the measure window only. CPU is the delta of process CPU time
+between the start of measure and the end of drain. `maxRssBytes` is the process-lifetime peak resident set size
+(`ru_maxrss`, not a delta; includes warmup); a .NET driver must report its process peak too (`Process.PeakWorkingSet64`),
+not a managed-heap figure.
+
+### Warmup isolation
+
+Warmup never touches measured data. Warmup streams are named `<streamPrefix>w-<n>` and the warmup category is
+`<category>w` (that is, `streamPrefix + "w"` and `category + "w"`, then `-<n>` as usual). Warmup appends go only to
+those streams; warmup reads (rebuild) use the same shape against `<streamPrefix>w-*` streams; warmup subscriptions
+(persistent and catch-up) use the `$ce-<category>w` stream. The harness seeds whatever warmup data a kind needs before
+`run`, exactly as for the measured data. For persistent subscriptions the harness also creates a second group for the
+warmup category; the driver does not create groups (see below). Measured streams, the measured category and the measured
+group are untouched until the measure window starts.
+
+### Common client settings
+
+- Default client settings and default client options everywhere (headline runs).
+- Appends use expected revision **any** (no optimistic concurrency).
+- Link resolution (`resolveLinkTos`) must be **explicitly enabled** wherever a `$ce-` stream is read or subscribed
+  (catch-up and persistent subscription), for every client: both SDKs default it to off, and without it only link events
+  arrive.
+
+### Random choices
+
+All random choices use **splitmix64 seeded with `seed`**, one draw per operation index, in index order (operation *i*
+uses draw *i*, whether or not the operation is later dropped, so every client draws the same sequence):
+
+```
+state = seed
+draw(): state = state + 0x9E3779B97F4A7C15            (mod 2^64)
+        z = state
+        z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9      (mod 2^64)
+        z = (z ^ (z >> 27)) * 0x94D049BB133111EB      (mod 2^64)
+        return z ^ (z >> 31)
+```
+
+The stream for operation *i* is index `z % streamCount`, i.e. `<streamPrefix>-<z % streamCount>` for append and
+persistent-subscription/catch-up writes. Rebuild picks `rebuildStreams[z % rebuildStreams.count]`. Warmup uses the same
+generator, restarted at `state = seed`, with the `w` names.
+
+### Event bytes
+
+Every appended event has:
+
+- event type `BenchEvent`, content type `application/json` (data and metadata are both JSON);
+- data of exactly `eventSize` bytes and metadata of exactly `metadataSize` bytes, built by the following function;
+- event index `k = i * batchSize + j` for event `j` (0-based) of operation `i`.
+
+`make(size, k, seed')` returns the ASCII bytes `{"i":<k>,"p":"` + `fillerCount` filler bytes + `"}`, where
+`<k>` is decimal, `fillerCount = size - len(prefix) - len(suffix)` (prefix `{"i":<k>,"p":"`, suffix `"}`; size is
+always large enough). Filler: `alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"` (62 bytes);
+
+```
+state = seed' XOR (k * 0xBF58476D1CE4E5B9)            (mod 2^64)
+repeat fillerCount times:
+    state = state + 0x9E3779B97F4A7C15                (mod 2^64)
+    z = state
+    z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9          (mod 2^64)
+    z = (z ^ (z >> 27)) * 0x94D049BB133111EB          (mod 2^64)
+    z = z ^ (z >> 31)
+    append alphabet[z % 62]
+```
+
+Data uses `seed' = seed`; metadata uses `seed' = seed + 0x9E3779B97F4A7C15 (mod 2^64)`. Reference:
+`Sources/LiveBenchCore/Payload.swift`.
 
 1. Operation *i* (0-based) is **due at `start + i / rate`**. Operations are scheduled only while the due instant is before
    `start + duration`. Nothing new is scheduled after that.
@@ -102,11 +166,37 @@ them against `scheduled`. A percentile whose rank falls among non-successes is r
 | `appendLatency` | append of `batchSize` (1) event(s) to a stream picked uniformly with the seeded RNG | append acknowledged |
 | `appendThroughput` | append of `batchSize` (50) events in one call to one stream | append acknowledged |
 | `rebuild` | read of one whole stream (picked from `rebuildStreams`, seeded) forward from the start, decoding every event | all `streamLength` events decoded |
-| `persistentSubscription` | write of one event (category stream picked uniformly) at `rate` events/s; latency = write to delivery to the subscriber | event delivered (first delivery) and acked |
-| `catchUp` | phase 1 is a read of the pre-seeded corpus (no rate; reports `catchUpSeconds`); phase 2 as `persistentSubscription` but with a catch-up subscription on `$ce-<category>` | event delivered |
+| `persistentSubscription` | append of one event (stream picked per "Random choices") at `rate` events/s; latency = writer's `min(scheduled, launch)` to the subscriber's first receipt of that event | event received (first delivery) |
+| `catchUp` | see "Catch-up" below | event received by the live phase |
 
-For subscription kinds the latency is end-to-end (writer scheduled instant to subscriber receipt), the writer is part of
-the driver, and the same event must be observed once for `uniqueDeliveries`.
+For subscription kinds the writer is part of the driver (same process, same open-loop rules, expected revision any).
+The append outcome is the operation outcome for accounting; the latency of a succeeded operation is taken at the
+subscriber's receipt: origin is `min(scheduled instant of the append, actual launch of the append)` (rule 3), end is the
+first receipt of that event (matched by the event's index `k`). An append that succeeds but whose event is never received
+by `scheduled + deadline` is a timeout (rule 5). Receipts of an event already received count as `redeliveries`.
+
+### Persistent subscription
+
+- The harness creates the group before `run` (resolve links on, RoundRobin, start from the beginning of
+  `$ce-<category>`; name in `groupName`). The driver must not create, update or delete it.
+- The driver connects `consumers` (absent = 1) consumers to the group in the same process, with default client
+  options, and **acks each event on receipt** (one ack per event; `ackEnqueued` counts acks handed to the client).
+- `uniqueDeliveries` counts distinct events across all consumers.
+
+### Catch-up
+
+Phase 1 reads the pre-seeded corpus of `catchUpExpectedEvents` events in `$ce-<category>` through a **catch-up
+subscription from the start** of that stream (not a stream read), with link resolution enabled.
+
+- Order: warmup first (it only exercises the live append path and a subscription on `$ce-<category>w`; no corpus),
+  then phase 1, then phase 2's measure window.
+- `catchUpSeconds` starts immediately before the subscribe call and stops when the `catchUpExpectedEvents`-th event has
+  been received (wall clock, monotonic).
+- Phase 1 is not open loop and contributes nothing to the outcome counters or the histogram.
+- Phase 2 keeps the **same subscription live**: when the corpus is consumed the subscription continues to receive the
+  events the writer appends at `rate` during measure; the open-loop rules and latency definition are those of the
+  persistent subscription kind, with the catch-up subscription as the receiver. The corpus events are not counted in
+  phase 2.
 
 ## Output: `result.json` (`TrialResult`)
 
@@ -119,8 +209,8 @@ the driver, and the same event must be observed once for `uniqueDeliveries`.
 | `scheduled` | int | indices scheduled in the measure window |
 | `succeeded`, `failed`, `dropped`, `timedOut` | int | outcome counts, sum equals `scheduled` |
 | `measuredSeconds` | number | length of the measure window as actually run (scheduling window, not including drain) |
-| `cpuUserSeconds`, `cpuSystemSeconds` | number | process CPU consumed during measure + drain (from `getrusage(RUSAGE_SELF)` or equivalent, differenced) |
-| `maxRssBytes` | uint64 | peak resident set size of the process, in bytes (`ru_maxrss` is KiB on Linux, bytes on macOS: normalise) |
+| `cpuUserSeconds`, `cpuSystemSeconds` | number | process CPU delta from the start of measure to the end of drain (`getrusage(RUSAGE_SELF)` or equivalent) |
+| `maxRssBytes` | uint64 | process-lifetime peak resident set size, in bytes (not a delta) (`ru_maxrss` is KiB on Linux, bytes on macOS: normalise) |
 | `ackEnqueued` | int? | persistent subscription: acks sent by the client; else absent/null |
 | `uniqueDeliveries` | int? | subscription kinds: distinct events delivered; else null |
 | `redeliveries` | int? | subscription kinds: deliveries of an already seen event; else null |
@@ -131,18 +221,28 @@ Optional fields may be omitted or `null`.
 
 ### `validation`
 
-`{ "expectedEvents": int, "receivedEvents": int, "payloadSizesOk": bool }`. The orchestrator fails the trial if
-`expectedEvents != receivedEvents` or `payloadSizesOk` is false.
+`{ "expectedEvents": int, "receivedEvents": int, "payloadSizesOk": bool }`.
 
-| `kind` | `expectedEvents` | `receivedEvents` |
-|---|---|---|
-| `appendLatency`, `appendThroughput` | events acknowledged as written by succeeded appends (`succeeded * batchSize`) | the same events confirmed by the driver's own bookkeeping (equal count unless the driver lost track) |
-| `rebuild` | streams read (succeeded reads) `* streamLength` | events decoded |
-| `persistentSubscription` | events the writer appended successfully | unique deliveries |
-| `catchUp` | phase 1: `catchUpExpectedEvents`; phase 2: events the writer appended successfully (sum both phases) | unique events delivered |
+| `kind` | `expectedEvents` | `receivedEvents` | Class |
+|---|---|---|---|
+| `appendLatency`, `appendThroughput` | `succeeded * batchSize` | the same events confirmed by the driver's own bookkeeping | informational |
+| `rebuild` | streams read by succeeded reads `* streamLength` | events decoded | **hard** (seeded count) |
+| `persistentSubscription` | events the writer appended successfully | unique deliveries | reported |
+| `catchUp` | phase 1: `catchUpExpectedEvents` (hard, seeded count; the trial fails if fewer arrive); live phase: events the writer appended successfully (reported). Report `expectedEvents` and `receivedEvents` as the sums over both phases | unique events received | mixed, see below |
 
 `payloadSizesOk` is true iff every event the driver read or received had `eventSize` bytes of data and `metadataSize`
 bytes of metadata (append kinds: true when the driver built payloads of those sizes).
+
+How the orchestrator interprets it:
+
+- **Hard failures** (the trial is marked failed): `payloadSizesOk == false`; and a mismatch of a **seeded** count:
+  rebuild `receivedEvents != expectedEvents`, catch-up phase 1 not receiving all `catchUpExpectedEvents` (the driver
+  waits for them up to a bounded time, exits 0 and reports `catchUpSeconds` null; the orchestrator fails a catch-up trial
+  whose `catchUpSeconds` is null).
+- **Reported, not failing**: for live-write kinds (persistent subscription, catch-up phase 2) `expectedEvents`
+  (written) versus `receivedEvents` (unique deliveries) is a reported number. A shortfall is shown in the report and
+  already shows up as timeouts in the outcome counts; it does not fail the trial.
+- Append kinds are informational: the orchestrator records the pair but does not fail on it.
 
 ## Output: `histogram.json` (`HistogramFile`)
 

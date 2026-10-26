@@ -6,7 +6,11 @@ public enum ProcessUsage {
     /// `ru_maxrss` is bytes on macOS and KiB on Linux; the result is always bytes.
     public static func current() -> (user: Double, system: Double, maxRss: UInt64) {
         var usage = rusage()
+        #if os(Linux)
+        getrusage(RUSAGE_SELF.rawValue, &usage)  // Glibc imports RUSAGE_SELF as an enum, getrusage takes Int32.
+        #else
         getrusage(RUSAGE_SELF, &usage)
+        #endif
         func seconds(_ t: timeval) -> Double { Double(t.tv_sec) + Double(t.tv_usec) / 1_000_000 }
         let raw = UInt64(max(usage.ru_maxrss, 0))
         #if os(Linux)
