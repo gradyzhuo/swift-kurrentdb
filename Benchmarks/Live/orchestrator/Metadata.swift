@@ -135,21 +135,27 @@ extension RunMetadata {
         return merged
     }
 
-    /// Every string field through `HostRedaction.scrub`, and each of `identities` (3+ characters) replaced too.
+    /// Every string value through `HostRedaction.scrub`, each of `identities` (3+ characters) replaced too. Fails
+    /// closed: if the metadata cannot be redacted, nothing of it is kept.
     func redacted(also identities: [String] = []) -> RunMetadata {
-        HostRedaction.scrubbing(self, also: identities) ?? self
+        (try? HostRedaction.scrubbing(self, also: identities)) ?? RunMetadata()
     }
 }
 
 /// Removes host identity from text bound for the results: home directories (`/Users/<name>`, `/home/<name>`, also
-/// with JSON-escaped slashes) become `~`, private IPv4 addresses (RFC 1918, all four octets) become `<private-ip>`.
-/// Loopback stays. Version strings such as `10.0.1` have three parts and are not addresses.
+/// with JSON-escaped slashes in raw text) become `~`, private IPv4 addresses (RFC 1918, all four octets) become
+/// `<private-ip>`. Loopback stays. Version strings such as `10.0.1` have three parts and are not addresses.
 enum HostRedaction {
     static let privateIPv4 = #"\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b"#
     static let home = #"\\?/(?:Users|home)\\?/[^/\\\s"'<>:;,)]+"#
 
+    struct Failure: Error, CustomStringConvertible {
+        var description: String
+    }
+
+    /// Scrubs one piece of text (a string value, or a raw log).
     static func scrub(_ text: String, also identities: [String] = []) -> String {
-        // `/Users/alice/x` → `~/x`; JSON-escaped `\/home\/bob\/y` → `~\/y`.
+        // `/Users/alice/x` → `~/x`; in raw text, JSON-escaped `\/home\/bob\/y` → `~\/y`.
         var result = text.replacingOccurrences(of: home, with: "~", options: .regularExpression)
         result = result.replacingOccurrences(of: privateIPv4, with: "<private-ip>", options: .regularExpression)
         for identity in identities where identity.count >= 3 {
@@ -158,12 +164,36 @@ enum HostRedaction {
         return result
     }
 
-    /// `value` encoded to JSON (slashes unescaped), scrubbed as text and decoded again: every string inside, however
-    /// deeply nested, is redacted. nil if the round trip fails.
-    static func scrubbing<T: Codable>(_ value: T, also identities: [String] = []) -> T? {
+    /// `value` with every string **value** inside it, however deeply nested, scrubbed; object keys are left alone,
+    /// so the structure always decodes again. Throws rather than ever returning the unredacted value.
+    static func scrubbing<T: Codable>(_ value: T, also identities: [String] = []) throws -> T {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.withoutEscapingSlashes, .sortedKeys]
-        guard let data = try? encoder.encode(value), let text = String(data: data, encoding: .utf8) else { return nil }
-        return try? JSONDecoder().decode(T.self, from: Data(scrub(text, also: identities).utf8))
+        encoder.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "+inf", negativeInfinity: "-inf", nan: "nan")
+        let decoder = JSONDecoder()
+        decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity: "+inf", negativeInfinity: "-inf", nan: "nan")
+        do {
+            let tree = try JSONSerialization.jsonObject(with: encoder.encode(value), options: [.fragmentsAllowed])
+            let scrubbed = try JSONSerialization.data(withJSONObject: scrubValues(tree, also: identities), options: [.fragmentsAllowed])
+            return try decoder.decode(T.self, from: scrubbed)
+        } catch {
+            throw Failure(description: "cannot redact \(T.self): \(error)")
+        }
+    }
+
+    /// A JSON document (raw bytes) with its string values scrubbed; nil when `data` is not JSON.
+    static func scrubbingJSON(_ data: Data) -> Data? {
+        guard let tree = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else { return nil }
+        return try? JSONSerialization.data(
+            withJSONObject: scrubValues(tree, also: []), options: [.fragmentsAllowed, .prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        )
+    }
+
+    private static func scrubValues(_ node: Any, also identities: [String]) -> Any {
+        switch node {
+        case let string as String: scrub(string, also: identities)
+        case let array as [Any]: array.map { scrubValues($0, also: identities) }
+        case let object as [String: Any]: object.mapValues { scrubValues($0, also: identities) }
+        default: node
+        }
     }
 }
