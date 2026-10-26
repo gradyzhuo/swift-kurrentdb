@@ -52,16 +52,29 @@ struct CellOptions: ParsableArguments {
 
         let control = ServerControl(image: image, mode: cell.tls ? .tlsAuth : .plainAuth, cpuset: serverCpus, workDir: workDirectory)
         let server = CellServer(control: control)
+        let device = DiskDevice.holding(workDirectory)
+        let streamPrefix = Seeder().category + "-"
         let monitor = Monitor(
             cores: serverCpus.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) },
-            device: diskDevice(for: workDirectory) ?? "unknown",
+            device: device ?? "unknown",
             interval: .seconds(1),
             readProcStat: { try? String(contentsOfFile: "/proc/stat", encoding: .utf8) },
             readDiskStats: { try? String(contentsOfFile: "/proc/diskstats", encoding: .utf8) },
-            readBuffered: { await server.byCategoryBuffered() }
+            readBuffered: { await server.byCategoryBuffered() },
+            readProjectionCatchUp: { await server.byCategoryCatchUp(streamPrefix: streamPrefix, within: $0) }
         )
+        #if os(Linux)
+        // CI measures headroom from /proc; without it no step would get a comparison, so stop before any work.
+        guard let device else {
+            throw ValidationError("cannot resolve the block device of \(workDirectory.path) in /proc/diskstats (by its device number); server headroom could not be measured")
+        }
+        do { try await monitor.checkReadable() } catch {
+            throw ValidationError("server headroom cannot be measured (device \(device), server CPUs \(serverCpus)): \(error)")
+        }
+        #endif
 
         var runner = TrialRunner(server: server, monitor: monitor, workDirectory: outDirectory)
+        runner.jobStarted = jobStartDate()
         if smoke { runner.phases = .smoke }
         #if os(Linux)
         runner.driverCPUs = driverCpus.isEmpty ? nil : driverCpus
@@ -200,13 +213,13 @@ private let configDirectory = URL(fileURLWithPath: #filePath).deletingLastPathCo
 /// Client versions for `RunMetadata`: `<driver> version` of each in-process driver, `ghz --version`. A driver that
 /// cannot report its version is left out (its trials will fail and say why).
 private func clientMetadata(_ drivers: [DriverSpec]) -> RunMetadata {
-    var metadata = RunMetadata()
-    var clients: [DriverVersion] = []
+    var versions: [DriverVersion] = []
+    var ghzVersion: String?
     for driver in drivers {
         if driver.isGhz {
             // ghz prints its version on stderr.
             if let output = try? Shell.capture(driver.command[0], Array(driver.command.dropFirst()) + ["--version"]), output.status == 0 {
-                metadata.ghzVersion = (output.stdout + output.stderr).trimmingCharacters(in: .whitespacesAndNewlines)
+                ghzVersion = (output.stdout + output.stderr).trimmingCharacters(in: .whitespacesAndNewlines)
             }
             continue
         }
@@ -216,39 +229,16 @@ private func clientMetadata(_ drivers: [DriverSpec]) -> RunMetadata {
             FileHandle.standardError.write(Data("[orchestrator] \(driver.name): `version` failed\n".utf8))
             continue
         }
-        clients.append(version)
-        switch version.client {
-        case "swift":
-            metadata.sdkCommit = version.clientVersion
-            metadata.swiftToolchain = version.runtime
-        case "dotnet":
-            metadata.kurrentDBClientVersion = version.clientVersion
-            metadata.dotnetRuntime = version.runtime
-        default:
-            break
-        }
+        versions.append(version)
     }
-    metadata.clients = clients
+    var metadata = RunMetadata.fromDrivers(versions)
+    metadata.ghzVersion = ghzVersion
     return metadata
 }
 
-/// The block device under `directory` for the monitor's `/proc/diskstats` lookup (Linux): `df --output=source` gives
-/// the partition, `/sys/class/block/<partition>/..` its disk (see `Budget`). nil elsewhere or when unknown.
-private func diskDevice(for directory: URL) -> String? {
-    #if os(Linux)
-    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    guard let output = try? Shell.run("df", ["--output=source", directory.path]),
-          let source = output.split(separator: "\n").last.map({ String($0).trimmingCharacters(in: .whitespaces) }),
-          source.hasPrefix("/dev/")
-    else { return nil }
-    let partition = URL(fileURLWithPath: source).resolvingSymlinksInPath().lastPathComponent
-    // `/sys/class/block/<name>` links into the device tree; a partition's parent there is its disk.
-    let parent = URL(fileURLWithPath: "/sys/class/block/\(partition)").resolvingSymlinksInPath().deletingLastPathComponent().lastPathComponent
-    let parentIsBlockDevice = !parent.isEmpty && FileManager.default.fileExists(atPath: "/sys/class/block/\(parent)")
-    return parentIsBlockDevice ? parent : partition
-    #else
-    return nil
-    #endif
+/// When the CI job started: env `LIVE_BENCH_JOB_STARTED` (Unix seconds, set by the workflow's first step), else now.
+private func jobStartDate() -> Date {
+    ProcessInfo.processInfo.environment["LIVE_BENCH_JOB_STARTED"].flatMap(TimeInterval.init).map(Date.init(timeIntervalSince1970:)) ?? Date()
 }
 
 // ArgumentParser's `main()` resolves to its synchronous entry point from top-level code (and then refuses to run an

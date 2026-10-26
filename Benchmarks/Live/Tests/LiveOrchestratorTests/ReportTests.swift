@@ -125,10 +125,77 @@ struct ReportTests {
         #expect(html.contains("second gRPC channel"))
         #expect(html.contains("thread pool"))
         #expect(html.contains("acknowledged progress"))
-        // .NET at 4000/s: 240,000 written, 239,970 delivered, 238,800 acknowledged in each round.
+        // .NET at 4000/s: 240,000 written, 239,970 delivered, 238,800 acknowledged after the drain (a shortfall of
+        // 1,200) in each round.
         #expect(html.contains("239,970"))
-        #expect(html.contains("238,800"))
+        #expect(html.contains(">1,200<"))
         #expect(!html.contains("Swift ÷ .NET acknowledged"))
+    }
+
+    @Test func acknowledgedProgressHeadlineIsTheCheckpointAtTheWindowEnd() throws {
+        var trial = ReportFixture.trial(round: 0, rate: 1000, driver: "swift", kind: .persistentSubscription, fast: 1000, slow: 2000, acked: 60_000, ackedAtWindowEnd: 57_600)
+        let cell = ReportFixture.cell("p", kind: .persistentSubscription, rates: [1000], rounds: 1)
+        #expect(TrialFigures(trial, cell: cell).ackedProgressRate == 57_600.0 / 60)
+        // The post-drain value alone is no headline (it is ≈ written by construction).
+        trial.serverAckedAtWindowEnd = nil
+        #expect(TrialFigures(trial, cell: cell).ackedProgressRate == nil)
+    }
+
+    @Test func persistentSubscriptionShowsWindowEndProgressShortfallAcksAndRedeliveries() {
+        let html = Report.render([.fixturePersistent])
+        for header in ["Acked at window end (server)", "Shortfall after drain", "Acks enqueued", "Redeliveries"] {
+            #expect(html.contains(header), "missing column \(header)")
+        }
+        // .NET at 4000/s: 238,800 acknowledged after the drain of 240,000 written (shortfall 1,200), 234,800 at the
+        // window end, 17 redeliveries.
+        #expect(html.contains("234,800"))
+        #expect(html.contains(">1,200<"))
+        #expect(html.contains(">17<"))
+        #expect(html.contains("checkpoint"))
+    }
+
+    @Test func catchUpTimeIsShownWithoutAVerdict() throws {
+        let step = try #require(comparison(.fixtureCatchUpReduced, rate: 250))
+        let catchUp = try #require(step.ratios.first { $0.metric == .catchUpTime })
+        #expect(catchUp.estimate != nil)
+        #expect(catchUp.verdict == nil)
+        #expect(step.ratios.filter { $0.metric != .catchUpTime }.allSatisfy { $0.verdict != nil })
+        let rows = ratioRows(Report.render([.fixtureCatchUpReduced])).filter { $0.contains("Catch-up time") }
+        #expect(rows.count == 2)
+        for row in rows {
+            #expect(row.contains("×"))
+            #expect(row.contains("no verdict"))
+            for verdict in ["meets", "misses", "inconclusive", "insufficient rounds"] { #expect(!row.contains(verdict)) }
+        }
+        #expect(Report.render([.fixtureCatchUpReduced]).contains("phase 1"))
+    }
+
+    @Test func harnessFloorsAreTheRunnersOwn() {
+        let html = Report.render([.fixtureWithLosses])
+        #expect(!html.contains("development Mac"))
+        #expect(html.contains("Harness floor on this runner"))
+        // swift p50 / p99 at each rate, and the .NET no-op CPU and peak RSS.
+        #expect(html.contains("241 µs") && html.contains("111 µs"))
+        #expect(html.contains("41.0 MB"))
+        var without = CellResult.fixtureWithLosses
+        without.metadata.harnessFloors = nil
+        #expect(Report.render([without]).contains("not measured"))
+    }
+
+    @Test func fairnessNotesDiscloseAppendRPCsAndDecoders() {
+        let append = Report.render([.fixtureWithLosses])
+        #expect(append.contains("BatchAppend"))
+        #expect(append.contains("Streams.Append"))
+        let rebuildCell = ReportFixture.cell("rebuild-fixture", kind: .rebuild, rates: [50, 200], rounds: 5)
+        let rebuild = Report.render([ReportFixture.result(rebuildCell) { round, rate, driver in
+            ReportFixture.trial(round: round, rate: rate, driver: driver, kind: .rebuild, fast: UInt64(900 * ReportFixture.wobble(round)), slow: 3000)
+        }])
+        #expect(rebuild.contains("JSONSerialization"))
+        #expect(rebuild.contains("JsonDocument"))
+        // The orchestrator itself is not pinned.
+        #expect(append.contains("orchestrator"))
+        #expect(append.contains("not pinned"))
+        #expect(append.contains("at or below"))
     }
 
     @Test func reportHasNoNaN() {

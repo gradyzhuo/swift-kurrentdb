@@ -4,12 +4,12 @@ import KurrentDB
 import LiveBenchCore
 
 /// The Swift client under test. Implements `docs/driver-contract.md`: `run` executes one trial, `version` reports
-/// which SDK commit is measured.
+/// which SDK commit is measured, `floor` measures the harness's no-op floor (contract rule 10).
 struct LiveDriverSwift: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "LiveDriverSwift",
         abstract: "swift-kurrentdb driver for the live benchmarks.",
-        subcommands: [Run.self, Version.self]
+        subcommands: [Run.self, Version.self, Floor.self]
     )
 }
 
@@ -59,7 +59,7 @@ struct Version: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print the driver version as JSON.")
 
     func run() throws {
-        let version = DriverVersion(client: "swift", clientVersion: try sdkCommit(), runtime: swiftRuntime)
+        let version = DriverVersion(client: "swift", clientVersion: try sdkCommit(), runtime: swiftLanguageMode)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         print(String(decoding: try encoder.encode(version), as: UTF8.self))
@@ -83,21 +83,33 @@ struct Version: ParsableCommand {
         }
         return commit
     }
+}
 
-    private var swiftRuntime: String {
-        #if swift(>=6.5)
-        "swift 6.5+"
-        #elseif swift(>=6.4)
-        "swift 6.4"
-        #elseif swift(>=6.3)
-        "swift 6.3"
-        #elseif swift(>=6.2)
-        "swift 6.2"
-        #elseif swift(>=6.1)
-        "swift 6.1"
-        #else
-        "swift 6.0"
-        #endif
+/// The harness floor: the trial's open loop with an operation that returns immediately, after a warmup window at the
+/// same rate. Prints one `HarnessFloor` JSON line, the same fields as the .NET driver's `floor`.
+struct Floor: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Measure the scheduler's no-op floor at one rate and print it as JSON.")
+
+    @Option(help: "Operations per second.")
+    var rate: Double
+
+    @Option(help: "Measured seconds.")
+    var seconds: Double = 5
+
+    @Option(help: "Warmup seconds at the same rate before the measured window.")
+    var warmup: Double = 2
+
+    func validate() throws {
+        guard rate.isFinite, rate > 0, seconds.isFinite, seconds > 0, warmup.isFinite, warmup >= 0 else {
+            throw ValidationError("rate and seconds must be positive, warmup not negative")
+        }
+    }
+
+    func run() async throws {
+        let floor = await measureHarnessFloor(rate: rate, seconds: seconds, warmupSeconds: warmup)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        print(String(decoding: try encoder.encode(floor), as: UTF8.self))
     }
 }
 
@@ -142,6 +154,8 @@ func log(_ message: String) {
 do {
     switch try LiveDriverSwift.parseAsRoot() {
     case let command as Run:
+        try await command.run()
+    case let command as Floor:
         try await command.run()
     case var command:
         try command.run()
