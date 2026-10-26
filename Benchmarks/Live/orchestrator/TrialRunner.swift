@@ -20,7 +20,8 @@ struct TrialRecord: Codable, Sendable {
     /// The driver's `result.json`; kept even when `error` is set by a validation failure.
     var result: TrialResult?
     var histogram: HistogramFile?
-    /// Server headroom over the measure window; nil when it could not be measured.
+    /// Server headroom over the measure window (from the driver's measure-start marker for `measureSeconds`); nil when
+    /// it could not be measured or the driver wrote no marker (`notes` then says so).
     var headroom: HeadroomSample?
     /// Persistent subscription: events of the measured group acknowledged as seen by the server (`PersistentProgress`),
     /// read after the driver exited. nil for other kinds or when unreadable.
@@ -28,6 +29,8 @@ struct TrialRecord: Codable, Sendable {
     /// Set when the trial failed: the driver crashed, hung, wrote no readable result, or a hard validation failed.
     /// A failed trial is excluded from ratios.
     var error: String?
+    /// Remarks that do not fail the trial (e.g. headroom unavailable because the driver wrote no measure-start marker).
+    var notes: [String]?
 }
 
 /// Everything one cell produced. `abortedReason` is set when the cell stopped early (refused, disk, server); the
@@ -115,6 +118,9 @@ struct TrialRunner: Sendable {
     /// Stream prefix and category of the seeded and written streams (`Seeder.category`).
     var category = Seeder().category
     var seed = Seeder().payloadSeed
+    /// Called with the cell's state after every trial (the CLI writes `cell-result.json` from it, so a killed job
+    /// keeps the trials done so far).
+    var onProgress: @Sendable (CellResult) -> Void = { _ in }
     var log: @Sendable (String) -> Void = { line in
         FileHandle.standardError.write(Data("[orchestrator] \(line)\n".utf8))
     }
@@ -190,6 +196,15 @@ struct TrialRunner: Sendable {
                     log("\(cell.id): \(step)")
                     do {
                         outcome.trials.append(try await runTrial(cell, manifest: manifest, round: round, rate: rate, driver: driver))
+                        onProgress(outcome)
+                    } catch let abort as TrialAbort {
+                        // The server failed after the driver ran (e.g. the container died mid-trial): the trial is
+                        // failed and nothing after it can be trusted.
+                        outcome.trials.append(abort.record)
+                        outcome.abortedReason = "\(step): \(abort.failure)"
+                        log("\(cell.id): stopped, \(outcome.abortedReason ?? "")")
+                        onProgress(outcome)
+                        return outcome
                     } catch {
                         // A server step (or the trial's own directory) failed: nothing after it can be trusted.
                         try? server.stop()
@@ -198,6 +213,7 @@ struct TrialRunner: Sendable {
                         outcome.trials.append(record)
                         outcome.abortedReason = "\(step): \(error)"
                         log("\(cell.id): stopped, \(outcome.abortedReason ?? "")")
+                        onProgress(outcome)
                         return outcome
                     }
                 }
@@ -212,6 +228,12 @@ struct TrialRunner: Sendable {
         var step: String
         var error: Error
         var description: String { "\(step) failed: \(error)" }
+    }
+
+    /// A server step that failed after the driver ran; `record` is the trial, already marked failed.
+    private struct TrialAbort: Error {
+        var record: TrialRecord
+        var failure: ServerStepFailure
     }
 
     private func serverStep<T>(_ step: String, _ body: () async throws -> T) async throws -> T {
@@ -247,23 +269,25 @@ struct TrialRunner: Sendable {
                 log("acknowledged progress of \(group) unreadable: \(error)")
             }
         }
-        do {
-            try server.stop()
-        } catch {
-            // The next trial restores the data directory anyway; a failed restore then ends the cell.
-            log("server stop after the trial: \(error)")
-        }
-
         if let result = record.result {
             if record.error == nil { record.error = Self.hardFailure(result, scenario: scenario) }
             record.headroom?.eventsWritten = Self.eventsWritten(result, scenario: scenario)
+        }
+        do {
+            try server.stop()
+        } catch {
+            // An unclean stop means the server died or hung during the trial (exit code other than 0/143): the
+            // driver's numbers may be its outcomes against a dead server, so the trial fails and the cell ends.
+            let failure = ServerStepFailure(step: "stop server after the trial", error: error)
+            record.error = "server: \(failure)" + (record.error.map { "; \($0)" } ?? "")
+            throw TrialAbort(record: record, failure: failure)
         }
         return record
     }
 
     /// An in-process driver: `run --scenario … --connection … --out …`, killed after warmup + measure + drain +
-    /// `killGraceSeconds` (+ the catch-up phase-1 bound). The monitor runs over the measure window; for catch-up,
-    /// whose measure window starts after an unknown phase 1, from the end of warmup until the driver exits.
+    /// `killGraceSeconds` (+ the catch-up phase-1 bound). The monitor starts when the driver writes the measure-start
+    /// marker on stderr and runs for `measureSeconds`; without a marker there is no headroom sample.
     private func runDriver(_ scenario: EffectiveScenario, driver: DriverSpec, directory: URL) async -> TrialRecord {
         var record = TrialRecord(round: 0, rate: scenario.rate, driver: driver.name)
         let scenarioFile = directory.appendingPathComponent("scenario.json")
@@ -281,13 +305,16 @@ struct TrialRunner: Sendable {
             cpus: driverCPUs
         )
         let limit = Self.killAfterSeconds(scenario, grace: killGraceSeconds)
-        let monitorUntilExit = scenario.kind == .catchUp
-        let exit: DriverProcess.Exit
-        (exit, record.headroom) = await monitored(
-            warmup: scenario.warmupSeconds, measure: monitorUntilExit ? nil : scenario.measureSeconds,
-            eventsWritten: Self.expectedEventsWritten(scenario)
+        let stderrFile = directory.appendingPathComponent("stderr.log")
+        let (exit, headroom, marked) = await monitored(
+            measure: scenario.measureSeconds, eventsWritten: Self.expectedEventsWritten(scenario),
+            waitForStart: { await MeasureMarker.wait(in: stderrFile) }
         ) {
             await DriverProcess.run(command, logDirectory: directory, timeoutSeconds: limit)
+        }
+        record.headroom = headroom
+        if !marked {
+            record.notes = ["headroom unavailable: the driver wrote no \(MeasureMarker.line) line on stderr"]
         }
         if let problem = exit.problem(limit: limit, name: driver.name) {
             record.error = problem
@@ -331,7 +358,10 @@ struct TrialRunner: Sendable {
                 if run.warmup {
                     exit = await DriverProcess.run(command, logDirectory: logs, timeoutSeconds: limit)
                 } else {
-                    (exit, record.headroom) = await monitored(warmup: 0, measure: run.seconds, eventsWritten: Self.expectedEventsWritten(scenario)) {
+                    // ghz writes no marker; its measured run starts sending at launch.
+                    (exit, record.headroom, _) = await monitored(
+                        measure: run.seconds, eventsWritten: Self.expectedEventsWritten(scenario), waitForStart: { true }
+                    ) {
                         await DriverProcess.run(command, logDirectory: logs, timeoutSeconds: limit)
                     }
                 }
@@ -355,25 +385,23 @@ struct TrialRunner: Sendable {
         return record
     }
 
-    /// Runs `body` (the driver) while the monitor samples from `warmup` seconds after the start for `measure`
-    /// seconds (nil: until `body` returns). A driver that ends before the window starts yields no sample.
+    /// Runs `body` (the driver) while the monitor samples for `measure` seconds from the moment `waitForStart`
+    /// returns true (it returns false when cancelled, i.e. the driver exited first: no sample, `started` false). A
+    /// driver that exits inside the window ends it early.
     private func monitored<T: Sendable>(
-        warmup: Double, measure: Double?, eventsWritten: Int64, _ body: @Sendable () async -> T
-    ) async -> (T, HeadroomSample?) {
+        measure: Double, eventsWritten: Int64, waitForStart: @escaping @Sendable () async -> Bool, _ body: @Sendable () async -> T
+    ) async -> (T, HeadroomSample?, started: Bool) {
         let monitor = self.monitor
-        let sampling = Task { () -> HeadroomSample? in
-            do { try await Task.sleep(for: .seconds(warmup)) } catch { return nil }
+        let sampling = Task { () -> (HeadroomSample?, Bool) in
+            guard await waitForStart(), !Task.isCancelled else { return (nil, false) }
             await monitor.start()
-            if let measure {
-                try? await Task.sleep(for: .seconds(measure))
-            } else {
-                while !Task.isCancelled { try? await Task.sleep(for: .seconds(3600)) }
-            }
-            return await monitor.stop(eventsWritten: eventsWritten)
+            try? await Task.sleep(for: .seconds(measure))
+            return (await monitor.stop(eventsWritten: eventsWritten), true)
         }
         let value = await body()
         sampling.cancel()
-        return (value, await sampling.value)
+        let (sample, started) = await sampling.value
+        return (value, sample, started)
     }
 
     // MARK: - Pure helpers
@@ -567,5 +595,39 @@ enum DriverProcess {
     static func tail(of file: URL) -> String {
         let text = (try? String(contentsOf: file, encoding: .utf8)) ?? ""
         return String(text.suffix(2000)).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+// MARK: - Measure-start marker
+
+/// The driver contract's measure-start marker: a driver writes exactly this line to stderr (unbuffered) at the instant
+/// its measure window starts (catch-up: the start of phase 2's window).
+enum MeasureMarker {
+    static let line = "LIVE_BENCH_MEASURE_START"
+
+    /// Polls `file` (the driver's stderr) every 20 ms, reading only what was appended, until a complete line equal to
+    /// the marker appears (true) or the task is cancelled (false).
+    static func wait(in file: URL, poll: Duration = .milliseconds(20)) async -> Bool {
+        var offset: UInt64 = 0
+        var partial = Data()
+        let newline = UInt8(ascii: "\n")
+        let marker = Data(line.utf8)
+        while !Task.isCancelled {
+            if let handle = try? FileHandle(forReadingFrom: file) {
+                defer { try? handle.close() }
+                if (try? handle.seek(toOffset: offset)) != nil, let chunk = try? handle.readToEnd(), !chunk.isEmpty {
+                    offset += UInt64(chunk.count)
+                    partial.append(chunk)
+                    // Complete lines only; the unterminated tail waits for the next read.
+                    while let end = partial.firstIndex(of: newline) {
+                        let lineBytes = partial[partial.startIndex..<end]
+                        if lineBytes.elementsEqual(marker) { return true }
+                        partial = Data(partial[partial.index(after: end)...])
+                    }
+                }
+            }
+            try? await Task.sleep(for: poll)
+        }
+        return false
     }
 }
