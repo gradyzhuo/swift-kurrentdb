@@ -68,6 +68,10 @@ for try await result in subscription.events {
 
 ## What's new
 
+### 2.7
+
+- **A subscription to a tombstoned stream ends with `resourceDeleted`.** When the stream a catch-up subscription follows is tombstoned, `events` now throws `KurrentError.resourceDeleted`, the error a read of a tombstoned stream throws, after delivering the events written before it; subscribing to an already tombstoned stream throws it from `subscribe`. **Upgrade note:** the `$streamDeleted` marker is no longer delivered as an event, and the raw `RPCError` that followed it is gone. Subscriptions to `$all` still deliver `$streamDeleted` as a system event. See <doc:Reading-events>.
+
 ### 2.6
 
 - **Typed errors for deleted streams and revision conflicts.** A `read()` the server rejects throws the same `KurrentError` as `read().lazy` already did, instead of a raw `RPCError`: `resourceDeleted` for a tombstoned stream, `accessDenied` without permission. `delete` and `tombstone` report a revision conflict as `KurrentError.wrongExpectedVersion(expected:current:)`, the same case `append` throws, with `current` set to `.noStream` when the stream does not exist. **Upgrade note:** code that matched `KurrentError.grpcError` for a delete or tombstone revision conflict now receives `wrongExpectedVersion`.

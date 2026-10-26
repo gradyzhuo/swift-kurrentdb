@@ -82,7 +82,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                     messages.finish(throwing: deadlineOrOriginal(error))
                 }
             }
-            return try await .init(messages: messages)
+            return try await .init(messages: messages, stream: streamIdentifier)
         }
     }
 }
@@ -215,7 +215,10 @@ extension Streams.Subscribe {
 }
 
 extension Streams.Subscription where Target: SpecifiedStreamTarget {
-    package init(messages: ResponseHandoff<Streams.Subscribe.UnderlyingResponse>) async throws {
+    /// The system event the server appends to a stream when it is tombstoned.
+    static var streamDeletedEventType: String { "$streamDeleted" }
+
+    package init(messages: ResponseHandoff<Streams.Subscribe.UnderlyingResponse>, stream: StreamIdentifier) async throws {
         let first: Streams.Subscribe.UnderlyingResponse?
         do {
             first = try await messages.next()
@@ -228,10 +231,18 @@ extension Streams.Subscription where Target: SpecifiedStreamTarget {
             throw KurrentError.subscriptionTerminated(subscriptionId: nil)
         }
 
-        let events = messages.makeStream { message -> ReadEvent? in
+        let streamName = stream.name
+        let events = messages.makeStream(mapError: serverExceptionOrOriginal) { message -> ReadEvent? in
             switch message.content {
             case let .event(value):
-                return try ReadEvent(message: value)
+                let readEvent = try ReadEvent(message: value)
+                // The stream's own tombstone marker (not one reached through a link): nothing
+                // follows it, so the subscription ends with the error a read of a tombstoned
+                // stream throws, and the marker itself is not delivered.
+                if readEvent.link == nil, readEvent.record.eventType == Self.streamDeletedEventType, readEvent.record.streamIdentifier.name == streamName {
+                    throw KurrentError.resourceDeleted(resource: streamName)
+                }
+                return readEvent
             case .caughtUp:
                 logger.debug("[Streams.Subscribe] Subscription caught up with the stream.")
                 return nil

@@ -234,7 +234,7 @@ extension Streams.Subscription where Target == AllStreamsTarget {
             throw KurrentError.subscriptionTerminated(subscriptionId: nil)
         }
 
-        let events = messages.makeStream { message -> ReadEvent? in
+        let events = messages.makeStream(mapError: serverExceptionOrOriginal) { message -> ReadEvent? in
             switch message.content {
             case let .event(value):
                 return try ReadEvent(message: value)

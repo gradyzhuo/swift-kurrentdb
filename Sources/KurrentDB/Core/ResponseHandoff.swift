@@ -192,7 +192,12 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     /// The stream's closure holds a sentinel that cancels the hand-off when the stream is
     /// released. An error thrown by `next()` or by `transform` also cancels it: an unfolding
     /// stream keeps its closure after throwing, so without this the hand-off would stay alive.
-    package func makeStream<T: Sendable>(_ transform: @escaping @Sendable (Element) throws -> T?) -> AsyncThrowingStream<T, any Error> {
+    /// `mapError` sees the error that ends the stream, whether the hand-off's or one `transform`
+    /// threw, and returns the one the consumer receives.
+    package func makeStream<T: Sendable>(
+        mapError: @escaping @Sendable (any Error) -> any Error = { $0 },
+        _ transform: @escaping @Sendable (Element) throws -> T?
+    ) -> AsyncThrowingStream<T, any Error> {
         let sentinel = CancelOnDeinit(self)
         return AsyncThrowingStream(unfolding: {
             do {
@@ -202,7 +207,7 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 return nil
             } catch {
                 sentinel.handoff.cancel()
-                throw error
+                throw mapError(error)
             }
         })
     }
