@@ -195,7 +195,9 @@ struct TrialRunnerTests {
 
     @Test func monitorWindowStartsAtTheDriversMarker() async throws {
         let fixture = try Fixture()
-        let marked = try fixture.driver("A", writing: fixture.result, before: "sleep 0.6 && echo progress >&2 && echo LIVE_BENCH_MEASURE_START >&2 && sleep 0.4")
+        // The driver keeps running 2 s after its marker, far longer than the 0.2 s window, so a loaded host cannot
+        // make the window end at the driver's exit instead.
+        let marked = try fixture.driver("A", writing: fixture.result, before: "sleep 0.6 && echo progress >&2 && echo LIVE_BENCH_MEASURE_START >&2 && sleep 2")
         let clock = ContinuousClock()
         let launched = clock.now
         let result = try await fixture.runner().runCell(fixture.cell, drivers: [marked], rounds: 1)
@@ -205,10 +207,69 @@ struct TrialRunnerTests {
         let start = try #require(fixture.monitor.starts.first)
         let stop = try #require(fixture.monitor.stops.first)
         #expect(launched.duration(to: start) >= .milliseconds(550))
-        // measureSeconds (0.2 s) after the marker, not at driver exit (0.4 s after it).
-        #expect(start.duration(to: stop) >= .milliseconds(190) && start.duration(to: stop) < .milliseconds(380))
+        // measureSeconds (0.2 s) after the marker, not at driver exit (2 s after it).
+        #expect(start.duration(to: stop) >= .milliseconds(190) && start.duration(to: stop) < .milliseconds(1500))
         // The actual events written replace the estimate.
         #expect(result.trials[0].headroom?.eventsWritten == 20)
+    }
+
+    @Test func persistentSubscriptionAckedProgressIsReadAtTheWindowEnd() async throws {
+        let fixture = try Fixture()
+        var cell = fixture.cell
+        cell.kind = .persistentSubscription
+        var written = fixture.result
+        written.validation = Validation(expectedEvents: 20, receivedEvents: 20, payloadSizesOk: true)
+        fixture.server.ackedProgress = 20
+        fixture.server.ackedNow = 17
+        let driver = try fixture.driver("A", writing: written, before: "echo LIVE_BENCH_MEASURE_START >&2 && sleep 2")
+        let result = try await fixture.runner().runCell(cell, drivers: [driver], rounds: 1)
+        let trial = result.trials[0]
+        #expect(trial.error == nil)
+        #expect(trial.serverAckedAtWindowEnd == 17)
+        #expect(trial.serverAckedProgress == 20)
+        #expect(fixture.server.calls.contains("acked now bench g0-20-A"))
+        // Read once, at marker + measureSeconds (0.2 s), long before the driver exits.
+        let start = try #require(fixture.monitor.starts.first)
+        let read = try #require(fixture.server.ackedNowReads.first)
+        #expect(fixture.server.ackedNowReads.count == 1)
+        #expect(start.duration(to: read) >= .milliseconds(190) && start.duration(to: read) < .milliseconds(1500))
+    }
+
+    @Test func harnessFloorsRunOncePerDriverAndRateBeforeSeeding() async throws {
+        let fixture = try Fixture()
+        var cell = fixture.cell
+        cell.rates = [20, 50]
+        let floorJSON = #"{"rate":RATE,"seconds":0.1,"scheduled":5,"succeeded":5,"p50Micros":7,"p99Micros":90,"p999Micros":95,"maxMicros":99,"cpuSeconds":0.01,"maxRssBytes":1000,"runtime":"fake"}"#
+        // `<command> floor --rate <r> --seconds <s> --warmup <w>`: $0 is "floor", $2 the rate.
+        let answering = "if [ \"$0\" = floor ]; then echo '\(floorJSON)' | sed \"s/RATE/$2/\"; exit 0; fi"
+        let good = try fixture.driver("A", writing: fixture.result, before: "true", prefix: answering)
+        let broken = try fixture.driver("B", writing: fixture.result, before: "true", prefix: "if [ \"$0\" = floor ]; then echo nope >&2; exit 2; fi")
+        var runner = fixture.runner()
+        runner.floor = FloorSettings(warmupSeconds: 0.05, seconds: 0.1)
+        let result = try await runner.runCell(cell, drivers: [good, broken, DriverSpec(name: "ghz", command: ["false"])], rounds: 1)
+        let floors = try #require(result.metadata.harnessFloors)
+        #expect(floors.map { "\($0.driver)@\(Int($0.rate))" } == ["A@20", "A@50", "B@20", "B@50"])
+        #expect(floors[0].floor?.p99Micros == 90 && floors[1].floor?.rate == 50)
+        #expect(floors[2].floor == nil && floors[2].error?.contains("nope") == true)
+        // A broken floor does not stop the cell.
+        #expect(result.abortedReason == nil)
+        #expect(result.trials.filter { $0.driver != "ghz" }.allSatisfy { $0.error == nil })
+    }
+
+    @Test func noTrialStartsPastTheJobTimeGuard() async throws {
+        let fixture = try Fixture()
+        var runner = fixture.runner()
+        let started = Date()
+        runner.jobStarted = started.addingTimeInterval(-339 * 60)
+        // The first trial starts at 339 minutes; the clock then reads 341 minutes.
+        let calls = Mutex(0)
+        runner.now = {
+            calls.withLock { $0 += 1; return $0 } == 1 ? started : started.addingTimeInterval(2 * 60)
+        }
+        let result = try await runner.runCell(fixture.cell, drivers: [fixture.goodDriver("A"), fixture.goodDriver("B")], rounds: 1)
+        #expect(result.trials.map(\.driver) == ["A"])
+        #expect(result.abortedReason?.contains("340") == true)
+        #expect(result.abortedReason?.contains("driver B") == true)
     }
 
     @Test func driverWithoutMarkerHasNoHeadroomAndANote() async throws {
@@ -289,6 +350,7 @@ private struct Fixture {
         var runner = TrialRunner(server: server, monitor: monitor, workDirectory: directory.appendingPathComponent("out"))
         runner.phases = TrialPhases(warmupSeconds: 0, measureSeconds: 0.2, drainSeconds: 0)
         runner.driverCPUs = nil
+        runner.floor = nil
         runner.log = { _ in }
         return runner
     }
@@ -300,14 +362,14 @@ private struct Fixture {
 
     /// A driver that writes `result` (with the trial's rate) and the fixture histogram into `--out` (argument 6),
     /// running `before` first (e.g. sleeps and the measure-start marker).
-    func driver(_ name: String, writing result: TrialResult, before: String = "true") throws -> DriverSpec {
+    func driver(_ name: String, writing result: TrialResult, before: String = "true", prefix: String = "true") throws -> DriverSpec {
         let file = directory.appendingPathComponent("result-\(name).json")
         try JSONEncoder().encode(result).write(to: file)
         let histogram = directory.appendingPathComponent("histogram.json").path
         // The runner appends: run --scenario <file> --connection <cs> --out <dir>  ($0 ... $6). The fake rewrites the
         // rate from the scenario so any rate step validates.
         let script = """
-        \(before) && mkdir -p "$6" && rate=$(sed -n 's/.*"rate":\\([0-9.]*\\).*/\\1/p' "$2") && \
+        \(prefix); \(before) && mkdir -p "$6" && rate=$(sed -n 's/.*"rate":\\([0-9.]*\\).*/\\1/p' "$2") && \
         sed "s/\\"targetRate\\":[0-9.]*/\\"targetRate\\":$rate/" '\(file.path)' > "$6/result.json" && cp '\(histogram)' "$6/histogram.json"
         """
         return DriverSpec(name: name, command: ["/bin/sh", "-c", script])
@@ -316,6 +378,13 @@ private struct Fixture {
 
 private final class FakeServer: TrialServer, Sendable {
     private let state = Mutex<(calls: [String], free: [Int64], acked: Int64, failReady: Bool, failStop: Bool)>(([], [], 0, false, false))
+    private let now = Mutex<(acked: Int64, reads: [ContinuousClock.Instant])>((0, []))
+
+    var ackedNow: Int64 {
+        get { now.withLock { $0.acked } }
+        set { now.withLock { $0.acked = newValue } }
+    }
+    var ackedNowReads: [ContinuousClock.Instant] { now.withLock { $0.reads } }
 
     var calls: [String] { state.withLock { $0.calls } }
     var freeBytes: [Int64] {
@@ -361,6 +430,10 @@ private final class FakeServer: TrialServer, Sendable {
         note("acked \(category) \(group) \(expected)")
         return ackedProgress
     }
+    func acknowledgedProgressNow(category: String, group: String) async throws -> Int64 {
+        note("acked now \(category) \(group)")
+        return now.withLock { $0.reads.append(.now); return $0.acked }
+    }
     func stop() throws {
         note("stop")
         if failStop { throw ServerError.uncleanStop(reason: "container exited with exit code 137") }
@@ -378,6 +451,6 @@ private final class FakeMonitor: TrialMonitor, Sendable {
     func start() async { events.withLock { $0.append(("start", ContinuousClock.now)) } }
     func stop(eventsWritten: Int64) async -> HeadroomSample? {
         events.withLock { $0.append(("stop", ContinuousClock.now)) }
-        return HeadroomSample(coreBusy: [0.5, 0.5], diskAwaitMillis: 1, diskQueueDepth: 0.1, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: eventsWritten)
+        return HeadroomSample(coreBusy: [0.5, 0.5], diskAwaitMillis: 1, diskQueueDepth: 0.1, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: eventsWritten, projectionCatchUpSeconds: 0.5)
     }
 }

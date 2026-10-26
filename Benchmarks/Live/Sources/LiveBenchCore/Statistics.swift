@@ -69,8 +69,14 @@ public func estimateRatio(_ pairs: [RoundPair], direction: Direction, minimumRou
     guard estimate.point.isFinite, estimate.lower.isFinite, estimate.upper.isFinite, estimate.lower > 0 else {
         return (nil, .insufficientRounds)
     }
-    if n < minimumRounds { return (estimate, .insufficientRounds) }
-    if estimate.upper < targetRatio { return (estimate, .meets) }
-    if estimate.lower > targetRatio { return (estimate, .misses) }
-    return (estimate, .inconclusive)
+    return (estimate, verdict(for: estimate, minimumRounds: minimumRounds))
+}
+
+/// The verdict of an estimate against `targetRatio` (spec): fewer rounds than `minimumRounds` is `.insufficientRounds`;
+/// otherwise `.meets` when the upper bound is ≤ the target, `.misses` when the lower bound is > it, else `.inconclusive`.
+public func verdict(for estimate: RatioEstimate, minimumRounds: Int) -> Verdict {
+    if estimate.rounds < minimumRounds { return .insufficientRounds }
+    if estimate.upper <= targetRatio { return .meets }
+    if estimate.lower > targetRatio { return .misses }
+    return .inconclusive
 }

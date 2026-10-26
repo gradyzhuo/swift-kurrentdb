@@ -199,7 +199,7 @@ struct StepComparison {
         ratios = RatioMetric.stepMetrics(kind).map { metric in
             let roundPairs = pairs.map { RoundPair(swift: metric.value($0.swift), dotnet: metric.value($0.dotnet)) }
             let (estimate, verdict) = estimateRatio(roundPairs, direction: metric.direction, minimumRounds: minimumRounds)
-            return MetricRatio(metric: metric, estimate: estimate, verdict: verdict)
+            return MetricRatio(metric: metric, estimate: estimate, verdict: metric.hasVerdict ? verdict : nil)
         }
     }
 }
@@ -216,6 +216,10 @@ enum RatioMetric: String, CaseIterable {
         }
     }
 
+    /// Catch-up time is shown with its ratio but no verdict: phase 1 (reading the corpus) runs before the monitored
+    /// window and saturates the server by design, so the headroom gate cannot vouch for it.
+    var hasVerdict: Bool { self != .catchUpTime }
+
     var direction: Direction {
         switch self {
         case .ackedProgressRate, .ceiling: .higherIsBetter
@@ -229,7 +233,7 @@ enum RatioMetric: String, CaseIterable {
         case .p99: "p99 latency"
         case .cpuPerThousand: "Client CPU per 1,000 successful operations"
         case .maxRss: "Peak RSS"
-        case .ackedProgressRate: "Acknowledged progress rate (server)"
+        case .ackedProgressRate: "Acknowledged progress rate (server, at the window end)"
         case .catchUpTime: "Catch-up time over the corpus"
         case .ceiling: "Highest sustained rate"
         }
@@ -253,11 +257,12 @@ enum RatioMetric: String, CaseIterable {
     }
 }
 
-/// A ratio exists only where a comparison is allowed (both sustained, server headroom), so it always has a verdict.
+/// A ratio exists only where a comparison is allowed (both sustained, server headroom). Its verdict is nil only for a
+/// metric without one (`RatioMetric.hasVerdict`).
 struct MetricRatio {
     var metric: RatioMetric
     var estimate: RatioEstimate?
-    var verdict: Verdict
+    var verdict: Verdict?
 }
 
 /// One client at one step, over its rounds.
@@ -303,7 +308,8 @@ struct TrialFigures {
     let achievedRate: Double?
     let cpuPerThousandSeconds: Double?
     let maxRssBytes: Double?
-    /// Server-observed acknowledged events per second of the measure window (persistent subscription).
+    /// Server-observed acknowledged events per second of the measure window (persistent subscription): the checkpoint
+    /// read at the window's end ÷ the measured seconds.
     let ackedProgressRate: Double?
     let catchUpSeconds: Double?
 
@@ -340,7 +346,7 @@ struct TrialFigures {
             ? cpu / Double(result.succeeded) * 1000 : nil
         maxRssBytes = result.timing == .scheduled && result.maxRssBytes > 0 ? Double(result.maxRssBytes) : nil
         ackedProgressRate = cell.kind == .persistentSubscription
-            ? zip(trial.serverAckedProgress, seconds).map { Double($0) / $1 } : nil
+            ? zip(trial.serverAckedAtWindowEnd, seconds).map { Double($0) / $1 } : nil
         catchUpSeconds = result.catchUpSeconds.flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
     }
 }

@@ -10,8 +10,11 @@ public enum EvaluationThresholds {
     public static let maxCoreBusy = 0.85
     public static let maxDiskAwaitMillis = 20.0
     public static let maxDiskQueueDepth = 4.0
-    /// `$by_category` buffered events may grow by at most this fraction of the events written.
-    public static let maxBufferedGrowthFraction = 0.01
+    /// `$by_category` must have processed the last event written by the end of the measure window within this many
+    /// seconds after it ends. (Its `bufferedEvents` is not a lag measure: it is the projection's read-ahead queue,
+    /// whose reader pauses above `PendingEventsThreshold` and resumes below half of it, so it stays bounded however far
+    /// the projection falls behind the log.)
+    public static let maxProjectionCatchUpSeconds = 5.0
 }
 
 /// Whether a step kept up with its target rate. Degenerate input (nothing scheduled, no measured time) is never sustained.
@@ -38,26 +41,34 @@ public struct HeadroomSample: Codable, Sendable {
     public var coreBusy: [Double]
     public var diskAwaitMillis: Double
     public var diskQueueDepth: Double
+    /// `$by_category`'s `bufferedEvents` (its read-ahead queue) at the start and end of the window; informational.
     public var projectionBufferedStart: Int64
     public var projectionBufferedEnd: Int64
     public var eventsWritten: Int64
+    /// Seconds after the measure window ended until `$by_category` had processed the last event written by then; nil
+    /// when it had not within `EvaluationThresholds.maxProjectionCatchUpSeconds` (the gate fails).
+    public var projectionCatchUpSeconds: Double?
 
-    public init(coreBusy: [Double], diskAwaitMillis: Double, diskQueueDepth: Double, projectionBufferedStart: Int64, projectionBufferedEnd: Int64, eventsWritten: Int64) {
+    public init(
+        coreBusy: [Double], diskAwaitMillis: Double, diskQueueDepth: Double, projectionBufferedStart: Int64, projectionBufferedEnd: Int64,
+        eventsWritten: Int64, projectionCatchUpSeconds: Double?
+    ) {
         self.coreBusy = coreBusy
         self.diskAwaitMillis = diskAwaitMillis
         self.diskQueueDepth = diskQueueDepth
         self.projectionBufferedStart = projectionBufferedStart
         self.projectionBufferedEnd = projectionBufferedEnd
         self.eventsWritten = eventsWritten
+        self.projectionCatchUpSeconds = projectionCatchUpSeconds
     }
 }
 
-/// Whether the server had headroom. An empty `coreBusy` means no measurement and counts as no headroom, as does any NaN reading.
+/// Whether the server had headroom. An empty `coreBusy` means no measurement and counts as no headroom, as does any NaN
+/// reading and a projection that did not catch up after the window.
 public func hasHeadroom(_ s: HeadroomSample) -> Bool {
-    guard !s.coreBusy.isEmpty else { return false }
-    let allowedGrowth = EvaluationThresholds.maxBufferedGrowthFraction * Double(max(s.eventsWritten, 0))
+    guard !s.coreBusy.isEmpty, let catchUp = s.projectionCatchUpSeconds else { return false }
     return s.coreBusy.allSatisfy { $0 <= EvaluationThresholds.maxCoreBusy }
         && s.diskAwaitMillis <= EvaluationThresholds.maxDiskAwaitMillis
         && s.diskQueueDepth <= EvaluationThresholds.maxDiskQueueDepth
-        && Double(s.projectionBufferedEnd - s.projectionBufferedStart) <= allowedGrowth
+        && catchUp <= EvaluationThresholds.maxProjectionCatchUpSeconds
 }

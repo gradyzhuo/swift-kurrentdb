@@ -56,6 +56,26 @@ struct OpenLoopParityTests {
         #expect(swift == dotnet)
     }
 
+    /// The .NET `floor` prints the fields of `HarnessFloor`, which the Swift driver's `floor` encodes and the
+    /// orchestrator decodes for both.
+    @Test(.enabled(if: dotnetAvailable))
+    func dotnetFloorPrintsTheSharedFields() async throws {
+        let output = try await offCooperativePool {
+            try runTool("dotnet", [try DotNetDriverBuild.dll().path, "floor", "--rate", "1000", "--seconds", "0.2", "--warmup", "0.1"])
+        }
+        let object = try #require(try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        #expect(Set(object.keys) == HarnessFloor.fieldNames)
+        let floor = try JSONDecoder().decode(HarnessFloor.self, from: Data(output.utf8))
+        #expect(floor.scheduled == 200 && floor.succeeded == 200)
+        #expect(floor.maxRssBytes > 0)
+    }
+
+    /// CI sets `LIVE_BENCH_REQUIRE_DOTNET=1`: there a missing `dotnet` fails instead of skipping the .NET tests.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LIVE_BENCH_REQUIRE_DOTNET"] == "1"))
+    func dotnetIsOnPathWhereRequired() {
+        #expect(dotnetAvailable, "LIVE_BENCH_REQUIRE_DOTNET=1 but `dotnet --version` failed: the .NET parity tests would be skipped")
+    }
+
     private func swiftCounters(_ c: Case) async -> [Int] {
         let config = OpenLoopConfig(
             rate: c.rate, duration: .milliseconds(Int(c.seconds * 1000)), inFlightCap: c.cap,

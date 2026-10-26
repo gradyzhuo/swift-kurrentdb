@@ -34,6 +34,8 @@ struct RunMetadata: Codable, Sendable, Equatable {
     var corpusReducedTo: Int?
     /// UTC date (`YYYY-MM-DD`) the cell ran; names the results bundle.
     var runDate: String?
+    /// Each in-process driver's harness floor at the cell's rates, measured on the cell's runner at cell start.
+    var harnessFloors: [HarnessFloorRun]?
 
     /// The effective scenario of a cell: what every trial's `EffectiveScenario` shares.
     struct ScenarioSettings: Codable, Sendable, Equatable {
@@ -50,7 +52,35 @@ struct RunMetadata: Codable, Sendable, Equatable {
     }
 }
 
+/// One driver's `floor` at one rate: the floor, or why there is none.
+struct HarnessFloorRun: Codable, Sendable, Equatable {
+    var driver: String
+    var rate: Double
+    var floor: HarnessFloor?
+    var error: String?
+}
+
 extension RunMetadata {
+    /// What the drivers' `version` outputs say: the SDK commit (Swift), the `KurrentDB.Client` version and runtime
+    /// (.NET), and every client. The Swift driver's `runtime` is only its language mode, so the toolchain comes from
+    /// the environment (`collect`'s full `swift --version` line).
+    static func fromDrivers(_ versions: [DriverVersion]) -> RunMetadata {
+        var metadata = RunMetadata()
+        for version in versions {
+            switch version.client {
+            case "swift":
+                metadata.sdkCommit = version.clientVersion
+            case "dotnet":
+                metadata.kurrentDBClientVersion = version.clientVersion
+                metadata.dotnetRuntime = version.runtime
+            default:
+                break
+            }
+        }
+        metadata.clients = versions
+        return metadata
+    }
+
     /// Build configuration of the drivers when the environment does not say (`LIVE_BENCH_BUILD_FLAGS`).
     static let defaultBuildFlags = "swift build -c release; dotnet build -c Release -p:RestoreLockedMode=true"
 
@@ -132,6 +162,7 @@ extension RunMetadata {
         merged.cpuModel = cpuModel ?? other.cpuModel
         merged.corpusReducedTo = corpusReducedTo ?? other.corpusReducedTo
         merged.runDate = runDate ?? other.runDate
+        merged.harnessFloors = harnessFloors ?? other.harnessFloors
         return merged
     }
 

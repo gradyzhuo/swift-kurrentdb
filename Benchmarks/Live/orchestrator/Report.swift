@@ -48,7 +48,7 @@ enum Report {
         <li><strong>Ratios</strong> are oriented so that <em>higher means Swift is worse</em>: Swift ÷ .NET for
         lower-is-better metrics (latency, CPU per operation, RSS, catch-up time), .NET ÷ Swift for higher-is-better
         metrics (acknowledged progress, highest sustained rate). The interval is a 95% Student t interval over the
-        round-level log-ratios. Verdict against \(fixed(targetRatio, 1))×: <em>meets</em> when the upper bound is below it,
+        round-level log-ratios. Verdict against \(fixed(targetRatio, 1))×: <em>meets</em> when the upper bound is at or below it,
         <em>misses</em> when the lower bound is above it, otherwise <em>inconclusive</em>; fewer paired rounds than the
         tier's minimum (5 headline, 3 appendix) gives <em>insufficient rounds</em>.</li>
         <li><strong>Pairing.</strong> A round contributes to a ratio only when both clients have a valid trial (no error)
@@ -63,20 +63,21 @@ enum Report {
         clients sustained it.</li>
         <li><strong>Server headroom</strong>: every server core ≤ \(fixed(t.maxCoreBusy * 100, 0))% busy, disk await ≤
         \(fixed(t.maxDiskAwaitMillis, 0)) ms, disk queue ≤ \(fixed(t.maxDiskQueueDepth, 0)), and the
-        <code>$by_category</code> backlog growing by at most \(fixed(t.maxBufferedGrowthFraction * 100, 0))% of the events
-        written. A step where any paired trial fails the gate is <em>system-limited</em>; one without a measurement is
-        <em>headroom unavailable</em>. Such a step is shown with each client's figures, but no ratio or verdict is
-        drawn from it.</li>
+        <code>$by_category</code> projection having processed the last event written in the window within
+        \(fixed(t.maxProjectionCatchUpSeconds, 0)) s after it ends. A step where any paired trial fails the gate is
+        <em>system-limited</em>; one without a measurement is <em>headroom unavailable</em>. Such a step is shown with
+        each client's figures, but no ratio or verdict is drawn from it.</li>
         <li><strong>Setting.</strong> The network is loopback and the server is co-located with the client on one VM
         (server and client pinned to separate cores): real network effects are not included, and the two still share
-        memory bandwidth, caches and disk.</li>
-        <li><strong>Harness floor</strong> (each driver's scheduler with a no-op operation, release build, after warmup,
-        p50 / p99; measured on a development Mac with Apple Silicon, not on the CI runner): Swift 1000/s 7 / 241–282 µs, 8000/s 3–6 / 31–88 µs; .NET 1000/s 5–7 / 111–153 µs,
-        8000/s 5–6 / 73–138 µs. Latencies close to these floors say more about the harness than the client.</li>
+        memory bandwidth, caches and disk. The orchestrator (its once-a-second headroom sampling and the server checks
+        between trials) is not pinned; its load during a window is light.</li>
+        <li><strong>Harness floor</strong>: each cell's job ran both drivers' schedulers with a no-op operation (release
+        build, pinned like the trials, after a warmup) at the cell's rates before seeding; the table <em>Harness floor
+        on this runner</em> shows p50 / p99 and the no-op run's CPU and peak RSS. Latencies close to the floor say more
+        about the harness than the client.</li>
         <li><strong>CPU</strong> is process CPU from the start of the measure window to the end of the drain. The .NET
-        thread pool's workers spin before sleeping (runtime default), which costs CPU even with a no-op operation: about
-        0.2 cores at 1000/s and 1.3 cores at 8000/s, against about 0.12 cores for Swift's harness at 8000/s (development Mac). Read the CPU
-        ratios with that in mind.</li>
+        thread pool's workers spin before sleeping (runtime default), which costs CPU even with a no-op operation; the
+        floor table shows each harness's no-op CPU on the runner. Read the CPU ratios with that in mind.</li>
         <li><strong>ghz</strong> is a <em>transport reference</em> for append and rebuild cells: plain gRPC calls with
         latency timed from the RPC start (not from the schedule), no drops (a full worker pool waits), no JSON decoding.
         It is shown on its own and never put in a ratio.</li>
@@ -127,6 +128,7 @@ enum Report {
         html += chart(a)
         html += stepTable(a)
         html += comparisonTable(a)
+        html += floorTable(metadata.harnessFloors)
         html += ghzTable(a)
         html += problems(a)
         html += metadataBlock(metadata)
@@ -139,10 +141,11 @@ enum Report {
         let kind = a.result.cell.kind
         let subscription = kind == .persistentSubscription || kind == .catchUp
         var head = ["Rate", "Client", "Valid rounds", "Achieved", "p50", "p99", "p99.9", "Failed / dropped / timed out", "CPU per 1,000 ops", "Peak RSS"]
-        if subscription { head += ["Written / delivered", "Acked (server)"] }
+        if subscription { head += ["Written / delivered"] }
+        if kind == .persistentSubscription { head += ["Acked at window end (server)", "Shortfall after drain", "Acks enqueued", "Redeliveries"] }
         if kind == .catchUp { head.append("Catch-up time") }
         head += ["Sustained", "Headroom"]
-        var html = "<h3>Rate steps</h3>\n<p class=\"caption\">Target rate in \(esc(rateUnit(kind))); per client the lower median over valid rounds, loss counts summed over them. “≥” marks the upper percentiles (p99, p99.9) of a step the client did not sustain: censored, the true value may be higher.\(subscription ? " Written / delivered / acked are medians per round; a shortfall is reported, not a failure." : "")</p>\n"
+        var html = "<h3>Rate steps</h3>\n<p class=\"caption\">Target rate in \(esc(rateUnit(kind))); per client the lower median over valid rounds, loss counts summed over them. “≥” marks the upper percentiles (p99, p99.9) of a step the client did not sustain: censored, the true value may be higher.\(subscription ? " Written / delivered are medians per round; a shortfall is reported, not a failure." : "")\(kind == .persistentSubscription ? " Acked at window end is the group's server checkpoint read when the measure window ended (it lags acks by up to the checkpoint interval, 2 s); shortfall after drain is written minus the checkpoint read after the driver exited (drain and a 3 s settle included); acks enqueued and redeliveries are the driver's counts. All medians per round." : "")</p>\n"
         html += "<div class=\"scroll\"><table class=\"steps\">\n<thead><tr>\(head.map { "<th>\(esc($0))</th>" }.joined())</tr></thead>\n<tbody>\n"
         for step in a.steps {
             for (index, client) in step.clients.enumerated() {
@@ -163,9 +166,17 @@ enum Report {
                 if subscription {
                     let written = client.median { $0.trial.result.map { Double($0.validation.expectedEvents) } }
                     let delivered = client.median { $0.trial.result.map { Double($0.validation.receivedEvents) } }
-                    let acked = client.median { $0.trial.serverAckedProgress.map(Double.init) }
                     cells.append("<td class=\"num\">\(count(written)) / \(count(delivered))</td>")
-                    cells.append("<td class=\"num\">\(kind == .persistentSubscription ? count(acked) : "n/a")</td>")
+                }
+                if kind == .persistentSubscription {
+                    let atWindowEnd = client.median { $0.trial.serverAckedAtWindowEnd.map(Double.init) }
+                    let shortfall = client.median { f -> Double? in
+                        guard let written = f.trial.result?.validation.expectedEvents, let acked = f.trial.serverAckedProgress else { return nil }
+                        return Double(max(0, Int64(written) - acked))
+                    }
+                    let enqueued = client.median { $0.trial.result?.ackEnqueued.map(Double.init) }
+                    let redeliveries = client.median { $0.trial.result?.redeliveries.map(Double.init) }
+                    cells += [atWindowEnd, shortfall, enqueued, redeliveries].map { "<td class=\"num\">\(count($0))</td>" }
                 }
                 if kind == .catchUp {
                     cells.append("<td class=\"num\">\(client.median { $0.catchUpSeconds }.map { esc(duration(seconds: $0)) } ?? "—")</td>")
@@ -219,30 +230,67 @@ enum Report {
         let rounds = ratio.estimate.map { "\($0.rounds)" } ?? "&lt; 2"
         let verdict: String
         switch ratio.verdict {
-        case .meets: verdict = "<span class=\"badge good\">meets</span>"
-        case .misses: verdict = "<span class=\"badge bad\">misses</span>"
-        case .inconclusive: verdict = "<span class=\"badge warn\">inconclusive</span>"
-        case .insufficientRounds: verdict = "<span class=\"badge muted\">insufficient rounds</span> <span class=\"muted\">(minimum \(minimum))</span>"
+        case .meets?: verdict = "<span class=\"badge good\">meets</span>"
+        case .misses?: verdict = "<span class=\"badge bad\">misses</span>"
+        case .inconclusive?: verdict = "<span class=\"badge warn\">inconclusive</span>"
+        case .insufficientRounds?: verdict = "<span class=\"badge muted\">insufficient rounds</span> <span class=\"muted\">(minimum \(minimum))</span>"
+        case nil: verdict = "<span class=\"muted\">no verdict (see notes)</span>"
         }
         return "<tr data-rate=\"\(esc(dataRate))\"><th scope=\"row\">\(esc(rateCell))</th><td>\(metric)</td><td class=\"num\">\(point)</td><td class=\"num\">\(interval)</td><td class=\"num\">\(rounds)</td><td>\(verdict)</td></tr>\n"
     }
 
     private static func fairnessNotes(_ kind: ScenarioKind) -> String {
         var notes = [
-            "CPU per 1,000 operations includes the .NET thread pool's default spin (with a no-op operation on a development Mac: about 0.2 cores at 1000/s, 1.3 cores at 8000/s; Swift's harness about 0.12 cores at 8000/s).",
+            "CPU per 1,000 operations includes the .NET thread pool's default spin, which costs CPU even with a no-op operation (the harness floor table shows each harness's no-op CPU on this runner).",
             "Peak RSS is the process lifetime peak (warmup included).",
         ]
-        if kind == .persistentSubscription {
+        let appends = "The clients append differently with their default APIs: the Swift SDK sends one Streams.Append RPC per append; KurrentDB.Client's AppendToStreamAsync (without per-call credentials, on a server that supports it) multiplexes appends over one long-lived BatchAppend stream. ghz sends Streams.Append."
+        switch kind {
+        case .appendLatency, .appendThroughput:
+            notes.insert(appends, at: 0)
+        case .rebuild:
+            notes.insert("Each event's data is parsed into a JSON DOM: Swift with Foundation's JSONSerialization.jsonObject, .NET with System.Text.Json's JsonDocument.Parse. The decoders' own speed is part of the rebuild figures; ghz does not decode.", at: 0)
+        case .persistentSubscription:
             notes.insert(contentsOf: [
                 "Persistent subscription consumers run with each client's default buffer: .NET bufferSize 10, Swift 1000. The buffer bounds the unacknowledged events the server sends one consumer.",
                 "The .NET client needs a separate persistent subscriptions client, so a .NET trial has a second gRPC channel; the Swift driver uses one client.",
-                "Acknowledged progress is the server's checkpoint of the measured group after the driver exits; it lags acks by up to the checkpoint interval.",
+                "Acknowledged progress is the server's checkpoint of the measured group read when the measure window ends, divided by the window's length; the checkpoint lags acks by up to its interval (2 s), so both clients read up to about two seconds of events low. The value read after the drain is shown as a shortfall against the events written.",
+                appends,
+            ], at: 0)
+        case .catchUp:
+            notes.insert(contentsOf: [
+                "Catch-up time over the corpus is shown with its ratio but without a verdict: phase 1 runs before the monitored measure window and reads the corpus as fast as the server delivers it, so the server is saturated by design and the headroom gate cannot vouch for it.",
+                appends,
             ], at: 0)
         }
         if kind == .persistentSubscription || kind == .catchUp {
             notes.append("Each client's writer runs in the same process as its subscriber, so CPU and RSS cover writing and consuming.")
         }
         return "<ul class=\"fairness\">\(notes.map { "<li>\(esc($0))</li>" }.joined())</ul>\n"
+    }
+
+    // MARK: - Harness floor
+
+    /// Each driver's no-op floor at each rate, measured in this cell's job (`HarnessFloorRun`).
+    private static func floorTable(_ runs: [HarnessFloorRun]?) -> String {
+        var html = "<h3>Harness floor on this runner</h3>\n"
+        guard let runs, !runs.isEmpty else {
+            return html + "<p class=\"caption\">The harness floor was not measured for this cell.</p>\n"
+        }
+        html += "<p class=\"caption\">Each driver's scheduler with a no-op operation, pinned like its trials, before seeding (no server load); p50 / p99 of the measured window, its process CPU and the run's peak RSS.</p>\n"
+        html += "<div class=\"scroll\"><table class=\"floors\">\n<thead><tr><th>Rate</th><th>Client</th><th>Operations</th><th>p50</th><th>p99</th><th>CPU</th><th>Peak RSS</th></tr></thead>\n<tbody>\n"
+        for run in runs.sorted(by: { ($0.rate, $0.driver) < ($1.rate, $1.driver) }) {
+            let head = "<tr><th scope=\"row\">\(esc(rateText(run.rate)))</th><td>\(esc(clientName(run.driver)))</td>"
+            guard let f = run.floor else {
+                html += head + "<td colspan=\"5\" class=\"muted\">no floor: \(esc(run.error ?? "not reported"))</td></tr>\n"
+                continue
+            }
+            let cores = f.seconds > 0 && f.cpuSeconds.isFinite ? " (\(fixed(f.cpuSeconds / f.seconds, 2)) cores)" : ""
+            html += head + "<td class=\"num\">\(grouped(f.succeeded)) of \(grouped(f.scheduled))</td>"
+                + "<td class=\"num\">\(esc(latencyText(Double(f.p50Micros))))</td><td class=\"num\">\(esc(latencyText(Double(f.p99Micros))))</td>"
+                + "<td class=\"num\">\(esc(duration(seconds: f.cpuSeconds)))\(esc(cores))</td><td class=\"num\">\(esc(megabytes(Double(f.maxRssBytes))))</td></tr>\n"
+        }
+        return html + "</tbody></table></div>\n"
     }
 
     // MARK: - ghz, problems, metadata

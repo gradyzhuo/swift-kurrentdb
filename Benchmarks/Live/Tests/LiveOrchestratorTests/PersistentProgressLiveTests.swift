@@ -61,6 +61,50 @@ struct PersistentProgressLiveTests {
         // Acked: the checkpoint covers all 100 events (revisions 0...99 of the `$ce-` stream).
         #expect(PersistentProgress.acknowledgedEvents(acked) == 100)
         #expect(PersistentProgress.acknowledgedEvents(disconnected) == 100)
+        // The window-end read is the same field, read once.
+        #expect(try await PersistentProgress.readOnce(client: client, stream: stream, group: group) == 100)
+    }
+
+    /// The monitor's projection gate: the target is the last event written to the trial's streams, and the gate
+    /// reports whether `$by_category` processed it within the bound.
+    @Test(.enabled(if: docker))
+    func projectionCatchUpTargetsTheLastWrittenEvent() async throws {
+        let server = try #require(LiveServer.current)
+        let client = KurrentDBClient(settings: try ClientSettings.parse(connectionString: server.connectionString))
+        defer { try? client.shutdown() }
+        try await enableByCategory(client)
+        let category = "probe" + UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(10).lowercased()
+        let factory = PayloadFactory(dataSize: 300, metadataSize: 60, seed: 42)
+        func append(_ stream: String, _ count: Int) async throws -> LogPosition {
+            let response = try await client.streams(specified: stream).append(events: (0..<count).map {
+                EventData(eventType: "BenchEvent", data: factory.data(index: $0), contentType: .json, customMetadata: factory.metadata(index: $0))
+            })
+            let position = try #require(response.position)
+            return LogPosition(commit: position.commit, prepare: position.prepare)
+        }
+        _ = try await append("\(category)-0", 10)
+        let last = try await append("\(category)-1", 10)
+        // Another category written later is not the trial's.
+        _ = try await append("other\(category)-0", 5)
+        #expect(try await lastWrittenPosition(client, streamPrefix: "\(category)-") == last)
+        #expect(try await lastWrittenPosition(client, streamPrefix: "nothing\(category)-") == .zero)
+
+        let caughtUp = await byCategoryCatchUp(client: client, streamPrefix: "\(category)-", within: .seconds(5))
+        print("probe catch-up: \(caughtUp)")
+        guard case let .caughtUp(seconds) = caughtUp else {
+            Issue.record("expected caught up, got \(caughtUp)")
+            return
+        }
+        #expect(seconds >= 0 && seconds <= 5)
+
+        // A stopped projection never reaches newer events: not caught up (the gate fails), not unreadable.
+        try await client.projections(system: .byCategory).disable()
+        do {
+            try await Task.sleep(for: .seconds(1))
+            _ = try await append("\(category)-2", 10)
+            #expect(await byCategoryCatchUp(client: client, streamPrefix: "\(category)-", within: .seconds(2)) == .notCaughtUp)
+        }
+        try await enableByCategory(client)
     }
 
     /// `read(...)` as the orchestrator calls it after a trial: polls until the checkpoint reaches `expected`.

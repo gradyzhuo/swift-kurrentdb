@@ -116,6 +116,55 @@ struct MonitorTests {
         #expect(sample.map(hasHeadroom) == true)
     }
 
+    @Test func projectionCatchUpAfterTheWindowIsCarriedThroughAndGated() async {
+        let stats = [procStat(core0: (busy: 0, idle: 0), core1: (busy: 0, idle: 0)), procStat(core0: (busy: 1, idle: 9), core1: (busy: 0, idle: 10))]
+        let disks = Array(repeating: diskStats(reads: 1, readMs: 1, writes: 1, writeMs: 1, weightedMs: 1), count: 2)
+        func stopped(_ catchUp: ProjectionCatchUp) async -> HeadroomSample? {
+            let monitor = Script(stats: stats, disks: disks, buffered: [0, 0], wallMillis: [0, 1000], catchUp: catchUp).monitor(cores: [0, 1])
+            await monitor.begin()
+            await monitor.sample()
+            return await monitor.stop(eventsWritten: 100)
+        }
+        let quick = await stopped(.caughtUp(seconds: 1.25))
+        #expect(quick?.projectionCatchUpSeconds == 1.25)
+        #expect(quick.map(hasHeadroom) == true)
+        let behind = await stopped(.notCaughtUp)
+        #expect(behind != nil && behind?.projectionCatchUpSeconds == nil)
+        #expect(behind.map(hasHeadroom) == false)
+        // Unreadable is not saturation: no sample, so "headroom unavailable".
+        #expect(await stopped(.unreadable) == nil)
+    }
+
+    @Test func projectionCatchUpGetsTheGatesBound() async {
+        let bound = Mutex<Duration?>(nil)
+        let monitor = Monitor(
+            cores: [0], device: "sda", interval: nil,
+            readProcStat: { procStat(core0: (busy: 1, idle: 1), core1: (busy: 1, idle: 1)) },
+            readDiskStats: { diskStats(reads: 1, readMs: 1, writes: 1, writeMs: 1, weightedMs: 1) },
+            readBuffered: { 0 },
+            readProjectionCatchUp: { limit in bound.withLock { $0 = limit }; return .caughtUp(seconds: 0) },
+            wallClockMillis: { 0 }
+        )
+        await monitor.begin()
+        _ = await monitor.stop(eventsWritten: 0)
+        #expect(bound.withLock { $0 } == .seconds(EvaluationThresholds.maxProjectionCatchUpSeconds))
+    }
+
+    @Test func readabilityCheckNamesWhatIsMissing() async throws {
+        let stats = procStat(core0: (busy: 1, idle: 1), core1: (busy: 1, idle: 1))
+        let disk = diskStats(reads: 1, readMs: 1, writes: 1, writeMs: 1, weightedMs: 1)
+        try await Script(stats: [stats], disks: [disk], buffered: [0], wallMillis: [0]).monitor(cores: [0, 1]).checkReadable()
+        await #expect(throws: MonitorError.self) {
+            try await Script(stats: [stats], disks: [disk], buffered: [0], wallMillis: [0]).monitor(cores: [0, 1], device: "root").checkReadable()
+        }
+        await #expect(throws: MonitorError.self) {
+            try await Script(stats: [stats], disks: [disk], buffered: [0], wallMillis: [0]).monitor(cores: [0, 5]).checkReadable()
+        }
+        await #expect(throws: MonitorError.self) {
+            try await Script(stats: [], disks: [], buffered: [0], wallMillis: [0]).monitor(cores: [0]).checkReadable()
+        }
+    }
+
     @Test func intervalsWithResetCountersAreSkipped() async {
         // The second snapshot is lower than the first (counter reset); only the third interval counts.
         let script = Script(
@@ -170,7 +219,8 @@ struct MonitorTests {
             cores: [0], device: "sda", interval: .milliseconds(5),
             readProcStat: { await counter.tick(); return procStat(core0: (busy: await counter.value * 9, idle: await counter.value), core1: (busy: 0, idle: 1)) },
             readDiskStats: { diskStats(reads: await counter.value, readMs: 0, writes: 0, writeMs: 0, weightedMs: 0) },
-            readBuffered: { 0 }
+            readBuffered: { 0 },
+            readProjectionCatchUp: { _ in .caughtUp(seconds: 0) }
         )
         await monitor.start()
         try? await Task.sleep(for: .milliseconds(100))
@@ -194,11 +244,14 @@ private final class Script: @unchecked Sendable {
     private let wallMillis: [Double]
     private var statIndex = 0, diskIndex = 0, bufferedIndex = 0, wallIndex = 0
 
-    init(stats: [String], disks: [String], buffered: [Int64], wallMillis: [Double]) {
+    private let catchUp: ProjectionCatchUp
+
+    init(stats: [String], disks: [String], buffered: [Int64], wallMillis: [Double], catchUp: ProjectionCatchUp = .caughtUp(seconds: 0.3)) {
         self.stats = stats
         self.disks = disks
         self.buffered = buffered
         self.wallMillis = wallMillis
+        self.catchUp = catchUp
     }
 
     private func next<T>(_ items: [T], _ index: inout Int) -> T? {
@@ -215,6 +268,7 @@ private final class Script: @unchecked Sendable {
             readProcStat: { self.next(self.stats, &self.statIndex) },
             readDiskStats: { self.next(self.disks, &self.diskIndex) },
             readBuffered: { self.next(self.buffered, &self.bufferedIndex) },
+            readProjectionCatchUp: { _ in self.catchUp },
             wallClockMillis: { self.next(self.wallMillis, &self.wallIndex) ?? 0 }
         )
     }
@@ -229,7 +283,8 @@ struct MonitorRestartTests {
                 cores: [0], device: "sda", interval: .milliseconds(20),
                 readProcStat: { reads.count.withLock { $0 += 1 }; return "cpu0 1 0 0 1 0 0 0 0 0 0\n" },
                 readDiskStats: { "   8       0 sda 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n" },
-                readBuffered: { 0 }
+                readBuffered: { 0 },
+                readProjectionCatchUp: { _ in .caughtUp(seconds: 0) }
             )
         }
         let once = Reads(), twice = Reads()
@@ -243,5 +298,55 @@ struct MonitorRestartTests {
         // Same window and interval: a second sampler would read about twice as often as the single one.
         let (a, b) = (once.count.withLock { $0 }, twice.count.withLock { $0 })
         #expect(Double(b) < 1.5 * Double(a), "single start read \(a) times, double start \(b)")
+    }
+}
+
+/// `/proc/diskstats` of a GitHub-hosted Ubuntu runner (`/` is `/dev/root`, the alias of `sda1`; `/mnt` is `sdb1`),
+/// plus an NVMe disk and a device-mapper volume.
+private let runnerDiskStats = """
+   7       0 loop0 52 0 2290 12 0 0 0 0 0 28 12 0 0 0 0 0 0
+   8       0 sda 21430 6390 1859674 7211 51740 41617 4198136 49011 0 51068 56223 0 0 0 0 0 0
+   8       1 sda1 21216 6390 1849186 7171 51740 41617 4198136 49011 0 50984 56182 0 0 0 0 0 0
+   8      14 sda14 69 0 552 9 0 0 0 0 0 20 9 0 0 0 0 0 0
+   8      15 sda15 92 0 6324 24 1 0 1 0 0 40 24 0 0 0 0 0 0
+   8      16 sdb 1029 4211 66574 523 50 13 4544 172 0 676 696 0 0 0 0 0 0
+   8      17 sdb1 948 4211 61722 487 50 13 4544 172 0 588 659 0 0 0 0 0 0
+ 259       0 nvme0n1 100 0 800 10 10 0 80 1 0 12 11 0 0 0 0 0 0
+ 259       1 nvme0n1p1 90 0 720 9 10 0 80 1 0 11 10 0 0 0 0 0 0
+ 253       0 dm-0 5 0 40 1 0 0 0 0 0 1 1 0 0 0 0 0 0
+"""
+
+@Suite("Disk device resolution")
+struct DiskDeviceTests {
+    /// glibc's `makedev`: minor low byte | major << 8 (12 bits) | minor high bits << 12 | major high bits << 32.
+    private func makedev(_ major: UInt64, _ minor: UInt64) -> UInt64 {
+        (minor & 0xff) | ((major & 0xfff) << 8) | ((minor & 0xffff_ff00) << 12) | ((major & 0xffff_f000) << 32)
+    }
+
+    @Test func deviceNumberSplitsIntoMajorAndMinor() {
+        #expect(DiskDevice.split(makedev(8, 1)) == DiskDevice.Number(major: 8, minor: 1))
+        #expect(DiskDevice.split(makedev(259, 1)) == DiskDevice.Number(major: 259, minor: 1))
+        #expect(DiskDevice.split(makedev(8, 300)) == DiskDevice.Number(major: 8, minor: 300))
+        #expect(DiskDevice.split(makedev(4100, 70_000)) == DiskDevice.Number(major: 4100, minor: 70_000))
+    }
+
+    /// `/dev/root` (what `df` names the root file system on a runner) is not in `/proc/diskstats`; its device number is.
+    @Test func rootFileSystemResolvesByDeviceNumberNotByName() {
+        #expect(DiskDevice.name(of: .init(major: 8, minor: 1), diskStats: runnerDiskStats) == "sda1")
+        #expect(DiskDevice.name(of: .init(major: 8, minor: 17), diskStats: runnerDiskStats) == "sdb1")
+        #expect(DiskDevice.name(of: .init(major: 259, minor: 1), diskStats: runnerDiskStats) == "nvme0n1p1")
+        #expect(DiskDevice.name(of: .init(major: 253, minor: 0), diskStats: runnerDiskStats) == "dm-0")
+        // The resolved line is one the monitor can read.
+        let reads: UInt64 = 21216, writes: UInt64 = 51740
+        let ios = DiskStats.parse(runnerDiskStats, device: "sda1")?.ios
+        #expect(ios == reads + writes)
+    }
+
+    @Test func unknownDeviceNumbersDoNotResolve() {
+        // Major 0 is an anonymous device (overlayfs, tmpfs, btrfs subvolumes): no block device to monitor.
+        #expect(DiskDevice.name(of: .init(major: 0, minor: 42), diskStats: runnerDiskStats) == nil)
+        #expect(DiskDevice.name(of: .init(major: 8, minor: 2), diskStats: runnerDiskStats) == nil)
+        #expect(DiskDevice.name(of: .init(major: 8, minor: 1), diskStats: "") == nil)
+        #expect(DiskDevice.name(of: .init(major: 8, minor: 1), diskStats: "8 1\nnonsense") == nil)
     }
 }

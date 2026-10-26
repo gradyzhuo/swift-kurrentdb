@@ -48,6 +48,9 @@ enum Budget {
     static let seedEventsPerSecond = 5_000.0
     /// The orchestrator refuses a cell estimated above this (a CI job is limited to 6 h).
     static let jobLimitMinutes = 330.0
+    /// No trial starts after this many minutes of job time (the workflow's job timeout is 350): a cell that runs over
+    /// its estimate stops with a reason instead of being killed mid-trial.
+    static let jobTimeGuardMinutes = 340.0
     /// Events per batch of the append-throughput scenario.
     static let throughputBatchSize = 50
     /// Per-operation deadline and in-flight cap, identical for every client.

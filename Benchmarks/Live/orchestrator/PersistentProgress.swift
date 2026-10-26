@@ -37,6 +37,14 @@ enum PersistentProgress {
         Int64(checkpoint.trimmingCharacters(in: .whitespaces)).map { max(0, $0 + 1) } ?? 0
     }
 
+    /// One read of the group's acknowledged progress (the headline: read at the end of the measure window).
+    static func readOnce(client: KurrentDBClient, stream: String, group: String) async throws -> Int64 {
+        let info = try await withTimeout(.seconds(5)) {
+            try await client.persistentSubscriptions(stream: stream, group: group).getInfo()
+        }
+        return acknowledgedEvents(info)
+    }
+
     /// Polls the group's info until acknowledged progress reaches `expected` or `timeout` passes, and returns the last
     /// value read (the shortfall, if any, is `expected - value`). Throws only when no info could be read at all.
     static func read(client: KurrentDBClient, stream: String, group: String, expected: Int64, timeout: Duration) async throws -> Int64 {
