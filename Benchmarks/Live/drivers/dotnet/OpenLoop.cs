@@ -117,9 +117,11 @@ static class OpenLoop
 
         // Drain: wait for everything to be accounted for, bounded by the end of the window plus `drain`.
         var allAccounted = ledger.CloseScheduling();
-        long remaining = start + config.DurationNanos + config.DrainNanos - MonoClock.Now();
-        if (remaining > 0 && !allAccounted.IsCompleted)
-            await Task.WhenAny(allAccounted, Task.Delay(TimeSpan.FromTicks((remaining + 99) / 100))).ConfigureAwait(false);
+        long drainEnd = start + config.DurationNanos + config.DrainNanos;
+        // Task.Delay works in whole milliseconds (TimeSpanUntil rounds up), so loop until the drain end has really passed:
+        // nothing outstanding is expired before it.
+        while (!allAccounted.IsCompleted && MonoClock.Now() < drainEnd)
+            await Task.WhenAny(allAccounted, Task.Delay(TimeSpanUntil(drainEnd))).ConfigureAwait(false);
         return ledger.ExpireOutstanding();
     }
 
@@ -150,13 +152,14 @@ static class OpenLoop
             }
             // Deadline: an operation still outstanding at `scheduled + deadline` is a timeout, recorded then. (The
             // timer only frees the cap slot and cancels; a late completion is judged by its own instant below.)
-            long untilDeadline = scheduled + config.DeadlineNanos - MonoClock.Now();
             cts.Token.Register(static state =>
             {
                 var (ledger, i) = ((Ledger, int))state!;
                 ledger.Finish(i, Outcome.Timeout);
             }, (this, index));
-            cts.CancelAfter(TimeSpan.FromTicks(Math.Max(0, (untilDeadline + 99) / 100)));
+            // CancelAfter's timer works in whole milliseconds and may fire up to about a millisecond before the
+            // requested span: rounding up plus one millisecond keeps the timeout at or after `scheduled + deadline`.
+            cts.CancelAfter(TimeSpanUntil(scheduled + config.DeadlineNanos));
             ThreadPool.UnsafeQueueUserWorkItem(static s => _ = s.ledger.Execute(s.index, s.scheduled, s.latencyOrigin, s.cts),
                 (ledger: this, index, scheduled, latencyOrigin, cts), preferLocal: false);
         }
@@ -174,7 +177,11 @@ static class OpenLoop
             }
             catch
             {
-                outcome = Outcome.Failure;
+                // Cancellation callbacks run in reverse registration order, so the operation's own cancellation (and
+                // its exception) can come before the ledger's timeout callback has recorded the timeout. The token is
+                // cancelled only at the deadline or at the drain end, so an operation that ends because of it is a
+                // timeout, never a failure, whichever thread gets to the ledger first.
+                outcome = cts.IsCancellationRequested ? Outcome.Timeout : Outcome.Failure;
             }
             Finish(index, outcome);
             cts.Dispose(); // stops the deadline timer; a cancellation already in flight is harmless (Finish ignores it)
@@ -224,6 +231,14 @@ static class OpenLoop
             // After Execute disposed it there is nothing left to cancel.
             try { cts.Cancel(); } catch (ObjectDisposedException) { } catch (AggregateException) { }
         }
+    }
+
+    /// The span from now until `instant` for a millisecond timer: whole milliseconds rounded up, plus one, so the timer
+    /// never fires before `instant` (zero if it has passed).
+    static TimeSpan TimeSpanUntil(long instant)
+    {
+        long nanos = instant - MonoClock.Now();
+        return nanos <= 0 ? TimeSpan.Zero : TimeSpan.FromMilliseconds((nanos + 999_999) / 1_000_000 + 1);
     }
 
     /// Whole microseconds, clamped at zero.
