@@ -355,7 +355,10 @@ How the orchestrator interprets it:
 ## .NET notes
 
 The .NET driver (`drivers/dotnet`, `KurrentDB.Client` pinned exactly in `LiveDriver.DotNet.csproj` and
-`packages.lock.json`, .NET 8) follows every rule above. Where the .NET client's API or runtime shapes the mapping, it
+`packages.lock.json`, .NET 8) follows every rule above. Build it (locally and in CI) with
+`dotnet build Benchmarks/Live/drivers/dotnet -c Release -p:RestoreLockedMode=true`, so a restore that would drift from
+the lock file fails. `version` reports the informational version of the `KurrentDB.Client` assembly actually loaded
+(build metadata stripped). Where the .NET client's API or runtime shapes the mapping, it
 does this:
 
 - **Clients.** `KurrentDBClientSettings.Create(<connection string>)` with nothing changed. Streams go through
@@ -367,15 +370,24 @@ does this:
   call (no batching), and `ackEnqueued` counts completed `Ack` calls. The driver waits for each consumer's
   `SubscriptionConfirmation` before the window starts. Link resolution is the group's setting (created by the harness).
 - **Catch-up.** `SubscribeToStream($ce-<category>, FromStream.Start, resolveLinkTos: true)`, read through `Messages`;
-  only `StreamMessage.Event` messages count as receipts.
+  only `StreamMessage.Event` messages count as receipts. The .NET subscription starts lazily, so the driver waits for
+  its `SubscriptionConfirmation` (60 s bound): a subscription that fails before it makes the driver exit 1 at once, as
+  the Swift SDK's `subscribe()` throws, instead of waiting out the phase-1 limit.
 - **Rebuild.** `ReadStreamAsync(Forwards, stream, Start)` with defaults; each event's data goes through
   `JsonDocument.Parse`. A read of a stream that does not exist is a failure (the Swift SDK throws), not a short read.
 - **Scheduler.** A dedicated thread sleeps with `nanosleep(2)` (nanosecond resolution, no millisecond rounding as in
   `Thread.Sleep` / `Task.Delay`) and applies the same overshoot estimate as the Swift waker (EWMA 1/16, capped at 1 ms,
   no spinning). Each launch is queued to the thread pool (`ThreadPool.UnsafeQueueUserWorkItem`), as the Swift driver
-  starts a `Task`. The deadline timer is `CancellationTokenSource.CancelAfter` (millisecond timer): it only decides when
-  a still-outstanding operation is recorded as a timeout and leaves the cap; a completion is judged against the deadline
-  by its own instant, as in rule 5.
+  starts a `Task`. The deadline timer is `CancellationTokenSource.CancelAfter` (a millisecond timer, armed with the span
+  rounded up plus 1 ms so it never fires before `scheduled + deadline`; the drain wait loops the same way until the
+  drain end has passed): it decides when a still-outstanding operation is recorded as a timeout and leaves the cap; a
+  completion is judged against the deadline by its own instant, as in rule 5. An operation that throws after its token
+  was cancelled (deadline or drain end) is a timeout, never a failure, even when its exception reaches the ledger
+  before the timeout callback does (.NET runs cancellation callbacks in reverse registration order).
+- **Parity test.** `dotnet LiveDriver.DotNet.dll selftest --mode ...` runs the open loop with synthetic operations
+  (no-op, throw, stall past the deadline with and without honouring cancellation, inline cancellation, a completion
+  instant past the deadline, over the cap with drain expiry); `OpenLoopParityTests` runs the same cases through
+  `runOpenLoop` and requires identical counters.
 - **Process figures.** CPU and peak RSS come from `getrusage(RUSAGE_SELF)` (P/Invoke), the Swift driver's source;
   on Linux `ru_maxrss` is the kernel's VmHWM, which `Process.PeakWorkingSet64` also reports.
 - **Runtime defaults.** No GC, thread-pool or tiered-compilation settings are changed. The .NET thread pool's workers
