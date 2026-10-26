@@ -212,8 +212,8 @@ extension Streams.SubscribeAll where Target == AllStreamsTarget {
                 }
 
                 $0.resolveLinks = resolveLinksEnabled
-                $0.readDirection = .forwards
                 $0.subscription = .init()
+                $0.controlOption = .with { $0.compatibility = Streams.Subscription.compatibility }
                 $0.readDirection = .forwards
             }
         }
@@ -234,20 +234,11 @@ extension Streams.Subscription where Target == AllStreamsTarget {
             throw KurrentError.subscriptionTerminated(subscriptionId: nil)
         }
 
-        let events = messages.makeStream(mapError: serverExceptionOrOriginal) { message -> ReadEvent? in
-            switch message.content {
-            case let .event(value):
-                return try ReadEvent(message: value)
-            case .caughtUp:
-                logger.debug("[Streams.SubscribeAll] Subscription caught up with the $all stream.")
-                return nil
-            case let content?:
-                logger.debug("[Streams.SubscribeAll] Received non-event subscription message: \(content)")
-                return nil
-            case nil:
-                return nil
+        self.init(handoff: messages, subscriptionId: confirmation.subscriptionID) { response in
+            guard case let .event(value) = response.content else {
+                return Self.notification(response.content, usage: "Streams.SubscribeAll")
             }
+            return try .event(ReadEvent(message: value))
         }
-        self.init(events: events, subscriptionId: confirmation.subscriptionID, messages: messages)
     }
 }
