@@ -68,6 +68,10 @@ for try await result in subscription.events {
 
 ## What's new
 
+### 2.7
+
+- **Subscription notifications.** ``Streams/Subscription/messages`` delivers the server's `caughtUp`, `fellBehind` (KurrentDB 26.2.2+) and (for a filtered `$all` subscription) `checkpoint` notifications next to the events, as a ``Streams/Subscription/Message``, so a read model can tell when it is current and a filtered subscription can store a resume position while nothing matches. `events` is unchanged. See <doc:Reading-events>.
+
 ### 2.6
 
 - **Record metadata is kept.** `EventRecord(eventType:payload:customMetadata:)` and `EventRecord(eventData:)` dropped the metadata: every member on macOS, and every member that is not a string on Linux. `multiStreams.append` and `appendRecords` sent a property of a type they did not list (`Int64`, `Date`, a nested struct, an optional, …) as null, and `batchAppend` dropped a record's whole metadata when one value could not be serialised. Every property that encodes as JSON now reaches the server, nested objects and arrays included; NaN, an infinity or an integer beyond 64 bits makes the append throw `encodingError`, and `customMetadata:` throws when it is not a JSON object. `append` and `appendRecords` carry numbers as `Double`, so an integer beyond ±2^53 arrives rounded. **Upgrade note:** metadata that is not a JSON object, which used to be ignored, now throws. See <doc:Appending-events> (2.6.1).
