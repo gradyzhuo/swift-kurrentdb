@@ -9,6 +9,8 @@ DerivedData/
 Package.resolved
 !Benchmarks/Live/Package.resolved
 Benchmarks/Live/.build/
+Benchmarks/Live/drivers/dotnet/bin/
+Benchmarks/Live/drivers/dotnet/obj/
 .claude/
 .capacitor/
 CLAUDE.local.md
