@@ -10,9 +10,9 @@ import LiveBenchCore
 ///   have such a trial in that round; a round where one side is missing contributes nothing.
 /// - Ratios are oriented so that higher means Swift is worse (Swift ÷ .NET when lower is better, .NET ÷ Swift when
 ///   higher is better) and estimated with `estimateRatio` (95% Student t over round log-ratios).
-/// - A step gets ratios only when both clients sustained it in every valid trial; it gets verdicts only when, in
-///   addition, every paired trial had server headroom. A failing gate is "system-limited", a missing sample
-///   "headroom unavailable"; neither gets a verdict.
+/// - A step gets ratios (and verdicts) only when both clients sustained it in every valid trial and every paired trial
+///   had server headroom. A failing gate is "system-limited", a missing sample "headroom unavailable": the step is
+///   shown (per-client figures) but no SDK comparison is drawn from it. The same holds for the ceiling ratio.
 /// - A censored percentile (rank among non-successes) on either side drops that round from that percentile's ratio.
 /// - "Backlog not growing" is enforced by the drivers' in-flight cap and deadline: a backlog that grows turns into
 ///   drops and timeouts, which the loss criterion of `isSustained` counts, so `backlogGrew` is false here.
@@ -82,8 +82,8 @@ struct CellAnalysis {
             return (nil, "Fewer than two paired rounds in which both clients sustained at least one step, so there is no ceiling ratio.")
         }
         let headroom = HeadroomState(paired)
-        var ratio = MetricRatio(metric: .ceiling, estimate: estimate, verdict: headroom == .ok ? verdict : nil, headroom: headroom)
-        ratio.label = headroom == .ok ? nil : headroom.label
+        guard headroom == .ok else { return (nil, "no ceiling ratio: \(headroom.noComparisonReason)") }
+        let ratio = MetricRatio(metric: .ceiling, estimate: estimate, verdict: verdict)
         let zero = pairs.contains { $0.swift == 0 || $0.dotnet == 0 }
         let note = [
             "A client that sustained the highest step has a ceiling of at least that rate, so the ratio understates the gap when one side sustained everything.",
@@ -143,6 +143,15 @@ enum HeadroomState: Equatable {
         case .unavailable: "headroom unavailable"
         }
     }
+
+    /// Why a step (or the ceiling) has no comparison.
+    var noComparisonReason: String {
+        switch self {
+        case .ok: ""
+        case .systemLimited: "system-limited: server headroom gate failed; no SDK comparison"
+        case .unavailable: "headroom unavailable: server headroom not measured; no SDK comparison"
+        }
+    }
 }
 
 /// The Swift-vs-.NET comparison at one step.
@@ -172,19 +181,25 @@ struct StepComparison {
             noRatioReason = "no round in which both clients produced a valid trial"
             return
         }
+        // A saturated server explains everything else at the step, so it is named first.
+        if headroom == .systemLimited {
+            noRatioReason = HeadroomState.systemLimited.noComparisonReason
+            return
+        }
         let unsustained = [(swift, "Swift"), (dotnet, ".NET")].filter { !($0.0?.sustained ?? false) }.map(\.1)
         guard unsustained.isEmpty else {
             noRatioReason = "not sustained by \(unsustained.joined(separator: " and ")): no ratio"
             return
         }
+        if headroom == .unavailable {
+            noRatioReason = HeadroomState.unavailable.noComparisonReason
+            return
+        }
         noRatioReason = nil
-        let headroom = headroom
         ratios = RatioMetric.stepMetrics(kind).map { metric in
             let roundPairs = pairs.map { RoundPair(swift: metric.value($0.swift), dotnet: metric.value($0.dotnet)) }
             let (estimate, verdict) = estimateRatio(roundPairs, direction: metric.direction, minimumRounds: minimumRounds)
-            var ratio = MetricRatio(metric: metric, estimate: estimate, verdict: headroom == .ok ? verdict : nil, headroom: headroom)
-            ratio.label = headroom == .ok ? nil : headroom.label
-            return ratio
+            return MetricRatio(metric: metric, estimate: estimate, verdict: verdict)
         }
     }
 }
@@ -238,13 +253,11 @@ enum RatioMetric: String, CaseIterable {
     }
 }
 
+/// A ratio exists only where a comparison is allowed (both sustained, server headroom), so it always has a verdict.
 struct MetricRatio {
     var metric: RatioMetric
     var estimate: RatioEstimate?
-    /// nil when the step's headroom forbids a verdict (`label` says why).
-    var verdict: Verdict?
-    var headroom: HeadroomState
-    var label: String?
+    var verdict: Verdict
 }
 
 /// One client at one step, over its rounds.
