@@ -275,7 +275,7 @@ PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig \
 ### Linux results via GitHub Actions
 
 The `Benchmarks` workflow (`.github/workflows/benchmarks.yml`) runs the
-same suite on `ubuntu-latest`. It runs on every push to `main` and can be
+same suite on `ubuntu-24.04`. It runs on every push to `main` and can be
 started by hand from the Actions tab. Each run writes the runner
 description and the full markdown report to the job summary and uploads
 them as the `offline-benchmarks-*` artifact. Numbers are copied into this
