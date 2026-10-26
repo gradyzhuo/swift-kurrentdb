@@ -14,6 +14,7 @@ import Synchronization
 /// `$ce-<category>`, acking each event on receipt. Warmup uses group `groupName + "w"` on `$ce-<category>w`.
 func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBClient) async throws -> Trial {
     let group = scenario.groupName ?? ""
+    let payloads = scenario.makePayloads()
     let consumers = max(scenario.consumers ?? 1, 1)
 
     if scenario.warmupSeconds > 0 {
@@ -21,7 +22,7 @@ func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBC
         let warmup = Names.warmup(scenario)
         let board = DeliveryBoard(scenario)
         let readers = try await PersistentConsumers.start(client, stream: warmup.categoryStream, group: group + "w", count: consumers, board: board)
-        _ = await writerWindow(scenario, client: client, names: warmup, seconds: scenario.warmupSeconds, board: board)
+        _ = await writerWindow(scenario, client: client, payloads: payloads, names: warmup, seconds: scenario.warmupSeconds, board: board)
         readers.stop()
     }
 
@@ -30,7 +31,7 @@ func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBC
     let board = DeliveryBoard(scenario)
     // The measured group is first touched here, right before the window starts.
     let readers = try await PersistentConsumers.start(client, stream: measured.categoryStream, group: group, count: consumers, board: board)
-    let window = await writerWindow(scenario, client: client, names: measured, seconds: scenario.measureSeconds, board: board)
+    let window = await writerWindow(scenario, client: client, payloads: payloads, names: measured, seconds: scenario.measureSeconds, board: board)
     let deliveries = board.snapshot()
     let acks = readers.stop()
     return Trial(
@@ -85,13 +86,14 @@ private func catchUpLimit(_ corpus: Int) -> Duration { .seconds(max(120, corpus 
 /// subscription and runs the open-loop writer into the same category; the corpus is not counted in phase 2.
 func runCatchUp(_ scenario: EffectiveScenario, client: KurrentDBClient) async throws -> Trial {
     let corpus = scenario.catchUpExpectedEvents ?? 0
+    let payloads = scenario.makePayloads()
 
     if scenario.warmupSeconds > 0 {
         log("warmup")
         let warmup = Names.warmup(scenario)
         let board = DeliveryBoard(scenario)
         let reader = try await CatchUpReader.start(client, stream: warmup.categoryStream, corpus: 0, board: board)
-        _ = await writerWindow(scenario, client: client, names: warmup, seconds: scenario.warmupSeconds, board: board)
+        _ = await writerWindow(scenario, client: client, payloads: payloads, names: warmup, seconds: scenario.warmupSeconds, board: board)
         reader.stop()
     }
 
@@ -116,7 +118,7 @@ func runCatchUp(_ scenario: EffectiveScenario, client: KurrentDBClient) async th
     let catchUpSeconds = durationSeconds(started.duration(to: caughtUp))
 
     log("phase 2: measure")
-    let window = await writerWindow(scenario, client: client, names: measured, seconds: scenario.measureSeconds, board: board)
+    let window = await writerWindow(scenario, client: client, payloads: payloads, names: measured, seconds: scenario.measureSeconds, board: board)
     let deliveries = board.snapshot()
     return Trial(
         recorder: window.recorder, cpu: window.cpu, measuredSeconds: scenario.measureSeconds,
@@ -216,18 +218,18 @@ private final class CatchUpReader: Sendable {
 
 // MARK: - Writer and deliveries
 
-/// The open-loop writer: operation *i* appends event *i* and completes when the board sees it delivered.
+/// The open-loop writer: operation *i* appends event *i* and completes at the instant the receiving callback stamped
+/// for its first receipt.
 private func writerWindow(
-    _ scenario: EffectiveScenario, client: KurrentDBClient, names: Names, seconds: Double, board: DeliveryBoard
+    _ scenario: EffectiveScenario, client: KurrentDBClient, payloads: PayloadFactory, names: Names, seconds: Double,
+    board: DeliveryBoard
 ) async -> (recorder: OutcomeRecorder, cpu: (user: Double, system: Double), appended: Int) {
-    let prepared = PreparedEvents(scenario, seconds: seconds)
-    defer { prepared.stop() }
     let appended = Counter()
     let seed = scenario.seed, streamCount = scenario.streamCount
     let (recorder, cpu) = await measuredWindow(scenario.openLoop(seconds: seconds)) { i in
         let stream = client.streams(specified: names.stream(seed: seed, index: i, count: streamCount))
-        let events = prepared.take(i)
-        try await board.delivery(of: i) {
+        let events = operationEvents(payloads, batchSize: 1, operation: i)
+        return try await board.delivery(of: i) {
             // Started once the receipt is awaited, so the receipt can complete the operation before the append's
             // response arrives; a failed append fails the operation.
             Task {
@@ -253,10 +255,11 @@ final class DeliveryBoard: Sendable {
     }
 
     private struct State {
-        var waiters: [Int: CheckedContinuation<Void, Error>] = [:]
+        var waiters: [Int: CheckedContinuation<ContinuousClock.Instant, Error>] = [:]
         var failed: [Int: Error] = [:]
         var cancelled: Set<Int> = []
-        var seen: Set<Int> = []
+        /// First receipt instant of every event seen.
+        var seen: [Int: ContinuousClock.Instant] = [:]
         var redeliveries = 0
         var sizesOk = true
     }
@@ -275,42 +278,46 @@ final class DeliveryBoard: Sendable {
     }
 
     /// Records a receipt: the first one of event `k` completes its waiting operation, later ones are redeliveries.
+    /// The receipt instant is stamped here, on the receiving callback, before any hand-off; the operation reports it
+    /// as its completion, so resuming the operation's task is not part of the latency.
     func receive(_ event: ReadEvent) {
+        let receivedAt = ContinuousClock.now
         let sizesOk = hasExpectedSizes(event)
         let index = Self.eventIndex(event.record.data)
-        let waiter = state.withLock { s -> CheckedContinuation<Void, Error>? in
+        let waiter = state.withLock { s -> CheckedContinuation<ContinuousClock.Instant, Error>? in
             if !sizesOk { s.sizesOk = false }
             guard let index else {
                 s.sizesOk = false // not one of ours, or a link that was not resolved
                 return nil
             }
-            guard s.seen.insert(index).inserted else {
+            guard s.seen[index] == nil else {
                 s.redeliveries += 1
                 return nil
             }
+            s.seen[index] = receivedAt
             return s.waiters.removeValue(forKey: index)
         }
-        waiter?.resume()
+        waiter?.resume(returning: receivedAt)
     }
 
-    /// Waits for the first receipt of event `index`; `start` runs once the waiter is registered. Throws the append's
-    /// error if it failed first, or `CancellationError` when the operation is cancelled (its deadline passed).
-    func delivery(of index: Int, start: () -> Void) async throws {
+    /// Waits for the first receipt of event `index` and returns its stamped instant; `start` runs once the waiter is
+    /// registered. Throws the append's error if it failed first, or `CancellationError` when the operation is cancelled
+    /// (its deadline passed).
+    func delivery(of index: Int, start: () -> Void) async throws -> ContinuousClock.Instant {
         try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                enum Registration { case waiting, delivered, failed(Error), cancelled }
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ContinuousClock.Instant, Error>) in
                 let registration = state.withLock { s -> Registration in
                     if s.cancelled.remove(index) != nil { return .cancelled }
                     if let error = s.failed.removeValue(forKey: index) { return .failed(error) }
-                    if s.seen.contains(index) { return .delivered }
+                    if let receivedAt = s.seen[index] { return .delivered(receivedAt) }
                     s.waiters[index] = continuation
                     return .waiting
                 }
                 switch registration {
                 case .waiting:
                     start()
-                case .delivered:
-                    continuation.resume()
+                case .delivered(let receivedAt):
+                    continuation.resume(returning: receivedAt)
                 case .failed(let error):
                     continuation.resume(throwing: error)
                 case .cancelled:
@@ -318,7 +325,7 @@ final class DeliveryBoard: Sendable {
                 }
             }
         } onCancel: {
-            let waiter = state.withLock { s -> CheckedContinuation<Void, Error>? in
+            let waiter = state.withLock { s -> CheckedContinuation<ContinuousClock.Instant, Error>? in
                 guard let waiter = s.waiters.removeValue(forKey: index) else {
                     s.cancelled.insert(index) // cancelled before registering
                     return nil
@@ -331,8 +338,8 @@ final class DeliveryBoard: Sendable {
 
     /// The append of event `index` failed: fail its waiting operation.
     func fail(_ index: Int, _ error: Error) {
-        let waiter = state.withLock { s -> CheckedContinuation<Void, Error>? in
-            guard !s.seen.contains(index) else { return nil }
+        let waiter = state.withLock { s -> CheckedContinuation<ContinuousClock.Instant, Error>? in
+            guard s.seen[index] == nil else { return nil }
             guard let waiter = s.waiters.removeValue(forKey: index) else {
                 s.failed[index] = error
                 return nil
@@ -362,6 +369,11 @@ final class DeliveryBoard: Sendable {
         }
         return nil
     }
+}
+
+/// What registering a delivery waiter found. (File scope: a local enum with payloads here crashes the 6.2 compiler.)
+private enum Registration {
+    case waiting, delivered(ContinuousClock.Instant), failed(Error), cancelled
 }
 
 final class Counter: Sendable {

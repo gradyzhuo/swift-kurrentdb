@@ -125,9 +125,10 @@ extension EffectiveScenario {
     }
 }
 
-/// Progress on stdout (the orchestrator reads only the output files).
+/// Progress on stdout, written unbuffered (one write per line) so a killed driver's log is complete. The orchestrator
+/// reads only the output files and the stderr tail.
 func log(_ message: String) {
-    print("[LiveDriverSwift] \(message)")
+    FileHandle.standardOutput.write(Data("[LiveDriverSwift] \(message)\n".utf8))
 }
 
 // ArgumentParser's `main()` resolves to its synchronous entry point from top-level code (and then refuses to run an
