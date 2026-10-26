@@ -10,8 +10,10 @@ struct SeedManifest: Codable, Sendable, Equatable {
     var catchUpCategory: String?
     /// Events in the catch-up corpus (0 when there is none); the scenario's `catchUpExpectedEvents`.
     var catchUpEvents: Int
-    /// Highest commit position the seeder wrote (0 when it wrote nothing); `$by_category` must reach it before a trial.
+    /// Log position `(commit, prepare)` of the last event the seeder wrote (0, 0 when it wrote nothing);
+    /// `$by_category` must reach it before a trial (`waitForByCategory(client:toReach:prepare:timeout:)`).
     var lastCommitPosition: UInt64
+    var lastPreparePosition: UInt64
     /// Set when the catch-up corpus was reduced below `Seeder.catchUpEvents` (disk budget); equals `catchUpEvents`.
     var corpusReducedTo: Int?
 }
@@ -59,7 +61,7 @@ struct Seeder: Sendable {
         }
         try await enableByCategory(client)
         let factory = PayloadFactory(dataSize: cell.eventSize, metadataSize: metadataSize, seed: payloadSeed)
-        var manifest = SeedManifest(rebuildStreams: [], catchUpCategory: nil, catchUpEvents: 0, lastCommitPosition: 0, corpusReducedTo: nil)
+        var manifest = SeedManifest(rebuildStreams: [], catchUpCategory: nil, catchUpEvents: 0, lastCommitPosition: 0, lastPreparePosition: 0, corpusReducedTo: nil)
 
         switch cell.kind {
         case .appendLatency, .appendThroughput, .persistentSubscription:
@@ -77,7 +79,7 @@ struct Seeder: Sendable {
                 plan.append((measured[n], indices))
                 plan.append((warmup[n], indices))
             }
-            manifest.lastCommitPosition = try await append(plan, factory: factory, client: client)
+            (manifest.lastCommitPosition, manifest.lastPreparePosition) = try await append(plan, factory: factory, client: client)
             manifest.rebuildStreams = measured
 
         case .catchUp:
@@ -91,39 +93,45 @@ struct Seeder: Sendable {
             let plan = (0..<streamCount).map { n in
                 ("\(category)-\(n)", Array(stride(from: n, to: corpus, by: streamCount)))
             }
-            manifest.lastCommitPosition = try await append(plan, factory: factory, client: client)
+            (manifest.lastCommitPosition, manifest.lastPreparePosition) = try await append(plan, factory: factory, client: client)
             manifest.catchUpCategory = category
             manifest.catchUpEvents = corpus
         }
 
-        try await waitForByCategory(client: client, toReach: manifest.lastCommitPosition, timeout: projectionTimeout)
+        try await waitForByCategory(
+            client: client, toReach: manifest.lastCommitPosition, prepare: manifest.lastPreparePosition, timeout: projectionTimeout
+        )
         if let category = manifest.catchUpCategory {
             try await waitForCategory(client, category: category, count: manifest.catchUpEvents, timeout: projectionTimeout)
         }
         return manifest
     }
 
-    /// Appends each stream's events in order (batched), `concurrency` streams at a time; returns the highest commit
-    /// position written.
-    private func append(_ plan: [(stream: String, indices: [Int])], factory: PayloadFactory, client: KurrentDBClient) async throws -> UInt64 {
+    /// Appends each stream's events in order (batched), `concurrency` streams at a time; returns the highest log
+    /// position written. Each stream is new: its first batch expects no stream and every later batch the revision
+    /// the previous one ended at, so a retried or duplicated batch fails loudly instead of changing seeded counts.
+    private func append(_ plan: [(stream: String, indices: [Int])], factory: PayloadFactory, client: KurrentDBClient) async throws -> (commit: UInt64, prepare: UInt64) {
         let perAppend = max(1, min(appendBatchSize, 1_000_000 / max(1, factory.dataSize + factory.metadataSize)))
-        return try await withThrowingTaskGroup(of: UInt64.self) { group in
+        return try await withThrowingTaskGroup(of: LogPosition.self) { group in
             var next = 0
-            var highest: UInt64 = 0
+            var highest = LogPosition.zero
             func addNext() {
                 guard next < plan.count else { return }
                 let (stream, indices) = plan[next]
                 next += 1
                 group.addTask {
-                    var position: UInt64 = 0
+                    var position = LogPosition.zero
                     for start in stride(from: 0, to: indices.count, by: perAppend) {
                         let events = indices[start ..< min(start + perAppend, indices.count)].map { k in
                             EventData(eventType: "BenchEvent", data: factory.data(index: k), contentType: .json, customMetadata: factory.metadata(index: k))
                         }
+                        let expected: StreamRevision = start == 0 ? .noStream : .at(UInt64(start - 1))
                         let response = try await client.streams(specified: stream).append(events: events) {
-                            $0.expectedRevision = .any
+                            $0.expectedRevision = expected
                         }
-                        position = max(position, response.position?.commit ?? 0)
+                        if let written = response.position {
+                            position = max(position, LogPosition(commit: written.commit, prepare: written.prepare))
+                        }
                     }
                     return position
                 }
@@ -133,8 +141,36 @@ struct Seeder: Sendable {
                 highest = max(highest, position)
                 addNext()
             }
-            return highest
+            return (highest.commit, highest.prepare)
         }
+    }
+}
+
+/// A position in the transaction log, ordered by commit, then prepare.
+struct LogPosition: Comparable, Sendable {
+    var commit: UInt64
+    var prepare: UInt64
+
+    static let zero = LogPosition(commit: 0, prepare: 0)
+
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        (lhs.commit, lhs.prepare) < (rhs.commit, rhs.prepare)
+    }
+
+    /// Parses a projection position such as `C:1234/P:1234`; nil when either part is missing or negative (a fresh
+    /// projection reports `C:0/P:-1`).
+    init?(projectionPosition text: String) {
+        func number(after tag: String) -> UInt64? {
+            guard let range = text.range(of: tag) else { return nil }
+            return UInt64(text[range.upperBound...].prefix(while: \.isNumber))
+        }
+        guard let commit = number(after: "C:"), let prepare = number(after: "P:") else { return nil }
+        self.init(commit: commit, prepare: prepare)
+    }
+
+    init(commit: UInt64, prepare: UInt64) {
+        self.commit = commit
+        self.prepare = prepare
     }
 }
 
@@ -156,9 +192,12 @@ func enableByCategory(_ client: KurrentDBClient, timeout: Duration = .seconds(12
     }
 }
 
-/// Polls `$by_category`'s `detail().position` until its commit position is at least `position` (a position of 0
-/// only needs the projection to answer). Throws after `timeout`.
-func waitForByCategory(client: KurrentDBClient, toReach position: UInt64, timeout: Duration) async throws {
+/// Polls `$by_category`'s `detail().position` until it is at or past `(position, prepare)`, compared as a pair
+/// (commit first). Verified on 26.2.3: every event has its own commit = prepare position (also within one multi-event
+/// append), the append response carries the last event's position, and once the projection has processed that event
+/// its position is exactly `C:<commit>/P:<prepare>` of it. A target of (0, 0) only needs the projection to answer.
+func waitForByCategory(client: KurrentDBClient, toReach position: UInt64, prepare: UInt64 = 0, timeout: Duration) async throws {
+    let target = LogPosition(commit: position, prepare: prepare)
     let clock = ContinuousClock()
     let deadline = clock.now.advanced(by: timeout)
     var last = "no answer"
@@ -167,23 +206,17 @@ func waitForByCategory(client: KurrentDBClient, toReach position: UInt64, timeou
             let detail = try await withTimeout(.seconds(5)) { try await client.projections(system: .byCategory).detail() }
             if let detail {
                 last = "\(detail.status) at \(detail.position)"
-                if position == 0 { return }
-                if let commit = commitPosition(of: detail.position), commit >= position { return }
+                if target == .zero { return }
+                if let reached = LogPosition(projectionPosition: detail.position), reached >= target { return }
             }
         } catch {
             last = "\(error)"
         }
         guard clock.now < deadline else {
-            throw Seeder.SeedError(description: "$by_category did not reach commit position \(position) within \(timeout) (last: \(last))")
+            throw Seeder.SeedError(description: "$by_category did not reach C:\(position)/P:\(prepare) within \(timeout) (last: \(last))")
         }
         try await Task.sleep(for: .milliseconds(500))
     }
-}
-
-/// The commit position in a projection position such as `C:1234/P:1234`; nil when there is none (e.g. `C:-1/P:-1`).
-func commitPosition(of projectionPosition: String) -> UInt64? {
-    guard let range = projectionPosition.range(of: "C:") else { return nil }
-    return UInt64(projectionPosition[range.upperBound...].prefix(while: \.isNumber))
 }
 
 /// Waits until `$ce-<category>` holds exactly `count` link events; throws if it holds more or does not get there.
