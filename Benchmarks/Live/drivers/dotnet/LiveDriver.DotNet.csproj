@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- The .NET client under test (docs/driver-contract.md). KurrentDB.Client is pinned to an exact version; `version`
-       reports it from KurrentDBClientVersion, the same property the PackageReference uses. -->
+  <!-- The .NET client under test (docs/driver-contract.md). KurrentDB.Client is pinned to an exact version
+       (KurrentDBClientVersion); `version` reports the version of the assembly actually loaded. Build with
+       `dotnet build -c Release -p:RestoreLockedMode=true` so restore fails instead of drifting from packages.lock.json. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -19,10 +20,6 @@
   <ItemGroup>
     <PackageReference Include="KurrentDB.Client" Version="[$(KurrentDBClientVersion)]" />
     <PackageReference Include="HdrHistogram" Version="[2.5.0]" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyMetadata Include="KurrentDBClientVersion" Value="$(KurrentDBClientVersion)" />
   </ItemGroup>
 
 </Project>
