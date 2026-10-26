@@ -46,6 +46,37 @@ struct MetadataTests {
         #expect(dotnet.hasPrefix("8.0.404"))
     }
 
+    @Test func identityRedactionTouchesValuesNotKeys() throws {
+        // On GitHub runners USER=runner: the field `runnerImageVersion` must survive.
+        let runner = RunMetadata.collect(
+            environment: ["USER": "runner", "ImageOS": "ubuntu24", "ImageVersion": "20261020.1"],
+            readFile: { _ in nil }, command: { _ in nil }
+        )
+        #expect(runner.runnerImageVersion == "ubuntu24 20261020.1")
+
+        // A short identity that is part of field names ("runDate", "corpusReducedTo", ...) still decodes and leaks
+        // nowhere in the values.
+        let short = RunMetadata.collect(
+            environment: ["HOSTNAME": "ate", "GITHUB_SHA": "late-commit", "ImageOS": "private-gate"],
+            readFile: { $0 == "/proc/cpuinfo" ? "model name\t: Gate CPU\n" : nil }, command: { _ in nil }
+        )
+        #expect(short.runDate != nil)
+        #expect(short.harnessCommit == "l<redacted>-commit")
+        #expect(short.cpuModel == "G<redacted> CPU")
+        let values = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(short)) as? [String: Any])
+        for case let value as String in values.values { #expect(!value.contains("ate"), "\(value)") }
+    }
+
+    @Test func redactionKeepsJsonValidAroundBackslashes() throws {
+        var record = TrialRecord(round: 0, rate: 1, driver: "swift")
+        record.error = #"path C:\/Users/alice/x and "quoted" \home"#
+        record.headroom = HeadroomSample(coreBusy: [.nan], diskAwaitMillis: .infinity, diskQueueDepth: 0, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 0)
+        let scrubbed = try HostRedaction.scrubbing(record)
+        // The decoded string is scrubbed, not the JSON text, so no stray `\~` escape can appear.
+        #expect(scrubbed.error == #"path C:~/x and "quoted" \home"#)
+        #expect(scrubbed.headroom?.coreBusy.first?.isNaN == true)
+    }
+
     @Test func driverReportedValuesWinOverCollected() {
         var fromDrivers = RunMetadata()
         fromDrivers.swiftToolchain = "swift 6.2"

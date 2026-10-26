@@ -12,8 +12,9 @@ import LiveBenchCore
 /// ```
 ///
 /// The date is the earliest `runDate` and the server version the tag of the most common `serverImage` among the
-/// cells. Every text file is copied through `HostRedaction.scrub` (home directories become `~`, private addresses
-/// `<private-ip>`): driver logs and errors can carry local temporary paths.
+/// cells. Every text file is copied through `HostRedaction` (home directories become `~`, private addresses
+/// `<private-ip>`): driver logs and errors can carry local temporary paths. A cell result that cannot be redacted
+/// stops the merge.
 enum Merge {
     struct NoCellResults: Error, CustomStringConvertible {
         var directory: String
@@ -41,7 +42,7 @@ enum Merge {
         var cells: [(result: CellResult, directory: URL)] = []
         for file in files {
             let raw = try JSONDecoder().decode(CellResult.self, from: Data(contentsOf: file))
-            guard let result = HostRedaction.scrubbing(raw) else { throw CocoaError(.coderInvalidValue) }
+            let result = try HostRedaction.scrubbing(raw)
             guard !cells.contains(where: { $0.result.cell.id == result.cell.id }) else { throw DuplicateCell(id: result.cell.id) }
             cells.append((result, file.deletingLastPathComponent()))
         }
@@ -94,7 +95,8 @@ enum Merge {
         String(name.map { $0.isLetter || $0.isNumber || "-._".contains($0) ? $0 : "_" })
     }
 
-    /// Copies the tree under `source` into `destination`; UTF-8 files go through `HostRedaction.scrub`.
+    /// Copies the tree under `source` into `destination`: JSON files with their string values scrubbed, other UTF-8
+    /// files through `HostRedaction.scrub`, anything else as is.
     private static func copyScrubbed(from source: URL, to destination: URL, skipping: Set<String>) throws {
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
@@ -109,7 +111,9 @@ enum Merge {
             let target = destination.appendingPathComponent(relative)
             try fileManager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
             let data = try Data(contentsOf: file)
-            if let text = String(data: data, encoding: .utf8) {
+            if file.pathExtension == "json", let json = HostRedaction.scrubbingJSON(data) {
+                try json.write(to: target)
+            } else if let text = String(data: data, encoding: .utf8) {
                 try Data(HostRedaction.scrub(text).utf8).write(to: target)
             } else {
                 try data.write(to: target)

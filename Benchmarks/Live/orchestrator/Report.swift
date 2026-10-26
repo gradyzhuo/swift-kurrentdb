@@ -6,7 +6,13 @@ import LiveBenchCore
 /// cells. All text from results (errors, notes, metadata) is redacted (`HostRedaction`) and HTML-escaped.
 enum Report {
     static func render(_ cells: [CellResult]) -> String {
-        let analyses = cells.map { CellAnalysis(HostRedaction.scrubbing($0) ?? $0) }
+        let analyses = cells.map { cell in
+            // Fails closed: a cell that cannot be redacted is shown only as an aborted placeholder.
+            CellAnalysis((try? HostRedaction.scrubbing(cell)) ?? CellResult(
+                cell: cell.cell, trials: [], metadata: RunMetadata(),
+                abortedReason: "its results could not be redacted for publication and are not shown"
+            ))
+        }
         var html = """
         <!doctype html>
         <html lang="en">
@@ -59,16 +65,17 @@ enum Report {
         \(fixed(t.maxDiskAwaitMillis, 0)) ms, disk queue ≤ \(fixed(t.maxDiskQueueDepth, 0)), and the
         <code>$by_category</code> backlog growing by at most \(fixed(t.maxBufferedGrowthFraction * 100, 0))% of the events
         written. A step where any paired trial fails the gate is <em>system-limited</em>; one without a measurement is
-        <em>headroom unavailable</em>. Neither gets a verdict.</li>
+        <em>headroom unavailable</em>. Such a step is shown with each client's figures, but no ratio or verdict is
+        drawn from it.</li>
         <li><strong>Setting.</strong> The network is loopback and the server is co-located with the client on one VM
         (server and client pinned to separate cores): real network effects are not included, and the two still share
         memory bandwidth, caches and disk.</li>
-        <li><strong>Harness floor</strong> (each driver's scheduler with a no-op operation, release build, Apple Silicon
-        Mac, after warmup, p50 / p99): Swift 1000/s 7 / 241–282 µs, 8000/s 3–6 / 31–88 µs; .NET 1000/s 5–7 / 111–153 µs,
+        <li><strong>Harness floor</strong> (each driver's scheduler with a no-op operation, release build, after warmup,
+        p50 / p99; measured on a development Mac with Apple Silicon, not on the CI runner): Swift 1000/s 7 / 241–282 µs, 8000/s 3–6 / 31–88 µs; .NET 1000/s 5–7 / 111–153 µs,
         8000/s 5–6 / 73–138 µs. Latencies close to these floors say more about the harness than the client.</li>
         <li><strong>CPU</strong> is process CPU from the start of the measure window to the end of the drain. The .NET
         thread pool's workers spin before sleeping (runtime default), which costs CPU even with a no-op operation: about
-        0.2 cores at 1000/s and 1.3 cores at 8000/s, against about 0.12 cores for Swift's harness at 8000/s. Read the CPU
+        0.2 cores at 1000/s and 1.3 cores at 8000/s, against about 0.12 cores for Swift's harness at 8000/s (development Mac). Read the CPU
         ratios with that in mind.</li>
         <li><strong>ghz</strong> is a <em>transport reference</em> for append and rebuild cells: plain gRPC calls with
         latency timed from the RPC start (not from the schedule), no drops (a full worker pool waits), no JSON decoding.
@@ -135,7 +142,7 @@ enum Report {
         if subscription { head += ["Written / delivered", "Acked (server)"] }
         if kind == .catchUp { head.append("Catch-up time") }
         head += ["Sustained", "Headroom"]
-        var html = "<h3>Rate steps</h3>\n<p class=\"caption\">Target rate in \(esc(rateUnit(kind))); per client the lower median over valid rounds, loss counts summed over them.\(subscription ? " Written / delivered / acked are medians per round; a shortfall is reported, not a failure." : "")</p>\n"
+        var html = "<h3>Rate steps</h3>\n<p class=\"caption\">Target rate in \(esc(rateUnit(kind))); per client the lower median over valid rounds, loss counts summed over them. “≥” marks the upper percentiles (p99, p99.9) of a step the client did not sustain: censored, the true value may be higher.\(subscription ? " Written / delivered / acked are medians per round; a shortfall is reported, not a failure." : "")</p>\n"
         html += "<div class=\"scroll\"><table class=\"steps\">\n<thead><tr>\(head.map { "<th>\(esc($0))</th>" }.joined())</tr></thead>\n<tbody>\n"
         for step in a.steps {
             for (index, client) in step.clients.enumerated() {
@@ -145,8 +152,10 @@ enum Report {
                 cells.append("<td class=\"num\">\(client.valid.count) of \(client.figures.count)</td>")
                 cells.append("<td class=\"num\">\(client.median { $0.achievedRate }.map { esc(rateText($0)) } ?? "—")</td>")
                 cells.append("<td class=\"num\">\(latency(client.medianPercentile(\.p50)))</td>")
-                cells.append("<td class=\"num\">\(latency(client.medianPercentile(\.p99)))</td>")
-                cells.append("<td class=\"num\">\(latency(client.medianPercentile(\.p999)))</td>")
+                // Upper percentiles of a step the client did not sustain are censored (lower bounds).
+                let unsustained = !client.valid.isEmpty && !client.sustained
+                cells.append("<td class=\"num\">\(latency(client.medianPercentile(\.p99), lowerBound: unsustained))</td>")
+                cells.append("<td class=\"num\">\(latency(client.medianPercentile(\.p999), lowerBound: unsustained))</td>")
                 let losses = client.valid.isEmpty ? "—" : "\(grouped(client.total(\.failed))) / \(grouped(client.total(\.dropped))) / \(grouped(client.total(\.timedOut)))"
                 cells.append("<td class=\"num\">\(losses)</td>")
                 cells.append("<td class=\"num\">\(client.median { $0.cpuPerThousandSeconds }.map { esc(duration(seconds: $0)) } ?? "—")</td>")
@@ -182,7 +191,7 @@ enum Report {
         if a.result.abortedReason != nil {
             return "<h3>Swift vs .NET</h3>\n<p>No ratios: the cell was aborted.</p>\n"
         }
-        var html = "<h3>Swift vs .NET</h3>\n<p class=\"caption\">Higher means Swift is worse. Verdict against \(fixed(targetRatio, 1))× needs both clients sustained and server headroom in every paired trial.</p>\n"
+        var html = "<h3>Swift vs .NET</h3>\n<p class=\"caption\">Higher means Swift is worse. A step is compared only when both clients sustained it and the server had headroom in every paired trial.</p>\n"
         html += "<div class=\"scroll\"><table class=\"ratios\">\n<thead><tr><th>Step</th><th>Metric</th><th>Ratio</th><th>95% CI</th><th>Rounds</th><th>Verdict</th></tr></thead>\n<tbody>\n"
         for (rate, comparison) in comparisons {
             let label = TrialRunner.rateLabel(rate)
@@ -209,22 +218,18 @@ enum Report {
         let interval = ratio.estimate.map { "\(fixed($0.lower, 2)) – \(fixed($0.upper, 2))" } ?? "—"
         let rounds = ratio.estimate.map { "\($0.rounds)" } ?? "&lt; 2"
         let verdict: String
-        if let v = ratio.verdict {
-            switch v {
-            case .meets: verdict = "<span class=\"badge good\">meets</span>"
-            case .misses: verdict = "<span class=\"badge bad\">misses</span>"
-            case .inconclusive: verdict = "<span class=\"badge warn\">inconclusive</span>"
-            case .insufficientRounds: verdict = "<span class=\"badge muted\">insufficient rounds</span> <span class=\"muted\">(minimum \(minimum))</span>"
-            }
-        } else {
-            verdict = "<span class=\"badge muted\">no verdict</span> <span class=\"muted\">\(esc(ratio.label ?? ""))</span>"
+        switch ratio.verdict {
+        case .meets: verdict = "<span class=\"badge good\">meets</span>"
+        case .misses: verdict = "<span class=\"badge bad\">misses</span>"
+        case .inconclusive: verdict = "<span class=\"badge warn\">inconclusive</span>"
+        case .insufficientRounds: verdict = "<span class=\"badge muted\">insufficient rounds</span> <span class=\"muted\">(minimum \(minimum))</span>"
         }
         return "<tr data-rate=\"\(esc(dataRate))\"><th scope=\"row\">\(esc(rateCell))</th><td>\(metric)</td><td class=\"num\">\(point)</td><td class=\"num\">\(interval)</td><td class=\"num\">\(rounds)</td><td>\(verdict)</td></tr>\n"
     }
 
     private static func fairnessNotes(_ kind: ScenarioKind) -> String {
         var notes = [
-            "CPU per 1,000 operations includes the .NET thread pool's default spin (about 0.2 cores at 1000/s, 1.3 cores at 8000/s with a no-op operation; Swift's harness about 0.12 cores at 8000/s).",
+            "CPU per 1,000 operations includes the .NET thread pool's default spin (with a no-op operation on a development Mac: about 0.2 cores at 1000/s, 1.3 cores at 8000/s; Swift's harness about 0.12 cores at 8000/s).",
             "Peak RSS is the process lifetime peak (warmup included).",
         ]
         if kind == .persistentSubscription {
@@ -331,6 +336,7 @@ enum Report {
         for (index, step) in steps.enumerated() {
             svg += "<text class=\"axis\" x=\"\(fixed(x(index), 1))\" y=\"\(fixed(height - 14, 0))\" text-anchor=\"middle\">\(esc(rateText(step.rate)))</text>\n"
         }
+        var anyHollow = false, anyCensored = false
         for s in series {
             var segment: [String] = []
             var paths: [[String]] = []
@@ -342,8 +348,11 @@ enum Report {
                 case let .micros(v)?:
                     let point = "\(fixed(x(index), 1)),\(fixed(y(Double(max(v, 1))), 1))"
                     segment.append(point)
-                    marks += "<circle class=\"\(color)\" cx=\"\(fixed(x(index), 1))\" cy=\"\(fixed(y(Double(max(v, 1))), 1))\" r=\"4\"><title>\(esc(label)): \(esc(latencyText(Double(v))))</title></circle>"
+                    let hollow = s.dashed && !(step.clients.first { $0.driver == s.driver }?.sustained ?? true)
+                    anyHollow = anyHollow || hollow
+                    marks += "<circle class=\"\(color)\(hollow ? " hollow" : "")\" cx=\"\(fixed(x(index), 1))\" cy=\"\(fixed(y(Double(max(v, 1))), 1))\" r=\"4\"><title>\(esc(label)): \(hollow ? "≥ " : "")\(esc(latencyText(Double(v))))\(hollow ? " (censored: step not sustained)" : "")</title></circle>"
                 case .censored?:
+                    anyCensored = true
                     if !segment.isEmpty { paths.append(segment); segment = [] }
                     let cx = x(index) + (s.driver == CellAnalysis.swift ? -5 : 5)
                     marks += "<path class=\"\(color)\" d=\"M\(fixed(cx - 5, 1)),\(fixed(top - 4, 1)) L\(fixed(cx + 5, 1)),\(fixed(top - 4, 1)) L\(fixed(cx, 1)),\(fixed(top - 13, 1)) Z\"><title>\(esc(label)): &gt; deadline</title></path>"
@@ -358,7 +367,7 @@ enum Report {
             svg += marks + "\n"
         }
         svg += "</svg>\n"
-        svg += "<figcaption><span class=\"key swift\"></span> Swift <span class=\"key dotnet\"></span> .NET · solid p50, dashed p99 · ▲ &gt; deadline (censored) · x: target rate (\(esc(rateUnit(a.result.cell.kind)))), y: latency, log scale · medians over valid rounds; exact values in the table below</figcaption></figure>\n"
+        svg += "<figcaption><span class=\"key swift\"></span> Swift <span class=\"key dotnet\"></span> .NET · solid p50, dashed p99 · \(anyCensored ? "▲ &gt; deadline (censored) · " : "")\(anyHollow ? "<span class=\"key hollow\"></span> hollow: p99 of a step the client did not sustain (censored, a lower bound) · " : "")x: target rate (\(esc(rateUnit(a.result.cell.kind)))), y: latency, log scale · medians over valid rounds; exact values in the table below</figcaption></figure>\n"
         return svg
     }
 
@@ -421,9 +430,13 @@ enum Report {
     }
 
     /// A percentile cell, already HTML: "&gt; deadline" when censored, "—" when there is no valid trial.
-    private static func latency(_ value: PercentileValue?) -> String {
+    /// With `lowerBound` (an upper percentile of an unsustained step) a number is shown as "≥ value", censored.
+    private static func latency(_ value: PercentileValue?, lowerBound: Bool = false) -> String {
         switch value {
-        case let .micros(v)?: esc(latencyText(Double(v)))
+        case let .micros(v)?:
+            lowerBound
+                ? "<span class=\"censored\" title=\"censored: step not sustained\">≥ \(esc(latencyText(Double(v))))</span>"
+                : esc(latencyText(Double(v)))
         case .censored?: "&gt; deadline"
         case nil: "—"
         }
@@ -517,6 +530,9 @@ enum Report {
     .line{fill:none;stroke-width:2} .line.dashed{stroke-dasharray:6 4}
     .line.swift{stroke:var(--swift)} .line.dotnet{stroke:var(--dotnet)}
     circle.swift,path.swift{fill:var(--swift);stroke:var(--surface);stroke-width:2} circle.dotnet,path.dotnet{fill:var(--dotnet);stroke:var(--surface);stroke-width:2}
+    circle.hollow{fill:var(--surface);stroke-width:2} circle.hollow.swift{stroke:var(--swift)} circle.hollow.dotnet{stroke:var(--dotnet)}
+    .key.hollow{width:9px;height:9px;border-radius:50%;border:2px solid var(--muted);background:transparent}
+    .censored{color:var(--muted)}
     .key{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-left:6px} .key.swift{background:var(--swift)} .key.dotnet{background:var(--dotnet)}
     details{margin:12px 0} summary{cursor:pointer;color:var(--text2)}
     details code{white-space:pre-wrap;word-break:break-word;font-size:.82rem}
