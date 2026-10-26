@@ -348,11 +348,14 @@ struct ConnectionProviderTests {
         }
         #expect(recording.calledMethods == [Self.probeMethod])
 
-        // A call waiting in the wrapped transport ends when its task is cancelled.
-        let held = AnyClientTransport(RecordingTransport(holdsCalls: true))
+        // A call already waiting in the wrapped transport ends when its task is cancelled.
+        let holding = RecordingTransport(holdsCalls: true)
+        let held = AnyClientTransport(holding)
         let call = Task {
             try await held.withStream(descriptor: Self.probeMethod, options: .defaults) { _, _ in }
         }
+        defer { call.cancel() }
+        #expect(try await eventually { holding.calledMethods == [Self.probeMethod] })
         call.cancel()
         await #expect(throws: CancellationError.self) {
             try await call.value
