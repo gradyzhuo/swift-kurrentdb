@@ -10,6 +10,7 @@ func runAppend(_ scenario: EffectiveScenario, client: KurrentDBClient) async -> 
         _ = await appendWindow(scenario, client: client, payloads: payloads, names: .warmup(scenario), seconds: scenario.warmupSeconds)
     }
     log("measure")
+    markMeasureStart()
     let (recorder, cpu) = await appendWindow(scenario, client: client, payloads: payloads, names: .measured(scenario), seconds: scenario.measureSeconds)
     // Informational for append kinds: every succeeded operation is an acknowledged append of `batchSize` events.
     let events = recorder.succeeded * scenario.batchSize

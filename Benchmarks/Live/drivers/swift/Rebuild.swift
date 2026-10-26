@@ -17,6 +17,7 @@ func runRebuild(_ scenario: EffectiveScenario, client: KurrentDBClient) async ->
     }
     log("measure")
     let tally = RebuildTally()
+    markMeasureStart()
     let (recorder, cpu) = await rebuildWindow(scenario, client: client, seconds: scenario.measureSeconds, tally: tally) { i in
         streams[SeededDraw.pick(seed: scenario.seed, index: i, count: streams.count)]
     }

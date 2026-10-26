@@ -125,6 +125,12 @@ extension EffectiveScenario {
     }
 }
 
+/// The driver contract's measure-start marker: the exact line `LIVE_BENCH_MEASURE_START` on stderr, written unbuffered
+/// immediately before the measure window's open loop starts. The orchestrator times the headroom monitor from it.
+func markMeasureStart() {
+    FileHandle.standardError.write(Data("LIVE_BENCH_MEASURE_START\n".utf8))
+}
+
 /// Progress on stdout, written unbuffered (one write per line) so a killed driver's log is complete. The orchestrator
 /// reads only the output files and the stderr tail.
 func log(_ message: String) {
