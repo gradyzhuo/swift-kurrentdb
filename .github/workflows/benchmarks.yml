@@ -74,14 +74,20 @@ jobs:
 
       # A second pass in JMH format: it carries every percentile of every metric,
       # which `bench-to-bmf` (scripts/) turns into Bencher Metric Format.
+      # package-benchmark exits 0 when a benchmark's setup or body throws: it leaves the
+      # benchmark out of the export and lists it at the end. Fail on that list instead of
+      # uploading a report without the benchmark.
       - name: Export benchmark percentiles
         run: |
+          set -o pipefail
           mkdir -p bench-out
           swift package --disable-sandbox benchmark \
             --target OfflineBenchmarks \
             --format jmh \
             --path bench-out \
-            --no-progress
+            --no-progress \
+            2>&1 | tee jmh.log
+          if grep -q "The following benchmarks failed" jmh.log; then exit 1; fi
           swift run --package-path scripts bench-to-bmf bench-out/Current_run.jmh.json > bmf.json
           echo "$(jq length bmf.json) benchmarks converted"
 
