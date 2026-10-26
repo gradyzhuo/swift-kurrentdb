@@ -321,7 +321,7 @@ static class Scenarios
             Log.Info("warmup");
             var warmup = Names.Warmup(s);
             var warmupBoard = new DeliveryBoard(s);
-            var warmupReader = CatchUpReader.Start(clients.Streams, warmup.CategoryStream, 0, warmupBoard);
+            var warmupReader = await CatchUpReader.Start(clients.Streams, warmup.CategoryStream, 0, warmupBoard);
             await WriterWindow(s, clients.Streams, payloads, warmup, s.WarmupSeconds, warmupBoard);
             await warmupReader.Stop();
         }
@@ -330,7 +330,7 @@ static class Scenarios
         var measured = Names.Measured(s);
         var board = new DeliveryBoard(s);
         long started = MonoClock.Now();
-        var reader = CatchUpReader.Start(clients.Streams, measured.CategoryStream, corpus, board);
+        var reader = await CatchUpReader.Start(clients.Streams, measured.CategoryStream, corpus, board);
         try
         {
             long? caughtUp = await reader.CorpusReceived(CatchUpLimit(corpus));
@@ -375,7 +375,12 @@ static class Scenarios
         bool _sizesOk = true;
         long? _caughtUpAt;
 
-        public static CatchUpReader Start(KurrentDBClient client, string stream, int corpus, DeliveryBoard board)
+        readonly TaskCompletionSource _confirmed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// Subscribes and returns once the server confirmed the subscription; a subscription that fails before that
+        /// throws here, so the driver exits non-zero at once (the Swift SDK's `subscribe()` throws the same way) instead
+        /// of waiting out the phase-1 limit. Errors after the confirmation are logged, as in the Swift driver.
+        public static async Task<CatchUpReader> Start(KurrentDBClient client, string stream, int corpus, DeliveryBoard board)
         {
             var reader = new CatchUpReader();
             if (corpus == 0)
@@ -385,6 +390,17 @@ static class Scenarios
             }
             reader._subscription = client.SubscribeToStream(stream, FromStream.Start, resolveLinkTos: true, cancellationToken: reader._stop.Token);
             reader._reader = Task.Run(() => reader.Read(reader._subscription, stream, corpus, board));
+            var confirmed = reader._confirmed.Task;
+            if (await Task.WhenAny(confirmed, Task.Delay(TimeSpan.FromSeconds(60))) != confirmed)
+            {
+                await reader.Stop();
+                throw new TimeoutException($"catch-up subscription on {stream} was not confirmed within 60 s");
+            }
+            if (confirmed.IsFaulted)
+            {
+                await reader.Stop();
+                await confirmed; // rethrows the subscription's error
+            }
             return reader;
         }
 
@@ -394,7 +410,9 @@ static class Scenarios
             {
                 await foreach (var message in subscription.Messages.WithCancellation(_stop.Token).ConfigureAwait(false))
                 {
+                    if (message is StreamMessage.SubscriptionConfirmation) _confirmed.TrySetResult();
                     if (message is not StreamMessage.Event e) continue;
+                    _confirmed.TrySetResult(); // an event implies a live subscription
                     bool inCorpus;
                     lock (_gate)
                     {
@@ -412,10 +430,12 @@ static class Scenarios
                     }
                     if (!inCorpus) board.Receive(e.ResolvedEvent);
                 }
+                _confirmed.TrySetException(new InvalidOperationException($"catch-up subscription on {stream} ended"));
             }
             catch (Exception e)
             {
-                if (!_stop.IsCancellationRequested) Log.Info($"catch-up subscription on {stream} ended: {e.Message}");
+                if (!_confirmed.TrySetException(e) && !_stop.IsCancellationRequested)
+                    Log.Info($"catch-up subscription on {stream} ended: {e.Message}");
             }
         }
 
