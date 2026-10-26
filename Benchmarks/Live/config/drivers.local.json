@@ -1,0 +1,5 @@
+[
+  { "name": "swift", "command": ["Benchmarks/Live/.build/release/LiveDriverSwift"] },
+  { "name": "dotnet", "command": ["dotnet", "Benchmarks/Live/drivers/dotnet/bin/Release/net8.0/LiveDriver.DotNet.dll"] },
+  { "name": "ghz", "command": ["ghz"] }
+]
