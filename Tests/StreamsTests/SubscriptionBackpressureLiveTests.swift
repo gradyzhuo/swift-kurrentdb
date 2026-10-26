@@ -46,8 +46,8 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
 
-        #expect(subscription.messages.isProducerWaiting)
-        #expect(subscription.messages.deliveredCount < 100)
+        #expect(subscription.handoff.isProducerWaiting)
+        #expect(subscription.handoff.deliveredCount < 100)
         subscription.cancel()
     }
 
@@ -64,7 +64,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
             for try await _ in subscription.events { count += 1 }
             return count
         }
-        #expect(try await eventually { subscription.messages.deliveredCount >= 2 })   // confirmation + event consumed
+        #expect(try await eventually { subscription.handoff.deliveredCount >= 2 })   // confirmation + event consumed
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
         subscription.cancel()
@@ -83,8 +83,8 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         var iterator = subscription.events.makeAsyncIterator()
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
-        #expect(subscription.messages.isProducerWaiting)
-        #expect(subscription.messages.deliveredCount < 100)
+        #expect(subscription.handoff.isProducerWaiting)
+        #expect(subscription.handoff.deliveredCount < 100)
         subscription.cancel()
     }
 
@@ -98,7 +98,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         // Consume nothing: the producer suspends in send holding the first message.
         // The test proves the release indirectly, through the error type: `connectionClosed`
         // comes from the close hook, whereas the transport's own failure would be `unavailable`.
-        #expect(try await eventually { subscription.messages.isProducerWaiting })
+        #expect(try await eventually { subscription.handoff.isProducerWaiting })
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
         try client.shutdown()
