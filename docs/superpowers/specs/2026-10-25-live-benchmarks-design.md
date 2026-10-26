@@ -110,9 +110,14 @@ needs), metadata 60 B.
      consuming in one process, symmetrically, and the reported CPU covers both.
    - Delivery latency is measured from the append's **scheduled** time to receipt.
    - Two throughput numbers, never conflated: the rate at which the client hands acks
-     to its transport (Swift's `ack()` only enqueues locally), and server-observed
-     progress (the group's processed count/checkpoint from the subscription info API,
-     polled by the orchestrator). Server-observed progress is the headline.
+     to its transport (Swift's `ack()` only enqueues locally), and **acknowledged
+     progress observed by the server** — the headline. The builder verifies which field
+     of the subscription info API counts acknowledged (not merely delivered) events,
+     and documents it; the orchestrator polls it.
+   - At the end of the window a bounded drain waits for acknowledged progress to reach
+     the number of events written; the shortfall is reported.
+   - The driver counts unique deliveries and redeliveries (by event id) separately;
+     redeliveries are reported and never counted as throughput.
    - Several consumers with RoundRobin is an appendix variant.
 4. **Catch-up subscription (secondary)**
    - On `$ce-<Category>`, not `$all`.
@@ -162,15 +167,25 @@ These close the gaps that would make percentiles or parity misleading.
   deadline. At the end of a measured window the driver drains for a bounded time;
   anything still unfinished counts as timed out and is reported, never silently
   excluded from percentiles.
-- **A step is sustained** only when achieved rate ≥ 99% of target, drops + timeouts ≤
-  0.1%, and the backlog does not grow over the window (exact thresholds are the
-  builder's, but fixed before the first published run).
-- **Server headroom.** The orchestrator records server container CPU, disk usage and
-  `$by_category` projection backlog per step. A step where the server's 2 cores are
+- **A step is sustained** only when the *successful* rate ≥ 99% of target, errors +
+  drops + timeouts ≤ 0.1%, and the backlog does not grow over the window (exact
+  thresholds are the builder's, but fixed before the first published run). Latency
+  from a step that is not sustained is never used in a headline comparison; where it is
+  shown, its upper percentiles are marked as censored.
+- **Server headroom.** The orchestrator records, per step, server CPU per core (so a
+  single saturated core is visible), disk latency and queue depth, disk usage, and
+  `$by_category` projection backlog. Any of them crossing its limit fails the headroom
+  gate. A step where the server's 2 cores are
   near saturation or the projection backlog grows is labelled **system-limited**: it is
   shown, but no SDK conclusion is drawn from it. Parity is judged only at steps both
   clients sustain with server headroom, so a saturated server cannot manufacture parity.
 - **Equivalent starting state for every trial.**
+  - Every client trial starts from the same seeded state: writes from earlier trials
+    go to their own streams/categories and are never read by later trials, and the
+    server is restarted (or its caches otherwise conditioned the same way) before
+    each trial, so no client inherits another's warm cache. The builder picks the
+    cheapest mechanism that guarantees this, for example restoring a snapshot of the
+    seeded data directory.
   - Warmup uses separate streams/categories from the measured data, so it cannot consume
     or pre-cache the measured corpus (notably the 1M-event catch-up corpus).
   - Each persistent subscription trial creates a fresh group; checkpoints never carry
@@ -181,8 +196,11 @@ These close the gaps that would make percentiles or parity misleading.
 - **Statistics.** Each round yields one paired ratio per metric (Swift ÷ .NET, both
   measured in that round). The interval is a 95% confidence interval over the
   round-level log-ratios. Minimum 5 rounds for headline cells, 3 for appendix cells.
-  Verdict against 1.2×: **meets** when the upper bound ≤ 1.2, **misses** when the lower
-  bound > 1.2, otherwise **inconclusive**, and the report says which.
+  Every ratio is oriented so that **higher means Swift is worse**: Swift ÷ .NET for
+  lower-is-better metrics (latency, CPU per operation, RSS), .NET ÷ Swift for
+  higher-is-better metrics (throughput). Verdict against 1.2×: **meets** when the upper
+  bound ≤ 1.2, **misses** when the lower bound > 1.2, otherwise **inconclusive**, and
+  the report says which.
 
 ### Fairness
 
@@ -211,9 +229,12 @@ These close the gaps that would make percentiles or parity misleading.
   running out mid-step.
 - **Reproducibility metadata** archived with every result bundle: the resolved
   dependency graph of `Benchmarks/Live` (its `Package.resolved` is committed, overriding
-  the repository-wide `.gitignore` entry), Swift toolchain, .NET runtime and
-  `KurrentDB.Client` version, ghz version, build flags, server image digest, scenario
-  random seed, and runner image version and CPU model.
+  the repository-wide `.gitignore` entry), the resolved .NET dependency graph (lock
+  file), the SDK and harness commit SHAs, Swift toolchain, .NET runtime and
+  `KurrentDB.Client` version, ghz version, build flags, server image digest and its
+  effective configuration, the effective scenario configuration (rates, durations,
+  in-flight caps, deadlines), scenario random seed, and runner image version and CPU
+  model.
 
 ### Trend layer
 
