@@ -211,6 +211,33 @@ reference is the `runOpenLoop` overload whose operation returns its completion i
 - `uniqueDeliveries` counts distinct events across all consumers.
 - Warmup runs the same way against group `groupName + "w"` on `$ce-<category>w`; its consumers are stopped before the
   measured group is first connected, right before the measure window.
+- After the drain the measured consumers **stay connected for 3 s** (outside the CPU window) before they are closed:
+  an ack still in transit when its connection closes is lost (the event goes back to be retried), and the server's
+  acknowledged progress, which the orchestrator reads after the driver exits, would fall short.
+
+#### Group settings and acknowledged progress (orchestrator)
+
+The orchestrator creates both groups per trial, identical for every client: name `g<round>-<rate>-<driver>` (warmup
+twin `+ "w"`), `resolveLinkTos` on, RoundRobin, checkpoint after 1 to 1000 acked events (`checkpointAfter` default,
+2 s), start from the beginning of the stream, every other setting default.
+
+**Acknowledged progress observed by the server** (the headline throughput number of this kind) is
+`SubscriptionInfo.lastCheckpointedEventPosition + 1` of the measured group (0 while the field is empty), read after
+the driver exits, polling for up to 10 s until it reaches the events the writer appended. Finding of
+`PersistentProgressLiveTests.checkpointAdvancesOnlyOnAck` (kurrentdb 26.2.3, 100 events delivered to one consumer):
+
+| state | `totalItems` | `lastCheckpointedEventPosition` | `outstandingMessageCount` |
+|---|---|---|---|
+| all delivered, none acked, 5 s later | 100 | (empty) | 100 |
+| all acked, `checkpointAfter` + 2 s later | 100 | `99` | 0 |
+| consumer disconnected, 2 s later | 100 | `99` | 0 |
+
+`totalItems` counts deliveries, not acks; `lastCheckpointedEventPosition` moves only on acks. It is the revision of the
+last event of the **contiguous acked prefix** in the `$ce-` stream, so it counts events only because each trial's
+`$ce-<category>` holds just that trial's events from revision 0. Caveats: it lags acks by up to `checkpointAfter`, an
+event whose ack is lost holds it back until the event is retried and acked, and acks the server had not processed
+when a consumer disconnected never count (closing a consumer right after its 20th ack left the checkpoint at 16 of 20,
+hence the 3 s above). A shortfall against the events written is reported, not a failure.
 
 ### Catch-up
 
@@ -236,6 +263,18 @@ subscription from the start** of that stream (not a stream read), with link reso
   0, `cpuUserSeconds` and `cpuSystemSeconds` 0, `catchUpSeconds: null`, an empty histogram, and validation
   `expectedEvents = catchUpExpectedEvents`, `receivedEvents` = corpus events received. Consumers must not divide by
   `measuredSeconds` or `scheduled` without checking for 0.
+
+### ghz (transport reference)
+
+ghz is not a driver of this contract: the orchestrator runs it for append and rebuild cells only, from the call
+configs `drivers/ghz/append.json` and `read.json` (`proto/kurrentdb/v1/streams.proto` of this repository, `Streams.Append`
+/ `Streams.Read`), and converts its JSON report (`GhzAdapter`) to the two output files with `timing: "rpcStart"`.
+What it shares with the drivers: target rate, measure and warmup lengths (warmup as a separate ghz run on the `w`
+streams), the per-call deadline (ghz `timeout`), `inFlightCap` as ghz `concurrency`, one connection, the stream set,
+batch size, event type, content type, expected revision any, and exact data and metadata sizes. What differs:
+latency from the RPC start; a full worker pool waits instead of dropping (no drops, wait not charged); streams in round
+robin instead of the seeded draw; every event carries the bytes of event index 0; rebuild reads are not decoded and
+counts are not checked; process CPU and RSS are not measured. Its numbers are never put in a ratio.
 
 ## Output: `result.json` (`TrialResult`)
 
