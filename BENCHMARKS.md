@@ -133,9 +133,9 @@ whole run.
 
 `GRPC/*` makes the same calls with the generated gRPC client alone, on the same kind of in-process
 connection behind the same `AnyClientTransport`: `Client/*` minus `GRPC/*` is what the SDK adds
-above that transport, whose own forwarding (one call per RPC) both include. Both also include one
-copy of every message, each way, between the in-process transport's `[UInt8]` and the Posix
-transport's bytes type, which a real connection does not make.
+above that transport, whose own forwarding both include; it forwards nothing per message. Both also
+include one copy of every message, each way, between the in-process transport's `[UInt8]` and the
+Posix transport's bytes type, which a real connection does not make.
 
 Two things these numbers do not show:
 - Memory. The in-process transport queues messages without a limit, so the server can run ahead of a

@@ -23,10 +23,11 @@ package protocol TransportProvider: Sendable {
 ///
 /// Usecases and generated service clients are generic over their transport, but the connection
 /// cache holds one concrete type, so the transport is erased here instead of making
-/// `KurrentDBClient` generic. The box forwards one call per RPC (`withStream`) or per connection
-/// (`connect`); the request and response streams pass through untouched, so messages cost
-/// nothing extra. The bytes type stays the Posix transport's, so the default path converts
-/// nothing; a transport with other bytes has to convert them itself.
+/// `KurrentDBClient` generic. The box forwards the calls grpc-swift makes on a transport:
+/// `config(forMethod:)` and `withStream` for every RPC, `connect` for every connection. The
+/// request and response streams pass through untouched, so messages cost nothing extra. The bytes
+/// type stays the Posix transport's, so the default path converts nothing; a transport with other
+/// bytes has to convert them itself.
 package struct AnyClientTransport: ClientTransport {
     package typealias Bytes = HTTP2ClientTransport.Posix.Bytes
 
