@@ -325,7 +325,7 @@ allocate on several concurrent tasks, so their counts depend on scheduling.
 Most move by an allocation or two between runs, but on the 4-vCPU runner a
 lazy read's count per iteration spreads over about 10%, depending on whether
 each element finds the consumer waiting, and its median moves with the mix.
-`scripts/bench_to_bmf.py` therefore reports them as `allocations-concurrent`,
+`bench-to-bmf` (`scripts/`) therefore reports them as `allocations-concurrent`,
 which keeps the history but has no threshold; the latency test still covers
 these benchmarks.
 
