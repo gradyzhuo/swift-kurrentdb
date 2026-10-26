@@ -303,6 +303,62 @@ struct ConnectionProviderTests {
         #expect(provider.createdDedicatedConnectionCount == 0)
     }
 
+    /// A method no service implements; `RecordingTransport` fails every call before encoding.
+    private static let probeMethod = MethodDescriptor(fullyQualifiedService: "kurrentdb.test.Recording", method: "Probe")
+
+    @Test("The transport a provider builds carries the connection and its calls, until the provider shuts down")
+    func providerTransportCarriesConnection() async throws {
+        let transports = RecordingTransportProvider()
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = transports
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(3600), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        let lease = try provider.acquire(Self.endpointA)
+        let transport = try #require(transports.transports.first)
+        #expect(try await eventually { transport.wasConnected })
+
+        await #expect(throws: RecordingTransport.callFailure) {
+            try await lease.client.unary(
+                request: ClientRequest(message: []),
+                descriptor: Self.probeMethod,
+                serializer: RawBytes(),
+                deserializer: RawBytes(),
+                options: .defaults
+            ) { try $0.message }
+        }
+        #expect(transport.calledMethods == [Self.probeMethod])
+
+        lease.release()
+        provider.shutdown()
+        #expect(try await eventually { transport.wasDisconnected })
+    }
+
+    @Test("AnyClientTransport passes through the method config, retry throttle, errors and cancellation of the transport it wraps")
+    func erasedTransportForwards() async throws {
+        let config = MethodConfig(names: [], timeout: .seconds(7))
+        let throttle = RetryThrottle(maxTokens: 7, tokenRatio: 0.5)
+        let recording = RecordingTransport(methodConfig: config, retryThrottle: throttle)
+        let transport = AnyClientTransport(recording)
+        #expect(transport.config(forMethod: Self.probeMethod) == config)
+        #expect(transport.retryThrottle === throttle)
+
+        await #expect(throws: RecordingTransport.callFailure) {
+            try await transport.withStream(descriptor: Self.probeMethod, options: .defaults) { _, _ in }
+        }
+        #expect(recording.calledMethods == [Self.probeMethod])
+
+        // A call waiting in the wrapped transport ends when its task is cancelled.
+        let held = AnyClientTransport(RecordingTransport(holdsCalls: true))
+        let call = Task {
+            try await held.withStream(descriptor: Self.probeMethod, options: .defaults) { _, _ in }
+        }
+        call.cancel()
+        await #expect(throws: CancellationError.self) {
+            try await call.value
+        }
+    }
+
     // MARK: - Shutdown
 
     @Test("shutdown 之後共用與獨立連線的准入都會被拒絕")
@@ -419,19 +475,106 @@ struct KurrentDBClientShutdownTests {
     }
 }
 
-/// Records the endpoint of every transport it builds. The transports are the default Posix ones,
-/// so the connections behave as they would without a provider. (`Endpoint` alone is ambiguous in
-/// this file: grpc-swift-nio-transport declares one too.)
+/// Builds a `RecordingTransport` for every connection and records the endpoint it was built for.
+/// (`Endpoint` alone is ambiguous in this file: grpc-swift-nio-transport declares one too.)
 private final class RecordingTransportProvider: TransportProvider {
-    private let recorded = Mutex<[KurrentDB.Endpoint]>([])
+    private let built = Mutex<[(endpoint: KurrentDB.Endpoint, transport: RecordingTransport)]>([])
 
+    /// The endpoint of every transport built so far, in order.
     var endpoints: [KurrentDB.Endpoint] {
-        recorded.withLock { $0 }
+        built.withLock { $0.map { $0.endpoint } }
+    }
+
+    /// Every transport built so far, in order.
+    var transports: [RecordingTransport] {
+        built.withLock { $0.map { $0.transport } }
     }
 
     func makeTransport(for endpoint: KurrentDB.Endpoint) throws -> any ClientTransport<AnyClientTransport.Bytes> {
-        recorded.withLock { $0.append(endpoint) }
-        return try HTTP2ClientTransport.Posix(target: endpoint.target, transportSecurity: .plaintext)
+        let transport = RecordingTransport()
+        built.withLock { $0.append((endpoint, transport)) }
+        return transport
+    }
+}
+
+/// A transport that runs no RPC. It records each call the client starts on it and fails the call
+/// with `callFailure`, or, built with `holdsCalls`, keeps the call waiting until its task is
+/// cancelled. It hands back the method config and retry throttle it was built with, and stays
+/// connected until it is shut down or the task running `connect()` is cancelled.
+private final class RecordingTransport: ClientTransport {
+    typealias Bytes = AnyClientTransport.Bytes
+
+    static let callFailure = RPCError(code: .unavailable, message: "RecordingTransport runs no RPC")
+
+    let retryThrottle: RetryThrottle?
+    private let methodConfig: MethodConfig?
+    private let holdsCalls: Bool
+    private let state = Mutex(State())
+    private let shutdown = AsyncStream<Void>.makeStream()
+
+    private struct State {
+        var calledMethods: [MethodDescriptor] = []
+        var wasConnected = false
+        var wasDisconnected = false
+    }
+
+    init(methodConfig: MethodConfig? = nil, retryThrottle: RetryThrottle? = nil, holdsCalls: Bool = false) {
+        self.methodConfig = methodConfig
+        self.retryThrottle = retryThrottle
+        self.holdsCalls = holdsCalls
+    }
+
+    /// The method of every call started on this transport, in order.
+    var calledMethods: [MethodDescriptor] {
+        state.withLock { $0.calledMethods }
+    }
+
+    /// Whether `connect()` has started.
+    var wasConnected: Bool {
+        state.withLock { $0.wasConnected }
+    }
+
+    /// Whether `connect()` has returned.
+    var wasDisconnected: Bool {
+        state.withLock { $0.wasDisconnected }
+    }
+
+    func connect() async throws {
+        state.withLock { $0.wasConnected = true }
+        defer { state.withLock { $0.wasDisconnected = true } }
+        // Ends when the stream finishes or the task is cancelled.
+        for await _ in shutdown.stream {}
+    }
+
+    func beginGracefulShutdown() {
+        shutdown.continuation.finish()
+    }
+
+    func withStream<T: Sendable>(
+        descriptor: MethodDescriptor,
+        options _: CallOptions,
+        _: (_ stream: RPCStream<Inbound, Outbound>, _ context: ClientContext) async throws -> T
+    ) async throws -> T {
+        state.withLock { $0.calledMethods.append(descriptor) }
+        if holdsCalls {
+            try await Task.sleep(for: .seconds(3600))
+        }
+        throw Self.callFailure
+    }
+
+    func config(forMethod _: MethodDescriptor) -> MethodConfig? {
+        methodConfig
+    }
+}
+
+/// Passes `[UInt8]` messages through unchanged.
+private struct RawBytes: MessageSerializer, MessageDeserializer {
+    func serialize<Bytes: GRPCContiguousBytes>(_ message: [UInt8]) throws -> Bytes {
+        Bytes(message)
+    }
+
+    func deserialize<Bytes: GRPCContiguousBytes>(_ serializedMessageBytes: Bytes) throws -> [UInt8] {
+        serializedMessageBytes.withUnsafeBytes { Array($0) }
     }
 }
 
