@@ -6,7 +6,7 @@
 #   https://gradyzhuo.github.io/swift-kurrentdb/<major.minor>/documentation/kurrentdb/
 #   https://gradyzhuo.github.io/swift-kurrentdb/main/documentation/kurrentdb/
 #
-# The published releases are the latest patch of every minor (scripts/doc-versions.py), and
+# The published releases are the latest patch of every minor (`doc-versions` in scripts/), and
 # docs/doc-versions.js adds a version menu to every page. GitHub Pages must use "GitHub
 # Actions" as its source, and the github-pages environment must allow `*.*.*` tags so that
 # a release deploys as soon as it is tagged.
@@ -38,6 +38,7 @@ jobs:
   versions:
     name: List versions
     runs-on: ubuntu-latest
+    container: swift:6.4-bookworm  # for the scripts package
     outputs:
       releases: ${{ steps.list.outputs.releases }}
       matrix: ${{ steps.list.outputs.matrix }}
@@ -54,7 +55,7 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           if [[ "$GITHUB_REF_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            scripts/check-release-readiness.py "$GITHUB_REF_NAME"
+            swift run --package-path scripts check-release-readiness "$GITHUB_REF_NAME"
           else
             echo "$GITHUB_REF_NAME is not a release tag; nothing to check"
           fi
@@ -64,10 +65,10 @@ jobs:
           # A tag's run documents the main branch as "main", not the tagged commit.
           MAIN_REF: ${{ github.ref_type == 'tag' && 'main' || github.sha }}
         run: |
-          releases=$(scripts/doc-versions.py)
-          echo "$releases" | jq .
+          releases=$(swift run --package-path scripts doc-versions)
+          echo "$releases"
           echo "releases=$releases" >> "$GITHUB_OUTPUT"
-          echo "matrix=$(echo "$releases" | jq -c --arg ref "$MAIN_REF" '. + [{label: "main", ref: $ref, commit: ""}]')" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(swift run --package-path scripts doc-versions --main "$MAIN_REF")" >> "$GITHUB_OUTPUT"
 
       # The deploy job leaves the Prepare commit (`[UPDATE] prepare X.Y.Z: …`) to the release
       # tag. A rebase or squash merge makes it main's head; a merge commit makes it the merged
@@ -141,12 +142,11 @@ jobs:
         env:
           RELEASES: ${{ needs.versions.outputs.releases }}
         run: |
-          apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 > /dev/null
-          # Each artifact downloads into doc-input/doc-input-<label>; the script expects doc-input/<label>.
+          # Each artifact downloads into doc-input/doc-input-<label>; the tool expects doc-input/<label>.
           for artifact in doc-input/doc-input-*; do
             mv "$artifact" "doc-input/${artifact#doc-input/doc-input-}"
           done
-          python3 scripts/build-docs-site.py --inputs doc-input --releases "$RELEASES" --output _site
+          swift run --package-path scripts build-docs-site --inputs doc-input --releases "$RELEASES" --output _site
           test -f _site/documentation/kurrentdb/index.html
           test -f _site/main/documentation/kurrentdb/index.html
 
