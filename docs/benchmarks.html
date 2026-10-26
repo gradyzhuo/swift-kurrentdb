@@ -65,8 +65,8 @@
 
 <section id="environment" class="container">
   <h2><span lang="en">Environment</span><span lang="zh-Hant">量測環境</span></h2>
-  <p lang="en">Both columns below were measured on the same commit on 2026-10-25; the client-stack section on a later commit the same day. Linux numbers come from a shared GitHub-hosted runner and vary between runs; treat differences under about 10% as noise.</p>
-  <p lang="zh-Hant">下表兩欄在同一個 commit 於 2026-10-25 量測；client stack 一節是同一天稍後另一個 commit 的結果。Linux 數字來自共用的 GitHub-hosted runner，每次會有浮動，10% 以內的差異視為雜訊。</p>
+  <p lang="en">Both columns below were measured on the same commit on 2026-10-25; the client-stack section on 2026-10-26, on later code. Linux numbers come from a shared GitHub-hosted runner and vary between runs; treat differences under about 10% as noise.</p>
+  <p lang="zh-Hant">下表兩欄在同一個 commit 於 2026-10-25 量測；client stack 一節是 2026-10-26 在之後的程式碼上量的。Linux 數字來自共用的 GitHub-hosted runner，每次會有浮動，10% 以內的差異視為雜訊。</p>
   <div class="table-scroll">
     <table class="results">
       <thead>
@@ -218,23 +218,25 @@
   </ul>
 
   <h3><span lang="en">Client stack against an in-process server</span><span lang="zh-Hant">Client stack（接 in-process server）</span></h3>
-  <p lang="en"><code>Client/*</code> runs a real <code>KurrentDBClient</code> against an in-process server (<code>Benchmarks/OfflineBenchmarks/InProcessServer.swift</code>), plugged in through the package-level <code>ClientSettings.transportProvider</code>. Node selection, the retry wrapper, the shared connection, the generated gRPC client and the response sequences run as they do against a node. The server answers from responses serialised in advance and never parses a request, and there are no sockets and no HTTP/2 framing, so what is left is the cost of the client and of grpc-swift. <code>GRPC/*</code> makes the same calls with the generated gRPC client alone on the same kind of connection: <code>Client/*</code> minus <code>GRPC/*</code> is what the SDK adds. Both include one copy of every message between the in-process transport's <code>[UInt8]</code> and the Posix transport's bytes type (one allocation per message), which a real connection does not make. Measured on the commit that added them; Linux in run 40168799307 (Intel Xeon Platinum 8573C, 4 vCPU).</p>
-  <p lang="zh-Hant"><code>Client/*</code> 用真的 <code>KurrentDBClient</code> 接 in-process server（<code>Benchmarks/OfflineBenchmarks/InProcessServer.swift</code>），透過 package 層級的 <code>ClientSettings.transportProvider</code> 接上。node 選擇、retry、共用連線、生成的 gRPC client 與回應序列都跟接真 node 時一樣在跑。server 用事先序列化好的回應作答，從不解析請求；沒有 socket、也沒有 HTTP/2 framing，所以剩下的就是 client 與 grpc-swift 本身的成本。<code>GRPC/*</code> 在同樣的連線上只用生成的 gRPC client 做同樣的呼叫：<code>Client/*</code> 減掉 <code>GRPC/*</code> 就是 SDK 多出來的部分。兩者都包含每則訊息在 in-process transport 的 <code>[UInt8]</code> 與 Posix transport 的 bytes 型別之間複製一次（每則一次配置），這是真連線不會有的。量測於加入它們的 commit；Linux 為 run 40168799307（Intel Xeon Platinum 8573C, 4 vCPU）。</p>
+  <p lang="en"><code>Client/*</code> runs a real <code>KurrentDBClient</code> against an in-process server (<code>Benchmarks/OfflineBenchmarks/InProcessServer.swift</code>), plugged in through the package-level <code>ClientSettings.transportProvider</code>. Node selection, the retry wrapper, the shared connection, the generated gRPC client and the response sequences run as they do against a node. The server answers from responses serialised in advance and never parses a request, but like a node it takes each request whole before answering, and it fails a call whose request does not carry the expected number of messages. There are no sockets and no HTTP/2 framing, so what is left is the cost of the client and of grpc-swift. <code>GRPC/*</code> makes the same calls with the generated gRPC client alone on the same kind of connection: <code>Client/*</code> minus <code>GRPC/*</code> is what the SDK adds. Both include one copy of every message, each way, between the in-process transport's <code>[UInt8]</code> and the Posix transport's bytes type, which a real connection does not make. Measured on 2026-10-26: macOS in two runs with the same allocation counts and p50s within 5% (the tables show the first); Linux in <a href="https://github.com/gradyzhuo/swift-kurrentdb/actions/runs/40279300762" target="_blank" rel="noopener">run 40279300762</a> (Intel Xeon Platinum 8573C, 4 vCPU).</p>
+  <p lang="zh-Hant"><code>Client/*</code> 用真的 <code>KurrentDBClient</code> 接 in-process server（<code>Benchmarks/OfflineBenchmarks/InProcessServer.swift</code>），透過 package 層級的 <code>ClientSettings.transportProvider</code> 接上。node 選擇、retry、共用連線、生成的 gRPC client 與回應序列都跟接真 node 時一樣在跑。server 用事先序列化好的回應作答，從不解析請求，但會像真 node 一樣先收完整個請求再回應，請求的訊息數不對就讓呼叫失敗；沒有 socket、也沒有 HTTP/2 framing，所以剩下的就是 client 與 grpc-swift 本身的成本。<code>GRPC/*</code> 在同樣的連線上只用生成的 gRPC client 做同樣的呼叫：<code>Client/*</code> 減掉 <code>GRPC/*</code> 就是 SDK 多出來的部分。兩者都包含每則訊息在 in-process transport 的 <code>[UInt8]</code> 與 Posix transport 的 bytes 型別之間來回各複製一次，這是真連線不會有的。量測於 2026-10-26：macOS 跑了兩次，配置次數相同、p50 差距在 5% 以內（表中是第一次）；Linux 為 <a href="https://github.com/gradyzhuo/swift-kurrentdb/actions/runs/40279300762" target="_blank" rel="noopener">run 40279300762</a>（Intel Xeon Platinum 8573C, 4 vCPU）。</p>
+  <p lang="en">Two things these numbers do not show. Memory: the in-process transport queues messages without a limit, so the server can run ahead of a slow reader; against a node, the HTTP/2 flow-control window limits how far it can. The server's share of a deadline: requests reach the in-process server without their <code>grpc-timeout</code> header, so only the client's timer runs; a node runs its own on its own machine.</p>
+  <p lang="zh-Hant">這些數字不包含兩件事。記憶體：in-process transport 的佇列沒有上限，server 可以跑在讀得慢的一方前面；接真 node 時，HTTP/2 的 flow-control window 會限制 server 能超前多少。deadline 在 server 端的成本：請求送到 in-process server 時已拿掉 <code>grpc-timeout</code> header，所以只有 client 的計時 task 在跑；真 node 的計時在它自己的機器上。</p>
   <div class="table-scroll">
     <table class="results">
       <thead>
         <tr><th>Benchmark</th><th>macOS p50</th><th>macOS Malloc</th><th>macOS Instructions</th><th>Linux p50</th><th>Linux Malloc</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>Client/append/1x100B</code></td><td>54 µs</td><td>108</td><td>646 K</td><td>115 µs</td><td>121</td></tr>
-        <tr><td><code>Client/append/100x100B</code></td><td>303 µs</td><td>1,107</td><td>4,891 K</td><td>515 µs</td><td>823</td></tr>
-        <tr><td><code>Client/append-with-deadline/1x100B</code></td><td>74 µs</td><td>142</td><td>871 K</td><td>169 µs</td><td>158</td></tr>
-        <tr><td><code>Client/read-buffered/1x100B</code></td><td>49 µs</td><td>103</td><td>634 K</td><td>120 µs</td><td>127</td></tr>
-        <tr><td><code>Client/read-buffered/100x100B</code></td><td>770 µs</td><td>1,606</td><td>10.2 M</td><td>948 µs</td><td>1,633</td></tr>
-        <tr><td><code>Client/read-buffered/1000x100B</code></td><td>7.07 ms</td><td>15,119</td><td>96.7 M</td><td>8.59 ms</td><td>15,151</td></tr>
-        <tr><td><code>Client/read-lazy/1x100B</code></td><td>79 µs</td><td>114</td><td>750 K</td><td>162 µs</td><td>136</td></tr>
-        <tr><td><code>Client/read-lazy/100x100B</code></td><td>1.11 ms</td><td>1,804</td><td>13.9 M</td><td>2.03 ms</td><td>1,829</td></tr>
-        <tr><td><code>Client/read-lazy/1000x100B</code></td><td>10.00 ms</td><td>17,113</td><td>132.3 M</td><td>19.74 ms</td><td>17,999</td></tr>
+        <tr><td><code>Client/append/1x100B</code></td><td>58 µs</td><td>110</td><td>613 K</td><td>137 µs</td><td>122</td></tr>
+        <tr><td><code>Client/append/100x100B</code></td><td>301 µs</td><td>1,107</td><td>4,829 K</td><td>618 µs</td><td>823</td></tr>
+        <tr><td><code>Client/append-with-deadline/1x100B</code></td><td>70 µs</td><td>129</td><td>709 K</td><td>193 µs</td><td>142</td></tr>
+        <tr><td><code>Client/read-buffered/1x100B</code></td><td>59 µs</td><td>107</td><td>648 K</td><td>140 µs</td><td>129</td></tr>
+        <tr><td><code>Client/read-buffered/100x100B</code></td><td>758 µs</td><td>1,610</td><td>10.2 M</td><td>1.11 ms</td><td>1,635</td></tr>
+        <tr><td><code>Client/read-buffered/1000x100B</code></td><td>6.79 ms</td><td>15,119</td><td>95.7 M</td><td>9.87 ms</td><td>15,151</td></tr>
+        <tr><td><code>Client/read-lazy/1x100B</code></td><td>69 µs</td><td>117</td><td>730 K</td><td>195 µs</td><td>139</td></tr>
+        <tr><td><code>Client/read-lazy/100x100B</code></td><td>957 µs</td><td>1,808</td><td>12.2 M</td><td>2.54 ms</td><td>1,835</td></tr>
+        <tr><td><code>Client/read-lazy/1000x100B</code></td><td>8.90 ms</td><td>17,114</td><td>117.6 M</td><td>25.94 ms</td><td>18,351</td></tr>
       </tbody>
     </table>
   </div>
@@ -244,26 +246,28 @@
         <tr><th>Benchmark</th><th>macOS p50</th><th>macOS Malloc</th><th>macOS Instructions</th><th>Linux p50</th><th>Linux Malloc</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>GRPC/append/1x100B</code></td><td>46 µs</td><td>96</td><td>615 K</td><td>100 µs</td><td>105</td></tr>
-        <tr><td><code>GRPC/append/100x100B</code></td><td>282 µs</td><td>996</td><td>4,616 K</td><td>413 µs</td><td>708</td></tr>
-        <tr><td><code>GRPC/read/1x100B</code></td><td>45 µs</td><td>81</td><td>545 K</td><td>93 µs</td><td>98</td></tr>
-        <tr><td><code>GRPC/read/100x100B</code></td><td>520 µs</td><td>1,475</td><td>7,684 K</td><td>624 µs</td><td>1,493</td></tr>
-        <tr><td><code>GRPC/read/1000x100B</code></td><td>4.86 ms</td><td>14,087</td><td>72.0 M</td><td>5.20 ms</td><td>14,103</td></tr>
+        <tr><td><code>GRPC/append/1x100B</code></td><td>52 µs</td><td>98</td><td>581 K</td><td>121 µs</td><td>106</td></tr>
+        <tr><td><code>GRPC/append/100x100B</code></td><td>276 µs</td><td>996</td><td>4,575 K</td><td>492 µs</td><td>708</td></tr>
+        <tr><td><code>GRPC/read/1x100B</code></td><td>53 µs</td><td>85</td><td>563 K</td><td>108 µs</td><td>101</td></tr>
+        <tr><td><code>GRPC/read/100x100B</code></td><td>532 µs</td><td>1,479</td><td>7,664 K</td><td>718 µs</td><td>1,496</td></tr>
+        <tr><td><code>GRPC/read/1000x100B</code></td><td>4.70 ms</td><td>14,085</td><td>72.0 M</td><td>6.23 ms</td><td>14,111</td></tr>
       </tbody>
     </table>
   </div>
   <ul lang="en">
-    <li>The fixed cost of a call is grpc-swift's: one append takes 54 µs through the client and 46 µs with gRPC alone on macOS (115 µs and 100 µs on Linux). The SDK adds 12 allocations to an append (16 on Linux) and 22 to a read (29).</li>
-    <li>Per event, a buffered read costs about 7.0 µs and 15 allocations on macOS. gRPC alone costs about 4.8 µs and 14: protobuf decoding plus the in-process transport and its copy. The SDK adds about 2.2 µs and 1 allocation.</li>
-    <li>A lazy read costs about 2.9 µs and 2 allocations more per event than a buffered one on macOS: each element waits in the hand-off for the iterating task. <code>.lazy</code> buys bounded memory at that price.</li>
-    <li>A default deadline adds about 20 µs and 34 allocations to a call on macOS: grpc-swift runs every call it bounds in a task group next to a timer task.</li>
+    <li>Most of a one-event call is grpc-swift's: a one-event append takes 58 µs through the client and 52 µs with gRPC alone on macOS (137 µs and 121 µs on Linux). The SDK's per-call work adds 12 allocations to it (16 on Linux) and 22 to a one-event read (28). These are totals for one event; each further event adds its own share.</li>
+    <li>Each further appended event costs about 2.4 µs and 10 allocations through the client on macOS, and about 2.3 µs and 9 with gRPC alone: the SDK adds 1 allocation per event on both systems, and on macOS a time within run-to-run noise.</li>
+    <li>Each event of a buffered read costs about 6.4–6.7 µs and 15 allocations on macOS. gRPC alone costs about 4.5–4.7 µs and 14: protobuf decoding plus the in-process transport and its copy. The SDK adds about 2 µs and 1 allocation (about 3.6 µs and 1 on Linux).</li>
+    <li>A lazy read costs about 2.1–2.7 µs and 2 allocations more per event than a buffered one on macOS: each element waits in the hand-off for the iterating task. That is the price of handing over one element at a time. On Linux the hand-off is the most scheduling-sensitive number: about 16 µs per event in this run, about 11 µs in an earlier run on the same CPU model.</li>
+    <li>A default deadline adds about 12 µs and 19 allocations to a call on macOS (about 56 µs and 20 on Linux): grpc-swift runs every call it bounds in a task group next to a timer task. That is the client's share alone; the in-process server never sees the deadline.</li>
     <li>These benchmarks allocate on several concurrent tasks, so their counts depend on scheduling. On the 4-vCPU Linux runner a lazy read's count per iteration spreads over about 10% (each element either finds the consumer waiting or suspends in the hand-off), so its Linux Malloc is a median of two modes. Bencher records them without a threshold (see Method).</li>
   </ul>
   <ul lang="zh-Hant">
-    <li>一次呼叫的固定成本是 grpc-swift 的：在 macOS 上，append 一筆經過 client 要 54 µs，只用 gRPC 要 46 µs（Linux 為 115 µs 與 100 µs）。SDK 對一次 append 多 12 次配置（Linux 16 次），對一次 read 多 22 次（Linux 29 次）。</li>
-    <li>buffered read 每筆在 macOS 約 7.0 µs、15 次配置；只用 gRPC 約 4.8 µs、14 次：protobuf 解碼加上 in-process transport 與它的複製。SDK 每筆多約 2.2 µs、1 次配置。</li>
-    <li>lazy read 每筆在 macOS 比 buffered 多約 2.9 µs、2 次配置：每個元素都要在 hand-off 等迭代的 task 來拿。<code>.lazy</code> 用這個代價換來有上限的記憶體。</li>
-    <li>預設 deadline 在 macOS 讓每次呼叫多約 20 µs、34 次配置：grpc-swift 會把每個有期限的呼叫放進 task group，旁邊再跑一個計時用的 task。</li>
+    <li>一筆的呼叫，成本大多來自 grpc-swift：在 macOS 上，append 一筆經過 client 要 58 µs，只用 gRPC 要 52 µs（Linux 為 137 µs 與 121 µs）。SDK 每次呼叫的工作讓這次 append 多 12 次配置（Linux 16 次），讓 read 一筆多 22 次（Linux 28 次）。這是一筆的總數，每多一筆還要再加上那一筆的成本。</li>
+    <li>append 每多一筆，經過 client 在 macOS 約 2.4 µs、10 次配置，只用 gRPC 約 2.3 µs、9 次：兩個系統上 SDK 每筆都多 1 次配置；時間差在 macOS 上落在兩次執行之間的浮動以內。</li>
+    <li>buffered read 每筆在 macOS 約 6.4–6.7 µs、15 次配置；只用 gRPC 約 4.5–4.7 µs、14 次：protobuf 解碼加上 in-process transport 與它的複製。SDK 每筆多約 2 µs、1 次配置（Linux 約 3.6 µs、1 次）。</li>
+    <li>lazy read 每筆在 macOS 比 buffered 多約 2.1–2.7 µs、2 次配置：每個元素都要在 hand-off 等迭代的 task 來拿，這是一次只交出一個元素的代價。在 Linux 上，hand-off 是最受排程影響的數字：這次每筆約 16 µs，先前在同型號 CPU 上的一次約 11 µs。</li>
+    <li>預設 deadline 在 macOS 讓每次呼叫多約 12 µs、19 次配置（Linux 約 56 µs、20 次）：grpc-swift 會把每個有期限的呼叫放進 task group，旁邊再跑一個計時用的 task。這只是 client 端的成本，in-process server 看不到 deadline。</li>
     <li>這些 benchmark 在多個並行的 task 上配置記憶體，配置次數取決於排程。在 4 vCPU 的 Linux runner 上，lazy read 每次迭代的配置次數分散約 10%（每個元素要嘛碰到 consumer 已在等，要嘛在 hand-off 裡暫停），所以 Linux 的 Malloc 是兩群數值的中位數。Bencher 只記錄、不設門檻（見量測方法）。</li>
   </ul>
 </section>

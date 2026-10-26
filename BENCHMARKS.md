@@ -5,8 +5,8 @@ All benchmarks use [ordo-one/benchmark](https://github.com/ordo-one/benchmark) a
 
 ## Environment
 
-Both columns were measured on the same commit on 2026-10-25; the client-stack section on a later
-commit the same day (see there).
+Both columns were measured on the same commit on 2026-10-25; the client-stack section on
+2026-10-26, on later code (see there).
 
 | | macOS | Linux |
 |---|---|---|
@@ -124,44 +124,55 @@ then decodes the `RecordedEvent`s of such a read into a three-field `Codable` st
 (`Benchmarks/OfflineBenchmarks/InProcessServer.swift`), plugged in through the package-level
 `ClientSettings.transportProvider`. Node selection, the retry wrapper, the shared connection, the
 generated gRPC client and the response sequences run as they do against a node. The server answers
-from responses serialised in advance and never parses a request, and there are no sockets and no
-HTTP/2 framing, so what is left is the cost of the client and of grpc-swift. Setup makes one call
-and checks its result, so discovery and the connection happen before measuring, and the node stays
-cached for the whole run.
+from responses serialised in advance and never parses a request, but like a node it takes each
+request whole before answering, and it fails a call whose request does not carry the expected number
+of messages. There are no sockets and no HTTP/2 framing, so what is left is the cost of the client
+and of grpc-swift. Setup makes one call and checks its result (a read makes one buffered and one
+lazy), so discovery and the connection happen before measuring, and the node stays cached for the
+whole run.
 
 `GRPC/*` makes the same calls with the generated gRPC client alone, on the same kind of in-process
-connection: `Client/*` minus `GRPC/*` is what the SDK adds. Both include one copy of every message
-between the in-process transport's `[UInt8]` and the Posix transport's bytes type (one allocation
-per message), which a real connection does not make.
+connection: `Client/*` minus `GRPC/*` is what the SDK adds. Both include one copy of every message,
+each way, between the in-process transport's `[UInt8]` and the Posix transport's bytes type, which a
+real connection does not make.
 
-Measured on 2026-10-25 on the commit that added them: macOS on the machine above, Linux in
-`Benchmarks` run 40168799307 (Intel Xeon Platinum 8573C, 4 vCPU).
+Two things these numbers do not show:
+- Memory. The in-process transport queues messages without a limit, so the server can run ahead of a
+  slow reader. Against a node, the HTTP/2 flow-control window limits how far it can.
+- The server's share of a deadline. Requests reach the in-process server without their
+  `grpc-timeout` header, so only the client's timer runs; a node runs its own on its own machine.
 
-| Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
-|---|---|---|---|---|---|
-| `Client/append/1x100B` | 54 µs | 108 | 646 K | 115 µs | 121 |
-| `Client/append/100x100B` | 303 µs | 1,107 | 4,891 K | 515 µs | 823 |
-| `Client/append-with-deadline/1x100B` | 74 µs | 142 | 871 K | 169 µs | 158 |
-| `Client/read-buffered/1x100B` | 49 µs | 103 | 634 K | 120 µs | 127 |
-| `Client/read-buffered/100x100B` | 770 µs | 1,606 | 10.2 M | 948 µs | 1,633 |
-| `Client/read-buffered/1000x100B` | 7.07 ms | 15,119 | 96.7 M | 8.59 ms | 15,151 |
-| `Client/read-lazy/1x100B` | 79 µs | 114 | 750 K | 162 µs | 136 |
-| `Client/read-lazy/100x100B` | 1.11 ms | 1,804 | 13.9 M | 2.03 ms | 1,829 |
-| `Client/read-lazy/1000x100B` | 10.00 ms | 17,113 | 132.3 M | 19.74 ms | 17,999 |
+Measured on 2026-10-26: macOS on the machine above, in two runs with the same allocation counts and
+p50s within 5% (the tables show the first); Linux in
+[`Benchmarks` run 40279300762](https://github.com/gradyzhuo/swift-kurrentdb/actions/runs/40279300762)
+(Intel Xeon Platinum 8573C, 4 vCPU).
 
 | Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
 |---|---|---|---|---|---|
-| `GRPC/append/1x100B` | 46 µs | 96 | 615 K | 100 µs | 105 |
-| `GRPC/append/100x100B` | 282 µs | 996 | 4,616 K | 413 µs | 708 |
-| `GRPC/read/1x100B` | 45 µs | 81 | 545 K | 93 µs | 98 |
-| `GRPC/read/100x100B` | 520 µs | 1,475 | 7,684 K | 624 µs | 1,493 |
-| `GRPC/read/1000x100B` | 4.86 ms | 14,087 | 72.0 M | 5.20 ms | 14,103 |
+| `Client/append/1x100B` | 58 µs | 110 | 613 K | 137 µs | 122 |
+| `Client/append/100x100B` | 301 µs | 1,107 | 4,829 K | 618 µs | 823 |
+| `Client/append-with-deadline/1x100B` | 70 µs | 129 | 709 K | 193 µs | 142 |
+| `Client/read-buffered/1x100B` | 59 µs | 107 | 648 K | 140 µs | 129 |
+| `Client/read-buffered/100x100B` | 758 µs | 1,610 | 10.2 M | 1.11 ms | 1,635 |
+| `Client/read-buffered/1000x100B` | 6.79 ms | 15,119 | 95.7 M | 9.87 ms | 15,151 |
+| `Client/read-lazy/1x100B` | 69 µs | 117 | 730 K | 195 µs | 139 |
+| `Client/read-lazy/100x100B` | 957 µs | 1,808 | 12.2 M | 2.54 ms | 1,835 |
+| `Client/read-lazy/1000x100B` | 8.90 ms | 17,114 | 117.6 M | 25.94 ms | 18,351 |
+
+| Benchmark | macOS p50 | macOS Malloc | macOS Instructions | Linux p50 | Linux Malloc |
+|---|---|---|---|---|---|
+| `GRPC/append/1x100B` | 52 µs | 98 | 581 K | 121 µs | 106 |
+| `GRPC/append/100x100B` | 276 µs | 996 | 4,575 K | 492 µs | 708 |
+| `GRPC/read/1x100B` | 53 µs | 85 | 563 K | 108 µs | 101 |
+| `GRPC/read/100x100B` | 532 µs | 1,479 | 7,664 K | 718 µs | 1,496 |
+| `GRPC/read/1000x100B` | 4.70 ms | 14,085 | 72.0 M | 6.23 ms | 14,111 |
 
 **Observations:**
-- The fixed cost of a call is grpc-swift's: one append takes 54 µs through the client and 46 µs with gRPC alone on macOS (115 µs and 100 µs on Linux). The SDK adds 12 allocations to an append (16 on Linux) and 22 to a read (29): node selection, the retry wrapper, the connection lease, the call metadata and, for a read, the response stream.
-- Per event, a buffered read costs ~7.0 µs and 15 allocations on macOS. gRPC alone costs ~4.8 µs and 14: protobuf decoding (`Read/decode-response` above) plus the in-process transport and its copy. The SDK adds ~2.2 µs and 1 allocation.
-- A lazy read costs ~2.9 µs and 2 allocations more per event than a buffered one on macOS (~11.1 µs on Linux): each element waits in the hand-off for the iterating task instead of being queued. `.lazy` buys bounded memory at that price.
-- A default deadline adds ~20 µs and 34 allocations to a call on macOS (~54 µs and 37 on Linux): grpc-swift runs every call it bounds in a task group next to a timer task.
+- Most of a one-event call is grpc-swift's: a one-event append takes 58 µs through the client and 52 µs with gRPC alone on macOS (137 µs and 121 µs on Linux). The SDK's per-call work (node selection, the retry wrapper, the connection lease, the call metadata and, for a read, the response stream) adds 12 allocations to it (16 on Linux) and 22 to a one-event read (28). These are totals for one event; each further event adds its own share.
+- Each further appended event costs ~2.4 µs and 10 allocations through the client on macOS, and ~2.3 µs and 9 with gRPC alone: the SDK adds 1 allocation per event on both systems, and on macOS a time within run-to-run noise.
+- Each event of a buffered read costs ~6.4–6.7 µs and 15 allocations on macOS. gRPC alone costs ~4.5–4.7 µs and 14: protobuf decoding plus the in-process transport and its copy. The SDK adds ~2 µs and 1 allocation (~3.6 µs and 1 on Linux).
+- A lazy read costs ~2.1–2.7 µs and 2 allocations more per event than a buffered one on macOS: each element waits in the hand-off for the iterating task instead of being queued. That is the price of handing over one element at a time. On Linux the hand-off is the most scheduling-sensitive number: ~16 µs per event in this run, ~11 µs in an earlier run on the same CPU model.
+- A default deadline adds ~12 µs and 19 allocations to a call on macOS (~56 µs and 20 on Linux): grpc-swift runs every call it bounds in a task group next to a timer task. That is the client's share alone; the in-process server never sees the deadline.
 - These benchmarks allocate on several concurrent tasks, so their counts depend on scheduling. On the 4-vCPU Linux runner a lazy read's count per iteration spreads over about 10% (each element either finds the consumer waiting or suspends in the hand-off), so its Linux `Malloc` is a median of two modes. Bencher records them without a threshold (see [History on Bencher](#history-on-bencher)).
 
 ---
@@ -177,10 +188,10 @@ Measured on 2026-10-25 on the commit that added them: macOS on the machine above
 | Read response, per event | ~3.2 µs | ~3.0 µs | 9 | Bytes to `ReadResponse` |
 | Model decoding, per event | ~2.4 µs | ~1.8 µs | 12 | `RecordedEvent.decode(to:)` |
 | Connection string parsing | 9–20 µs | 9–18 µs | 11–29 | Parse once, reuse the result |
-| Client call, fixed | 54 µs | 115 µs | 108 | In-process; gRPC alone: 46 µs (100 µs on Linux) |
-| Buffered read, per event | ~7.0 µs | ~8.5 µs | 15 | gRPC alone: ~4.8 µs and 14 on macOS |
-| Lazy read, per event | ~9.9 µs | ~19.6 µs | 17 | The hand-off per element; memory stays bounded |
-| Default deadline, per call | +20 µs | +54 µs | +34 | grpc-swift's timer task |
+| Client call, one event | ~58 µs | ~137 µs | 110 | In-process; gRPC alone: ~52 µs (~121 µs on Linux) |
+| Buffered read, per event | ~6.6 µs | ~9.7 µs | 15 | gRPC alone: ~4.6 µs and 14 on macOS |
+| Lazy read, per event | ~9.0 µs | ~26 µs | 17 | The hand-off per element; scheduling-sensitive on Linux |
+| Default deadline, per call | +12 µs | +56 µs | +19 | grpc-swift's timer task, client side |
 
 ---
 
