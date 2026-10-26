@@ -48,6 +48,9 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+      # The checkout is owned by the runner's user and the container runs as root, so git
+      # refuses the repository ("dubious ownership") until it is marked safe.
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       # A release tag locks the catalog and README into /X.Y/ and the site root for good, so a
       # tag whose documentation is not ready fails here instead of publishing a stale "latest".
