@@ -53,6 +53,14 @@ struct StatisticsTests {
         #expect(abs(log(e.upper) - (2 + half)) < 1e-9)
     }
 
+    /// Spec: meets when the upper bound ≤ 1.2, misses when the lower bound > 1.2.
+    @Test func verdictBoundaryAtTheTargetIsInclusiveForMeets() {
+        #expect(verdict(for: RatioEstimate(point: 1.1, lower: 1.0, upper: 1.2, rounds: 5), minimumRounds: 5) == .meets)
+        #expect(verdict(for: RatioEstimate(point: 1.25, lower: 1.2, upper: 1.3, rounds: 5), minimumRounds: 5) == .inconclusive)
+        #expect(verdict(for: RatioEstimate(point: 1.3, lower: 1.2000001, upper: 1.4, rounds: 5), minimumRounds: 5) == .misses)
+        #expect(verdict(for: RatioEstimate(point: 1.1, lower: 1.0, upper: 1.2, rounds: 4), minimumRounds: 5) == .insufficientRounds)
+    }
+
     @Test func criticalValueTable() {
         #expect(studentT975(degreesOfFreedom: 1) == 12.706)
         #expect(studentT975(degreesOfFreedom: 30) == 2.042)

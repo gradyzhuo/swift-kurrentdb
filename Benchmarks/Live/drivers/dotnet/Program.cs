@@ -84,7 +84,8 @@ static int VersionCommand()
 }
 
 /// The harness floor: the same open loop with an operation that returns immediately, after a warmup window at the same
-/// rate (the JIT compiles the loop during warmup, as in a trial). Prints one JSON line.
+/// rate (the JIT compiles the loop during warmup, as in a trial). Prints one JSON line with the fields of Swift's
+/// `HarnessFloor` (the Swift driver's `floor` prints the same object; the orchestrator runs both at cell start).
 static async Task<int> FloorCommand(Dictionary<string, string> options)
 {
     double rate = double.Parse(Required(options, "rate"), System.Globalization.CultureInfo.InvariantCulture);
@@ -107,6 +108,7 @@ static async Task<int> FloorCommand(Dictionary<string, string> options)
         p999Micros = r.Histogram.GetValueAtPercentile(99.9),
         maxMicros = r.Histogram.GetValueAtPercentile(100),
         cpuSeconds = (after.User - before.User) + (after.System - before.System),
+        maxRssBytes = after.MaxRss,
         runtime = RuntimeInformation.FrameworkDescription,
     }, Json.Options));
     return 0;

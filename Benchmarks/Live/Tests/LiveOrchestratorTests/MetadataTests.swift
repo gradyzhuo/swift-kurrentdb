@@ -70,7 +70,7 @@ struct MetadataTests {
     @Test func redactionKeepsJsonValidAroundBackslashes() throws {
         var record = TrialRecord(round: 0, rate: 1, driver: "swift")
         record.error = #"path C:\/Users/alice/x and "quoted" \home"#
-        record.headroom = HeadroomSample(coreBusy: [.nan], diskAwaitMillis: .infinity, diskQueueDepth: 0, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 0)
+        record.headroom = HeadroomSample(coreBusy: [.nan], diskAwaitMillis: .infinity, diskQueueDepth: 0, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 0, projectionCatchUpSeconds: nil)
         let scrubbed = try HostRedaction.scrubbing(record)
         // The decoded string is scrubbed, not the JSON text, so no stray `\~` escape can appear.
         #expect(scrubbed.error == #"path C:~/x and "quoted" \home"#)
@@ -86,6 +86,22 @@ struct MetadataTests {
         let merged = fromDrivers.filling(from: collected)
         #expect(merged.swiftToolchain == "swift 6.2")
         #expect(merged.cpuModel == "cpu")
+    }
+
+    /// The Swift driver's `runtime` is only the language mode ("swift 6.4"); the toolchain is the full first line of
+    /// `swift --version` from the environment. The .NET driver's runtime (the loaded framework) is kept.
+    @Test func swiftToolchainIsTheFullVersionLineNotTheDriversRuntime() {
+        let fromDrivers = RunMetadata.fromDrivers([
+            DriverVersion(client: "swift", clientVersion: "abc123", runtime: "swift 6.4"),
+            DriverVersion(client: "dotnet", clientVersion: "1.6.0", runtime: ".NET 8.0.11"),
+        ])
+        #expect(fromDrivers.sdkCommit == "abc123")
+        #expect(fromDrivers.swiftToolchain == nil)
+        #expect(fromDrivers.kurrentDBClientVersion == "1.6.0" && fromDrivers.dotnetRuntime == ".NET 8.0.11")
+        #expect(fromDrivers.clients?.count == 2)
+        var collected = RunMetadata()
+        collected.swiftToolchain = "Swift version 6.4 (swift-6.4-RELEASE)"
+        #expect(fromDrivers.filling(from: collected).swiftToolchain == "Swift version 6.4 (swift-6.4-RELEASE)")
     }
 
     @Test func redactionRemovesHomesAndPrivateAddresses() {

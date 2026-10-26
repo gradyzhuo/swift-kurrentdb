@@ -23,20 +23,22 @@ private func elapsedSeconds(since start: ContinuousClock.Instant) -> Double {
 @Suite("OpenLoop", .serialized)
 struct OpenLoopTests {
     @Test func stalledOperationDelaysAreMeasuredFromSchedule() async {
-        // 100 ops/s for 0.5 s; op #2 stalls 200 ms. Later ops must still be scheduled on time.
+        // 100 ops/s for 0.5 s; op #2 stalls 1 s. Later ops must still be scheduled on time. The deadline and drain are
+        // far above anything a loaded host adds (the drain ends as soon as everything is accounted for), and op #3's
+        // bound is far below the stall, so host load cannot flip either check.
         let started = Mutex<[Int: ContinuousClock.Instant]>([:])
         let t0 = ContinuousClock.now
-        let r = await runOpenLoop(.init(rate: 100, duration: .milliseconds(500), inFlightCap: 256, deadline: .seconds(1), drain: .milliseconds(300))) { i in
+        let r = await runOpenLoop(.init(rate: 100, duration: .milliseconds(500), inFlightCap: 256, deadline: .seconds(5), drain: .seconds(5))) { i in
             started.withLock { $0[i] = .now }
-            if i == 2 { try await Task.sleep(for: .milliseconds(200)) }
+            if i == 2 { try await Task.sleep(for: .seconds(1)) }
         }
         #expect(r.scheduled == 50)
         #expect(r.succeeded == 50)
-        #expect(r.histogram.valueAtPercentile(100) >= 200_000)
+        #expect(r.histogram.valueAtPercentile(100) >= 1_000_000)
         expectAccounted(r)
-        // Op #3 is due at 30 ms; it must not wait behind op #2's 200 ms stall (generous slack for loaded CI).
+        // Op #3 is due at 30 ms; it must not wait behind op #2's 1 s stall.
         let op3 = started.withLock { $0[3] }
-        #expect(op3.map { t0.duration(to: $0) < .milliseconds(180) } == true)
+        #expect(op3.map { t0.duration(to: $0) < .milliseconds(700) } == true)
     }
 
     @Test func capProducesDropsNotBackpressure() async {

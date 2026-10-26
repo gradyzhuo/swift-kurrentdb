@@ -39,19 +39,26 @@ struct EvaluationTests {
         #expect(!isSustained(recorder(ok: 10), targetRate: 10, measuredSeconds: .nan, backlogGrew: false))
     }
 
-    private func sample(cores: [Double] = [0.5], disk: Double = 1, queue: Double = 0.2, start: Int64 = 0, end: Int64 = 0, written: Int64 = 1000) -> HeadroomSample {
-        .init(coreBusy: cores, diskAwaitMillis: disk, diskQueueDepth: queue, projectionBufferedStart: start, projectionBufferedEnd: end, eventsWritten: written)
+    private func sample(cores: [Double] = [0.5], disk: Double = 1, queue: Double = 0.2, start: Int64 = 0, end: Int64 = 0, written: Int64 = 1000, catchUp: Double? = 0.4) -> HeadroomSample {
+        .init(coreBusy: cores, diskAwaitMillis: disk, diskQueueDepth: queue, projectionBufferedStart: start, projectionBufferedEnd: end, eventsWritten: written, projectionCatchUpSeconds: catchUp)
     }
 
     @Test func singleSaturatedCoreFailsHeadroom() {
-        #expect(!hasHeadroom(.init(coreBusy: [0.95, 0.30], diskAwaitMillis: 1, diskQueueDepth: 0.2, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 1000)))
+        #expect(!hasHeadroom(sample(cores: [0.95, 0.30])))
     }
 
     @Test func headroomBoundariesAreInclusive() {
-        #expect(hasHeadroom(sample(cores: [0.85, 0.1], disk: 20, queue: 4, start: 5, end: 15, written: 1000)))
+        #expect(hasHeadroom(sample(cores: [0.85, 0.1], disk: 20, queue: 4, catchUp: 5)))
         #expect(!hasHeadroom(sample(disk: 20.1)))
         #expect(!hasHeadroom(sample(queue: 4.1)))
-        #expect(!hasHeadroom(sample(start: 5, end: 16, written: 1000)))
+        #expect(!hasHeadroom(sample(catchUp: 5.01)))
+    }
+
+    /// The projection gate is the catch-up after the window, not `bufferedEvents`: that is `$by_category`'s read-ahead
+    /// queue (bounded by its pending-events threshold), not its lag behind the log.
+    @Test func projectionGateIsTheCatchUpAfterTheWindowNotTheBuffer() {
+        #expect(hasHeadroom(sample(start: 0, end: 4_000, written: 1000, catchUp: 1.5)))
+        #expect(!hasHeadroom(sample(start: 0, end: 0, catchUp: nil)))
     }
 
     @Test func emptyCoreMeasurementHasNoHeadroom() {

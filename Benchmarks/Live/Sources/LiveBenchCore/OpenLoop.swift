@@ -235,7 +235,8 @@ private final class OpenLoopLedger: Sendable {
 }
 
 extension Duration {
-    fileprivate var totalNanoseconds: Int64 {
+    /// The duration in whole nanoseconds.
+    public var totalNanoseconds: Int64 {
         let (seconds, attoseconds) = components
         return seconds * 1_000_000_000 + attoseconds / 1_000_000_000
     }

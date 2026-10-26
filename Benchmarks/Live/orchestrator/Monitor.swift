@@ -1,6 +1,8 @@
 import Foundation
-import KurrentDB
 import LiveBenchCore
+#if canImport(Glibc)
+import Glibc
+#endif
 
 /// Per-core CPU counters from `/proc/stat`.
 struct ProcStat {
@@ -47,11 +49,67 @@ struct DiskStats {
     }
 }
 
-/// Samples the server's pinned cores, its disk and the `$by_category` backlog over one trial's measure window.
+/// The block device the monitor reads in `/proc/diskstats`, found by device number. A file system's name is no help:
+/// `df` names the root file system of a GitHub-hosted runner `/dev/root`, which `/proc/diskstats` does not list, but
+/// `stat`'s `st_dev` (major:minor) is the line's first two columns. The partition's own line is used (the kernel keeps
+/// every counter the monitor reads for partitions too), so the figures are those of the file system holding the data.
+enum DiskDevice {
+    struct Number: Equatable, Sendable {
+        var major: UInt64
+        var minor: UInt64
+    }
+
+    /// Linux `dev_t` → major:minor (glibc's `gnu_dev_major`/`gnu_dev_minor`: minor in bits 0-7 and 20-43, major in
+    /// bits 8-19 and 44-63).
+    static func split(_ dev: UInt64) -> Number {
+        Number(major: ((dev >> 8) & 0xfff) | ((dev >> 32) & 0xffff_f000), minor: (dev & 0xff) | ((dev >> 12) & 0xffff_ff00))
+    }
+
+    /// The name of the `/proc/diskstats` line with this major and minor; nil when there is none.
+    static func name(of number: Number, diskStats text: String) -> String? {
+        for line in text.split(separator: "\n") {
+            let fields = line.split(separator: " ", omittingEmptySubsequences: true)
+            guard fields.count >= 3, UInt64(fields[0]) == number.major, UInt64(fields[1]) == number.minor else { continue }
+            return String(fields[2])
+        }
+        return nil
+    }
+
+    /// The device holding `directory` (created if missing), resolved through `/proc/diskstats`. Linux only; nil elsewhere
+    /// or when it cannot be resolved.
+    static func holding(_ directory: URL) -> String? {
+        #if os(Linux)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        var info = stat()
+        guard stat(directory.path, &info) == 0, let text = try? String(contentsOfFile: "/proc/diskstats", encoding: .utf8) else { return nil }
+        return name(of: split(UInt64(info.st_dev)), diskStats: text)
+        #else
+        return nil
+        #endif
+    }
+}
+
+/// Why the monitor cannot measure on this machine (`Monitor.checkReadable`).
+struct MonitorError: Error, CustomStringConvertible {
+    var description: String
+}
+
+/// `$by_category`'s progress after a measure window (`Monitor`'s `readProjectionCatchUp`).
+enum ProjectionCatchUp: Sendable, Equatable {
+    /// It had processed the last event written by the window's end this many seconds after it.
+    case caughtUp(seconds: Double)
+    /// It had not within the bound.
+    case notCaughtUp
+    /// Its position (or the log's) could not be read: no measurement.
+    case unreadable
+}
+
+/// Samples the server's pinned cores, its disk and the `$by_category` projection over one trial's measure window.
 ///
 /// `stop` returns nil when the headroom could not be measured (no `/proc`, as on macOS, a core or the device missing
 /// from it, fewer than two readings, or the projection unreadable). That is not the same as saturation, where
-/// `hasHeadroom` is false; callers record "unavailable" for nil.
+/// `hasHeadroom` is false; callers record "unavailable" for nil. After the window `stop` also waits (up to
+/// `EvaluationThresholds.maxProjectionCatchUpSeconds`) for `$by_category` to process the last event written by then.
 ///
 /// Every `interval` the counters are read and the deltas of that interval are added up; an interval in which any
 /// counter went backwards (reset, device re-plugged) is dropped. Core busy is Σ Δbusy / Σ Δtotal, disk await is
@@ -63,6 +121,7 @@ actor Monitor {
     private let readProcStat: @Sendable () async -> String?
     private let readDiskStats: @Sendable () async -> String?
     private let readBuffered: @Sendable () async -> Int64?
+    private let readProjectionCatchUp: @Sendable (_ bound: Duration) async -> ProjectionCatchUp
     private let wallClockMillis: @Sendable () -> Double
 
     private struct Reading {
@@ -82,22 +141,15 @@ actor Monitor {
     private var bufferedStart: Int64?
     private var loop: Task<Void, Never>?
 
-    /// `device` is the block device (or partition) backing the Docker data directory; see `Budget` for how to find it.
-    init(cores: [Int], device: String, client: KurrentDBClient, interval: Duration = .seconds(1)) {
-        self.init(
-            cores: cores, device: device, interval: interval,
-            readProcStat: { try? String(contentsOfFile: "/proc/stat", encoding: .utf8) },
-            readDiskStats: { try? String(contentsOfFile: "/proc/diskstats", encoding: .utf8) },
-            readBuffered: { try? await client.projections(system: .byCategory).detail()?.bufferedEvents }
-        )
-    }
-
-    /// Everything injectable, for tests. A nil `interval` runs no loop: call `sample()` by hand.
+    /// `device` is the `/proc/diskstats` name of the device holding the server's data (`DiskDevice.holding`);
+    /// `readBuffered` reads `$by_category`'s `bufferedEvents`, `readProjectionCatchUp` waits up to its bound for the
+    /// projection to process the last event written so far. A nil `interval` runs no loop: call `sample()` by hand.
     init(
         cores: [Int], device: String, interval: Duration?,
         readProcStat: @escaping @Sendable () async -> String?,
         readDiskStats: @escaping @Sendable () async -> String?,
         readBuffered: @escaping @Sendable () async -> Int64?,
+        readProjectionCatchUp: @escaping @Sendable (_ bound: Duration) async -> ProjectionCatchUp,
         wallClockMillis: @escaping @Sendable () -> Double = Monitor.monotonicMillis
     ) {
         self.cores = cores
@@ -106,7 +158,23 @@ actor Monitor {
         self.readProcStat = readProcStat
         self.readDiskStats = readDiskStats
         self.readBuffered = readBuffered
+        self.readProjectionCatchUp = readProjectionCatchUp
         self.wallClockMillis = wallClockMillis
+    }
+
+    /// Fails unless one reading has every pinned core in `/proc/stat` and the device in `/proc/diskstats`: run at cell
+    /// start on Linux, where a monitor that can never measure would leave every step without a comparison.
+    func checkReadable() async throws {
+        guard let statText = await readProcStat() else { throw MonitorError(description: "/proc/stat is unreadable") }
+        guard let diskText = await readDiskStats() else { throw MonitorError(description: "/proc/diskstats is unreadable") }
+        let cpu = ProcStat.parse(statText)
+        let missing = cores.filter { cpu[$0] == nil }
+        guard missing.isEmpty else {
+            throw MonitorError(description: "/proc/stat has no line for server core(s) \(missing.map(String.init).joined(separator: ", "))")
+        }
+        guard DiskStats.parse(diskText, device: device) != nil else {
+            throw MonitorError(description: "/proc/diskstats has no readable line for device '\(device)'")
+        }
     }
 
     static let monotonicMillis: @Sendable () -> Double = {
@@ -167,16 +235,18 @@ actor Monitor {
         intervals += 1
     }
 
-    /// Final reading and projection backlog. `eventsWritten` is what the caller's driver wrote in the window (for the
-    /// buffered-growth allowance). Nil when headroom could not be measured (see the type's documentation).
+    /// Final reading, then the projection's catch-up to the last event written by now. `eventsWritten` is what the
+    /// caller's driver wrote in the window (recorded with the sample). Nil when headroom could not be measured (see the
+    /// type's documentation).
     func stop(eventsWritten: Int64) async -> HeadroomSample? {
         loop?.cancel()
         await loop?.value
         loop = nil
         await sample()
         let bufferedEnd = await readBuffered()
+        let catchUp = await readProjectionCatchUp(.seconds(EvaluationThresholds.maxProjectionCatchUpSeconds))
         defer { reset() }
-        guard intervals > 0, wall > 0, let bufferedStart, let bufferedEnd else { return nil }
+        guard intervals > 0, wall > 0, let bufferedStart, let bufferedEnd, catchUp != .unreadable else { return nil }
         var coreBusy: [Double] = []
         for core in cores {
             guard let t = total[core], t > 0 else { return nil }
@@ -188,7 +258,8 @@ actor Monitor {
             diskQueueDepth: Double(weighted) / wall,
             projectionBufferedStart: bufferedStart,
             projectionBufferedEnd: bufferedEnd,
-            eventsWritten: eventsWritten
+            eventsWritten: eventsWritten,
+            projectionCatchUpSeconds: { if case let .caughtUp(seconds) = catchUp { seconds } else { nil } }()
         )
     }
 

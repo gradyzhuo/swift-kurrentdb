@@ -7,20 +7,23 @@ enum ReportFixture {
     /// Headroom well inside every gate.
     static let roomy = HeadroomSample(
         coreBusy: [0.4, 0.5], diskAwaitMillis: 1, diskQueueDepth: 0.5,
-        projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 15_000
+        projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 15_000, projectionCatchUpSeconds: 0.5
     )
     /// One server core above the 85% gate.
     static let saturated = HeadroomSample(
         coreBusy: [0.97, 0.6], diskAwaitMillis: 1, diskQueueDepth: 0.5,
-        projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 30_000
+        projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: 30_000, projectionCatchUpSeconds: 0.5
     )
 
     /// One trial: `scheduled = rate * 60`, `lost` of them timed out, the successes split 90/10 between `fast` and
-    /// `slow` microseconds. CPU and RSS scale with `cost`.
+    /// `slow` microseconds. CPU and RSS scale with `cost`. Persistent subscription: `acked` is the server's acknowledged
+    /// progress after the drain (default: everything written), `ackedAtWindowEnd` the checkpoint at the window end
+    /// (default: one second of events behind `acked`).
     static func trial(
         round: Int, rate: Double, driver: String, kind: ScenarioKind = .appendLatency,
         fast: UInt64, slow: UInt64, lost: Int = 0, failedAll: Bool = false, cost: Double = 1,
-        headroom: HeadroomSample? = roomy, acked: Int64? = nil, delivered: Int? = nil, error: String? = nil
+        headroom: HeadroomSample? = roomy, acked: Int64? = nil, ackedAtWindowEnd: Int64? = nil, delivered: Int? = nil,
+        redeliveries: Int = 0, error: String? = nil
     ) -> TrialRecord {
         let scheduled = Int(rate * 60)
         let succeeded = failedAll ? 0 : scheduled - lost
@@ -39,7 +42,7 @@ enum ReportFixture {
             maxRssBytes: driver == "ghz" ? 0 : UInt64(60_000_000 * cost),
             ackEnqueued: kind == .persistentSubscription ? succeeded : nil,
             uniqueDeliveries: subscription ? (delivered ?? succeeded) : nil,
-            redeliveries: subscription ? 0 : nil,
+            redeliveries: subscription ? redeliveries : nil,
             catchUpSeconds: kind == .catchUp ? 40 * cost : nil,
             validation: Validation(
                 expectedEvents: subscription ? scheduled : succeeded,
@@ -52,6 +55,7 @@ enum ReportFixture {
         record.histogram = HistogramFile(buckets: buckets)
         record.headroom = driver == "ghz" ? nil : headroom
         record.serverAckedProgress = kind == .persistentSubscription ? (acked ?? Int64(scheduled)) : nil
+        record.serverAckedAtWindowEnd = kind == .persistentSubscription ? (ackedAtWindowEnd ?? ((acked ?? Int64(scheduled)) - Int64(rate))) : nil
         record.error = error
         return record
     }
@@ -74,6 +78,22 @@ enum ReportFixture {
             rates: rates, rounds: rounds, warmupSeconds: 30, measureSeconds: 60, drainSeconds: 5,
             inFlightCap: 256, deadlineMillis: 5000, seed: 42, smoke: false
         )
+        struct Floor { var driver: String; var p50: UInt64; var p99: UInt64; var cpu: Double; var rss: UInt64; var runtime: String }
+        let floors = [
+            Floor(driver: "swift", p50: 7, p99: 241, cpu: 0.05, rss: 9_000_000, runtime: "swift 6.4"),
+            Floor(driver: "dotnet", p50: 5, p99: 111, cpu: 0.4, rss: 41_000_000, runtime: ".NET 8.0.11"),
+        ]
+        var runs: [HarnessFloorRun] = []
+        for rate in rates {
+            for f in floors {
+                let floor = HarnessFloor(
+                    rate: rate, seconds: 5, scheduled: Int(rate * 5), succeeded: Int(rate * 5), p50Micros: f.p50, p99Micros: f.p99,
+                    p999Micros: f.p99 * 2, maxMicros: f.p99 * 4, cpuSeconds: f.cpu, maxRssBytes: f.rss, runtime: f.runtime
+                )
+                runs.append(HarnessFloorRun(driver: f.driver, rate: rate, floor: floor))
+            }
+        }
+        metadata.harnessFloors = runs
         return metadata
     }
 
@@ -165,7 +185,8 @@ extension CellResult {
                 round: round, rate: rate, driver: driver, kind: .persistentSubscription,
                 fast: UInt64(2000 * w), slow: UInt64(6000 * w), cost: driver == "dotnet" ? 1.8 * w : w,
                 acked: driver == "dotnet" && rate == 4000 ? scheduled - 1200 : scheduled,
-                delivered: driver == "dotnet" && rate == 4000 ? Int(scheduled) - 30 : nil
+                delivered: driver == "dotnet" && rate == 4000 ? Int(scheduled) - 30 : nil,
+                redeliveries: driver == "dotnet" && rate == 4000 ? 17 : 0
             )
         }
         var failed = TrialRecord(round: 4, rate: 250, driver: "dotnet")
