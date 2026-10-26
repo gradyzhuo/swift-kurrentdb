@@ -172,6 +172,11 @@ These close the gaps that would make percentiles or parity misleading.
   thresholds are the builder's, but fixed before the first published run). Latency
   from a step that is not sustained is never used in a headline comparison; where it is
   shown, its upper percentiles are marked as censored.
+- **Percentiles are ranked over all scheduled attempts**, not over successes only.
+  A failed, dropped or timed-out attempt counts as a latency of +∞ (worse than the
+  deadline). Any percentile that lands among those attempts is reported as
+  "> deadline" (censored) rather than as a number, on sustained steps too, so a
+  permitted 0.1% loss cannot flatter p99.9.
 - **Server headroom.** The orchestrator records, per step, server CPU per core (so a
   single saturated core is visible), disk latency and queue depth, disk usage, and
   `$by_category` projection backlog. Any of them crossing its limit fails the headroom
@@ -180,12 +185,13 @@ These close the gaps that would make percentiles or parity misleading.
   shown, but no SDK conclusion is drawn from it. Parity is judged only at steps both
   clients sustain with server headroom, so a saturated server cannot manufacture parity.
 - **Equivalent starting state for every trial.**
-  - Every client trial starts from the same seeded state: writes from earlier trials
-    go to their own streams/categories and are never read by later trials, and the
-    server is restarted (or its caches otherwise conditioned the same way) before
-    each trial, so no client inherits another's warm cache. The builder picks the
-    cheapest mechanism that guarantees this, for example restoring a snapshot of the
-    seeded data directory.
+  - Every client trial starts from the identical seeded database: the server is
+    stopped, its data directory is restored from a snapshot taken right after seeding,
+    and it is started again. Writes and index state from earlier trials therefore never
+    carry over.
+  - The same cache-conditioning procedure runs before every trial: after the restore,
+    drop the OS page cache (`sync; echo 3 | sudo tee /proc/sys/vm/drop_caches`), start
+    the server, then run the trial's warmup. No client inherits another's warm cache.
   - Warmup uses separate streams/categories from the measured data, so it cannot consume
     or pre-cache the measured corpus (notably the 1M-event catch-up corpus).
   - Each persistent subscription trial creates a fresh group; checkpoints never carry
