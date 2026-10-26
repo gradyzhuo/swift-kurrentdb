@@ -46,7 +46,12 @@ let package = Package(
         ),
         .testTarget(
             name: "LiveOrchestratorTests",
-            dependencies: ["LiveOrchestrator", "LiveBenchCore"],
+            dependencies: [
+                "LiveOrchestrator",
+                "LiveBenchCore",
+                // The driver harness prepares server state (seeding, groups, projections) with the SDK directly.
+                .product(name: "KurrentDB", package: "swift-kurrentdb"),
+            ],
             path: "Tests/LiveOrchestratorTests"
         ),
     ]
