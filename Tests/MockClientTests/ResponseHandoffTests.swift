@@ -145,6 +145,23 @@ struct ResponseHandoffTests {
         #expect(probe.count == 1)
     }
 
+    @Test("Streams sharing a hold keep the hand-off open until the last of them is released")
+    func sharedHoldOutlivesSiblings() async throws {
+        let probe = TerminationProbe()
+        let handoff = ResponseHandoff<Int>(onTermination: { probe.record($0) })
+        let kept: AsyncThrowingStream<Int, any Error> = {
+            let hold = handoff.hold()
+            _ = handoff.makeStream(hold: hold) { $0 }   // a sibling, released at once
+            return handoff.makeStream(hold: hold) { $0 }
+        }()
+        #expect(probe.count == 0)   // the sibling's release did not cancel the hand-off
+        let producer = Task { try await handoff.send(1); handoff.finish() }
+        var received: [Int] = []
+        for try await value in kept { received.append(value) }
+        try await producer.value
+        #expect(received == [1])
+    }
+
     @Test("Cancelling the consumer task cancels the hand-off and the consumer ends cleanly")
     func consumerTaskCancellation() async throws {
         let probe = TerminationProbe()

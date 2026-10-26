@@ -68,6 +68,10 @@ for try await result in subscription.events {
 
 ## What's new
 
+### 2.7
+
+- **Subscription notifications.** ``Streams/Subscription/messages`` delivers the server's `caughtUp`, `fellBehind` (KurrentDB 26.2.2+) and (for a filtered `$all` subscription) `checkpoint` notifications next to the events, as a ``Streams/Subscription/Message``, so a read model can tell when it is current and a filtered subscription can store a resume position while nothing matches. `events` is unchanged. See <doc:Reading-events>.
+
 ### 2.6
 
 - **Stream metadata the server applies.** `setMetadata` wrote `maxAge` and `cacheControl` as Swift `Duration` arrays, and ``StreamMetadata/Acl/userStream`` and ``StreamMetadata/Acl/systemStream`` as an `$acl` string. The server ignores the whole metadata object for either, so the `$maxCount`, `$tb` and `$acl` written with them were never enforced: the stream fell back to the server's default ACL, which under the default `$settings` lets every user read it. Durations are now whole seconds, `.userStream` writes no `$acl` (the server's `$userStreamAcl` default), and `.systemStream` writes `$admins` for every permission; a value the server cannot apply throws `encodingError`. `getMetadata` reads both formats, and a role written as a single string. **Upgrade note:** metadata that 2.6.1 or earlier wrote with `maxAge`, `cacheControl`, `.userStream` or `.systemStream` stays ignored by the server until it is written again. Once written with 2.6.2, `.userStream` reads back with no ACL and `.systemStream` as `.stream(_:)`; the old strings still read as `.userStream` and `.systemStream`. See <doc:Appending-events> (2.6.2).

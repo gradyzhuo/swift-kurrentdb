@@ -208,6 +208,7 @@ extension Streams.Subscribe {
 
                 $0.resolveLinks = resolveLinksEnabled
                 $0.subscription = .init()
+                $0.controlOption = .with { $0.compatibility = Streams.Subscription.compatibility }
                 $0.readDirection = .forwards
             }
         }
@@ -232,27 +233,18 @@ extension Streams.Subscription where Target: SpecifiedStreamTarget {
         }
 
         let streamName = stream.name
-        let events = messages.makeStream(mapError: serverExceptionOrOriginal) { message -> ReadEvent? in
-            switch message.content {
-            case let .event(value):
-                let readEvent = try ReadEvent(message: value)
-                // The stream's own tombstone marker (not one reached through a link): nothing
-                // follows it, so the subscription ends with the error a read of a tombstoned
-                // stream throws, and the marker itself is not delivered.
-                if readEvent.link == nil, readEvent.record.eventType == Self.streamDeletedEventType, readEvent.record.streamIdentifier.name == streamName {
-                    throw KurrentError.resourceDeleted(resource: streamName)
-                }
-                return readEvent
-            case .caughtUp:
-                logger.debug("[Streams.Subscribe] Subscription caught up with the stream.")
-                return nil
-            case let content?:
-                logger.debug("[Streams.Subscribe] Received non-event subscription message: \(content)")
-                return nil
-            case nil:
-                return nil
+        self.init(handoff: messages, subscriptionId: confirmation.subscriptionID) { response in
+            guard case let .event(value) = response.content else {
+                return Self.notification(response.content, usage: "Streams.Subscribe")
             }
+            let readEvent = try ReadEvent(message: value)
+            // The stream's own tombstone marker (not one reached through a link): nothing
+            // follows it, so the subscription ends with the error a read of a tombstoned
+            // stream throws, and the marker itself is not delivered.
+            if readEvent.link == nil, readEvent.record.eventType == Self.streamDeletedEventType, readEvent.record.streamIdentifier.name == streamName {
+                throw KurrentError.resourceDeleted(resource: streamName)
+            }
+            return .event(readEvent)
         }
-        self.init(events: events, subscriptionId: confirmation.subscriptionID, messages: messages)
     }
 }
