@@ -38,7 +38,8 @@ enum Client: CustomStringConvertible, Sendable {
     }
 }
 
-/// Builds the .NET driver in Release once per test process (`dotnet` from `PATH`).
+/// Builds the .NET driver in Release once per test process (`dotnet` from `PATH`), in locked restore mode so a
+/// dependency that drifts from `packages.lock.json` fails the build.
 enum DotNetDriverBuild {
     static let projectDirectory = livePackageDirectory.appendingPathComponent("drivers/dotnet")
     static let dllPath = projectDirectory.appendingPathComponent("bin/Release/net8.0/LiveDriver.DotNet.dll")
@@ -48,7 +49,7 @@ enum DotNetDriverBuild {
         try built.withLock { state in
             if state == nil {
                 do {
-                    try runTool("dotnet", ["build", projectDirectory.path, "-c", "Release", "-nologo", "-v", "q"])
+                    try runTool("dotnet", ["build", projectDirectory.path, "-c", "Release", "-p:RestoreLockedMode=true", "-nologo", "-v", "q"])
                     state = .success(dllPath)
                 } catch {
                     state = .failure(HarnessError("dotnet build of the .NET driver failed: \(error)"))
