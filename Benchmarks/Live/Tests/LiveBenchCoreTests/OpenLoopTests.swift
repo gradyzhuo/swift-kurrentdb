@@ -98,6 +98,11 @@ struct OpenLoopTests {
         }
         #expect(r.timedOut == 1)
         #expect(r.failed == 0) // the late CancellationError must not be recorded a second time
+        // The op's catch runs a few task hops after runOpenLoop returns; poll for up to 1 s.
+        let t0 = ContinuousClock.now
+        while !sawCancellation.withLock({ $0 }), t0.duration(to: .now) < .seconds(1) {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
         #expect(sawCancellation.withLock { $0 })
         expectAccounted(r)
     }
@@ -115,11 +120,57 @@ struct OpenLoopTests {
         expectAccounted(r)
     }
 
+    @Test func completionPastDeadlineIsATimeoutEvenIfTheDeadlineTimerHasNotFired() async {
+        // The clock's `now` jumps 10 s forward inside the operation, while its sleeps (and so the 1 s deadline timer)
+        // run in real time. The operation therefore completes 10 s after its scheduled instant before the deadline
+        // child can record anything. That is the race where a late completion could be recorded as a success.
+        let clock = SkewedClock()
+        let r = await runOpenLoop(.init(rate: 10, duration: .milliseconds(100), inFlightCap: 10, deadline: .seconds(1), drain: .seconds(2)), clock: clock) { _ in
+            clock.skip(.seconds(10))
+        }
+        #expect(r.scheduled == 1)
+        #expect(r.timedOut == 1)
+        #expect(r.succeeded == 0)
+        expectAccounted(r)
+    }
+
+    /// Harness floor: latency of a no-op operation, i.e. what the scheduler itself adds to every measurement.
+    /// Bounds are deliberately loose (debug build, loaded CI); the printed numbers are what to compare against the
+    /// .NET driver's floor. A release build on an Apple Silicon Mac measures p50 2-4 µs, p99 under 40 µs.
+    @Test(arguments: [1000.0, 8000.0])
+    func noOpCalibrationFloor(rate: Double) async {
+        let r = await runOpenLoop(.init(rate: rate, duration: .milliseconds(500), inFlightCap: 256, deadline: .seconds(5), drain: .seconds(1))) { _ in }
+        let p50 = r.histogram.valueAtPercentile(50)
+        let p99 = r.histogram.valueAtPercentile(99)
+        print("open-loop harness floor at \(Int(rate))/s: p50 \(p50) µs, p99 \(p99) µs over \(r.succeeded) no-op operations")
+        #expect(r.scheduled == Int(rate / 2))
+        #expect(r.succeeded == r.scheduled)
+        #expect(p50 < 2_000)
+        #expect(p99 < 20_000)
+        expectAccounted(r)
+    }
+
     @Test func fractionalScheduleCount() async {
         // 30 ops/s for 0.1 s: offsets 0, 33.3, 66.7 ms are before the end; 100 ms is not.
         let r = await runOpenLoop(.init(rate: 30, duration: .milliseconds(100), inFlightCap: 10, deadline: .seconds(1), drain: .milliseconds(200))) { _ in }
         #expect(r.scheduled == 3)
         #expect(r.succeeded == 3)
         expectAccounted(r)
+    }
+}
+
+/// A clock whose `now` can be pushed forward while its sleeps keep running in real time.
+private final class SkewedClock: Clock, Sendable {
+    typealias Instant = ContinuousClock.Instant
+    private let base = ContinuousClock()
+    private let skew = Mutex(Duration.zero)
+
+    var now: Instant { base.now.advanced(by: skew.withLock { $0 }) }
+    var minimumResolution: Duration { base.minimumResolution }
+
+    func skip(_ d: Duration) { skew.withLock { $0 += d } }
+
+    func sleep(until deadline: Instant, tolerance: Duration?) async throws {
+        try await base.sleep(until: deadline, tolerance: tolerance)
     }
 }
