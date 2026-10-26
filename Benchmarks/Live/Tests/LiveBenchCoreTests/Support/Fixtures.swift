@@ -26,7 +26,8 @@ extension EffectiveScenario {
         kind: ScenarioKind = .appendLatency,
         eventSize: Int = 300,
         rate: Double = 20,
-        measureSeconds: Double = 3
+        measureSeconds: Double = 3,
+        consumers: Int? = nil
     ) -> EffectiveScenario {
         EffectiveScenario(
             cellId: "fixture-\(kind.rawValue)-\(eventSize)",
@@ -38,6 +39,7 @@ extension EffectiveScenario {
             streamPrefix: "bench-fixture",
             category: "benchfixture",
             groupName: kind == .persistentSubscription ? "bench-group" : nil,
+            consumers: consumers,
             streamLength: kind == .rebuild ? 10 : nil,
             rebuildStreams: kind == .rebuild ? (0..<100).map { "bench-fixture-\($0)" } : nil,
             catchUpExpectedEvents: kind == .catchUp ? 1000 : nil,
