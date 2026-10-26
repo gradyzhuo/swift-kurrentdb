@@ -123,7 +123,7 @@ struct InProcessTransportProvider: TransportProvider {
 ///
 /// Requests reach the server without their `grpc-timeout` header. With it, the in-process server
 /// would run a deadline timer of its own in the measured process; a node runs that timer on its
-/// own machine.
+/// own machine. Dropping the header copies the request metadata of a call with a deadline.
 private struct InProcessConnection: ClientTransport {
     typealias Bytes = AnyClientTransport.Bytes
 
@@ -243,7 +243,10 @@ extension RPCRequestPart {
     fileprivate func forInProcessServer<Other: GRPCContiguousBytes>() -> RPCRequestPart<Other> {
         switch self {
         case var .metadata(metadata):
-            metadata.removeAllValues(forKey: "grpc-timeout")
+            // Removing copies the shared metadata, so only a call with a deadline pays for it.
+            if metadata.contains(where: { $0.key == "grpc-timeout" }) {
+                metadata.removeAllValues(forKey: "grpc-timeout")
+            }
             return .metadata(metadata)
         case let .message(bytes):
             return .message(bytes.converted())

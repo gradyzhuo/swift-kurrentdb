@@ -10,7 +10,8 @@ import KurrentDB
 // of encoding and decoding. Not covered here: HTTP/2 framing, sockets and the server's own work.
 //
 // The `GRPC/*` benchmarks make the same calls with the generated gRPC client alone, on the same
-// kind of in-process connection: `Client/*` minus `GRPC/*` is what the SDK adds to grpc-swift.
+// kind of in-process connection behind the same `AnyClientTransport`: `Client/*` minus `GRPC/*` is
+// what the SDK adds above that transport, whose own forwarding both include.
 
 private typealias StreamsService = EventStore_Client_Streams_Streams
 
@@ -142,8 +143,9 @@ private struct StreamFixture {
 }
 
 /// The generated gRPC client alone, on an in-process connection like the ones `StreamFixture`'s
-/// client opens: no node selection, no retry and no SDK types around the messages. Setup makes
-/// one call first and checks its result, as `StreamFixture` does.
+/// client opens and behind the same `AnyClientTransport`: no node selection, no retry and no SDK
+/// types around the messages. Setup makes one call first and checks its result, as
+/// `StreamFixture` does.
 private struct GRPCFixture {
     private let streams: StreamsService.Client<AnyClientTransport>
     private let appendRequest: [EventStore_Client_Streams_AppendReq]
