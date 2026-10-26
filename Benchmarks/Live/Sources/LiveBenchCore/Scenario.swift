@@ -23,8 +23,10 @@ public struct Cell: Codable, Sendable, Identifiable {
     public var tier: Tier
     public var rates: [Double]
     public var rounds: Int
+    /// Persistent-subscription consumers (RoundRobin); nil means 1.
+    public var consumers: Int?
 
-    public init(id: String, kind: ScenarioKind, eventSize: Int, tls: Bool, streamLength: Int?, tier: Tier, rates: [Double], rounds: Int) {
+    public init(id: String, kind: ScenarioKind, eventSize: Int, tls: Bool, streamLength: Int?, tier: Tier, rates: [Double], rounds: Int, consumers: Int? = nil) {
         self.id = id
         self.kind = kind
         self.eventSize = eventSize
@@ -33,6 +35,7 @@ public struct Cell: Codable, Sendable, Identifiable {
         self.tier = tier
         self.rates = rates
         self.rounds = rounds
+        self.consumers = consumers
     }
 }
 
@@ -47,6 +50,8 @@ public struct EffectiveScenario: Codable, Sendable {
     public var streamPrefix: String
     public var category: String
     public var groupName: String?
+    /// Persistent-subscription consumers (RoundRobin); nil means 1.
+    public var consumers: Int?
     public var streamLength: Int?
     public var rebuildStreams: [String]?
     public var catchUpExpectedEvents: Int?
@@ -60,7 +65,7 @@ public struct EffectiveScenario: Codable, Sendable {
 
     public init(
         cellId: String, kind: ScenarioKind, eventSize: Int, metadataSize: Int, batchSize: Int,
-        streamCount: Int, streamPrefix: String, category: String, groupName: String?,
+        streamCount: Int, streamPrefix: String, category: String, groupName: String?, consumers: Int? = nil,
         streamLength: Int?, rebuildStreams: [String]?, catchUpExpectedEvents: Int?,
         rate: Double, warmupSeconds: Double, measureSeconds: Double, drainSeconds: Double,
         deadlineMillis: Int, inFlightCap: Int, seed: UInt64
@@ -74,6 +79,7 @@ public struct EffectiveScenario: Codable, Sendable {
         self.streamPrefix = streamPrefix
         self.category = category
         self.groupName = groupName
+        self.consumers = consumers
         self.streamLength = streamLength
         self.rebuildStreams = rebuildStreams
         self.catchUpExpectedEvents = catchUpExpectedEvents

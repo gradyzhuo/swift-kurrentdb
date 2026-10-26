@@ -32,7 +32,7 @@
       "rounds": 5
     },
     {
-      "id": "persistent-subscription-300-tls",
+      "id": "persistent-300-tls",
       "kind": "persistentSubscription",
       "eventSize": 300,
       "tls": true,
@@ -137,7 +137,7 @@
       "rounds": 3
     },
     {
-      "id": "persistent-subscription-1024-tls",
+      "id": "persistent-1024-tls",
       "kind": "persistentSubscription",
       "eventSize": 1024,
       "tls": true,
@@ -198,7 +198,7 @@
       "rounds": 3
     },
     {
-      "id": "persistent-subscription-4096-tls",
+      "id": "persistent-4096-tls",
       "kind": "persistentSubscription",
       "eventSize": 4096,
       "tls": true,
@@ -259,7 +259,7 @@
       "rounds": 3
     },
     {
-      "id": "persistent-subscription-300-notls",
+      "id": "persistent-300-notls",
       "kind": "persistentSubscription",
       "eventSize": 300,
       "tls": false,
@@ -294,6 +294,19 @@
       ],
       "rounds": 3,
       "streamLength": 100
+    },
+    {
+      "id": "persistent-300-tls-c4",
+      "kind": "persistentSubscription",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        1000,
+        4000
+      ],
+      "rounds": 3,
+      "consumers": 4
     }
   ]
 }
