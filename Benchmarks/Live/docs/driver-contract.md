@@ -114,13 +114,18 @@ Every appended event has:
 - data of exactly `eventSize` bytes and metadata of exactly `metadataSize` bytes, built by the following function;
 - event index `k = i * batchSize + j` for event `j` (0-based) of operation `i`.
 
-`make(size, k, seed')` returns the ASCII bytes `{"i":<k>,"p":"` + `fillerCount` filler bytes + `"}`, where
-`<k>` is decimal, `fillerCount = size - len(prefix) - len(suffix)` (prefix `{"i":<k>,"p":"`, suffix `"}`; size is
-always large enough). Filler: `alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"` (62 bytes);
+`make(size, k, seed')` returns the ASCII bytes `{"i":<k>,"p":"` + `fillerCount` filler bytes + `"}`, where `<k>` is
+decimal and `fillerCount = size - len(prefix) - len(suffix)` (prefix `{"i":<k>,"p":"`, suffix `"}`; size is always large
+enough). The filler comes from a **pool of 1024 bodies** per payload kind, computed once before warmup:
+
+- `width = size - len("{\"i\":0,\"p\":\"") - len("\"}") = size - 13` (the filler length of a one-digit index, the
+  longest any index gets).
+- Pool entry `j` (`0 <= j < 1024`) is `width` bytes over
+  `alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"` (62 bytes):
 
 ```
-state = seed' XOR (k * 0xBF58476D1CE4E5B9)            (mod 2^64)
-repeat fillerCount times:
+state = seed' XOR (j * 0xBF58476D1CE4E5B9)            (mod 2^64)
+repeat width times:
     state = state + 0x9E3779B97F4A7C15                (mod 2^64)
     z = state
     z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9          (mod 2^64)
@@ -129,12 +134,16 @@ repeat fillerCount times:
     append alphabet[z % 62]
 ```
 
-Data uses `seed' = seed`; metadata uses `seed' = seed + 0x9E3779B97F4A7C15 (mod 2^64)`. Reference:
-`Sources/LiveBenchCore/Payload.swift`.
+- Event `k` uses entry `k % 1024`, **truncated to its first `fillerCount` bytes** (an index with more digits gets a
+  shorter filler, so every payload has exactly `size` bytes). Indices 1024 apart with the same number of digits share
+  their filler and differ only in `"i"`.
 
-Building these bytes (one splitmix64 step per filler byte) is harness work, not client work: a driver should build an
-operation's events before its due instant (the Swift driver prepares them on a background task about half a second
-ahead and builds inline only when that falls behind), so payload generation does not end up in the latency.
+Data uses `seed' = seed`; metadata uses `seed' = seed + 0x9E3779B97F4A7C15 (mod 2^64)`, each with its own pool. Reference:
+`Sources/LiveBenchCore/Payload.swift` (`PayloadTests.poolEntryIsTheSeededGenerator` restates the rule independently).
+
+Events are built **inline on the operation path** from the precomputed pools (a prefix, a slice and a suffix: two small
+copies). There is no look-ahead producer: generation is cheap enough to be part of the client's operation, and the
+same for every client.
 
 1. Operation *i* (0-based) is **due at `start + i / rate`**. Operations are scheduled only while the due instant is before
    `start + duration`. Nothing new is scheduled after that.
@@ -176,7 +185,7 @@ them against `scheduled`. A percentile whose rank falls among non-successes is r
 |---|---|---|
 | `appendLatency` | append of `batchSize` (1) event(s) to a stream picked uniformly with the seeded RNG | append acknowledged |
 | `appendThroughput` | append of `batchSize` (50) events in one call to one stream | append acknowledged |
-| `rebuild` | read of one whole stream (picked from `rebuildStreams`, seeded) forward from the start, decoding every event | all `streamLength` events decoded |
+| `rebuild` | read of one whole stream (picked from `rebuildStreams`, seeded) forward from the start, decoding every event (a full JSON DOM parse of the data: Swift `JSONSerialization.jsonObject`, .NET `JsonDocument.Parse`) | all `streamLength` events decoded |
 | `persistentSubscription` | append of one event (stream picked per "Random choices") at `rate` events/s; latency = writer's `min(scheduled, launch)` to the subscriber's first receipt of that event | event received (first delivery) |
 | `catchUp` | see "Catch-up" below | event received by the live phase |
 
@@ -188,6 +197,10 @@ by `scheduled + deadline` is a timeout (rule 5). Receipts of an event already re
 The operation therefore completes at the receipt, which may come before the append's response: the Swift driver
 registers the event as awaited, starts the append, and completes the operation on the first receipt, or fails it if the
 append throws first. A receipt is matched by parsing `k` from the data prefix `{"i":<k>,`.
+**The end instant is the receipt instant, stamped on the receiving callback (the subscription's event loop body)
+before any hand-off** to the operation's task or another thread; the time to wake the waiting operation is not part of
+the latency. Deadline rules apply to that instant (a receipt at or after `scheduled + deadline` is a timeout). The Swift
+reference is the `runOpenLoop` overload whose operation returns its completion instant.
 
 ### Persistent subscription
 
@@ -200,6 +213,10 @@ append throws first. A receipt is matched by parsing `k` from the data prefix `{
   measured group is first connected, right before the measure window.
 
 ### Catch-up
+
+**Precondition:** at driver start `$ce-<category>` holds exactly `catchUpExpectedEvents` events (the orchestrator
+guarantees it by restoring the seeded snapshot; when the corpus was reduced, `corpusReducedTo` is what the scenario
+carries as `catchUpExpectedEvents`). The driver relies on it: the first `catchUpExpectedEvents` receipts are the corpus.
 
 Phase 1 reads the pre-seeded corpus of `catchUpExpectedEvents` events in `$ce-<category>` through a **catch-up
 subscription from the start** of that stream (not a stream read), with link resolution enabled.
@@ -215,7 +232,10 @@ subscription from the start** of that stream (not a stream read), with link reso
   phase 2: the first `catchUpExpectedEvents` events the subscription receives are the corpus, everything after them is
   matched to the writer. `uniqueDeliveries` and `redeliveries` cover phase 2 only.
 - The bounded wait for phase 1 is `max(120 s, catchUpExpectedEvents / 1000 s)` (at least 1,000 events/s). If it
-  expires, the driver skips phase 2 and writes zero outcome counters and `catchUpSeconds: null`.
+  expires, the driver skips phase 2 and writes a phase-1 shortfall result: all outcome counters 0, `measuredSeconds`
+  0, `cpuUserSeconds` and `cpuSystemSeconds` 0, `catchUpSeconds: null`, an empty histogram, and validation
+  `expectedEvents = catchUpExpectedEvents`, `receivedEvents` = corpus events received. Consumers must not divide by
+  `measuredSeconds` or `scheduled` without checking for 0.
 
 ## Output: `result.json` (`TrialResult`)
 
@@ -245,7 +265,7 @@ Optional fields may be omitted or `null`.
 | `kind` | `expectedEvents` | `receivedEvents` | Class |
 |---|---|---|---|
 | `appendLatency`, `appendThroughput` | `succeeded * batchSize` | the same events confirmed by the driver's own bookkeeping | informational |
-| `rebuild` | (succeeded reads + reads that completed with a count other than `streamLength`) `* streamLength` | `succeeded * streamLength` + events of those wrong-count reads (a wrong-count read is a failure, so any one makes the two differ) | **hard** (seeded count) |
+| `rebuild` | (succeeded reads + reads that completed with a count other than `streamLength`) `* streamLength` | `succeeded * streamLength` + events of those wrong-count reads (a wrong-count read is a failure, so any one makes the two differ). Events of a read that throws mid-stream are not counted (that read is a failure and neither side includes it) | **hard** (seeded count) |
 | `persistentSubscription` | events the writer appended successfully | unique deliveries | reported |
 | `catchUp` | phase 1: `catchUpExpectedEvents` (hard, seeded count; the trial fails if fewer arrive); live phase: events the writer appended successfully (reported). Report `expectedEvents` and `receivedEvents` as the sums over both phases | unique events received | mixed, see below |
 
@@ -278,5 +298,7 @@ How the orchestrator interprets it:
 ## Process rules
 
 - One process, one trial. No state is carried between trials; the orchestrator pins the process to its CPUs.
-- stdout is free for logging; the orchestrator reads only the two files (and `version` stdout).
+- stdout is free for logging; the orchestrator reads only the two files (and `version` stdout) plus the tail of stderr on
+  failure. Logs go either to stderr (unbuffered) or to stdout flushed after each line, so the log of a killed driver is
+  complete. The Swift driver writes each stdout line unbuffered.
 - Do not write outside `--out`.
