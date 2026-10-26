@@ -81,7 +81,7 @@ jobs:
       # Every Swift example in the docs becomes part of the DocSnippetsTests
       # target, so the build below fails if an example no longer compiles.
       - name: Generate documentation snippets
-        run: python3 scripts/generate-doc-snippets.py
+        run: swift run --package-path scripts generate-doc-snippets
 
       - name: Build
         run: swift build --build-tests --enable-code-coverage
@@ -226,20 +226,22 @@ jobs:
             ${{ matrix.image }} \
             bash -c "swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
 
-  # Release readiness. The release tag locks the documentation surfaces into `/X.Y/` (README,
-  # Getting started, What's new) and the landing page must flip to the new version, so the
-  # Prepare PR (`[UPDATE] prepare X.Y.Z: …` as title and last commit) must pass every row of
-  # scripts/check-release-readiness.py for the version named in that subject. Other pushes
-  # only run the script's own tests.
+  # The scripts package (scripts/Package.swift: doc snippets, doc versions, site assembly,
+  # release readiness, benchmark conversion) is tested on every push. The release tag locks
+  # the documentation surfaces into `/X.Y/` (README, Getting started, What's new) and the
+  # landing page must flip to the new version, so the Prepare PR (`[UPDATE] prepare X.Y.Z: …`
+  # as title and last commit) must also pass every row of `check-release-readiness` for the
+  # version named in that subject.
   release-readiness:
     name: Release readiness
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    container: swift:6.4-bookworm
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Script tests
-        run: python3 -m unittest scripts/test_check_release_readiness.py
+        run: swift test --package-path scripts
 
       - name: Check the Prepare PR
         env:
@@ -248,7 +250,7 @@ jobs:
           version=$(printf '%s' "$SUBJECT" | sed -n 's/^\[UPDATE\] prepare \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p')
           if [ -n "$version" ]; then
             echo "Prepare PR for $version: every row must pass"
-            scripts/check-release-readiness.py "$version"
+            swift run --package-path scripts check-release-readiness "$version"
           else
             echo "not a Prepare PR; nothing to check"
           fi

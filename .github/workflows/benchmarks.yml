@@ -73,7 +73,7 @@ jobs:
           cat results.md >> "$GITHUB_STEP_SUMMARY"
 
       # A second pass in JMH format: it carries every percentile of every metric,
-      # which scripts/bench_to_bmf.py turns into Bencher Metric Format.
+      # which `bench-to-bmf` (scripts/) turns into Bencher Metric Format.
       - name: Export benchmark percentiles
         run: |
           mkdir -p bench-out
@@ -82,8 +82,8 @@ jobs:
             --format jmh \
             --path bench-out \
             --no-progress
-          python3 scripts/bench_to_bmf.py bench-out/Current_run.jmh.json > bmf.json
-          python3 -c 'import json; d=json.load(open("bmf.json")); print(len(d), "benchmarks converted")'
+          swift run --package-path scripts bench-to-bmf bench-out/Current_run.jmh.json > bmf.json
+          echo "$(jq length bmf.json) benchmarks converted"
 
       - uses: bencherdev/bencher@f80847436d7157936b40525db4c2a1064124f04a # v0.6.13 (was @main)
       # Uploads to Bencher; the perf page (see BENCHER_PROJECT) keeps the history per commit.

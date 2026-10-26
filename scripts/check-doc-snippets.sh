@@ -4,7 +4,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 root="$(pwd)"
-python3 scripts/generate-doc-snippets.py || exit 1
+swift run --package-path scripts generate-doc-snippets || exit 1
 log="$(mktemp)"
 swift build --target DocSnippetsTests >"$log" 2>&1
 status=$?
