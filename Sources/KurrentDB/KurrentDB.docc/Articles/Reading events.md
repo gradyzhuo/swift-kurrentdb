@@ -265,6 +265,53 @@ for try await readEvent in subscription.events {
 
 Establishing a subscription is retried across nodes under the client's retry policy, like any other call; an established one is not re-established by the client. When `events` throws, decide whether to subscribe again from your checkpoint.
 
+### Caught up, fell behind and checkpoints
+
+Besides events, the server tells a subscription when it has delivered everything that was written before it and is now following live writes, and when writes have outpaced the consumer so that it is reading history again. ``Streams/Subscription/messages`` carries these notifications next to the events, as a ``Streams/Subscription/Message``; `events` is the same stream without them. Iterate one of the two, not both. A read model that rebuilds itself from the start can use `caughtUp` to know when it is current and may start serving:
+
+```swift
+let subscription = try await client.streams(specified: "orders").subscribe {
+    $0.revision = .start
+}
+
+for try await message in subscription.messages {
+    switch message {
+    case let .event(readEvent):
+        print("apply", readEvent.record.eventType)
+    case .caughtUp:
+        print("the read model is current")
+    case .fellBehind:
+        print("reading history again")
+    case .checkpoint:
+        break  // $all with a filter only
+    }
+}
+```
+
+KurrentDB 26.2.2 is the first server that sends `fellBehind`. An older one returns to catch-up silently, and `caughtUp` still follows once it is current again.
+
+A `$all` subscription with a filter also reports checkpoints: the position up to which the server has scanned without a match. Store a checkpoint like the position of an event, so that after a restart a long stretch without matching events is not scanned again. The first one reported is the start position itself; how often the next ones arrive follows the filter's ``StreamFilter/max(_:)`` window and ``StreamFilter/checkpointIntervalMultiplier(_:)``:
+
+```swift
+let subscription = try await client.allStreams.subscribe {
+    $0.position = .start
+    $0.filter = .onEventType(prefixes: "Order").max(32).checkpointIntervalMultiplier(1)
+}
+
+for try await message in subscription.messages {
+    switch message {
+    case let .event(readEvent):
+        // Update the read model, then store readEvent.record.position.
+        print("handled", readEvent.record.position.commit)
+    case let .checkpoint(position):
+        // Nothing matched up to here: store position the same way.
+        print("scanned up to", position.commit)
+    case .caughtUp, .fellBehind:
+        break
+    }
+}
+```
+
 ### Stopping
 
 ```swift
@@ -281,13 +328,13 @@ for try await readEvent in subscription.events {
 // cancel() ended `events`; the loop exited normally.
 ```
 
-``Streams/Subscription/cancel()`` ends `events` at once and the loop exits normally, as it does when your task is cancelled. An event that had already arrived from the server but was not yet handed to your code is dropped. After a `break` the subscription stays open while you hold it: call `cancel()` or let it go out of scope, which ends it too. ``KurrentDBClient/shutdown()`` ends every subscription the client opened.
+``Streams/Subscription/cancel()`` ends `events` and `messages` at once and the loop exits normally, as it does when your task is cancelled. An event that had already arrived from the server but was not yet handed to your code is dropped. After a `break` the subscription stays open while you hold it: call `cancel()` or let it go out of scope, which ends it too. ``KurrentDBClient/shutdown()`` ends every subscription the client opened.
 
 ### Backpressure
 
 Subscriptions are backpressured: the client takes the next event from the server only when your code asks for it, so a slow consumer holds the server back through HTTP/2 flow control instead of growing client memory. The memory one subscription holds is bounded like a lazy read's (next section). Each subscription has its own connection (see <doc:Getting-started>), so a long-lived subscription never competes with other calls.
 
-The server's caught-up and fell-behind notifications are not surfaced to your code; the client logs them at `debug` level and drops them.
+The server's caught-up and fell-behind notifications are delivered through `messages` (above); `events` leaves them out.
 
 ## Bounded memory: `read().lazy`
 
