@@ -28,6 +28,7 @@ func clientBenchmarks() {
     }
 
     // With a deadline, grpc-swift runs each call it bounds in a task group next to a timer task.
+    // The in-process connection keeps the deadline from the server, so only the client's timer runs.
     Benchmark("Client/append-with-deadline/1x100B") { (benchmark, fixture: StreamFixture) in
         for _ in benchmark.scaledIterations {
             blackHole(try await fixture.stream.append(events: fixture.events))
@@ -79,10 +80,11 @@ func clientBenchmarks() {
     }
 }
 
-/// A warm client on one stream of an in-process server. Setup makes one call first and checks
-/// its result, so discovery and the shared connection are done before measuring, and a broken
-/// in-process path fails the benchmark instead of measuring an error. The node stays cached for
-/// longer than a benchmark runs: every measured call takes the path of a long-lived client.
+/// A warm client on one stream of an in-process server. Setup makes a call first and checks its
+/// result (for a read, one buffered and one lazy), so discovery and the shared connection are done
+/// before measuring, and a broken in-process path fails the benchmark instead of measuring an
+/// error. The node stays cached for longer than a benchmark runs: every measured call takes the
+/// path of a long-lived client.
 ///
 /// Each benchmark runs in its own process, so the client is not shut down afterwards.
 private struct StreamFixture {
@@ -98,7 +100,11 @@ private struct StreamFixture {
     ) throws {
         var settings = configure(ClientSettings.localhost().nodeCacheTTL(.seconds(3600)))
         settings.transportProvider = try InProcessTransportProvider(
-            server: FakeKurrentDB(endpoint: settings.endpoints[0], readResponses: readResponses)
+            server: FakeKurrentDB(
+                endpoint: settings.endpoints[0],
+                appendMessages: events.count + 1,
+                readResponses: readResponses
+            )
         )
         client = KurrentDBClient(settings: settings)
         stream = client.streams(specified: "orders-abc-123")
@@ -119,12 +125,17 @@ private struct StreamFixture {
     /// Reads a stream of `count` events of 100 bytes per call.
     static func reading(_ count: Int) async throws -> Self {
         let fixture = try Self(readResponses: serializedReadResponses(count: count, payload: payload))
-        var revisions: [UInt64] = []
+        var buffered: [UInt64] = []
         for try await response in try await fixture.stream.read() {
-            try revisions.append(response.event.record.revision)
+            try buffered.append(response.event.record.revision)
         }
-        guard revisions == Array(0 ..< UInt64(count)) else {
-            throw FixtureError("the warm-up read returned revisions \(revisions)")
+        var lazy: [UInt64] = []
+        for try await response in fixture.stream.read().lazy {
+            try lazy.append(response.event.record.revision)
+        }
+        let expected = Array(0 ..< UInt64(count))
+        guard buffered == expected, lazy == expected else {
+            throw FixtureError("the warm-up reads returned revisions \(buffered) (buffered) and \(lazy) (lazy)")
         }
         return fixture
     }
@@ -144,7 +155,9 @@ private struct GRPCFixture {
         readRequest: EventStore_Client_Streams_ReadReq = .init()
     ) throws {
         let endpoint = ClientSettings.localhost().endpoints[0]
-        let transports = try InProcessTransportProvider(server: FakeKurrentDB(endpoint: endpoint, readResponses: readResponses))
+        let transports = try InProcessTransportProvider(
+            server: FakeKurrentDB(endpoint: endpoint, appendMessages: appendRequest.count, readResponses: readResponses)
+        )
         let client = try GRPCClient(transport: AnyClientTransport(transports.makeTransport(for: endpoint)))
         // Runs until the process exits: each benchmark runs in its own process.
         _ = Task { try await client.runConnections() }
