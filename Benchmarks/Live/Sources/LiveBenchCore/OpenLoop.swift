@@ -54,6 +54,23 @@ public func runOpenLoop(
     clock: some Clock<Duration> = ContinuousClock(),
     operation: @escaping @Sendable (_ index: Int) async throws -> Void
 ) async -> OutcomeRecorder {
+    await runOpenLoop(config, clock: clock) { index in
+        try await operation(index)
+        return nil
+    }
+}
+
+/// `runOpenLoop` for operations that know when they really completed: the operation returns its completion instant,
+/// or nil for "now" (when it returns). Subscription kinds return the instant the receiving callback stamped, so the
+/// hand-off from the callback to the operation's task is not part of the latency. Every other rule is unchanged:
+/// latency runs from `min(scheduled, launch)` to the returned instant, and an instant at or past
+/// `scheduled + deadline` is a `.timeout`. The deadline timer still fires at the deadline if the operation has not
+/// returned by then.
+public func runOpenLoop<C: Clock<Duration>>(
+    _ config: OpenLoopConfig,
+    clock: C,
+    operation: @escaping @Sendable (_ index: Int) async throws -> C.Instant?
+) async -> OutcomeRecorder {
     precondition(config.rate.isFinite && config.rate > 0, "rate must be a positive finite number")
     precondition(config.inFlightCap >= 0, "inFlightCap must not be negative")
 
@@ -86,8 +103,7 @@ public func runOpenLoop(
                     group.addTask {
                         let outcome: Outcome
                         do {
-                            try await operation(i)
-                            let completed = clock.now
+                            let completed = try await operation(i) ?? clock.now
                             // The deadline child may not have run yet; finishing at or past the deadline is still a timeout.
                             outcome = scheduled.duration(to: completed) >= config.deadline
                                 ? .timeout
