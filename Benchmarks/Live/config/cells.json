@@ -1,0 +1,299 @@
+{
+  "cells": [
+    {
+      "id": "append-latency-300-tls",
+      "kind": "appendLatency",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        250,
+        500,
+        1000,
+        2000,
+        4000,
+        8000
+      ],
+      "rounds": 5
+    },
+    {
+      "id": "append-throughput-300-tls",
+      "kind": "appendThroughput",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        20,
+        50,
+        100,
+        200,
+        400
+      ],
+      "rounds": 5
+    },
+    {
+      "id": "persistent-subscription-300-tls",
+      "kind": "persistentSubscription",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        250,
+        1000,
+        4000
+      ],
+      "rounds": 5
+    },
+    {
+      "id": "catch-up-300-tls",
+      "kind": "catchUp",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        250,
+        1000
+      ],
+      "rounds": 5
+    },
+    {
+      "id": "rebuild-300-tls-L10",
+      "kind": "rebuild",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        100,
+        500,
+        2000
+      ],
+      "rounds": 5,
+      "streamLength": 10
+    },
+    {
+      "id": "rebuild-300-tls-L100",
+      "kind": "rebuild",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        50,
+        200,
+        800
+      ],
+      "rounds": 5,
+      "streamLength": 100
+    },
+    {
+      "id": "rebuild-300-tls-L1000",
+      "kind": "rebuild",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        5,
+        20,
+        80
+      ],
+      "rounds": 5,
+      "streamLength": 1000
+    },
+    {
+      "id": "rebuild-300-tls-L10000",
+      "kind": "rebuild",
+      "eventSize": 300,
+      "tls": true,
+      "tier": "headline",
+      "rates": [
+        1,
+        2,
+        8
+      ],
+      "rounds": 5,
+      "streamLength": 10000
+    },
+    {
+      "id": "append-latency-1024-tls",
+      "kind": "appendLatency",
+      "eventSize": 1024,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        500,
+        2000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "append-throughput-1024-tls",
+      "kind": "appendThroughput",
+      "eventSize": 1024,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        50,
+        200
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "persistent-subscription-1024-tls",
+      "kind": "persistentSubscription",
+      "eventSize": 1024,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        1000,
+        4000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "catch-up-1024-tls",
+      "kind": "catchUp",
+      "eventSize": 1024,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        250,
+        1000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "rebuild-1024-tls-L100",
+      "kind": "rebuild",
+      "eventSize": 1024,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        200,
+        800
+      ],
+      "rounds": 3,
+      "streamLength": 100
+    },
+    {
+      "id": "append-latency-4096-tls",
+      "kind": "appendLatency",
+      "eventSize": 4096,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        500,
+        2000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "append-throughput-4096-tls",
+      "kind": "appendThroughput",
+      "eventSize": 4096,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        50,
+        200
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "persistent-subscription-4096-tls",
+      "kind": "persistentSubscription",
+      "eventSize": 4096,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        1000,
+        4000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "catch-up-4096-tls",
+      "kind": "catchUp",
+      "eventSize": 4096,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        250,
+        1000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "rebuild-4096-tls-L100",
+      "kind": "rebuild",
+      "eventSize": 4096,
+      "tls": true,
+      "tier": "appendix",
+      "rates": [
+        200,
+        800
+      ],
+      "rounds": 3,
+      "streamLength": 100
+    },
+    {
+      "id": "append-latency-300-notls",
+      "kind": "appendLatency",
+      "eventSize": 300,
+      "tls": false,
+      "tier": "appendix",
+      "rates": [
+        500,
+        2000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "append-throughput-300-notls",
+      "kind": "appendThroughput",
+      "eventSize": 300,
+      "tls": false,
+      "tier": "appendix",
+      "rates": [
+        50,
+        200
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "persistent-subscription-300-notls",
+      "kind": "persistentSubscription",
+      "eventSize": 300,
+      "tls": false,
+      "tier": "appendix",
+      "rates": [
+        1000,
+        4000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "catch-up-300-notls",
+      "kind": "catchUp",
+      "eventSize": 300,
+      "tls": false,
+      "tier": "appendix",
+      "rates": [
+        250,
+        1000
+      ],
+      "rounds": 3
+    },
+    {
+      "id": "rebuild-300-notls-L100",
+      "kind": "rebuild",
+      "eventSize": 300,
+      "tls": false,
+      "tier": "appendix",
+      "rates": [
+        200,
+        800
+      ],
+      "rounds": 3,
+      "streamLength": 100
+    }
+  ]
+}

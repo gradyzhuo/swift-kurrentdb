@@ -7,6 +7,8 @@ DerivedData/
 .swiftpm/xcode/
 .netrc
 Package.resolved
+!Benchmarks/Live/Package.resolved
+Benchmarks/Live/.build/
 .claude/
 .capacitor/
 CLAUDE.local.md
