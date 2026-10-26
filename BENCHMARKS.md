@@ -226,8 +226,8 @@ per benchmark:
 | `latency` | p50 wall clock, ns | p0 / p90 | `Time (wall clock)` |
 | `allocations` | p50 malloc count | p0 / p90 | `Malloc (total)` |
 
-The conversion lives in `scripts/bench_to_bmf.py` (tests in
-`scripts/test_bench_to_bmf.py`): the workflow exports a second run in JMH
+The conversion is `bench-to-bmf` in the `scripts/` package (tests in
+`scripts/Tests/ToolingTests`): the workflow exports a second run in JMH
 format, which carries every percentile, and normalises the per-benchmark
 units package-benchmark picks (ns / μs, # / K) before upload.
 
@@ -254,7 +254,7 @@ branches are uploaded without thresholds.
 To reproduce the upload locally:
 
 ```bash
-python3 -m unittest scripts/test_bench_to_bmf.py
+swift test --package-path scripts --filter BenchToBMFTests
 swift package --disable-sandbox benchmark --target OfflineBenchmarks --format jmh --path bench-out
-python3 scripts/bench_to_bmf.py bench-out/Current_run.jmh.json > bmf.json
+swift run --package-path scripts bench-to-bmf bench-out/Current_run.jmh.json > bmf.json
 ```

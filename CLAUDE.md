@@ -260,7 +260,22 @@ Every ```` ```swift ```` block in the DocC catalog, `README.md` and the `///` co
 scripts/check-doc-snippets.sh
 ```
 
-It generates `Tests/DocSnippetsTests/DocSnippets.generated.swift` (git-ignored) and builds the `DocSnippetsTests` target; errors point at the Markdown/Swift line. Names examples use without declaring (`client`, `settings`, `eventData`, `record`, ...) live in `Tests/DocSnippetsTests/Prelude.swift`. Put `<!-- snippet:skip -->` above blocks that must not compile (1.x code, `✗ Compile error` examples), `<!-- snippet:continue -->` to reuse the previous block's names, `<!-- snippet:toplevel -->` for type declarations.
+It generates `Tests/DocSnippetsTests/DocSnippets.generated.swift` (git-ignored, by `swift run --package-path scripts generate-doc-snippets`) and builds the `DocSnippetsTests` target; errors point at the Markdown/Swift line. Names examples use without declaring (`client`, `settings`, `eventData`, `record`, ...) live in `Tests/DocSnippetsTests/Prelude.swift`. Put `<!-- snippet:skip -->` above blocks that must not compile (1.x code, `✗ Compile error` examples), `<!-- snippet:continue -->` to reuse the previous block's names, `<!-- snippet:toplevel -->` for type declarations.
+
+## Helper scripts
+
+`scripts/` is a dependency-free SwiftPM package (Swift 6.0, one executable per script, logic in the `Tooling` library), run from the repository root:
+
+```bash
+swift run --package-path scripts generate-doc-snippets          # Tests/DocSnippetsTests/DocSnippets.generated.swift
+swift run --package-path scripts doc-versions [--main REF]      # the published releases, newest first (JSON)
+swift run --package-path scripts build-docs-site --inputs DIR --releases JSON --output DIR [--docc "xcrun docc"]
+swift run --package-path scripts check-release-readiness X.Y.Z  # the release checklist's mechanical rows
+swift run --package-path scripts bench-to-bmf Current_run.jmh.json > bmf.json
+swift test --package-path scripts                                # ToolingTests
+```
+
+Every tool reads `--help`. Build messages go to stderr, so stdout can be captured. There is no Python in the repository; keep it that way.
 
 ## Protobuf Code Generation
 
@@ -296,15 +311,15 @@ The `Sources/_GRPCProtobufGenerated/` directory contains auto-generated code fro
 
 GitHub Actions workflow (`.github/workflows/swift-build-testing.yml`):
 - Tests against Swift 6.0–6.4 and KurrentDB 24.10, 25.1, 26.0, 26.1 (3-node TLS cluster) and 26.2 (single TLS node, since 26.2 needs a license for a multi-node cluster)
-- Compiles the documentation examples (`scripts/generate-doc-snippets.py` + `DocSnippetsTests`)
+- Compiles the documentation examples (`generate-doc-snippets` + `DocSnippetsTests`)
 - Separate jobs: `KurrentDBPool` live suite, X.509 user certificates (against an unlicensed 26.2 node), offline builds on Amazon Linux / Debian
 - Enables code coverage reporting to Codecov
 - Uses Swift Testing framework with parallel execution disabled
-- `Release readiness` job: on the `[UPDATE] prepare X.Y.Z` PR and on the release tag, `scripts/check-release-readiness.py X.Y.Z` fails on any release documentation row still missing (see AGENTS.md, *Releases*)
+- `Release readiness` job: runs the scripts package's tests (`swift test --package-path scripts`); on the `[UPDATE] prepare X.Y.Z` PR and on the release tag, `check-release-readiness X.Y.Z` fails on any release documentation row still missing (see AGENTS.md, *Releases*)
 
 Documentation workflow (`.github/workflows/documentation.yml`):
 - Builds the DocC catalog (symbol graph + the toolchain's `docc`, no swift-docc-plugin) and deploys it with `docs/` to GitHub Pages (source: GitHub Actions)
-- Versioned: the latest patch of every minor from 1.12 (`scripts/doc-versions.py`) at `/<major.minor>/`, main at `/main/`, the latest release also at the root; `scripts/build-docs-site.py` assembles the site and `docs/doc-versions.js` draws the version menu
+- Versioned: the latest patch of every minor from 1.12 (`doc-versions`) at `/<major.minor>/`, main at `/main/`, the latest release also at the root; `build-docs-site` assembles the site and `docs/doc-versions.js` draws the version menu
 - Release symbol graphs are cached per commit; runs on pushes to main and on `*.*.*` tags (the `github-pages` environment allows both); the Prepare commit of a release skips the deploy from main so the release tag's deploy of the same SHA is the first one Pages sees
 - Swift Package Index links to it through `external_links` in `.spi.yml` instead of building its own
 
