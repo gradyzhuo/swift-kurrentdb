@@ -53,3 +53,15 @@ extension EffectiveScenario {
         )
     }
 }
+
+extension TrialResult {
+    static var fixture: TrialResult {
+        TrialResult(
+            client: "swift", cellId: "fixture-appendLatency-300", targetRate: 20, timing: .scheduled,
+            scheduled: 1200, succeeded: 1190, failed: 2, dropped: 3, timedOut: 5,
+            measuredSeconds: 60, cpuUserSeconds: 4.5, cpuSystemSeconds: 1.25, maxRssBytes: 123_456_789,
+            ackEnqueued: nil, uniqueDeliveries: nil, redeliveries: nil, catchUpSeconds: nil,
+            validation: Validation(expectedEvents: 1190, receivedEvents: 1190, payloadSizesOk: true)
+        )
+    }
+}
