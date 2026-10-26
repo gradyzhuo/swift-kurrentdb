@@ -82,6 +82,13 @@ struct RunCell: AsyncParsableCommand {
         runner.driverCPUs = driverCpus.isEmpty ? nil : driverCpus
         #endif
         runner.metadata = clientMetadata(TrialRunner.applicableDrivers(specs, kind: cell.kind))
+        let resultFile = outDirectory.appendingPathComponent("cell-result.json")
+        // Rewritten after every trial (atomic replace), so a killed job keeps the trials done so far.
+        runner.onProgress = { partial in
+            do { try writeCellResult(partial, to: resultFile) } catch {
+                FileHandle.standardError.write(Data("[orchestrator] cannot write \(resultFile.path): \(error)\n".utf8))
+            }
+        }
 
         let result: CellResult
         do {
@@ -95,13 +102,17 @@ struct RunCell: AsyncParsableCommand {
         try? server.cleanUp()
         if work == nil { try? FileManager.default.removeItem(at: workDirectory) }
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let resultFile = outDirectory.appendingPathComponent("cell-result.json")
-        try encoder.encode(result).write(to: resultFile)
+        try writeCellResult(result, to: resultFile)
         let failed = result.trials.filter { $0.error != nil }.count
         print("\(cell.id): \(result.trials.count) trials, \(failed) failed\(result.abortedReason.map { ", aborted: \($0)" } ?? ""); \(resultFile.path)")
     }
+}
+
+/// Writes `result` as pretty JSON, replacing `file` atomically (a reader never sees a half-written file).
+func writeCellResult(_ result: CellResult, to file: URL) throws {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    try encoder.encode(result).write(to: file, options: .atomic)
 }
 
 /// `Benchmarks/Live/config`, found from this source file (the orchestrator always runs from a source checkout).
