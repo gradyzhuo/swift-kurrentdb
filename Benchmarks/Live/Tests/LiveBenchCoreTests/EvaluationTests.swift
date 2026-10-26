@@ -57,4 +57,14 @@ struct EvaluationTests {
     @Test func emptyCoreMeasurementHasNoHeadroom() {
         #expect(!hasHeadroom(sample(cores: [])))
     }
+
+    @Test func storedCountsJudgeLikeTheRecorder() {
+        for (ok, lost) in [(1000, 0), (999, 1), (990, 10), (0, 10)] {
+            let r = recorder(ok: ok, timedOut: lost)
+            #expect(
+                isSustained(scheduled: ok + lost, succeeded: ok, lost: lost, targetRate: 1000, measuredSeconds: 1, backlogGrew: false)
+                    == isSustained(r, targetRate: 1000, measuredSeconds: 1, backlogGrew: false)
+            )
+        }
+    }
 }

@@ -57,4 +57,16 @@ struct OutcomesTests {
             #expect(back == v)
         }
     }
+
+    @Test func storedHistogramRanksLikeTheRecorder() {
+        var r = OutcomeRecorder()
+        for i in 1...990 { r.record(.success(latencyMicros: UInt64(i))) }
+        for _ in 0..<10 { r.record(.timeout) }
+        let stored = HistogramFile(r.histogram).histogram()
+        for p in [50.0, 99.0, 99.5] {
+            #expect(percentile(p, successes: stored, scheduled: r.scheduled) == percentile(p, of: r))
+        }
+        #expect(percentile(99.5, successes: stored, scheduled: r.scheduled) == .censored)
+        #expect(percentile(50, successes: HistogramFile(buckets: []).histogram(), scheduled: 0) == .censored)
+    }
 }

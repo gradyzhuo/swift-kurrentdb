@@ -16,9 +16,17 @@ public enum EvaluationThresholds {
 
 /// Whether a step kept up with its target rate. Degenerate input (nothing scheduled, no measured time) is never sustained.
 public func isSustained(_ r: OutcomeRecorder, targetRate: Double, measuredSeconds: Double, backlogGrew: Bool) -> Bool {
-    guard r.scheduled > 0, measuredSeconds > 0, measuredSeconds.isFinite, targetRate.isFinite, targetRate >= 0 else { return false }
-    let successRate = Double(r.succeeded) / measuredSeconds
-    let losses = Double(r.failed + r.dropped + r.timedOut) / Double(r.scheduled)
+    isSustained(
+        scheduled: r.scheduled, succeeded: r.succeeded, lost: r.failed + r.dropped + r.timedOut,
+        targetRate: targetRate, measuredSeconds: measuredSeconds, backlogGrew: backlogGrew
+    )
+}
+
+/// `isSustained(_:targetRate:measuredSeconds:backlogGrew:)` over stored counts (`lost` = failed + dropped + timed out).
+public func isSustained(scheduled: Int, succeeded: Int, lost: Int, targetRate: Double, measuredSeconds: Double, backlogGrew: Bool) -> Bool {
+    guard scheduled > 0, measuredSeconds > 0, measuredSeconds.isFinite, targetRate.isFinite, targetRate >= 0 else { return false }
+    let successRate = Double(succeeded) / measuredSeconds
+    let losses = Double(lost) / Double(scheduled)
     return successRate >= EvaluationThresholds.sustainedRateFraction * targetRate
         && losses <= EvaluationThresholds.maxLossRatio
         && !backlogGrew
