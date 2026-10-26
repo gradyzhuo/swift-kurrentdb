@@ -33,6 +33,9 @@ func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBC
     let readers = try await PersistentConsumers.start(client, stream: measured.categoryStream, group: group, count: consumers, board: board)
     let window = await writerWindow(scenario, client: client, payloads: payloads, names: measured, seconds: scenario.measureSeconds, board: board)
     let deliveries = board.snapshot()
+    // Stay connected (outside the CPU window) so the last acks reach the server and get checkpointed: an ack still in
+    // transit when the connection closes is lost, and the orchestrator reads acknowledged progress after exit.
+    try? await Task.sleep(for: .seconds(persistentAckSettleSeconds))
     let acks = readers.stop()
     return Trial(
         recorder: window.recorder, cpu: window.cpu, measuredSeconds: scenario.measureSeconds,
@@ -40,6 +43,9 @@ func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBC
         ackEnqueued: acks, uniqueDeliveries: deliveries.unique, redeliveries: deliveries.redeliveries
     )
 }
+
+/// Seconds the measured consumers stay connected after the drain (driver contract, "Persistent subscription").
+let persistentAckSettleSeconds = 3.0
 
 /// Consumers of one persistent subscription group, each reading on its own task.
 private struct PersistentConsumers {
