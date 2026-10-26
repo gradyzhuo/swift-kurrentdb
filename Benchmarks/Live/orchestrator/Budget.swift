@@ -50,6 +50,13 @@ enum Budget {
     static let jobLimitMinutes = 330.0
     /// Events per batch of the append-throughput scenario.
     static let throughputBatchSize = 50
+    /// Per-operation deadline and in-flight cap, identical for every client.
+    static let deadlineMillis = 5_000
+    static let inFlightCap = 256
+    /// Streams the append scenarios pick from (uniform, seeded).
+    static let appendStreamCount = 100_000
+    /// Streams the subscription writers pick from (the catch-up corpus is spread over as many, `Seeder.catchUpStreamCount`).
+    static let subscriptionStreamCount = 1_000
 
     // MARK: - Disk
 
@@ -91,15 +98,26 @@ enum Budget {
     /// Bytes the busiest trial writes on top of the restored snapshot: the top rate for the whole trial, in event
     /// units (a throughput cell's rate counts batches). Rebuild trials only read.
     static func trialWriteBytes(_ cell: Cell) -> Int64 {
+        trialWriteBytes(cell, rate: cell.rates.max() ?? 0)
+    }
+
+    /// Bytes one trial at `rate` writes on top of the restored snapshot (warmup, measure and drain at that rate).
+    static func trialWriteBytes(_ cell: Cell, rate: Double) -> Int64 {
         let eventsPerUnit: Double = cell.kind == .appendThroughput ? Double(throughputBatchSize) : 1
         switch cell.kind {
         case .rebuild:
             return 0
         case .appendLatency, .appendThroughput, .persistentSubscription, .catchUp:
             let seconds = warmupSeconds + measureSeconds + drainSeconds
-            let events = (cell.rates.max() ?? 0) * eventsPerUnit * seconds
+            let events = rate * eventsPerUnit * seconds
             return Int64(events.rounded(.up)) * perEventBytes(eventSize: cell.eventSize)
         }
+    }
+
+    /// Free disk a trial at `rate` needs before it starts: its writes plus the reserve. Checked before every trial;
+    /// the data directory then still holds the previous trial's writes, which the restore frees, so this errs safe.
+    static func stepRequiredBytes(_ cell: Cell, rate: Double) -> Int64 {
+        trialWriteBytes(cell, rate: rate) + reserveBytes
     }
 
     private static func requiredBytes(_ cell: Cell, events: Int) -> Int64 {
