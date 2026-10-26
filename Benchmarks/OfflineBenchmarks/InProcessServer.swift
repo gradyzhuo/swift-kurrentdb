@@ -7,7 +7,9 @@ import KurrentDB
 // An in-process stand-in for one KurrentDB node, so the client benchmarks run a real
 // `KurrentDBClient` without a server. It answers discovery (gossip, server features), append and
 // read with responses serialized in advance, keeps no state and never parses what it is sent:
-// what the benchmarks measure is the client.
+// what the benchmarks measure is the client. It does take every request whole before answering,
+// as a node does, and fails a call whose request does not carry the expected number of messages,
+// so a client that sends less fails the benchmark instead of measuring less work.
 
 private typealias GossipService = EventStore_Client_Gossip_Gossip
 private typealias ServerFeaturesService = EventStore_Client_ServerFeatures_ServerFeatures
@@ -17,13 +19,16 @@ private typealias StreamsService = EventStore_Client_Streams_Streams
 struct FakeKurrentDB: RegistrableRPCService {
     private let gossip: [UInt8]
     private let serverFeatures: [UInt8]
+    private let appendMessages: Int
     private let appendResponse: [UInt8]
     private let readResponses: [[UInt8]]
 
     /// - Parameters:
     ///   - endpoint: The leader gossip reports; the client connects to it after discovery.
+    ///   - appendMessages: How many request messages every append carries: its options, then one
+    ///     per event. An append with any other number fails.
     ///   - readResponses: The serialized `ReadResp` messages every read streams back, in order.
-    init(endpoint: Endpoint, readResponses: [[UInt8]] = []) throws {
+    init(endpoint: Endpoint, appendMessages: Int, readResponses: [[UInt8]] = []) throws {
         gossip = try EventStore_Client_Gossip_ClusterInfo.with {
             $0.members = [.with {
                 $0.instanceID = .with { $0.value = .string(UUID().uuidString) }
@@ -53,12 +58,14 @@ struct FakeKurrentDB: RegistrableRPCService {
                 }
             }
         }.serializedBytes()
+        self.appendMessages = appendMessages
         self.readResponses = readResponses
     }
 
     func registerMethods<Transport: ServerTransport>(with router: inout RPCRouter<Transport>) {
         let gossip = gossip
         let serverFeatures = serverFeatures
+        let appendMessages = appendMessages
         let appendResponse = appendResponse
         let readResponses = readResponses
 
@@ -66,31 +73,33 @@ struct FakeKurrentDB: RegistrableRPCService {
             forMethod: GossipService.Method.Read.descriptor,
             deserializer: DiscardingDeserializer(),
             serializer: PreSerializedSerializer()
-        ) { _, _ in
-            .responding(with: [gossip])
+        ) { request, _ in
+            try await request.expectMessages(1)
+            return .responding(with: [gossip])
         }
         router.registerHandler(
             forMethod: ServerFeaturesService.Method.GetSupportedMethods.descriptor,
             deserializer: DiscardingDeserializer(),
             serializer: PreSerializedSerializer()
-        ) { _, _ in
-            .responding(with: [serverFeatures])
+        ) { request, _ in
+            try await request.expectMessages(1)
+            return .responding(with: [serverFeatures])
         }
         router.registerHandler(
             forMethod: StreamsService.Method.Append.descriptor,
             deserializer: DiscardingDeserializer(),
             serializer: PreSerializedSerializer()
         ) { request, _ in
-            // Client streaming: take every request message before answering, as the server does.
-            for try await _ in request.messages {}
+            try await request.expectMessages(appendMessages)
             return .responding(with: [appendResponse])
         }
         router.registerHandler(
             forMethod: StreamsService.Method.Read.descriptor,
             deserializer: DiscardingDeserializer(),
             serializer: PreSerializedSerializer()
-        ) { _, _ in
-            .responding(with: readResponses)
+        ) { request, _ in
+            try await request.expectMessages(1)
+            return .responding(with: readResponses)
         }
     }
 }
@@ -111,6 +120,10 @@ struct InProcessTransportProvider: TransportProvider {
 /// grpc-swift's in-process transport carries `[UInt8]`, while `AnyClientTransport` takes the
 /// Posix transport's bytes, so every message is copied once on its way in and once on its way out.
 /// The client benchmarks include that copy; the Posix transport has its own instead.
+///
+/// Requests reach the server without their `grpc-timeout` header. With it, the in-process server
+/// would run a deadline timer of its own in the measured process; a node runs that timer on its
+/// own machine.
 private struct InProcessConnection: ClientTransport {
     typealias Bytes = AnyClientTransport.Bytes
 
@@ -160,16 +173,17 @@ private struct InProcessConnection: ClientTransport {
     }
 }
 
-/// Writes request parts to the in-process transport, converting their bytes on the way.
+/// Writes request parts to the in-process transport, as `RPCRequestPart.forInProcessServer()`
+/// makes them.
 private struct ConvertingWriter: ClosableRPCWriterProtocol {
     let base: InProcessTransport.Client.Outbound
 
     func write(_ element: RPCRequestPart<AnyClientTransport.Bytes>) async throws {
-        try await base.write(element.converted())
+        try await base.write(element.forInProcessServer())
     }
 
     func write(contentsOf elements: some Sequence<RPCRequestPart<AnyClientTransport.Bytes>>) async throws {
-        try await base.write(contentsOf: elements.map { $0.converted() })
+        try await base.write(contentsOf: elements.map { $0.forInProcessServer() })
     }
 
     func finish() async {
@@ -193,6 +207,19 @@ private struct PreSerializedSerializer: MessageSerializer {
     }
 }
 
+extension StreamingServerRequest {
+    /// Waits for the end of the request and checks that it carried `count` messages.
+    fileprivate func expectMessages(_ count: Int) async throws {
+        var received = 0
+        for try await _ in messages {
+            received += 1
+        }
+        guard received == count else {
+            throw RPCError(code: .invalidArgument, message: "expected \(count) request messages, received \(received)")
+        }
+    }
+}
+
 extension StreamingServerResponse<[UInt8]> {
     /// A response that writes `messages` in order and ends the call successfully.
     fileprivate static func responding(with messages: [[UInt8]]) -> Self {
@@ -204,17 +231,22 @@ extension StreamingServerResponse<[UInt8]> {
 }
 
 extension GRPCContiguousBytes {
-    /// The same bytes in another bytes type: one allocation and one copy.
+    /// The same bytes in another bytes type: one copy.
     fileprivate func converted<Other: GRPCContiguousBytes>() -> Other {
         withUnsafeBytes { Other($0) }
     }
 }
 
 extension RPCRequestPart {
-    fileprivate func converted<Other: GRPCContiguousBytes>() -> RPCRequestPart<Other> {
+    /// The part as the in-process server takes it: its bytes converted, and its metadata without
+    /// `grpc-timeout`.
+    fileprivate func forInProcessServer<Other: GRPCContiguousBytes>() -> RPCRequestPart<Other> {
         switch self {
-        case let .metadata(metadata): .metadata(metadata)
-        case let .message(bytes): .message(bytes.converted())
+        case var .metadata(metadata):
+            metadata.removeAllValues(forKey: "grpc-timeout")
+            return .metadata(metadata)
+        case let .message(bytes):
+            return .message(bytes.converted())
         }
     }
 }
