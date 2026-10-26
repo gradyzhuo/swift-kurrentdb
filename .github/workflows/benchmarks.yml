@@ -23,7 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        # The same image as the test matrix (swift-build-testing.yml): the allocation threshold
+        # compares runs on one runner image, so the image is pinned rather than following latest.
+        os: [ubuntu-24.04]
         swift: ["6.4"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
