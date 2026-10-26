@@ -5,6 +5,7 @@
 //   dotnet LiveDriver.DotNet.dll run --scenario <effective.json> --connection <connection string> --out <dir>
 //   dotnet LiveDriver.DotNet.dll version
 //   dotnet LiveDriver.DotNet.dll floor --rate <ops/s> [--seconds <s>] [--warmup <s>]
+//   dotnet LiveDriver.DotNet.dll selftest --mode <mode> --rate <ops/s> --seconds <s> --cap <n> --deadline-ms <ms> --drain-ms <ms> [--stall-ms <ms>]
 
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -19,6 +20,7 @@ try
         ["run", .. var rest] => await RunCommand(Options(rest, "scenario", "connection", "out")),
         ["version"] => VersionCommand(),
         ["floor", .. var rest] => await FloorCommand(Options(rest, "rate", "seconds", "warmup")),
+        ["selftest", .. var rest] => await SelfTestCommand(Options(rest, "mode", "rate", "seconds", "cap", "deadline-ms", "drain-ms", "stall-ms")),
         _ => throw new UsageException(
             "usage: LiveDriver.DotNet run --scenario <file> --connection <string> --out <dir> | version | floor --rate <ops/s> [--seconds <s>] [--warmup <s>]"),
     };
@@ -72,9 +74,10 @@ static async Task<int> RunCommand(Dictionary<string, string> options)
 
 static int VersionCommand()
 {
-    string clientVersion = typeof(LiveDriver.Log).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-        .FirstOrDefault(a => a.Key == "KurrentDBClientVersion")?.Value
-        ?? throw new InvalidOperationException("the build did not embed KurrentDBClientVersion");
+    // The informational version of the KurrentDB.Client assembly that is actually loaded ("1.6.0+<commit>"), without
+    // its build metadata.
+    string clientVersion = typeof(KurrentDBClient).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+        ?? throw new InvalidOperationException("KurrentDB.Client has no informational version");
     var version = new DriverVersion("dotnet", clientVersion, RuntimeInformation.FrameworkDescription);
     Console.Out.WriteLine(JsonSerializer.Serialize(version, Json.Options));
     return 0;
@@ -105,6 +108,53 @@ static async Task<int> FloorCommand(Dictionary<string, string> options)
         maxMicros = r.Histogram.GetValueAtPercentile(100),
         cpuSeconds = (after.User - before.User) + (after.System - before.System),
         runtime = RuntimeInformation.FrameworkDescription,
+    }, Json.Options));
+    return 0;
+}
+
+/// The open loop with a synthetic operation, for the parity test against Swift's `runOpenLoop`
+/// (`Tests/LiveOrchestratorTests/OpenLoopParityTests.swift`). Prints the outcome counters as one JSON line.
+/// Modes: `noop`; `throw`; `stallHonouring` / `stallIgnoring` (wait `stall-ms`, with / without the cancellation token);
+/// `stallHonouringInline` (never completes on its own; fails synchronously when its token is cancelled);
+/// `instantPastDeadline` (returns now + deadline + 10 ms as its completion instant).
+static async Task<int> SelfTestCommand(Dictionary<string, string> options)
+{
+    static double Number(Dictionary<string, string> o, string name) =>
+        double.Parse(Required(o, name), System.Globalization.CultureInfo.InvariantCulture);
+    var config = new OpenLoopConfig(
+        Rate: Number(options, "rate"),
+        DurationNanos: (long)(Number(options, "seconds") * 1e9),
+        InFlightCap: (int)Number(options, "cap"),
+        DeadlineNanos: (long)(Number(options, "deadline-ms") * 1e6),
+        DrainNanos: (long)(Number(options, "drain-ms") * 1e6));
+    var stall = TimeSpan.FromMilliseconds(options.ContainsKey("stall-ms") ? Number(options, "stall-ms") : 0);
+    OpenLoopOperation operation = Required(options, "mode") switch
+    {
+        "noop" => static (_, _) => Task.FromResult<long?>(null),
+        "throw" => static (_, _) => Task.FromException<long?>(new InvalidOperationException("synthetic failure")),
+        "stallHonouring" => async (_, token) => { await Task.Delay(stall, token); return null; },
+        "stallIgnoring" => async (_, _) => { await Task.Delay(stall); return null; },
+        // Cancellation surfaces synchronously inside the token's callback (continuations inline), as a client whose
+        // call completes on cancellation can do: the operation's catch runs before the ledger's own timeout callback.
+        "stallHonouringInline" => (_, token) =>
+        {
+            var inline = new TaskCompletionSource<long?>();
+            token.Register(() => inline.TrySetCanceled(token));
+            return inline.Task;
+        },
+        // 10 ms past: a launch may run up to the waker's estimate (< 1 ms) before its scheduled instant.
+        "instantPastDeadline" => (_, _) => Task.FromResult<long?>(MonoClock.Now() + config.DeadlineNanos + 10_000_000),
+        var mode => throw new UsageException($"unknown selftest mode {mode}"),
+    };
+    var r = await OpenLoop.Run(config, operation);
+    Console.Out.WriteLine(JsonSerializer.Serialize(new
+    {
+        scheduled = r.Scheduled,
+        succeeded = r.Succeeded,
+        failed = r.Failed,
+        dropped = r.Dropped,
+        timedOut = r.TimedOut,
+        minMicros = r.Succeeded > 0 ? r.Histogram.GetValueAtPercentile(0) : 0,
     }, Json.Options));
     return 0;
 }
