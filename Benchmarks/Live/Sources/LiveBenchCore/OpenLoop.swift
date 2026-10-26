@@ -26,7 +26,11 @@ public struct OpenLoopConfig: Sendable {
 ///
 /// - Operation *i* is due at `start + i / rate`. The scheduling loop only sleeps until each due instant and never waits
 ///   for completions, so a slow operation cannot delay later ones (no coordinated omission).
-/// - Latency is completion time minus the **scheduled** instant, so scheduler lag counts against the client.
+/// - Latency is completion time minus the **scheduled** instant, so scheduler lag counts against the client. The only
+///   exception is a launch slightly *before* the due instant (see `DueInstantWaker`), which is measured from the
+///   launch so it is never under-charged.
+/// - Completing at or past `scheduled + deadline` is a `.timeout`, never a success, even if the deadline timer has
+///   not fired yet.
 /// - If `inFlightCap` operations are outstanding at the due instant, the index is recorded as `.drop` and not run.
 /// - A thrown error is `.failure`. An operation still outstanding at `scheduled + deadline` is `.timeout` and its
 ///   task is cancelled; the timeout is recorded at the deadline even if the operation ignores cancellation, and its
@@ -35,6 +39,12 @@ public struct OpenLoopConfig: Sendable {
 ///   anything still outstanding then is `.timeout` and cancelled. The call does not wait for operations that ignore
 ///   cancellation: they are unstructured tasks whose results are discarded.
 /// - If the calling task is cancelled, scheduling stops; indices already scheduled are still accounted for.
+///
+/// Harness floor: every latency includes the scheduler's own wake-up and task-start cost. Measured on an Apple Silicon
+/// Mac in a release build with a no-op operation at 250-8000/s: p50 2-4 µs, p99 under 40 µs (see
+/// `OpenLoopTests.noOpCalibrationFloor`). Any other driver compared against this one (the .NET driver, Task 10) must
+/// use the same timing rules (latency from the scheduled instant, an untoleranced timer or equivalent overshoot
+/// compensation) and meet a comparable no-op floor. Otherwise a ratio partly measures harness timers, not clients.
 public func runOpenLoop(
     _ config: OpenLoopConfig,
     clock: some Clock<Duration> = ContinuousClock(),
@@ -49,17 +59,23 @@ public func runOpenLoop(
     // Integer nanosecond offsets keep the schedule exact (no accumulated floating-point drift).
     let nanosPerOp = 1e9 / config.rate
 
+    var waker = DueInstantWaker(clock: clock)
     var index = 0
     while true {
         let offsetNanos = (Double(index) * nanosPerOp).rounded()
         guard offsetNanos < Double(windowNanos) else { break }
         let scheduled = start.advanced(by: .nanoseconds(Int64(offsetNanos)))
         do {
-            try await clock.sleep(until: scheduled, tolerance: nil)
+            try await waker.wait(until: scheduled)
         } catch {
             break // the caller was cancelled: stop scheduling
         }
         let i = index
+        // The waker may return a little before the due instant (see `DueInstantWaker`). Latency runs from the later of
+        // the due instant and the actual launch, so an early launch is never under-charged and a late one is charged
+        // from the schedule (no coordinated omission).
+        let launched = clock.now
+        let latencyOrigin = max(scheduled, launched)
         ledger.launch(i, cap: config.inFlightCap) {
             Task {
                 await withTaskGroup(of: Void.self) { group in
@@ -67,7 +83,11 @@ public func runOpenLoop(
                         let outcome: Outcome
                         do {
                             try await operation(i)
-                            outcome = .success(latencyMicros: scheduled.duration(to: clock.now).wholeMicroseconds)
+                            let completed = clock.now
+                            // The deadline child may not have run yet; finishing at or past the deadline is still a timeout.
+                            outcome = scheduled.duration(to: completed) >= config.deadline
+                                ? .timeout
+                                : .success(latencyMicros: latencyOrigin.duration(to: completed).wholeMicroseconds)
                         } catch {
                             outcome = .failure
                         }
@@ -75,7 +95,7 @@ public func runOpenLoop(
                     }
                     group.addTask {
                         // A cancelled sleep means the operation finished first: nothing to record.
-                        guard (try? await clock.sleep(until: scheduled.advanced(by: config.deadline), tolerance: nil)) != nil else { return }
+                        guard (try? await clock.sleep(until: scheduled.advanced(by: config.deadline), tolerance: .zero)) != nil else { return }
                         ledger.finish(i, .timeout)
                     }
                     // Whichever child finishes first has recorded the outcome; cancel the other. If the operation ignores
@@ -98,6 +118,38 @@ public func runOpenLoop(
         group.cancelAll()
     }
     return ledger.expireOutstanding()
+}
+
+/// Wakes the scheduling loop close to each due instant without spinning.
+///
+/// Latency is measured from the scheduled instant, so a late wake-up is charged to the client under test. A timer
+/// with the default leeway wakes ~0.5-1 ms late. Even with `.zero` tolerance, an idle process overshoots by a roughly
+/// constant amount (~350 µs on macOS at 1000/s, ~50 µs at 8000/s). The waker keeps an exponentially weighted estimate
+/// of that overshoot and sleeps until `due - estimate`, so it usually wakes within tens of µs of `due`, sometimes
+/// slightly before it. It does not spin to the exact instant: a spin cost 60-100% of a core at 4000-8000/s, which
+/// would distort the client CPU figures. The caller measures latency from `max(due, actual launch)` instead. The
+/// estimate is capped at `maxEstimate`, which bounds how early a launch can be.
+private struct DueInstantWaker<C: Clock<Duration>> {
+    private static var maxEstimate: Duration { .milliseconds(1) }
+    let clock: C
+    private var overshootEstimate = Duration.zero
+
+    init(clock: C) {
+        self.clock = clock
+    }
+
+    mutating func wait(until due: C.Instant) async throws {
+        let wakeAt = due.advanced(by: .zero - overshootEstimate)
+        guard clock.now < wakeAt else {
+            try Task.checkCancellation()
+            return
+        }
+        try await clock.sleep(until: wakeAt, tolerance: .zero)
+        // Learn only from real sleeps; a loop already behind schedule says nothing about the timer.
+        let overshoot = wakeAt.duration(to: clock.now)
+        overshootEstimate += (overshoot - overshootEstimate) / 16
+        overshootEstimate = min(max(overshootEstimate, .zero), Self.maxEstimate)
+    }
 }
 
 /// Shared, lock-protected accounting: each index is recorded at most once, by whichever path gets there first.
