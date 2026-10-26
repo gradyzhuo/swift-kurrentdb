@@ -9,6 +9,7 @@ this contract. The orchestrator knows nothing else about a driver. The reference
 ```
 <driver> run --scenario <effective.json> --connection <connection string> --out <dir>
 <driver> version
+<driver> floor --rate <ops/s> [--seconds <s>] [--warmup <s>]
 ```
 
 - `run` executes one trial (warmup, then measure, then drain) of one rate step, writes `result.json` and `histogram.json`
@@ -18,6 +19,13 @@ this contract. The orchestrator knows nothing else about a driver. The reference
 - `--scenario` is an `EffectiveScenario` JSON file (field names below). `--connection` is a KurrentDB connection string,
   used with the client's default settings (no tuning in headline runs).
 - `version` prints one `DriverVersion` JSON object on stdout and exits 0.
+- `floor` measures the harness floor (rule 10): the driver's open loop with an operation that returns immediately,
+  `--warmup` seconds (default 2) and then `--seconds` measured (default 5) at `--rate`, in-flight cap 256, deadline
+  5 s, drain 1 s. It prints one JSON object on stdout with the fields of `HarnessFloor`
+  (`Sources/LiveBenchCore/HarnessFloor.swift`): `rate`, `seconds`, `scheduled`, `succeeded`, `p50Micros`, `p99Micros`,
+  `p999Micros`, `maxMicros`, `cpuSeconds` (process CPU of the measured window), `maxRssBytes` (process peak) and
+  `runtime`. The orchestrator runs it for every in-process driver at each of the cell's rates at cell start (before
+  seeding, pinned like the trials) and records it in the run metadata.
 
 ### `version` output
 
@@ -169,9 +177,9 @@ same for every client.
    clock sleep plus an overshoot estimate; on .NET avoid `Task.Delay` granularity of ~15 ms on some platforms: use a
    high-resolution timer or a short spin/overshoot compensation). Timer error ends up in the latency, so a sloppy timer
    is charged to the client.
-10. **Harness floor**: each driver must be able to report its no-op floor (the same scheduler with an operation that
-    returns immediately, p50/p99 at the step's rate). Latencies of two drivers are only comparable if their floors are
-    comparable (Swift reference numbers are in the `runOpenLoop` doc comment).
+10. **Harness floor**: each driver must be able to report its no-op floor (`floor` above: the same scheduler with an
+    operation that returns immediately, p50/p99 at the step's rate). Latencies of two drivers are only comparable if
+    their floors are comparable; the report shows both, measured on the cell's runner.
 
 ### Percentiles
 
@@ -225,8 +233,12 @@ twin `+ "w"`), `resolveLinkTos` on, RoundRobin, checkpoint after 1 to 1000 acked
 2 s), start from the beginning of the stream, every other setting default.
 
 **Acknowledged progress observed by the server** (the headline throughput number of this kind) is
-`SubscriptionInfo.lastCheckpointedEventPosition + 1` of the measured group (0 while the field is empty), read after
-the driver exits, polling for up to 10 s until it reaches the events the writer appended. Finding of
+`SubscriptionInfo.lastCheckpointedEventPosition + 1` of the measured group (0 while the field is empty), read once
+when the measure window ends (measure-start marker + `measureSeconds`) and divided by the window's length. The
+checkpoint lags acks by up to `checkpointAfter` (2 s), so the value reads up to about two seconds of events low for
+every client; the report says so. The same field is read again after the driver exits, polling for up to 10 s until
+it reaches the events the writer appended; that value is reported as the shortfall against the events written (it is
+close to them by construction, so it is no throughput measure). Finding of
 `PersistentProgressLiveTests.checkpointAdvancesOnlyOnAck` (kurrentdb 26.2.3, 100 events delivered to one consumer):
 
 | state | `totalItems` | `lastCheckpointedEventPosition` | `outstandingMessageCount` |
@@ -373,8 +385,17 @@ does this:
   only `StreamMessage.Event` messages count as receipts. The .NET subscription starts lazily, so the driver waits for
   its `SubscriptionConfirmation` (60 s bound): a subscription that fails before it makes the driver exit 1 at once, as
   the Swift SDK's `subscribe()` throws, instead of waiting out the phase-1 limit.
+- **Appends.** `AppendToStreamAsync(stream, StreamState.Any, events)` with no per-call credentials. In
+  `KurrentDB.Client` 1.6.0 that call goes through the client's `StreamAppender` whenever the server advertises
+  `BatchAppend` (decompiled `KurrentDBClient.AppendToStreamAsync`: `userCredentials == null && await
+  BatchAppender.IsUsable()`, where `IsUsable` is the server capability `SupportsBatchAppend`): every append of the
+  process is multiplexed over one long-lived bidirectional `Streams.BatchAppend` call. The Swift SDK sends one unary
+  `Streams.Append` RPC per append, as ghz does. Both are the clients' default append paths; the report discloses the
+  difference in its append fairness notes.
 - **Rebuild.** `ReadStreamAsync(Forwards, stream, Start)` with defaults; each event's data goes through
-  `JsonDocument.Parse`. A read of a stream that does not exist is a failure (the Swift SDK throws), not a short read.
+  `JsonDocument.Parse` (System.Text.Json), where the Swift driver uses Foundation's `JSONSerialization.jsonObject`.
+  Both build a full DOM, but the decoders differ, and their speed is part of the rebuild figures (disclosed in the
+  report). A read of a stream that does not exist is a failure (the Swift SDK throws), not a short read.
 - **Scheduler.** A dedicated thread sleeps with `nanosleep(2)` (nanosecond resolution, no millisecond rounding as in
   `Thread.Sleep` / `Task.Delay`) and applies the same overshoot estimate as the Swift waker (EWMA 1/16, capped at 1 ms,
   no spinning). Each launch is queued to the thread pool (`ThreadPool.UnsafeQueueUserWorkItem`), as the Swift driver
@@ -396,7 +417,9 @@ does this:
   (about 0.03 and 0.12 cores with the spin limit set to 0). That CPU is part of a default .NET process and is counted in
   `cpuUserSeconds`/`cpuSystemSeconds`; read the CPU ratios with it in mind.
 - **Harness floor** (rule 10): `dotnet LiveDriver.DotNet.dll floor --rate <r> [--seconds <s>] [--warmup <s>]` runs the
-  same scheduler with a no-op operation after a warmup window and prints p50/p99. Release build, Apple Silicon Mac,
+  same scheduler with a no-op operation after a warmup window and prints the `HarnessFloor` fields (the Swift
+  driver's `floor` prints the same object; `OpenLoopParityTests` checks the fields). The report shows the floors each
+  cell's job measured on its runner. For reference, release build, Apple Silicon Mac,
   5 s after a 2 s warmup, p50 / p99: 1000/s 5-7 / 111-153 µs, 8000/s 5-6 / 73-138 µs (Swift on the same machine,
   `OpenLoopTests.noOpCalibrationFloor` in release: 1000/s 7 / 241-282 µs, 8000/s 3-6 / 31-88 µs). Without warmup
   (0.5 s windows, JIT still tiering) the .NET p99 is sometimes several ms, which is why the floor is taken after a

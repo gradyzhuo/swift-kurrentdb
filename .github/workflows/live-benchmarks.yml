@@ -5,6 +5,7 @@
 #   client (Swift, .NET, ghz where it applies) to CPUs 2,3, interleaved over the cell's rounds. `merge` assembles the
 #   results bundle and `report.html` from every cell's artifact.
 # - Trend layer (`trend`): nightly on main, Swift only, one moderate rate per headline cell, uploaded to Bencher.
+# - The harness's own tests run in `.github/workflows/live-benchmarks-tests.yml` on every change to it.
 #
 # Nothing is committed: a person reviews a comparison run and commits its bundle under
 # `Benchmarks/Live/results/` in a pull request (BENCHMARKS.md, "Live benchmarks"). The live suite never fails a job
@@ -21,7 +22,7 @@ on:
         required: false
         default: ""
   push:
-    tags: ['*']
+    tags: ['*.*.*']
   schedule:
     - cron: '0 18 * * *'
 
@@ -80,6 +81,10 @@ jobs:
       LIVE_BENCH_SDK_COMMIT: ${{ github.sha }}
       LIVE_BENCH_HARNESS_COMMIT: ${{ github.sha }}
     steps:
+      # The orchestrator starts no trial after 340 minutes of job time (timeout 350), counted from here.
+      - name: Record job start
+        run: echo "LIVE_BENCH_JOB_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
       # A standard runner starts with about 14 GB free; 4 KB cells need most of it.
       - name: Free disk space
         run: |
@@ -106,10 +111,11 @@ jobs:
           tar -xzf "$RUNNER_TEMP/ghz.tar.gz" -C "$RUNNER_TEMP/ghz" ghz
           echo "$RUNNER_TEMP/ghz" >> "$GITHUB_PATH"
 
-      # Locked restore: a restore that would drift from packages.lock.json fails.
+      # Locked resolution on both sides: a resolve that would drift from Benchmarks/Live/Package.resolved or
+      # packages.lock.json fails instead of building other versions than the ones recorded.
       - name: Build drivers and orchestrator
         run: |
-          swift build --package-path Benchmarks/Live -c release
+          swift build --package-path Benchmarks/Live -c release --force-resolved-versions
           dotnet build Benchmarks/Live/drivers/dotnet -c Release -p:RestoreLockedMode=true
           ghz --version
 
@@ -153,7 +159,7 @@ jobs:
 
       - name: Merge cells
         run: |
-          swift build --package-path Benchmarks/Live -c release --product LiveOrchestrator
+          swift build --package-path Benchmarks/Live -c release --product LiveOrchestrator --force-resolved-versions
           Benchmarks/Live/.build/release/LiveOrchestrator merge --in live-in --out live-results | tee report-path.txt
           echo "Report: \`$(tail -n 1 report-path.txt)\` in the \`live-benchmark-report\` artifact" >> "$GITHUB_STEP_SUMMARY"
 
@@ -175,6 +181,9 @@ jobs:
       LIVE_BENCH_SDK_COMMIT: ${{ github.sha }}
       LIVE_BENCH_HARNESS_COMMIT: ${{ github.sha }}
     steps:
+      - name: Record job start
+        run: echo "LIVE_BENCH_JOB_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
       - name: Free disk space
         run: |
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/share/boost
@@ -186,7 +195,7 @@ jobs:
           swift-version: "6.4"
 
       - name: Build Swift driver and orchestrator
-        run: swift build --package-path Benchmarks/Live -c release
+        run: swift build --package-path Benchmarks/Live -c release --force-resolved-versions
 
       # Every headline cell at one fixed moderate rate, one round, Swift only; writes trend-out/bmf.json.
       - name: Run trend

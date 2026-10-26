@@ -314,13 +314,12 @@ Swift and .NET dependency graphs, and `report.html`.
 
 ### How results land
 
-The workflows commit nothing, matching the offline suite: GitHub-hosted runners differ between runs, so a person
-reviews a run before it becomes a reference. To publish one:
+The workflows commit and publish nothing, matching the offline suite: GitHub-hosted runners differ between runs, so a
+person reviews a run before it becomes a reference. Publishing is manual; the maintainer:
 
-1. Download `live-benchmark-report` from the run and check `report.html`.
-2. Commit the bundle under `Benchmarks/Live/results/<YYYY-MM-DD>-<server version>/` in a pull request.
-3. Once merged, the report is published on the [benchmarks page](https://gradyzhuo.github.io/swift-kurrentdb/benchmarks.html)
-   of the GitHub Pages site, and a summary with the link to it is added below.
+1. Downloads `live-benchmark-report` from the run and checks `report.html`.
+2. Commits the bundle under `Benchmarks/Live/results/<YYYY-MM-DD>-<server version>/` in a pull request.
+3. Adds a summary of the run below, with a link to the committed `report.html`, in the same pull request.
 
 ### Published runs
 

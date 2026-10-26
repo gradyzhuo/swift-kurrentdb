@@ -1,0 +1,50 @@
+# Tests of the live benchmark harness (Benchmarks/Live): scheduler, statistics, report, orchestrator against fakes,
+# and the .NET driver's parity with the Swift open loop. No server: the Docker suites (LIVE_BENCH_DOCKER=1) do not run
+# here. Runs on every change to the harness, to the SDK it builds against, or to this workflow.
+#
+# Third-party actions are pinned to full commit SHAs (version in the trailing comment) so an upstream tag or branch
+# that moves cannot run new code with this repository's secrets.
+name: Live benchmarks tests
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "Benchmarks/Live/**"
+      - "Sources/**"
+      - "Package.swift"
+      - ".github/workflows/live-benchmarks-tests.yml"
+      - ".github/workflows/live-benchmarks.yml"
+  pull_request:
+    paths:
+      - "Benchmarks/Live/**"
+      - "Sources/**"
+      - "Package.swift"
+      - ".github/workflows/live-benchmarks-tests.yml"
+      - ".github/workflows/live-benchmarks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Benchmarks/Live tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    env:
+      # The .NET parity tests skip without `dotnet`; here a missing `dotnet` fails the run instead.
+      LIVE_BENCH_REQUIRE_DOTNET: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
+        with:
+          swift-version: "6.4"
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "8.0.x"
+
+      # Serial, as the timing tests assume an otherwise idle process; the .NET driver is built by the tests in locked
+      # restore mode.
+      - name: Test
+        run: swift test --package-path Benchmarks/Live --no-parallel --force-resolved-versions

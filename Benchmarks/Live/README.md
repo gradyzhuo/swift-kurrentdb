@@ -61,6 +61,14 @@ Useful options (`LiveOrchestrator run-cell --help` lists them all):
 
 Between trials the orchestrator drops the page cache with `sudo -n` on Linux (a no-op elsewhere). Server headroom
 (CPU per core, disk await and queue depth) is read from `/proc`, so on macOS it is unavailable and the report says so.
+On Linux the disk is the `/proc/diskstats` line whose major:minor is the `st_dev` of the work directory, and a cell
+stops at once with an error when that device or a server core cannot be read. The projection part of the gate is
+whether `$by_category` has processed the last event written in the measure window within 5 s after it ends
+(`bufferedEvents` is the projection's read-ahead queue, not its lag, and is only recorded).
+
+At cell start, before seeding, each in-process driver's `floor` runs at every rate of the cell (pinned like the
+trials); the report shows the floors next to the ratios. No trial starts after 340 minutes of job time (the workflow
+passes the job's start in `LIVE_BENCH_JOB_STARTED`; without it the orchestrator's own start counts).
 
 ## Merge cells into a report
 
@@ -104,5 +112,8 @@ driver contract (`docs/driver-contract.md`, ".NET notes"):
   gRPC channels; the Swift driver uses one client.
 - The .NET thread pool's default spin before sleeping costs process CPU even with a no-op operation, and that CPU is
   counted in the client's CPU figures.
-- Each driver's no-op harness floor is recorded in the contract; latencies close to it say more about the harness than
-  the client.
+- Appends: the .NET client multiplexes `AppendToStreamAsync` over one `BatchAppend` stream; the Swift SDK (and ghz)
+  sends one `Streams.Append` RPC per append.
+- Rebuild decodes with Foundation's `JSONSerialization` in Swift and `JsonDocument` in .NET.
+- Each driver's no-op harness floor is measured in every cell's job and shown in the report; latencies close to it say
+  more about the harness than the client.
