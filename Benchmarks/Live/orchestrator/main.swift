@@ -2,31 +2,20 @@ import ArgumentParser
 import Foundation
 import LiveBenchCore
 
-/// Runs live benchmark cells. `trend` and `merge` come with the report (Task 11).
+/// Runs live benchmark cells (`run-cell`), assembles their results bundle and report (`merge`), and runs the nightly
+/// Swift-only trend (`trend`).
 struct LiveOrchestratorCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "LiveOrchestrator",
         abstract: "Orchestrates the live KurrentDB client benchmarks.",
-        subcommands: [RunCell.self]
+        subcommands: [RunCell.self, Merge.Command.self, Trend.self]
     )
 }
 
-/// `run-cell`: seeds one cell, runs every rate step for every client over the rounds (rotated), and writes
-/// `<out>/cell-result.json` plus each trial's files under `<out>/trials/`.
-struct RunCell: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "run-cell",
-        abstract: "Run one cell (scenario x event size) with every client, interleaved over rounds."
-    )
-
-    @Option(help: "Cell id from the cells file.")
-    var cell: String
-
+/// Server and pinning options shared by `run-cell` and `trend`.
+struct CellOptions: ParsableArguments {
     @Option(help: "JSON array of drivers: [{\"name\": \"swift\", \"command\": [...]}, ...]. Relative paths resolve against the working directory.")
     var drivers: String
-
-    @Option(help: "Directory for cell-result.json and the trials' files.")
-    var out: String
 
     @Option(help: "Server work directory (certificates, data, snapshot, logs). Data and snapshot are removed at the end; the default, a temporary directory, entirely.")
     var work: String?
@@ -46,21 +35,17 @@ struct RunCell: AsyncParsableCommand {
     @Flag(help: "Smoke run: 1 round, the first rate only, 5 s warmup and 5 s measure. Never a published result.")
     var smoke = false
 
-    func run() async throws {
-        let allCells = try loadCells(from: URL(fileURLWithPath: cells))
-        guard var cell = allCells.first(where: { $0.id == self.cell }) else {
-            throw ValidationError("no cell '\(self.cell)' in \(cells); known: \(allCells.map(\.id).joined(separator: ", "))")
-        }
-        let specs = try JSONDecoder().decode([DriverSpec].self, from: Data(contentsOf: URL(fileURLWithPath: drivers)))
+    func loadCells() throws -> [Cell] { try LiveBenchCore.loadCells(from: URL(fileURLWithPath: cells)) }
+
+    func loadDrivers() throws -> [DriverSpec] {
+        try JSONDecoder().decode([DriverSpec].self, from: Data(contentsOf: URL(fileURLWithPath: drivers)))
+    }
+
+    /// Runs `cell` (its rates as given) with `specs` over `rounds` and writes `<out>/cell-result.json` after every
+    /// trial and at the end. The environment's metadata (`RunMetadata.collect`) fills what the drivers did not report.
+    func run(_ cell: Cell, specs: [DriverSpec], rounds: Int, out outDirectory: URL) async throws -> CellResult {
         struct ServerConfig: Decodable { var image: String }
         let image = try JSONDecoder().decode(ServerConfig.self, from: Data(contentsOf: URL(fileURLWithPath: serverConfig))).image
-
-        var rounds = cell.rounds
-        if smoke {
-            cell.rates = Array(cell.rates.prefix(1))
-            rounds = 1
-        }
-        let outDirectory = URL(fileURLWithPath: out)
         try FileManager.default.createDirectory(at: outDirectory, withIntermediateDirectories: true)
         let workDirectory = work.map { URL(fileURLWithPath: $0) }
             ?? FileManager.default.temporaryDirectory.appendingPathComponent("live-bench-\(cell.id)-\(UUID().uuidString.prefix(8))")
@@ -82,6 +67,7 @@ struct RunCell: AsyncParsableCommand {
         runner.driverCPUs = driverCpus.isEmpty ? nil : driverCpus
         #endif
         runner.metadata = clientMetadata(TrialRunner.applicableDrivers(specs, kind: cell.kind))
+            .filling(from: RunMetadata.collect(environment: ProcessInfo.processInfo.environment))
         let resultFile = outDirectory.appendingPathComponent("cell-result.json")
         // Rewritten after every trial (atomic replace), so a killed job keeps the trials done so far.
         runner.onProgress = { partial in
@@ -105,6 +91,98 @@ struct RunCell: AsyncParsableCommand {
         try writeCellResult(result, to: resultFile)
         let failed = result.trials.filter { $0.error != nil }.count
         print("\(cell.id): \(result.trials.count) trials, \(failed) failed\(result.abortedReason.map { ", aborted: \($0)" } ?? ""); \(resultFile.path)")
+        return result
+    }
+}
+
+/// `run-cell`: seeds one cell, runs every rate step for every client over the rounds (rotated), and writes
+/// `<out>/cell-result.json` plus each trial's files under `<out>/trials/`.
+struct RunCell: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "run-cell",
+        abstract: "Run one cell (scenario x event size) with every client, interleaved over rounds."
+    )
+
+    @Option(help: "Cell id from the cells file.")
+    var cell: String
+
+    @Option(help: "Directory for cell-result.json and the trials' files.")
+    var out: String
+
+    @OptionGroup var options: CellOptions
+
+    func run() async throws {
+        let allCells = try options.loadCells()
+        guard var cell = allCells.first(where: { $0.id == self.cell }) else {
+            throw ValidationError("no cell '\(self.cell)' in \(options.cells); known: \(allCells.map(\.id).joined(separator: ", "))")
+        }
+        let specs = try options.loadDrivers()
+        var rounds = cell.rounds
+        if options.smoke {
+            cell.rates = Array(cell.rates.prefix(1))
+            rounds = 1
+        }
+        _ = try await options.run(cell, specs: specs, rounds: rounds, out: URL(fileURLWithPath: out))
+    }
+}
+
+extension Merge {
+    /// `merge`: the results bundle and report from the cells' outputs.
+    struct Command: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "merge",
+            abstract: "Assemble the results bundle (<out>/<YYYY-MM-DD>-<server version>/) and report.html from cell results."
+        )
+
+        @Option(help: "Directory holding the cells' outputs (each cell-result.json next to its trials/), at any depth.")
+        var `in`: String
+
+        @Option(help: "Results directory; the bundle is created inside it.")
+        var out: String
+
+        func run() throws {
+            let bundle = try Merge.bundle(from: URL(fileURLWithPath: `in`), into: URL(fileURLWithPath: out))
+            print(bundle.appendingPathComponent("report.html").path)
+        }
+    }
+}
+
+/// `trend`: every headline cell at one fixed moderate rate (`BMF.trendRate`), Swift only, one round; writes each
+/// cell's result under `<out>/<cell id>/` and the Bencher file `<out>/bmf.json`. Fails when no benchmark was produced.
+struct Trend: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "trend",
+        abstract: "Nightly Swift-only trend: one moderate rate per headline cell, one round, Bencher output."
+    )
+
+    @Option(help: "Directory for bmf.json and each cell's results.")
+    var out: String
+
+    @Option(help: "Comma-separated cell ids (default: every headline cell).")
+    var only: String?
+
+    @OptionGroup var options: CellOptions
+
+    func run() async throws {
+        let wanted = only.map { Set($0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }) }
+        let cells = try options.loadCells().filter { wanted?.contains($0.id) ?? ($0.tier == .headline) }
+        guard !cells.isEmpty else { throw ValidationError("no cells selected") }
+        let specs = try options.loadDrivers().filter { $0.name == CellAnalysis.swift }
+        guard !specs.isEmpty else { throw ValidationError("the drivers file has no \"swift\" driver") }
+
+        let outDirectory = URL(fileURLWithPath: out)
+        var results: [CellResult] = []
+        for var cell in cells {
+            cell.rates = [BMF.trendRate(for: cell)]
+            cell.rounds = 1
+            results.append(try await options.run(cell, specs: specs, rounds: 1, out: outDirectory.appendingPathComponent(cell.id)))
+        }
+        let bmf = BMF.trend(results)
+        let file = outDirectory.appendingPathComponent("bmf.json")
+        try bmf.write(to: file)
+        let count = (try? JSONSerialization.jsonObject(with: bmf) as? [String: Any])?.count ?? 0
+        print("\(count) benchmarks; \(file.path)")
+        guard count > 0 else { throw ValidationError("no trend benchmark produced (every trial failed)") }
     }
 }
 
@@ -178,6 +256,8 @@ private func diskDevice(for directory: URL) -> String? {
 do {
     switch try LiveOrchestratorCommand.parseAsRoot() {
     case let command as RunCell:
+        try await command.run()
+    case let command as Trend:
         try await command.run()
     case var command:
         try command.run()
