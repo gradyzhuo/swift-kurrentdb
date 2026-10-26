@@ -77,5 +77,6 @@ private func rebuildWindow(
         }
         tally.record(events: events, expected: length, sizesOk: sizesOk)
         if events != length { throw RebuildMismatch(events: events) }
+        return nil
     }
 }
