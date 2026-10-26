@@ -161,8 +161,10 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// Subscribes to live events from the stream.
     ///
     /// - Parameter configure: Closure to configure ``Subscribe/Options`` (starting revision, link resolution). Defaults to no-op.
-    /// - Returns: A ``Streams/Subscription`` that delivers events as they are appended.
-    /// - Throws: `KurrentError` if the subscription cannot be established.
+    /// - Returns: A ``Streams/Subscription`` that delivers events as they are appended. Its `events`
+    ///   end with `KurrentError.resourceDeleted` when the stream is tombstoned.
+    /// - Throws: `KurrentError` if the subscription cannot be established, including
+    ///   `KurrentError.resourceDeleted` when the stream is already tombstoned.
     public func subscribe(configure: @Sendable (inout Subscribe.Options) -> Void = { _ in }) async throws(KurrentError) -> Subscription {
         var options = Subscribe.Options()
         configure(&options)
