@@ -7,12 +7,10 @@
       "tls": true,
       "tier": "headline",
       "rates": [
+        100,
         250,
         500,
-        1000,
-        2000,
-        4000,
-        8000
+        750
       ],
       "rounds": 5
     },
@@ -119,8 +117,8 @@
       "tls": true,
       "tier": "appendix",
       "rates": [
-        500,
-        2000
+        250,
+        500
       ],
       "rounds": 3
     },
@@ -180,8 +178,8 @@
       "tls": true,
       "tier": "appendix",
       "rates": [
-        500,
-        2000
+        250,
+        500
       ],
       "rounds": 3
     },
@@ -241,8 +239,8 @@
       "tls": false,
       "tier": "appendix",
       "rates": [
-        500,
-        2000
+        250,
+        500
       ],
       "rounds": 3
     },
