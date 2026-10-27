@@ -198,6 +198,8 @@ same for every client.
     Every term depends only on the schedule and the observations, so both drivers compute identical values from
     identical observations. If scheduling stops before `m` the three are null. A window shorter than 2 s uses half
     of it as the span: the two spans are then the first half up to `m` and the second half, sharing at most index `m`.
+    The first half's span then starts at index 0, whose backlog is always 1, so `backlogAtMidpoint` is 1 and the gate
+    only bounds the end's floor; such windows occur only in self-tests (measure windows are 60 s).
     The orchestrator calls a step's backlog grown when
     `backlogAtEnd - backlogAtMidpoint > max(1, 0.01 * scheduledSecondHalf, rate * 0.25 s)`, and such a step is not
     sustained: a client that completes slightly slower than the rate can still finish everything within the deadline
