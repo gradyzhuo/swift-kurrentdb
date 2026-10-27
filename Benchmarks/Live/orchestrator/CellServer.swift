@@ -8,7 +8,9 @@ import Synchronization
 /// the monitor's projection backlog.
 final class CellServer: TrialServer {
     let control: ServerControl
-    private let state = Mutex<(client: KurrentDBClient?, digest: String?)>((nil, nil))
+    /// `seed` is the seed's last position and `writes` whether the cell's trials write (all kinds but rebuild), both
+    /// set by `prepare` for the projection gate's target.
+    private let state = Mutex<(client: KurrentDBClient?, digest: String?, seed: LogPosition?, writes: Bool)>((nil, nil, nil, true))
 
     init(control: ServerControl) {
         self.control = control
@@ -46,7 +48,11 @@ final class CellServer: TrialServer {
         try stop()
         try control.snapshot()
         let digest = try? control.imageDigest()
-        state.withLock { $0.digest = digest }
+        state.withLock {
+            $0.digest = digest
+            $0.seed = LogPosition(commit: manifest.lastCommitPosition, prepare: manifest.lastPreparePosition)
+            $0.writes = cell.kind != .rebuild
+        }
         return manifest
     }
 
@@ -94,10 +100,16 @@ final class CellServer: TrialServer {
         return try? await withTimeout(.seconds(5)) { try await client.projections(system: .byCategory).detail()?.bufferedEvents }
     }
 
-    /// The monitor's projection gate (`byCategoryCatchUp(client:streamPrefix:within:)`); unreadable while no server answers.
+    /// The monitor's projection gate: the target is `projectionTarget(seed:trialWrites:lastWritten:)` (the seed's last
+    /// position, or the last event written to `<streamPrefix>…` when the cell's trials write), then
+    /// `byCategoryCatchUp(client:target:within:)`. Unanswered while no server answers.
     func byCategoryCatchUp(streamPrefix: String, within bound: Duration) async -> ProjectionCatchUp {
-        guard let client = try? currentClient() else { return .unreadable }
-        return await LiveOrchestrator.byCategoryCatchUp(client: client, streamPrefix: streamPrefix, within: bound)
+        guard let client = try? currentClient() else { return .unanswered }
+        let (seed, writes) = state.withLock { ($0.seed, $0.writes) }
+        guard let target = await projectionTarget(seed: seed, trialWrites: writes, lastWritten: {
+            try await lastWrittenPosition(client, streamPrefix: streamPrefix)
+        }) else { return .targetUnreadable }
+        return await LiveOrchestrator.byCategoryCatchUp(client: client, target: target, within: bound)
     }
 
     /// Removes the data directory and the snapshot (between cells, and after the last one: they can be GBs).
@@ -125,16 +137,26 @@ private func waitForSeedPosition(_ client: KurrentDBClient, _ manifest: SeedMani
     try await waitForByCategory(client: client, toReach: manifest.lastCommitPosition, prepare: manifest.lastPreparePosition, timeout: .seconds(120))
 }
 
-/// The monitor's projection gate: reads the log position of the last event written so far to a stream named
-/// `<streamPrefix>…` (the trial's measured streams; a filtered backward read of `$all`), then polls `$by_category`'s
-/// position until it is at or past it or `bound` passes, counting from the call. With nothing written (rebuild), the
-/// seeded events are the target and the projection has them already.
-func byCategoryCatchUp(client: KurrentDBClient, streamPrefix: String, within bound: Duration) async -> ProjectionCatchUp {
+/// The position `$by_category` must reach after a measure window. A trial that writes nothing (rebuild) has the seed's
+/// last position as its target, with no read of `$all`: the newest event under the prefix is then the last seeded one,
+/// and the filtered backward read that finds it walks past every link event the projections wrote after seeding (about
+/// two per seeded event; 12 s for a 2 M-event corpus). A trial that writes has `lastWritten` (bounded by `scanBound`)
+/// as its target, never below the seed's position. Nil when `lastWritten` fails or is not answered within `scanBound`.
+/// Without a seed position (no `prepare`), `lastWritten` is the target whatever `trialWrites` says.
+func projectionTarget(
+    seed: LogPosition?, trialWrites: Bool, scanBound: Duration = .seconds(5),
+    lastWritten: @escaping @Sendable () async throws -> LogPosition
+) async -> LogPosition? {
+    if let seed, !trialWrites { return seed }
+    guard let written = try? await withTimeout(scanBound, lastWritten) else { return nil }
+    return max(written, seed ?? .zero)
+}
+
+/// Polls `$by_category`'s position until it is at or past `target` or `bound` passes, counting from the call: the
+/// target is already known, so how long it took to find does not count as projection lag.
+func byCategoryCatchUp(client: KurrentDBClient, target: LogPosition, within bound: Duration) async -> ProjectionCatchUp {
     let clock = ContinuousClock()
     let started = clock.now
-    guard let target = try? await withTimeout(.seconds(5), { try await lastWrittenPosition(client, streamPrefix: streamPrefix) }) else {
-        return .unreadable
-    }
     var answered = false
     while true {
         if let detail = try? await withTimeout(.seconds(1), { try await client.projections(system: .byCategory).detail() }) {
@@ -143,7 +165,7 @@ func byCategoryCatchUp(client: KurrentDBClient, streamPrefix: String, within bou
                 return .caughtUp(seconds: Double(started.duration(to: clock.now).totalNanoseconds) / 1e9)
             }
         }
-        guard clock.now < started.advanced(by: bound) else { return answered ? .notCaughtUp : .unreadable }
+        guard clock.now < started.advanced(by: bound) else { return answered ? .notCaughtUp : .unanswered }
         try? await Task.sleep(for: .milliseconds(100))
     }
 }
