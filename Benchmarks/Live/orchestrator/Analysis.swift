@@ -16,7 +16,9 @@ import LiveBenchCore
 /// - A censored percentile (rank among non-successes) on either side drops that round from that percentile's ratio.
 /// - "Backlog not growing" uses the drivers' backlog samples (`TrialResult.backlog`, `backlogGrew`): a client that
 ///   falls slowly behind can finish everything within the deadline and the drain, so the loss criterion alone would
-///   miss it. A result without samples (ghz) counts as not grown: unknown is not growth.
+///   miss it. The tolerance includes the in-flight count the step's own p99 explains (rate × p99), so a latency
+///   spike under one single-instant sample is not read as growth. A result without samples (ghz) counts as not
+///   grown: unknown is not growth.
 struct CellAnalysis {
     static let swift = "swift"
     static let dotnet = "dotnet"
@@ -330,15 +332,16 @@ struct TrialFigures {
             return
         }
         valid = true
-        let lost = result.failed + result.dropped + result.timedOut
-        sustained = isSustained(
-            scheduled: result.scheduled, succeeded: result.succeeded, lost: lost,
-            targetRate: trial.rate, measuredSeconds: result.measuredSeconds, backlogGrew: result.backlog?.grew ?? false
-        )
         let histogram = (trial.histogram ?? HistogramFile(buckets: [])).histogram()
         p50 = percentile(50, successes: histogram, scheduled: result.scheduled)
         p99 = percentile(99, successes: histogram, scheduled: result.scheduled)
         p999 = percentile(99.9, successes: histogram, scheduled: result.scheduled)
+        let lost = result.failed + result.dropped + result.timedOut
+        let backlogGrew = result.backlog?.grew(inFlightAtP99: inFlight(targetRate: trial.rate, p99: p99)) ?? false
+        sustained = isSustained(
+            scheduled: result.scheduled, succeeded: result.succeeded, lost: lost,
+            targetRate: trial.rate, measuredSeconds: result.measuredSeconds, backlogGrew: backlogGrew
+        )
         let seconds = result.measuredSeconds.isFinite && result.measuredSeconds > 0 ? result.measuredSeconds : nil
         achievedRate = seconds.map { Double(result.succeeded) / $0 }
         // ghz measures neither CPU nor RSS (zeros); an all-failed trial has no per-operation cost.
