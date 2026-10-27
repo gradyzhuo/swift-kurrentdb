@@ -243,7 +243,7 @@ static class Scenarios
         int _acks;
 
         /// Connects `count` consumers with the client's default options and returns once the server confirmed each
-        /// subscription (the Swift SDK's `subscribe()` likewise returns a started subscription).
+        /// subscription (the Swift driver waits for every confirmation the same way).
         public static async Task<PersistentConsumers> Start(KurrentDBPersistentSubscriptionsClient client, string stream, string group, int count, DeliveryBoard board)
         {
             var consumers = new PersistentConsumers();
