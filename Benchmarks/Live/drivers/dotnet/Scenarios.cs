@@ -24,7 +24,9 @@ sealed record Trial(
         MeasuredSeconds: MeasuredSeconds, CpuUserSeconds: Cpu.User, CpuSystemSeconds: Cpu.System,
         MaxRssBytes: ProcessUsage.Current().MaxRss,
         AckEnqueued: AckEnqueued, UniqueDeliveries: UniqueDeliveries, Redeliveries: Redeliveries,
-        CatchUpSeconds: CatchUpSeconds, Validation: Validation);
+        CatchUpSeconds: CatchUpSeconds, BacklogAtMidpoint: Recorder.Backlog?.AtMidpoint,
+        BacklogAtEnd: Recorder.Backlog?.AtEnd, ScheduledSecondHalf: Recorder.Backlog?.ScheduledSecondHalf,
+        Validation: Validation);
 }
 
 /// Names a phase works on: the measured ones, or the warmup ones (`streamPrefix + "w"`, `category + "w"`).

@@ -14,8 +14,9 @@ import LiveBenchCore
 ///   had server headroom. A failing gate is "system-limited", a missing sample "headroom unavailable": the step is
 ///   shown (per-client figures) but no SDK comparison is drawn from it. The same holds for the ceiling ratio.
 /// - A censored percentile (rank among non-successes) on either side drops that round from that percentile's ratio.
-/// - "Backlog not growing" is enforced by the drivers' in-flight cap and deadline: a backlog that grows turns into
-///   drops and timeouts, which the loss criterion of `isSustained` counts, so `backlogGrew` is false here.
+/// - "Backlog not growing" uses the drivers' backlog samples (`TrialResult.backlog`, `backlogGrew`): a client that
+///   falls slowly behind can finish everything within the deadline and the drain, so the loss criterion alone would
+///   miss it. A result without samples (ghz) counts as not grown: unknown is not growth.
 struct CellAnalysis {
     static let swift = "swift"
     static let dotnet = "dotnet"
@@ -332,7 +333,7 @@ struct TrialFigures {
         let lost = result.failed + result.dropped + result.timedOut
         sustained = isSustained(
             scheduled: result.scheduled, succeeded: result.succeeded, lost: lost,
-            targetRate: trial.rate, measuredSeconds: result.measuredSeconds, backlogGrew: false
+            targetRate: trial.rate, measuredSeconds: result.measuredSeconds, backlogGrew: result.backlog?.grew ?? false
         )
         let histogram = (trial.histogram ?? HistogramFile(buckets: [])).histogram()
         p50 = percentile(50, successes: histogram, scheduled: result.scheduled)

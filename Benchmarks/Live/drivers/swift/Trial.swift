@@ -21,7 +21,9 @@ struct Trial {
             measuredSeconds: measuredSeconds, cpuUserSeconds: cpu.user, cpuSystemSeconds: cpu.system,
             maxRssBytes: ProcessUsage.current().maxRss,
             ackEnqueued: ackEnqueued, uniqueDeliveries: uniqueDeliveries, redeliveries: redeliveries,
-            catchUpSeconds: catchUpSeconds, validation: validation
+            catchUpSeconds: catchUpSeconds, backlogAtMidpoint: recorder.backlog?.atMidpoint,
+            backlogAtEnd: recorder.backlog?.atEnd, scheduledSecondHalf: recorder.backlog?.scheduledSecondHalf,
+            validation: validation
         )
     }
 }

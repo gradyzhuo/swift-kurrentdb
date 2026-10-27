@@ -41,13 +41,26 @@ public struct TrialResult: Codable, Equatable, Sendable {
     public var uniqueDeliveries: Int?
     public var redeliveries: Int?
     public var catchUpSeconds: Double?
+    /// The open loop's backlog samples of the measure window (see `BacklogSamples`); nil when not measured (ghz).
+    public var backlogAtMidpoint: Int?
+    public var backlogAtEnd: Int?
+    public var scheduledSecondHalf: Int?
     public var validation: Validation
+
+    /// The three samples as `BacklogSamples`, or nil unless all are present.
+    public var backlog: BacklogSamples? {
+        guard let backlogAtMidpoint, let backlogAtEnd, let scheduledSecondHalf else { return nil }
+        return BacklogSamples(
+            atMidpoint: backlogAtMidpoint, atEnd: backlogAtEnd, scheduledSecondHalf: scheduledSecondHalf
+        )
+    }
 
     public init(
         client: String, cellId: String, targetRate: Double, timing: Timing,
         scheduled: Int, succeeded: Int, failed: Int, dropped: Int, timedOut: Int,
         measuredSeconds: Double, cpuUserSeconds: Double, cpuSystemSeconds: Double, maxRssBytes: UInt64,
         ackEnqueued: Int? = nil, uniqueDeliveries: Int? = nil, redeliveries: Int? = nil, catchUpSeconds: Double? = nil,
+        backlogAtMidpoint: Int? = nil, backlogAtEnd: Int? = nil, scheduledSecondHalf: Int? = nil,
         validation: Validation
     ) {
         self.client = client
@@ -67,6 +80,9 @@ public struct TrialResult: Codable, Equatable, Sendable {
         self.uniqueDeliveries = uniqueDeliveries
         self.redeliveries = redeliveries
         self.catchUpSeconds = catchUpSeconds
+        self.backlogAtMidpoint = backlogAtMidpoint
+        self.backlogAtEnd = backlogAtEnd
+        self.scheduledSecondHalf = scheduledSecondHalf
         self.validation = validation
     }
 }

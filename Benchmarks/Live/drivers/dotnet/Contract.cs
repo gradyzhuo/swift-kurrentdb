@@ -104,6 +104,9 @@ sealed record TrialResult(
     int? UniqueDeliveries,
     int? Redeliveries,
     double? CatchUpSeconds,
+    int? BacklogAtMidpoint,
+    int? BacklogAtEnd,
+    int? ScheduledSecondHalf,
     Validation Validation);
 
 /// Output of `version` (`DriverVersion`).

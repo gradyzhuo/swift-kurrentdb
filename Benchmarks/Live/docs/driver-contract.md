@@ -180,6 +180,15 @@ same for every client.
 10. **Harness floor**: each driver must be able to report its no-op floor (`floor` above: the same scheduler with an
     operation that returns immediately, p50/p99 at the step's rate). Latencies of two drivers are only comparable if
     their floors are comparable; the report shows both, measured on the cell's runner.
+11. **Backlog samples**: the scheduler samples the backlog (operations launched with no recorded outcome yet; drops
+    are not backlog) twice: right after it launches or drops the first index whose integer-nanosecond offset (the same
+    rounded offset that decides whether an index is in the window) is at or after `duration / 2`, and when the
+    scheduling loop exits, before the drain. It reports both counts and the number of indices from that midpoint index
+    to the last scheduled one, both included (`backlogAtMidpoint`, `backlogAtEnd`, `scheduledSecondHalf`). If
+    scheduling stops before the midpoint the three are null. The orchestrator calls a step's backlog grown when
+    `backlogAtEnd - backlogAtMidpoint > max(1, 0.01 * scheduledSecondHalf)` and such a step is not sustained: a
+    client that completes slightly slower than the rate can still finish everything within the deadline and the
+    drain, so the loss counts alone would not show it. Missing samples count as not grown.
 
 ### Percentiles
 
@@ -310,6 +319,9 @@ counts are not checked; process CPU and RSS are not measured. Its numbers are ne
 | `uniqueDeliveries` | int? | subscription kinds: distinct events delivered; else null |
 | `redeliveries` | int? | subscription kinds: deliveries of an already seen event; else null |
 | `catchUpSeconds` | number? | catch-up: wall time of phase 1 until the last corpus event; else null |
+| `backlogAtMidpoint` | int? | backlog right after the midpoint index was launched or dropped (rule 11); else null |
+| `backlogAtEnd` | int? | backlog when scheduling ended, before the drain (rule 11); else null |
+| `scheduledSecondHalf` | int? | indices from the midpoint index to the last scheduled one (rule 11); else null |
 | `validation` | object | see below |
 
 Optional fields may be omitted or `null`.
@@ -410,7 +422,8 @@ does this:
 - **Parity test.** `dotnet LiveDriver.DotNet.dll selftest --mode ...` runs the open loop with synthetic operations
   (no-op, throw, stall past the deadline with and without honouring cancellation, inline cancellation, a completion
   instant past the deadline, over the cap with drain expiry); `OpenLoopParityTests` runs the same cases through
-  `runOpenLoop` and requires identical counters.
+  `runOpenLoop` and requires identical counters and `scheduledSecondHalf`, and identical backlog samples where they do
+  not depend on timing (operations that never complete within the window).
 - **Process figures.** CPU and peak RSS come from `getrusage(RUSAGE_SELF)` (P/Invoke), the Swift driver's source;
   on Linux `ru_maxrss` is the kernel's VmHWM, which `Process.PeakWorkingSet64` also reports.
 - **Runtime defaults.** No GC, thread-pool or tiered-compilation settings are changed. The .NET thread pool's workers
