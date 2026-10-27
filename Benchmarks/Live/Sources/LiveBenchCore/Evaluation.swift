@@ -6,17 +6,18 @@ public enum EvaluationThresholds {
     public static let sustainedRateFraction = 0.99
     /// Maximum (failed + dropped + timed out) / scheduled for a sustained step.
     public static let maxLossRatio = 0.001
-    /// The open loop's backlog grew when it rose from the window's midpoint to the end of scheduling by more than the
-    /// largest of: this fraction of the operations scheduled in the second half, `minBacklogGrowth`, and the
-    /// operations scheduled during `backlogSpikeAllowanceSeconds` (see `backlogGrew`). Growth beyond 1% of the second
-    /// half's schedule means completions fell behind the target rate; one operation absorbs sampling jitter (a sample
-    /// can land just before or after a completion).
+    /// The open loop's backlog grew when its minimum over the window's last second exceeds its minimum over the second
+    /// ending at the midpoint by more than the largest of: this fraction of the operations scheduled in the second
+    /// half, `minBacklogGrowth`, and the operations scheduled during `backlogSpikeAllowanceSeconds` (see `backlogGrew`
+    /// and `BacklogSamples`). Growth beyond 1% of the second half's schedule means completions fell behind the target
+    /// rate; one operation absorbs sampling jitter (an observation can land just before or after a completion).
     public static let maxBacklogGrowthFraction = 0.01
     public static let minBacklogGrowth = 1
-    /// Seconds of the target rate's schedule a latency spike may leave outstanding at one of the two single-instant
-    /// samples without counting as growth; at low rates such a spike would otherwise exceed the other two terms. It is
-    /// fixed rather than tied to the step's latency: a drifting client's queued operations raise its own percentiles,
-    /// so a latency-based allowance would grow with the drift and hide it.
+    /// Seconds of the target rate's schedule a latency spike may leave outstanding in the samples without counting as
+    /// growth; at low rates such a spike would otherwise exceed the other two terms. The samples are minima over a
+    /// second, so only a stall that lasts the whole second reaches them. It is fixed rather than tied to the step's
+    /// latency: a drifting client's queued operations raise its own percentiles, so a latency-based allowance would
+    /// grow with the drift and hide it.
     public static let backlogSpikeAllowanceSeconds = 0.25
     /// Every server core's mean busy fraction must stay at or below this.
     public static let maxCoreBusy = 0.85
@@ -47,7 +48,8 @@ public func isSustained(scheduled: Int, succeeded: Int, lost: Int, targetRate: D
         && !backlogGrew
 }
 
-/// Whether the open loop's backlog grew over the second half of the window: `atEnd - atMidpoint` exceeds
+/// Whether the open loop's backlog grew over the second half of the window: `atEnd - atMidpoint` (the minima of
+/// `BacklogSamples`) exceeds
 /// `max(minBacklogGrowth, maxBacklogGrowthFraction * scheduledSecondHalf, targetRate * backlogSpikeAllowanceSeconds)`.
 /// A client that completes slightly slower than the target rate can still finish everything within the deadline and
 /// the drain; this is what catches it. A negative or non-finite `targetRate` adds no allowance. Callers without

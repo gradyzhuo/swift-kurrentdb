@@ -182,17 +182,31 @@ same for every client.
 10. **Harness floor**: each driver must be able to report its no-op floor (`floor` above: the same scheduler with an
     operation that returns immediately, p50/p99 at the step's rate). Latencies of two drivers are only comparable if
     their floors are comparable; the report shows both, measured on the cell's runner.
-11. **Backlog samples**: the scheduler samples the backlog (operations launched with no recorded outcome yet; drops
-    are not backlog) twice: right after it launches or drops the first index whose integer-nanosecond offset (the same
-    rounded offset that decides whether an index is in the window) is at or after `duration / 2`, and when the
-    scheduling loop exits, before the drain. It reports both counts and the number of indices from that midpoint index
-    to the last scheduled one, both included (`backlogAtMidpoint`, `backlogAtEnd`, `scheduledSecondHalf`). If
-    scheduling stops before the midpoint the three are null. The orchestrator calls a step's backlog grown when
+11. **Backlog samples**: the scheduler observes the backlog (operations launched with no recorded outcome yet; drops
+    are not backlog) right after it launches or drops each index, under the same lock as the cap check, so the
+    observation counts the index just launched. Offsets below are each index's integer-nanosecond offset (the same
+    rounded offset that decides whether an index is in the window), `span = min(1 s, duration / 2)` in whole
+    nanoseconds (integer division), and the **midpoint index** `m` is the first index whose offset is at or after
+    `duration / 2`. The driver reports:
+    - `backlogAtMidpoint`: the minimum observation over the indices `i <= m` with `offset(i) >= offset(m) - span`
+      (the second of schedule that ends at the midpoint index, both ends included);
+    - `backlogAtEnd`: the minimum observation over the indices with `offset(i) >= duration - span` (the window's last
+      second) and the last index scheduled, which is always included (so a rate below one per span, or a loop
+      stopped early, still has an observation);
+    - `scheduledSecondHalf`: the number of indices from `m` to the last scheduled one, both included.
+
+    Every term depends only on the schedule and the observations, so both drivers compute identical values from
+    identical observations. If scheduling stops before `m` the three are null. A window shorter than 2 s uses half
+    of it as the span: the two spans are then the first half up to `m` and the second half, sharing at most index `m`.
+    The orchestrator calls a step's backlog grown when
     `backlogAtEnd - backlogAtMidpoint > max(1, 0.01 * scheduledSecondHalf, rate * 0.25 s)`, and such a step is not
     sustained: a client that completes slightly slower than the rate can still finish everything within the deadline
-    and the drain, so the loss counts alone would not show it. The `rate * 0.25 s` term keeps a latency spike that
-    covers one of the two single-instant samples from reading as growth at low rates. It is fixed, not tied to the
-    step's latency: a drifting client's queued operations raise its own percentiles, so a latency-based allowance
+    and the drain, so the loss counts alone would not show it. The samples are minima, not single instants, because a
+    client that falls behind raises the backlog's floor, which the minimum follows, while a short server stall only
+    makes a peak: single-instant samples read such stalls (with no loss) as growth, e.g. 1 at the midpoint and 181 at
+    the end at 250/s. The two minima still lie about half a window apart, as single instants did, so the thresholds
+    keep their meaning. The `rate * 0.25 s` term still covers a stall long enough to fill a whole span. It is fixed, not tied to
+    the step's latency: a drifting client's queued operations raise its own percentiles, so a latency-based allowance
     would hide the drift. Missing samples count as not grown.
 
 ### Percentiles
@@ -324,8 +338,8 @@ counts are not checked; process CPU and RSS are not measured. Its numbers are ne
 | `uniqueDeliveries` | int? | subscription kinds: distinct events delivered; else null |
 | `redeliveries` | int? | subscription kinds: deliveries of an already seen event; else null |
 | `catchUpSeconds` | number? | catch-up: wall time of phase 1 until the last corpus event; else null |
-| `backlogAtMidpoint` | int? | backlog right after the midpoint index was launched or dropped (rule 11); else null |
-| `backlogAtEnd` | int? | backlog when scheduling ended, before the drain (rule 11); else null |
+| `backlogAtMidpoint` | int? | minimum backlog over the second of schedule ending at the midpoint index (rule 11); else null |
+| `backlogAtEnd` | int? | minimum backlog over the window's last second of schedule (rule 11); else null |
 | `scheduledSecondHalf` | int? | indices from the midpoint index to the last scheduled one (rule 11); else null |
 | `validation` | object | see below |
 
@@ -426,9 +440,10 @@ does this:
   before the timeout callback does (.NET runs cancellation callbacks in reverse registration order).
 - **Parity test.** `dotnet LiveDriver.DotNet.dll selftest --mode ...` runs the open loop with synthetic operations
   (no-op, throw, stall past the deadline with and without honouring cancellation, inline cancellation, a completion
-  instant past the deadline, over the cap with drain expiry); `OpenLoopParityTests` runs the same cases through
+  instant past the deadline, over the cap with drain expiry, a stall at the end of the window); `OpenLoopParityTests` runs the same cases through
   `runOpenLoop` and requires identical counters and `scheduledSecondHalf`, and identical backlog samples where they do
-  not depend on timing (operations that never complete within the window).
+  not depend on timing (operations that never complete within the window, or a stall at the end whose completions
+  come after the last observation): these pin both spans' boundaries and the minimum ignoring a final peak.
 - **Process figures.** CPU comes from `getrusage(RUSAGE_SELF)` (P/Invoke) and peak RSS from `VmHWM` of
   /proc/self/status on Linux (`ru_maxrss` elsewhere), the Swift driver's sources; `Process.PeakWorkingSet64` reports
   the same `VmHWM`.

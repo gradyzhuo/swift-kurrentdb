@@ -9,8 +9,9 @@ import Testing
 /// Every case leaves at least 100 ms between an operation's completion and the boundary that decides its outcome
 /// (deadline, drain end), far above both waker's error (< 1 ms) and the .NET millisecond timers, so the counters are
 /// compared exactly; no tolerance is needed. `scheduledSecondHalf` depends only on the schedule and is compared in
-/// every case; the backlog samples only where no operation completes before the drain ends (`backlog`), since
-/// elsewhere they depend on when completions land relative to the samples.
+/// every case; the backlog samples (minima over trailing spans of observations, `BacklogWindows`) only where every
+/// completion is at least 100 ms from every observation (`backlog`), since elsewhere they depend on when completions
+/// land relative to the launches.
 @Suite("Open loop parity: .NET driver vs Swift reference", .serialized)
 struct OpenLoopParityTests {
     struct Case: Sendable, CustomStringConvertible {
@@ -21,13 +22,17 @@ struct OpenLoopParityTests {
         var deadlineMillis: Int
         var drainMillis: Int
         var stallMillis: Int = 0
+        /// `stallTail`: the first index that stalls.
+        var stallFrom: Int = 0
         /// scheduled, succeeded, failed, dropped, timedOut
         var expected: [Int]
         var backlog: BacklogSamples? = nil
         /// Expected `scheduledSecondHalf` where the case pins the schedule's rounding.
         var secondHalf: Int? = nil
 
-        var description: String { "\(mode), deadline \(deadlineMillis) ms" + (cap < 256 ? ", over the cap" : "") }
+        var description: String {
+            "\(mode)" + (mode == "stallTail" ? " from \(stallFrom)" : "") + ", deadline \(deadlineMillis) ms" + (cap < 256 ? ", over the cap" : "")
+        }
     }
 
     static let cases: [Case] = [
@@ -50,7 +55,7 @@ struct OpenLoopParityTests {
         Case(
             mode: "stallIgnoring", rate: 100, seconds: 0.5, cap: 10, deadlineMillis: 5000, drainMillis: 200,
             stallMillis: 10_000,
-            expected: [50, 0, 0, 40, 10], backlog: BacklogSamples(atMidpoint: 10, atEnd: 10, scheduledSecondHalf: 25)
+            expected: [50, 0, 0, 40, 10], backlog: BacklogSamples(atMidpoint: 1, atEnd: 10, scheduledSecondHalf: 25)
         ),
         // Fractional offsets: index 3 is due at 3 × 33,333,333.33… ns, which rounds to exactly 100 ms, half the
         // window, so it is the midpoint index (unrounded it would be index 4). Pins Swift's `.rounded()` against
@@ -59,11 +64,26 @@ struct OpenLoopParityTests {
             mode: "noop", rate: 30, seconds: 0.2, cap: 256, deadlineMillis: 500, drainMillis: 500,
             expected: [6, 6, 0, 0, 0], secondHalf: 3
         ),
-        // Nothing completes within the window: the backlog grows from 11 (index 10 at 200 ms) to all 20.
+        // Nothing completes within the window. A 0.4 s window has 0.2 s spans: the midpoint span (indices 0-10) has
+        // its minimum at index 0 (1), the end span (indices 10-19) at index 10 (11).
         Case(
             mode: "stallIgnoring", rate: 50, seconds: 0.4, cap: 256, deadlineMillis: 5000, drainMillis: 200,
             stallMillis: 10_000,
-            expected: [20, 0, 0, 0, 20], backlog: BacklogSamples(atMidpoint: 11, atEnd: 20, scheduledSecondHalf: 10)
+            expected: [20, 0, 0, 0, 20], backlog: BacklogSamples(atMidpoint: 1, atEnd: 11, scheduledSecondHalf: 10)
+        ),
+        // A stall in the last half second (indices 15-19 of 20, each 600 ms): the backlog peaks at 5 when scheduling
+        // ends, but the end span (1-2 s, indices 10-19) also holds no-ops with a backlog of 1, so both minima are 1.
+        Case(
+            mode: "stallTail", rate: 10, seconds: 2, cap: 256, deadlineMillis: 2000, drainMillis: 1000,
+            stallMillis: 600, stallFrom: 15,
+            expected: [20, 20, 0, 0, 0], backlog: BacklogSamples(atMidpoint: 1, atEnd: 1, scheduledSecondHalf: 10)
+        ),
+        // Nothing completes within a 3 s window, so each minimum is its span's first observation: index 5, exactly
+        // 0.5 s (the midpoint index 15 minus 1 s), and index 20, exactly 2 s (the window's end minus 1 s).
+        Case(
+            mode: "stallIgnoring", rate: 10, seconds: 3, cap: 256, deadlineMillis: 5000, drainMillis: 200,
+            stallMillis: 10_000,
+            expected: [30, 0, 0, 0, 30], backlog: BacklogSamples(atMidpoint: 6, atEnd: 21, scheduledSecondHalf: 15)
         ),
     ]
 
@@ -121,7 +141,7 @@ struct OpenLoopParityTests {
         )
         let stall = Duration.milliseconds(c.stallMillis)
         let deadline = Duration.milliseconds(c.deadlineMillis)
-        let r = await runOpenLoop(config, clock: ContinuousClock()) { _ -> ContinuousClock.Instant? in
+        let r = await runOpenLoop(config, clock: ContinuousClock()) { index -> ContinuousClock.Instant? in
             switch c.mode {
             case "throw":
                 throw HarnessError("synthetic failure")
@@ -130,6 +150,8 @@ struct OpenLoopParityTests {
             case "stallIgnoring":
                 // A detached task is not cancelled with the operation.
                 await Task.detached { try? await Task.sleep(for: stall) }.value
+            case "stallTail":
+                if index >= c.stallFrom { try await Task.sleep(for: stall) }
             case "instantPastDeadline":
                 return ContinuousClock.now.advanced(by: deadline + .milliseconds(10))
             default:
@@ -145,7 +167,7 @@ struct OpenLoopParityTests {
         let output = try runTool("dotnet", [
             dll.path, "selftest", "--mode", c.mode, "--rate", "\(c.rate)", "--seconds", "\(c.seconds)",
             "--cap", "\(c.cap)", "--deadline-ms", "\(c.deadlineMillis)", "--drain-ms", "\(c.drainMillis)",
-            "--stall-ms", "\(c.stallMillis)",
+            "--stall-ms", "\(c.stallMillis)", "--stall-from", "\(c.stallFrom)",
         ])
         struct Counters: Decodable {
             var scheduled, succeeded, failed, dropped, timedOut: Int

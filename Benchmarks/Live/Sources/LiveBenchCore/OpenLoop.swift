@@ -41,11 +41,13 @@ public struct OpenLoopConfig: Sendable {
 ///   anything still outstanding then is `.timeout` and cancelled. The call does not wait for operations that ignore
 ///   cancellation: they are unstructured tasks whose results are discarded.
 /// - If the calling task is cancelled, scheduling stops; indices already scheduled are still accounted for.
-/// - The backlog (operations launched with no recorded outcome yet) is sampled right after the first index scheduled at
-///   or after `duration / 2` is launched or dropped, and again when scheduling ends, before the drain; the result's
-///   `backlog` holds both samples and the number of indices scheduled from the midpoint index on. It stays nil if
-///   scheduling stopped before the midpoint. A backlog that grows means completions fall behind the rate even if
-///   everything finishes within the deadline and the drain (`backlogGrew`).
+/// - The backlog (operations launched with no recorded outcome yet) is observed right after each index is launched or
+///   dropped. The result's `backlog` holds its minimum over the trailing second of schedule that ends at the midpoint
+///   index (the first index scheduled at or after `duration / 2`), its minimum over the last second of the window, and
+///   the number of indices scheduled from the midpoint index on (`BacklogWindows`). It stays nil if scheduling stopped
+///   before the midpoint. A backlog whose floor rises means completions fall behind the rate even if everything
+///   finishes within the deadline and the drain (`backlogGrew`); a short stall only makes a peak, which the minimum
+///   ignores.
 ///
 /// Harness floor: every latency includes the scheduler's own wake-up error (early or late) and task-start cost.
 /// Measured on an Apple Silicon Mac (macOS) in a release build with a no-op operation, p50 / p99:
@@ -84,10 +86,7 @@ public func runOpenLoop<C: Clock<Duration>>(
     let windowNanos = config.duration.totalNanoseconds
     // Integer nanosecond offsets keep the schedule exact (no accumulated floating-point drift).
     let nanosPerOp = 1e9 / config.rate
-
-    let midpointNanos = Double(windowNanos) / 2
-    // Index and backlog of the first launch at or after the window's midpoint.
-    var midpoint: (index: Int, backlog: Int)?
+    var backlogWindows = BacklogWindows(windowNanos: windowNanos, nanosPerOp: nanosPerOp)
 
     var waker = DueInstantWaker(clock: clock)
     var index = 0
@@ -134,13 +133,13 @@ public func runOpenLoop<C: Clock<Duration>>(
                 }
             }
         }
-        if midpoint == nil, offsetNanos >= midpointNanos { midpoint = (i, backlog) }
+        backlogWindows.observe(index: i, offsetNanos: offsetNanos, backlog: backlog)
         index += 1
     }
 
     // Drain: wait for everything to be accounted for, bounded by the end of the window plus `drain`.
     let drainEnd = start.advanced(by: config.duration + config.drain)
-    let (allAccounted, backlogAtEnd) = ledger.closeScheduling()
+    let allAccounted = ledger.closeScheduling()
     await withTaskGroup(of: Void.self) { group in
         group.addTask { for await _ in allAccounted {} } // ends when everything is accounted for, or on cancellation
         group.addTask { try? await clock.sleep(until: drainEnd, tolerance: nil) }
@@ -148,13 +147,67 @@ public func runOpenLoop<C: Clock<Duration>>(
         group.cancelAll()
     }
     var recorder = ledger.expireOutstanding()
-    if let midpoint {
-        // `index` is one past the last index scheduled (launched or dropped).
-        recorder.backlog = BacklogSamples(
-            atMidpoint: midpoint.backlog, atEnd: backlogAtEnd, scheduledSecondHalf: index - midpoint.index
+    // `index` is one past the last index scheduled (launched or dropped).
+    recorder.backlog = backlogWindows.samples(scheduled: index)
+    return recorder
+}
+
+/// Folds the backlog observed right after each index is launched or dropped into `BacklogSamples` (driver contract
+/// rule 11). A sample is the **minimum** over a trailing span of `span = min(1 s, duration / 2)` of schedule, by
+/// the indices' integer-nanosecond offsets (the same rounded offsets that decide whether an index is in the window):
+///
+/// - midpoint: the indices with offsets in `[offset(m) - span, offset(m)]`, where `m`, the midpoint index, is the first
+///   index whose offset is at or after `duration / 2`;
+/// - end: the indices with offsets in `[duration - span, duration)`, and always the last index scheduled (so a rate
+///   below one per span, or a loop stopped early, still has one observation).
+///
+/// A client that falls behind raises the backlog's floor, so the minimum rises with it; a stall shorter than the
+/// span only adds a peak, and the observations before or after it keep the minimum low. For windows of 2 s or more
+/// the span is 1 s; a shorter window uses half of it, so the two spans cover the first half (up to `m`) and the second
+/// half and share at most index `m`. Either way the two minima are about half a window apart, like the
+/// `scheduledSecondHalf` that scales the growth tolerance.
+struct BacklogWindows: Sendable {
+    let spanNanos: Int64
+    let midpointIndex: Int
+    /// Offsets at which the midpoint span and the end span start.
+    private let midpointSpanStart: Double
+    private let endSpanStart: Double
+    private var midpointMin: Int?
+    private var endMin: Int?
+    private var last: Int?
+
+    init(windowNanos: Int64, nanosPerOp: Double) {
+        spanNanos = min(1_000_000_000, windowNanos / 2)
+        // The first index whose rounded offset is at or after half the window, found from an estimate below it.
+        let midpointNanos = Double(windowNanos) / 2
+        var m = max(0, Int(midpointNanos / nanosPerOp) - 1)
+        while m > 0, Self.offset(m - 1, nanosPerOp) >= midpointNanos { m -= 1 }
+        while Self.offset(m, nanosPerOp) < midpointNanos { m += 1 }
+        midpointIndex = m
+        midpointSpanStart = Self.offset(m, nanosPerOp) - Double(spanNanos)
+        endSpanStart = Double(windowNanos - spanNanos)
+    }
+
+    /// Integer-nanosecond offset of `index` from the window's start (`runOpenLoop`'s schedule).
+    static func offset(_ index: Int, _ nanosPerOp: Double) -> Double {
+        (Double(index) * nanosPerOp).rounded()
+    }
+
+    /// The backlog right after `index` (offset `offsetNanos`) was launched or dropped; indices arrive in order.
+    mutating func observe(index: Int, offsetNanos: Double, backlog: Int) {
+        if index <= midpointIndex, offsetNanos >= midpointSpanStart { midpointMin = min(midpointMin ?? backlog, backlog) }
+        if offsetNanos >= endSpanStart { endMin = min(endMin ?? backlog, backlog) }
+        last = backlog
+    }
+
+    /// The samples once `scheduled` indices (0 ..< scheduled) were observed; nil if scheduling never reached the
+    /// midpoint index.
+    func samples(scheduled: Int) -> BacklogSamples? {
+        guard scheduled > midpointIndex, let midpointMin, let last else { return nil }
+        return BacklogSamples(
+            atMidpoint: midpointMin, atEnd: min(endMin ?? last, last), scheduledSecondHalf: scheduled - midpointIndex
         )
     }
-    return recorder
 }
 
 /// Wakes the scheduling loop close to each due instant without spinning.
@@ -229,15 +282,14 @@ private final class OpenLoopLedger: Sendable {
         if nowEmpty { allAccountedContinuation.finish() }
     }
 
-    /// Marks the end of scheduling and returns a stream that finishes once nothing is outstanding, with the backlog
-    /// (outstanding count) at that moment.
-    func closeScheduling() -> (allAccounted: AsyncStream<Void>, backlog: Int) {
-        let backlog = state.withLock { s -> Int in
+    /// Marks the end of scheduling and returns a stream that finishes once nothing is outstanding.
+    func closeScheduling() -> AsyncStream<Void> {
+        let empty = state.withLock { s -> Bool in
             s.schedulingClosed = true
-            return s.outstanding.count
+            return s.outstanding.isEmpty
         }
-        if backlog == 0 { allAccountedContinuation.finish() }
-        return (allAccounted, backlog)
+        if empty { allAccountedContinuation.finish() }
+        return allAccounted
     }
 
     /// Records every outstanding operation as `.timeout`, cancels it without awaiting it, and returns the final tally.

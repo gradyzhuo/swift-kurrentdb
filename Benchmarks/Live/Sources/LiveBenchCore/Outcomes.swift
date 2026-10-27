@@ -9,12 +9,14 @@ public enum Outcome: Sendable {
     case timeout
 }
 
-/// The open loop's backlog (operations launched with no recorded outcome yet; drops are not backlog), sampled at the
-/// window's midpoint and at the end of scheduling. See `runOpenLoop`.
+/// The open loop's backlog (operations launched with no recorded outcome yet; drops are not backlog), as its minimum
+/// over the second of schedule ending at the window's midpoint and over the window's last second. See `runOpenLoop`
+/// and `BacklogWindows` (which also covers windows shorter than 2 s).
 public struct BacklogSamples: Equatable, Sendable {
-    /// Backlog right after the first index scheduled at or after half the window was launched (or dropped).
+    /// Minimum backlog observed over the second of schedule ending at the midpoint index (the first index scheduled at
+    /// or after half the window), that index included.
     public var atMidpoint: Int
-    /// Backlog when the scheduling loop exits, before the drain.
+    /// Minimum backlog observed over the window's last second of schedule (and at least at the last index scheduled).
     public var atEnd: Int
     /// Indices scheduled from the midpoint index to the last one, both included.
     public var scheduledSecondHalf: Int

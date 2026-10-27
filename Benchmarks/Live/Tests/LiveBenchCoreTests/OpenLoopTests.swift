@@ -213,9 +213,10 @@ struct OpenLoopTests {
 
     @Test func serializedOperationGrowsTheBacklog() async throws {
         // 50 ops/s for 0.4 s, each holding one shared resource for 50 ms: completions run at 20/s. Every operation
-        // still succeeds within the deadline and the drain, so only the backlog shows the client falling behind. At
-        // the midpoint (index 10, 200 ms) about 4 have completed, at the end (index 19, 380 ms) about 7: the backlog
-        // grows from about 7 to about 13. A loaded host only completes fewer, which grows it more.
+        // still succeeds within the deadline and the drain, so only the backlog shows the client falling behind. The
+        // spans are 0.2 s: the midpoint span (indices 0-10) has its minimum at index 0 (1), the end span (indices
+        // 10-19) at index 10, by when about 4 have completed (about 7). A loaded host only completes fewer, which
+        // raises the end minimum more.
         let tail = Mutex<Task<Void, Never>?>(nil)
         let config = OpenLoopConfig(
             rate: 50, duration: .milliseconds(400), inFlightCap: 256, deadline: .seconds(10), drain: .seconds(5)
@@ -255,7 +256,8 @@ struct OpenLoopTests {
 
     @Test func dropsAreNotBacklog() async throws {
         // Cap 2, operations that outlast the window: from index 2 on every index is a drop and the backlog stays at
-        // the cap. Index 5 (100 ms of 200 ms) is the midpoint.
+        // the cap. Index 5 (100 ms of 200 ms) is the midpoint; with 0.1 s spans the midpoint span starts at index 0
+        // (backlog 1), the end span at index 5 (backlog 2 from there on).
         let config = OpenLoopConfig(
             rate: 50, duration: .milliseconds(200), inFlightCap: 2, deadline: .seconds(2), drain: .milliseconds(100)
         )
@@ -263,7 +265,25 @@ struct OpenLoopTests {
             try await Task.sleep(for: .seconds(1))
         }
         #expect(r.dropped == 8)
-        #expect(r.backlog == BacklogSamples(atMidpoint: 2, atEnd: 2, scheduledSecondHalf: 5))
+        #expect(r.backlog == BacklogSamples(atMidpoint: 1, atEnd: 2, scheduledSecondHalf: 5))
+        expectAccounted(r)
+    }
+
+    @Test func stallAtTheEndOfTheWindowIsNotGrowth() async throws {
+        // 20 ops/s for 2 s: no-ops, except that indices 30-39 (1.5-1.95 s) each stall 600 ms. When scheduling ends
+        // about 10 are outstanding, which a single sample at the end would read as growth (9 > max(1, 0.2, 5)); the
+        // end span (1-2 s) also holds the no-ops before the stall, so its minimum is about 1.
+        let config = OpenLoopConfig(
+            rate: 20, duration: .seconds(2), inFlightCap: 256, deadline: .seconds(5), drain: .seconds(2)
+        )
+        let r = await runOpenLoop(config) { index in
+            if index >= 30 { try await Task.sleep(for: .milliseconds(600)) }
+        }
+        #expect(r.succeeded == 40)
+        let backlog = try #require(r.backlog)
+        #expect(backlog.scheduledSecondHalf == 20)
+        #expect(backlog.atEnd <= 2)
+        #expect(!backlog.grew(targetRate: 20))
         expectAccounted(r)
     }
 
@@ -305,5 +325,71 @@ private struct OffsetSleepClock: Clock {
 
     func sleep(until deadline: Instant, tolerance: Duration?) async throws {
         try await base.sleep(until: deadline.advanced(by: offset), tolerance: tolerance)
+    }
+}
+
+/// `BacklogWindows` over synthetic observations: which observations each minimum covers, and that a stall at the end
+/// is a peak, not growth, while a rising floor is growth.
+@Suite("Backlog windows")
+struct BacklogWindowsTests {
+    /// Observes `backlog(i)` for every index of a `seconds` window at `rate`, as `runOpenLoop` schedules them.
+    private func samples(rate: Double, seconds: Double, _ backlog: (Int) -> Int) -> BacklogSamples? {
+        let windowNanos = Int64(seconds * 1e9)
+        let nanosPerOp = 1e9 / rate
+        var windows = BacklogWindows(windowNanos: windowNanos, nanosPerOp: nanosPerOp)
+        var index = 0
+        while BacklogWindows.offset(index, nanosPerOp) < Double(windowNanos) {
+            windows.observe(index: index, offsetNanos: BacklogWindows.offset(index, nanosPerOp), backlog: backlog(index))
+            index += 1
+        }
+        return windows.samples(scheduled: index)
+    }
+
+    @Test func spansAreTheSecondEndingAtTheMidpointIndexAndTheLastSecond() throws {
+        // 10/s for 10 s: the midpoint index is 50 (5 s); its span holds indices 40-50, the end span indices 90-99.
+        // Each index observes its own number, so a minimum is its span's first index.
+        let s = try #require(samples(rate: 10, seconds: 10) { $0 })
+        #expect(s == BacklogSamples(atMidpoint: 40, atEnd: 90, scheduledSecondHalf: 50))
+    }
+
+    /// The CI case: a short server stall right at the end of scheduling left 181 outstanding at 250/s with no loss.
+    @Test func stallInTheLastSecondIsNotGrowth() throws {
+        // 250/s for 10 s, backlog 1, then a stall over the last 0.7 s: the backlog climbs to 175 by the end, which a
+        // single sample there would read as growth (174 > max(1, 12.5, 62.5)).
+        let atPeak = try #require(samples(rate: 250, seconds: 10) { $0 >= 2325 ? $0 - 2324 : 1 })
+        #expect(atPeak.atMidpoint == 1 && atPeak.atEnd == 1)
+        #expect(!atPeak.grew(targetRate: 250))
+        // A stall from 8.8 s to 9.8 s that then clears (the backlog dips back to 1).
+        let dipped = try #require(samples(rate: 250, seconds: 10) { (2200..<2450).contains($0) ? $0 - 2199 : 1 })
+        #expect(dipped.atEnd == 1)
+        #expect(!dipped.grew(targetRate: 250))
+    }
+
+    @Test func risingFloorIsGrowth() throws {
+        // 100/s for 10 s, completing 10/s too slowly: the backlog rises by one every 10 indices. The minima are the
+        // backlog a second before the midpoint and a second before the end: 41 and 91, a growth of 50 > max(1, 5, 25).
+        let s = try #require(samples(rate: 100, seconds: 10) { $0 / 10 + 1 })
+        #expect(s == BacklogSamples(atMidpoint: 41, atEnd: 91, scheduledSecondHalf: 500))
+        #expect(s.grew(targetRate: 100))
+    }
+
+    @Test func windowsShorterThanTwoSecondsUseHalfTheWindow() throws {
+        // 10/s for 1 s: spans of 0.5 s. The midpoint index 5 (0.5 s) closes the first half (indices 0-5), the end span
+        // is the second half (indices 5-9); they share index 5.
+        let s = try #require(samples(rate: 10, seconds: 1) { $0 })
+        #expect(s == BacklogSamples(atMidpoint: 0, atEnd: 5, scheduledSecondHalf: 5))
+    }
+
+    @Test func rateBelowOnePerSpanKeepsTheLastIndex() throws {
+        // 0.4/s for 10 s: offsets 0, 2.5, 5, 7.5 s. No index lies in the end span (9-10 s), so the end sample is the
+        // last index's observation; the midpoint span (4-5 s) holds only the midpoint index 2.
+        let s = try #require(samples(rate: 0.4, seconds: 10) { $0 * 10 })
+        #expect(s == BacklogSamples(atMidpoint: 20, atEnd: 30, scheduledSecondHalf: 2))
+    }
+
+    @Test func noSamplesBeforeTheMidpointIndex() {
+        var windows = BacklogWindows(windowNanos: 1_000_000_000, nanosPerOp: 1e8)
+        for index in 0..<5 { windows.observe(index: index, offsetNanos: Double(index) * 1e8, backlog: 1) }
+        #expect(windows.samples(scheduled: 5) == nil)
     }
 }
