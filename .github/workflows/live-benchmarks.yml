@@ -45,6 +45,19 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      # TEMPORARY (revert before merging): how the runner's filesystems map to /proc/diskstats.
+      - name: Disk diagnostics
+        run: |
+          d=$(mktemp -d)
+          stat -c 'st_dev=%d major=%t minor=%T fs=%T' "$d" || true
+          stat -f -c 'fstype=%T' "$d" || true
+          findmnt -T "$d" || true
+          findmnt -T /mnt || true
+          lsblk -o NAME,MAJ:MIN,TYPE,FSTYPE,MOUNTPOINTS || true
+          cat /proc/diskstats | awk '{print $1, $2, $3}'
+          grep -E ' / | /tmp | /mnt ' /proc/self/mountinfo || true
+          rmdir "$d"
+
       # The JSON array of cell ids for the matrix: every cell, or the ones named in the `cells` input (an unknown id
       # fails here rather than as an empty job later).
       - name: Select cells
