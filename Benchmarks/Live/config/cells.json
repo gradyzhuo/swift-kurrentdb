@@ -10,7 +10,7 @@
         100,
         250,
         500,
-        750
+        650
       ],
       "rounds": 5
     },
@@ -24,8 +24,7 @@
         20,
         50,
         100,
-        200,
-        400
+        200
       ],
       "rounds": 5
     },
@@ -36,9 +35,9 @@
       "tls": true,
       "tier": "headline",
       "rates": [
+        100,
         250,
-        1000,
-        4000
+        400
       ],
       "rounds": 5
     },
@@ -50,7 +49,7 @@
       "tier": "headline",
       "rates": [
         250,
-        1000
+        500
       ],
       "rounds": 5
     },
@@ -63,7 +62,7 @@
       "rates": [
         100,
         500,
-        2000
+        1500
       ],
       "rounds": 5,
       "streamLength": 10
@@ -141,8 +140,8 @@
       "tls": true,
       "tier": "appendix",
       "rates": [
-        1000,
-        4000
+        250,
+        400
       ],
       "rounds": 3
     },
@@ -154,7 +153,7 @@
       "tier": "appendix",
       "rates": [
         250,
-        1000
+        500
       ],
       "rounds": 3
     },
@@ -202,8 +201,8 @@
       "tls": true,
       "tier": "appendix",
       "rates": [
-        1000,
-        4000
+        250,
+        400
       ],
       "rounds": 3
     },
@@ -215,7 +214,7 @@
       "tier": "appendix",
       "rates": [
         250,
-        1000
+        500
       ],
       "rounds": 3
     },
@@ -263,8 +262,8 @@
       "tls": false,
       "tier": "appendix",
       "rates": [
-        1000,
-        4000
+        250,
+        400
       ],
       "rounds": 3
     },
@@ -276,7 +275,7 @@
       "tier": "appendix",
       "rates": [
         250,
-        1000
+        500
       ],
       "rounds": 3
     },
@@ -300,8 +299,8 @@
       "tls": true,
       "tier": "appendix",
       "rates": [
-        1000,
-        4000
+        250,
+        400
       ],
       "rounds": 3,
       "consumers": 4
