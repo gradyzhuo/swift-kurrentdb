@@ -70,7 +70,10 @@ enum Report {
         <li><strong>Setting.</strong> The network is loopback and the server is co-located with the client on one VM
         (server and client pinned to separate cores): real network effects are not included, and the two still share
         memory bandwidth, caches and disk. The orchestrator (its once-a-second headroom sampling and the server checks
-        between trials) is not pinned; its load during a window is light.</li>
+        between trials) is not pinned; its load during a window is light. The server runs with response compression
+        off (<code>KURRENTDB_COMPRESSION_LEVEL=NoCompression</code>): by default it gzips every response message for a
+        client that asks for gzip, which KurrentDB.Client and ghz do and the Swift SDK does not, so reads would cost the
+        server several times the CPU for those clients only.</li>
         <li><strong>Harness floor</strong>: each cell's job ran both drivers' schedulers with a no-op operation (release
         build, pinned like the trials, after a warmup) at the cell's rates before seeding; the table <em>Harness floor
         on this runner</em> shows p50 / p99 and the no-op run's CPU and peak RSS. Latencies close to the floor say more
