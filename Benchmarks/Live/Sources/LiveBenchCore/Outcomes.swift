@@ -9,6 +9,28 @@ public enum Outcome: Sendable {
     case timeout
 }
 
+/// The open loop's backlog (operations launched with no recorded outcome yet; drops are not backlog), sampled at the
+/// window's midpoint and at the end of scheduling. See `runOpenLoop`.
+public struct BacklogSamples: Equatable, Sendable {
+    /// Backlog right after the first index scheduled at or after half the window was launched (or dropped).
+    public var atMidpoint: Int
+    /// Backlog when the scheduling loop exits, before the drain.
+    public var atEnd: Int
+    /// Indices scheduled from the midpoint index to the last one, both included.
+    public var scheduledSecondHalf: Int
+
+    public init(atMidpoint: Int, atEnd: Int, scheduledSecondHalf: Int) {
+        self.atMidpoint = atMidpoint
+        self.atEnd = atEnd
+        self.scheduledSecondHalf = scheduledSecondHalf
+    }
+
+    /// `backlogGrew(atMidpoint:atEnd:scheduledSecondHalf:)` over these samples.
+    public var grew: Bool {
+        backlogGrew(atMidpoint: atMidpoint, atEnd: atEnd, scheduledSecondHalf: scheduledSecondHalf)
+    }
+}
+
 /// Counts every scheduled attempt and keeps a latency histogram of the successes only.
 public struct OutcomeRecorder: Sendable {
     public private(set) var succeeded = 0
@@ -16,6 +38,8 @@ public struct OutcomeRecorder: Sendable {
     public private(set) var dropped = 0
     public private(set) var timedOut = 0
     public private(set) var histogram: Histogram<UInt64>
+    /// Set by `runOpenLoop` once its schedule reached the window's midpoint; nil otherwise.
+    public internal(set) var backlog: BacklogSamples?
 
     /// Latencies from 1 us to 60 s with 3 significant digits.
     public init() {

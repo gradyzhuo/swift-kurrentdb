@@ -115,7 +115,8 @@ static async Task<int> FloorCommand(Dictionary<string, string> options)
 }
 
 /// The open loop with a synthetic operation, for the parity test against Swift's `runOpenLoop`
-/// (`Tests/LiveOrchestratorTests/OpenLoopParityTests.swift`). Prints the outcome counters as one JSON line.
+/// (`Tests/LiveOrchestratorTests/OpenLoopParityTests.swift`). Prints the outcome counters and the backlog samples as
+/// one JSON line.
 /// Modes: `noop`; `throw`; `stallHonouring` / `stallIgnoring` (wait `stall-ms`, with / without the cancellation token);
 /// `stallHonouringInline` (never completes on its own; fails synchronously when its token is cancelled);
 /// `instantPastDeadline` (returns now + deadline + 10 ms as its completion instant).
@@ -157,6 +158,9 @@ static async Task<int> SelfTestCommand(Dictionary<string, string> options)
         dropped = r.Dropped,
         timedOut = r.TimedOut,
         minMicros = r.Succeeded > 0 ? r.Histogram.GetValueAtPercentile(0) : 0,
+        backlogAtMidpoint = r.Backlog?.AtMidpoint,
+        backlogAtEnd = r.Backlog?.AtEnd,
+        scheduledSecondHalf = r.Backlog?.ScheduledSecondHalf,
     }, Json.Options));
     return 0;
 }
