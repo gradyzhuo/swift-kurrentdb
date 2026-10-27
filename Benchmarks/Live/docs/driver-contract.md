@@ -216,6 +216,8 @@ reference is the `runOpenLoop` overload whose operation returns its completion i
   `$ce-<category>`; name in `groupName`). The driver must not create, update or delete it.
 - The driver connects `consumers` (absent = 1) consumers to the group in the same process, with default client
   options, and **acks each event on receipt** (one ack per event; `ackEnqueued` counts acks handed to the client).
+- Every consumer must be **confirmed by the server** (its subscription confirmation received; 60 s bound, failing the
+  driver) before the measure-start marker, so connection setup is never charged to the first deliveries.
 - `uniqueDeliveries` counts distinct events across all consumers.
 - Warmup runs the same way against group `groupName + "w"` on `$ce-<category>w`; its consumers are stopped before the
   measured group is first connected, right before the measure window.
