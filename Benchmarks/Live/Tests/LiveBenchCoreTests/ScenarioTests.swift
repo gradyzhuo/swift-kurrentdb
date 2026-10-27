@@ -40,18 +40,18 @@ struct ScenarioTests {
         let c = try #require(cells.first { $0.id == "persistent-300-tls-c4" })
         #expect(c.consumers == 4)
         #expect(c.kind == .persistentSubscription && c.tier == .appendix && c.tls && c.eventSize == 300)
-        #expect(c.rates == [1000, 4000] && c.rounds == 3)
+        #expect(c.rates == [250, 400] && c.rounds == 3)
         #expect(cells.first { $0.id == "persistent-300-tls" }?.consumers == nil)
     }
 
     @Test func headlineRatesMatchTheFixedTable() throws {
         let cells = try loadCells(from: configURL("cells.json"))
         func rates(_ id: String) -> [Double]? { cells.first { $0.id == id }?.rates }
-        #expect(rates("append-latency-300-tls") == [100, 250, 500, 750])
-        #expect(rates("append-throughput-300-tls") == [20, 50, 100, 200, 400])
+        #expect(rates("append-latency-300-tls") == [100, 250, 500, 650])
+        #expect(rates("append-throughput-300-tls") == [20, 50, 100, 200])
         #expect(rates("rebuild-300-tls-L10000") == [1, 2, 8])
-        #expect(rates("persistent-300-tls") == [250, 1000, 4000])
-        #expect(rates("catch-up-300-tls") == [250, 1000])
+        #expect(rates("persistent-300-tls") == [100, 250, 400])
+        #expect(rates("catch-up-300-tls") == [250, 500])
         #expect(rates("append-latency-1024-tls") == [250, 500])
     }
 
