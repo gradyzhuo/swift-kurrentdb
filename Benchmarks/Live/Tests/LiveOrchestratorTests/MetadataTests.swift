@@ -3,11 +3,9 @@ import Foundation
 @testable import LiveOrchestrator
 import Testing
 
-/// Private IPv4 addresses (RFC 1918), as the plan's check writes them.
-private let privateAddress = #"\b(10|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+"#
-/// The same with all four octets: the plan's pattern also matches versions such as `10.0.5`, which NuGet lock files
-/// are full of.
-private let privateAddressFourOctets = #"\b(10\.\d+|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+"#
+/// Private IPv4 addresses (RFC 1918), with all four octets: a three-octet pattern also matches versions such as
+/// `10.0.5`, which NuGet lock files and the runner's `dotnet --version` (a preinstalled .NET 10 SDK) are full of.
+private let privateAddress = #"\b(10\.\d+|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+"#
 
 @Suite("Run metadata")
 struct MetadataTests {
@@ -145,7 +143,7 @@ struct MergeTests {
             guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
             #expect(!text.contains("/Users/alice"), "\(file.lastPathComponent)")
             #expect(!text.contains("/home/bob"), "\(file.lastPathComponent)")
-            #expect(text.range(of: privateAddressFourOctets, options: .regularExpression) == nil, "\(file.lastPathComponent)")
+            #expect(text.range(of: privateAddress, options: .regularExpression) == nil, "\(file.lastPathComponent)")
         }
     }
 
