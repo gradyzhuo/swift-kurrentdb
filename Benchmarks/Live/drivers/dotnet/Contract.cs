@@ -228,10 +228,11 @@ static class HistogramFile
     }
 }
 
-/// Resource usage of the current process from `getrusage(RUSAGE_SELF)`, the source the Swift driver uses
-/// (ProcessUsage.swift): CPU seconds (user, system) since process start, and the process-lifetime peak resident set
-/// size in bytes (`ru_maxrss`: KiB on Linux, bytes on macOS). On Linux `ru_maxrss` is the kernel's VmHWM, the value
-/// `Process.PeakWorkingSet64` reads from /proc/self/status.
+/// Resource usage of the current process, from the sources the Swift driver uses (ProcessUsage.swift): CPU seconds
+/// (user, system) since process start from `getrusage(RUSAGE_SELF)`, and the process-lifetime peak resident set size
+/// in bytes. On Linux the peak is `VmHWM` of /proc/self/status, the value `Process.PeakWorkingSet64` reads, not
+/// `ru_maxrss`: the kernel folds the pre-exec address space's high-water mark into `ru_maxrss`, so a driver spawned
+/// by the orchestrator would report at least the orchestrator's peak. `ru_maxrss` (bytes on macOS) is the fallback.
 static class ProcessUsage
 {
     [DllImport("libc", SetLastError = true)]
@@ -246,7 +247,24 @@ static class ProcessUsage
             throw new InvalidOperationException($"getrusage failed: errno {Marshal.GetLastPInvokeError()}");
         static double Seconds(long sec, long usec) => sec + (int)(usec & 0xFFFF_FFFF) / 1_000_000.0;
         ulong raw = (ulong)Math.Max(usage[4], 0);
-        ulong rss = OperatingSystem.IsLinux() ? raw * 1024 : raw;
+        ulong rss = OperatingSystem.IsLinux() ? PeakResidentFromProcStatus() ?? raw * 1024 : raw;
         return (Seconds(usage[0], usage[1]), Seconds(usage[2], usage[3]), rss);
+    }
+
+    /// `VmHWM` of /proc/self/status (`VmHWM:   1234 kB`) in bytes, or null when it cannot be read.
+    static ulong? PeakResidentFromProcStatus()
+    {
+        try
+        {
+            foreach (var line in File.ReadLines("/proc/self/status"))
+            {
+                if (!line.StartsWith("VmHWM:", StringComparison.Ordinal)) continue;
+                var fields = line["VmHWM:".Length..].Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+                return fields.Length >= 2 && fields[1] == "kB" && ulong.TryParse(fields[0], out var kib) ? kib * 1024 : null;
+            }
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        return null;
     }
 }
