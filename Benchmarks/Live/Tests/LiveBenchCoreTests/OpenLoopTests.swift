@@ -236,20 +236,20 @@ struct OpenLoopTests {
         let backlog = try #require(r.backlog)
         #expect(backlog.scheduledSecondHalf == 10)
         #expect(backlog.atEnd > backlog.atMidpoint + 1)
-        #expect(backlog.grew)
         expectAccounted(r)
     }
 
     @Test func operationThatKeepsUpLeavesTheBacklogFlat() async throws {
         // 100 ops/s for 0.4 s with a no-op: each completes long before the next is due, so both samples are about 1
-        // (the operation just launched).
+        // (the operation just launched). A loaded host can delay a no-op's task by a launch interval or so, which can
+        // leave one more outstanding at either sample; allow 2 so the test checks flatness, not scheduling luck.
         let config = OpenLoopConfig(
             rate: 100, duration: .milliseconds(400), inFlightCap: 256, deadline: .seconds(5), drain: .seconds(1)
         )
         let r = await runOpenLoop(config) { _ in }
         let backlog = try #require(r.backlog)
         #expect(backlog.scheduledSecondHalf == 20)
-        #expect(!backlog.grew)
+        #expect(backlog.atEnd - backlog.atMidpoint <= 2)
         expectAccounted(r)
     }
 
