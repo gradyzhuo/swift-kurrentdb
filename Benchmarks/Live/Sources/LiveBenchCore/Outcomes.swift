@@ -25,9 +25,11 @@ public struct BacklogSamples: Equatable, Sendable {
         self.scheduledSecondHalf = scheduledSecondHalf
     }
 
-    /// `backlogGrew(atMidpoint:atEnd:scheduledSecondHalf:)` over these samples.
-    public var grew: Bool {
-        backlogGrew(atMidpoint: atMidpoint, atEnd: atEnd, scheduledSecondHalf: scheduledSecondHalf)
+    /// `backlogGrew(atMidpoint:atEnd:scheduledSecondHalf:inFlightAtP99:)` over these samples.
+    public func grew(inFlightAtP99: Double) -> Bool {
+        backlogGrew(
+            atMidpoint: atMidpoint, atEnd: atEnd, scheduledSecondHalf: scheduledSecondHalf, inFlightAtP99: inFlightAtP99
+        )
     }
 }
 

@@ -169,7 +169,9 @@ These close the gaps that would make percentiles or parity misleading.
   excluded from percentiles.
 - **A step is sustained** only when the *successful* rate ≥ 99% of target, errors +
   drops + timeouts ≤ 0.1%, and the backlog does not grow over the window (exact
-  thresholds are the builder's, but fixed before the first published run). Latency
+  thresholds are the builder's, but fixed before the first published run; they are
+  fixed in `Benchmarks/Live/docs/driver-contract.md` rule 11 for the backlog and in
+  `EvaluationThresholds` for the rate and loss criteria). Latency
   from a step that is not sustained is never used in a headline comparison; where it is
   shown, its upper percentiles are marked as censored.
 - **Percentiles are ranked over all scheduled attempts**, not over successes only.

@@ -24,6 +24,8 @@ struct OpenLoopParityTests {
         /// scheduled, succeeded, failed, dropped, timedOut
         var expected: [Int]
         var backlog: BacklogSamples? = nil
+        /// Expected `scheduledSecondHalf` where the case pins the schedule's rounding.
+        var secondHalf: Int? = nil
 
         var description: String { "\(mode), deadline \(deadlineMillis) ms" + (cap < 256 ? ", over the cap" : "") }
     }
@@ -50,6 +52,13 @@ struct OpenLoopParityTests {
             stallMillis: 10_000,
             expected: [50, 0, 0, 40, 10], backlog: BacklogSamples(atMidpoint: 10, atEnd: 10, scheduledSecondHalf: 25)
         ),
+        // Fractional offsets: index 3 is due at 3 × 33,333,333.33… ns, which rounds to exactly 100 ms, half the
+        // window, so it is the midpoint index (unrounded it would be index 4). Pins Swift's `.rounded()` against
+        // .NET's `MidpointRounding.AwayFromZero`.
+        Case(
+            mode: "noop", rate: 30, seconds: 0.2, cap: 256, deadlineMillis: 500, drainMillis: 500,
+            expected: [6, 6, 0, 0, 0], secondHalf: 3
+        ),
         // Nothing completes within the window: the backlog grows from 11 (index 10 at 200 ms) to all 20.
         Case(
             mode: "stallIgnoring", rate: 50, seconds: 0.4, cap: 256, deadlineMillis: 5000, drainMillis: 200,
@@ -69,6 +78,10 @@ struct OpenLoopParityTests {
         #expect(swift.counters == dotnet.counters)
         #expect(swift.backlog != nil && dotnet.backlog != nil, "\(c)")
         #expect(swift.backlog?.scheduledSecondHalf == dotnet.backlog?.scheduledSecondHalf, "\(c)")
+        if let secondHalf = c.secondHalf {
+            #expect(swift.backlog?.scheduledSecondHalf == secondHalf, "swift \(c)")
+            #expect(dotnet.backlog?.scheduledSecondHalf == secondHalf, "dotnet \(c)")
+        }
         if let backlog = c.backlog {
             #expect(swift.backlog == backlog, "swift \(c)")
             #expect(dotnet.backlog == backlog, "dotnet \(c)")
