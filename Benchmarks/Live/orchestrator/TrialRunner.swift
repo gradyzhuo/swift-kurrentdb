@@ -21,7 +21,7 @@ struct TrialRecord: Codable, Sendable {
     var result: TrialResult?
     var histogram: HistogramFile?
     /// Server headroom over the measure window (from the driver's measure-start marker for `measureSeconds`); nil when
-    /// it could not be measured or the driver wrote no marker (`notes` then says so).
+    /// it could not be measured or the driver wrote no marker (`notes` then says why).
     var headroom: HeadroomSample?
     /// Persistent subscription: events of the measured group acknowledged as seen by the server (`PersistentProgress`),
     /// read after the driver exited (drain and settle included). Its shortfall against the events written is reported.
@@ -34,7 +34,8 @@ struct TrialRecord: Codable, Sendable {
     /// Set when the trial failed: the driver crashed, hung, wrote no readable result, or a hard validation failed.
     /// A failed trial is excluded from ratios.
     var error: String?
-    /// Remarks that do not fail the trial (e.g. headroom unavailable because the driver wrote no measure-start marker).
+    /// Remarks that do not fail the trial (e.g. headroom unavailable because the driver wrote no measure-start marker,
+    /// or the monitor's `HeadroomUnavailable` reason).
     var notes: [String]?
 }
 
@@ -94,7 +95,7 @@ protocol TrialServer: Sendable {
 /// The headroom monitor of the measure window (`Monitor` in production).
 protocol TrialMonitor: Sendable {
     func start() async
-    func stop(eventsWritten: Int64) async -> HeadroomSample?
+    func stop(eventsWritten: Int64) async -> Result<HeadroomSample, HeadroomUnavailable>
 }
 
 extension Monitor: TrialMonitor {}
@@ -355,11 +356,12 @@ struct TrialRunner: Sendable {
         ) {
             await DriverProcess.run(command, logDirectory: directory, timeoutSeconds: limit)
         }
-        record.headroom = headroom
+        record.headroom = try? headroom?.get()
         record.serverAckedAtWindowEnd = windowEnd
         if !marked {
             record.notes = ["headroom unavailable: the driver wrote no \(MeasureMarker.line) line on stderr"]
         }
+        record.notes = Self.noting(headroom, in: record.notes)
         if let problem = exit.problem(limit: limit, name: driver.name) {
             record.error = problem
             return record
@@ -403,11 +405,14 @@ struct TrialRunner: Sendable {
                     exit = await DriverProcess.run(command, logDirectory: logs, timeoutSeconds: limit)
                 } else {
                     // ghz writes no marker; its measured run starts sending at launch.
-                    (exit, record.headroom, _, _) = await monitored(
+                    let headroom: Result<HeadroomSample, HeadroomUnavailable>?
+                    (exit, headroom, _, _) = await monitored(
                         measure: run.seconds, eventsWritten: Self.expectedEventsWritten(scenario), waitForStart: { true }
                     ) {
                         await DriverProcess.run(command, logDirectory: logs, timeoutSeconds: limit)
                     }
+                    record.headroom = try? headroom?.get()
+                    record.notes = Self.noting(headroom, in: record.notes)
                 }
                 if let problem = exit.problem(limit: limit, name: "ghz (\(run.name))") {
                     record.error = problem
@@ -430,14 +435,14 @@ struct TrialRunner: Sendable {
     }
 
     /// Runs `body` (the driver) while the monitor samples for `measure` seconds from the moment `waitForStart`
-    /// returns true (it returns false when cancelled, i.e. the driver exited first: no sample, `started` false). At the
+    /// returns true (it returns false when cancelled, i.e. the driver exited first: no result, `started` false). At the
     /// window's end `atWindowEnd` runs alongside the monitor's stop. A driver that exits inside the window ends it early.
     private func monitored<T: Sendable>(
         measure: Double, eventsWritten: Int64, waitForStart: @escaping @Sendable () async -> Bool,
         atWindowEnd: @escaping @Sendable () async -> Int64? = { nil }, _ body: @Sendable () async -> T
-    ) async -> (T, HeadroomSample?, started: Bool, windowEnd: Int64?) {
+    ) async -> (T, Result<HeadroomSample, HeadroomUnavailable>?, started: Bool, windowEnd: Int64?) {
         let monitor = self.monitor
-        let sampling = Task { () -> (HeadroomSample?, Bool, Int64?) in
+        let sampling = Task { () -> (Result<HeadroomSample, HeadroomUnavailable>?, Bool, Int64?) in
             guard await waitForStart(), !Task.isCancelled else { return (nil, false, nil) }
             // The window ends `measure` seconds after the marker, however long the monitor's first reads take.
             let windowCloses = ContinuousClock.now.advanced(by: .seconds(measure))
@@ -455,6 +460,12 @@ struct TrialRunner: Sendable {
         sampling.cancel()
         let (sample, started, windowEnd) = await sampling.value
         return (value, sample, started, windowEnd)
+    }
+
+    /// `notes` plus "headroom unavailable: <reason>" when the monitor measured no headroom, so it is never silent.
+    static func noting(_ headroom: Result<HeadroomSample, HeadroomUnavailable>?, in notes: [String]?) -> [String]? {
+        guard case let .failure(reason)? = headroom else { return notes }
+        return (notes ?? []) + ["headroom unavailable: \(reason)"]
     }
 
     /// Each driver's `floor` at each rate, pinned like its trials; a floor that fails is recorded with its error.

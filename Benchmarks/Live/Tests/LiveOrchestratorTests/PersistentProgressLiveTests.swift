@@ -65,8 +65,8 @@ struct PersistentProgressLiveTests {
         #expect(try await PersistentProgress.readOnce(client: client, stream: stream, group: group) == 100)
     }
 
-    /// The monitor's projection gate: the target is the last event written to the trial's streams, and the gate
-    /// reports whether `$by_category` processed it within the bound.
+    /// The monitor's projection gate: the target is the last event written to the trial's streams (never below the
+    /// seed's position), and the gate reports whether `$by_category` processed it within the bound.
     @Test(.enabled(if: docker))
     func projectionCatchUpTargetsTheLastWrittenEvent() async throws {
         let server = try #require(LiveServer.current)
@@ -89,7 +89,16 @@ struct PersistentProgressLiveTests {
         #expect(try await lastWrittenPosition(client, streamPrefix: "\(category)-") == last)
         #expect(try await lastWrittenPosition(client, streamPrefix: "nothing\(category)-") == .zero)
 
-        let caughtUp = await byCategoryCatchUp(client: client, streamPrefix: "\(category)-", within: .seconds(5))
+        // A seed position past what the prefix holds is the floor; one before it does not lower the target.
+        let seed = try await append("seed\(category)-0", 1)
+        let floored = await projectionTarget(seed: seed, trialWrites: true) { try await lastWrittenPosition(client, streamPrefix: "\(category)-") }
+        #expect(floored == seed)
+        let target = try #require(await projectionTarget(seed: .zero, trialWrites: true) {
+            try await lastWrittenPosition(client, streamPrefix: "\(category)-")
+        })
+        #expect(target == last)
+
+        let caughtUp = await byCategoryCatchUp(client: client, target: seed, within: .seconds(5))
         print("probe catch-up: \(caughtUp)")
         guard case let .caughtUp(seconds) = caughtUp else {
             Issue.record("expected caught up, got \(caughtUp)")
@@ -101,8 +110,8 @@ struct PersistentProgressLiveTests {
         try await client.projections(system: .byCategory).disable()
         do {
             try await Task.sleep(for: .seconds(1))
-            _ = try await append("\(category)-2", 10)
-            #expect(await byCategoryCatchUp(client: client, streamPrefix: "\(category)-", within: .seconds(2)) == .notCaughtUp)
+            let unprocessed = try await append("\(category)-2", 10)
+            #expect(await byCategoryCatchUp(client: client, target: unprocessed, within: .seconds(2)) == .notCaughtUp)
         }
         try await enableByCategory(client)
     }

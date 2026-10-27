@@ -96,20 +96,48 @@ struct MonitorError: Error, CustomStringConvertible {
 
 /// `$by_category`'s progress after a measure window (`Monitor`'s `readProjectionCatchUp`).
 enum ProjectionCatchUp: Sendable, Equatable {
-    /// It had processed the last event written by the window's end this many seconds after it.
+    /// It had processed the last event written by the window's end this many seconds after the target was known.
     case caughtUp(seconds: Double)
     /// It had not within the bound.
     case notCaughtUp
-    /// Its position (or the log's) could not be read: no measurement.
-    case unreadable
+    /// The target, the log position of the last event written, could not be read: no measurement.
+    case targetUnreadable
+    /// The projection's position never answered within the bound: no measurement.
+    case unanswered
+}
+
+/// Why `Monitor.stop` has no headroom sample; the trial's `notes` carry it as "headroom unavailable: <reason>".
+enum HeadroomUnavailable: Error, Sendable, Equatable, CustomStringConvertible {
+    /// Fewer than two readings of `/proc/stat` and `/proc/diskstats` over the window (no `/proc`, as on macOS, the
+    /// device missing from it, or every interval dropped).
+    case noIntervals
+    /// A pinned core is missing from `/proc/stat`, or its counters did not advance over the window.
+    case coreMissing(Int)
+    /// `$by_category`'s buffered events were unreadable at the window's start or end.
+    case bufferedUnreadable
+    /// The projection gate's target could not be read (`ProjectionCatchUp.targetUnreadable`).
+    case projectionTargetUnreadable
+    /// The projection's position never answered (`ProjectionCatchUp.unanswered`).
+    case projectionUnanswered
+
+    var description: String {
+        switch self {
+        case .noIntervals: "fewer than two readings of /proc/stat and /proc/diskstats over the window"
+        case let .coreMissing(core): "server core \(core) had no advancing counters in /proc/stat over the window"
+        case .bufferedUnreadable: "$by_category's buffered events were unreadable at the window's start or end"
+        case .projectionTargetUnreadable: "the position of the last event written could not be read for the projection gate"
+        case .projectionUnanswered: "$by_category's position did not answer within the projection gate's bound"
+        }
+    }
 }
 
 /// Samples the server's pinned cores, its disk and the `$by_category` projection over one trial's measure window.
 ///
-/// `stop` returns nil when the headroom could not be measured (no `/proc`, as on macOS, a core or the device missing
-/// from it, fewer than two readings, or the projection unreadable). That is not the same as saturation, where
-/// `hasHeadroom` is false; callers record "unavailable" for nil. After the window `stop` also waits (up to
-/// `EvaluationThresholds.maxProjectionCatchUpSeconds`) for `$by_category` to process the last event written by then.
+/// `stop` fails with a `HeadroomUnavailable` reason when the headroom could not be measured (no `/proc`, as on macOS, a
+/// core or the device missing from it, fewer than two readings, or the projection unreadable). That is not the same as
+/// saturation, where `hasHeadroom` is false; callers record "unavailable" and the reason. After the window `stop` also
+/// waits (up to `EvaluationThresholds.maxProjectionCatchUpSeconds`) for `$by_category` to process the last event
+/// written by then.
 ///
 /// Every `interval` the counters are read and the deltas of that interval are added up; an interval in which any
 /// counter went backwards (reset, device re-plugged) is dropped. Core busy is Σ Δbusy / Σ Δtotal, disk await is
@@ -237,12 +265,12 @@ actor Monitor {
     }
 
     /// Final reading, then the projection's catch-up to the last event written by now. `eventsWritten` is what the
-    /// caller's driver wrote in the window (recorded with the sample). Nil when headroom could not be measured (see the
-    /// type's documentation).
+    /// caller's driver wrote in the window (recorded with the sample). Fails with the reason when headroom could not be
+    /// measured (see the type's documentation).
     ///
     /// The catch-up wait starts first, at the window's end, and runs alongside the final reading and the statistics
     /// query, so neither can delay its clock and hide a slow projection.
-    func stop(eventsWritten: Int64) async -> HeadroomSample? {
+    func stop(eventsWritten: Int64) async -> Result<HeadroomSample, HeadroomUnavailable> {
         let readProjectionCatchUp = readProjectionCatchUp
         async let catchUpResult = readProjectionCatchUp(.seconds(EvaluationThresholds.maxProjectionCatchUpSeconds))
         loop?.cancel()
@@ -252,13 +280,20 @@ actor Monitor {
         let bufferedEnd = await readBuffered()
         let catchUp = await catchUpResult
         defer { reset() }
-        guard intervals > 0, wall > 0, let bufferedStart, let bufferedEnd, catchUp != .unreadable else { return nil }
+        guard intervals > 0, wall > 0 else {
+            // A reading without a pinned core is dropped as a whole: name the core rather than the missing intervals.
+            let missing = previous.flatMap { reading in cores.first { reading.cpu[$0] == nil } }
+            return .failure(missing.map(HeadroomUnavailable.coreMissing) ?? .noIntervals)
+        }
         var coreBusy: [Double] = []
         for core in cores {
-            guard let t = total[core], t > 0 else { return nil }
+            guard let t = total[core], t > 0 else { return .failure(.coreMissing(core)) }
             coreBusy.append(Double(busy[core] ?? 0) / Double(t))
         }
-        return HeadroomSample(
+        guard let bufferedStart, let bufferedEnd else { return .failure(.bufferedUnreadable) }
+        if catchUp == .targetUnreadable { return .failure(.projectionTargetUnreadable) }
+        if catchUp == .unanswered { return .failure(.projectionUnanswered) }
+        return .success(HeadroomSample(
             coreBusy: coreBusy,
             diskAwaitMillis: ios > 0 ? Double(ticks) / Double(ios) : 0,
             diskQueueDepth: Double(weighted) / wall,
@@ -266,7 +301,7 @@ actor Monitor {
             projectionBufferedEnd: bufferedEnd,
             eventsWritten: eventsWritten,
             projectionCatchUpSeconds: { if case let .caughtUp(seconds) = catchUp { seconds } else { nil } }()
-        )
+        ))
     }
 
     private func reading() async -> Reading? {

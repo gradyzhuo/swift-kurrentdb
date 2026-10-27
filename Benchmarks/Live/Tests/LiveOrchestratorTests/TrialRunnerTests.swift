@@ -281,6 +281,18 @@ struct TrialRunnerTests {
         #expect(fixture.monitor.starts.isEmpty)
     }
 
+    @Test func unavailableHeadroomCarriesItsReasonInTheNotes() async throws {
+        let fixture = try Fixture()
+        fixture.monitor.unavailable = .projectionTargetUnreadable
+        let driver = try fixture.driver("A", writing: fixture.result, before: "echo LIVE_BENCH_MEASURE_START >&2 && sleep 1")
+        let result = try await fixture.runner().runCell(fixture.cell, drivers: [driver], rounds: 1)
+        let trial = result.trials[0]
+        #expect(trial.error == nil)
+        #expect(trial.headroom == nil)
+        let notes = trial.notes ?? []
+        #expect(notes == ["headroom unavailable: \(HeadroomUnavailable.projectionTargetUnreadable)"])
+    }
+
     @Test func progressIsReportedAfterEveryTrial() async throws {
         let fixture = try Fixture()
         let seen = Mutex<[Int]>([])
@@ -441,16 +453,23 @@ private final class FakeServer: TrialServer, Sendable {
     func serverMetadata() -> (image: String?, digest: String?, configuration: [String: String]?) { (nil, nil, nil) }
 }
 
-/// Records when its window starts and stops and returns a fixed sample.
+/// Records when its window starts and stops and returns a fixed sample, or `unavailable` when set.
 private final class FakeMonitor: TrialMonitor, Sendable {
     private let events = Mutex<[(String, ContinuousClock.Instant)]>([])
+    private let failure = Mutex<HeadroomUnavailable?>(nil)
+
+    var unavailable: HeadroomUnavailable? {
+        get { failure.withLock { $0 } }
+        set { failure.withLock { $0 = newValue } }
+    }
 
     var starts: [ContinuousClock.Instant] { events.withLock { $0.filter { $0.0 == "start" }.map(\.1) } }
     var stops: [ContinuousClock.Instant] { events.withLock { $0.filter { $0.0 == "stop" }.map(\.1) } }
 
     func start() async { events.withLock { $0.append(("start", ContinuousClock.now)) } }
-    func stop(eventsWritten: Int64) async -> HeadroomSample? {
+    func stop(eventsWritten: Int64) async -> Result<HeadroomSample, HeadroomUnavailable> {
         events.withLock { $0.append(("stop", ContinuousClock.now)) }
-        return HeadroomSample(coreBusy: [0.5, 0.5], diskAwaitMillis: 1, diskQueueDepth: 0.1, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: eventsWritten, projectionCatchUpSeconds: 0.5)
+        if let reason = unavailable { return .failure(reason) }
+        return .success(HeadroomSample(coreBusy: [0.5, 0.5], diskAwaitMillis: 1, diskQueueDepth: 0.1, projectionBufferedStart: 0, projectionBufferedEnd: 0, eventsWritten: eventsWritten, projectionCatchUpSeconds: 0.5))
     }
 }
