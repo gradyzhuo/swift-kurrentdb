@@ -99,6 +99,20 @@ struct ReportTests {
         #expect(low.ratios.first { $0.metric == .p99 }?.estimate?.rounds == 5)
     }
 
+    @Test func growingBacklogIsNotSustained() throws {
+        // 250/s for 60 s: 7,500 indices in the second half, so up to 75 more outstanding at the end is tolerated.
+        let cell = ReportFixture.cell("backlog", rates: [250], rounds: 1)
+        var trial = ReportFixture.trial(round: 0, rate: 250, driver: "swift", fast: 1000, slow: 3000)
+        // No samples (ghz, older results): unknown is not growth.
+        #expect(TrialFigures(trial, cell: cell).sustained)
+        trial.result?.backlogAtMidpoint = 4
+        trial.result?.backlogAtEnd = 79
+        trial.result?.scheduledSecondHalf = 7500
+        #expect(TrialFigures(trial, cell: cell).sustained)
+        trial.result?.backlogAtEnd = 80
+        #expect(!TrialFigures(trial, cell: cell).sustained)
+    }
+
     @Test func ghzLatencyNeverInARatio() {
         let withGhz = Report.render([.fixtureWithGhz])
         var withoutGhz = CellResult.fixtureWithGhz

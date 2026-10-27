@@ -25,8 +25,23 @@ import Testing
         r.uniqueDeliveries = 9
         r.redeliveries = 1
         r.catchUpSeconds = 2.5
+        r.backlogAtMidpoint = 3
+        r.backlogAtEnd = 7
+        r.scheduledSecondHalf = 600
         let back = try JSONDecoder().decode(TrialResult.self, from: JSONEncoder().encode(r))
         #expect(back == r)
+        #expect(back.backlog == BacklogSamples(atMidpoint: 3, atEnd: 7, scheduledSecondHalf: 600))
+    }
+
+    @Test func backlogNeedsAllThreeSamples() throws {
+        // A result written before the samples existed (or by ghz) decodes with none of them.
+        var r = TrialResult.fixture
+        #expect(r.backlog == nil)
+        r.backlogAtMidpoint = 3
+        r.backlogAtEnd = 7
+        #expect(r.backlog == nil)
+        let json = try String(data: JSONEncoder().encode(TrialResult.fixture), encoding: .utf8)!
+        #expect(!json.contains("backlog"))
     }
 
     @Test func driverVersionFieldNames() throws {

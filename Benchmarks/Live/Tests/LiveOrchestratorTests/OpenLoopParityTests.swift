@@ -8,7 +8,9 @@ import Testing
 ///
 /// Every case leaves at least 100 ms between an operation's completion and the boundary that decides its outcome
 /// (deadline, drain end), far above both waker's error (< 1 ms) and the .NET millisecond timers, so the counters are
-/// compared exactly; no tolerance is needed.
+/// compared exactly; no tolerance is needed. `scheduledSecondHalf` depends only on the schedule and is compared in
+/// every case; the backlog samples only where no operation completes before the drain ends (`backlog`), since
+/// elsewhere they depend on when completions land relative to the samples.
 @Suite("Open loop parity: .NET driver vs Swift reference", .serialized)
 struct OpenLoopParityTests {
     struct Case: Sendable, CustomStringConvertible {
@@ -21,6 +23,7 @@ struct OpenLoopParityTests {
         var stallMillis: Int = 0
         /// scheduled, succeeded, failed, dropped, timedOut
         var expected: [Int]
+        var backlog: BacklogSamples? = nil
 
         var description: String { "\(mode), deadline \(deadlineMillis) ms" + (cap < 256 ? ", over the cap" : "") }
     }
@@ -42,7 +45,17 @@ struct OpenLoopParityTests {
         Case(mode: "instantPastDeadline", rate: 100, seconds: 0.2, cap: 256, deadlineMillis: 500, drainMillis: 500, expected: [20, 0, 0, 0, 20]),
         // Cap 10 of 50 operations that never finish within the window: 40 drops, and the 10 outstanding expire at the
         // drain end (deadline 5 s is after it).
-        Case(mode: "stallIgnoring", rate: 100, seconds: 0.5, cap: 10, deadlineMillis: 5000, drainMillis: 200, stallMillis: 10_000, expected: [50, 0, 0, 40, 10]),
+        Case(
+            mode: "stallIgnoring", rate: 100, seconds: 0.5, cap: 10, deadlineMillis: 5000, drainMillis: 200,
+            stallMillis: 10_000,
+            expected: [50, 0, 0, 40, 10], backlog: BacklogSamples(atMidpoint: 10, atEnd: 10, scheduledSecondHalf: 25)
+        ),
+        // Nothing completes within the window: the backlog grows from 11 (index 10 at 200 ms) to all 20.
+        Case(
+            mode: "stallIgnoring", rate: 50, seconds: 0.4, cap: 256, deadlineMillis: 5000, drainMillis: 200,
+            stallMillis: 10_000,
+            expected: [20, 0, 0, 0, 20], backlog: BacklogSamples(atMidpoint: 11, atEnd: 20, scheduledSecondHalf: 10)
+        ),
     ]
 
     @Test(.enabled(if: dotnetAvailable), arguments: cases)
@@ -51,9 +64,15 @@ struct OpenLoopParityTests {
         // blocked cooperative thread would starve the Swift open loop of this or a concurrently running test.
         let dotnet = try await offCooperativePool { try dotnetCounters(c) }
         let swift = await swiftCounters(c)
-        #expect(swift == c.expected, "swift \(c)")
-        #expect(dotnet == c.expected, "dotnet \(c)")
-        #expect(swift == dotnet)
+        #expect(swift.counters == c.expected, "swift \(c)")
+        #expect(dotnet.counters == c.expected, "dotnet \(c)")
+        #expect(swift.counters == dotnet.counters)
+        #expect(swift.backlog != nil && dotnet.backlog != nil, "\(c)")
+        #expect(swift.backlog?.scheduledSecondHalf == dotnet.backlog?.scheduledSecondHalf, "\(c)")
+        if let backlog = c.backlog {
+            #expect(swift.backlog == backlog, "swift \(c)")
+            #expect(dotnet.backlog == backlog, "dotnet \(c)")
+        }
     }
 
     /// The .NET `floor` prints the fields of `HarnessFloor`, which the Swift driver's `floor` encodes and the
@@ -76,7 +95,13 @@ struct OpenLoopParityTests {
         #expect(dotnetAvailable, "LIVE_BENCH_REQUIRE_DOTNET=1 but `dotnet --version` failed: the .NET parity tests would be skipped")
     }
 
-    private func swiftCounters(_ c: Case) async -> [Int] {
+    /// Outcome counters (scheduled, succeeded, failed, dropped, timedOut) and backlog samples of one run.
+    struct Observed {
+        var counters: [Int]
+        var backlog: BacklogSamples?
+    }
+
+    private func swiftCounters(_ c: Case) async -> Observed {
         let config = OpenLoopConfig(
             rate: c.rate, duration: .milliseconds(Int(c.seconds * 1000)), inFlightCap: c.cap,
             deadline: .milliseconds(c.deadlineMillis), drain: .milliseconds(c.drainMillis)
@@ -99,19 +124,29 @@ struct OpenLoopParityTests {
             }
             return nil
         }
-        return [r.scheduled, r.succeeded, r.failed, r.dropped, r.timedOut]
+        return Observed(counters: [r.scheduled, r.succeeded, r.failed, r.dropped, r.timedOut], backlog: r.backlog)
     }
 
-    private nonisolated func dotnetCounters(_ c: Case) throws -> [Int] {
+    private nonisolated func dotnetCounters(_ c: Case) throws -> Observed {
         let dll = try DotNetDriverBuild.dll()
         let output = try runTool("dotnet", [
             dll.path, "selftest", "--mode", c.mode, "--rate", "\(c.rate)", "--seconds", "\(c.seconds)",
             "--cap", "\(c.cap)", "--deadline-ms", "\(c.deadlineMillis)", "--drain-ms", "\(c.drainMillis)",
             "--stall-ms", "\(c.stallMillis)",
         ])
-        struct Counters: Decodable { var scheduled, succeeded, failed, dropped, timedOut: Int }
+        struct Counters: Decodable {
+            var scheduled, succeeded, failed, dropped, timedOut: Int
+            var backlogAtMidpoint, backlogAtEnd, scheduledSecondHalf: Int?
+
+            var backlog: BacklogSamples? {
+                guard let backlogAtMidpoint, let backlogAtEnd, let scheduledSecondHalf else { return nil }
+                return BacklogSamples(
+                    atMidpoint: backlogAtMidpoint, atEnd: backlogAtEnd, scheduledSecondHalf: scheduledSecondHalf
+                )
+            }
+        }
         let r = try JSONDecoder().decode(Counters.self, from: Data(output.utf8))
-        return [r.scheduled, r.succeeded, r.failed, r.dropped, r.timedOut]
+        return Observed(counters: [r.scheduled, r.succeeded, r.failed, r.dropped, r.timedOut], backlog: r.backlog)
     }
 }
 

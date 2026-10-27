@@ -33,6 +33,23 @@ struct EvaluationTests {
         #expect(!isSustained(recorder(ok: 1000), targetRate: 100, measuredSeconds: 10, backlogGrew: true))
     }
 
+    @Test func backlogGrowthBeyondOnePercentOfTheSecondHalfIsGrowth() {
+        // 1,000 indices in the second half: up to 10 more outstanding at the end is tolerated.
+        #expect(!backlogGrew(atMidpoint: 5, atEnd: 15, scheduledSecondHalf: 1000))
+        #expect(backlogGrew(atMidpoint: 5, atEnd: 16, scheduledSecondHalf: 1000))
+        #expect(!backlogGrew(atMidpoint: 15, atEnd: 5, scheduledSecondHalf: 1000))
+    }
+
+    @Test func backlogGrowthToleratesOneOperationAtLowCounts() {
+        // 10 indices in the second half: 1% is 0.1, so the one-operation minimum applies.
+        #expect(!backlogGrew(atMidpoint: 0, atEnd: 1, scheduledSecondHalf: 10))
+        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 10))
+        #expect(!backlogGrew(atMidpoint: 3, atEnd: 4, scheduledSecondHalf: 150))
+        #expect(backlogGrew(atMidpoint: 3, atEnd: 5, scheduledSecondHalf: 150))
+        #expect(BacklogSamples(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 10).grew)
+        #expect(OutcomeRecorder().backlog == nil)
+    }
+
     @Test func degenerateInputsAreNotSustained() {
         #expect(!isSustained(OutcomeRecorder(), targetRate: 10, measuredSeconds: 1, backlogGrew: false))
         #expect(!isSustained(recorder(ok: 10), targetRate: 10, measuredSeconds: 0, backlogGrew: false))

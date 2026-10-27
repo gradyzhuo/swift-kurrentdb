@@ -29,6 +29,10 @@ readonly record struct Outcome(OutcomeKind Kind, ulong LatencyMicros = 0)
     public static Outcome Success(ulong micros) => new(OutcomeKind.Success, micros);
 }
 
+/// The open loop's backlog (operations launched with no recorded outcome yet; drops are not backlog), sampled at the
+/// window's midpoint and at the end of scheduling (`BacklogSamples`, Outcomes.swift).
+readonly record struct BacklogSamples(int AtMidpoint, int AtEnd, int ScheduledSecondHalf);
+
 /// Counts every scheduled attempt and keeps a latency histogram of the successes only (Outcomes.swift):
 /// 1 us to 60 s, 3 significant digits; a success is clamped to that range.
 sealed class OutcomeRecorder
@@ -39,6 +43,8 @@ sealed class OutcomeRecorder
     public long TimedOut { get; private set; }
     public LongHistogram Histogram { get; } = new(1, 60_000_000, 3);
     public long Scheduled => Succeeded + Failed + Dropped + TimedOut;
+    /// Set by `OpenLoop.Run` once its schedule reached the window's midpoint; null otherwise.
+    public BacklogSamples? Backlog { get; set; }
 
     public void Record(Outcome outcome)
     {
@@ -75,6 +81,9 @@ static class OpenLoop
     /// - A thrown exception is a failure.
     /// - After the window: wait until nothing is outstanding or `start + duration + drain`; everything still
     ///   outstanding then is a timeout and is cancelled (not awaited).
+    /// - The backlog (outstanding operations) is sampled right after the first index scheduled at or after
+    ///   `duration / 2` is launched or dropped, and again when scheduling ends, before the drain; `Backlog` holds both
+    ///   and the number of indices scheduled from the midpoint index on (null if scheduling never reached it).
     public static async Task<OutcomeRecorder> Run(OpenLoopConfig config, OpenLoopOperation operation)
     {
         if (!double.IsFinite(config.Rate) || config.Rate <= 0) throw new ArgumentException("rate must be a positive finite number");
@@ -83,6 +92,11 @@ static class OpenLoop
         var ledger = new Ledger(config, operation);
         long start = MonoClock.Now();
         double nanosPerOp = 1e9 / config.Rate;
+        double midpointNanos = config.DurationNanos / 2.0;
+        // Index and backlog of the first launch at or after the window's midpoint; `scheduledCount` is one past the
+        // last index scheduled. Written by the scheduling thread, read after `schedulingDone`.
+        (int Index, int Backlog)? midpoint = null;
+        int scheduledCount = 0;
         var schedulingDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var scheduler = new Thread(() =>
         {
@@ -94,12 +108,14 @@ static class OpenLoop
                     // Integer nanosecond offsets keep the schedule exact (no accumulated floating-point drift).
                     double offset = Math.Round(index * nanosPerOp, MidpointRounding.AwayFromZero);
                     if (!(offset < config.DurationNanos)) break;
+                    scheduledCount = index + 1;
                     long scheduled = start + (long)offset;
                     waker.Wait(scheduled);
                     // The waker may return a little before or after the due instant. Latency runs from the earlier of
                     // the two: a late launch is charged from the schedule, an early one from the launch.
                     long launched = MonoClock.Now();
-                    ledger.Launch(index, scheduled, Math.Min(scheduled, launched));
+                    int backlog = ledger.Launch(index, scheduled, Math.Min(scheduled, launched));
+                    if (midpoint is null && offset >= midpointNanos) midpoint = (index, backlog);
                 }
                 schedulingDone.SetResult();
             }
@@ -116,13 +132,15 @@ static class OpenLoop
         await schedulingDone.Task.ConfigureAwait(false);
 
         // Drain: wait for everything to be accounted for, bounded by the end of the window plus `drain`.
-        var allAccounted = ledger.CloseScheduling();
+        var (allAccounted, backlogAtEnd) = ledger.CloseScheduling();
         long drainEnd = start + config.DurationNanos + config.DrainNanos;
         // Task.Delay works in whole milliseconds (TimeSpanUntil rounds up), so loop until the drain end has really passed:
         // nothing outstanding is expired before it.
         while (!allAccounted.IsCompleted && MonoClock.Now() < drainEnd)
             await Task.WhenAny(allAccounted, Task.Delay(TimeSpanUntil(drainEnd))).ConfigureAwait(false);
-        return ledger.ExpireOutstanding();
+        var recorder = ledger.ExpireOutstanding();
+        if (midpoint is { } m) recorder.Backlog = new BacklogSamples(m.Backlog, backlogAtEnd, scheduledCount - m.Index);
+        return recorder;
     }
 
     /// Shared, lock-protected accounting (`OpenLoopLedger`): each index is recorded at most once, by whichever path
@@ -137,18 +155,21 @@ static class OpenLoop
 
         /// Records a drop if the cap is reached; otherwise tracks the operation as outstanding, then starts it on the
         /// thread pool together with its deadline timer. It is tracked before it starts, so its outcome always finds it.
-        public void Launch(int index, long scheduled, long latencyOrigin)
+        /// Returns the backlog (outstanding count) right after.
+        public int Launch(int index, long scheduled, long latencyOrigin)
         {
             var cts = new CancellationTokenSource();
+            int backlog;
             lock (_gate)
             {
                 if (_outstanding.Count >= config.InFlightCap)
                 {
                     _recorder.Record(Outcome.Drop);
                     cts.Dispose();
-                    return;
+                    return _outstanding.Count;
                 }
                 _outstanding[index] = cts;
+                backlog = _outstanding.Count;
             }
             // Deadline: an operation still outstanding at `scheduled + deadline` is a timeout, recorded then. (The
             // timer only frees the cap slot and cancels; a late completion is judged by its own instant below.)
@@ -162,6 +183,7 @@ static class OpenLoop
             cts.CancelAfter(TimeSpanUntil(scheduled + config.DeadlineNanos));
             ThreadPool.UnsafeQueueUserWorkItem(static s => _ = s.ledger.Execute(s.index, s.scheduled, s.latencyOrigin, s.cts),
                 (ledger: this, index, scheduled, latencyOrigin, cts), preferLocal: false);
+            return backlog;
         }
 
         async Task Execute(int index, long scheduled, long latencyOrigin, CancellationTokenSource cts)
@@ -200,15 +222,16 @@ static class OpenLoop
             if (nowEmpty) _allAccounted.TrySetResult();
         }
 
-        /// Marks the end of scheduling; the task completes once nothing is outstanding.
-        public Task CloseScheduling()
+        /// Marks the end of scheduling; the task completes once nothing is outstanding. Also returns the backlog
+        /// (outstanding count) at that moment.
+        public (Task AllAccounted, int Backlog) CloseScheduling()
         {
             lock (_gate)
             {
                 _schedulingClosed = true;
                 if (_outstanding.Count == 0) _allAccounted.TrySetResult();
+                return (_allAccounted.Task, _outstanding.Count);
             }
-            return _allAccounted.Task;
         }
 
         /// Records every outstanding operation as a timeout, cancels it without awaiting it, and returns the tally.

@@ -41,6 +41,11 @@ public struct OpenLoopConfig: Sendable {
 ///   anything still outstanding then is `.timeout` and cancelled. The call does not wait for operations that ignore
 ///   cancellation: they are unstructured tasks whose results are discarded.
 /// - If the calling task is cancelled, scheduling stops; indices already scheduled are still accounted for.
+/// - The backlog (operations launched with no recorded outcome yet) is sampled right after the first index scheduled at
+///   or after `duration / 2` is launched or dropped, and again when scheduling ends, before the drain; the result's
+///   `backlog` holds both samples and the number of indices scheduled from the midpoint index on. It stays nil if
+///   scheduling stopped before the midpoint. A backlog that grows means completions fall behind the rate even if
+///   everything finishes within the deadline and the drain (`backlogGrew`).
 ///
 /// Harness floor: every latency includes the scheduler's own wake-up error (early or late) and task-start cost.
 /// Measured on an Apple Silicon Mac (macOS) in a release build with a no-op operation, p50 / p99:
@@ -80,6 +85,10 @@ public func runOpenLoop<C: Clock<Duration>>(
     // Integer nanosecond offsets keep the schedule exact (no accumulated floating-point drift).
     let nanosPerOp = 1e9 / config.rate
 
+    let midpointNanos = Double(windowNanos) / 2
+    // Index and backlog of the first launch at or after the window's midpoint.
+    var midpoint: (index: Int, backlog: Int)?
+
     var waker = DueInstantWaker(clock: clock)
     var index = 0
     while true {
@@ -97,7 +106,7 @@ public func runOpenLoop<C: Clock<Duration>>(
         // the launch (its head start is not free).
         let launched = clock.now
         let latencyOrigin = min(scheduled, launched)
-        ledger.launch(i, cap: config.inFlightCap) {
+        let backlog = ledger.launch(i, cap: config.inFlightCap) {
             Task {
                 await withTaskGroup(of: Void.self) { group in
                     group.addTask {
@@ -125,19 +134,27 @@ public func runOpenLoop<C: Clock<Duration>>(
                 }
             }
         }
+        if midpoint == nil, offsetNanos >= midpointNanos { midpoint = (i, backlog) }
         index += 1
     }
 
     // Drain: wait for everything to be accounted for, bounded by the end of the window plus `drain`.
     let drainEnd = start.advanced(by: config.duration + config.drain)
-    let allAccounted = ledger.closeScheduling()
+    let (allAccounted, backlogAtEnd) = ledger.closeScheduling()
     await withTaskGroup(of: Void.self) { group in
         group.addTask { for await _ in allAccounted {} } // ends when everything is accounted for, or on cancellation
         group.addTask { try? await clock.sleep(until: drainEnd, tolerance: nil) }
         await group.next()
         group.cancelAll()
     }
-    return ledger.expireOutstanding()
+    var recorder = ledger.expireOutstanding()
+    if let midpoint {
+        // `index` is one past the last index scheduled (launched or dropped).
+        recorder.backlog = BacklogSamples(
+            atMidpoint: midpoint.backlog, atEnd: backlogAtEnd, scheduledSecondHalf: index - midpoint.index
+        )
+    }
+    return recorder
 }
 
 /// Wakes the scheduling loop close to each due instant without spinning.
@@ -189,14 +206,16 @@ private final class OpenLoopLedger: Sendable {
     }
 
     /// Records a drop if the cap is reached; otherwise starts the operation's task and tracks it as outstanding.
-    /// The task is created under the lock so its `finish` cannot run before it is tracked.
-    func launch(_ index: Int, cap: Int, makeTask: () -> Task<Void, Never>) {
+    /// The task is created under the lock so its `finish` cannot run before it is tracked. Returns the backlog
+    /// (outstanding count) right after.
+    func launch(_ index: Int, cap: Int, makeTask: () -> Task<Void, Never>) -> Int {
         state.withLock { s in
             if s.outstanding.count >= cap {
                 s.recorder.record(.drop)
             } else {
                 s.outstanding[index] = makeTask()
             }
+            return s.outstanding.count
         }
     }
 
@@ -210,14 +229,15 @@ private final class OpenLoopLedger: Sendable {
         if nowEmpty { allAccountedContinuation.finish() }
     }
 
-    /// Marks the end of scheduling and returns a stream that finishes once nothing is outstanding.
-    func closeScheduling() -> AsyncStream<Void> {
-        let empty = state.withLock { s -> Bool in
+    /// Marks the end of scheduling and returns a stream that finishes once nothing is outstanding, with the backlog
+    /// (outstanding count) at that moment.
+    func closeScheduling() -> (allAccounted: AsyncStream<Void>, backlog: Int) {
+        let backlog = state.withLock { s -> Int in
             s.schedulingClosed = true
-            return s.outstanding.isEmpty
+            return s.outstanding.count
         }
-        if empty { allAccountedContinuation.finish() }
-        return allAccounted
+        if backlog == 0 { allAccountedContinuation.finish() }
+        return (allAccounted, backlog)
     }
 
     /// Records every outstanding operation as `.timeout`, cancels it without awaiting it, and returns the final tally.

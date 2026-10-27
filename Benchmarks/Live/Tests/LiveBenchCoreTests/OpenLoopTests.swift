@@ -211,6 +211,62 @@ struct OpenLoopTests {
         expectAccounted(r)
     }
 
+    @Test func serializedOperationGrowsTheBacklog() async throws {
+        // 50 ops/s for 0.4 s, each holding one shared resource for 50 ms: completions run at 20/s. Every operation
+        // still succeeds within the deadline and the drain, so only the backlog shows the client falling behind. At
+        // the midpoint (index 10, 200 ms) about 4 have completed, at the end (index 19, 380 ms) about 7: the backlog
+        // grows from about 7 to about 13. A loaded host only completes fewer, which grows it more.
+        let tail = Mutex<Task<Void, Never>?>(nil)
+        let config = OpenLoopConfig(
+            rate: 50, duration: .milliseconds(400), inFlightCap: 256, deadline: .seconds(10), drain: .seconds(5)
+        )
+        let r = await runOpenLoop(config) { _ in
+            let mine = tail.withLock { previous in
+                let next = Task { [previous] in
+                    await previous?.value
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
+                previous = next
+                return next
+            }
+            await mine.value
+        }
+        #expect(r.scheduled == 20)
+        #expect(r.succeeded == 20)
+        let backlog = try #require(r.backlog)
+        #expect(backlog.scheduledSecondHalf == 10)
+        #expect(backlog.atEnd > backlog.atMidpoint + 1)
+        #expect(backlog.grew)
+        expectAccounted(r)
+    }
+
+    @Test func operationThatKeepsUpLeavesTheBacklogFlat() async throws {
+        // 100 ops/s for 0.4 s with a no-op: each completes long before the next is due, so both samples are about 1
+        // (the operation just launched).
+        let config = OpenLoopConfig(
+            rate: 100, duration: .milliseconds(400), inFlightCap: 256, deadline: .seconds(5), drain: .seconds(1)
+        )
+        let r = await runOpenLoop(config) { _ in }
+        let backlog = try #require(r.backlog)
+        #expect(backlog.scheduledSecondHalf == 20)
+        #expect(!backlog.grew)
+        expectAccounted(r)
+    }
+
+    @Test func dropsAreNotBacklog() async throws {
+        // Cap 2, operations that outlast the window: from index 2 on every index is a drop and the backlog stays at
+        // the cap. Index 5 (100 ms of 200 ms) is the midpoint.
+        let config = OpenLoopConfig(
+            rate: 50, duration: .milliseconds(200), inFlightCap: 2, deadline: .seconds(2), drain: .milliseconds(100)
+        )
+        let r = await runOpenLoop(config) { _ in
+            try await Task.sleep(for: .seconds(1))
+        }
+        #expect(r.dropped == 8)
+        #expect(r.backlog == BacklogSamples(atMidpoint: 2, atEnd: 2, scheduledSecondHalf: 5))
+        expectAccounted(r)
+    }
+
     @Test func fractionalScheduleCount() async {
         // 30 ops/s for 0.1 s: offsets 0, 33.3, 66.7 ms are before the end; 100 ms is not.
         let r = await runOpenLoop(.init(rate: 30, duration: .milliseconds(100), inFlightCap: 10, deadline: .seconds(1), drain: .milliseconds(200))) { _ in }
