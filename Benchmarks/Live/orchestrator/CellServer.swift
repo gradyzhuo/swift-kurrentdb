@@ -102,14 +102,16 @@ final class CellServer: TrialServer {
 
     /// The monitor's projection gate: the target is `projectionTarget(seed:trialWrites:lastWritten:)` (the seed's last
     /// position, or the last event written to `<streamPrefix>…` when the cell's trials write), then
-    /// `byCategoryCatchUp(client:target:within:)`. Unanswered while no server answers.
+    /// `byCategoryCatchUp(client:target:within:since:)` counted from this call (the window's end), so the time spent
+    /// finding the target counts against the bound. Unanswered while no server answers.
     func byCategoryCatchUp(streamPrefix: String, within bound: Duration) async -> ProjectionCatchUp {
+        let windowEnd = ContinuousClock.now
         guard let client = try? currentClient() else { return .unanswered }
         let (seed, writes) = state.withLock { ($0.seed, $0.writes) }
         guard let target = await projectionTarget(seed: seed, trialWrites: writes, lastWritten: {
             try await lastWrittenPosition(client, streamPrefix: streamPrefix)
         }) else { return .targetUnreadable }
-        return await LiveOrchestrator.byCategoryCatchUp(client: client, target: target, within: bound)
+        return await LiveOrchestrator.byCategoryCatchUp(client: client, target: target, within: bound, since: windowEnd)
     }
 
     /// Removes the data directory and the snapshot (between cells, and after the last one: they can be GBs).
@@ -152,11 +154,13 @@ func projectionTarget(
     return max(written, seed ?? .zero)
 }
 
-/// Polls `$by_category`'s position until it is at or past `target` or `bound` passes, counting from the call: the
-/// target is already known, so how long it took to find does not count as projection lag.
-func byCategoryCatchUp(client: KurrentDBClient, target: LogPosition, within bound: Duration) async -> ProjectionCatchUp {
+/// Polls `$by_category`'s position until it is at or past `target` or `bound` passes, both counted from `started`
+/// (the call by default). The gate passes `started` = the window's end, so the time spent finding the target counts as
+/// projection lag: a slow lookup must not stretch the 5 s the projection has after the window.
+func byCategoryCatchUp(
+    client: KurrentDBClient, target: LogPosition, within bound: Duration, since started: ContinuousClock.Instant = .now
+) async -> ProjectionCatchUp {
     let clock = ContinuousClock()
-    let started = clock.now
     var answered = false
     while true {
         if let detail = try? await withTimeout(.seconds(1), { try await client.projections(system: .byCategory).detail() }) {
