@@ -135,8 +135,12 @@ jobs:
           dotnet build Benchmarks/Live/drivers/dotnet -c Release -p:RestoreLockedMode=true
           ghz --version
 
-      # Drivers resolve against the repository root (config/drivers.local.json uses repository-relative paths).
+      # Drivers resolve against the repository root (config/drivers.local.json uses repository-relative paths). The
+      # server's data must be on the runner's disk: /tmp is a tmpfs (memory) on GitHub's Ubuntu images, so the cell's
+      # work directory goes under runner.temp (the root ext4 partition) through TMPDIR.
       - name: Run cell
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           Benchmarks/Live/.build/release/LiveOrchestrator run-cell \
             --cell "${{ matrix.cell }}" \
@@ -214,7 +218,10 @@ jobs:
         run: swift build --package-path Benchmarks/Live -c release --force-resolved-versions
 
       # Every headline cell at one fixed moderate rate, one round, Swift only; writes trend-out/bmf.json.
+      # TMPDIR: the server's data on the runner's disk, not the /tmp tmpfs (see "Run cell").
       - name: Run trend
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           Benchmarks/Live/.build/release/LiveOrchestrator trend \
             --drivers Benchmarks/Live/config/drivers.local.json \

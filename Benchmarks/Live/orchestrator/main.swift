@@ -66,7 +66,11 @@ struct CellOptions: ParsableArguments {
         #if os(Linux)
         // CI measures headroom from /proc; without it no step would get a comparison, so stop before any work.
         guard let device else {
-            throw ValidationError("cannot resolve the block device of \(workDirectory.path) in /proc/diskstats (by its device number); server headroom could not be measured")
+            throw ValidationError(
+                "cannot resolve the block device of \(workDirectory.path) in /proc/diskstats (by its device number); "
+                    + "server headroom could not be measured. A memory filesystem such as tmpfs (GitHub's Ubuntu runners "
+                    + "mount /tmp so) has no block device: pass --work, or set TMPDIR, to a directory on a disk"
+            )
         }
         do { try await monitor.checkReadable() } catch {
             throw ValidationError("server headroom cannot be measured (device \(device), server CPUs \(serverCpus)): \(error)")
