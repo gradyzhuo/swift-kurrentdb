@@ -439,8 +439,10 @@ struct TrialRunner: Sendable {
         let monitor = self.monitor
         let sampling = Task { () -> (HeadroomSample?, Bool, Int64?) in
             guard await waitForStart(), !Task.isCancelled else { return (nil, false, nil) }
+            // The window ends `measure` seconds after the marker, however long the monitor's first reads take.
+            let windowCloses = ContinuousClock.now.advanced(by: .seconds(measure))
             await monitor.start()
-            try? await Task.sleep(for: .seconds(measure))
+            try? await Task.sleep(until: windowCloses, clock: .continuous)
             // An unstructured task is not cancelled with the sampler, so a driver that exits right at the window's end
             // (ghz) does not cut the final reads short.
             return await Task {
