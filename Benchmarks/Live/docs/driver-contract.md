@@ -68,8 +68,10 @@ Unknown fields must be ignored; absent optional fields are `null`/absent.
 Applies to the warmup window and the measure window alike. Warmup runs at the step's rate and its outcomes are
 discarded. Counters and histogram in the result cover the measure window only. CPU is the delta of process CPU time
 between the start of measure and the end of drain. `maxRssBytes` is the process-lifetime peak resident set size
-(`ru_maxrss`, not a delta; includes warmup); a .NET driver must report its process peak too (`ru_maxrss`, or
-`Process.PeakWorkingSet64`, which reads the same kernel peak on Linux), not a managed-heap figure.
+(not a delta; includes warmup): on Linux `VmHWM` of /proc/self/status, elsewhere `ru_maxrss`. Not `ru_maxrss` on
+Linux: the kernel folds the pre-exec address space's high-water mark into it, so a driver the orchestrator spawns
+would report at least the orchestrator's peak. A .NET driver reports the same process peak (`VmHWM`, which
+`Process.PeakWorkingSet64` also reads), not a managed-heap figure.
 
 ### Warmup isolation
 
@@ -317,7 +319,7 @@ counts are not checked; process CPU and RSS are not measured. Its numbers are ne
 | `succeeded`, `failed`, `dropped`, `timedOut` | int | outcome counts, sum equals `scheduled` |
 | `measuredSeconds` | number | length of the measure window as actually run (scheduling window, not including drain) |
 | `cpuUserSeconds`, `cpuSystemSeconds` | number | process CPU delta from the start of measure to the end of drain (`getrusage(RUSAGE_SELF)` or equivalent) |
-| `maxRssBytes` | uint64 | process-lifetime peak resident set size, in bytes (not a delta) (`ru_maxrss` is KiB on Linux, bytes on macOS: normalise) |
+| `maxRssBytes` | uint64 | process-lifetime peak resident set size, in bytes (not a delta): `VmHWM` (KiB) on Linux, `ru_maxrss` (bytes) on macOS |
 | `ackEnqueued` | int? | persistent subscription: acks sent by the client; else absent/null |
 | `uniqueDeliveries` | int? | subscription kinds: distinct events delivered; else null |
 | `redeliveries` | int? | subscription kinds: deliveries of an already seen event; else null |
@@ -427,8 +429,9 @@ does this:
   instant past the deadline, over the cap with drain expiry); `OpenLoopParityTests` runs the same cases through
   `runOpenLoop` and requires identical counters and `scheduledSecondHalf`, and identical backlog samples where they do
   not depend on timing (operations that never complete within the window).
-- **Process figures.** CPU and peak RSS come from `getrusage(RUSAGE_SELF)` (P/Invoke), the Swift driver's source;
-  on Linux `ru_maxrss` is the kernel's VmHWM, which `Process.PeakWorkingSet64` also reports.
+- **Process figures.** CPU comes from `getrusage(RUSAGE_SELF)` (P/Invoke) and peak RSS from `VmHWM` of
+  /proc/self/status on Linux (`ru_maxrss` elsewhere), the Swift driver's sources; `Process.PeakWorkingSet64` reports
+  the same `VmHWM`.
 - **Runtime defaults.** No GC, thread-pool or tiered-compilation settings are changed. The .NET thread pool's workers
   spin briefly before sleeping (`ThreadPool_UnfairSemaphoreSpinLimit` default), which keeps wake-ups short but costs
   process CPU even with a no-op operation: about 0.2 cores at 1000/s and 1.3 cores at 8000/s on an Apple Silicon Mac
