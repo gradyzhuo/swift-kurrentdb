@@ -16,9 +16,9 @@ import LiveBenchCore
 /// - A censored percentile (rank among non-successes) on either side drops that round from that percentile's ratio.
 /// - "Backlog not growing" uses the drivers' backlog samples (`TrialResult.backlog`, `backlogGrew`): a client that
 ///   falls slowly behind can finish everything within the deadline and the drain, so the loss criterion alone would
-///   miss it. The tolerance includes a fixed spike allowance (`backlogSpikeAllowanceSeconds` of the rate), so a
-///   latency spike under one single-instant sample is not read as growth. A result without samples (ghz) counts as
-///   not grown: unknown is not growth.
+///   miss it. The samples are minima over a second of schedule, so a short stall's peak is not read as growth, and
+///   the tolerance includes a fixed spike allowance (`backlogSpikeAllowanceSeconds` of the rate) for a longer one. A
+///   result without samples (ghz) counts as not grown: unknown is not growth.
 struct CellAnalysis {
     static let swift = "swift"
     static let dotnet = "dotnet"
