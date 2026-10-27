@@ -113,26 +113,26 @@ struct ReportTests {
         #expect(!TrialFigures(trial, cell: cell).sustained)
     }
 
-    @Test func backlogToleranceIncludesWhatTheStepsP99Explains() throws {
-        // 10/s for 60 s: 300 in the second half (1% is 3), p99 400 ms, so rate × p99 explains about 4 more
-        // outstanding.
+    @Test func backlogToleranceIsFixedNotTheStepsLatency() throws {
+        // 10/s for 60 s: 300 in the second half, so the tolerance is max(1, 3, 2.5) = 3. A 400 ms p99 (which would
+        // explain 4 in flight) does not widen it: a drifting client's queue raises its own percentiles.
         let cell = ReportFixture.cell("backlog", rates: [10], rounds: 1)
         var trial = ReportFixture.trial(round: 0, rate: 10, driver: "swift", fast: 2000, slow: 400_000)
         trial.result?.backlogAtMidpoint = 1
-        trial.result?.backlogAtEnd = 5
+        trial.result?.backlogAtEnd = 4
         trial.result?.scheduledSecondHalf = 300
         #expect(TrialFigures(trial, cell: cell).sustained)
-        trial.result?.backlogAtEnd = 6
+        trial.result?.backlogAtEnd = 5
         #expect(!TrialFigures(trial, cell: cell).sustained)
 
-        // 1/s (the cells' lowest rate): 30 in the second half, p99 2.5 s explains 2 more outstanding, not 3.
+        // 1/s (the cells' lowest rate): 30 in the second half, so the minimum of one operation rules.
         let slow = ReportFixture.cell("backlog-1", rates: [1], rounds: 1)
         var spike = ReportFixture.trial(round: 0, rate: 1, driver: "swift", fast: 2000, slow: 2_500_000)
         spike.result?.backlogAtMidpoint = 0
-        spike.result?.backlogAtEnd = 2
+        spike.result?.backlogAtEnd = 1
         spike.result?.scheduledSecondHalf = 30
         #expect(TrialFigures(spike, cell: slow).sustained)
-        spike.result?.backlogAtEnd = 3
+        spike.result?.backlogAtEnd = 2
         #expect(!TrialFigures(spike, cell: slow).sustained)
     }
 

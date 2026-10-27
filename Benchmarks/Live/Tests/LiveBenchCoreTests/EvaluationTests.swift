@@ -34,43 +34,37 @@ struct EvaluationTests {
     }
 
     @Test func backlogGrowthBeyondOnePercentOfTheSecondHalfIsGrowth() {
-        // 1,000 indices in the second half: up to 10 more outstanding at the end is tolerated.
-        #expect(!backlogGrew(atMidpoint: 5, atEnd: 15, scheduledSecondHalf: 1000, inFlightAtP99: 0))
-        #expect(backlogGrew(atMidpoint: 5, atEnd: 16, scheduledSecondHalf: 1000, inFlightAtP99: 0))
-        #expect(!backlogGrew(atMidpoint: 15, atEnd: 5, scheduledSecondHalf: 1000, inFlightAtP99: 0))
+        // 1000/s for 60 s: 30,000 in the second half, so 1% (300) beats the spike allowance (250).
+        #expect(!backlogGrew(atMidpoint: 5, atEnd: 305, scheduledSecondHalf: 30_000, targetRate: 1000))
+        #expect(backlogGrew(atMidpoint: 5, atEnd: 306, scheduledSecondHalf: 30_000, targetRate: 1000))
+        #expect(!backlogGrew(atMidpoint: 305, atEnd: 5, scheduledSecondHalf: 30_000, targetRate: 1000))
     }
 
-    @Test func backlogGrowthToleratesOneOperationAtLowCounts() {
-        // 10 indices in the second half: 1% is 0.1, so the one-operation minimum applies.
-        #expect(!backlogGrew(atMidpoint: 0, atEnd: 1, scheduledSecondHalf: 10, inFlightAtP99: 0))
-        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 10, inFlightAtP99: 0))
-        #expect(!backlogGrew(atMidpoint: 3, atEnd: 4, scheduledSecondHalf: 150, inFlightAtP99: 0))
-        #expect(backlogGrew(atMidpoint: 3, atEnd: 5, scheduledSecondHalf: 150, inFlightAtP99: 0))
-        #expect(BacklogSamples(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 10).grew(inFlightAtP99: 0))
-        #expect(OutcomeRecorder().backlog == nil)
+    @Test func clientCompletingTwoPercentShortIsGrown() {
+        // 1000/s scheduled, 980/s completed: over the 30 s second half the backlog grows by about 20 × 30 = 600, twice
+        // the tolerance of max(1, 300, 250). Every operation can still succeed within the deadline and the drain.
+        #expect(backlogGrew(atMidpoint: 20, atEnd: 620, scheduledSecondHalf: 30_000, targetRate: 1000))
+        #expect(BacklogSamples(atMidpoint: 20, atEnd: 620, scheduledSecondHalf: 30_000).grew(targetRate: 1000))
     }
 
     @Test func latencySpikeUnderOneSampleIsNotGrowthAtLowRates() {
-        // 10/s for 30 s (150 in the second half, 1% is 1.5): a 200 ms spike under the end sample leaves 3 outstanding
-        // instead of 1. With a p99 of 200 ms, rate × p99 = 2 operations explain it.
-        let at10 = inFlight(targetRate: 10, p99: .micros(200_000))
-        #expect(at10 == 2)
-        #expect(!backlogGrew(atMidpoint: 1, atEnd: 3, scheduledSecondHalf: 150, inFlightAtP99: at10))
-        // A drift of 3 more outstanding is beyond what one p99 explains.
-        #expect(backlogGrew(atMidpoint: 1, atEnd: 4, scheduledSecondHalf: 150, inFlightAtP99: at10))
-        // 1/s (the cells' lowest rate) for 30 s: 15 in the second half, so only the one-operation minimum and the
-        // p99 term apply. A 2.5 s p99 explains 2 more outstanding, not 3.
-        let at1 = inFlight(targetRate: 1, p99: .micros(2_500_000))
-        #expect(!backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 15, inFlightAtP99: at1))
-        #expect(backlogGrew(atMidpoint: 0, atEnd: 3, scheduledSecondHalf: 15, inFlightAtP99: at1))
+        // 10/s for 30 s: 150 in the second half (1% is 1.5), the spike allowance is 2.5. A 200 ms spike under the end
+        // sample leaves 3 outstanding instead of 1: not growth. A drift of 3 more is.
+        #expect(!backlogGrew(atMidpoint: 1, atEnd: 3, scheduledSecondHalf: 150, targetRate: 10))
+        #expect(backlogGrew(atMidpoint: 1, atEnd: 4, scheduledSecondHalf: 150, targetRate: 10))
+        // 20/s: the allowance is exactly 5 operations, and growth must exceed it.
+        #expect(!backlogGrew(atMidpoint: 0, atEnd: 5, scheduledSecondHalf: 300, targetRate: 20))
+        #expect(backlogGrew(atMidpoint: 0, atEnd: 6, scheduledSecondHalf: 300, targetRate: 20))
     }
 
-    @Test func censoredOrInvalidP99AddsNoTolerance() {
-        #expect(inFlight(targetRate: 10, p99: .censored) == 0)
-        #expect(inFlight(targetRate: .nan, p99: .micros(1_000_000)) == 0)
-        #expect(inFlight(targetRate: 0, p99: .micros(1_000_000)) == 0)
-        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 15, inFlightAtP99: .infinity))
-        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 15, inFlightAtP99: .nan))
+    @Test func backlogGrowthToleratesOneOperationAtTheLowestRates() {
+        // 1/s (the cells' lowest rate) for 30 s: 1% of 15 is 0.15 and the allowance 0.25, so the minimum of one rules.
+        #expect(!backlogGrew(atMidpoint: 0, atEnd: 1, scheduledSecondHalf: 15, targetRate: 1))
+        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 15, targetRate: 1))
+        // A rate that is not a positive finite number adds no allowance.
+        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 15, targetRate: .nan))
+        #expect(backlogGrew(atMidpoint: 0, atEnd: 2, scheduledSecondHalf: 15, targetRate: -100))
+        #expect(OutcomeRecorder().backlog == nil)
     }
 
     @Test func degenerateInputsAreNotSustained() {

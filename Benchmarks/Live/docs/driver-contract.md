@@ -186,12 +186,12 @@ same for every client.
     scheduling loop exits, before the drain. It reports both counts and the number of indices from that midpoint index
     to the last scheduled one, both included (`backlogAtMidpoint`, `backlogAtEnd`, `scheduledSecondHalf`). If
     scheduling stops before the midpoint the three are null. The orchestrator calls a step's backlog grown when
-    `backlogAtEnd - backlogAtMidpoint > max(1, 0.01 * scheduledSecondHalf, rate * p99)`, with the step's p99 in
-    seconds ranked as in "Percentiles" (the term is 0 when p99 is censored: that step already fails on losses), and
-    such a step is not sustained: a client that completes slightly slower than the rate can still finish everything
-    within the deadline and the drain, so the loss counts alone would not show it. The `rate * p99` term is the
-    in-flight count one p99 latency explains; it keeps a latency spike that covers one of the two single-instant
-    samples from reading as growth at low rates. Missing samples count as not grown.
+    `backlogAtEnd - backlogAtMidpoint > max(1, 0.01 * scheduledSecondHalf, rate * 0.25 s)`, and such a step is not
+    sustained: a client that completes slightly slower than the rate can still finish everything within the deadline
+    and the drain, so the loss counts alone would not show it. The `rate * 0.25 s` term keeps a latency spike that
+    covers one of the two single-instant samples from reading as growth at low rates. It is fixed, not tied to the
+    step's latency: a drifting client's queued operations raise its own percentiles, so a latency-based allowance
+    would hide the drift. Missing samples count as not grown.
 
 ### Percentiles
 
