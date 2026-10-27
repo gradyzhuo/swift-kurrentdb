@@ -45,6 +45,14 @@ func runPersistentSubscription(_ scenario: EffectiveScenario, client: KurrentDBC
     )
 }
 
+/// A measured consumer that ended, or that the server did not confirm within 60 s (the .NET driver's bound), before
+/// the window.
+struct SubscriptionNotConfirmed: Error, CustomStringConvertible {
+    let stream: String
+    let group: String
+    var description: String { "persistent subscription \(stream)/\(group) ended or was not confirmed within 60 s" }
+}
+
 /// Seconds the measured consumers stay connected after the drain (driver contract, "Persistent subscription").
 let persistentAckSettleSeconds = 3.0
 
@@ -53,11 +61,16 @@ private struct PersistentConsumers {
     let readers: [Task<Void, Never>]
     let acks: Counter
 
+    /// Returns once the server confirmed every consumer, as the .NET driver does: `subscribe()` returns before the
+    /// confirmation, and connecting inside the window would charge connection setup to the first deliveries.
     static func start(_ client: KurrentDBClient, stream: String, group: String, count: Int, board: DeliveryBoard) async throws -> PersistentConsumers {
         let acks = Counter()
+        let ended = Counter()
         var readers: [Task<Void, Never>] = []
+        var confirmations: [@Sendable () -> String?] = []
         for _ in 0..<count {
             let subscription = try await client.persistentSubscriptions(stream: stream, group: group).subscribe()
+            confirmations.append { subscription.subscriptionId }
             readers.append(Task {
                 do {
                     for try await result in subscription.events {
@@ -68,9 +81,20 @@ private struct PersistentConsumers {
                 } catch {
                     if !Task.isCancelled { log("persistent subscription on \(stream)/\(group) ended: \(error)") }
                 }
+                ended.increment()
             })
         }
-        return PersistentConsumers(readers: readers, acks: acks)
+        let consumers = PersistentConsumers(readers: readers, acks: acks)
+        // The SDK records the confirmation's subscription id and offers no way to await it, so poll for it.
+        let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+        while confirmations.contains(where: { $0() == nil }) {
+            guard ended.value == 0, ContinuousClock.now < deadline else {
+                consumers.stop()
+                throw SubscriptionNotConfirmed(stream: stream, group: group)
+            }
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        return consumers
     }
 
     /// Stops reading and returns the acks handed to the client. Cancelling a reader ends its `events` iteration; the
