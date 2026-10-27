@@ -63,7 +63,7 @@ jobs:
       - name: Select cells
         id: select
         env:
-          REQUESTED: ${{ github.event.inputs.cells || (github.ref == 'refs/heads/docs/live-benchmarks-design' && 'append-latency-300-tls' || '') }}  # TEMPORARY
+          REQUESTED: ${{ github.event.inputs.cells || (github.ref == 'refs/heads/docs/live-benchmarks-design' && 'append-latency-300-tls,append-throughput-300-tls,persistent-300-tls,catch-up-300-tls,rebuild-300-tls-L10,rebuild-300-tls-L100,rebuild-300-tls-L1000,rebuild-300-tls-L10000' || '') }}  # TEMPORARY
         run: |
           all=$(jq -c '[.cells[].id]' Benchmarks/Live/config/cells.json)
           if [ -z "${REQUESTED//[[:space:],]/}" ]; then
