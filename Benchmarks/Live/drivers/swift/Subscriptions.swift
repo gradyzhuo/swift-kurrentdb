@@ -68,33 +68,38 @@ private struct PersistentConsumers {
         let ended = Counter()
         var readers: [Task<Void, Never>] = []
         var confirmations: [@Sendable () -> String?] = []
-        for _ in 0..<count {
-            let subscription = try await client.persistentSubscriptions(stream: stream, group: group).subscribe()
-            confirmations.append { subscription.subscriptionId }
-            readers.append(Task {
-                do {
-                    for try await result in subscription.events {
-                        board.receive(result.event)
-                        try await subscription.ack(readEvents: result.event)
-                        acks.increment()
+        do {
+            for _ in 0..<count {
+                let subscription = try await client.persistentSubscriptions(stream: stream, group: group).subscribe()
+                confirmations.append { subscription.subscriptionId }
+                readers.append(Task {
+                    do {
+                        for try await result in subscription.events {
+                            board.receive(result.event)
+                            try await subscription.ack(readEvents: result.event)
+                            acks.increment()
+                        }
+                    } catch {
+                        if !Task.isCancelled { log("persistent subscription on \(stream)/\(group) ended: \(error)") }
                     }
-                } catch {
-                    if !Task.isCancelled { log("persistent subscription on \(stream)/\(group) ended: \(error)") }
-                }
-                ended.increment()
-            })
-        }
-        let consumers = PersistentConsumers(readers: readers, acks: acks)
-        // The SDK records the confirmation's subscription id and offers no way to await it, so poll for it.
-        let deadline = ContinuousClock.now.advanced(by: .seconds(60))
-        while confirmations.contains(where: { $0() == nil }) {
-            guard ended.value == 0, ContinuousClock.now < deadline else {
-                consumers.stop()
-                throw SubscriptionNotConfirmed(stream: stream, group: group)
+                    ended.increment()
+                })
             }
-            try await Task.sleep(for: .milliseconds(5))
+            // The SDK records the confirmation's subscription id and offers no way to await it, so poll for it.
+            let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+            while confirmations.contains(where: { $0() == nil }) {
+                guard ended.value == 0, ContinuousClock.now < deadline else {
+                    throw SubscriptionNotConfirmed(stream: stream, group: group)
+                }
+                try await Task.sleep(for: .milliseconds(5))
+            }
+        } catch {
+            // Every failure path (a subscribe that throws, an unconfirmed consumer, cancellation during the poll)
+            // stops the readers already started, so none keeps reading and acknowledging after the trial gave up.
+            for reader in readers { reader.cancel() }
+            throw error
         }
-        return consumers
+        return PersistentConsumers(readers: readers, acks: acks)
     }
 
     /// Stops reading and returns the acks handed to the client. Cancelling a reader ends its `events` iteration; the
