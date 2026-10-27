@@ -202,10 +202,11 @@ actor Monitor {
         }
     }
 
-    /// Baseline reading and starting projection backlog, without the sampling loop.
+    /// Baseline reading and starting projection backlog, without the sampling loop. The reading comes first so a slow
+    /// statistics query cannot move the start of the sampled window.
     func begin() async {
-        bufferedStart = await readBuffered()
         previous = await reading()
+        bufferedStart = await readBuffered()
     }
 
     /// One reading, folded into the running totals against the previous one.
@@ -238,13 +239,18 @@ actor Monitor {
     /// Final reading, then the projection's catch-up to the last event written by now. `eventsWritten` is what the
     /// caller's driver wrote in the window (recorded with the sample). Nil when headroom could not be measured (see the
     /// type's documentation).
+    ///
+    /// The catch-up wait starts first, at the window's end, and runs alongside the final reading and the statistics
+    /// query, so neither can delay its clock and hide a slow projection.
     func stop(eventsWritten: Int64) async -> HeadroomSample? {
+        let readProjectionCatchUp = readProjectionCatchUp
+        async let catchUpResult = readProjectionCatchUp(.seconds(EvaluationThresholds.maxProjectionCatchUpSeconds))
         loop?.cancel()
         await loop?.value
         loop = nil
         await sample()
         let bufferedEnd = await readBuffered()
-        let catchUp = await readProjectionCatchUp(.seconds(EvaluationThresholds.maxProjectionCatchUpSeconds))
+        let catchUp = await catchUpResult
         defer { reset() }
         guard intervals > 0, wall > 0, let bufferedStart, let bufferedEnd, catchUp != .unreadable else { return nil }
         var coreBusy: [Double] = []
