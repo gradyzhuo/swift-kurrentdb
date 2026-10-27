@@ -23,6 +23,9 @@ on:
         default: ""
   push:
     tags: ['*.*.*']
+    # TEMPORARY (revert before merging): smoke-run one cell from the PR branch, since workflow_dispatch needs the
+    # workflow on the default branch.
+    branches: [docs/live-benchmarks-design]
   schedule:
     - cron: '0 18 * * *'
 
@@ -47,7 +50,7 @@ jobs:
       - name: Select cells
         id: select
         env:
-          REQUESTED: ${{ github.event.inputs.cells }}
+          REQUESTED: ${{ github.event.inputs.cells || (github.ref == 'refs/heads/docs/live-benchmarks-design' && 'append-latency-300-tls' || '') }}  # TEMPORARY
         run: |
           all=$(jq -c '[.cells[].id]' Benchmarks/Live/config/cells.json)
           if [ -z "${REQUESTED//[[:space:],]/}" ]; then
