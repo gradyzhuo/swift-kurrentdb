@@ -70,6 +70,10 @@ gRPC, in two layers:
 - Single node. From 26.2 onward single-node deployments are the main use case.
 - Image pinned to an exact 26.2.x tag, its digest recorded in every report. 26.2
   single-node deployments need no license key.
+- Response compression off (`KURRENTDB_COMPRESSION_LEVEL=NoCompression`). By default the
+  server gzips every response message for a client that advertises gzip; KurrentDB.Client
+  and ghz do, the Swift SDK does not, so reads cost the server 2-4x the CPU for those
+  clients only (measured on the first calibration run, 2026-10-27).
 - TLS and authentication on for the main runs (that is what production looks like, and
   each SDK's TLS/HTTP/2 stack is part of its cost). Certificates come from
   `es-gencert-cli`, as `server/docker-compose.yaml` already does.

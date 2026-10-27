@@ -120,6 +120,10 @@ struct ServerControl: Sendable {
             "KURRENTDB_START_STANDARD_PROJECTIONS": "true",
             "KURRENTDB_ADVERTISE_HOST_TO_CLIENT_AS": "127.0.0.1",
             "KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS": "\(port)",
+            // The server gzips every response message for a client that advertises gzip (.NET and ghz do, the Swift
+            // SDK does not), costing it 2-4x the CPU on long reads for ~10% fewer bytes on 300 B events: off, so every
+            // client gets the same server work.
+            "KURRENTDB_COMPRESSION_LEVEL": "NoCompression",
         ]
         switch mode {
         case .tlsAuth:
