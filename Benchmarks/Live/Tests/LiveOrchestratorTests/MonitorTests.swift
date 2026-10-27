@@ -65,7 +65,7 @@ struct MonitorTests {
         let monitor = script.monitor(cores: [0, 1])
         await monitor.begin()
         await monitor.sample()
-        let sample = await monitor.stop(eventsWritten: 0)
+        let sample = try? await monitor.stop(eventsWritten: 0).get()
         #expect(sample != nil)
         #expect(abs((sample?.coreBusy[0] ?? 0) - 0.90) < 1e-9)
         #expect(abs((sample?.coreBusy[1] ?? 0) - 0.20) < 1e-9)
@@ -82,7 +82,7 @@ struct MonitorTests {
         let monitor = script.monitor(cores: [0])
         await monitor.begin()
         await monitor.sample()
-        let sample = await monitor.stop(eventsWritten: 0)
+        let sample = try? await monitor.stop(eventsWritten: 0).get()
         #expect(abs((sample?.diskAwaitMillis ?? -1) - 4.0) < 1e-9)
         #expect(abs((sample?.diskQueueDepth ?? -1) - 0.5) < 1e-9)
     }
@@ -96,7 +96,7 @@ struct MonitorTests {
         let monitor = script.monitor(cores: [0])
         await monitor.begin()
         await monitor.sample()
-        let sample = await monitor.stop(eventsWritten: 0)
+        let sample = try? await monitor.stop(eventsWritten: 0).get()
         #expect(sample?.diskAwaitMillis == 0 && sample?.diskQueueDepth == 0)
     }
 
@@ -109,7 +109,7 @@ struct MonitorTests {
         let monitor = script.monitor(cores: [0, 1])
         await monitor.begin()
         await monitor.sample()
-        let sample = await monitor.stop(eventsWritten: 12_345)
+        let sample = try? await monitor.stop(eventsWritten: 12_345).get()
         #expect(sample?.projectionBufferedStart == 40)
         #expect(sample?.projectionBufferedEnd == 95)
         #expect(sample?.eventsWritten == 12_345)
@@ -119,20 +119,23 @@ struct MonitorTests {
     @Test func projectionCatchUpAfterTheWindowIsCarriedThroughAndGated() async {
         let stats = [procStat(core0: (busy: 0, idle: 0), core1: (busy: 0, idle: 0)), procStat(core0: (busy: 1, idle: 9), core1: (busy: 0, idle: 10))]
         let disks = Array(repeating: diskStats(reads: 1, readMs: 1, writes: 1, writeMs: 1, weightedMs: 1), count: 2)
-        func stopped(_ catchUp: ProjectionCatchUp) async -> HeadroomSample? {
+        func stopped(_ catchUp: ProjectionCatchUp) async -> Result<HeadroomSample, HeadroomUnavailable> {
             let monitor = Script(stats: stats, disks: disks, buffered: [0, 0], wallMillis: [0, 1000], catchUp: catchUp).monitor(cores: [0, 1])
             await monitor.begin()
             await monitor.sample()
             return await monitor.stop(eventsWritten: 100)
         }
-        let quick = await stopped(.caughtUp(seconds: 1.25))
+        let quick = try? await stopped(.caughtUp(seconds: 1.25)).get()
         #expect(quick?.projectionCatchUpSeconds == 1.25)
         #expect(quick.map(hasHeadroom) == true)
-        let behind = await stopped(.notCaughtUp)
+        let behind = try? await stopped(.notCaughtUp).get()
         #expect(behind != nil && behind?.projectionCatchUpSeconds == nil)
         #expect(behind.map(hasHeadroom) == false)
-        // Unreadable is not saturation: no sample, so "headroom unavailable".
-        #expect(await stopped(.unreadable) == nil)
+        // Unreadable is not saturation: no sample, so "headroom unavailable", with which part was unreadable.
+        let noTarget = await stopped(.targetUnreadable).reason
+        #expect(noTarget == HeadroomUnavailable.projectionTargetUnreadable)
+        let unanswered = await stopped(.unanswered).reason
+        #expect(unanswered == HeadroomUnavailable.projectionUnanswered)
     }
 
     @Test func projectionCatchUpGetsTheGatesBound() async {
@@ -178,7 +181,7 @@ struct MonitorTests {
         await monitor.begin()
         await monitor.sample()
         await monitor.sample()
-        let sample = await monitor.stop(eventsWritten: 0)
+        let sample = try? await monitor.stop(eventsWritten: 0).get()
         #expect(abs((sample?.coreBusy[0] ?? 0) - 0.5) < 1e-9)
     }
 
@@ -187,7 +190,8 @@ struct MonitorTests {
         let monitor = script.monitor(cores: [0, 1])
         await monitor.begin()
         await monitor.sample()
-        #expect(await monitor.stop(eventsWritten: 0) == nil)
+        let result = await monitor.stop(eventsWritten: 0).reason
+        #expect(result == HeadroomUnavailable.noIntervals)
     }
 
     @Test func aMissingCoreOrDeviceMeansNoSample() async {
@@ -196,20 +200,36 @@ struct MonitorTests {
         let noCore = Script(stats: [stats, stats], disks: [disk, disk], buffered: [0, 0], wallMillis: [0, 1000])
         let a = noCore.monitor(cores: [0, 7])
         await a.begin(); await a.sample()
-        #expect(await a.stop(eventsWritten: 0) == nil)
+        let missingCore = await a.stop(eventsWritten: 0).reason
+        #expect(missingCore == HeadroomUnavailable.coreMissing(7))
+        // Present, but its counters did not move, so no share of busy time can be computed.
+        let frozen = Script(stats: [stats, stats], disks: [disk, disk], buffered: [0, 0], wallMillis: [0, 1000])
+        let c = frozen.monitor(cores: [0])
+        await c.begin(); await c.sample()
+        let frozenCore = await c.stop(eventsWritten: 0).reason
+        #expect(frozenCore == HeadroomUnavailable.coreMissing(0))
         let noDevice = Script(stats: [stats, stats], disks: [disk, disk], buffered: [0, 0], wallMillis: [0, 1000])
         let b = noDevice.monitor(cores: [0], device: "nvme9n9")
         await b.begin(); await b.sample()
-        #expect(await b.stop(eventsWritten: 0) == nil)
+        let missingDevice = await b.stop(eventsWritten: 0).reason
+        #expect(missingDevice == HeadroomUnavailable.noIntervals)
     }
 
-    @Test func unreadableProjectionMeansNoSample() async {
-        let stats = procStat(core0: (busy: 1, idle: 1), core1: (busy: 1, idle: 1))
+    @Test func unreadableProjectionBufferMeansNoSample() async {
+        let stats = [procStat(core0: (busy: 1, idle: 1), core1: (busy: 1, idle: 1)), procStat(core0: (busy: 2, idle: 2), core1: (busy: 2, idle: 2))]
         let disk = diskStats(reads: 1, readMs: 1, writes: 1, writeMs: 1, weightedMs: 1)
-        let script = Script(stats: [stats, stats], disks: [disk, disk], buffered: [], wallMillis: [0, 1000])
+        let script = Script(stats: stats, disks: [disk, disk], buffered: [], wallMillis: [0, 1000])
         let monitor = script.monitor(cores: [0])
         await monitor.begin(); await monitor.sample()
-        #expect(await monitor.stop(eventsWritten: 0) == nil)
+        let result = await monitor.stop(eventsWritten: 0).reason
+        #expect(result == HeadroomUnavailable.bufferedUnreadable)
+    }
+
+    @Test func everyReasonReadsAsANote() {
+        let reasons: [HeadroomUnavailable] = [.noIntervals, .coreMissing(3), .bufferedUnreadable, .projectionTargetUnreadable, .projectionUnanswered]
+        let notes = Set(reasons.map(\.description))
+        #expect(notes.count == reasons.count)
+        #expect(HeadroomUnavailable.coreMissing(3).description.contains("3"))
     }
 
     @Test func samplingLoopRunsAndStopsOnItsOwn() async {
@@ -224,9 +244,15 @@ struct MonitorTests {
         )
         await monitor.start()
         try? await Task.sleep(for: .milliseconds(100))
-        let sample = await monitor.stop(eventsWritten: 1)
+        let sample = try? await monitor.stop(eventsWritten: 1).get()
         #expect(sample != nil)
         #expect(abs((sample?.coreBusy[0] ?? 0) - 0.9) < 1e-9)
+    }
+}
+
+private extension Result where Success == HeadroomSample, Failure == HeadroomUnavailable {
+    var reason: HeadroomUnavailable? {
+        if case let .failure(reason) = self { reason } else { nil }
     }
 }
 
@@ -298,6 +324,55 @@ struct MonitorRestartTests {
         // Same window and interval: a second sampler would read about twice as often as the single one.
         let (a, b) = (once.count.withLock { $0 }, twice.count.withLock { $0 })
         #expect(Double(b) < 1.5 * Double(a), "single start read \(a) times, double start \(b)")
+    }
+}
+
+/// The projection gate's target (`projectionTarget(seed:trialWrites:scanBound:lastWritten:)`), without a server.
+@Suite("Projection gate target")
+struct ProjectionTargetTests {
+    private let seed = LogPosition(commit: 5000, prepare: 5000)
+
+    /// A rebuild trial writes nothing: the seed's last position is the target and `$all` is never read (the scan past
+    /// the projections' link events made every rebuild trial of a 2 M-event corpus "headroom unavailable").
+    @Test func aTrialThatWritesNothingTargetsTheSeedWithoutReadingTheLog() async {
+        let scans = Mutex(0)
+        let target = await projectionTarget(seed: seed, trialWrites: false) {
+            scans.withLock { $0 += 1 }
+            return LogPosition(commit: 1, prepare: 1)
+        }
+        #expect(target == seed)
+        #expect(scans.withLock { $0 } == 0)
+    }
+
+    @Test func aTrialThatWritesTargetsTheLastWrittenEventNeverBelowTheSeed() async {
+        let later = LogPosition(commit: 9000, prepare: 9000)
+        let newer = await projectionTarget(seed: seed, trialWrites: true) { later }
+        #expect(newer == later)
+        // Nothing newer under the prefix than the seed (or nothing at all): the seed is the floor.
+        let older = await projectionTarget(seed: seed, trialWrites: true) { LogPosition(commit: 10, prepare: 10) }
+        #expect(older == seed)
+        let none = await projectionTarget(seed: seed, trialWrites: true) { .zero }
+        #expect(none == seed)
+    }
+
+    @Test func withoutASeedPositionTheLogIsRead() async {
+        let later = LogPosition(commit: 42, prepare: 42)
+        let target = await projectionTarget(seed: nil, trialWrites: false) { later }
+        #expect(target == later)
+    }
+
+    @Test func aScanThatFailsOrIsNotAnsweredInItsBoundHasNoTarget() async {
+        struct Refused: Error {}
+        let failed = await projectionTarget(seed: seed, trialWrites: true) { throw Refused() }
+        #expect(failed == nil)
+        let clock = ContinuousClock()
+        let started = clock.now
+        let slow = await projectionTarget(seed: seed, trialWrites: true, scanBound: .milliseconds(100)) {
+            try await Task.sleep(for: .seconds(10))
+            return LogPosition(commit: 9000, prepare: 9000)
+        }
+        #expect(slow == nil)
+        #expect(started.duration(to: clock.now) < .seconds(5))
     }
 }
 
