@@ -67,7 +67,7 @@ whether `$by_category` has processed the last event written in the measure windo
 (`bufferedEvents` is the projection's read-ahead queue, not its lag, and is only recorded). That target is the seed's
 last position when the cell's trials write nothing (rebuild), so no `$all` read is made; otherwise it is the newest
 event on a measured stream (a filtered backward read of `$all`, bounded by its own 5 s), never below the seed's
-position. The 5 s count from when the target is known. A trial without headroom carries the reason in its `notes`.
+position. The 5 s count from the window's end, the target lookup included. A trial without headroom carries the reason in its `notes`.
 
 At cell start, before seeding, each in-process driver's `floor` runs at every rate of the cell (pinned like the
 trials); the report shows the floors next to the ratios. No trial starts after 340 minutes of job time (the workflow
