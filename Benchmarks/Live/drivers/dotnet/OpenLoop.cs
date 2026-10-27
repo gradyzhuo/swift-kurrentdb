@@ -29,8 +29,9 @@ readonly record struct Outcome(OutcomeKind Kind, ulong LatencyMicros = 0)
     public static Outcome Success(ulong micros) => new(OutcomeKind.Success, micros);
 }
 
-/// The open loop's backlog (operations launched with no recorded outcome yet; drops are not backlog), sampled at the
-/// window's midpoint and at the end of scheduling (`BacklogSamples`, Outcomes.swift).
+/// The open loop's backlog (operations launched with no recorded outcome yet; drops are not backlog), as its minimum
+/// over the second of schedule ending at the window's midpoint and over the window's last second (`BacklogSamples`,
+/// Outcomes.swift; `BacklogWindows`).
 readonly record struct BacklogSamples(int AtMidpoint, int AtEnd, int ScheduledSecondHalf);
 
 /// Counts every scheduled attempt and keeps a latency histogram of the successes only (Outcomes.swift):
@@ -81,9 +82,10 @@ static class OpenLoop
     /// - A thrown exception is a failure.
     /// - After the window: wait until nothing is outstanding or `start + duration + drain`; everything still
     ///   outstanding then is a timeout and is cancelled (not awaited).
-    /// - The backlog (outstanding operations) is sampled right after the first index scheduled at or after
-    ///   `duration / 2` is launched or dropped, and again when scheduling ends, before the drain; `Backlog` holds both
-    ///   and the number of indices scheduled from the midpoint index on (null if scheduling never reached it).
+    /// - The backlog (outstanding operations) is observed right after each index is launched or dropped; `Backlog`
+    ///   holds its minimum over the trailing second ending at the midpoint index, its minimum over the window's last
+    ///   second, and the number of indices scheduled from the midpoint index on (null if scheduling never reached the
+    ///   midpoint index; `BacklogWindows`).
     public static async Task<OutcomeRecorder> Run(OpenLoopConfig config, OpenLoopOperation operation)
     {
         if (!double.IsFinite(config.Rate) || config.Rate <= 0) throw new ArgumentException("rate must be a positive finite number");
@@ -92,10 +94,9 @@ static class OpenLoop
         var ledger = new Ledger(config, operation);
         long start = MonoClock.Now();
         double nanosPerOp = 1e9 / config.Rate;
-        double midpointNanos = config.DurationNanos / 2.0;
-        // Index and backlog of the first launch at or after the window's midpoint; `scheduledCount` is one past the
-        // last index scheduled. Written by the scheduling thread, read after `schedulingDone`.
-        (int Index, int Backlog)? midpoint = null;
+        // `scheduledCount` is one past the last index scheduled. Both are written by the scheduling thread and read
+        // after `schedulingDone`.
+        var backlogWindows = new BacklogWindows(config.DurationNanos, nanosPerOp);
         int scheduledCount = 0;
         var schedulingDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var scheduler = new Thread(() =>
@@ -106,7 +107,7 @@ static class OpenLoop
                 for (int index = 0; ; index++)
                 {
                     // Integer nanosecond offsets keep the schedule exact (no accumulated floating-point drift).
-                    double offset = Math.Round(index * nanosPerOp, MidpointRounding.AwayFromZero);
+                    double offset = BacklogWindows.Offset(index, nanosPerOp);
                     if (!(offset < config.DurationNanos)) break;
                     scheduledCount = index + 1;
                     long scheduled = start + (long)offset;
@@ -115,7 +116,7 @@ static class OpenLoop
                     // the two: a late launch is charged from the schedule, an early one from the launch.
                     long launched = MonoClock.Now();
                     int backlog = ledger.Launch(index, scheduled, Math.Min(scheduled, launched));
-                    if (midpoint is null && offset >= midpointNanos) midpoint = (index, backlog);
+                    backlogWindows.Observe(index, offset, backlog);
                 }
                 schedulingDone.SetResult();
             }
@@ -132,15 +133,63 @@ static class OpenLoop
         await schedulingDone.Task.ConfigureAwait(false);
 
         // Drain: wait for everything to be accounted for, bounded by the end of the window plus `drain`.
-        var (allAccounted, backlogAtEnd) = ledger.CloseScheduling();
+        var allAccounted = ledger.CloseScheduling();
         long drainEnd = start + config.DurationNanos + config.DrainNanos;
         // Task.Delay works in whole milliseconds (TimeSpanUntil rounds up), so loop until the drain end has really passed:
         // nothing outstanding is expired before it.
         while (!allAccounted.IsCompleted && MonoClock.Now() < drainEnd)
             await Task.WhenAny(allAccounted, Task.Delay(TimeSpanUntil(drainEnd))).ConfigureAwait(false);
         var recorder = ledger.ExpireOutstanding();
-        if (midpoint is { } m) recorder.Backlog = new BacklogSamples(m.Backlog, backlogAtEnd, scheduledCount - m.Index);
+        recorder.Backlog = backlogWindows.Samples(scheduledCount);
         return recorder;
+    }
+
+    /// Folds the backlog observed right after each index is launched or dropped into `BacklogSamples` (driver contract
+    /// rule 11; `BacklogWindows` in OpenLoop.swift). A sample is the minimum over a trailing span of
+    /// `min(1 s, duration / 2)` of schedule, by the indices' rounded offsets: the midpoint sample over the offsets in
+    /// `[offset(m) - span, offset(m)]`, m being the first index whose offset is at or after `duration / 2`; the end
+    /// sample over the offsets in `[duration - span, duration)` and always the last index scheduled.
+    sealed class BacklogWindows
+    {
+        readonly double _midpointSpanStart;
+        readonly double _endSpanStart;
+        int? _midpointMin;
+        int? _endMin;
+        int? _last;
+
+        public long SpanNanos { get; }
+        public int MidpointIndex { get; }
+
+        public BacklogWindows(long durationNanos, double nanosPerOp)
+        {
+            SpanNanos = Math.Min(1_000_000_000L, durationNanos / 2);
+            // The first index whose rounded offset is at or after half the window, found from an estimate below it.
+            double midpointNanos = durationNanos / 2.0;
+            int m = Math.Max(0, (int)(midpointNanos / nanosPerOp) - 1);
+            while (m > 0 && Offset(m - 1, nanosPerOp) >= midpointNanos) m--;
+            while (Offset(m, nanosPerOp) < midpointNanos) m++;
+            MidpointIndex = m;
+            _midpointSpanStart = Offset(m, nanosPerOp) - SpanNanos;
+            _endSpanStart = durationNanos - SpanNanos;
+        }
+
+        /// Integer-nanosecond offset of `index` from the window's start (away-from-zero, as Swift's `rounded()`).
+        public static double Offset(int index, double nanosPerOp) => Math.Round(index * nanosPerOp, MidpointRounding.AwayFromZero);
+
+        /// The backlog right after `index` (offset `offset`) was launched or dropped; indices arrive in order.
+        public void Observe(int index, double offset, int backlog)
+        {
+            if (index <= MidpointIndex && offset >= _midpointSpanStart) _midpointMin = Math.Min(_midpointMin ?? backlog, backlog);
+            if (offset >= _endSpanStart) _endMin = Math.Min(_endMin ?? backlog, backlog);
+            _last = backlog;
+        }
+
+        /// The samples once `scheduled` indices were observed; null if scheduling never reached the midpoint index.
+        public BacklogSamples? Samples(int scheduled)
+        {
+            if (scheduled <= MidpointIndex || _midpointMin is not { } atMidpoint || _last is not { } last) return null;
+            return new BacklogSamples(atMidpoint, Math.Min(_endMin ?? last, last), scheduled - MidpointIndex);
+        }
     }
 
     /// Shared, lock-protected accounting (`OpenLoopLedger`): each index is recorded at most once, by whichever path
@@ -222,15 +271,14 @@ static class OpenLoop
             if (nowEmpty) _allAccounted.TrySetResult();
         }
 
-        /// Marks the end of scheduling; the task completes once nothing is outstanding. Also returns the backlog
-        /// (outstanding count) at that moment.
-        public (Task AllAccounted, int Backlog) CloseScheduling()
+        /// Marks the end of scheduling; the task completes once nothing is outstanding.
+        public Task CloseScheduling()
         {
             lock (_gate)
             {
                 _schedulingClosed = true;
                 if (_outstanding.Count == 0) _allAccounted.TrySetResult();
-                return (_allAccounted.Task, _outstanding.Count);
+                return _allAccounted.Task;
             }
         }
 

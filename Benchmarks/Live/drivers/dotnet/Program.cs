@@ -5,7 +5,7 @@
 //   dotnet LiveDriver.DotNet.dll run --scenario <effective.json> --connection <connection string> --out <dir>
 //   dotnet LiveDriver.DotNet.dll version
 //   dotnet LiveDriver.DotNet.dll floor --rate <ops/s> [--seconds <s>] [--warmup <s>]
-//   dotnet LiveDriver.DotNet.dll selftest --mode <mode> --rate <ops/s> --seconds <s> --cap <n> --deadline-ms <ms> --drain-ms <ms> [--stall-ms <ms>]
+//   dotnet LiveDriver.DotNet.dll selftest --mode <mode> --rate <ops/s> --seconds <s> --cap <n> --deadline-ms <ms> --drain-ms <ms> [--stall-ms <ms>] [--stall-from <index>]
 
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -20,7 +20,7 @@ try
         ["run", .. var rest] => await RunCommand(Options(rest, "scenario", "connection", "out")),
         ["version"] => VersionCommand(),
         ["floor", .. var rest] => await FloorCommand(Options(rest, "rate", "seconds", "warmup")),
-        ["selftest", .. var rest] => await SelfTestCommand(Options(rest, "mode", "rate", "seconds", "cap", "deadline-ms", "drain-ms", "stall-ms")),
+        ["selftest", .. var rest] => await SelfTestCommand(Options(rest, "mode", "rate", "seconds", "cap", "deadline-ms", "drain-ms", "stall-ms", "stall-from")),
         _ => throw new UsageException(
             "usage: LiveDriver.DotNet run --scenario <file> --connection <string> --out <dir> | version | floor --rate <ops/s> [--seconds <s>] [--warmup <s>]"),
     };
@@ -119,7 +119,8 @@ static async Task<int> FloorCommand(Dictionary<string, string> options)
 /// one JSON line.
 /// Modes: `noop`; `throw`; `stallHonouring` / `stallIgnoring` (wait `stall-ms`, with / without the cancellation token);
 /// `stallHonouringInline` (never completes on its own; fails synchronously when its token is cancelled);
-/// `instantPastDeadline` (returns now + deadline + 10 ms as its completion instant).
+/// `instantPastDeadline` (returns now + deadline + 10 ms as its completion instant); `stallTail` (no-op before index
+/// `stall-from`, `stallHonouring` from it on).
 static async Task<int> SelfTestCommand(Dictionary<string, string> options)
 {
     static double Number(Dictionary<string, string> o, string name) =>
@@ -131,12 +132,18 @@ static async Task<int> SelfTestCommand(Dictionary<string, string> options)
         DeadlineNanos: (long)(Number(options, "deadline-ms") * 1e6),
         DrainNanos: (long)(Number(options, "drain-ms") * 1e6));
     var stall = TimeSpan.FromMilliseconds(options.ContainsKey("stall-ms") ? Number(options, "stall-ms") : 0);
+    int stallFrom = options.ContainsKey("stall-from") ? (int)Number(options, "stall-from") : 0;
     OpenLoopOperation operation = Required(options, "mode") switch
     {
         "noop" => static (_, _) => Task.FromResult<long?>(null),
         "throw" => static (_, _) => Task.FromException<long?>(new InvalidOperationException("synthetic failure")),
         "stallHonouring" => async (_, token) => { await Task.Delay(stall, token); return null; },
         "stallIgnoring" => async (_, _) => { await Task.Delay(stall); return null; },
+        "stallTail" => async (index, token) =>
+        {
+            if (index >= stallFrom) await Task.Delay(stall, token);
+            return null;
+        },
         // Cancellation surfaces synchronously inside the token's callback (continuations inline), as a client whose
         // call completes on cancellation can do: the operation's catch runs before the ledger's own timeout callback.
         "stallHonouringInline" => (_, token) =>
