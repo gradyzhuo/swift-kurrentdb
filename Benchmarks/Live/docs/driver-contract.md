@@ -224,7 +224,7 @@ them against `scheduled`. A percentile whose rank falls among non-successes is r
 |---|---|---|
 | `appendLatency` | append of `batchSize` (1) event(s) to a stream picked uniformly with the seeded RNG | append acknowledged |
 | `appendThroughput` | append of `batchSize` (50) events in one call to one stream | append acknowledged |
-| `rebuild` | read of one whole stream (picked from `rebuildStreams`, seeded) forward from the start, decoding every event (a full JSON DOM parse of the data: Swift `JSONSerialization.jsonObject`, .NET `JsonDocument.Parse`) | all `streamLength` events decoded |
+| `rebuild` | read of one whole stream (picked from `rebuildStreams`, seeded) forward from the start, decoding every event's data into a typed value (Swift `JSONDecoder` into a `Decodable` struct, .NET `JsonSerializer.Deserialize` into a record) | all `streamLength` events decoded |
 | `persistentSubscription` | append of one event (stream picked per "Random choices") at `rate` events/s; latency = writer's `min(scheduled, launch)` to the subscriber's first receipt of that event | event received (first delivery) |
 | `catchUp` | see "Catch-up" below | event received by the live phase |
 
@@ -428,10 +428,10 @@ does this:
   process is multiplexed over one long-lived bidirectional `Streams.BatchAppend` call. The Swift SDK sends one unary
   `Streams.Append` RPC per append, as ghz does. Both are the clients' default append paths; the report discloses the
   difference in its append fairness notes.
-- **Rebuild.** `ReadStreamAsync(Forwards, stream, Start)` with defaults; each event's data goes through
-  `JsonDocument.Parse` (System.Text.Json), where the Swift driver uses Foundation's `JSONSerialization.jsonObject`.
-  Both build a full DOM, but the decoders differ, and their speed is part of the rebuild figures (disclosed in the
-  report). A read of a stream that does not exist is a failure (the Swift SDK throws), not a short read.
+- **Rebuild.** `ReadStreamAsync(Forwards, stream, Start)` with defaults; each event's data is deserialized with
+  `JsonSerializer.Deserialize` (System.Text.Json) into a record `(int i, string p)`, where the Swift driver decodes
+  it with `JSONDecoder` into a `Decodable` struct of the same two fields: each client's usual way of decoding typed
+  events. The decoders differ, and their speed is part of the rebuild figures (disclosed in the report). A read of a stream that does not exist is a failure (the Swift SDK throws), not a short read.
 - **Scheduler.** A dedicated thread sleeps with `nanosleep(2)` (nanosecond resolution, no millisecond rounding as in
   `Thread.Sleep` / `Task.Delay`) and applies the same overshoot estimate as the Swift waker (EWMA 1/16, capped at 1 ms,
   no spinning). Each launch is queued to the thread pool (`ThreadPool.UnsafeQueueUserWorkItem`), as the Swift driver

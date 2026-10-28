@@ -34,6 +34,13 @@ func runRebuild(_ scenario: EffectiveScenario, client: KurrentDBClient) async ->
     )
 }
 
+/// The seeded event data (`{"i":<index>,"p":"<filler>"}`, see `PayloadFactory`), decoded the way an application
+/// decodes its events: into a `Decodable` type with `JSONDecoder`.
+private struct RebuildPayload: Decodable {
+    let i: Int
+    let p: String
+}
+
 private struct RebuildMismatch: Error {
     let events: Int
 }
@@ -67,12 +74,13 @@ private func rebuildWindow(
 ) async -> (recorder: OutcomeRecorder, cpu: (user: Double, system: Double)) {
     let length = scenario.streamLength ?? 0
     let eventSize = scenario.eventSize, metadataSize = scenario.metadataSize
+    let decoder = JSONDecoder()
     return await measuredWindow(scenario.openLoop(seconds: seconds)) { i in
         var events = 0
         var sizesOk = true
         for try await response in client.streams(specified: stream(i)).read().lazy {
             let record = try response.event.record
-            _ = try JSONSerialization.jsonObject(with: record.data)
+            _ = try decoder.decode(RebuildPayload.self, from: record.data)
             if record.data.count != eventSize || record.customMetadata.count != metadataSize { sizesOk = false }
             events += 1
         }
