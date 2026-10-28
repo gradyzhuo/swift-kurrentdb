@@ -120,7 +120,7 @@ static class Scenarios
     // MARK: Rebuild
 
     /// `rebuild`: operation i reads one whole stream forward from the start (`rebuildStreams[pick(i)]`; warmup reads
-    /// `<streamPrefix>w-<pick(i)>`), parsing every event's data into a JSON DOM (`JsonDocument.Parse`). A read that does
+    /// `<streamPrefix>w-<pick(i)>`), deserializing every event's data into `RebuildPayload` (`JsonSerializer.Deserialize`). A read that does
     /// not return exactly `streamLength` events is a failure.
     public static async Task<Trial> RunRebuild(EffectiveScenario s, Clients clients)
     {
@@ -143,6 +143,10 @@ static class Scenarios
             ReceivedEvents: (int)recorder.Succeeded * length + t.ShortReadEvents,
             PayloadSizesOk: t.SizesOk));
     }
+
+    /// The seeded event data (`{"i":<index>,"p":"<filler>"}`), deserialized the way an application deserializes its
+    /// events: into a typed record with System.Text.Json's `JsonSerializer`.
+    sealed record RebuildPayload(int i, string p);
 
     sealed class RebuildMismatch(int events) : Exception($"read {events} events");
 
@@ -183,7 +187,7 @@ static class Scenarios
             await foreach (var resolved in read.ConfigureAwait(false))
             {
                 var record = resolved.Event;
-                using (JsonDocument.Parse(record.Data)) { }
+                _ = JsonSerializer.Deserialize<RebuildPayload>(record.Data.Span);
                 if (record.Data.Length != eventSize || record.Metadata.Length != metadataSize) sizesOk = false;
                 events++;
             }
