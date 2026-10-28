@@ -227,8 +227,8 @@ struct ReportTests {
         let rebuild = Report.render([ReportFixture.result(rebuildCell) { round, rate, driver in
             ReportFixture.trial(round: round, rate: rate, driver: driver, kind: .rebuild, fast: UInt64(900 * ReportFixture.wobble(round)), slow: 3000)
         }])
-        #expect(rebuild.contains("JSONSerialization"))
-        #expect(rebuild.contains("JsonDocument"))
+        #expect(rebuild.contains("JSONDecoder"))
+        #expect(rebuild.contains("JsonSerializer.Deserialize"))
         // The orchestrator itself is not pinned.
         #expect(append.contains("orchestrator"))
         #expect(append.contains("not pinned"))

@@ -252,7 +252,7 @@ enum Report {
         case .appendLatency, .appendThroughput:
             notes.insert(appends, at: 0)
         case .rebuild:
-            notes.insert("Each event's data is parsed into a JSON DOM: Swift with Foundation's JSONSerialization.jsonObject, .NET with System.Text.Json's JsonDocument.Parse. The decoders' own speed is part of the rebuild figures; ghz does not decode.", at: 0)
+            notes.insert("Each event's data is decoded into a typed value, each client's usual way: Swift with JSONDecoder into a Decodable struct, .NET with System.Text.Json's JsonSerializer.Deserialize into a record. The decoders' own speed is part of the rebuild figures; ghz does not decode.", at: 0)
         case .persistentSubscription:
             notes.insert(contentsOf: [
                 "Persistent subscription consumers run with each client's default buffer: .NET bufferSize 10, Swift 1000. The buffer bounds the unacknowledged events the server sends one consumer.",

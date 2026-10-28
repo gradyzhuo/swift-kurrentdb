@@ -117,6 +117,6 @@ driver contract (`docs/driver-contract.md`, ".NET notes"):
   counted in the client's CPU figures.
 - Appends: the .NET client multiplexes `AppendToStreamAsync` over one `BatchAppend` stream; the Swift SDK (and ghz)
   sends one `Streams.Append` RPC per append.
-- Rebuild decodes with Foundation's `JSONSerialization` in Swift and `JsonDocument` in .NET.
+- Rebuild decodes each event into a typed value: `JSONDecoder` into a `Decodable` struct in Swift, `JsonSerializer.Deserialize` into a record in .NET.
 - Each driver's no-op harness floor is measured in every cell's job and shown in the report; latencies close to it say
   more about the harness than the client.
