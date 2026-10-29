@@ -12,6 +12,8 @@ Version 2.x introduces a **target-based, hierarchical API** that replaces the fl
 This makes the API more composable, type-safe, and easier to discover — the compiler guides you to the operations that are valid for the scope you've selected.
 
 > **1.x code is migrated on 2.6.** The `KurrentDB_V1` library that carried the 1.x methods ships in 2.x only. Pin `from: "2.6.0"`, follow this guide with its documentation at [/2.6/documentation/kurrentdb/migration-guide](https://gradyzhuo.github.io/swift-kurrentdb/2.6/documentation/kurrentdb/migration-guide), and move to 3.0 once nothing imports `KurrentDB_V1` — 3.0 has no `KurrentDB_V1`.
+>
+> **One call keeps compiling with a different meaning: `client.shutdown()`.** `KurrentDB_V1` added an `async` `shutdown()` that shuts the *server* down. Once no file in your module and no module you depend on imports `KurrentDB_V1`, the same line binds to `KurrentDBClient.shutdown()`, which only closes this client. It still compiles: at most with warnings about an unnecessary `await` (and, from 3.0, `try`), with no warning at all when `client.shutdown` is passed as a function value, and with none about the `await` when its receiver is itself awaited. On 2.6 every such call still shows the `KurrentDB_V1` deprecation warning, so sort them before you delete the import. Rewrite each one that means "shut the server down" as `try await client.operations(of: .system).shutdown()`. Leave each one that means "close this client" as it is: while `KurrentDB_V1` is imported, `try client.shutdown()` in async code does not compile, and its fix-it adds back the `await` that selects the server shutdown, so those lines keep shutting the server down until the import is gone, as they always did. After that they bind to `KurrentDBClient.shutdown()`; remove what the compiler flags as unnecessary.
 
 ---
 
@@ -450,5 +452,6 @@ try await client.operations(of: .node).setNodePriority(priority: 3)
 | `client.enableUser(loginName:)` | `client.user(loginName).enable()` |
 | `client.startScavenge(...)` | `client.operations(of: .scavenge).startScavenge(...)` |
 | `client.mergeIndexes()` | `client.operations(of: .system).mergeIndexes()` |
+| `client.shutdown()` (`KurrentDB_V1`; shuts the server down) | `client.operations(of: .system).shutdown()` — not `client.shutdown()`, which closes the client |
 | `client.resignNode()` | `client.operations(of: .node).resignNode()` |
 | `settings.cerificate(source:)` *(misspelled)* | `settings.certificate(source:)` (the misspelled name is removed in 3.0) |
