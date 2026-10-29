@@ -15,6 +15,8 @@ struct EventDataPayloadFormatTests {
         let event = EventData(eventType: "Snapshot", payload: .json(bytes))
         #expect(try event.payload.data == Data("\"AQID\"".utf8))
         #expect(event.payload.contentType == .json)
+        // Multi-stream appends encode through EventRecord, which has its own JSONEncoder.
+        #expect(try EventRecord(eventData: event).data == Data("\"AQID\"".utf8))
     }
 
     @Test("A Data payload given as data: is stored as the raw bytes")

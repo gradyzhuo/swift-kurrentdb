@@ -118,4 +118,12 @@ struct CertificateFallbackTests {
         #expect(trustedCertificateCount(settings) == 1)
         #expect(!isSystemDefault(settings))
     }
+
+    // MARK: trustRoots
+
+    @Test("TLS off has no trust roots")
+    func insecureHasNoTrustRoots() {
+        let settings = ClientSettings.localhost().secure(false)
+        #expect(settings.trustRoots == nil)
+    }
 }
