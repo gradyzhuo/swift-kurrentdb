@@ -43,12 +43,6 @@ let package = Package(
             ]
         ),
         .library(
-            name: "KurrentDB_V1",
-            targets: [
-                "KurrentDB_V1",
-            ]
-        ),
-        .library(
             name: "KurrentDBPool",
             targets: [
                 "KurrentDBPool",
@@ -72,12 +66,6 @@ let package = Package(
             dependencies: [
                 "GRPCEncapsulates",
                 .product(name: "Logging", package: "swift-log"),
-            ]
-        ),
-        .target(
-            name: "KurrentDB_V1",
-            dependencies: [
-                "KurrentDB",
             ]
         ),
         .target(
