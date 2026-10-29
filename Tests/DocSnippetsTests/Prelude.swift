@@ -4,7 +4,7 @@
 //
 //  Names the documentation examples use without declaring them. The examples
 //  themselves are compiled from DocSnippets.generated.swift, which
-//  `scripts/generate-doc-snippets.py` writes; nothing here connects to a server.
+//  `swift run --package-path scripts generate-doc-snippets` writes; nothing here connects to a server.
 //
 
 import Foundation
@@ -31,5 +31,5 @@ let record = try! EventRecord(eventType: "OrderPlaced", payload: .json(OrderPlac
 
 @Test("Documentation examples compile")
 func documentationExamplesCompile() {
-    // Building this target is the check; see scripts/generate-doc-snippets.py.
+    // Building this target is the check; see `swift run --package-path scripts generate-doc-snippets`.
 }
