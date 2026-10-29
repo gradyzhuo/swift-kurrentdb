@@ -369,11 +369,6 @@ package final class ConnectionProvider: Sendable {
     }
 
     private func makeClient(for endpoint: Endpoint) throws(KurrentError) -> Client {
-        // The deprecated certificate(path:) could not read its CA. Refuse rather than connect
-        // with a trust set the caller did not ask for.
-        guard !settings.hasUnreadableCertificate else {
-            throw .initializationError(reason: ClientSettings.unreadableCertificateRefusalReason)
-        }
         let settings = settings
         let transport: AnyClientTransport = try withRethrowingError(usage: "ConnectionProvider.makeClient(for:)") {
             if let provider = settings.transportProvider {
