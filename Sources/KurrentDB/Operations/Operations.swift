@@ -106,6 +106,7 @@ extension Operations where Target: SystemControllable {
     ///
     /// - Throws: `KurrentError.accessDenied` if the caller lacks administrative permissions.
     /// - Warning: Terminates the server process. Ensure all clients are prepared for disconnection.
+    /// - Note: `KurrentDBClient.shutdown()` is a different call: it closes the client's connections and leaves the server running.
     public func shutdown() async throws(KurrentError) {
         let node = try await selector.select()
         let usecase = Shutdown()
