@@ -18,10 +18,4 @@ struct CurrentRevisionStateRenameTests {
         let state: KurrentError.CurrentRevisionState = current
         if case .noStream = state {} else { Issue.record("expected .noStream, got \(state)") }
     }
-
-    @Test("The deprecated CurrentRevisionOption name still resolves to CurrentRevisionState")
-    @available(*, deprecated)
-    func deprecatedNameIsSameType() {
-        #expect(KurrentError.CurrentRevisionOption.self == KurrentError.CurrentRevisionState.self)
-    }
 }

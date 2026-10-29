@@ -114,15 +114,6 @@ extension StreamFilter {
 
     /// Creates a stream-name filter matching any of the given prefixes.
     ///
-    /// - Parameter prefix: One or more stream name prefixes.
-    /// - Returns: A configured `StreamFilter`.
-    @available(*, deprecated, renamed: "onStreamName(prefixes:)")
-    public static func onStreamName(prefix: String...) -> Self {
-        .onStreamName(prefixes: prefix)
-    }
-
-    /// Creates a stream-name filter matching any of the given prefixes.
-    ///
     /// - Parameter prefixes: Array of stream name prefixes.
     /// - Returns: A configured `StreamFilter`.
     public static func onStreamName(prefixes: [String]) -> Self {
@@ -172,8 +163,3 @@ extension StreamFilter {
         .onStreamName(regex: "^[^\\$].*")
     }
 }
-
-// MARK: - Deprecated alias
-
-@available(*, deprecated, renamed: "StreamFilter")
-public typealias SubscriptionFilter = StreamFilter
