@@ -71,9 +71,8 @@ docker run --rm -d -p 2113:2113 \
 
 ### Three-Layer Architecture
 
-The codebase is organized into three module layers, plus two companion libraries built on the top one:
+The codebase is organized into three module layers, plus one companion library built on the top one:
 
-- `KurrentDB_V1` (`Sources/KurrentDB_V1/`) — the deprecated 1.x flat-method API, kept for gradual migration
 - `KurrentDBPool` (`Sources/KurrentDBPool/`) — lends clients for independent KurrentDB instances (mainly for tests); its only public entry point is `withBorrowedClient(_:)`
 
 #### 1. KurrentDB (High-Level API)
@@ -205,7 +204,6 @@ Sources/
 │   ├── Operations/              # Server operations
 │   ├── Gossip/                  # Cluster gossip protocol
 │   └── KurrentDB.docc/          # DocC articles (examples are compiled by DocSnippetsTests)
-├── KurrentDB_V1/                # Deprecated 1.x API
 ├── KurrentDBPool/               # Client pool for independent instances
 ├── GRPCEncapsulates/            # gRPC abstraction layer
 │   ├── Usecase/                 # RPC pattern protocols

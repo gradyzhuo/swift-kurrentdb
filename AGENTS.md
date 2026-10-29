@@ -4,7 +4,6 @@ Short, verifiable facts about this repository for coding agents and new contribu
 
 ## Project Structure & Module Organization
 - `Sources/KurrentDB` — the public client (`KurrentDBClient`, target-based `Streams`, `Projections`, `PersistentSubscriptions`, `Users`, `Monitoring`, `Operations`, `Gossip`) plus the DocC catalog `KurrentDB.docc`.
-- `Sources/KurrentDB_V1` — the deprecated 1.x flat-method API, kept for gradual migration.
 - `Sources/KurrentDBPool` — lends clients for independent KurrentDB instances; entry point `withBorrowedClient(_:)`.
 - `Sources/GRPCEncapsulates` — gRPC call-shape protocols (`UnaryUnary`, `UnaryStream`, `StreamUnary`, `StreamStream`) and request/response composition.
 - `Sources/_GRPCProtobufGenerated` — code generated from `proto/`; never hand-edit.
