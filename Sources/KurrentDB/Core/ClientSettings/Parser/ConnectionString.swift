@@ -60,7 +60,7 @@ package struct ConnectionString: Sendable, Equatable {
             throw Self.failure("Connection strings take no path; only '/' may follow the hosts. Percent-encode '/' as %2F in credentials.")
         }
 
-        guard authority.utf8.filter { $0 == UInt8(ascii: "@") }.count <= 1 else {
+        guard authority.utf8.filter({ $0 == UInt8(ascii: "@") }).count <= 1 else {
             throw Self.failure("The authority holds more than one '@'; percent-encode '@' as %40 in credentials.")
         }
         let hostList: Substring
