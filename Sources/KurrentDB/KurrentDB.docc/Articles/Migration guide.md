@@ -11,26 +11,7 @@ Version 2.x introduces a **target-based, hierarchical API** that replaces the fl
 
 This makes the API more composable, type-safe, and easier to discover — the compiler guides you to the operations that are valid for the scope you've selected.
 
-> **Important — the 1.x API moves to `KurrentDB_V1`**
->
-> In 2.x, the old flat-method API is no longer part of the `KurrentDB` module.
-> It has been moved to a separate `KurrentDB_V1` library that ships in the same package.
-> If you are not ready to migrate, update your dependency target and import:
->
-> ```swift
-> // Package.swift — add KurrentDB_V1 to your target dependencies
-> .product(name: "KurrentDB_V1", package: "swift-kurrentdb")
-> ```
->
-> ```swift
-> // Replace your existing import
-> import KurrentDB_V1   // was: import KurrentDB
-> ```
->
-> `KurrentDB_V1` gives you access to all 1.x methods (marked `@deprecated`) while you migrate to 2.x at your own pace.
-> The `KurrentDBClient` type and `ClientSettings` are shared between both modules, so no changes to client creation are needed.
-
-All 1.x methods in `KurrentDB_V1` carry `@deprecated` annotations with Xcode fix-its pointing to their 2.x equivalents, making incremental migration straightforward.
+> **1.x code is migrated on 2.6.** The `KurrentDB_V1` library that carried the 1.x methods ships in 2.x only. Pin `from: "2.6.0"`, follow this guide with its documentation at [/2.6/documentation/kurrentdb/migration-guide](https://gradyzhuo.github.io/swift-kurrentdb/2.6/documentation/kurrentdb/migration-guide), and move to 3.0 once nothing imports `KurrentDB_V1` — 3.0 has no `KurrentDB_V1`.
 
 ---
 
@@ -49,13 +30,13 @@ let client = KurrentDBClient(settings: settings)
 
 ## ClientSettings — certificate spelling fix
 
-The `cerificates` property and `cerificate(source:)` / `cerificate(path:)` builder methods were misspelled in 1.x. They are corrected in 2.x and the old names are kept as deprecated aliases.
+The `cerificates` property and `cerificate(source:)` / `cerificate(path:)` builder methods were misspelled in 1.x. They are corrected in 2.x and the old names, deprecated in 2.x, are removed in 3.0.
 
-In 2.5, `certificate(path:)` (and its alias `cerificate(path:)`) is deprecated as well: when its file cannot be read, the client refuses to connect instead of trusting the system's root certificates. Use `certificate(path:fallback:)`, which throws right away (`fallback: .none`) or, only when you ask for it, leaves the file out (`fallback: .systemTrustRoots`).
+In 2.5, `certificate(path:)` (and its alias `cerificate(path:)`) is deprecated as well (when its file cannot be read, the client refuses to connect instead of trusting the system's root certificates) and removed in 3.0. Use `certificate(path:fallback:)`, which throws right away (`fallback: .none`) or, only when you ask for it, leaves the file out (`fallback: .systemTrustRoots`).
 
 <!-- snippet:skip -->
 ```swift
-// 1.x (misspelled — still compiles but emits a deprecation warning)
+// 1.x (misspelled — deprecated in 2.x, removed in 3.0)
 settings.cerificate(source: .crtInBundle("ca")!)
 ```
 
@@ -470,4 +451,4 @@ try await client.operations(of: .node).setNodePriority(priority: 3)
 | `client.startScavenge(...)` | `client.operations(of: .scavenge).startScavenge(...)` |
 | `client.mergeIndexes()` | `client.operations(of: .system).mergeIndexes()` |
 | `client.resignNode()` | `client.operations(of: .node).resignNode()` |
-| `settings.cerificate(source:)` *(misspelled)* | `settings.certificate(source:)` |
+| `settings.cerificate(source:)` *(misspelled)* | `settings.certificate(source:)` (the misspelled name is removed in 3.0) |

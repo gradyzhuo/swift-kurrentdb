@@ -196,7 +196,6 @@ swift-kurrentdb/
 │   │   ├── Projections/
 │   │   ├── PersistentSubscriptions/
 │   │   └── KurrentDB.docc/      # DocC articles (every Swift example is compiled by DocSnippetsTests)
-│   ├── KurrentDB_V1/            # Deprecated 1.x flat-method API
 │   ├── KurrentDBPool/           # withBorrowedClient(_:) for independent instances
 │   ├── GRPCEncapsulates/        # gRPC call-shape protocols (UnaryUnary, UnaryStream, …)
 │   └── _GRPCProtobufGenerated/  # Generated from proto/ — never hand-edit
