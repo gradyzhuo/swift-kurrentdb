@@ -283,7 +283,7 @@ struct StreamTests: Sendable {
             .append(events: [eventForTesting]) { $0.expectedRevision = .any }
 
         Task {
-            try await Task.sleep(for: .microseconds(500))
+            try? await Task.sleep(for: .microseconds(500))
             subscription.cancel()
         }
 
