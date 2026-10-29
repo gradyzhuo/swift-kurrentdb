@@ -78,7 +78,7 @@ extension StreamEvent {
     ///
     /// - Parameters:
     ///   - streamIdentifier: Target stream identifier.
-    ///   - eventData: One or more legacy `EventData` values to convert and append.
+    ///   - eventData: One or more `EventData` values to convert and append.
     ///   - expectedRevision: Required current stream revision; defaults to `.any`.
     /// - Throws: `KurrentError` if any `EventData` cannot be converted to an `EventRecord`.
     public init(stream streamIdentifier: StreamIdentifier, eventData: EventData..., expectedRevision: StreamRevision = .any) throws {
@@ -93,7 +93,7 @@ extension StreamEvent {
     ///
     /// - Parameters:
     ///   - streamName: Target stream name.
-    ///   - eventData: One or more legacy `EventData` values to convert and append.
+    ///   - eventData: One or more `EventData` values to convert and append.
     ///   - expectedRevision: Required current stream revision; defaults to `.any`.
     /// - Throws: `KurrentError` if any `EventData` cannot be converted to an `EventRecord`.
     public init(stream streamName: String, eventData: EventData..., expectedRevision: StreamRevision = .any) throws {

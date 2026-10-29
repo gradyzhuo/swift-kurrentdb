@@ -53,7 +53,7 @@ struct EventRecordPropertiesTests {
 
     @Test("EventRecord(eventData:) carries the metadata of a legacy EventData")
     func fromEventData() throws {
-        let eventData = EventData(eventType: "test", payload: ["a": "b"], customMetadata: Data(#"{"operatorId":"op-1","n":7}"#.utf8))
+        let eventData = EventData(eventType: "test", payload: .json(["a": "b"]), customMetadata: Data(#"{"operatorId":"op-1","n":7}"#.utf8))
         let record = try EventRecord(eventData: eventData)
         #expect(record.properties["operatorId"] as? String == "op-1")
         #expect(record.properties["n"] as? Int == 7)

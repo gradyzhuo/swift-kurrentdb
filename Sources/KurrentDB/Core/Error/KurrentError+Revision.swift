@@ -18,12 +18,6 @@ extension KurrentError {
         case revision(UInt64)
     }
 
-    /// The former name of ``CurrentRevisionState``.
-    ///
-    /// It is the server's observed state, not an option anyone chooses.
-    @available(*, deprecated, renamed: "CurrentRevisionState")
-    public typealias CurrentRevisionOption = CurrentRevisionState
-
     /// The revision expectation provided by the caller when appending events.
     public enum ExpectedRevisionOption: Sendable {
         /// No revision constraint — append succeeds regardless of current state.
