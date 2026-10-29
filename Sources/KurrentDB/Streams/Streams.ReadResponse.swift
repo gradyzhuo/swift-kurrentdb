@@ -17,11 +17,6 @@ extension Streams {
         /// A successfully resolved event.
         case event(readEvent: ReadEvent)
 
-        // TODO: Not sure how to request to get first_stream_position, last_stream_position, first_all_stream_position.
-//            case firstStreamPosition(UInt64)
-//            case lastStreamPosition(UInt64)
-//            case lastAllStreamPosition(commit: UInt64, prepare: UInt64)
-
         package init(from message: Streams<Target>.UnderlyingClient.UnderlyingService.Method.Read.Output) throws {
             switch message.content {
             case let .event(message):

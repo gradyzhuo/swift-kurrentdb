@@ -51,11 +51,6 @@ public struct EventData: EventStoreEvent {
         ]
     }
 
-    @available(*, deprecated)
-    public init(id: UUID = .init(), eventType: String, payload: Codable & Sendable, customMetadata: Data? = nil) {
-        self.init(id: id, eventType: eventType, payload: .json(payload), customMetadata: customMetadata)
-    }
-
     /// Creates an event from a `Codable` model, encoding it as JSON.
     ///
     /// - Parameters:
@@ -137,7 +132,7 @@ extension EventData {
 }
 
 extension EventRecord {
-    /// Creates an `EventRecord` from an `EventData` value, bridging the legacy API to the newer record type.
+    /// Creates an `EventRecord` from an `EventData` value.
     ///
     /// - Parameter eventData: The source event data to convert.
     /// - Throws: `EncodingError` if the payload cannot be JSON-encoded.
