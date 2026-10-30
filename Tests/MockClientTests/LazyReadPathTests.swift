@@ -54,6 +54,7 @@ struct LazyReadPathTests {
         #expect(node.connections.createdSharedConnectionCount == 0)
         #expect(node.connections.createdDedicatedConnectionCount == 0)
         #expect(node.connections.readEntrySnapshot(for: Self.refused)?.retainCount == 0)
+        #expect(node.connections.shutdownHandlerCount == 0)   // removed in open()'s failure branch
     }
 
     @Test("open: ReadAll takes the same path")
@@ -320,6 +321,123 @@ struct LazyReadPathTests {
         #expect(client.selector.connections.readEntrySnapshot(for: fake.endpoint)?.retainCount == 1)
         #expect(fake.openStreams == 1)   // the held read; gossip and discovery have ended
         withExtendedLifetime(held) {}
+    }
+
+    // MARK: shutdown (§5.1.6, S14)
+
+    /// Waits until the condition holds or the timeout passes: after `break` the lease and the close
+    /// handler are given back from the iterator's `deinit`, in the background.
+    private func eventually(timeout: Duration = .seconds(10), _ condition: () async -> Bool) async throws -> Bool {
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline {
+            if await condition() { return true }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        return await condition()
+    }
+
+    @Test("shutdown() during iteration ends the lazy read with exactly connectionClosed and empties the registry")
+    func shutdownDuringIteration() async throws {
+        let fake = InProcessKurrentDB(read: .events(3, then: .hold))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let connections = client.selector.connections
+        let iterator = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        for _ in 0 ..< 3 { #expect(try await iterator.next() != nil) }
+        #expect(connections.shutdownHandlerCount == 1)
+
+        let shutter = Task {
+            try await Task.sleep(for: .milliseconds(100))   // the consumer is suspended in next() by then
+            connections.shutdown()
+        }
+        await #expect(throws: KurrentError.connectionClosed) { _ = try await iterator.next() }
+        try await shutter.value
+        #expect(try await iterator.next() == nil)
+        #expect(connections.shutdownHandlerCount == 0)
+    }
+
+    @Test("shutdown() while waiting for acceptance ends the open with exactly connectionClosed")
+    func shutdownDuringAcceptance() async throws {
+        let listener = try await SilentListener.start()
+        let endpoint = Endpoint(host: "127.0.0.1", port: UInt32(listener.port))
+        var policy = OperationRetryPolicy.default
+        policy.maxAttempts = 1
+        let settings = ClientSettings(clusterMode: .standalone(endpoint: endpoint)).operationRetryPolicy(policy)
+        let selector = NodeSelector(settings: settings)
+        defer { selector.connections.shutdown() }
+        let descriptor = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init()).methodDescriptor
+        await selector.cacheNodeForTesting(Node(endpoint: endpoint, settings: settings, serverInfo: makeInfo(supporting: [descriptor]), connections: selector.connections))
+        let streams = Streams<SpecifiedStream>(target: .specified("any"), selector: selector, callOptions: .defaults)
+
+        let reader = Task { for try await _ in streams.read().lazy {} }
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(selector.connections.shutdownHandlerCount == 1)   // registered before accepted.wait()
+        selector.connections.shutdown()
+        let outcome = await reader.result
+        await listener.stop()
+
+        #expect(throws: KurrentError.connectionClosed) { try outcome.get() }
+        #expect(selector.connections.shutdownHandlerCount == 0)
+    }
+
+    @Test("shutdown() during node discovery ends the read with connectionClosed, not serverError (S14)")
+    func shutdownDuringDiscovery() async throws {
+        let selector = makeUncachedSelector()
+        defer { selector.connections.shutdown() }
+        let streams = makeStreams(selector)
+
+        let reader = Task { for try await _ in streams.read().lazy {} }
+        try await Task.sleep(for: .milliseconds(100))   // discovery against the refused port retries for ~1 s
+        let shutdownAt = ContinuousClock.now
+        selector.connections.shutdown()
+        let outcome = await reader.result
+        let elapsed = ContinuousClock.now - shutdownAt
+
+        #expect(throws: KurrentError.connectionClosed) { try outcome.get() }
+        // At once: within one discovery interval (100 ms), not after the remaining attempts.
+        #expect(elapsed < .milliseconds(500), "ended \(elapsed) after shutdown()")
+        #expect(selector.connections.createdReadConnectionCount == 0)
+    }
+
+    @Test("shutdown() called from inside the loop body ends the read at the next element without deadlocking", .timeLimit(.minutes(1)))
+    func shutdownFromInsideTheLoopBody() async throws {
+        let fake = InProcessKurrentDB(read: .events(3, then: .hold))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let connections = client.selector.connections
+        var count = 0
+        await #expect(throws: KurrentError.connectionClosed) {
+            for try await _ in client.streams(specified: "orders").read().lazy {
+                count += 1
+                if count == 2 { connections.shutdown() }
+            }
+        }
+        #expect(count == 2)   // the third event, already offered by the producer, is not delivered
+        #expect(connections.shutdownHandlerCount == 0)
+    }
+
+    @Test("A completed read and a broken read both leave the registry empty")
+    func finishedReadsLeaveRegistryEmpty() async throws {
+        let fake = InProcessKurrentDB(read: .events(3))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let connections = client.selector.connections
+
+        var count = 0
+        for try await _ in client.streams(specified: "orders").read().lazy {
+            count += 1
+            #expect(connections.shutdownHandlerCount == 1)
+        }
+        #expect(count == 3)
+        #expect(connections.shutdownHandlerCount == 0)   // close() is awaited on the way out
+
+        for try await _ in client.streams(specified: "orders").read().lazy {
+            #expect(connections.shutdownHandlerCount == 1)
+            break
+        }
+        #expect(try await eventually { connections.shutdownHandlerCount == 0 })
+        #expect(try await eventually { connections.readEntrySnapshot(for: fake.endpoint)?.retainCount == 0 })
+        #expect(try await eventually { fake.openStreams == 0 })
     }
 
     // MARK: next(isolation:)

@@ -55,32 +55,44 @@ private final class AcceptanceGate: Sendable {
     }
 }
 
-/// An accepted server-streaming RPC: the task running it, its hand-off and its shared-connection
-/// lease. Owned by a lazy read iterator.
+/// An accepted server-streaming RPC: the task running it, its hand-off, its shared-connection
+/// lease and its shutdown handler. Owned by a lazy read iterator.
 package final class ScopedCall<Response: Sendable>: Sendable {
     package let handoff: ResponseHandoff<Response>
     private let lease: SharedLease
     private let task: Task<Void, Never>
+    private let connections: ConnectionProvider
+    private let shutdownHandlerID: ConnectionProvider.ShutdownHandlerID
 
-    fileprivate init(handoff: ResponseHandoff<Response>, lease: SharedLease, task: Task<Void, Never>) {
+    fileprivate init(
+        handoff: ResponseHandoff<Response>,
+        lease: SharedLease,
+        task: Task<Void, Never>,
+        connections: ConnectionProvider,
+        shutdownHandlerID: ConnectionProvider.ShutdownHandlerID
+    ) {
         self.handoff = handoff
         self.lease = lease
         self.task = task
+        self.connections = connections
+        self.shutdownHandlerID = shutdownHandlerID
     }
 
     /// Ends the RPC and returns the lease, returning only after the RPC task has finished.
     /// Cancelling the task cancels only this RPC; the shared connection stays up for other calls.
     /// The order matters: cancelling the hand-off first makes the producer's exit quiet.
     package func close() async {
+        connections.removeShutdownHandler(shutdownHandlerID)
         handoff.cancel()
         task.cancel()
         await task.value
         lease.release()
     }
 
-    /// `close()` for contexts that cannot await (an iterator's `deinit`): the lease is released
-    /// once the RPC task has finished, from an unstructured task.
+    /// `close()` for contexts that cannot await (an iterator's `deinit`): the shutdown handler is
+    /// removed at once, the lease once the RPC task has finished, from an unstructured task.
     package func closeInBackground() {
+        connections.removeShutdownHandler(shutdownHandlerID)
         handoff.cancel()
         task.cancel()
         let task = self.task
@@ -100,6 +112,10 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
     /// callers may retry node failures because no element has been delivered yet. A caller
     /// cancelled while waiting gets `KurrentError.connectionClosed` (typed throws); the lazy
     /// iterator maps that to `CancellationError`.
+    ///
+    /// The provider's `shutdown()` ends the call with `KurrentError.connectionClosed`, whether it is
+    /// still waiting for acceptance (thrown here, not retried) or being iterated (thrown by the
+    /// hand-off's next `next()`), through a shutdown handler registered before the wait.
     package func open(node: Node, callOptions: CallOptions, credentials: Authentication?) async throws(KurrentError) -> ScopedCall<Response> {
         guard node.serverInfo.isSupported(method: methodDescriptor) else {
             throw .unsupportedFeature(methodDescriptor)
@@ -118,6 +134,17 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
 
         let handoff = ResponseHandoff<Response>()
         let accepted = AcceptanceGate()
+        // Registered before the RPC starts, so a shutdown at any later point reaches this call as
+        // connectionClosed and never as the transport error its run task's cancellation causes
+        // (a node failure to withRetry). Runs at once if the provider is already shut down. It
+        // captures only the hand-off and the gate: never handoff.cancel(), which would end the
+        // consumer with nil (a silently truncated read), and never the call, which the registry
+        // would then keep alive.
+        let connections = node.connections
+        let shutdownHandlerID = connections.registerShutdownHandler {
+            handoff.finish(throwing: KurrentError.connectionClosed)
+            accepted.fail(KurrentError.connectionClosed)
+        }
         let handlerCancellation = HandlerCancellation()
         let task = Task {
             do {
@@ -160,13 +187,13 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
             }
         }
 
-        let call = ScopedCall(handoff: handoff, lease: lease, task: task)
+        let call = ScopedCall(handoff: handoff, lease: lease, task: task, connections: connections, shutdownHandlerID: shutdownHandlerID)
         do {
             try await withRethrowingError(usage: "\(Self.self).\(#function)") {
                 try await accepted.wait()
             }
         } catch {
-            await call.close()
+            await call.close()   // also removes the shutdown handler
             // A cancelled caller is not an internal failure; map it the way withRetry's backoff
             // does, so it is not retried.
             if Task.isCancelled { throw .connectionClosed }

@@ -256,6 +256,48 @@ struct LazyReadLiveTests: Sendable {
         }
     }
 
+    /// The lazy twin of `ConnectionReuseLiveTests.shutdownDuringReadEndsIteration`: there the read
+    /// only has to end; here it must end with `connectionClosed`, not read on or fail as a transport error.
+    @Test("A lazy read in progress on the read connection during shutdown() ends with connectionClosed")
+    func shutdownDuringLazyRead() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
+        try await appendEvents(count: 2000, to: stream)
+
+        let (firstElement, signal) = AsyncStream.makeStream(of: Void.self)
+        let reader = Task { () -> (count: Int, error: (any Error)?) in
+            defer { signal.finish() }
+            var count = 0
+            do {
+                for try await _ in stream.read().lazy {
+                    count += 1
+                    if count == 1 { signal.yield() }
+                    try? await Task.sleep(for: .milliseconds(1))   // keep the read in progress past the shutdown
+                }
+                return (count, nil)
+            } catch {
+                return (count, error)
+            }
+        }
+        for await _ in firstElement { break }
+        try await Task.sleep(for: .milliseconds(5))
+        try client.shutdown()
+
+        let outcome = await withTaskGroup(of: (count: Int, error: (any Error)?)?.self) { group in
+            // cancelAll() does not end a wait on reader.value by itself; cancel the reader so a
+            // read that shutdown() left blocked still lets the group return and the test fail.
+            group.addTask { await withTaskCancellationHandler { await reader.value } onCancel: { reader.cancel() } }
+            group.addTask { try? await Task.sleep(for: .seconds(10)); return nil }
+            let first = await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
+        let ended = try #require(outcome, "the lazy read did not end within 10 s of shutdown()")
+        #expect(ended.count < 2000)
+        #expect((ended.error as? KurrentError) == .connectionClosed, "ended with \(String(describing: ended.error))")
+        #expect(client.selector.connections.shutdownHandlerCount == 0)
+    }
+
     @Test("Cancelling one lazy read leaves a concurrent read on the shared connection intact")
     func cancellingLazyKeepsSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
