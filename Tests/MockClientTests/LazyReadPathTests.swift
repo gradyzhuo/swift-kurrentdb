@@ -50,9 +50,10 @@ struct LazyReadPathTests {
         await #expect(throws: KurrentError.self) {
             _ = try await usecase.open(node: node, callOptions: boundedCallOptions, credentials: nil)
         }
-        #expect(node.connections.createdSharedConnectionCount == 1)
+        #expect(node.connections.createdReadConnectionCount == 1)
+        #expect(node.connections.createdSharedConnectionCount == 0)
         #expect(node.connections.createdDedicatedConnectionCount == 0)
-        #expect(node.connections.sharedEntrySnapshot(for: Self.refused)?.retainCount == 0)
+        #expect(node.connections.readEntrySnapshot(for: Self.refused)?.retainCount == 0)
     }
 
     @Test("open: ReadAll takes the same path")
@@ -63,8 +64,9 @@ struct LazyReadPathTests {
         await #expect(throws: KurrentError.self) {
             _ = try await usecase.open(node: node, callOptions: boundedCallOptions, credentials: nil)
         }
-        #expect(node.connections.createdSharedConnectionCount == 1)
-        #expect(node.connections.sharedEntrySnapshot(for: Self.refused)?.retainCount == 0)
+        #expect(node.connections.createdReadConnectionCount == 1)
+        #expect(node.connections.createdSharedConnectionCount == 0)
+        #expect(node.connections.readEntrySnapshot(for: Self.refused)?.retainCount == 0)
     }
 
     @Test("open: unsupported method throws unsupportedFeature without acquiring a lease")
@@ -79,6 +81,7 @@ struct LazyReadPathTests {
             return false
         }
         #expect(node.connections.createdSharedConnectionCount == 0)
+        #expect(node.connections.createdReadConnectionCount == 0)
     }
 
     @Test("open: cancelling the caller while waiting for acceptance ends the call and returns the lease")
@@ -103,7 +106,7 @@ struct LazyReadPathTests {
             if case .connectionClosed = error as? KurrentError { return true }
             return false
         }
-        #expect(node.connections.sharedEntrySnapshot(for: Endpoint(host: "127.0.0.1", port: port))?.retainCount == 0)
+        #expect(node.connections.readEntrySnapshot(for: Endpoint(host: "127.0.0.1", port: port))?.retainCount == 0)
     }
 
     // MARK: ReadCall.lazy
@@ -139,9 +142,10 @@ struct LazyReadPathTests {
         await #expect(throws: KurrentError.self) {
             for try await _ in streams.read().lazy {}
         }
-        #expect(selector.connections.createdSharedConnectionCount == 1)
+        #expect(selector.connections.createdReadConnectionCount == 1)
+        #expect(selector.connections.createdSharedConnectionCount == 0)
         #expect(selector.connections.createdDedicatedConnectionCount == 0)
-        #expect(selector.connections.sharedEntrySnapshot(for: Self.refused)?.retainCount == 0)
+        #expect(selector.connections.readEntrySnapshot(for: Self.refused)?.retainCount == 0)
     }
 
     @Test("lazy: an iterator that is never advanced takes no lease")
@@ -152,7 +156,9 @@ struct LazyReadPathTests {
 
         do { _ = streams.read().lazy.makeAsyncIterator() }
         #expect(selector.connections.createdSharedConnectionCount == 0)
+        #expect(selector.connections.createdReadConnectionCount == 0)
         #expect(selector.connections.sharedEntrySnapshot(for: Self.refused) == nil)
+        #expect(selector.connections.readEntrySnapshot(for: Self.refused) == nil)
     }
 
     @Test("lazy: a caller that is already cancelled gets CancellationError before node discovery")
@@ -167,6 +173,7 @@ struct LazyReadPathTests {
         }
         await #expect(throws: CancellationError.self) { try await reader.value }
         #expect(selector.connections.createdSharedConnectionCount == 0)
+        #expect(selector.connections.createdReadConnectionCount == 0)
     }
 
     @Test("lazy: cancelling the caller during node discovery surfaces CancellationError")
@@ -201,7 +208,7 @@ struct LazyReadPathTests {
         await listener.stop()
 
         #expect(throws: CancellationError.self) { try outcome.get() }
-        #expect(selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount == 0)
+        #expect(selector.connections.readEntrySnapshot(for: endpoint)?.retainCount == 0)
     }
 
     @Test("lazy: a pre-cancelled first next() finishes the iterator; a later next() opens nothing")
@@ -225,6 +232,7 @@ struct LazyReadPathTests {
         #expect(outcome.firstThrewCancellation)
         #expect(outcome.second == nil)
         #expect(selector.connections.createdSharedConnectionCount == 0)
+        #expect(selector.connections.createdReadConnectionCount == 0)
     }
 
     @Test("lazy: after the open fails once, next() returns nil and opens no second RPC")
@@ -237,7 +245,8 @@ struct LazyReadPathTests {
         await #expect(throws: KurrentError.self) { _ = try await iterator.next() }
         let second = try await iterator.next()
         #expect(second == nil)
-        #expect(selector.connections.createdSharedConnectionCount == 1)
+        #expect(selector.connections.createdReadConnectionCount == 1)
+        #expect(selector.connections.createdSharedConnectionCount == 0)
     }
 
     // MARK: errors after acceptance (S15)
@@ -291,6 +300,26 @@ struct LazyReadPathTests {
             for try await _ in try await client.streams(specified: "orders").read().buffered { count += 1 }
         }
         #expect(count == 2)
+    }
+
+    // MARK: read connection (§5.1.5)
+
+    @Test("A lazy read holding the only stream slot of its connection does not block a unary call on the main connection")
+    func heldLazyReadLeavesMainConnectionFree() async throws {
+        let fake = InProcessKurrentDB(read: .events(3, then: .hold), maxConcurrentStreams: 1)
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let held = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        _ = try await held.next()
+
+        // Gossip runs on the main connection; on the read connection it would wait for the held slot.
+        let members = try await client.readCluster(timeout: .seconds(1))
+        #expect(!members.isEmpty)
+        #expect(client.selector.connections.createdReadConnectionCount == 1)
+        #expect(client.selector.connections.createdSharedConnectionCount == 1)
+        #expect(client.selector.connections.readEntrySnapshot(for: fake.endpoint)?.retainCount == 1)
+        #expect(fake.openStreams == 1)   // the held read; gossip and discovery have ended
+        withExtendedLifetime(held) {}
     }
 
     // MARK: next(isolation:)
