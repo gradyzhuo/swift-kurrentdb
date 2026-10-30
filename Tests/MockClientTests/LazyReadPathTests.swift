@@ -321,9 +321,30 @@ struct LazyReadControlFrameTests {
         // Not skipped: handle(message:) maps it to a resource-not-found error, as the buffered path does.
         #expect(throws: KurrentError.self) { _ = try all.scopedResponse(for: notFound) }
 
-        // Specified-stream reads do not expect control frames, same as read() today.
+        // Specified-stream reads skip the same frames (S12): a compatibility ≥ 1 read sends position frames.
         let specified = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
-        #expect(throws: (any Error).self) { _ = try specified.scopedResponse(for: checkpoint) }
+        #expect(try specified.scopedResponse(for: checkpoint) == nil)
+    }
+
+    @Test("Read's scoped path skips position frames instead of ending the read")
+    func readScopedSkipsPositionFrames() throws {
+        let read = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
+        var frame = Streams<SpecifiedStream>.Read.UnderlyingResponse()
+        frame.content = .lastStreamPosition(41)
+        #expect(try read.scopedResponse(for: frame) == nil)
+    }
+
+    @Test("Read's buffered path skips position frames: a compatibility ≥ 1 read yields the events alone")
+    func readBufferedSkipsPositionFrames() async throws {
+        var script = InProcessKurrentDB.ReadScript.events(2)
+        var frame = Streams<SpecifiedStream>.Read.UnderlyingResponse()
+        frame.content = .lastStreamPosition(1)
+        script.messages.insert(frame, at: 0)
+        let fake = InProcessKurrentDB(read: script)
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let count = try await client.streams(specified: "orders").read { $0.compatibility = 1 }.buffered.reduce(0) { n, _ in n + 1 }
+        #expect(count == 2)
     }
 }
 
