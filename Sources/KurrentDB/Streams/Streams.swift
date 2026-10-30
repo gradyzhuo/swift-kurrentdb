@@ -38,9 +38,6 @@ public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// The gRPC call options.
     internal let callOptions: CallOptions
 
-    /// The event loop group handling asynchronous tasks.
-    internal let eventLoopGroup: EventLoopGroup
-
     /// The target that defines the scope of stream operations.
     public let target: Target
 
@@ -48,11 +45,10 @@ public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// authentication from ``ClientSettings`` is used.
     internal let overrideCredentials: Authentication?
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, overrideCredentials: Authentication? = nil) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
-        self.eventLoopGroup = eventLoopGroup
         self.overrideCredentials = overrideCredentials
     }
 
@@ -62,7 +58,7 @@ public final class Streams<Target: StreamsTarget>: GRPCConcreteService {
     /// - Parameter credentials: Authentication to use for calls made on the returned instance.
     /// - Returns: A new interface scoped to `credentials`.
     public func authenticated(_ credentials: Authentication) -> Self {
-        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
+        .init(target: target, selector: selector, callOptions: callOptions, overrideCredentials: credentials)
     }
 }
 

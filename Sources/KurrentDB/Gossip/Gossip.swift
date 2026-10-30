@@ -18,16 +18,14 @@ public final class Gossip: Sendable {
     internal let endpoint: Endpoint
     internal let settings: ClientSettings
     internal let callOptions: CallOptions
-    internal let eventLoopGroup: EventLoopGroup
     /// gossip 讀取是單一回應的 RPC,走 client 的共用連線。
     internal let connections: ConnectionProvider
 
-    init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults) {
         self.endpoint = endpoint
         self.settings = settings
         self.connections = connections
         self.callOptions = callOptions
-        self.eventLoopGroup = eventLoopGroup
     }
 }
 

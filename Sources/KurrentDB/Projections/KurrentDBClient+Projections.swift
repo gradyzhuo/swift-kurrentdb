@@ -16,8 +16,7 @@ extension KurrentDBClient {
         .init(
             target: target,
             selector: selector,
-            callOptions: defaultCallOptions,
-            eventLoopGroup: eventLoopGroup)
+            callOptions: defaultCallOptions)
     }
 
     /// Returns a ``Projections`` service scoped to the named projection.
@@ -33,8 +32,7 @@ extension KurrentDBClient {
         .init(
             target: .init(name: name),
             selector: selector,
-            callOptions: defaultCallOptions,
-            eventLoopGroup: eventLoopGroup)
+            callOptions: defaultCallOptions)
     }
 
     /// Returns a ``Projections`` service scoped to a built-in system projection.
@@ -49,7 +47,6 @@ extension KurrentDBClient {
         .init(
             target: .init(predefined: predefined),
             selector: selector,
-            callOptions: defaultCallOptions,
-            eventLoopGroup: eventLoopGroup)
+            callOptions: defaultCallOptions)
     }
 }
