@@ -16,6 +16,7 @@
 import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import NIOPosix
 import Synchronization
 import Testing
 @testable import KurrentDB
@@ -37,6 +38,28 @@ struct ConnectionProviderTests {
             try await Task.sleep(for: .milliseconds(10))
         }
         return condition()
+    }
+
+    // MARK: - Event-loop group
+
+    @Test("The provider keeps the injected event-loop group and hands it to every Posix transport it builds")
+    func injectedGroupReachesTheProvider() {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { try? group.syncShutdownGracefully() }
+        let provider = ConnectionProvider(settings: .localhost(), eventLoopGroup: group, idleTimeout: .seconds(1), sweepInterval: nil)
+        defer { provider.shutdown() }
+        #expect(provider.eventLoopGroup === group)
+        let client = KurrentDBClient(settings: .localhost(), eventLoopGroup: group)
+        defer { client.shutdown() }
+        #expect(client.eventLoopGroup === group)
+        #expect(client.selector.connections.eventLoopGroup === group)
+    }
+
+    @Test("Without an injected group the client runs on NIO's process-wide singleton")
+    func defaultGroupIsTheSingleton() {
+        let client = KurrentDBClient(settings: .localhost())
+        defer { client.shutdown() }
+        #expect(client.selector.connections.eventLoopGroup === MultiThreadedEventLoopGroup.singleton)
     }
 
     // MARK: - Shared: reuse
@@ -675,8 +698,8 @@ struct KurrentDBClientShutdownTests {
     func shutdownIsIdempotentAndClosesProvider() throws {
         let client = KurrentDBClient(settings: .localhost())
 
-        try client.shutdown()
-        try client.shutdown()
+        client.shutdown()
+        client.shutdown()
 
         #expect(client.selector.connections.isShutdown)
     }
@@ -686,7 +709,7 @@ struct KurrentDBClientShutdownTests {
     @Test("shutdown 之後 select() 立即拋 connectionClosed")
     func selectAfterShutdownThrowsConnectionClosed() async throws {
         let client = KurrentDBClient(settings: .localhost())
-        try client.shutdown()
+        client.shutdown()
 
         await #expect(throws: KurrentError.connectionClosed) {
             try await client.selector.select()

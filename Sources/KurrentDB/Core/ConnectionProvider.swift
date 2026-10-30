@@ -12,6 +12,8 @@
 import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import NIOCore
+import NIOPosix
 import Synchronization
 
 /// Manages two kinds of connections, chosen by whether the RPC **finishes inside** `perform(node:)`:
@@ -94,18 +96,25 @@ package final class ConnectionProvider: Sendable {
 
     private let settings: ClientSettings
     private let idleTimeout: Duration
+
+    /// The event-loop group every Posix transport this provider builds runs on (a
+    /// `TransportProvider` in the settings chooses its own loops). Never shut down here.
+    package let eventLoopGroup: any EventLoopGroup
     private let state = Mutex(State())
 
     /// - Parameters:
+    ///   - eventLoopGroup: The group the Posix transports run on; the client passes the one it was given.
     ///   - idleTimeout: 共用連線在沒有任何進行中的呼叫後,閒置多久會被回收。
     ///   - sweepInterval: 背景 sweeper 的檢查間隔;傳 `nil` 不啟動 sweeper
     ///     (測試用,改以 ``sweep(now:)`` 手動驅動)。
     package init(
         settings: ClientSettings,
+        eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup,
         idleTimeout: Duration = .seconds(3600),
         sweepInterval: Duration? = .seconds(60)
     ) {
         self.settings = settings
+        self.eventLoopGroup = eventLoopGroup
         self.idleTimeout = idleTimeout
 
         guard let sweepInterval else { return }
@@ -503,6 +512,7 @@ package final class ConnectionProvider: Sendable {
 
     private func makeClient(for endpoint: Endpoint) throws(KurrentError) -> Client {
         let settings = settings
+        let eventLoopGroup = eventLoopGroup
         let transport: AnyClientTransport = try withRethrowingError(usage: "ConnectionProvider.makeClient(for:)") {
             if let provider = settings.transportProvider {
                 return try AnyClientTransport(provider.makeTransport(for: endpoint))
@@ -519,7 +529,8 @@ package final class ConnectionProvider: Sendable {
                         timeout: settings.keepAlive.timeout,
                         allowWithoutCalls: false
                     )
-                }
+                },
+                eventLoopGroup: eventLoopGroup
             )
             return AnyClientTransport(posix)
         }

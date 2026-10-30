@@ -42,7 +42,7 @@ struct BorrowedClientGiveBackTests {
         let handler = SlowHandler()
         _ = borrowed.client.selector.connections.registerShutdownHandler { handler.run() }
         let client = borrowed.client
-        Thread { try? client.shutdown() }.start()
+        Thread { client.shutdown() }.start()
         #expect(try await eventually { handler.started.withLock { $0 } })
         return (borrowed, lease, handler)
     }

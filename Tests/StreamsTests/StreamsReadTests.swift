@@ -291,7 +291,7 @@ struct StreamsReadTests: Sendable {
             .tlsVerifyCert(false)
             .certificate(source: .crtInBundle("ca", inBundle: .module)!)
         let client = KurrentDBClient(settings: anonymous)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         // A buffered read receives the rejection inside its response stream; it used to surface
         // there as a raw RPCError while read().lazy already threw accessDenied.

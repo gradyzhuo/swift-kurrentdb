@@ -258,7 +258,7 @@ struct LazyReadPathTests {
         var options = CallOptions.defaults
         options.timeout = .milliseconds(300)
         let client = KurrentDBClient(settings: fake.settings, defaultCallOptions: options)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         var count = 0
         await #expect(throws: KurrentError.deadlineExceeded) {
             for try await _ in client.streams(specified: "orders").read() { count += 1 }
@@ -271,7 +271,7 @@ struct LazyReadPathTests {
     func lazyServerErrorMidStreamIsKurrentError() async throws {
         let fake = InProcessKurrentDB(read: .events(2, then: .error(RPCError(code: .internalError, message: "boom"))))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         var count = 0
         await #expect(throws: KurrentError.serverError("boom")) {
             for try await _ in client.streams(specified: "orders").read() { count += 1 }
@@ -285,7 +285,7 @@ struct LazyReadPathTests {
         var options = CallOptions.defaults
         options.timeout = .milliseconds(300)
         let client = KurrentDBClient(settings: fake.settings, defaultCallOptions: options)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         await #expect(throws: KurrentError.deadlineExceeded) {
             for try await _ in try await client.streams(specified: "orders").read().buffered {}
         }
@@ -295,7 +295,7 @@ struct LazyReadPathTests {
     func bufferedServerErrorMidStreamIsKurrentError() async throws {
         let fake = InProcessKurrentDB(read: .events(2, then: .error(RPCError(code: .internalError, message: "boom"))))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         var count = 0
         await #expect(throws: KurrentError.serverError("boom")) {
             for try await _ in try await client.streams(specified: "orders").read().buffered { count += 1 }
@@ -309,7 +309,7 @@ struct LazyReadPathTests {
     func heldLazyReadLeavesMainConnectionFree() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold), maxConcurrentStreams: 1)
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let held = client.streams(specified: "orders").read().makeAsyncIterator()
         _ = try await held.next()
 
@@ -340,7 +340,7 @@ struct LazyReadPathTests {
     func shutdownDuringIteration() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
         let iterator = client.streams(specified: "orders").read().makeAsyncIterator()
         for _ in 0 ..< 3 { #expect(try await iterator.next() != nil) }
@@ -403,7 +403,7 @@ struct LazyReadPathTests {
     func shutdownFromInsideTheLoopBody() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
         var count = 0
         await #expect(throws: KurrentError.connectionClosed) {
@@ -420,7 +420,7 @@ struct LazyReadPathTests {
     func finishedReadsLeaveRegistryEmpty() async throws {
         let fake = InProcessKurrentDB(read: .events(3))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         var count = 0
@@ -446,7 +446,7 @@ struct LazyReadPathTests {
     func storedIteratorAdvancedFromActor() async throws {
         let fake = InProcessKurrentDB(read: .events(2))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let cursor = Cursor(client.streams(specified: "orders").read())
         #expect(try await cursor.next() == 0)
         #expect(try await cursor.next() == 1)
@@ -459,7 +459,7 @@ struct LazyReadPathTests {
     func readCallIsASequence() async throws {
         let fake = InProcessKurrentDB(read: .events(5))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let call = client.streams(specified: "orders").read()
         let first = try await call.reduce(0) { n, _ in n + 1 }
         let second = try await call.reduce(0) { n, _ in n + 1 }
@@ -475,7 +475,7 @@ struct LazyReadPathTests {
     func lazyIsDeprecatedNoOp() async throws {
         let fake = InProcessKurrentDB(read: .events(2))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         var count = 0
         for try await _ in client.streams(specified: "orders").read().lazy { count += 1 }
         #expect(count == 2)
@@ -520,7 +520,7 @@ struct LazyReadControlFrameTests {
         script.messages.insert(frame, at: 0)
         let fake = InProcessKurrentDB(read: script)
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let count = try await client.streams(specified: "orders").read { $0.compatibility = 1 }.buffered.reduce(0) { n, _ in n + 1 }
         #expect(count == 2)
     }

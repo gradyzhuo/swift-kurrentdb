@@ -11,6 +11,7 @@
 
 import Foundation
 @testable import KurrentDB
+import NIOPosix
 import Testing
 
 @Suite("Connection reuse (live)", .serialized, .timeLimit(.minutes(3)))
@@ -46,7 +47,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("暖機之後再 append 200 次,不會再建立任何共用連線")
     func appendsReuseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
 
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
@@ -65,7 +66,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("並行的 append 共用同一條連線")
     func concurrentAppendsReuseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
 
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
@@ -92,7 +93,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("成功與失敗的 read 都走共用連線,且不影響之後的 append")
     func finiteReadsUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         _ = try await stream.append(events: [event(), event()]) { $0.expectedRevision = .any }
         let warmed = client.selector.connections.createdSharedConnectionCount
@@ -123,7 +124,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("readAll、projection statistics、user details 都走共用連線")
     func otherBufferedUsecasesUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
         let warmed = client.selector.connections.createdSharedConnectionCount
@@ -164,7 +165,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("150 個並行 read 全部完成,期間的 append 也完成,且不替換服務它們的共用連線")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         _ = try await stream.append(events: (0 ..< 20).map { _ in event() }) { $0.expectedRevision = .any }
         let endpoint = try #require(await client.selector.selectedNode?.endpoint)
@@ -209,7 +210,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
     func cancellingReadMidDrainReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
         for _ in 0 ..< 2 {
             _ = try await stream.append(events: (0 ..< 5000).map { _ in event() }) { $0.expectedRevision = .any }
@@ -255,7 +256,7 @@ struct ConnectionReuseLiveTests: Sendable {
             } catch {}
         }
         try await Task.sleep(for: .milliseconds(5))
-        try client.shutdown()
+        client.shutdown()
 
         let ended = await withTaskGroup(of: Bool.self) { group in
             group.addTask { await reader.value; return true }
@@ -272,7 +273,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("取消一個訂閱,不影響同一個 client 上的其他訂閱與 unary 呼叫")
     func cancellingOneSubscriptionLeavesOthersWorking() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
 
         let cancelled = try await stream.subscribe()
@@ -303,7 +304,7 @@ struct ConnectionReuseLiveTests: Sendable {
         let subscription = try await makeSubscription()
 
         let writer = KurrentDBClient(settings: settings)
-        defer { try? writer.shutdown() }
+        defer { writer.shutdown() }
         let appended = try await writer.streams(specified: streamName)
             .append(events: [event()]) { $0.expectedRevision = .any }
 
@@ -318,7 +319,7 @@ struct ConnectionReuseLiveTests: Sendable {
     @Test("150 個並行訂閱全部收到確認")
     func manyConcurrentSubscriptionsAreConfirmed() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
 
         let subscriptions = try await withThrowingTaskGroup(of: Streams<SpecifiedStream>.Subscription.self) { group in
@@ -343,6 +344,60 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
+    // MARK: - Injected event-loop group
+
+    /// The client runs every kind of call on a group it is given and never shuts that group down:
+    /// shutting it down afterwards is the caller's job and completes. This alone does not show the
+    /// calls ran on the group (NIO closes channels still registered when a group shuts down); the
+    /// next test does.
+    @Test("A client on a private one-thread group appends, reads lazily and subscribes; shutting the group down after client.shutdown() completes", .timeLimit(.minutes(1)))
+    func privateOneThreadGroupCarriesEveryCall() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let client = KurrentDBClient(settings: settings, eventLoopGroup: group)
+        #expect(client.selector.connections.eventLoopGroup === group)
+        let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
+
+        _ = try await stream.append(events: (0 ..< 3).map { _ in event() }) { $0.expectedRevision = .any }
+        var read = 0
+        for try await response in stream.read() {
+            if case .event = response { read += 1 }
+        }
+        #expect(read == 3)
+
+        let subscription = try await stream.subscribe()
+        let appended = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
+        let received = try await subscription.events.first { _ in true }
+        #expect(received?.record.revision == appended.currentRevision)
+        subscription.cancel()
+
+        try await stream.delete()
+        client.shutdown()
+
+        // shutdownGracefully() ignores cancellation, so the time limit above, not a racing timer,
+        // is what turns a hang into a failure.
+        try await group.shutdownGracefully()
+    }
+
+    /// What makes the test above non-vacuous: had the transports run on NIO's singleton, the
+    /// private group would be idle and its shutdown would complete whatever the client did. With
+    /// the group's only thread blocked, a call that runs on it waits; one on the singleton would not.
+    @Test("The client's calls run on the injected group: blocking its only thread delays the next append")
+    func injectedGroupCarriesTheConnections() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let client = KurrentDBClient(settings: settings, eventLoopGroup: group)
+        let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
+        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
+
+        group.next().execute { Thread.sleep(forTimeInterval: 1) }
+        let started = ContinuousClock.now
+        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
+        #expect(ContinuousClock.now - started >= .milliseconds(800))
+
+        try await stream.delete()
+        client.shutdown()
+        try await group.shutdownGracefully()
+    }
+
     // MARK: - Shutdown
 
     @Test("shutdown 會結束進行中的訂閱,並拒絕之後所有的呼叫(node 仍在快取中)")
@@ -358,7 +413,7 @@ struct ConnectionReuseLiveTests: Sendable {
             } catch {}
         }
 
-        try client.shutdown()
+        client.shutdown()
 
         // 訂閱必須在有限時間內結束,而不是永遠掛著。
         let ended = await withTaskGroup(of: Bool.self) { group in
