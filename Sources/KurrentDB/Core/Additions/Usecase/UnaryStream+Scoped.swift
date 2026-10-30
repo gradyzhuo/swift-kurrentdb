@@ -8,53 +8,6 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2Posix
 import Synchronization
 
-/// One-shot signal: the server accepted the call (open) or the call failed before that (fail).
-private final class AcceptanceGate: Sendable {
-    private enum State {
-        case pending(CheckedContinuation<Void, any Error>?)
-        case opened
-        case failed(any Error)
-    }
-
-    private let state = Mutex(State.pending(nil))
-
-    func open() { resolve(.success(())) }
-    func fail(_ error: any Error) { resolve(.failure(error)) }
-
-    private func resolve(_ result: Result<Void, any Error>) {
-        let waiter: CheckedContinuation<Void, any Error>? = state.withLock { state in
-            guard case let .pending(waiter) = state else { return nil }
-            switch result {
-            case .success: state = .opened
-            case let .failure(error): state = .failed(error)
-            }
-            return waiter
-        }
-        waiter?.resume(with: result)
-    }
-
-    func wait() async throws {
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
-                let immediate: Result<Void, any Error>? = state.withLock { state in
-                    switch state {
-                    case .pending:
-                        state = .pending(continuation)
-                        return nil
-                    case .opened:
-                        return .success(())
-                    case let .failed(error):
-                        return .failure(error)
-                    }
-                }
-                if let immediate { continuation.resume(with: immediate) }
-            }
-        } onCancel: {
-            fail(CancellationError())
-        }
-    }
-}
-
 /// An accepted server-streaming RPC: the task running it, its hand-off, its shared-connection
 /// lease and its shutdown handler. Owned by a lazy read iterator.
 package final class ScopedCall<Response: Sendable>: Sendable {
@@ -133,7 +86,7 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
         }
 
         let handoff = ResponseHandoff<Response>()
-        let accepted = AcceptanceGate()
+        let accepted = Latch()
         // Registered before the RPC starts, so a shutdown at any later point reaches this call as
         // connectionClosed and never as the transport error its run task's cancellation causes
         // (a node failure to withRetry). Runs at once if the provider is already shut down. It

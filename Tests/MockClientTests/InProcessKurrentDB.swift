@@ -25,22 +25,19 @@ private typealias StreamsService = Streams<SpecifiedStream>.Read.ServiceClient.U
 /// clients; `readsStarted` counts the read calls of all of them. The fake never parses a request:
 /// a read of any stream, forward or backward, from `$all` or not, gets the same script.
 ///
-/// The in-process transport does not tell the server that a client cancelled one call (a deadline,
-/// a `break`, a cancelled task): the client's side of the call ends, while a `.hold` handler stays
-/// suspended until the connection it runs on closes, which `KurrentDBClient.shutdown()` or an idle
-/// sweep does. Only the client's side is what these tests observe.
+/// The in-process transport does not tell the server that a client abandoned one call (a deadline,
+/// a `break`, a cancelled task); the fake does it itself (`ClientCalls`): once the client's side of
+/// a call has ended, its `.hold` handler ends the call with `RPCError(.cancelled)`, as a node does
+/// on HTTP/2 `RST_STREAM`, so a consumer still iterating the response stream directly (the direct
+/// read path) is woken, as on a real connection, instead of waiting for the connection to close.
 ///
 /// `openStreams` counts the RPC streams the client has open on the fake, over all its connections
 /// (discovery calls included; they end at once). A stream counts from when it gets a slot until
 /// the transport's `withStream` returns on the client, which grpc-swift does only after the
 /// call's response handling has ended. So a client that hands back its lease before its RPC task
 /// has finished still leaves the count above 0, and `eventually { fake.openStreams == 0 }` after
-/// a read is how a test shows that nothing leaked. The count is the client's side: with `.hold`, a
-/// call the client abandons leaves the count when the client's side ends (as of grpc-swift 2.4),
-/// while its server handler stays suspended until the connection closes, which the count does not
-/// show. Because that depends on how the client side of an abandoned call ends, assert promptness
-/// with `.end` or other finite scripts, and with `.hold` close the connection (`shutdown()`)
-/// before expecting 0.
+/// a read is how a test shows that nothing leaked. The count is the client's side; it drops for an
+/// abandoned `.hold` call too, when the client's side ends.
 ///
 /// `maxConcurrentStreams` limits the streams open at once on each connection, as a node's HTTP/2
 /// `SETTINGS_MAX_CONCURRENT_STREAMS` (100 on KurrentDB) does: a further stream waits, in order,
@@ -55,7 +52,8 @@ final class InProcessKurrentDB: TransportProvider, Sendable {
             case end
             /// The call ends with this status.
             case error(RPCError)
-            /// The call stays open until it is cancelled (see the type's note on cancellation).
+            /// The call stays open until it is cancelled or the client's side of it ends (see the
+            /// type's note on cancellation).
             case hold
         }
 
@@ -106,12 +104,13 @@ final class InProcessKurrentDB: TransportProvider, Sendable {
     let maxConcurrentStreams: Int?
     private let service: Service
     private let openStreamCount = Mutex(0)
+    private let calls = ClientCalls()
 
     init(endpoint: Endpoint = Endpoint(host: "127.0.0.1", port: 2113), read: ReadScript, maxConcurrentStreams: Int? = nil) {
         precondition(maxConcurrentStreams.map { $0 > 0 } ?? true, "maxConcurrentStreams must be positive")
         self.endpoint = endpoint
         self.maxConcurrentStreams = maxConcurrentStreams
-        service = Service(endpoint: endpoint, read: read)
+        service = Service(endpoint: endpoint, read: read, calls: calls)
     }
 
     /// `ClientSettings.localhost()`-style settings for `endpoint` (insecure, standalone), with
@@ -146,7 +145,7 @@ final class InProcessKurrentDB: TransportProvider, Sendable {
     }
 
     func makeTransport(for _: Endpoint) throws -> any ClientTransport<AnyClientTransport.Bytes> {
-        InProcessConnection(serving: service, fake: self, slots: StreamSlots(limit: maxConcurrentStreams))
+        InProcessConnection(serving: service, fake: self, calls: calls, slots: StreamSlots(limit: maxConcurrentStreams))
     }
 }
 
@@ -155,9 +154,11 @@ extension InProcessKurrentDB {
     private final class Service: RegistrableRPCService, Sendable {
         let endpoint: Endpoint
         let read: ReadScript
+        let calls: ClientCalls
         let readsStarted = Mutex(0)
 
-        init(endpoint: Endpoint, read: ReadScript) {
+        init(endpoint: Endpoint, read: ReadScript, calls: ClientCalls) {
+            self.calls = calls
             self.endpoint = endpoint
             self.read = read
         }
@@ -207,13 +208,14 @@ extension InProcessKurrentDB {
                 serializer: PreSerializedSerializer()
             ) { request, _ in
                 self.readsStarted.withLock { $0 += 1 }
+                let callID = request.metadata[stringValues: ClientCalls.metadataKey].first { _ in true }.flatMap { UInt64($0) }
                 let read = self.read
                 try await request.expectMessages(1)
                 let messages: [[UInt8]] = try read.messages.map { try $0.serializedBytes() }
                 if read.acceptDelay > .zero {
                     try await Task.sleep(for: read.acceptDelay)
                 }
-                return StreamingServerResponse(metadata: [:]) { [ending = read.ending] writer in
+                return StreamingServerResponse(metadata: [:]) { [ending = read.ending, calls = self.calls] writer in
                     try await writer.write(contentsOf: messages)
                     switch ending {
                     case .end:
@@ -221,12 +223,55 @@ extension InProcessKurrentDB {
                     case let .error(error):
                         throw error
                     case .hold:
-                        try await Task.sleep(for: .seconds(3600))
+                        // Until the client's side of the call ends, as an HTTP/2 RST_STREAM would end it.
+                        try await calls.waitForEnd(of: callID)
+                        throw RPCError(code: .cancelled, message: "The client ended the call.")
                     }
                     return [:]
                 }
             }
         }
+    }
+}
+
+/// The calls whose client side is still open, so a `.hold` handler ends once its client's side has
+/// ended (a deadline, a `break`, a cancelled task), as an HTTP/2 RST_STREAM ends the server's side
+/// on a real node. The in-process transport itself never tells the server; without this, the
+/// response stream of an abandoned call would stay open, and a consumer still iterating it (the
+/// direct read path does) would wait until the connection closes.
+///
+/// Each call is tagged with its id in the request metadata (`metadataKey`).
+final class ClientCalls: Sendable {
+    static let metadataKey = "x-in-process-call-id"
+
+    private struct State {
+        var next: UInt64 = 0
+        var open: [UInt64: Latch] = [:]
+    }
+
+    private let state = Mutex(State())
+
+    func begin() -> UInt64 {
+        state.withLock { state in
+            defer { state.next += 1 }
+            state.open[state.next] = Latch()
+            return state.next
+        }
+    }
+
+    func end(_ id: UInt64) {
+        state.withLock { $0.open.removeValue(forKey: id) }?.open()
+    }
+
+    /// Returns once the client's side of call `id` has ended; throws when the waiting task is
+    /// cancelled (the server shutting down). Without an id it waits for the cancellation alone.
+    func waitForEnd(of id: UInt64?) async throws {
+        guard let id else {
+            try await Task.sleep(for: .seconds(3600))
+            return
+        }
+        guard let latch = state.withLock({ $0.open[id] }) else { return }   // already ended
+        try await latch.wait()
     }
 }
 
@@ -311,13 +356,15 @@ private struct InProcessConnection: ClientTransport {
     // Not in the benchmark's copy: the fake's stream count and this connection's stream limit.
     private let fake: InProcessKurrentDB
     private let slots: StreamSlots
+    private let calls: ClientCalls
 
-    init(serving service: some RegistrableRPCService, fake: InProcessKurrentDB, slots: StreamSlots) {
+    init(serving service: some RegistrableRPCService, fake: InProcessKurrentDB, calls: ClientCalls, slots: StreamSlots) {
         let transport = InProcessTransport()
         client = transport.client
         server = GRPCServer(transport: transport.server, services: [service])
         self.fake = fake
         self.slots = slots
+        self.calls = calls
     }
 
     var retryThrottle: RetryThrottle? {
@@ -343,8 +390,10 @@ private struct InProcessConnection: ClientTransport {
         _ closure: (_ stream: RPCStream<Inbound, Outbound>, _ context: ClientContext) async throws -> T
     ) async throws -> T {
         try await slots.acquire()
+        let callID = calls.begin()
         fake.streamOpened()
         defer {
+            calls.end(callID)
             fake.streamClosed()
             slots.release()
         }
@@ -352,7 +401,7 @@ private struct InProcessConnection: ClientTransport {
             let converted = RPCStream(
                 descriptor: stream.descriptor,
                 inbound: Inbound(wrapping: stream.inbound.map { $0.converted() }),
-                outbound: Outbound(wrapping: ConvertingWriter(base: stream.outbound))
+                outbound: Outbound(wrapping: ConvertingWriter(base: stream.outbound, callID: callID))
             )
             return try await closure(converted, context)
         }
@@ -367,13 +416,14 @@ private struct InProcessConnection: ClientTransport {
 /// makes them.
 private struct ConvertingWriter: ClosableRPCWriterProtocol {
     let base: InProcessTransport.Client.Outbound
+    let callID: UInt64
 
     func write(_ element: RPCRequestPart<AnyClientTransport.Bytes>) async throws {
-        try await base.write(element.forInProcessServer())
+        try await base.write(element.forInProcessServer(callID: callID))
     }
 
     func write(contentsOf elements: some Sequence<RPCRequestPart<AnyClientTransport.Bytes>>) async throws {
-        try await base.write(contentsOf: elements.map { $0.forInProcessServer() })
+        try await base.write(contentsOf: elements.map { $0.forInProcessServer(callID: callID) })
     }
 
     func finish() async {
@@ -429,13 +479,14 @@ extension GRPCContiguousBytes {
 
 extension RPCRequestPart {
     /// The part as the in-process server takes it: its bytes converted, and its metadata without
-    /// `grpc-timeout`.
-    fileprivate func forInProcessServer<Other: GRPCContiguousBytes>() -> RPCRequestPart<Other> {
+    /// `grpc-timeout` and tagged with the call's id (see `ClientCalls`).
+    fileprivate func forInProcessServer<Other: GRPCContiguousBytes>(callID: UInt64) -> RPCRequestPart<Other> {
         switch self {
         case var .metadata(metadata):
             if metadata.contains(where: { $0.key == "grpc-timeout" }) {
                 metadata.removeAllValues(forKey: "grpc-timeout")
             }
+            metadata.addString(String(callID), forKey: ClientCalls.metadataKey)
             return .metadata(metadata)
         case let .message(bytes):
             return .message(bytes.converted())
