@@ -8,6 +8,8 @@
 import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import NIOCore
+import NIOPosix
 
 /// Selects and caches the best available cluster node for client connections.
 ///
@@ -26,10 +28,10 @@ public actor NodeSelector: Sendable {
     /// `KurrentDBPool` closes a borrowed client's connections when it is given back.
     package nonisolated let connections: ConnectionProvider
 
-    init(settings: ClientSettings) {
+    init(settings: ClientSettings, eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         id = nil
         self.settings = settings
-        connections = ConnectionProvider(settings: settings)
+        connections = ConnectionProvider(settings: settings, eventLoopGroup: eventLoopGroup)
         discover = .init(settings: settings, connections: connections, previousCandidates: [])
     }
 

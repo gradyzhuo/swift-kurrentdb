@@ -39,8 +39,7 @@ extension KurrentDBClient {
                 endpoint: candidate,
                 settings: settings,
                 connections: selector.connections,
-                callOptions: defaultCallOptions,
-                eventLoopGroup: eventLoopGroup
+                callOptions: defaultCallOptions
             )
             if let members = try? await gossip.read(timeout: gossipTimeout), !members.isEmpty {
                 return members
@@ -51,8 +50,7 @@ extension KurrentDBClient {
             endpoint: candidates[0],
             settings: settings,
             connections: selector.connections,
-            callOptions: defaultCallOptions,
-            eventLoopGroup: eventLoopGroup
+            callOptions: defaultCallOptions
         ).read(timeout: gossipTimeout)
     }
 }

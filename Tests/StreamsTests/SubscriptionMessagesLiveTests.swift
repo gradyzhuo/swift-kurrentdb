@@ -35,7 +35,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
     func testCaughtUpFollowsTheStoredEvents() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         try await client.streams(specified: streamName).append(events: [
             EventData(eventType: "Messages-A", data: Data(), contentType: .json),
             EventData(eventType: "Messages-B", data: Data(), contentType: .json),
@@ -55,7 +55,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
     func testEventsKeepArrivingAfterCaughtUp() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         let subscription = try await client.streams(specified: streamName).subscribe()
         try await client.streams(specified: streamName)
@@ -74,7 +74,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
     @Test("A filtered $all subscription reports a checkpoint while scanning events the filter rejects")
     func testFilteredAllSubscriptionReportsCheckpoints() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         // Enough events the filter rejects for at least one checkpoint interval (32 × 1) to pass.
         try await client.streams(specified: UUID().uuidString).append(
             events: (0 ..< 40).map { _ in EventData(eventType: "Messages-Noise", data: Data(), contentType: .json) }
@@ -103,7 +103,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
     func testFellBehindWhenTheConsumerStalls() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         let subscription = try await client.streams(specified: streamName).subscribe()
         var iterator = subscription.messages.makeAsyncIterator()
@@ -146,7 +146,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
     func testTombstoneEndsMessagesWithResourceDeleted() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         try await client.streams(specified: streamName)
             .append(events: [EventData(eventType: "Messages-Before", data: Data(), contentType: .json)]) { $0.expectedRevision = .any }
         let subscription = try await client.streams(specified: streamName).subscribe { $0.revision = .start }
@@ -166,7 +166,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
     func testEventsOutlivesTheSubscriptionValue() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         // Keep only the stream: the subscription value, `messages` with it, is released here.
         let events = try await client.streams(specified: streamName).subscribe().events

@@ -1,4 +1,6 @@
 import KurrentDB
+import NIOCore
+import NIOPosix
 
 /// Lends a client for one independent KurrentDB instance from the pool, runs `action` with it and
 /// gives it back before returning, whether `action` returns or throws. Giving it back is awaited,
@@ -19,12 +21,20 @@ import KurrentDB
 ///
 /// This is the only public entry point of `KurrentDBPool`. `BorrowedClient` is public because
 /// `action` receives it, but giving it back is not public: this function always does it.
+///
+/// - Parameters:
+///   - eventLoopGroup: The event-loop group the borrowed client's connections run on, passed to
+///     `KurrentDBClient(settings:eventLoopGroup:defaultCallOptions:)` (the reachability check before
+///     lending uses it too). Defaults to NIO's `.singletonMultiThreadedEventLoopGroup`. The pool never
+///     shuts it down.
+///   - maxAttempts: How many candidate instances are tried before giving up.
+///   - action: Runs with the borrowed client; its result is returned.
 public func withBorrowedClient<T: Sendable>(
-    numberOfThreads: Int = 1,
+    eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup,
     maxAttempts: Int = 3,
     _ action: (BorrowedClient) async throws -> T
 ) async rethrows -> T? {
-    guard let borrowed = await KurrentDBPool.borrow(numberOfThreads: numberOfThreads, maxAttempts: maxAttempts) else {
+    guard let borrowed = await KurrentDBPool.borrow(eventLoopGroup: eventLoopGroup, maxAttempts: maxAttempts) else {
         return nil
     }
     do {

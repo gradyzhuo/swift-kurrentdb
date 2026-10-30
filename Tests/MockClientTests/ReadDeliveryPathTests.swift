@@ -133,7 +133,7 @@ struct ReadDeliveryPathTests {
     func pathSelection() async throws {
         let fake = InProcessKurrentDB(read: .events(1))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "orders")
 
         let offActor = try await Task.detached { () -> DeliveryPath? in
@@ -164,7 +164,7 @@ struct ReadDeliveryPathTests {
     func pathIsKept() async throws {
         let fake = InProcessKurrentDB(read: .events(3))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let iterator = client.streams(specified: "orders").read().makeAsyncIterator()
         #expect(try await iterator.next(isolation: nil) != nil)
         #expect(iterator.deliveryPath == .direct)
@@ -216,7 +216,7 @@ struct ReadDeliveryPathTests {
         var options = CallOptions.defaults
         options.timeout = .milliseconds(300)
         let client = KurrentDBClient(settings: fake.settings, defaultCallOptions: options)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         let outcome = await drive(client.streams(specified: "orders").read(), in: context, Iteration(perElement: .milliseconds(2)))
@@ -235,7 +235,7 @@ struct ReadDeliveryPathTests {
     func callerCancellation(_ context: IterationContext) async throws {
         let fake = InProcessKurrentDB(read: .events(1000, then: .hold))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
         let call: ReadCall = client.streams(specified: "orders").read()
 
@@ -255,7 +255,7 @@ struct ReadDeliveryPathTests {
     func breakAfterFirst(_ context: IterationContext) async throws {
         let fake = InProcessKurrentDB(read: .events(50))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
         let stream = client.streams(specified: "orders")
 
@@ -279,7 +279,7 @@ struct ReadDeliveryPathTests {
     func shutdownDuringIteration(_ context: IterationContext) async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
         let shutter = TaskSlot()
 
@@ -304,7 +304,7 @@ struct ReadDeliveryPathTests {
         var options = CallOptions.defaults
         options.timeout = .milliseconds(100)
         let client = KurrentDBClient(settings: fake.settings, defaultCallOptions: options)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         let outcome = await drive(client.streams(specified: "orders").read(), in: context, Iteration(onElement: { count in
@@ -327,7 +327,7 @@ struct ReadDeliveryPathTests {
         let client = KurrentDBClient(settings: fake.settings)
         let connections = client.selector.connections
         let call: ReadCall = client.streams(specified: "orders").read()
-        try client.shutdown()
+        client.shutdown()
 
         let outcome = await drive(call, in: context)
 
@@ -343,7 +343,7 @@ struct ReadDeliveryPathTests {
     func serverEnd(_ context: IterationContext) async throws {
         let fake = InProcessKurrentDB(read: .events(5))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         let outcome = await drive(client.streams(specified: "orders").read(), in: context)
@@ -361,7 +361,7 @@ struct ReadDeliveryPathTests {
     func emptyStream(_ context: IterationContext) async throws {
         let fake = InProcessKurrentDB(read: .events(0))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         let outcome = await drive(client.streams(specified: "orders").read(), in: context)
@@ -379,7 +379,7 @@ struct ReadDeliveryPathTests {
     func serverEndWithLateError(_ context: IterationContext) async throws {
         let fake = InProcessKurrentDB(read: .events(2, then: .error(RPCError(code: .internalError, message: "boom"))))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         let outcome = await drive(client.streams(specified: "orders").read(), in: context)
@@ -400,7 +400,7 @@ struct ReadDeliveryPathTests {
         script.messages.insert(frame, at: 0)
         let fake = InProcessKurrentDB(read: script)
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let connections = client.selector.connections
 
         let outcome = await drive(client.streams(specified: "orders").read { $0.compatibility = 1 }, in: context)

@@ -315,10 +315,10 @@ Create one client per application and share it. The client manages its connectio
 - Calls that complete before they return — appends, deletes, stream metadata, reads of a stream or of `$all`, projection statistics, user details, projection and user management, server operations — share one connection per node and its HTTP/2 stream budget. A shared connection that has been idle for an hour is closed and reopened on next use.
 - Calls that hand you a live stream — subscriptions, persistent subscriptions, server statistics — each open their own connection, which closes when the stream ends or is cancelled. Long-lived subscriptions therefore never compete with other calls for capacity on a shared connection.
 
-Calling `shutdown()` closes every connection the client opened, ends active subscriptions, and makes every later call — including calls through `Streams` or other values obtained from the client earlier — throw `KurrentError.connectionClosed`. Shutdown is initiated rather than awaited: connections may still be closing when the method returns. Calling it more than once has no further effect.
+Calling `shutdown()` closes every connection the client opened, ends active subscriptions, and makes every later call — including calls through `Streams` or other values obtained from the client earlier — throw `KurrentError.connectionClosed`. Shutdown is initiated rather than awaited: connections may still be closing when the method returns. Calling it more than once has no further effect. It closes this client and never stops the server: code written against `KurrentDB_V1`, whose `client.shutdown()` shut the server down, uses `try await client.operations(of: .system).shutdown()` for that.
 
 ```swift
-try client.shutdown()
+client.shutdown()
 ```
 
 
