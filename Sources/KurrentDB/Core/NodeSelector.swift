@@ -116,7 +116,9 @@ public actor NodeSelector: Sendable {
                     return nil
                 }
 
-                try await Task.sleep(for: settings.discoveryInterval)
+                // A shutdown during the back-off ends it at once with connectionClosed (S14); a plain
+                // Task.sleep would keep the call waiting the whole discoveryInterval.
+                try await connections.sleepUnlessShutDown(for: settings.discoveryInterval)
                 logger.debug("Starting new connection attempt")
                 continue
             }

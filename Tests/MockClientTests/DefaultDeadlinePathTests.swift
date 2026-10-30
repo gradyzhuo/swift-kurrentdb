@@ -395,4 +395,33 @@ struct LazyReadEstablishmentDeadlineTests {
         // The default policy's two attempts, each with its own deadline (S2 "per attempt").
         #expect(fake.readsStarted == 2)
     }
+
+    // MARK: Establishment budget
+
+    @Test("An open that fails after the budget expired ends with deadlineExceeded")
+    func budgetExpiredOpenFails() async throws {
+        let provider = ConnectionProvider(settings: .localhost(), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        await #expect(throws: KurrentError.deadlineExceeded) {
+            try await withEstablishmentBudget(milliseconds: 100, connections: provider) { () throws(KurrentError) -> Int in
+                try? await Task.sleep(for: .seconds(10))   // woken by the expiry's cancellation
+                throw .internalClientError(reason: "unwinding")
+            }
+        }
+    }
+
+    @Test("A shutdown landing after the budget expired, while the open unwinds, ends it with connectionClosed")
+    func budgetExpiredThenShutdown() async throws {
+        let provider = ConnectionProvider(settings: .localhost(), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        await #expect(throws: KurrentError.connectionClosed) {
+            try await withEstablishmentBudget(milliseconds: 100, connections: provider) { () throws(KurrentError) -> Int in
+                try? await Task.sleep(for: .seconds(10))   // woken by the expiry's cancellation
+                provider.shutdown()                         // the shutdown lands while the open unwinds
+                throw .internalClientError(reason: "unwinding")
+            }
+        }
+    }
 }

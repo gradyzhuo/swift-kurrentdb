@@ -202,7 +202,7 @@ extension Streams.ReadCall {
             let call = call   // the retry closures are @Sendable; capture the value, not `self`
             let isRetryable: @Sendable (KurrentError) -> Bool = { $0.isNodeFailure && $0 != .deadlineExceeded }
             do {
-                return try await withEstablishmentBudget(milliseconds: call.selector.settings.defaultDeadline) { () throws(KurrentError) -> Delivery in
+                return try await withEstablishmentBudget(milliseconds: call.selector.settings.defaultDeadline, connections: call.selector.connections) { () throws(KurrentError) -> Delivery in
                     switch path {
                     case .handoff:
                         return try await .handoff(withRetry(
