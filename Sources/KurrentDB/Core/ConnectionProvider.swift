@@ -323,7 +323,8 @@ package final class ConnectionProvider: Sendable {
     /// For a call that holds a shared connection beyond one `perform` (a lazy read, on either of its
     /// delivery paths): the handler ends the call with `KurrentError.connectionClosed` before the
     /// transport is torn down, so the caller sees why the call ended instead of whatever error the
-    /// teardown produces (which `withRetry` would take for a node failure). It must be synchronous,
+    /// teardown produces (which `withRetry` would take for a node failure). Also for a wait that a
+    /// shutdown must end at once (``sleepUnlessShutDown(for:)``). It must be synchronous,
     /// must not block, and must capture only what it needs to end the call, never the call's owner:
     /// the registry keeps it alive until it is removed or run. A handler may call back into the
     /// provider. Remove it with ``removeShutdownHandler(_:)`` when the call ends.
@@ -353,6 +354,31 @@ package final class ConnectionProvider: Sendable {
     /// For tests: how many shutdown handlers are registered.
     package var shutdownHandlerCount: Int {
         state.withLock { $0.shutdownHandlers.count }
+    }
+
+    // MARK: - Back-off
+
+    /// Sleeps for `duration`, waking early when the provider shuts down or the calling task is
+    /// cancelled. For a wait between attempts (the node-discovery back-off): a shutdown must end it
+    /// at once, but `Task.sleep` only wakes on its own task's cancellation, and `shutdown()` cannot
+    /// cancel its caller's task. So the sleep runs in a task of its own, which a shutdown handler
+    /// cancels; the caller's cancellation is forwarded to it.
+    ///
+    /// - Throws: `KurrentError.connectionClosed` if the provider is shut down when the sleep ends,
+    ///   also when it already was; `CancellationError` if the calling task was cancelled.
+    package func sleepUnlessShutDown(for duration: Duration) async throws {
+        let sleeper = Task { try await Task.sleep(for: duration) }
+        let handler = registerShutdownHandler { sleeper.cancel() }
+        defer { removeShutdownHandler(handler) }
+        await withTaskCancellationHandler {
+            _ = await sleeper.result
+        } onCancel: {
+            sleeper.cancel()
+        }
+        if isShutdown {
+            throw KurrentError.connectionClosed
+        }
+        try Task.checkCancellation()
     }
 
     // MARK: - Shutdown
