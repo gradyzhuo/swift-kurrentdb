@@ -367,7 +367,7 @@ Read the events back from `some-stream`:
 let responses = try await client.streams(specified: "some-stream").read {
     $0.revision = .start
     $0.limit = 10
-}
+}.buffered
 
 for try await response in responses {
     let readEvent = try response.event

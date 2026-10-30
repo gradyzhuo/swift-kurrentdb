@@ -64,6 +64,7 @@ let options = StreamsReadOptions()
 
 In 2.x, options are configured through an `inout` closure passed directly to the operation:
 
+<!-- snippet:skip -->
 ```swift
 // 2.x
 let responses = try await client.streams(specified: "orders").read {
@@ -104,6 +105,7 @@ let responses = try await client.readStream("orders") {
 }
 ```
 
+<!-- snippet:skip -->
 ```swift
 // 2.x
 let responses = try await client.streams(of: .specified("orders")).read {
@@ -123,6 +125,7 @@ let responses = try await client.readAllStreams {
 }
 ```
 
+<!-- snippet:skip -->
 ```swift
 // 2.x
 let responses = try await client.allStreams.read {

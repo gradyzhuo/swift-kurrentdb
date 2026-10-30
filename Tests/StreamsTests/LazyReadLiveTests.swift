@@ -96,10 +96,10 @@ struct LazyReadLiveTests: Sendable {
         try #require(arrived, "RPC A never received its first event")
 
         // RPC B on the same shared connection, while A is parked and again after A is cancelled.
-        let before = try await stream.read().reduce(0) { count, _ in count + 1 }
+        let before = try await stream.read().buffered.reduce(0) { count, _ in count + 1 }
         parked.cancel()
         let outcome = await parked.result
-        let after = try await stream.read().reduce(0) { count, _ in count + 1 }
+        let after = try await stream.read().buffered.reduce(0) { count, _ in count + 1 }
 
         switch outcome {
         case .success:
@@ -120,7 +120,7 @@ struct LazyReadLiveTests: Sendable {
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 50, to: stream)
 
-        let viaRead = try await stream.read().reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
+        let viaRead = try await stream.read().buffered.reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
         let viaBuffered = try await stream.read().buffered.reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
         let viaLazy = try await stream.read().lazy.reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
         #expect(viaLazy == viaRead)
@@ -205,7 +205,7 @@ struct LazyReadLiveTests: Sendable {
         let stream = client.streams(specified: "LazyRead-missing-\(UUID().uuidString)")
 
         var bufferedError: (any Error)?
-        do { for try await _ in try await stream.read() {} } catch { bufferedError = error }
+        do { for try await _ in try await stream.read().buffered {} } catch { bufferedError = error }
 
         var lazyError: (any Error)?
         let iterator = stream.read().lazy.makeAsyncIterator()
@@ -282,10 +282,10 @@ struct LazyReadLiveTests: Sendable {
         }
         try #require(arrived, "the lazy read never produced its first element")
 
-        let before = try await stream.read().reduce(0) { n, _ in n + 1 }
+        let before = try await stream.read().buffered.reduce(0) { n, _ in n + 1 }
         reader.cancel()
         await #expect(throws: CancellationError.self) { _ = try await reader.value }
-        let after = try await stream.read().reduce(0) { n, _ in n + 1 }
+        let after = try await stream.read().buffered.reduce(0) { n, _ in n + 1 }
 
         #expect(before == 300)
         #expect(after == 300)

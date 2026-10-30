@@ -24,7 +24,7 @@ import NIO
 /// try await client.streams(specified: "orders").append(events: [event])
 ///
 /// // Read from $all
-/// for try await response in try await client.allStreams.read() {
+/// for try await response in try await client.allStreams.read().buffered {
 ///     print(response)
 /// }
 /// ```
