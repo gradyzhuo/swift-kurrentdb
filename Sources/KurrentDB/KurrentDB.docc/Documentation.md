@@ -40,7 +40,7 @@ let client = KurrentDBClient(settings: settings)
 try await client.streams(specified: "orders").append(events: [eventData])
 
 // Read it back
-for try await response in try await client.streams(specified: "orders").read() {
+for try await response in try await client.streams(specified: "orders").read().buffered {
     print(try response.event.record)
 }
 ```
@@ -125,7 +125,7 @@ try await client.multiStreams.appendRecords(
 
 let filtered = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
-}
+}.buffered
 
 try await client.streams(specified: "orders")
     .authenticated(.bearer(token: "user-access-token"))

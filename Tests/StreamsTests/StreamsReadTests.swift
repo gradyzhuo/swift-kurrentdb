@@ -36,7 +36,7 @@ struct StreamsReadTests: Sendable {
 
         var readTypes: [String] = []
         let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .start }
+            .read { $0.direction = .forward; $0.revision = .start }.buffered
         for try await response in responses {
             if case let .event(event) = response {
                 readTypes.append(event.record.eventType)
@@ -61,7 +61,7 @@ struct StreamsReadTests: Sendable {
 
         var readTypes: [String] = []
         let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .backward; $0.revision = .end }
+            .read { $0.direction = .backward; $0.revision = .end }.buffered
         for try await response in responses {
             if case let .event(event) = response {
                 readTypes.append(event.record.eventType)
@@ -85,7 +85,7 @@ struct StreamsReadTests: Sendable {
 
         var count = 0
         let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 }
+            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 }.buffered
         for try await response in responses {
             if case .event = response { count += 1 }
         }
@@ -109,7 +109,7 @@ struct StreamsReadTests: Sendable {
         // Read from revision 2 → should get events at revisions 2, 3, 4
         var readRevisions: [UInt64] = []
         let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .specified(2) }
+            .read { $0.direction = .forward; $0.revision = .specified(2) }.buffered
         for try await response in responses {
             if case let .event(event) = response {
                 readRevisions.append(event.record.revision)
@@ -137,7 +137,7 @@ struct StreamsReadTests: Sendable {
         try await client.streams(specified: streamName).delete()
 
         await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamName)' of streams not found.")) {
-            let responses = try await client.streams(specified: streamName).read()
+            let responses = try await client.streams(specified: streamName).read().buffered
             var iter = responses.makeAsyncIterator()
             _ = try await iter.next()
         }
@@ -276,7 +276,7 @@ struct StreamsReadTests: Sendable {
         // The buffered read receives the server's stream-deleted status inside the response
         // stream; it used to surface there as a raw RPCError.
         await #expect(throws: KurrentError.resourceDeleted(resource: streamName)) {
-            for try await _ in try await client.streams(specified: streamName).read() {}
+            for try await _ in try await client.streams(specified: streamName).read().buffered {}
         }
         await #expect(throws: KurrentError.resourceDeleted(resource: streamName)) {
             for try await _ in client.streams(specified: streamName).read().lazy {}
@@ -296,7 +296,7 @@ struct StreamsReadTests: Sendable {
         // A buffered read receives the rejection inside its response stream; it used to surface
         // there as a raw RPCError while read().lazy already threw accessDenied.
         await #expect(throws: KurrentError.accessDenied) {
-            for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }) {}
+            for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }).buffered {}
         }
         await #expect(throws: KurrentError.accessDenied) {
             for try await _ in client.allStreams.read(configure: { $0.limit = 1 }).lazy {}

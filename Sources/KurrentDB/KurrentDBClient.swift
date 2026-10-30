@@ -28,7 +28,7 @@ import Synchronization
 /// try await client.streams(specified: "orders").append(events: events)
 ///
 /// // Read from the global $all stream
-/// for try await event in try await client.allStreams.read() {
+/// for try await event in try await client.allStreams.read().buffered {
 ///     print(event)
 /// }
 /// ```

@@ -80,7 +80,7 @@ try await client.streams(of: .specified("orders"))
 
 // ✓ Read from $all
 let responses = try await client.streams(of: .all)
-    .read { $0.direction = .forward }
+    .read { $0.direction = .forward }.buffered
 
 // ✓ Append to several streams at once
 try await client.streams(of: .multiple)

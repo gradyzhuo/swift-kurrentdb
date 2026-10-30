@@ -116,7 +116,7 @@ extension Streams where Target: SpecifiedStreamTarget {
     /// let responses = try await client.streams(specified: "orders").read {
     ///     $0.direction = .backward
     ///     $0.limit = 10
-    /// }
+    /// }.buffered
     /// for try await response in responses {
     ///     let event = try response.event
     /// }
