@@ -61,6 +61,7 @@ struct UnaryStreamConnectionPathTests {
         }
 
         #expect(node.connections.createdSharedConnectionCount == 1)
+        #expect(node.connections.createdReadConnectionCount == 0)   // buffered reads stay on the main connection
         #expect(node.connections.createdDedicatedConnectionCount == 0)
         #expect(node.connections.activeDedicatedConnectionCount == 0)
         #expect(node.connections.sharedEntrySnapshot(for: Self.refused)?.retainCount == 0)
@@ -112,6 +113,7 @@ struct UnaryStreamConnectionPathTests {
         }
 
         #expect(selector.connections.createdSharedConnectionCount == 1)
+        #expect(selector.connections.createdReadConnectionCount == 0)
         #expect(selector.connections.createdDedicatedConnectionCount == 0)
     }
 
