@@ -109,38 +109,16 @@ extension Streams where Target: SpecifiedStreamTarget {
         try await append(events: events, configure: configure)
     }
 
-    /// Reads events from the stream.
-    /// The whole result is fetched before this returns, so memory grows with the result; this is the same as ``ReadCall/buffered``. For large reads use `read().lazy`.
+    /// Reads events lazily: a ``ReadCall`` that opens its RPC when iterated and pulls events as you
+    /// iterate, with memory bounded and the RPC ended when the loop ends. Nothing happens until then;
+    /// use ``ReadCall/buffered`` to fetch the whole result first.
+    ///
+    /// Errors arrive during iteration, as described on ``ReadCall/Iterator``. Establishing the call —
+    /// node selection to the server's first response — is bounded by
+    /// ``ClientSettings/defaultDeadline``; the iteration that follows is not.
     ///
     /// ```swift
-    /// let responses = try await client.streams(specified: "orders").read {
-    ///     $0.direction = .backward
-    ///     $0.limit = 10
-    /// }.buffered
-    /// for try await response in responses {
-    ///     let event = try response.event
-    /// }
-    /// ```
-    ///
-    /// - Parameter configure: Closure to configure ``Read/Options`` (direction, limit, starting revision). Defaults to no-op.
-    /// - Returns: An async throwing stream of ``Streams/ReadResponse`` values.
-    /// - Throws: `KurrentError` if the stream is not found or the read fails.
-    public func read(configure: @Sendable (inout Read.Options) -> Void = { _ in }) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error> {
-        var options = Read.Options()
-        configure(&options)
-        let usecase = Read(from: identifier, options: options)
-        return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
-    }
-
-    /// Prepares a read whose delivery you choose with ``ReadCall/lazy`` or ``ReadCall/buffered``.
-    /// Nothing happens until one of them is used.
-    ///
-    /// Bare `try await read()` calls and function references formed in an async context keep selecting the
-    /// buffered overload; a `.lazy` / `.buffered` chain or an explicit `: ReadCall` annotation selects this one,
-    /// and so does a function reference formed in a synchronous context, so spell the type if that matters.
-    ///
-    /// ```swift
-    /// for try await response in client.streams(specified: "orders").read().lazy {
+    /// for try await response in client.streams(specified: "orders").read() {
     ///     print(try response.event.record.eventType)
     /// }
     /// ```

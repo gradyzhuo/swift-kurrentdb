@@ -15,7 +15,7 @@ import Testing
 @testable import KurrentDB
 
 private typealias ReadCall = Streams<SpecifiedStream>.ReadCall
-private typealias DeliveryPath = ReadCall.Lazy.Iterator.DeliveryPath
+private typealias DeliveryPath = ReadCall.Iterator.DeliveryPath
 
 /// Where a test iterates a read.
 enum IterationContext: String, CaseIterable, Sendable, CustomTestStringConvertible {
@@ -54,7 +54,7 @@ private func drive(_ call: ReadCall, in context: IterationContext, _ iteration: 
 }
 
 private func driveNonisolated(_ call: ReadCall, _ iteration: Iteration) async -> Outcome {
-    let iterator = call.lazy.makeAsyncIterator()
+    let iterator = call.makeAsyncIterator()
     var outcome = Outcome()
     do {
         while try await iterator.next(isolation: nil) != nil {
@@ -72,7 +72,7 @@ private func driveNonisolated(_ call: ReadCall, _ iteration: Iteration) async ->
 
 @MainActor
 private func driveOnMainActor(_ call: ReadCall, _ iteration: Iteration) async -> Outcome {
-    let iterator = call.lazy.makeAsyncIterator()
+    let iterator = call.makeAsyncIterator()
     var outcome = Outcome()
     do {
         while try await iterator.next(isolation: MainActor.shared) != nil {
@@ -91,7 +91,7 @@ private func driveOnMainActor(_ call: ReadCall, _ iteration: Iteration) async ->
 /// A custom actor (not the main actor), the case Review Focus 1 names.
 private actor Driver {
     func drive(_ call: ReadCall, _ iteration: Iteration) async -> Outcome {
-        let iterator = call.lazy.makeAsyncIterator()
+        let iterator = call.makeAsyncIterator()
         var outcome = Outcome()
         do {
             while try await iterator.next(isolation: self) != nil {
@@ -137,7 +137,7 @@ struct ReadDeliveryPathTests {
         let stream = client.streams(specified: "orders")
 
         let offActor = try await Task.detached { () -> DeliveryPath? in
-            let iterator = stream.read().lazy.makeAsyncIterator()
+            let iterator = stream.read().makeAsyncIterator()
             #expect(iterator.deliveryPath == nil)   // nothing is chosen before the first next()
             _ = try await iterator.next()
             return iterator.deliveryPath
@@ -149,13 +149,13 @@ struct ReadDeliveryPathTests {
 
         // `for try await` passes #isolation: a plain async function takes the direct path.
         var count = 0
-        for try await _ in stream.read().lazy { count += 1 }
+        for try await _ in stream.read() { count += 1 }
         #expect(count == 1)
     }
 
     @MainActor
     private static func advanceOnMain(_ call: ReadCall) async throws -> DeliveryPath? {
-        let iterator = call.lazy.makeAsyncIterator()
+        let iterator = call.makeAsyncIterator()
         _ = try await iterator.next(isolation: MainActor.shared)
         return iterator.deliveryPath
     }
@@ -165,7 +165,7 @@ struct ReadDeliveryPathTests {
         let fake = InProcessKurrentDB(read: .events(3))
         let client = KurrentDBClient(settings: fake.settings)
         defer { try? client.shutdown() }
-        let iterator = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        let iterator = client.streams(specified: "orders").read().makeAsyncIterator()
         #expect(try await iterator.next(isolation: nil) != nil)
         #expect(iterator.deliveryPath == .direct)
         let (rest, path) = await Self.drainOnMain(iterator)
@@ -174,7 +174,7 @@ struct ReadDeliveryPathTests {
     }
 
     @MainActor
-    private static func drainOnMain(_ iterator: sending ReadCall.Lazy.Iterator) async -> (Int, DeliveryPath?) {
+    private static func drainOnMain(_ iterator: sending ReadCall.Iterator) async -> (Int, DeliveryPath?) {
         var count = 0
         while (try? await iterator.next(isolation: MainActor.shared)) ?? nil != nil { count += 1 }
         return (count, iterator.deliveryPath)
