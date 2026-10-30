@@ -286,9 +286,12 @@ struct StreamTests: Sendable {
             subscription.cancel()
         }
 
+        var receivedEvent = false
         for try await _ in subscription.events {
+            receivedEvent = true
             break
         }
+        #expect(!receivedEvent)
     }
 
     @Test("It should return only matching events when reading $all with an event type filter.")
