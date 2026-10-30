@@ -449,6 +449,63 @@ struct ConnectionProviderTests {
 
     // MARK: - Shutdown
 
+    @Test("A shutdown handler runs once, outside the lock, before the run tasks are cancelled; one registered after shutdown runs at once")
+    func shutdownHandlersRunBeforeCancellation() async throws {
+        let transports = RecordingTransportProvider()
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = transports
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(3600), sweepInterval: nil)
+        let lease = try provider.acquire(Self.endpointA)
+        let transport = try #require(transports.transports.first)
+        // Cancellation only reaches connect() once it runs; before that the check below would pass either way.
+        #expect(try await eventually { transport.wasConnected })
+
+        let sawConnectionStillUp = Mutex(false)
+        let runs = Mutex(0)
+        let id = provider.registerShutdownHandler {
+            runs.withLock { $0 += 1 }
+            sawConnectionStillUp.withLock { $0 = !transport.connectWasCancelled }
+            // Outside the lock: a handler may call back into the provider without deadlocking.
+            _ = provider.isShutdown
+            _ = provider.shutdownHandlerCount
+        }
+        #expect(id != 0)
+        #expect(provider.shutdownHandlerCount == 1)
+
+        provider.shutdown()
+        #expect(runs.withLock { $0 } == 1)
+        #expect(sawConnectionStillUp.withLock { $0 })
+        #expect(transport.connectWasCancelled)
+        #expect(provider.shutdownHandlerCount == 0)
+
+        provider.shutdown()   // idempotent: the handler does not run again
+        provider.removeShutdownHandler(id)   // no-op after shutdown
+        #expect(runs.withLock { $0 } == 1)
+
+        let late = Mutex(false)
+        let lateID = provider.registerShutdownHandler { late.withLock { $0 = true } }
+        #expect(late.withLock { $0 })
+        #expect(lateID == 0)
+        #expect(provider.shutdownHandlerCount == 0)
+        lease.release()
+    }
+
+    @Test("A removed shutdown handler does not run")
+    func removedShutdownHandlerDoesNotRun() {
+        let provider = makeProvider()
+        let removedRan = Mutex(false)
+        let keptRan = Mutex(false)
+        let removed = provider.registerShutdownHandler { removedRan.withLock { $0 = true } }
+        _ = provider.registerShutdownHandler { keptRan.withLock { $0 = true } }
+        #expect(provider.shutdownHandlerCount == 2)
+        provider.removeShutdownHandler(removed)
+        provider.removeShutdownHandler(removed)   // twice is a no-op
+        #expect(provider.shutdownHandlerCount == 1)
+        provider.shutdown()
+        #expect(!removedRan.withLock { $0 })
+        #expect(keptRan.withLock { $0 })
+    }
+
     @Test("shutdown 之後共用與獨立連線的准入都會被拒絕")
     func shutdownRejectsBothConnectionClasses() throws {
         let provider = makeProvider()
@@ -604,6 +661,7 @@ private final class RecordingTransport: ClientTransport {
         var calledMethods: [MethodDescriptor] = []
         var wasConnected = false
         var wasDisconnected = false
+        var connectWasCancelled = false
     }
 
     init(methodConfig: MethodConfig? = nil, retryThrottle: RetryThrottle? = nil, holdsCalls: Bool = false) {
@@ -627,11 +685,21 @@ private final class RecordingTransport: ClientTransport {
         state.withLock { $0.wasDisconnected }
     }
 
+    /// Whether the task running `connect()` has been cancelled. Set synchronously inside
+    /// `Task.cancel()`, unlike ``wasDisconnected``, so a test can tell what ran before the cancel.
+    var connectWasCancelled: Bool {
+        state.withLock { $0.connectWasCancelled }
+    }
+
     func connect() async throws {
         state.withLock { $0.wasConnected = true }
         defer { state.withLock { $0.wasDisconnected = true } }
         // Ends when the stream finishes or the task is cancelled.
-        for await _ in shutdown.stream {}
+        await withTaskCancellationHandler {
+            for await _ in shutdown.stream {}
+        } onCancel: {
+            state.withLock { $0.connectWasCancelled = true }
+        }
     }
 
     func beginGracefulShutdown() {

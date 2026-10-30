@@ -50,7 +50,9 @@ public actor NodeSelector: Sendable {
     /// `ClientSettings.maxDiscoveryAttempts` times with `discoveryInterval` between attempts.
     ///
     /// - Returns: A ``Node`` ready to accept gRPC connections.
-    /// - Throws: `KurrentError.serverError` if no reachable node is found within the attempt limit.
+    /// - Throws: `KurrentError.serverError` if no reachable node is found within the attempt limit;
+    ///   `KurrentError.connectionClosed` once the client has shut down, also when that happens
+    ///   during discovery.
     public func select() async throws(KurrentError) -> Node {
         // 不論 node 快取是否過期,shutdown 之後一律是 connectionClosed。否則快取過期時
         // 會進入 discovery,把探測的 connectionClosed 當成一般失敗重試,最後回報成
@@ -95,6 +97,11 @@ public actor NodeSelector: Sendable {
                 let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
                 return Node(endpoint: endpoint, settings: settings, serverInfo: serverInfo, connections: connections)
             } catch {
+                // A shutdown during discovery makes every later probe fail with connectionClosed
+                // (acquire refuses); retrying them would end as "Connection node not found." (S14).
+                if connections.isShutdown {
+                    throw KurrentError.connectionClosed
+                }
                 attempts += 1
 
                 guard attempts < settings.maxDiscoveryAttempts else {
