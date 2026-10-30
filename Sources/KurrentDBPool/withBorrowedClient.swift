@@ -1,13 +1,24 @@
 import KurrentDB
 
-/// 借用範圍剛好等於一個 closure 時用這個：不管 action 正常回傳還是丟錯，
-/// 保證在這個函式真正返回之前就已經 giveBack() 完畢——故意不用
-/// defer { Task { ... } }，因為那樣沒法保證歸還真的在返回前跑完。
+/// Lends a client for one independent KurrentDB instance from the pool, runs `action` with it and
+/// gives it back before returning, whether `action` returns or throws. Giving it back is awaited,
+/// not deferred to a `Task`, so the instance is back in the pool when this function returns.
 ///
-/// 這是整個 KurrentDBPool target 唯一 public 的入口。BorrowedClient 因此
-/// 也必須是 public（Swift 不允許嵌套型別比外層容器更寬鬆），但它的
-/// giveBack()/isGivenBack 維持 package——呼叫端只透過這支函式借用，
-/// 不需要也不該自己管歸還。
+/// Giving it back first closes the borrowed client's connections: every call still running on
+/// them ends with `KurrentError.connectionClosed`, and so does every later call on the client, on a
+/// facade made from it, or on a `ReadCall` or `Subscription` kept past the closure. Only then does
+/// the instance return to the pool, so nothing kept from this borrow ever runs against an instance
+/// the next borrower holds. Iterate inside `action` and return values, not calls, facades or
+/// clients.
+///
+/// Returns `nil` without calling `action` when no instance can be lent: the pool is empty, the
+/// calling task is cancelled before one is lent, `maxAttempts` is not positive, or none of up to
+/// `maxAttempts` candidates answered node selection (a later attempt does not wait: when no other
+/// instance is idle, it gives up). When every instance is busy, the first attempt waits until one
+/// is given back.
+///
+/// This is the only public entry point of `KurrentDBPool`. `BorrowedClient` is public because
+/// `action` receives it, but giving it back is not public: this function always does it.
 public func withBorrowedClient<T: Sendable>(
     numberOfThreads: Int = 1,
     maxAttempts: Int = 3,
