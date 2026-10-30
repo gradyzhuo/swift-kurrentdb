@@ -218,7 +218,13 @@ jobs:
           - "swift:6.4-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
         include:
           # This cell also compiles Benchmarks/OfflineBenchmarks (Package.swift adds it on Linux
-          # only with KURRENTDB_BENCHMARKS=1; package-benchmark needs libjemalloc-dev).
+          # only with KURRENTDB_BENCHMARKS=1; package-benchmark needs libjemalloc-dev), and it is
+          # the warning gate: its first build fails on any compiler warning whose path is in
+          # Sources, Tests or Benchmarks (dependencies under .build/checkouts are not matched;
+          # the -warn-long-* "took Nms to type-check" timings are not warnings to fix). The gate
+          # wraps the first build because a later build is incremental and prints nothing.
+          # NO_COLOR=1 is required: without it the compiler colours "warning:" even into a pipe
+          # and the regex never matches.
           - image: "swift:6.4-bookworm"
             benchmarks: "1"
     runs-on: ubuntu-latest
@@ -227,12 +233,20 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Build and Offline Tests (MockClientTests)
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            ${{ matrix.benchmarks == '1' && '-e KURRENTDB_BENCHMARKS=1 -e NO_COLOR=1' || '' }} \
-            ${{ matrix.image }} \
-            bash -c "${{ matrix.benchmarks == '1' && 'apt-get update && apt-get install -y libjemalloc-dev && ' || '' }}swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
+          if [ "${{ matrix.benchmarks }}" = "1" ]; then
+            docker run --rm \
+              -v ${{ github.workspace }}:/workspace \
+              -w /workspace \
+              -e KURRENTDB_BENCHMARKS=1 -e NO_COLOR=1 \
+              ${{ matrix.image }} \
+              bash -c "apt-get update && apt-get install -y libjemalloc-dev || exit 1; set -o pipefail; swift build --build-tests 2>&1 | tee build.log || exit 1; if grep -E '^/workspace/(Sources|Tests|Benchmarks)/[^:]+:[0-9]+:[0-9]+: warning:' build.log | grep -vE 'took [0-9]+ms to type-check'; then exit 1; fi; swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
+          else
+            docker run --rm \
+              -v ${{ github.workspace }}:/workspace \
+              -w /workspace \
+              ${{ matrix.image }} \
+              bash -c "swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
+          fi
 
   # The scripts package (scripts/Package.swift: doc snippets, doc versions, site assembly,
   # release readiness, benchmark conversion) is tested on every push. The release tag locks
