@@ -27,7 +27,7 @@ struct InProcessKurrentDBTests {
         let client = KurrentDBClient(settings: fake.settings)
         defer { try? client.shutdown() }
         var revisions: [UInt64] = []
-        for try await response in client.streams(specified: "orders").read().lazy {
+        for try await response in client.streams(specified: "orders").read() {
             try revisions.append(response.event.record.revision)
         }
         #expect(revisions == [0, 1, 2])
@@ -39,7 +39,7 @@ struct InProcessKurrentDBTests {
     func brokenHoldReadClosesWithTheConnection() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
         let client = KurrentDBClient(settings: fake.settings)
-        for try await _ in client.streams(specified: "orders").read().lazy {
+        for try await _ in client.streams(specified: "orders").read() {
             break
         }
         #expect(fake.readsStarted == 1)
@@ -55,13 +55,13 @@ struct InProcessKurrentDBTests {
         let client = KurrentDBClient(settings: fake.settings)
         defer { try? client.shutdown() }
         // Discovery runs on the main connection; the first read holds the read connection's one slot.
-        let held = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        let held = client.streams(specified: "orders").read().makeAsyncIterator()
         _ = try await held.next()
         #expect(fake.openStreams == 1)
         let discoveries = fake.discoveries
         let start = ContinuousClock.now
         let waiting = Task {
-            for try await _ in client.streams(specified: "orders").read().lazy {}
+            for try await _ in client.streams(specified: "orders").read() {}
         }
         try await Task.sleep(for: .milliseconds(300))
         #expect(fake.readsStarted == 1)
