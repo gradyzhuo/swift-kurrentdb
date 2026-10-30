@@ -434,7 +434,7 @@ struct StreamTests: Sendable {
         #expect(String(decoding: event.record.data, as: UTF8.self) == #"{"$acl":{"$d":["$admins"],"$mr":["$admins"],"$mw":["$admins"],"$r":["$admins"],"$w":["$admins"]},"$cacheControl":3,"$maxAge":3600,"$maxCount":1}"#)
 
         var indices: [Int] = []
-        for try await response in try await orders.read() {
+        for try await response in orders.read() {
             if case let .event(event) = response {
                 try indices.append(#require(try JSONDecoder().decode([String: Int].self, from: event.record.data)["index"]))
             }
@@ -445,7 +445,7 @@ struct StreamTests: Sendable {
         _ = try await client.users.create(loginName: loginName, password: "Password123!", fullName: "Metadata Test", groups: [.ops])
         let user = KurrentDBClient(settings: settings.authenticated(.credentials(username: loginName, password: "Password123!")))
         await #expect(throws: KurrentError.accessDenied) {
-            for try await _ in try await user.streams(specified: stream).read() {}
+            for try await _ in user.streams(specified: stream).read() {}
         }
 
         try await client.user(loginName).disable()

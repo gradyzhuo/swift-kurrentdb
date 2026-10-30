@@ -22,7 +22,7 @@ import Synchronization
 ///   `BufferedStreamResponse`: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
 ///   `Users.Details`), plus gossip and server features. Up to two long-lived connections per
 ///   endpoint, one per ``ConnectionPurpose``: these calls share the `.main` one's HTTP/2 stream
-///   budget. A lazy read (`ScopedStreamResponse`, `read().lazy`) holds its lease, and an HTTP/2
+///   budget. A lazy read (`ScopedStreamResponse`, `read()`) holds its lease, and an HTTP/2
 ///   stream, for as long as the iterator lives, so it takes the `.read` one: held reads queue
 ///   only behind each other above the server's per-connection stream limit, never in front of a
 ///   unary call. The `.read` connection opens on the first lazy read to the endpoint.
