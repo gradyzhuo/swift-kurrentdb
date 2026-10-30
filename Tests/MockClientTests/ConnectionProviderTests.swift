@@ -13,6 +13,7 @@
 //  裡累積對不可達目標無限期掛著的 runConnections()。
 //
 
+import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
 import Synchronization
@@ -488,6 +489,79 @@ struct ConnectionProviderTests {
         #expect(lateID == 0)
         #expect(provider.shutdownHandlerCount == 0)
         lease.release()
+    }
+
+    @Test("shutdownAwaitingHandlers() returns only after the handlers of a shutdown already in progress on another thread have run; a second plain shutdown() does not wait")
+    func shutdownAwaitingHandlersJoinsAnInProgressShutdown() async throws {
+        let provider = makeProvider()
+        let started = Mutex(false)
+        let mayFinish = Mutex(false)
+        let events = Mutex<[String]>([])
+        _ = provider.registerShutdownHandler {
+            started.withLock { $0 = true }
+            while !mayFinish.withLock({ $0 }) { usleep(1_000) }
+            events.withLock { $0.append("handler finished") }
+        }
+        Thread { provider.shutdown() }.start()
+        #expect(try await eventually { started.withLock { $0 } })
+
+        // The narrowed guarantee of shutdown(): only the caller that performs it waits for the handlers.
+        provider.shutdown()
+        #expect(events.withLock { $0 }.isEmpty)
+
+        let waiter = Task {
+            await provider.shutdownAwaitingHandlers()
+            events.withLock { $0.append("waiter returned") }
+        }
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(events.withLock { $0 }.isEmpty)
+
+        mayFinish.withLock { $0 = true }
+        await waiter.value
+        #expect(events.withLock { $0 } == ["handler finished", "waiter returned"])
+
+        // Once the handlers have run it returns at once, also for a caller that comes late.
+        await provider.shutdownAwaitingHandlers()
+    }
+
+    @Test("shutdownAwaitingHandlers() also waits for the close hooks of dedicated connections (how a Subscription ends) run by a shutdown in progress")
+    func shutdownAwaitingHandlersWaitsForDedicatedCloseHooks() async throws {
+        let provider = makeProvider()
+        let events = Mutex<[String]>([])
+        let started = Mutex(false)
+        let mayFinish = Mutex(false)
+        _ = provider.registerShutdownHandler {}
+        let dedicated = try provider.openDedicated(for: Self.endpointA)
+        dedicated.onClose {
+            started.withLock { $0 = true }
+            while !mayFinish.withLock({ $0 }) { usleep(1_000) }
+            events.withLock { $0.append("dedicated hook finished") }
+        }
+        Thread { provider.shutdown() }.start()
+        #expect(try await eventually { started.withLock { $0 } })
+
+        let waiter = Task {
+            await provider.shutdownAwaitingHandlers()
+            events.withLock { $0.append("waiter returned") }
+        }
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(events.withLock { $0 }.isEmpty)
+
+        mayFinish.withLock { $0 = true }
+        await waiter.value
+        #expect(events.withLock { $0 } == ["dedicated hook finished", "waiter returned"])
+        dedicated.close()
+    }
+
+    @Test("shutdownAwaitingHandlers() on a running provider shuts it down and runs its handlers before returning")
+    func shutdownAwaitingHandlersShutsDown() async {
+        let provider = makeProvider()
+        let ran = Mutex(false)
+        _ = provider.registerShutdownHandler { ran.withLock { $0 = true } }
+        await provider.shutdownAwaitingHandlers()
+        #expect(provider.isShutdown)
+        #expect(ran.withLock { $0 })
+        #expect(provider.shutdownHandlerCount == 0)
     }
 
     @Test("A removed shutdown handler does not run")

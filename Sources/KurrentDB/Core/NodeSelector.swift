@@ -21,9 +21,10 @@ public actor NodeSelector: Sendable {
     var selectedNodeExpiry: Date?
     var discover: NodeDiscover
 
-    /// 這個 client 所有 gRPC 連線的來源。`nonisolated let`:同步的
-    /// `KurrentDBClient.shutdown()` 需要在不進入 actor 的情況下關閉它。
-    nonisolated let connections: ConnectionProvider
+    /// The source of every gRPC connection of this client. `nonisolated let`: the synchronous
+    /// `KurrentDBClient.shutdown()` closes it without entering the actor. `package` so that
+    /// `KurrentDBPool` closes a borrowed client's connections when it is given back.
+    package nonisolated let connections: ConnectionProvider
 
     init(settings: ClientSettings) {
         id = nil
