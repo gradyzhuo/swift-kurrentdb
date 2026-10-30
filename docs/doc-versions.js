@@ -1,4 +1,4 @@
-// Version menu for the DocC pages on GitHub Pages. `swift run --package-path scripts build-docs-site` adds this script
+// Version menu for the DocC pages on GitHub Pages. `swift run --package-path scripts build-docs-site --inputs DIR --releases JSON --output DIR` adds this script
 // to every generated page and writes doc-versions.json next to it:
 //
 //   [{ "title": "2.5.0", "path": "2.5", "latest": true }, ..., { "title": "main", "path": "main" }]
