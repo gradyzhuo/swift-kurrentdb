@@ -85,6 +85,11 @@ package final class ConnectionProvider: Sendable {
         var createdDedicatedConnectionCount = 0
         var sweeper: Task<Void, Never>?
         var shutdownHandlers: [ShutdownHandlerID: @Sendable () -> Void] = [:]
+        /// Set by the caller that performs the shutdown once it has run every shutdown handler and
+        /// every dedicated connection's close hook.
+        var shutdownHasRun = false
+        /// Callers of `shutdownAwaitingHandlers()` waiting for `shutdownHasRun`.
+        var shutdownHandlerWaiters: [CheckedContinuation<Void, Never>] = []
     }
 
     private let settings: ClientSettings
@@ -349,15 +354,18 @@ package final class ConnectionProvider: Sendable {
     /// first runs the registered shutdown handlers (synchronously, in registration order), then
     /// cancels the shared run tasks and the sweeper, then terminates the dedicated connections. The
     /// handlers go first so each call they end reports `connectionClosed` before cancelling a run
-    /// task fails it as a transport error (the pattern of `DedicatedLifecycle.terminate()`). Every
-    /// handler has run when this returns, so a call that held a connection has ended by then, even
-    /// though the transports may still be tearing down.
+    /// task fails it as a transport error (the pattern of `DedicatedLifecycle.terminate()`). For the
+    /// caller that performs the shutdown, every handler and every dedicated connection's close hook
+    /// has run when this returns, so a call that held a connection has ended by then, even though
+    /// the transports may still be tearing down. A caller that finds a shutdown already in progress
+    /// returns at once, possibly while that shutdown is still running them; use
+    /// ``shutdownAwaitingHandlers()`` to wait for them.
     ///
     /// 這是**發起**關閉:返回時連線不保證已經關閉完成。
     package func shutdown() {
-        let (handlers, tasks, dedicated) = state.withLock { state -> ([@Sendable () -> Void], [Task<Void, Never>], [DedicatedLifecycle]) in
+        let taken = state.withLock { state -> (handlers: [@Sendable () -> Void], tasks: [Task<Void, Never>], dedicated: [DedicatedLifecycle])? in
             guard !state.isShutdown else {
-                return ([], [], [])
+                return nil
             }
             state.isShutdown = true
             let handlers = state.shutdownHandlers.sorted { $0.key < $1.key }.map(\.value)
@@ -372,14 +380,47 @@ package final class ConnectionProvider: Sendable {
             state.sweeper = nil
             return (handlers, tasks, dedicated)
         }
-        for handler in handlers {
+        // Another caller performs the shutdown; `shutdownAwaitingHandlers()` waits for it.
+        guard let taken else { return }
+        for handler in taken.handlers {
             handler()
         }
-        for task in tasks {
+        for task in taken.tasks {
             task.cancel()
         }
-        for lifecycle in dedicated {
+        for lifecycle in taken.dedicated {
             lifecycle.terminate()
+        }
+        // Last: a caller of `shutdownAwaitingHandlers()` proceeds only once the dedicated
+        // connections' close hooks (how a `Subscription` ends) have run too.
+        let waiters = state.withLock { state in
+            state.shutdownHasRun = true
+            defer { state.shutdownHandlerWaiters.removeAll() }
+            return state.shutdownHandlerWaiters
+        }
+        for waiter in waiters {
+            waiter.resume()
+        }
+    }
+
+    /// Shuts the provider down like ``shutdown()`` and returns once that shutdown has run every
+    /// shutdown handler (which ends lazy reads) and every dedicated connection's
+    /// ``DedicatedConnection/onClose(_:)`` hook (which ends subscriptions), also when another
+    /// caller's shutdown started first and is still running them (a plain second ``shutdown()`` returns at once). For a caller that must not
+    /// proceed while a call that held a connection may still be ending, such as `KurrentDBPool`
+    /// handing the instance to the next borrower. Not cancellable: the handlers and hooks are
+    /// synchronous and short, so it waits for them even when the calling task is cancelled.
+    package func shutdownAwaitingHandlers() async {
+        shutdown()
+        await withCheckedContinuation { (waiter: CheckedContinuation<Void, Never>) in
+            let haveRun = state.withLock { state in
+                guard !state.shutdownHasRun else { return true }
+                state.shutdownHandlerWaiters.append(waiter)
+                return false
+            }
+            if haveRun {
+                waiter.resume()
+            }
         }
     }
 

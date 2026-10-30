@@ -26,8 +26,8 @@ struct KurrentDBPoolLiveTests {
         #expect(members?.isEmpty == false)
     }
 
-    @Test("借用範圍結束後 isGivenBack 讀到 true——這只是 pool 帳本訊號，不代表底層 client 被擋住")
-    func testIsGivenBackReflectsPoolBookkeeping() async {
+    @Test("After the borrow, isGivenBack is true and the client's connections are closed: later calls throw connectionClosed")
+    func testIsGivenBackClosesTheClient() async {
         var capturedBorrowed: BorrowedClient?
         _ = await withBorrowedClient { borrowed in
             capturedBorrowed = borrowed
@@ -39,6 +39,21 @@ struct KurrentDBPoolLiveTests {
         }
 
         #expect(borrowed.isGivenBack)
+        // Give-back closes the client, so a client kept past the closure never reaches the instance
+        // again, which the next borrower may hold.
+        await #expect(throws: KurrentError.connectionClosed) {
+            try await borrowed.client.readCluster()
+        }
+    }
+
+    @Test("A ReadCall and a facade returned from withBorrowedClient end with connectionClosed")
+    func leakedCallsEndWithConnectionClosed() async throws {
+        let leaked = await withBorrowedClient { borrowed in
+            (call: borrowed.client.streams(specified: "any").read(), streams: borrowed.client.streams(specified: "any"))
+        }
+        let (call, streams) = try #require(leaked)
+        await #expect(throws: KurrentError.connectionClosed) { for try await _ in call {} }
+        await #expect(throws: KurrentError.connectionClosed) { _ = try await streams.append(events: [EventData(eventType: "T", model: ["k": "v"])]) }
     }
 
     @Test("同時借兩個不同成員，各自寫入的事件不會出現在對方那裡（隔離驗證）")
@@ -82,8 +97,7 @@ struct KurrentDBPoolLiveTests {
         await #expect(throws: KurrentError.resourceNotFound(
             reason: "The name '\(streamName)' of streams not found."
         )) {
-            let responses = try await second.client.streams(specified: streamName).read().buffered
-            var iterator = responses.makeAsyncIterator()
+            let iterator = second.client.streams(specified: streamName).read().makeAsyncIterator()
             _ = try await iterator.next()
         }
 
