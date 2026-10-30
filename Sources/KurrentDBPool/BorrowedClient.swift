@@ -19,10 +19,19 @@ import Synchronization
 public final class BorrowedClient: Sendable {
     public let client: KurrentDBClient
     private let lease: KurrentDBPool.Lease
-    private let state = Mutex(false)
+    private struct State {
+        /// Set by the first give-back, `giveBack()` or `deinit`; a later one does nothing.
+        var started = false
+        /// Set once that give-back has finished.
+        var finished = false
+    }
 
-    /// `true` once the client has been given back; its connections are closed by then.
-    public var isGivenBack: Bool { state.withLock { $0 } }
+    private let state = Mutex(State())
+
+    /// `true` once give-back has finished: the client's connections are closed, every call they
+    /// carried has ended and the instance is back in the pool. `false` while `giveBack()` is still
+    /// waiting for that, so a `true` never precedes the closed connections it promises.
+    public var isGivenBack: Bool { state.withLock { $0.finished } }
 
     package init(client: KurrentDBClient, lease: KurrentDBPool.Lease) {
         self.client = client
@@ -31,19 +40,21 @@ public final class BorrowedClient: Sendable {
 
     /// Closes the client's connections, waits until every call they carried has ended (reads through
     /// the shutdown handlers, subscriptions through the dedicated connections' close hooks), then
-    /// returns the instance to the pool that lent it. A second call does nothing.
+    /// returns the instance to the pool that lent it; ``isGivenBack`` becomes `true` after that. A
+    /// second call does nothing (it does not wait for the first).
     package func giveBack() async {
-        let shouldRelease = state.withLock { given in
-            defer { given = true }
-            return !given
+        let shouldRelease = state.withLock { state in
+            defer { state.started = true }
+            return !state.started
         }
         guard shouldRelease else { return }
         await client.selector.connections.shutdownAwaitingHandlers()
         await lease.giveBack()
+        state.withLock { $0.finished = true }
     }
 
     deinit {
-        guard state.withLock({ !$0 }) else { return }
+        guard state.withLock({ !$0.started }) else { return }
         let connections = client.selector.connections
         connections.shutdown()
         let lease = lease
