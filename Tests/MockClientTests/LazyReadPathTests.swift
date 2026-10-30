@@ -239,6 +239,19 @@ struct LazyReadPathTests {
         #expect(second == nil)
         #expect(selector.connections.createdSharedConnectionCount == 1)
     }
+
+    // MARK: next(isolation:)
+
+    @Test("A stored iterator is advanced from an actor with next(isolation:)")
+    func storedIteratorAdvancedFromActor() async throws {
+        let fake = InProcessKurrentDB(read: .events(2))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let cursor = Cursor(client.streams(specified: "orders").read())
+        #expect(try await cursor.next() == 0)
+        #expect(try await cursor.next() == 1)
+        #expect(try await cursor.next() == nil)
+    }
 }
 
 @Suite("Lazy read control frames")
@@ -259,4 +272,12 @@ struct LazyReadControlFrameTests {
         let specified = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
         #expect(throws: (any Error).self) { _ = try specified.scopedResponse(for: checkpoint) }
     }
+}
+
+/// Holds a lazy read's iterator in actor state and advances it from the actor, the shape
+/// `next(isolation:)` exists for: without it the iterator would have to leave the actor's region.
+private actor Cursor {
+    private let iterator: Streams<SpecifiedStream>.ReadCall.Lazy.Iterator
+    init(_ call: Streams<SpecifiedStream>.ReadCall) { iterator = call.lazy.makeAsyncIterator() }
+    func next() async throws -> UInt64? { try await iterator.next(isolation: self)?.event.record.revision }
 }
