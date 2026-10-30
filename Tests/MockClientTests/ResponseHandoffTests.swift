@@ -3,6 +3,7 @@
 //  swift-kurrentdb
 //
 
+import Dispatch
 import Synchronization
 import Testing
 @testable import KurrentDB
@@ -290,8 +291,61 @@ struct ResponseHandoffTests {
         withExtendedLifetime(handoff) {}
     }
 
+    @Test("next(isolation:) called from the MainActor receives the element the producer sends")
+    @MainActor func nextWithIsolationFromMainActor() async throws {
+        let handoff = ResponseHandoff<Int>()
+        let producer = Task { try await handoff.send(7); handoff.finish() }
+        #expect(try await handoff.next(isolation: MainActor.shared) == 7)
+        #expect(try await handoff.next(isolation: MainActor.shared) == nil)
+        try await producer.value
+    }
+
+    @Test("next(isolation:) stays on the caller's executor: taking a waiting element enqueues no job on it")
+    func nextWithIsolationStaysOnCallerExecutor() async throws {
+        let handoff = ResponseHandoff<Int>()
+        let producer = Task { try await handoff.send(7); handoff.finish() }
+        await waitUntil { handoff.isProducerWaiting }
+        #expect(handoff.isProducerWaiting)
+        let consumer = ExecutorCountingActor()
+        let (element, enqueues) = try await consumer.takeNext(from: handoff)
+        #expect(element == 7)
+        // Isolation dropped anywhere on the way, the call hops off the actor and back: one enqueue.
+        #expect(enqueues == 0)
+        try await producer.value
+    }
+
     private func makeCallback(_ released: ReleaseFlag) -> @Sendable ((any Error)?) -> Void {
         let token = DeinitToken(released)
         return { _ in _ = token }
+    }
+}
+
+/// A serial executor that counts the jobs enqueued on it, so a test can see whether an `await`
+/// left the actor and came back (one enqueue) or stayed on it (none).
+private final class CountingSerialExecutor: SerialExecutor {
+    private let queue = DispatchQueue(label: "ResponseHandoffTests.CountingSerialExecutor")
+    private let enqueued = Mutex(0)
+
+    var enqueueCount: Int { enqueued.withLock { $0 } }
+
+    func enqueue(_ job: consuming ExecutorJob) {
+        enqueued.withLock { $0 += 1 }
+        let job = UnownedJob(job)
+        let executor = asUnownedSerialExecutor()
+        queue.async { job.runSynchronously(on: executor) }
+    }
+
+    func asUnownedSerialExecutor() -> UnownedSerialExecutor { UnownedSerialExecutor(ordinary: self) }
+}
+
+private actor ExecutorCountingActor {
+    private let executor = CountingSerialExecutor()
+    nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
+
+    /// The element taken and the jobs enqueued on this actor's executor during the call alone.
+    func takeNext(from handoff: ResponseHandoff<Int>) async throws -> (Int?, Int) {
+        let before = executor.enqueueCount
+        let element = try await handoff.next(isolation: self)
+        return (element, executor.enqueueCount - before)
     }
 }
