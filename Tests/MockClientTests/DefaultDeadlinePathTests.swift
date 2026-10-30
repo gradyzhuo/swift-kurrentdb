@@ -135,7 +135,7 @@ private func drain(_ call: ReadCall, on path: EstablishmentPath) async -> Draine
 
 private func drainNonisolated(_ call: ReadCall) async -> Drained {
     let start = ContinuousClock.now
-    let iterator = call.lazy.makeAsyncIterator()
+    let iterator = call.makeAsyncIterator()
     var drained = Drained()
     do {
         while try await iterator.next(isolation: nil) != nil { drained.count += 1 }
@@ -149,7 +149,7 @@ private func drainNonisolated(_ call: ReadCall) async -> Drained {
 @MainActor
 private func drainOnMainActor(_ call: ReadCall) async -> Drained {
     let start = ContinuousClock.now
-    let iterator = call.lazy.makeAsyncIterator()
+    let iterator = call.makeAsyncIterator()
     var drained = Drained()
     do {
         while try await iterator.next(isolation: MainActor.shared) != nil { drained.count += 1 }
@@ -322,7 +322,7 @@ struct LazyReadEstablishmentDeadlineTests {
         let selector = other?.selector ?? client.selector
         // The held read takes the only slot of the read connection the bounded read then uses.
         let holder = other ?? client
-        var held: Streams<SpecifiedStream>.ReadCall.Lazy.Iterator? = holder.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        var held: Streams<SpecifiedStream>.ReadCall.Iterator? = holder.streams(specified: "orders").read().makeAsyncIterator()
         _ = try await held?.next()
         #expect(fake.openStreams == 1)
         _ = try await selector.select()

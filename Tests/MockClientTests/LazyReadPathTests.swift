@@ -110,7 +110,7 @@ struct LazyReadPathTests {
         #expect(node.connections.readEntrySnapshot(for: Endpoint(host: "127.0.0.1", port: port))?.retainCount == 0)
     }
 
-    // MARK: ReadCall.lazy
+    // MARK: ReadCall iteration
 
     /// Seed and cached node both point at the refused port; retries are off.
     private func makeSelector(supporting descriptors: [GRPCCore.MethodDescriptor]) async -> NodeSelector {
@@ -141,7 +141,7 @@ struct LazyReadPathTests {
         let streams = makeStreams(selector)
 
         await #expect(throws: KurrentError.self) {
-            for try await _ in streams.read().lazy {}
+            for try await _ in streams.read() {}
         }
         #expect(selector.connections.createdReadConnectionCount == 1)
         #expect(selector.connections.createdSharedConnectionCount == 0)
@@ -155,7 +155,7 @@ struct LazyReadPathTests {
         defer { selector.connections.shutdown() }
         let streams = makeStreams(selector)
 
-        do { _ = streams.read().lazy.makeAsyncIterator() }
+        do { _ = streams.read().makeAsyncIterator() }
         #expect(selector.connections.createdSharedConnectionCount == 0)
         #expect(selector.connections.createdReadConnectionCount == 0)
         #expect(selector.connections.sharedEntrySnapshot(for: Self.refused) == nil)
@@ -170,7 +170,7 @@ struct LazyReadPathTests {
 
         let reader = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            for try await _ in streams.read().lazy {}
+            for try await _ in streams.read() {}
         }
         await #expect(throws: CancellationError.self) { try await reader.value }
         #expect(selector.connections.createdSharedConnectionCount == 0)
@@ -183,7 +183,7 @@ struct LazyReadPathTests {
         defer { selector.connections.shutdown() }
         let streams = makeStreams(selector)
 
-        let reader = Task { for try await _ in streams.read().lazy {} }
+        let reader = Task { for try await _ in streams.read() {} }
         try await Task.sleep(for: .milliseconds(200))   // discovery against the refused port retries for ~1s
         reader.cancel()
         await #expect(throws: CancellationError.self) { try await reader.value }
@@ -202,7 +202,7 @@ struct LazyReadPathTests {
         await selector.cacheNodeForTesting(Node(endpoint: endpoint, settings: settings, serverInfo: makeInfo(supporting: [descriptor]), connections: selector.connections))
         let streams = Streams<SpecifiedStream>(target: .specified("any"), selector: selector, callOptions: .defaults)
 
-        let reader = Task { for try await _ in streams.read().lazy {} }
+        let reader = Task { for try await _ in streams.read() {} }
         try await Task.sleep(for: .milliseconds(300))
         reader.cancel()
         let outcome = await reader.result
@@ -218,7 +218,7 @@ struct LazyReadPathTests {
         defer { selector.connections.shutdown() }
         let streams = makeStreams(selector)
 
-        let iterator = streams.read().lazy.makeAsyncIterator()
+        let iterator = streams.read().makeAsyncIterator()
         let reader = Task { () -> (firstThrewCancellation: Bool, second: Streams<SpecifiedStream>.ReadResponse?) in
             withUnsafeCurrentTask { $0?.cancel() }
             var firstThrewCancellation = false
@@ -242,7 +242,7 @@ struct LazyReadPathTests {
         defer { selector.connections.shutdown() }
         let streams = makeStreams(selector)
 
-        var iterator = streams.read().lazy.makeAsyncIterator()
+        let iterator = streams.read().makeAsyncIterator()
         await #expect(throws: KurrentError.self) { _ = try await iterator.next() }
         let second = try await iterator.next()
         #expect(second == nil)
@@ -261,7 +261,7 @@ struct LazyReadPathTests {
         defer { try? client.shutdown() }
         var count = 0
         await #expect(throws: KurrentError.deadlineExceeded) {
-            for try await _ in client.streams(specified: "orders").read().lazy { count += 1 }
+            for try await _ in client.streams(specified: "orders").read() { count += 1 }
         }
         #expect(count == 3)
         #expect(fake.readsStarted == 1)
@@ -274,7 +274,7 @@ struct LazyReadPathTests {
         defer { try? client.shutdown() }
         var count = 0
         await #expect(throws: KurrentError.serverError("boom")) {
-            for try await _ in client.streams(specified: "orders").read().lazy { count += 1 }
+            for try await _ in client.streams(specified: "orders").read() { count += 1 }
         }
         #expect(count == 2)
     }
@@ -310,7 +310,7 @@ struct LazyReadPathTests {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold), maxConcurrentStreams: 1)
         let client = KurrentDBClient(settings: fake.settings)
         defer { try? client.shutdown() }
-        let held = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        let held = client.streams(specified: "orders").read().makeAsyncIterator()
         _ = try await held.next()
 
         // Gossip runs on the main connection; on the read connection it would wait for the held slot.
@@ -342,7 +342,7 @@ struct LazyReadPathTests {
         let client = KurrentDBClient(settings: fake.settings)
         defer { try? client.shutdown() }
         let connections = client.selector.connections
-        let iterator = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
+        let iterator = client.streams(specified: "orders").read().makeAsyncIterator()
         for _ in 0 ..< 3 { #expect(try await iterator.next() != nil) }
         #expect(connections.shutdownHandlerCount == 1)
 
@@ -369,7 +369,7 @@ struct LazyReadPathTests {
         await selector.cacheNodeForTesting(Node(endpoint: endpoint, settings: settings, serverInfo: makeInfo(supporting: [descriptor]), connections: selector.connections))
         let streams = Streams<SpecifiedStream>(target: .specified("any"), selector: selector, callOptions: .defaults)
 
-        let reader = Task { for try await _ in streams.read().lazy {} }
+        let reader = Task { for try await _ in streams.read() {} }
         try await Task.sleep(for: .milliseconds(300))
         #expect(selector.connections.shutdownHandlerCount == 1)   // registered before accepted.wait()
         selector.connections.shutdown()
@@ -386,7 +386,7 @@ struct LazyReadPathTests {
         defer { selector.connections.shutdown() }
         let streams = makeStreams(selector)
 
-        let reader = Task { for try await _ in streams.read().lazy {} }
+        let reader = Task { for try await _ in streams.read() {} }
         try await Task.sleep(for: .milliseconds(100))   // discovery against the refused port retries for ~1 s
         let shutdownAt = ContinuousClock.now
         selector.connections.shutdown()
@@ -407,7 +407,7 @@ struct LazyReadPathTests {
         let connections = client.selector.connections
         var count = 0
         await #expect(throws: KurrentError.connectionClosed) {
-            for try await _ in client.streams(specified: "orders").read().lazy {
+            for try await _ in client.streams(specified: "orders").read() {
                 count += 1
                 if count == 2 { connections.shutdown() }
             }
@@ -424,14 +424,14 @@ struct LazyReadPathTests {
         let connections = client.selector.connections
 
         var count = 0
-        for try await _ in client.streams(specified: "orders").read().lazy {
+        for try await _ in client.streams(specified: "orders").read() {
             count += 1
             #expect(connections.shutdownHandlerCount == 1)
         }
         #expect(count == 3)
         #expect(connections.shutdownHandlerCount == 0)   // close() is awaited on the way out
 
-        for try await _ in client.streams(specified: "orders").read().lazy {
+        for try await _ in client.streams(specified: "orders").read() {
             #expect(connections.shutdownHandlerCount == 1)
             break
         }
@@ -451,6 +451,37 @@ struct LazyReadPathTests {
         #expect(try await cursor.next() == 0)
         #expect(try await cursor.next() == 1)
         #expect(try await cursor.next() == nil)
+    }
+
+    // MARK: ReadCall is the sequence (§5.1.1)
+
+    @Test("read() is a sequence: stored, iterated twice, each iteration its own RPC; first(where:) and reduce stop the RPC when done")
+    func readCallIsASequence() async throws {
+        let fake = InProcessKurrentDB(read: .events(5))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        let call = client.streams(specified: "orders").read()
+        let first = try await call.reduce(0) { n, _ in n + 1 }
+        let second = try await call.reduce(0) { n, _ in n + 1 }
+        #expect(first == 5 && second == 5)
+        #expect(fake.readsStarted == 2)
+        #expect(try await call.first { try $0.event.record.revision == 1 }?.event.record.revision == 1)
+        #expect(fake.readsStarted == 3)
+        #expect(try await eventually { client.selector.connections.readEntrySnapshot(for: fake.endpoint)?.retainCount == 0 })
+    }
+
+    @available(*, deprecated)
+    @Test("The deprecated .lazy is the same sequence")
+    func lazyIsDeprecatedNoOp() async throws {
+        let fake = InProcessKurrentDB(read: .events(2))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        var count = 0
+        for try await _ in client.streams(specified: "orders").read().lazy { count += 1 }
+        #expect(count == 2)
+        let lazy: Streams<SpecifiedStream>.ReadCall.Lazy = client.streams(specified: "orders").read().lazy
+        #expect(try await lazy.reduce(0) { n, _ in n + 1 } == 2)
+        #expect(fake.readsStarted == 2)
     }
 }
 
@@ -498,7 +529,7 @@ struct LazyReadControlFrameTests {
 /// Holds a lazy read's iterator in actor state and advances it from the actor, the shape
 /// `next(isolation:)` exists for: without it the iterator would have to leave the actor's region.
 private actor Cursor {
-    private let iterator: Streams<SpecifiedStream>.ReadCall.Lazy.Iterator
-    init(_ call: Streams<SpecifiedStream>.ReadCall) { iterator = call.lazy.makeAsyncIterator() }
+    private let iterator: Streams<SpecifiedStream>.ReadCall.Iterator
+    init(_ call: Streams<SpecifiedStream>.ReadCall) { iterator = call.makeAsyncIterator() }
     func next() async throws -> UInt64? { try await iterator.next(isolation: self)?.event.record.revision }
 }
