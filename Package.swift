@@ -16,6 +16,12 @@ let benchmarksEnabled: Bool = {
     #endif
 }()
 
+// The documentation examples (DocSnippetsTests) compile with -suppress-warnings: they routinely
+// leave values unused. `KURRENTDB_DOC_WARNINGS=1` drops the flag (swiftc has no reverse flag),
+// so the Swift 6.4 Debian cell in CI can fail on an unnecessary try/await or a deprecated API
+// in an example (the [#UnnecessaryEffectMarker] / [#DeprecatedDeclaration] diagnostic groups).
+let docWarningsEnabled = ProcessInfo.processInfo.environment["KURRENTDB_DOC_WARNINGS"] == "1"
+
 let package = Package(
     name: "swift-kurrentdb",
     // Platform minimums are set to the first OS versions that shipped Swift 6 concurrency
@@ -306,10 +312,9 @@ let package = Package(
                 "KurrentDB",
                 "KurrentDBPool",
             ],
-            swiftSettings: [
-                // Examples routinely leave values unused; only errors matter here.
-                .unsafeFlags(["-suppress-warnings"]),
-            ]
+            // Examples routinely leave values unused; only errors matter here, unless
+            // KURRENTDB_DOC_WARNINGS=1 (see `docWarningsEnabled`).
+            swiftSettings: docWarningsEnabled ? [] : [.unsafeFlags(["-suppress-warnings"])]
         ),
     ]
 )
