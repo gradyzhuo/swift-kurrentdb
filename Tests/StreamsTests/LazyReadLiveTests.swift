@@ -316,8 +316,8 @@ struct LazyReadLiveTests: Sendable {
 
         let error = try #require(failure)
         #expect(!(error is CancellationError))
-        // Post-acceptance errors reach the iterator as the RPC's own error, like a buffered read's stream.
-        #expect((error as? RPCError)?.code == .deadlineExceeded)
+        // Post-acceptance errors reach the iterator as KurrentError, like a buffered read's stream.
+        #expect(error as? KurrentError == .deadlineExceeded)
     }
 
     @Test("A subscription whose deadline expires while its consumer is idle ends with the deadline error")
@@ -337,7 +337,7 @@ struct LazyReadLiveTests: Sendable {
 
         let error = try #require(failure)
         #expect(!(error is CancellationError))
-        #expect((error as? RPCError)?.code == .deadlineExceeded)
+        #expect(error as? KurrentError == .deadlineExceeded)
     }
 
     @Test("A caught-up subscription whose deadline expires while the consumer waits ends with the deadline error")
@@ -353,6 +353,6 @@ struct LazyReadLiveTests: Sendable {
         do { for try await _ in subscription.events {} } catch { failure = error }
 
         let error = try #require(failure, "the loop ended cleanly instead of with the deadline error")
-        #expect((error as? RPCError)?.code == .deadlineExceeded)
+        #expect(error as? KurrentError == .deadlineExceeded)
     }
 }

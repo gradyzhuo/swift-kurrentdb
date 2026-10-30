@@ -240,6 +240,59 @@ struct LazyReadPathTests {
         #expect(selector.connections.createdSharedConnectionCount == 1)
     }
 
+    // MARK: errors after acceptance (S15)
+
+    @Test("A call deadline expiring mid-stream ends a lazy read with KurrentError.deadlineExceeded")
+    func lazyDeadlineMidStreamIsKurrentError() async throws {
+        let fake = InProcessKurrentDB(read: .events(3, then: .hold))
+        var options = CallOptions.defaults
+        options.timeout = .milliseconds(300)
+        let client = KurrentDBClient(settings: fake.settings, defaultCallOptions: options)
+        defer { try? client.shutdown() }
+        var count = 0
+        await #expect(throws: KurrentError.deadlineExceeded) {
+            for try await _ in client.streams(specified: "orders").read().lazy { count += 1 }
+        }
+        #expect(count == 3)
+        #expect(fake.readsStarted == 1)
+    }
+
+    @Test("A server error after two events reaches a lazy read as KurrentError.serverError")
+    func lazyServerErrorMidStreamIsKurrentError() async throws {
+        let fake = InProcessKurrentDB(read: .events(2, then: .error(RPCError(code: .internalError, message: "boom"))))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        var count = 0
+        await #expect(throws: KurrentError.serverError("boom")) {
+            for try await _ in client.streams(specified: "orders").read().lazy { count += 1 }
+        }
+        #expect(count == 2)
+    }
+
+    @Test("A call deadline expiring mid-stream ends a buffered read with KurrentError.deadlineExceeded")
+    func bufferedDeadlineMidStreamIsKurrentError() async throws {
+        let fake = InProcessKurrentDB(read: .events(3, then: .hold))
+        var options = CallOptions.defaults
+        options.timeout = .milliseconds(300)
+        let client = KurrentDBClient(settings: fake.settings, defaultCallOptions: options)
+        defer { try? client.shutdown() }
+        await #expect(throws: KurrentError.deadlineExceeded) {
+            for try await _ in try await client.streams(specified: "orders").read().buffered {}
+        }
+    }
+
+    @Test("A server error after two events reaches a buffered read as KurrentError.serverError")
+    func bufferedServerErrorMidStreamIsKurrentError() async throws {
+        let fake = InProcessKurrentDB(read: .events(2, then: .error(RPCError(code: .internalError, message: "boom"))))
+        let client = KurrentDBClient(settings: fake.settings)
+        defer { try? client.shutdown() }
+        var count = 0
+        await #expect(throws: KurrentError.serverError("boom")) {
+            for try await _ in try await client.streams(specified: "orders").read().buffered { count += 1 }
+        }
+        #expect(count == 2)
+    }
+
     // MARK: next(isolation:)
 
     @Test("A stored iterator is advanced from an actor with next(isolation:)")

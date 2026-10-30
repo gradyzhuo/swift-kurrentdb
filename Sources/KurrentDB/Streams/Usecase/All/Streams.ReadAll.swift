@@ -62,7 +62,7 @@ extension Streams where Target == AllStreamsTarget {
                                 // Like Streams.Read, end the RPC on a parse failure. Reading the
                                 // rest of the server's response would keep the shared
                                 // connection's stream slot and the lease pinned.
-                                continuation.finish(throwing: error)
+                                continuation.finish(throwing: mapStreamError(error, usage: "\(Self.name)"))
                                 return stream
                             }
                         default:
@@ -71,8 +71,8 @@ extension Streams where Target == AllStreamsTarget {
                     }
                     continuation.finish()
                 } catch {
-                    let rejected = if case .failure = response.accepted { true } else { false }
-                    continuation.finish(throwing: bufferedReadFailure(error, rejected: rejected))
+                    // Before or after acceptance alike: the consumer sees a KurrentError (or CancellationError).
+                    continuation.finish(throwing: mapStreamError(error, usage: "\(Self.name)"))
                 }
                 // Older grpc-swift ends the loop above quietly when the call deadline cancels this
                 // handler, and the call then returns a truncated result as if it were complete.
