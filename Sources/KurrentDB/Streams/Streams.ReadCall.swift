@@ -71,7 +71,11 @@ extension Streams.ReadCall {
                 if let scoped, !finished { scoped.closeInBackground() }
             }
 
-            public func next() async throws -> Streams.ReadResponse? {
+            public func next() async throws -> Streams.ReadResponse? { try await next(isolation: nil) }
+
+            /// Advances the read on the caller's actor (`#isolation`), so an iterator kept in actor state
+            /// can be advanced from that actor without leaving its isolation.
+            public func next(isolation actor: isolated (any Actor)? = #isolation) async throws -> Streams.ReadResponse? {
                 if finished { return nil }
                 if Task.isCancelled {
                     // Cancelled before the first call or between two: finish for good, and end an
@@ -106,7 +110,7 @@ extension Streams.ReadCall {
                 }
 
                 do {
-                    if let element = try await active.handoff.next() { return element }
+                    if let element = try await active.handoff.next(isolation: actor) { return element }
                     // Either the server finished the stream or our task was cancelled (the
                     // hand-off ends quietly on consumer-side cancellation).
                     finished = true

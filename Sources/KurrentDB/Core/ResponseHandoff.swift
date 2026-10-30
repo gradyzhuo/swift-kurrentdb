@@ -104,9 +104,14 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         }
     }
 
-    package func next() async throws -> Element? {
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Element?, any Error>) in
+    package func next() async throws -> Element? { try await next(isolation: nil) }
+
+    /// ``next()`` run on the caller's actor, so a consumer that keeps its iterator in actor state
+    /// can advance it from that actor. The labelled stdlib forms are used because only they take
+    /// `isolation:`; forwarding the other way, from this to `next()`, does not compile.
+    package func next(isolation actor: isolated (any Actor)? = #isolation) async throws -> Element? {
+        try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation(isolation: actor) { (continuation: CheckedContinuation<Element?, any Error>) in
                 let action: NextAction = state.withLock { state in
                     if let pending = state.producer {
                         state.producer = nil
@@ -132,9 +137,9 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
                 case .suspend: break
                 }
             }
-        } onCancel: {
+        }, onCancel: {
             cancel()
-        }
+        }, isolation: actor)
     }
 
     package func finish(throwing error: (any Error)? = nil) {
