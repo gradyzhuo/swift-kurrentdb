@@ -22,10 +22,15 @@ private enum EstablishmentOutcome<T: Sendable>: Sendable {
 /// with `invalidate()`. A value `operation` returns after the expiry is returned, never dropped: a
 /// dropped call would keep its lease, its stream slot and its shutdown handler.
 ///
+/// An `operation` that fails after the expiry ends with `deadlineExceeded`, unless `connections` was
+/// shut down by then: a shutdown, also one that lands while the expired `operation` unwinds, ends it
+/// with `connectionClosed` (S14), the outcome a shutdown has everywhere else.
+///
 /// The caller's own cancellation is not the budget's: it reaches `operation` the same way and
 /// whatever `operation` then throws is rethrown unchanged.
 package func withEstablishmentBudget<T: Sendable>(
     milliseconds: Int,
+    connections: ConnectionProvider,
     operation: @escaping @Sendable () async throws(KurrentError) -> T
 ) async throws(KurrentError) -> T {
     guard milliseconds != .max, milliseconds > 0 else {
@@ -50,8 +55,11 @@ package func withEstablishmentBudget<T: Sendable>(
                 do {
                     next = try await group.next()
                 } catch {
-                    // The operation failed; after the expiry, because the expiry cancelled it.
-                    if expired { throw KurrentError.deadlineExceeded }
+                    // The operation failed; after the expiry, because the expiry cancelled it, or
+                    // because the provider shut down, which wins: the caller sees connectionClosed.
+                    if expired {
+                        throw connections.isShutdown ? KurrentError.connectionClosed : KurrentError.deadlineExceeded
+                    }
                     throw error
                 }
                 switch next {

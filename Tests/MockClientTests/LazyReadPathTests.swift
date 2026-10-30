@@ -399,6 +399,71 @@ struct LazyReadPathTests {
         #expect(selector.connections.createdReadConnectionCount == 0)
     }
 
+    // MARK: Shutdown during the discovery back-off
+
+    /// No cached node, the seed refuses, retries are off, and a failed probe waits `discoveryInterval`
+    /// before the next one: 5 s, far longer than any test below waits.
+    private func makeBackingOffSelector(defaultDeadline: Int = .max) -> NodeSelector {
+        var policy = OperationRetryPolicy.default
+        policy.maxAttempts = 1
+        let settings = ClientSettings(clusterMode: .standalone(endpoint: Self.refused))
+            .operationRetryPolicy(policy)
+            .discoveryInterval(.seconds(5))
+            .defaultDeadline(defaultDeadline)
+        return NodeSelector(settings: settings)
+    }
+
+    @Test("shutdown() during the discovery back-off ends a lazy read with connectionClosed at once, not after discoveryInterval")
+    func shutdownDuringDiscoveryBackOff() async throws {
+        let selector = makeBackingOffSelector()
+        defer { selector.connections.shutdown() }
+        let streams = Streams<SpecifiedStream>(target: .specified("any"), selector: selector, callOptions: .defaults)
+
+        let reader = Task { for try await _ in streams.read() {} }
+        try await Task.sleep(for: .milliseconds(100))   // the refused probe failed; the 5 s back-off is running
+        let shutdownAt = ContinuousClock.now
+        selector.connections.shutdown()
+        let outcome = await reader.result
+        let elapsed = ContinuousClock.now - shutdownAt
+
+        #expect(throws: KurrentError.connectionClosed) { try outcome.get() }
+        #expect(elapsed < .milliseconds(300), "ended \(elapsed) after shutdown()")
+    }
+
+    @Test("shutdown() during the discovery back-off under a 500 ms defaultDeadline ends a lazy read with connectionClosed before the budget, not deadlineExceeded")
+    func shutdownDuringDiscoveryBackOffUnderBudget() async throws {
+        let selector = makeBackingOffSelector(defaultDeadline: 500)
+        defer { selector.connections.shutdown() }
+        let streams = Streams<SpecifiedStream>(target: .specified("any"), selector: selector, callOptions: .defaults)
+
+        let startedAt = ContinuousClock.now
+        let reader = Task { for try await _ in streams.read() {} }
+        try await Task.sleep(for: .milliseconds(100))
+        selector.connections.shutdown()
+        let outcome = await reader.result
+        let elapsed = ContinuousClock.now - startedAt
+
+        #expect(throws: KurrentError.connectionClosed) { try outcome.get() }
+        #expect(elapsed < .milliseconds(500), "ended \(elapsed) after the read started")
+    }
+
+    @Test("shutdown() during the discovery back-off ends a unary call with connectionClosed at once")
+    func shutdownDuringDiscoveryBackOffUnary() async throws {
+        let selector = makeBackingOffSelector()
+        defer { selector.connections.shutdown() }
+        let usecase = Streams<SpecifiedStream>.Delete(to: .init(name: "any"), options: .init())
+
+        let caller = Task { _ = try await usecase.perform(selector: selector, callOptions: .defaults) }
+        try await Task.sleep(for: .milliseconds(100))
+        let shutdownAt = ContinuousClock.now
+        selector.connections.shutdown()
+        let outcome = await caller.result
+        let elapsed = ContinuousClock.now - shutdownAt
+
+        #expect(throws: KurrentError.connectionClosed) { try outcome.get() }
+        #expect(elapsed < .milliseconds(300), "ended \(elapsed) after shutdown()")
+    }
+
     @Test("shutdown() called from inside the loop body ends the read at the next element without deadlocking", .timeLimit(.minutes(1)))
     func shutdownFromInsideTheLoopBody() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
