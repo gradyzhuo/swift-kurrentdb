@@ -258,6 +258,9 @@ let package = Package(
             name: "MockClientTests",
             dependencies: [
                 "KurrentDB",
+                // InProcessKurrentDB: a fake node on grpc-swift's in-process transport.
+                .product(name: "GRPCCore", package: "grpc-swift-2"),
+                .product(name: "GRPCInProcessTransport", package: "grpc-swift-2"),
             ],
             swiftSettings: [
                 .unsafeFlags([
