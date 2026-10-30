@@ -107,39 +107,51 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     package func next() async throws -> Element? { try await next(isolation: nil) }
 
     /// ``next()`` run on the caller's actor, so a consumer that keeps its iterator in actor state
-    /// can advance it from that actor. The labelled stdlib forms are used because only they take
-    /// `isolation:`; forwarding the other way, from this to `next()`, does not compile.
+    /// can advance it from that actor. Before Swift 6.4 the labelled stdlib forms are used because
+    /// only they take `isolation:`; forwarding the other way, from this to `next()`, does not compile.
+    /// Swift 6.4 deprecates them for `nonisolated(nonsending)` overloads, which run on the caller's
+    /// actor without the label (before 6.4 the unlabelled forms hop off it and back; seen on 6.0 and 6.2).
     package func next(isolation actor: isolated (any Actor)? = #isolation) async throws -> Element? {
+        #if compiler(>=6.4)
         try await withTaskCancellationHandler(operation: {
-            try await withCheckedThrowingContinuation(isolation: actor) { (continuation: CheckedContinuation<Element?, any Error>) in
-                let action: NextAction = state.withLock { state in
-                    if let pending = state.producer {
-                        state.producer = nil
-                        state.deliveredCount += 1
-                        return .deliver(pending.element, wake: pending.continuation)
-                    }
-                    switch state.terminal {
-                    case let .finished(error?)?:
-                        state.terminal = .finished(nil)   // an AsyncSequence ends after throwing once
-                        return .fail(error)
-                    case .finished(nil)?, .cancelled?:
-                        return .end
-                    case nil:
-                        precondition(state.consumer == nil, "ResponseHandoff supports a single consumer")
-                        state.consumer = continuation
-                        return .suspend
-                    }
-                }
-                switch action {
-                case let .deliver(element, wake): wake.resume(); continuation.resume(returning: element)
-                case let .fail(error): continuation.resume(throwing: error)
-                case .end: continuation.resume(returning: nil)
-                case .suspend: break
-                }
-            }
+            try await withCheckedThrowingContinuation { take(into: $0) }
+        }, onCancel: {
+            cancel()
+        })
+        #else
+        try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation(isolation: actor) { take(into: $0) }
         }, onCancel: {
             cancel()
         }, isolation: actor)
+        #endif
+    }
+
+    private func take(into continuation: CheckedContinuation<Element?, any Error>) {
+        let action: NextAction = state.withLock { state in
+            if let pending = state.producer {
+                state.producer = nil
+                state.deliveredCount += 1
+                return .deliver(pending.element, wake: pending.continuation)
+            }
+            switch state.terminal {
+            case let .finished(error?)?:
+                state.terminal = .finished(nil)   // an AsyncSequence ends after throwing once
+                return .fail(error)
+            case .finished(nil)?, .cancelled?:
+                return .end
+            case nil:
+                precondition(state.consumer == nil, "ResponseHandoff supports a single consumer")
+                state.consumer = continuation
+                return .suspend
+            }
+        }
+        switch action {
+        case let .deliver(element, wake): wake.resume(); continuation.resume(returning: element)
+        case let .fail(error): continuation.resume(throwing: error)
+        case .end: continuation.resume(returning: nil)
+        case .suspend: break
+        }
     }
 
     package func finish(throwing error: (any Error)? = nil) {
