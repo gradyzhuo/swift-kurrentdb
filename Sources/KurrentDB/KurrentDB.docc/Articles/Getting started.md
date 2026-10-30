@@ -65,7 +65,7 @@ There are a number of query parameters that can be used in the connection string
 | ^ | false |   ^  |     ^     |
 |tlsCaFile|String|None|Path to the CA file when connecting to a secure cluster with a certificate that's not signed by a trusted CA. If the file cannot be read, `parse` throws instead of trusting the system's root certificates.|
 | ^ | file path |   ^  |     ^     |
-|defaultDeadline|Number|None|Default deadline, in milliseconds, for calls that complete before they return — appends, deletes, management calls, `read()`. Subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it; a `CallOptions.timeout` set on the client wins.|
+|defaultDeadline|Number|None|Default deadline, in milliseconds, for calls that complete before they return — appends, deletes, management calls, `.buffered` reads (each attempt) — and for establishing a `read()`, from node selection to the server's first response, as one budget that is not retried. Iterating a `read()`, subscriptions, persistent-subscription reads and server statistics are not bounded by it. A `CallOptions.timeout` set on the client replaces it for the other calls; for a `read()` both bound establishing it, the earlier one ending it, and the timeout, as the gRPC call deadline, also bounds the iteration.|
 |keepAliveInterval|Number|10|Interval between keep-alive ping calls, in seconds. Takes effect only together with `keepAliveTimeout`.|
 |keepAliveTimeout|Number|10|Keep-alive ping call timeout, in seconds. Takes effect only together with `keepAliveInterval`.|
 |userCertFile|String|None|User certificate file (PEM) for X.509 authentication. Requires TLS.|
@@ -191,7 +191,7 @@ Available builder methods:
 | `.certificate(source:)` | Add a TLS certificate source |
 | `.certificate(path:fallback:)` | Add a CA certificate from a file. `fallback: .none` throws when the file cannot be read; `fallback: .systemTrustRoots` leaves it out, so the system roots are trusted if no other CA is configured (only for configurations shared with environments that legitimately have no CA file) |
 | `.connectionName(_:)` | Set a connection name |
-| `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return; not subscriptions, persistent-subscription reads, server statistics or `.lazy` reads |
+| `.defaultDeadline(_:)` | Default deadline (ms) for calls that complete before they return, `.buffered` reads included, and for establishing a `read()`; not for iterating a `read()`, subscriptions, persistent-subscription reads or server statistics |
 | `.keepAlive(_:)` | Configure keep-alive settings |
 | `.discoveryInterval(_:)` | Set cluster discovery polling interval |
 | `.maxDiscoveryAttempts(_:)` | Set maximum cluster discovery attempts |
@@ -228,8 +228,8 @@ let settings = ClientSettings(
 A cluster elects a new leader whenever the current one restarts, resigns or loses contact with the other nodes. An election takes a few seconds, and during that window:
 
 - Leader-only commands (appends, deletes, persistent-subscription management) sent to the old leader are rejected. The server answers with gRPC status `UNAVAILABLE` and the metadata `exception: not-leader`; the client surfaces this as ``KurrentError/grpcConnectionError(cause:)``.
-- Reads keep working: a demoted node still serves them. A `.lazy` read that is already streaming is not retried — only establishing the call is.
-- `grpcConnectionError`, `grpcError`, `grpcRuntimeError`, `deadlineExceeded` and `notLeaderException` count as node failures. For those, the client drops the cached node, rediscovers the leader through gossip and retries the operation according to ``ClientSettings/operationRetryPolicy``. A task that was cancelled is never retried; a cancelled `read()` throws ``KurrentError/connectionClosed``.
+- Reads keep working: a demoted node still serves them. A `read()` that is already streaming is not retried — only establishing it is, and a `deadlineExceeded` while establishing it is final.
+- `grpcConnectionError`, `grpcError`, `grpcRuntimeError`, `deadlineExceeded` and `notLeaderException` count as node failures. For those, the client drops the cached node, rediscovers the leader through gossip and retries the operation according to ``ClientSettings/operationRetryPolicy``. A task that was cancelled is never retried; a cancelled `read()` throws `CancellationError`, and a cancelled `.buffered` read throws ``KurrentError/connectionClosed``.
 
 The default policy is **2 attempts with no delay** — one immediate retry. That covers the common case where the new leader is already elected when the first call fails. If the election is still in progress when the retry runs, the error reaches your code:
 
@@ -312,10 +312,12 @@ let client = KurrentDBClient(settings: settings)
 
 Create one client per application and share it. The client manages its connections for you:
 
-- Calls that complete before they return — appends, deletes, stream metadata, reads of a stream or of `$all`, projection statistics, user details, projection and user management, server operations — share one connection per node and its HTTP/2 stream budget. A shared connection that has been idle for an hour is closed and reopened on next use.
+- Calls that complete before they return — appends, deletes, stream metadata, `.buffered` reads, projection statistics, user details, projection and user management, server operations — share one connection per node and its HTTP/2 stream budget.
+- `read()` calls on a stream or on `$all` can hold their HTTP/2 stream until the server has sent the rest of the result, so they share a second connection per node, opened on the first `read()` to it. A read that is still iterating never makes the calls above wait; above the server's per-connection stream limit (about 100), reads wait for each other.
+- A shared connection that has been idle for an hour is closed and reopened on next use.
 - Calls that hand you a live stream — subscriptions, persistent subscriptions, server statistics — each open their own connection, which closes when the stream ends or is cancelled. Long-lived subscriptions therefore never compete with other calls for capacity on a shared connection.
 
-Calling `shutdown()` closes every connection the client opened, ends active subscriptions, and makes every later call — including calls through `Streams` or other values obtained from the client earlier — throw `KurrentError.connectionClosed`. Shutdown is initiated rather than awaited: connections may still be closing when the method returns. Calling it more than once has no further effect. It closes this client and never stops the server: code written against `KurrentDB_V1`, whose `client.shutdown()` shut the server down, uses `try await client.operations(of: .system).shutdown()` for that.
+Calling `shutdown()` closes every connection the client opened, ends active subscriptions and `read()` calls in progress, and makes every later call — including calls through `Streams` or other values obtained from the client earlier — throw `KurrentError.connectionClosed`. Shutdown is initiated rather than awaited: connections may still be closing when the method returns. Calling it more than once has no further effect. It closes this client and never stops the server: code written against `KurrentDB_V1`, whose `client.shutdown()` shut the server down, uses `try await client.operations(of: .system).shutdown()` for that.
 
 ```swift
 client.shutdown()
@@ -364,10 +366,10 @@ This appends without checking whether the stream exists or what revision it's at
 Read the events back from `some-stream`:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+let responses = client.streams(specified: "some-stream").read {
     $0.revision = .start
     $0.limit = 10
-}.buffered
+}
 
 for try await response in responses {
     let readEvent = try response.event

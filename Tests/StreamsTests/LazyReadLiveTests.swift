@@ -107,27 +107,25 @@ struct LazyReadLiveTests: Sendable {
         case .success:
             Issue.record("RPC A ended without being cancelled")
         case let .failure(error):
-            let cancelled = error is CancellationError || (error as? RPCError)?.code == .cancelled
-            #expect(cancelled, "RPC A ended with \(error) instead of cancellation")
+            // A raw grpc-swift call, not a KurrentDB read: cancelling its task surfaces as CancellationError.
+            #expect(error is CancellationError, "RPC A ended with \(error) instead of cancellation")
         }
         #expect(before == 200)
         #expect(after == 200)
         #expect(client.selector.connections.createdSharedConnectionCount == createdBefore)
     }
 
-    @Test("lazy returns the same events as read() and as buffered")
+    @Test("read() returns the same events as buffered")
     func lazyMatchesBuffered() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 50, to: stream)
 
-        let viaRead = try await stream.read().buffered.reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
+        let viaRead = try await stream.read().reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
         let viaBuffered = try await stream.read().buffered.reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
-        let viaLazy = try await stream.read().lazy.reduce(into: [UUID]()) { $0.append(try $1.event.record.id) }
-        #expect(viaLazy == viaRead)
         #expect(viaBuffered == viaRead)
-        #expect(viaLazy.count == 50)
+        #expect(viaRead.count == 50)
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
@@ -138,7 +136,7 @@ struct LazyReadLiveTests: Sendable {
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 300, to: stream)
 
-        var iterator = stream.read().lazy.makeAsyncIterator()
+        var iterator = stream.read().makeAsyncIterator()
         let first = try await iterator.next()
         #expect(first != nil)
         #expect(try await readRetainCount(client) == 1)             // positive control: the lease is held
@@ -154,23 +152,23 @@ struct LazyReadLiveTests: Sendable {
         #expect(call.handoff.deliveredCount == 1)
         await call.close()
 
-        iterator = stream.read().lazy.makeAsyncIterator()   // release the first iterator → its RPC ends
+        iterator = stream.read().makeAsyncIterator()   // release the first iterator → its RPC ends
         _ = iterator
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
-    @Test("A Lazy value can be iterated twice; each iteration is its own RPC")
+    @Test("A ReadCall can be iterated twice; each iteration is its own RPC")
     func lazyIsReiterable() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 20, to: stream)
-        let lazy = stream.read().lazy
+        let call = stream.read()
 
         var firstRun = 0
-        for try await _ in lazy { firstRun += 1; if firstRun == 3 { break } }
+        for try await _ in call { firstRun += 1; if firstRun == 3 { break } }
         var secondRun = 0
-        for try await _ in lazy { secondRun += 1 }
+        for try await _ in call { secondRun += 1 }
         #expect(firstRun == 3)
         #expect(secondRun == 20)
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
@@ -187,7 +185,7 @@ struct LazyReadLiveTests: Sendable {
         let reader = Task {
             defer { signal.finish() }
             var count = 0
-            for try await _ in stream.read().lazy {
+            for try await _ in stream.read() {
                 count += 1
                 if count == 1 { signal.yield() }
                 try? await Task.sleep(for: .milliseconds(50))   // non-throwing wait: cancellation must come from the SDK
@@ -210,7 +208,7 @@ struct LazyReadLiveTests: Sendable {
         do { for try await _ in try await stream.read().buffered {} } catch { bufferedError = error }
 
         var lazyError: (any Error)?
-        let iterator = stream.read().lazy.makeAsyncIterator()
+        let iterator = stream.read().makeAsyncIterator()
         do { _ = try await iterator.next() } catch { lazyError = error }
         let afterError = try await iterator.next()
 
@@ -230,7 +228,7 @@ struct LazyReadLiveTests: Sendable {
         let unauthorised = stream.authenticated(.credentials(username: "admin", password: "wrong-password"))
         var count = 0
         await #expect(throws: KurrentError.self) {
-            for try await _ in unauthorised.read().lazy { count += 1 }
+            for try await _ in unauthorised.read() { count += 1 }
         }
         #expect(count == 0)
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
@@ -240,7 +238,7 @@ struct LazyReadLiveTests: Sendable {
     func allStreamsLazy() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
-        let count = try await client.allStreams.read { $0.limit = 5 }.lazy.reduce(0) { total, _ in total + 1 }
+        let count = try await client.allStreams.read { $0.limit = 5 }.reduce(0) { total, _ in total + 1 }
         #expect(count == 5)
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
@@ -252,7 +250,7 @@ struct LazyReadLiveTests: Sendable {
         try await appendEvents(count: 1, to: stream)
         client.shutdown()
         await #expect(throws: KurrentError.connectionClosed) {
-            for try await _ in stream.read().lazy {}
+            for try await _ in stream.read() {}
         }
     }
 
@@ -269,7 +267,7 @@ struct LazyReadLiveTests: Sendable {
             defer { signal.finish() }
             var count = 0
             do {
-                for try await _ in stream.read().lazy {
+                for try await _ in stream.read() {
                     count += 1
                     if count == 1 { signal.yield() }
                     try? await Task.sleep(for: .milliseconds(1))   // keep the read in progress past the shutdown
@@ -298,19 +296,18 @@ struct LazyReadLiveTests: Sendable {
         #expect(client.selector.connections.shutdownHandlerCount == 0)
     }
 
-    @Test("Cancelling one lazy read leaves a concurrent read on the shared connection intact")
+    @Test("Cancelling one read leaves a concurrent read on the read connection intact")
     func cancellingLazyKeepsSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 300, to: stream)
-        let createdBefore = client.selector.connections.createdSharedConnectionCount
 
         let (firstElement, signal) = AsyncStream.makeStream(of: Void.self)
         let reader = Task {
             defer { signal.finish() }
             var count = 0
-            for try await _ in stream.read().lazy {
+            for try await _ in stream.read() {
                 count += 1
                 if count == 1 { signal.yield() }
                 try? await Task.sleep(for: .milliseconds(50))   // non-throwing: cancellation must come from the SDK
@@ -325,15 +322,17 @@ struct LazyReadLiveTests: Sendable {
             return first
         }
         try #require(arrived, "the lazy read never produced its first element")
+        // The reader opened the read connection; the reads below share it.
+        let createdBefore = client.selector.connections.createdReadConnectionCount
 
-        let before = try await stream.read().buffered.reduce(0) { n, _ in n + 1 }
+        let before = try await stream.read().reduce(0) { n, _ in n + 1 }
         reader.cancel()
         await #expect(throws: CancellationError.self) { _ = try await reader.value }
-        let after = try await stream.read().buffered.reduce(0) { n, _ in n + 1 }
+        let after = try await stream.read().reduce(0) { n, _ in n + 1 }
 
         #expect(before == 300)
         #expect(after == 300)
-        #expect(client.selector.connections.createdSharedConnectionCount == createdBefore)
+        #expect(client.selector.connections.createdReadConnectionCount == createdBefore)
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
@@ -352,7 +351,7 @@ struct LazyReadLiveTests: Sendable {
         try await appendEvents(count: 300, to: client.streams(specified: name))
         let timed = streams(client, name: name, timeout: .seconds(2))
 
-        let iterator = timed.read().lazy.makeAsyncIterator()
+        let iterator = timed.read().makeAsyncIterator()
         _ = try await iterator.next()
         try await Task.sleep(for: .seconds(4))   // the producer is suspended in send; the deadline expires
         var failure: (any Error)?
@@ -424,7 +423,7 @@ struct LazyReadLiveTests: Sendable {
             for _ in 0 ..< 150 {
                 group.addTask {
                     var first = true
-                    for try await _ in stream.read().lazy {
+                    for try await _ in stream.read() {
                         if first { first = false; started.increment() }
                         try await Task.sleep(for: .milliseconds(60))
                     }
@@ -459,9 +458,9 @@ struct LazyReadLiveTests: Sendable {
         let node = try await client.selector.select()
         let expiry = await client.selector.selectedNodeExpiry   // a rediscovery would renew it
 
-        var held: [Streams<SpecifiedStream>.ReadCall.Lazy.Iterator] = []
+        var held: [Streams<SpecifiedStream>.ReadCall.Iterator] = []
         for _ in 0 ..< 100 {
-            let iterator = stream.read().lazy.makeAsyncIterator()
+            let iterator = stream.read().makeAsyncIterator()
             _ = try await iterator.next()
             held.append(iterator)
         }
@@ -473,7 +472,7 @@ struct LazyReadLiveTests: Sendable {
         let start = ContinuousClock.now
         let blocked = Task { () -> (any Error)? in
             do {
-                _ = try await stream.read().lazy.makeAsyncIterator().next()
+                _ = try await stream.read().makeAsyncIterator().next()
                 return nil
             } catch {
                 return error
@@ -509,9 +508,9 @@ struct LazyReadLiveTests: Sendable {
 
         var outerCount = 0
         var innerCount = 0
-        for try await _ in outer.read().lazy {
+        for try await _ in outer.read() {
             outerCount += 1
-            for try await _ in inner.read().lazy { innerCount += 1 }
+            for try await _ in inner.read() { innerCount += 1 }
         }
         #expect(outerCount == 5)
         #expect(innerCount == 25)
