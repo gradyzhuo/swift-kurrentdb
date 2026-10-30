@@ -1,0 +1,257 @@
+# Live benchmarks (Benchmarks/Live): the SDK against a real KurrentDB server on one GitHub-hosted VM.
+#
+# - Comparison layer (`prepare` -> `cells` -> `merge`): on demand and on release tags. Each cell (scenario x event
+#   size, `Benchmarks/Live/config/cells.json`) is one job: the server container is pinned to CPUs 0,1 and every
+#   client (Swift, .NET, ghz where it applies) to CPUs 2,3, interleaved over the cell's rounds. `merge` assembles the
+#   results bundle and `report.html` from every cell's artifact.
+# - Trend layer (`trend`): nightly on main, Swift only, one moderate rate per headline cell, uploaded to Bencher.
+# - The harness's own tests run in `.github/workflows/live-benchmarks-tests.yml` on every change to it.
+#
+# Nothing is committed: a person reviews a comparison run and commits its bundle under
+# `Benchmarks/Live/results/` in a pull request (BENCHMARKS.md, "Live benchmarks"). The live suite never fails a job
+# on a latency threshold: runner CPUs differ between runs, so a hard threshold would fail on noise.
+#
+# Third-party actions are pinned to full commit SHAs (version in the trailing comment) so an upstream tag or branch
+# that moves cannot run new code with this repository's secrets.
+name: Live benchmarks
+on:
+  workflow_dispatch:
+    inputs:
+      cells:
+        description: "Comma-separated cell ids from Benchmarks/Live/config/cells.json (empty: every cell)"
+        required: false
+        default: ""
+  push:
+    tags: ['*.*.*']
+    # TEMPORARY (revert before merging): smoke-run one cell from the PR branch, since workflow_dispatch needs the
+    # workflow on the default branch.
+    branches: [docs/live-benchmarks-design]
+  schedule:
+    - cron: '0 18 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Select cells
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      cells: ${{ steps.select.outputs.cells }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # TEMPORARY (revert before merging): how the runner's filesystems map to /proc/diskstats.
+      - name: Disk diagnostics
+        run: |
+          d=$(mktemp -d)
+          stat -c 'st_dev=%d major=%t minor=%T fs=%T' "$d" || true
+          stat -f -c 'fstype=%T' "$d" || true
+          findmnt -T "$d" || true
+          findmnt -T /mnt || true
+          lsblk -o NAME,MAJ:MIN,TYPE,FSTYPE,MOUNTPOINTS || true
+          cat /proc/diskstats | awk '{print $1, $2, $3}'
+          grep -E ' / | /tmp | /mnt ' /proc/self/mountinfo || true
+          rmdir "$d"
+
+      # The JSON array of cell ids for the matrix: every cell, or the ones named in the `cells` input (an unknown id
+      # fails here rather than as an empty job later).
+      - name: Select cells
+        id: select
+        env:
+          REQUESTED: ${{ github.event.inputs.cells || (github.ref == 'refs/heads/docs/live-benchmarks-design' && 'rebuild-300-tls-L10,rebuild-300-tls-L100,rebuild-300-tls-L1000' || '') }}  # TEMPORARY
+        run: |
+          all=$(jq -c '[.cells[].id]' Benchmarks/Live/config/cells.json)
+          if [ -z "${REQUESTED//[[:space:],]/}" ]; then
+            selected="$all"
+          else
+            requested=$(jq -c -n --arg r "$REQUESTED" '$r | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(. != "")) | unique')
+            unknown=$(jq -c -n --argjson all "$all" --argjson req "$requested" '$req - $all')
+            if [ "$unknown" != "[]" ]; then
+              echo "::error::Unknown cell ids: $unknown. Known: $all"
+              exit 1
+            fi
+            selected=$(jq -c -n --argjson all "$all" --argjson req "$requested" '$all | map(select(. as $id | $req | index($id)))')
+          fi
+          echo "cells=$selected" >> "$GITHUB_OUTPUT"
+          echo "Cells: $selected" >> "$GITHUB_STEP_SUMMARY"
+
+  cells:
+    name: Cell ${{ matrix.cell }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        cell: ${{ fromJSON(needs.prepare.outputs.cells) }}
+    runs-on: ubuntu-latest
+    # The orchestrator refuses a cell estimated over 330 minutes; GitHub's job limit is 360.
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    env:
+      # Recorded in the run metadata; the Swift driver reports it as the SDK commit.
+      LIVE_BENCH_SDK_COMMIT: ${{ github.sha }}
+      LIVE_BENCH_HARNESS_COMMIT: ${{ github.sha }}
+    steps:
+      # The orchestrator starts no trial after 340 minutes of job time (timeout 350), counted from here.
+      - name: Record job start
+        run: echo "LIVE_BENCH_JOB_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
+      # A standard runner starts with about 14 GB free; 4 KB cells need most of it.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h /
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
+        with:
+          swift-version: "6.4"
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "8.0.x"
+
+      # ghz is the transport reference for append and rebuild cells (Benchmarks/Live/docs/driver-contract.md).
+      - name: Install ghz
+        env:
+          GHZ_VERSION: v0.120.0
+          GHZ_SHA256: c1b5eee89fd7c779213f198753d1d961dfbcb257bc470eb3c336f333060a6d6c
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/ghz.tar.gz" "https://github.com/bojand/ghz/releases/download/${GHZ_VERSION}/ghz-linux-x86_64.tar.gz"
+          echo "${GHZ_SHA256}  $RUNNER_TEMP/ghz.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/ghz"
+          tar -xzf "$RUNNER_TEMP/ghz.tar.gz" -C "$RUNNER_TEMP/ghz" ghz
+          echo "$RUNNER_TEMP/ghz" >> "$GITHUB_PATH"
+
+      # Locked resolution on both sides: a resolve that would drift from Benchmarks/Live/Package.resolved or
+      # packages.lock.json fails instead of building other versions than the ones recorded.
+      - name: Build drivers and orchestrator
+        run: |
+          swift build --package-path Benchmarks/Live -c release --force-resolved-versions
+          dotnet build Benchmarks/Live/drivers/dotnet -c Release -p:RestoreLockedMode=true
+          ghz --version
+
+      # Drivers resolve against the repository root (config/drivers.local.json uses repository-relative paths). The
+      # server's data must be on the runner's disk: /tmp is a tmpfs (memory) on GitHub's Ubuntu images, so the cell's
+      # work directory goes under runner.temp (the root ext4 partition) through TMPDIR.
+      - name: Run cell
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          Benchmarks/Live/.build/release/LiveOrchestrator run-cell \
+            --cell "${{ matrix.cell }}" \
+            --drivers Benchmarks/Live/config/drivers.local.json \
+            --out "live-out/cell-${{ matrix.cell }}"
+
+      # Also after a failure: cell-result.json is rewritten after every trial, so a cut-short cell keeps its trials.
+      - name: Upload cell results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cell-${{ matrix.cell }}
+          path: live-out/cell-${{ matrix.cell }}
+          if-no-files-found: warn
+
+  merge:
+    name: Merge report
+    needs: [prepare, cells]
+    # Runs when some cells failed or were cancelled, so their siblings' results still make a report (not when no
+    # cell was selected, nor on the nightly schedule, where `prepare` is skipped).
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
+        with:
+          swift-version: "6.4"
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: cell-*
+          path: live-in
+
+      - name: Merge cells
+        run: |
+          swift build --package-path Benchmarks/Live -c release --product LiveOrchestrator --force-resolved-versions
+          Benchmarks/Live/.build/release/LiveOrchestrator merge --in live-in --out live-results | tee report-path.txt
+          echo "Report: \`$(tail -n 1 report-path.txt)\` in the \`live-benchmark-report\` artifact" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: live-benchmark-report
+          path: live-results
+          if-no-files-found: error
+
+  trend:
+    name: Trend (Swift)
+    if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    env:
+      LIVE_BENCH_SDK_COMMIT: ${{ github.sha }}
+      LIVE_BENCH_HARNESS_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Record job start
+        run: echo "LIVE_BENCH_JOB_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h /
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
+        with:
+          swift-version: "6.4"
+
+      - name: Build Swift driver and orchestrator
+        run: swift build --package-path Benchmarks/Live -c release --force-resolved-versions
+
+      # Every headline cell at one fixed moderate rate, one round, Swift only; writes trend-out/bmf.json.
+      # TMPDIR: the server's data on the runner's disk, not the /tmp tmpfs (see "Run cell").
+      - name: Run trend
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          Benchmarks/Live/.build/release/LiveOrchestrator trend \
+            --drivers Benchmarks/Live/config/drivers.local.json \
+            --out trend-out
+
+      - uses: bencherdev/bencher@f80847436d7157936b40525db4c2a1064124f04a # v0.6.13 (was @main)
+      # Same t-test policy as the offline suite: alert only once a benchmark has 10 runs of history, 99% band of the
+      # last 64 runs. No --error-on-alert: the live suite never fails a job on a latency threshold.
+      - name: Upload to Bencher
+        working-directory: trend-out
+        env:
+          BENCHER_API_KEY: ${{ secrets.BENCHER_API_KEY }}
+        run: |
+          bencher run \
+            --project gradyzhuo-s-project \
+            --branch main \
+            --testbed ubuntu-latest-live \
+            --adapter json \
+            --file bmf.json \
+            --threshold-measure latency \
+            --threshold-test t_test \
+            --threshold-min-sample-size 10 \
+            --threshold-max-sample-size 64 \
+            --threshold-upper-boundary 0.99 \
+            --thresholds-reset
+
+      - name: Upload trend results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: live-trend
+          path: trend-out
+          if-no-files-found: warn
