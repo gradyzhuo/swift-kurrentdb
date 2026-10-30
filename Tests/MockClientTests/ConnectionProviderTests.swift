@@ -217,6 +217,91 @@ struct ConnectionProviderTests {
         #expect(provider.createdSharedConnectionCount == 2)
     }
 
+    // MARK: - Shared: read purpose
+
+    @Test("acquire(purpose: .read) opens a second shared connection to the endpoint, counted and snapshotted apart from the main one")
+    func readPurposeIsASecondConnection() throws {
+        let transports = RecordingTransportProvider()
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = transports
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(3600), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        let main = try provider.acquire(Self.endpointA)
+        let read = try provider.acquire(Self.endpointA, purpose: .read)
+        #expect(main.client !== read.client)
+        #expect(provider.createdSharedConnectionCount == 1)
+        #expect(provider.createdReadConnectionCount == 1)
+        #expect(transports.endpoints == [Self.endpointA, Self.endpointA])
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+
+        // A second read lease reuses the read connection.
+        let again = try provider.acquire(Self.endpointA, purpose: .read)
+        #expect(again.client === read.client)
+        #expect(provider.createdReadConnectionCount == 1)
+        again.release()
+
+        read.release()
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 0)
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+        main.release()
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 0)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 0)
+    }
+
+    @Test("sweep retires an idle read connection and shutdown closes both purposes")
+    func sweepAndShutdownCoverTheReadPurpose() throws {
+        let provider = makeProvider(idleTimeout: .seconds(1))
+
+        let main = try provider.acquire(Self.endpointA)
+        let read = try provider.acquire(Self.endpointA, purpose: .read)
+        main.release()
+        read.release()
+        let lastUsed = max(
+            try #require(provider.sharedEntrySnapshot(for: Self.endpointA)).lastUsed,
+            try #require(provider.readEntrySnapshot(for: Self.endpointA)).lastUsed
+        )
+        #expect(provider.sweep(now: lastUsed + .seconds(2)) == 2)
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA) == nil)
+
+        // Both purposes come back as new connections, then shutdown closes both.
+        let mainAgain = try provider.acquire(Self.endpointA)
+        let readAgain = try provider.acquire(Self.endpointA, purpose: .read)
+        #expect(provider.createdSharedConnectionCount == 2)
+        #expect(provider.createdReadConnectionCount == 2)
+        provider.shutdown()
+        mainAgain.release()
+        readAgain.release()
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(throws: KurrentError.connectionClosed) {
+            try provider.acquire(Self.endpointA, purpose: .read)
+        }
+    }
+
+    @Test("A read connection whose run task ends is removed without touching the main connection")
+    func readRunTaskEndRemovesOnlyTheReadEntry() async throws {
+        let provider = makeProvider()
+        defer { provider.shutdown() }
+
+        let main = try provider.acquire(Self.endpointA)
+        let read = try provider.acquire(Self.endpointA, purpose: .read)
+        defer { main.release() }
+        provider.cancelSharedRunTaskForTesting(Self.endpointA, purpose: .read)
+        #expect(try await eventually { provider.readEntrySnapshot(for: Self.endpointA) == nil })
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+
+        // The late release of the old read lease touches neither entry.
+        let fresh = try provider.acquire(Self.endpointA, purpose: .read)
+        defer { fresh.release() }
+        read.release()
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+        #expect(provider.createdReadConnectionCount == 2)
+        #expect(provider.createdSharedConnectionCount == 1)
+    }
+
     // MARK: - Dedicated
 
     @Test("獨立連線每次都是新的,close 後註銷且 close 是冪等的")

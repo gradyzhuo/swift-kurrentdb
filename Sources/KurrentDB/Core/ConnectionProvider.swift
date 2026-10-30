@@ -16,13 +16,16 @@ import Synchronization
 
 /// Manages two kinds of connections, chosen by whether the RPC **finishes inside** `perform(node:)`:
 ///
-/// - **Shared** (``acquire(_:)``): calls that end inside `perform(node:)` and whose connection
-///   never leaves that scope — single-message responses (`UnaryUnary`, `StreamUnary`) and
-///   `UnaryStream` usecases whose `send()` drains the stream before returning (marked
+/// - **Shared** (``acquire(_:purpose:)``): calls that end inside `perform(node:)` and whose
+///   connection never leaves that scope — single-message responses (`UnaryUnary`, `StreamUnary`)
+///   and `UnaryStream` usecases whose `send()` drains the stream before returning (marked
 ///   `BufferedStreamResponse`: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
-///   `Users.Details`). One long-lived connection per endpoint; these calls share that
-///   connection's HTTP/2 stream budget. A lazy read (`ScopedStreamResponse`, `read().lazy`)
-///   also uses it, holding its lease for as long as the iterator lives.
+///   `Users.Details`), plus gossip and server features. Up to two long-lived connections per
+///   endpoint, one per ``ConnectionPurpose``: these calls share the `.main` one's HTTP/2 stream
+///   budget. A lazy read (`ScopedStreamResponse`, `read().lazy`) holds its lease, and an HTTP/2
+///   stream, for as long as the iterator lives, so it takes the `.read` one: held reads queue
+///   only behind each other above the server's per-connection stream limit, never in front of a
+///   unary call. The `.read` connection opens on the first lazy read to the endpoint.
 /// - **Dedicated** (``openDedicated(for:)``): RPCs that carry the stream out of `perform`
 ///   (subscriptions, persistent subscriptions, `Monitoring.Stats`, `StreamStream`). They may
 ///   hold an HTTP/2 stream slot indefinitely, so each call gets its own connection and never
@@ -58,6 +61,12 @@ import Synchronization
 package final class ConnectionProvider: Sendable {
     package typealias Client = GRPCClient<AnyClientTransport>
 
+    /// The key of a shared entry: one shared connection per endpoint and purpose.
+    private struct SharedKey: Hashable {
+        let endpoint: Endpoint
+        let purpose: ConnectionPurpose
+    }
+
     private struct SharedEntry {
         let generation: UInt64
         let client: Client
@@ -67,11 +76,12 @@ package final class ConnectionProvider: Sendable {
     }
 
     private struct State {
-        var shared: [Endpoint: SharedEntry] = [:]
+        var shared: [SharedKey: SharedEntry] = [:]
         var dedicated: [UInt64: DedicatedLifecycle] = [:]
         var nextID: UInt64 = 0
         var isShutdown = false
         var createdSharedConnectionCount = 0
+        var createdReadConnectionCount = 0
         var createdDedicatedConnectionCount = 0
         var sweeper: Task<Void, Never>?
     }
@@ -116,16 +126,20 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Shared connections
 
-    /// 取得 `endpoint` 的共用連線,並把它的 retainCount 加一。
+    /// 取得 `endpoint` 上 `purpose` 那條共用連線,並把它的 retainCount 加一。
     ///
     /// 呼叫端必須在呼叫結束時 ``SharedLease/release()`` —— 在 `perform(node:)` 裡用
     /// `defer { lease.release() }`。查找/發布與 retainCount 遞增在同一個 lock 內完成,
     /// 所以 sweeper 不可能在「查到」與「加一」之間把 entry 移走。
     ///
+    /// - Parameter purpose: `.main` (the default) for every call that ends inside `perform`;
+    ///   `.read` for a lazy read, which holds its stream for as long as the caller iterates.
+    ///   Each purpose is its own connection, entry, generation and idle clock.
     /// - Throws: `KurrentError.connectionClosed` 若 provider 已 shutdown;
     ///           transport 建立失敗時則是對應的 `KurrentError`。
-    package func acquire(_ endpoint: Endpoint) throws(KurrentError) -> SharedLease {
-        if let lease = try retainExisting(endpoint, now: .now) {
+    package func acquire(_ endpoint: Endpoint, purpose: ConnectionPurpose = .main) throws(KurrentError) -> SharedLease {
+        let key = SharedKey(endpoint: endpoint, purpose: purpose)
+        if let lease = try retainExisting(key, now: .now) {
             return lease
         }
 
@@ -137,102 +151,106 @@ package final class ConnectionProvider: Sendable {
             }
             let now = ContinuousClock.now
             // 別人在我們建構期間先發布了:用它的,丟掉我們的(從未 run 過,直接釋放即可)。
-            if var existing = state.shared[endpoint] {
+            if var existing = state.shared[key] {
                 existing.retainCount += 1
                 existing.lastUsed = now
-                state.shared[endpoint] = existing
-                return (SharedLease(provider: self, endpoint: endpoint, generation: existing.generation, client: existing.client), false)
+                state.shared[key] = existing
+                return (SharedLease(provider: self, endpoint: endpoint, purpose: purpose, generation: existing.generation, client: existing.client), false)
             }
             // 在同一個 lock 內建 runTask 並發布完整 entry:任何時刻都不會有一個看得到、
             // 卻沒有可取消 task 的 entry,也不會有逃過登記的 task。
             state.nextID += 1
             let generation = state.nextID
-            let runTask = makeSharedRunTask(client: candidate, endpoint: endpoint, generation: generation)
-            state.shared[endpoint] = SharedEntry(
+            let runTask = makeSharedRunTask(client: candidate, key: key, generation: generation)
+            state.shared[key] = SharedEntry(
                 generation: generation,
                 client: candidate,
                 runTask: runTask,
                 retainCount: 1,
                 lastUsed: now
             )
-            state.createdSharedConnectionCount += 1
-            return (SharedLease(provider: self, endpoint: endpoint, generation: generation, client: candidate), true)
+            switch purpose {
+            case .main: state.createdSharedConnectionCount += 1
+            case .read: state.createdReadConnectionCount += 1
+            }
+            return (SharedLease(provider: self, endpoint: endpoint, purpose: purpose, generation: generation, client: candidate), true)
         }
         if published {
-            logger.debug("[ConnectionProvider] Opened shared connection to \(endpoint.debugDescription)")
+            logger.debug("[ConnectionProvider] Opened shared \(purpose) connection to \(endpoint.debugDescription)")
         }
         return lease
     }
 
-    private func retainExisting(_ endpoint: Endpoint, now: ContinuousClock.Instant) throws(KurrentError) -> SharedLease? {
+    private func retainExisting(_ key: SharedKey, now: ContinuousClock.Instant) throws(KurrentError) -> SharedLease? {
         try state.withLock { state throws(KurrentError) -> SharedLease? in
             guard !state.isShutdown else {
                 throw KurrentError.connectionClosed
             }
-            guard var entry = state.shared[endpoint] else {
+            guard var entry = state.shared[key] else {
                 return nil
             }
             entry.retainCount += 1
             entry.lastUsed = now
-            state.shared[endpoint] = entry
-            return SharedLease(provider: self, endpoint: endpoint, generation: entry.generation, client: entry.client)
+            state.shared[key] = entry
+            return SharedLease(provider: self, endpoint: key.endpoint, purpose: key.purpose, generation: entry.generation, client: entry.client)
         }
     }
 
     /// 只在 generation 相符時生效。entry 已被移除或已換成新的一代時什麼都不做 ——
     /// 晚到的 release 絕不能動到替換上來的 entry 的計數。
-    fileprivate func release(_ endpoint: Endpoint, generation: UInt64) {
+    fileprivate func release(_ endpoint: Endpoint, purpose: ConnectionPurpose, generation: UInt64) {
+        let key = SharedKey(endpoint: endpoint, purpose: purpose)
         let now = ContinuousClock.now
         state.withLock { state in
-            guard var entry = state.shared[endpoint], entry.generation == generation else {
+            guard var entry = state.shared[key], entry.generation == generation else {
                 return
             }
             entry.retainCount = max(0, entry.retainCount - 1)
             entry.lastUsed = now
-            state.shared[endpoint] = entry
+            state.shared[key] = entry
         }
     }
 
-    private func makeSharedRunTask(client: Client, endpoint: Endpoint, generation: UInt64) -> Task<Void, Never> {
+    private func makeSharedRunTask(client: Client, key: SharedKey, generation: UInt64) -> Task<Void, Never> {
         Task { [weak self] in
-            await Self.run(client, endpoint: endpoint)
+            await Self.run(client, endpoint: key.endpoint)
             // weak self 只在收尾時解析,不跨越上面的 await 提升成強引用。
-            self?.sharedRunTaskEnded(endpoint, generation: generation)
+            self?.sharedRunTaskEnded(key, generation: generation)
         }
     }
 
-    private func sharedRunTaskEnded(_ endpoint: Endpoint, generation: UInt64) {
+    private func sharedRunTaskEnded(_ key: SharedKey, generation: UInt64) {
         let removed = state.withLock { state -> Bool in
-            guard state.shared[endpoint]?.generation == generation else {
+            guard state.shared[key]?.generation == generation else {
                 return false
             }
-            state.shared[endpoint] = nil
+            state.shared[key] = nil
             return true
         }
         if removed {
-            logger.debug("[ConnectionProvider] Shared connection to \(endpoint.debugDescription) ended; removed from cache")
+            logger.debug("[ConnectionProvider] Shared \(key.purpose) connection to \(key.endpoint.debugDescription) ended; removed from cache")
         }
     }
 
-    /// 移除所有 `retainCount == 0` 且閒置超過 `idleTimeout` 的共用 entry。
+    /// 移除所有 `retainCount == 0` 且閒置超過 `idleTimeout` 的共用 entry,兩種 purpose 都算。
     ///
     /// 背景 sweeper 定期以 `.now` 呼叫;測試可注入任意時間點。
     ///
     /// - Returns: 被移除的 entry 數量。
     @discardableResult
     package func sweep(now: ContinuousClock.Instant) -> Int {
-        let expired = state.withLock { state -> [(Endpoint, Task<Void, Never>)] in
+        let expired = state.withLock { state -> [(SharedKey, Task<Void, Never>)] in
             let expired = state.shared.filter { _, entry in
                 entry.retainCount == 0 && now - entry.lastUsed > idleTimeout
             }
-            for endpoint in expired.keys {
-                state.shared[endpoint] = nil
+            for key in expired.keys {
+                state.shared[key] = nil
             }
             return expired.map { ($0.key, $0.value.runTask) }
         }
         // 只 cancel 當下捕捉到的舊 task;期間若有人 acquire 建了新的一代,不受影響。
-        for (endpoint, runTask) in expired {
-            logger.debug("[ConnectionProvider] Retiring idle shared connection to \(endpoint.debugDescription)")
+        for (key, runTask) in expired {
+            logger.debug("[ConnectionProvider] Retiring idle shared \(key.purpose) connection to \(key.endpoint.debugDescription)")
             runTask.cancel()
         }
         return expired.count
@@ -280,7 +298,7 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Shutdown
 
-    /// 拒絕之後所有的准入,並取消所有共用連線、已登記的獨立連線與 sweeper。冪等。
+    /// 拒絕之後所有的准入,並取消所有共用連線(兩種 purpose)、已登記的獨立連線與 sweeper。冪等。
     ///
     /// 這是**發起**關閉:返回時連線不保證已經關閉完成。
     package func shutdown() {
@@ -314,10 +332,17 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Introspection (tests)
 
-    /// 至今建立過幾條共用連線。只增不減;計的是 `GRPCClient` 的建立次數,不是 TCP 連線或
-    /// TLS handshake —— transport 內部的重連不會讓它增加。
+    /// 至今建立過幾條 `.main` 共用連線。只增不減;計的是 `GRPCClient` 的建立次數,不是 TCP 連線或
+    /// TLS handshake —— transport 內部的重連不會讓它增加。`.read` 連線另計於
+    /// ``createdReadConnectionCount``。
     package var createdSharedConnectionCount: Int {
         state.withLock { $0.createdSharedConnectionCount }
+    }
+
+    /// How many `.read` shared connections (the ones lazy reads hold their streams on) have been
+    /// created so far. Monotonic, counted like ``createdSharedConnectionCount``.
+    package var createdReadConnectionCount: Int {
+        state.withLock { $0.createdReadConnectionCount }
     }
 
     /// How many dedicated connections have been created so far. Monotonic; the counterpart of
@@ -339,10 +364,19 @@ package final class ConnectionProvider: Sendable {
         package let lastUsed: ContinuousClock.Instant
     }
 
-    /// 測試用:檢視某個 endpoint 目前的共用 entry。
+    /// 測試用:檢視某個 endpoint 目前的 `.main` 共用 entry。
     package func sharedEntrySnapshot(for endpoint: Endpoint) -> SharedEntrySnapshot? {
+        entrySnapshot(SharedKey(endpoint: endpoint, purpose: .main))
+    }
+
+    /// For tests: the endpoint's current `.read` shared entry, the one lazy reads use.
+    package func readEntrySnapshot(for endpoint: Endpoint) -> SharedEntrySnapshot? {
+        entrySnapshot(SharedKey(endpoint: endpoint, purpose: .read))
+    }
+
+    private func entrySnapshot(_ key: SharedKey) -> SharedEntrySnapshot? {
         state.withLock { state in
-            state.shared[endpoint].map {
+            state.shared[key].map {
                 SharedEntrySnapshot(generation: $0.generation, retainCount: $0.retainCount, lastUsed: $0.lastUsed)
             }
         }
@@ -350,8 +384,8 @@ package final class ConnectionProvider: Sendable {
 
     /// 測試用:取消某個共用 entry 的 runTask 但**不**移除 entry,藉此走真正的
     /// 「runTask 結束 → identity-checked 移除」路徑。
-    package func cancelSharedRunTaskForTesting(_ endpoint: Endpoint) {
-        let runTask = state.withLock { $0.shared[endpoint]?.runTask }
+    package func cancelSharedRunTaskForTesting(_ endpoint: Endpoint, purpose: ConnectionPurpose = .main) {
+        let runTask = state.withLock { $0.shared[SharedKey(endpoint: endpoint, purpose: purpose)]?.runTask }
         runTask?.cancel()
     }
 
@@ -394,17 +428,27 @@ package final class ConnectionProvider: Sendable {
     }
 }
 
+/// Which of an endpoint's two shared connections a call uses (see ``ConnectionProvider``).
+package enum ConnectionPurpose: Hashable, Sendable {
+    /// Unary calls, `.buffered` reads, gossip, server features: everything that ends inside `perform`.
+    case main
+    /// Lazy reads, which hold their stream for as long as the caller iterates.
+    case read
+}
+
 /// 一次共用連線的使用權。在 `perform(node:)` 內以 `defer { lease.release() }` 釋放。
 package final class SharedLease: Sendable {
     package let client: ConnectionProvider.Client
     private let provider: ConnectionProvider
     private let endpoint: Endpoint
+    private let purpose: ConnectionPurpose
     private let generation: UInt64
     private let released = Mutex(false)
 
-    fileprivate init(provider: ConnectionProvider, endpoint: Endpoint, generation: UInt64, client: ConnectionProvider.Client) {
+    fileprivate init(provider: ConnectionProvider, endpoint: Endpoint, purpose: ConnectionPurpose, generation: UInt64, client: ConnectionProvider.Client) {
         self.provider = provider
         self.endpoint = endpoint
+        self.purpose = purpose
         self.generation = generation
         self.client = client
     }
@@ -416,7 +460,7 @@ package final class SharedLease: Sendable {
             return !released
         }
         guard first else { return }
-        provider.release(endpoint, generation: generation)
+        provider.release(endpoint, purpose: purpose, generation: generation)
     }
 
     deinit {

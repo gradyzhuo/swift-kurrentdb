@@ -131,6 +131,8 @@ let package = Package(
             name: "StreamsTests",
             dependencies: [
                 "KurrentDB",
+                // SmallWindowTransportProvider: a Posix transport with a small HTTP/2 window.
+                .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
             ],
             resources: [
                 .copy("Resources/ca.crt"),
