@@ -216,6 +216,11 @@ jobs:
           # Swift 6.4 dropped Amazon Linux 2 images (AL2 is EOL); use AL2023 instead.
           - "swift:6.4-amazonlinux2023" # Amazon Linux 2023 — AWS/Lambda deployment target
           - "swift:6.4-bookworm"       # Debian 12 — stable, covers non-Ubuntu Debian family
+        include:
+          # This cell also compiles Benchmarks/OfflineBenchmarks (Package.swift adds it on Linux
+          # only with KURRENTDB_BENCHMARKS=1; package-benchmark needs libjemalloc-dev).
+          - image: "swift:6.4-bookworm"
+            benchmarks: "1"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -225,8 +230,9 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
+            ${{ matrix.benchmarks == '1' && '-e KURRENTDB_BENCHMARKS=1 -e NO_COLOR=1' || '' }} \
             ${{ matrix.image }} \
-            bash -c "swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
+            bash -c "${{ matrix.benchmarks == '1' && 'apt-get update && apt-get install -y libjemalloc-dev && ' || '' }}swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
 
   # The scripts package (scripts/Package.swift: doc snippets, doc versions, site assembly,
   # release readiness, benchmark conversion) is tested on every push. The release tag locks
