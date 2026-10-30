@@ -98,14 +98,14 @@ struct ConnectionReuseLiveTests: Sendable {
         let warmed = client.selector.connections.createdSharedConnectionCount
 
         var count = 0
-        for try await _ in try await stream.read() {
+        for try await _ in try await stream.read().buffered {
             count += 1
         }
         #expect(count == 2)
 
         let missing = client.streams(specified: "ConnectionReuse-missing-\(UUID().uuidString)")
         await #expect(throws: (any Error).self) {
-            for try await _ in try await missing.read() {}
+            for try await _ in try await missing.read().buffered {}
         }
 
         // A read never creates a dedicated connection. createdDedicatedConnectionCount is
@@ -129,7 +129,7 @@ struct ConnectionReuseLiveTests: Sendable {
         let warmed = client.selector.connections.createdSharedConnectionCount
 
         for _ in 0 ..< 20 {
-            for try await _ in try await client.allStreams.read(configure: { $0.limit = 5 }) {}
+            for try await _ in try await client.allStreams.read(configure: { $0.limit = 5 }).buffered {}
         }
         for _ in 0 ..< 20 {
             _ = try await client.projections(of: .anyContinuous).list()
@@ -174,7 +174,7 @@ struct ConnectionReuseLiveTests: Sendable {
             for _ in 0 ..< 150 {
                 group.addTask {
                     var n = 0
-                    for try await _ in try await stream.read() { n += 1 }
+                    for try await _ in try await stream.read().buffered { n += 1 }
                     return n
                 }
             }
@@ -219,7 +219,7 @@ struct ConnectionReuseLiveTests: Sendable {
         let baseline = try #require(client.selector.connections.sharedEntrySnapshot(for: endpoint)?.retainCount)
 
         let reader = Task {
-            for try await _ in try await stream.read() {}
+            for try await _ in try await stream.read().buffered {}
         }
         var sawLeaseHeld = false
         for _ in 0 ..< 2000 {
@@ -251,7 +251,7 @@ struct ConnectionReuseLiveTests: Sendable {
 
         let reader = Task {
             do {
-                for try await _ in try await stream.read() {}
+                for try await _ in try await stream.read().buffered {}
             } catch {}
         }
         try await Task.sleep(for: .milliseconds(5))
@@ -378,7 +378,7 @@ struct ConnectionReuseLiveTests: Sendable {
             _ = try await stream.subscribe()
         }
         await #expect(throws: KurrentError.connectionClosed) {
-            for try await _ in try await stream.read() {}
+            for try await _ in try await stream.read().buffered {}
         }
         #expect(client.selector.connections.activeDedicatedConnectionCount == 0)
     }

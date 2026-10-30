@@ -17,7 +17,7 @@ Get a ``Streams`` value for the stream with ``KurrentDBClient/streams(specified:
 ```swift
 let responses = try await client.streams(specified: "some-stream").read {
     $0.revision = .start
-}
+}.buffered
 ```
 
 `read` returns an `AsyncThrowingStream` you iterate with `for try await`:
@@ -50,7 +50,7 @@ Credentials set on ``ClientSettings`` apply to every call. To use different cred
 ```swift
 let responses = try await client.streams(specified: "some-stream")
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .read()
+    .read().buffered
 ```
 
 ## Reading from a revision
@@ -61,7 +61,7 @@ Pass a specific revision to start from it:
 let responses = try await client.streams(specified: "some-stream").read {
     $0.revision = .specified(10)
     $0.limit = 20
-}
+}.buffered
 ```
 
 ## Reading backwards
@@ -72,7 +72,7 @@ To read a stream backwards, start from the end and set the direction:
 let responses = try await client.streams(specified: "some-stream").read {
     $0.revision = .end
     $0.direction = .backward
-}
+}.buffered
 
 for try await response in responses {
     print(try response.event.record)
@@ -89,7 +89,7 @@ Reading a stream that doesn't exist throws ``KurrentError/resourceNotFound(reaso
 do {
     let responses = try await client.streams(specified: "some-stream").read {
         $0.revision = .specified(10)
-    }
+    }.buffered
     for try await response in responses {
         print(try response.event.record)
     }
@@ -112,7 +112,7 @@ Reading `$all` works like reading an individual stream, with two differences: it
 ```swift
 let responses = try await client.allStreams.read {
     $0.position = .start
-}
+}.buffered
 
 for try await response in responses {
     print("Event>", try response.event.record)
@@ -127,7 +127,7 @@ To resolve link events, set `resolveLinksEnabled`:
 let responses = try await client.allStreams.read {
     $0.position = .start
     $0.resolveLinksEnabled = true
-}
+}.buffered
 ```
 
 To start from a known position:
@@ -137,7 +137,7 @@ let responses = try await client.allStreams
     .authenticated(.credentials(username: "admin", password: "changeit"))
     .read {
         $0.position = .specified(commit: 1110, prepare: 1110)
-    }
+    }.buffered
 ```
 
 ### Reading backwards
@@ -147,7 +147,7 @@ let responses = try await client.allStreams.read {
     $0.position = .end
     $0.direction = .backward
     $0.limit = 1
-}
+}.buffered
 ```
 
 > Tip: Read one event backwards to find the last position in `$all`.
@@ -160,12 +160,12 @@ Set `filter` to a ``StreamFilter`` to have the server return only events whose s
 // Events whose type starts with "Order"
 let orderEvents = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "Order")
-}
+}.buffered
 
 // Events from streams whose name matches a regular expression
 let customerEvents = try await client.allStreams.read {
     $0.filter = .onStreamName(regex: "^customer-")
-}
+}.buffered
 ```
 
 ### Handling system events
@@ -175,7 +175,7 @@ let customerEvents = try await client.allStreams.read {
 ```swift
 let responses = try await client.allStreams.read {
     $0.position = .start
-}
+}.buffered
 
 for try await response in responses {
     let readEvent = try response.event

@@ -120,7 +120,7 @@ let responses = try await stream.read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 1
-}
+}.buffered
 
 for try await response in responses {
     let revision = try response.event.record.revision

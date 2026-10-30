@@ -44,7 +44,7 @@ let count = try await withBorrowedClient { borrowed in
     try await client.streams(specified: "orders").append(events: [eventData])
 
     var count = 0
-    for try await _ in try await client.streams(specified: "orders").read() {
+    for try await _ in try await client.streams(specified: "orders").read().buffered {
         count += 1
     }
     return count
