@@ -296,30 +296,27 @@ extension KurrentError {
     }
 }
 
-/// Maps an error that ends a streamed response to the server's domain error, when it carries one.
+/// The error a consumer receives when a server-streaming call ends after the server accepted it.
 ///
-/// A read's response stream can end with a status the server rejected the call with, e.g.
-/// `stream-deleted` for a tombstoned stream. Only those server exceptions are mapped; every other
-/// error, including a post-acceptance deadline, reaches the consumer unchanged.
-package func serverExceptionOrOriginal(_ error: any Error) -> any Error {
-    guard let rpcError = error as? RPCError else { return error }
-    return KurrentError.serverException(from: rpcError) ?? error
-}
-
-/// Maps the error that ends a buffered read's response stream.
-///
-/// A call the server rejected before accepting it (a status-only response, such as access denied
-/// or a tombstoned stream) is mapped like any rejected call, the same as `read().lazy` maps it.
-/// After the server accepted the call, only server exceptions are mapped
-/// (``serverExceptionOrOriginal(_:)``), so a post-acceptance deadline stays the RPC's own error.
-package func bufferedReadFailure(_ error: any Error, rejected: Bool) -> any Error {
-    guard rejected, let rpcError = error as? RPCError else { return serverExceptionOrOriginal(error) }
-    do {
-        try rpcError.rethrow(usage: "read")
-    } catch {
+/// `KurrentError` and `CancellationError` pass through; an `RPCError` goes through the same
+/// `rethrow(usage:)` table every unary call uses (so KurrentDB's own meaning wins and anything it
+/// has none for stays visible as `.grpcError(cause:)`); anything else becomes `.internalClientError`, its reason naming the original error.
+/// A call the server rejected before accepting it (a status-only response) maps the same way.
+package func mapStreamError(_ error: any Error, usage: String) -> any Error {
+    switch error {
+    case is KurrentError, is CancellationError:
         return error
+    case let rpcError as RPCError:
+        do {
+            try rpcError.rethrow(usage: usage)
+        } catch {
+            return error
+        }
+        return KurrentError.internalClientError(reason: "`\(usage)` failed.")   // unreachable: rethrow always throws
+    default:
+        logger.debug("'\(usage)' failed with unexpected error: \(error)")
+        return KurrentError.internalClientError(reason: "`\(usage)` failed: \(error)")
     }
-    return error
 }
 
 extension IOError {

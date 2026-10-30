@@ -18,7 +18,7 @@ struct ServerExceptionMappingTests {
 
     @Test("A stream-deleted trailer becomes resourceDeleted")
     func mapsStreamDeleted() {
-        let mapped = serverExceptionOrOriginal(streamDeleted("orders-1"))
+        let mapped = mapStreamError(streamDeleted("orders-1"), usage: "t")
         guard case let .resourceDeleted(resource)? = mapped as? KurrentError else {
             Issue.record("expected KurrentError.resourceDeleted, got \(mapped)")
             return
@@ -26,39 +26,30 @@ struct ServerExceptionMappingTests {
         #expect(resource == "orders-1")
     }
 
-    @Test("An RPC error without a server exception passes through unchanged")
-    func keepsDeadline() {
-        // Post-acceptance deadlines reach a read's consumer as the RPC's own error (LazyReadLiveTests).
-        let mapped = serverExceptionOrOriginal(RPCError(code: .deadlineExceeded, message: "RPC timed out"))
-        #expect((mapped as? RPCError)?.code == .deadlineExceeded)
-    }
-
-    @Test("Non-RPC errors pass through unchanged")
-    func keepsOtherErrors() {
-        #expect(serverExceptionOrOriginal(CancellationError()) is CancellationError)
-        if case .connectionClosed? = serverExceptionOrOriginal(KurrentError.connectionClosed) as? KurrentError {} else {
-            Issue.record("expected KurrentError.connectionClosed to pass through")
+    @Test("mapStreamError: RPC codes map like unary calls, KurrentError and CancellationError pass through, other errors are internal")
+    func mapStreamErrorTable() {
+        #expect(mapStreamError(RPCError(code: .deadlineExceeded, message: ""), usage: "t") as? KurrentError == .deadlineExceeded)
+        #expect(mapStreamError(RPCError(code: .cancelled, message: ""), usage: "t") as? KurrentError == .connectionClosed)
+        #expect(mapStreamError(RPCError(code: .permissionDenied, message: ""), usage: "t") as? KurrentError == .accessDenied)
+        if case .grpcError? = mapStreamError(RPCError(code: .unknown, message: "x"), usage: "t") as? KurrentError {} else { Issue.record("unknown codes stay visible as grpcError") }
+        #expect(mapStreamError(CancellationError(), usage: "t") is CancellationError)
+        #expect(mapStreamError(KurrentError.accessDenied, usage: "t") as? KurrentError == .accessDenied)
+        struct Other: Error, CustomStringConvertible { var description: String { "undecodable frame" } }
+        if case let .internalClientError(reason)? = mapStreamError(Other(), usage: "t") as? KurrentError {
+            #expect(reason.contains("undecodable frame"), "the reason keeps the original error: \(reason)")
+        } else {
+            Issue.record("foreign errors become internalClientError")
         }
     }
 
-    @Test("A rejected buffered read is mapped like any rejected call")
-    func rejectedReadIsFullyMapped() {
-        let denied = bufferedReadFailure(RPCError(code: .permissionDenied, message: "Access Denied"), rejected: true)
-        if case .accessDenied? = denied as? KurrentError {} else { Issue.record("expected accessDenied, got \(denied)") }
-
-        let deleted = bufferedReadFailure(streamDeleted("orders-1"), rejected: true)
-        if case .resourceDeleted("orders-1")? = deleted as? KurrentError {} else { Issue.record("expected resourceDeleted, got \(deleted)") }
-    }
-
-    @Test("After acceptance a buffered read maps only server exceptions")
-    func acceptedReadMapsOnlyServerExceptions() {
-        let denied = bufferedReadFailure(RPCError(code: .permissionDenied, message: "Access Denied"), rejected: false)
-        #expect((denied as? RPCError)?.code == .permissionDenied)
-
-        let deadline = bufferedReadFailure(RPCError(code: .deadlineExceeded, message: "RPC timed out"), rejected: false)
-        #expect((deadline as? RPCError)?.code == .deadlineExceeded)
-
-        let deleted = bufferedReadFailure(streamDeleted("orders-1"), rejected: false)
-        if case .resourceDeleted? = deleted as? KurrentError {} else { Issue.record("expected resourceDeleted, got \(deleted)") }
+    @Test("A stream-deleted trailer wins over the status code, whichever side of acceptance it ends")
+    func trailerWinsOverStatusCode() {
+        // A status-only rejection (access denied, tombstoned stream) and a stream that ends after
+        // acceptance go through the same table.
+        if case .resourceDeleted("orders-1")? = mapStreamError(streamDeleted("orders-1"), usage: "t") as? KurrentError {} else {
+            Issue.record("expected resourceDeleted")
+        }
+        #expect(mapStreamError(RPCError(code: .unauthenticated, message: "Access Denied"), usage: "t") as? KurrentError == .accessDenied)
+        #expect(mapStreamError(RPCError(code: .internalError, message: "boom"), usage: "t") as? KurrentError == .serverError("boom"))
     }
 }
