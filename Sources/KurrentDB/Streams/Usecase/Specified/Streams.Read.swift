@@ -56,8 +56,8 @@ extension Streams {
                     }
                     continuation.finish()
                 } catch {
-                    let rejected = if case .failure = response.accepted { true } else { false }
-                    continuation.finish(throwing: bufferedReadFailure(error, rejected: rejected))
+                    // Before or after acceptance alike: the consumer sees a KurrentError (or CancellationError).
+                    continuation.finish(throwing: mapStreamError(error, usage: "\(Self.name)"))
                 }
                 // Older grpc-swift ends the loop above quietly when the call deadline cancels this
                 // handler, and the call then returns a truncated result as if it were complete.
