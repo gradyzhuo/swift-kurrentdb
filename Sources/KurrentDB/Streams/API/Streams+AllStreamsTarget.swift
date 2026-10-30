@@ -45,7 +45,8 @@ extension Streams where Target == AllStreamsTarget {
         return ReadCall(
             selector: selector,
             openCall: { node throws(KurrentError) in try await usecase.open(node: node, callOptions: callOptions, credentials: credentials) },
-            bufferedRead: { () throws(KurrentError) in try await usecase.perform(selector: selector, callOptions: callOptions, credentials: credentials) }
+            bufferedRead: { () throws(KurrentError) in try await usecase.perform(selector: selector, callOptions: callOptions, credentials: credentials) },
+            openParkedCall: { node throws(KurrentError) in try await usecase.openParked(node: node, callOptions: callOptions, credentials: credentials) }
         )
     }
 
