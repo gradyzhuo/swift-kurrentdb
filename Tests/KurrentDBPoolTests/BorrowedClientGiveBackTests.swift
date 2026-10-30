@@ -103,4 +103,20 @@ struct BorrowedClientGiveBackTests {
             try await borrowed.client.streams(specified: "any").append(events: [EventData(eventType: "T", model: ["k": "v"])])
         }
     }
+
+    @Test("isGivenBack stays false while giveBack() is still waiting for the shutdown to end every call, and is true once it returns")
+    func isGivenBackOnlyOnceGiveBackHasFinished() async throws {
+        let pool = KurrentDBPool(settings: [.localhost()])
+        let (borrowed, _, handler) = try await borrowWithRacingShutdown(from: pool)
+
+        let giveBack = Task { await borrowed.giveBack() }
+        try await Task.sleep(for: .milliseconds(200))
+        // giveBack() has started but a slow shutdown handler is still ending a call.
+        let observedDuringGiveBack = await Task.detached { borrowed.isGivenBack }.value
+        #expect(!observedDuringGiveBack)
+
+        handler.release()
+        await giveBack.value
+        #expect(borrowed.isGivenBack)
+    }
 }
