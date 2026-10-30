@@ -8,6 +8,7 @@
 import Foundation
 import GRPCCore
 @testable import KurrentDB
+import Synchronization
 import Testing
 
 @Suite("Lazy read (live)", .serialized, .timeLimit(.minutes(3)))
@@ -41,10 +42,11 @@ struct LazyReadLiveTests: Sendable {
         _ = try await stream.append(events: (0 ..< count).map { _ in event() }) { $0.expectedRevision = .any }
     }
 
-    /// Retain count of the shared connection the client is currently routed to.
-    func sharedRetainCount(_ client: KurrentDBClient) async throws -> Int? {
+    /// Retain count of the shared read connection (the one lazy reads use) of the node the client
+    /// is currently routed to.
+    func readRetainCount(_ client: KurrentDBClient) async throws -> Int? {
         let node = try await client.selector.select()
-        return client.selector.connections.sharedEntrySnapshot(for: node.endpoint)?.retainCount
+        return client.selector.connections.readEntrySnapshot(for: node.endpoint)?.retainCount
     }
 
     @Test("Cancelling one in-flight server-streaming RPC does not disturb another on the same shared connection")
@@ -126,7 +128,7 @@ struct LazyReadLiveTests: Sendable {
         #expect(viaLazy == viaRead)
         #expect(viaBuffered == viaRead)
         #expect(viaLazy.count == 50)
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("Breaking after the first event returns the lease and production stays bounded")
@@ -139,7 +141,7 @@ struct LazyReadLiveTests: Sendable {
         var iterator = stream.read().lazy.makeAsyncIterator()
         let first = try await iterator.next()
         #expect(first != nil)
-        #expect(try await sharedRetainCount(client) == 1)             // positive control: the lease is held
+        #expect(try await readRetainCount(client) == 1)             // positive control: the lease is held
         try await Task.sleep(for: .milliseconds(500))
         // The RPC task feeds a rendezvous hand-off; nothing is pulled, so the producer is parked on the second element.
         // Observe the hand-off counters through a separately opened ScopedCall, since the iterator's own call is private.
@@ -154,7 +156,7 @@ struct LazyReadLiveTests: Sendable {
 
         iterator = stream.read().lazy.makeAsyncIterator()   // release the first iterator → its RPC ends
         _ = iterator
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("A Lazy value can be iterated twice; each iteration is its own RPC")
@@ -171,7 +173,7 @@ struct LazyReadLiveTests: Sendable {
         for try await _ in lazy { secondRun += 1 }
         #expect(firstRun == 3)
         #expect(secondRun == 20)
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("Cancelling the iterating task throws CancellationError and returns the lease")
@@ -195,7 +197,7 @@ struct LazyReadLiveTests: Sendable {
         for await _ in firstElement { break }
         reader.cancel()
         await #expect(throws: CancellationError.self) { _ = try await reader.value }
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("A missing stream fails during iteration with the same error as read(), then ends")
@@ -215,7 +217,7 @@ struct LazyReadLiveTests: Sendable {
         #expect(bufferedError != nil)
         #expect(lazyError.map { "\($0)" } == bufferedError.map { "\($0)" })
         #expect(afterError == nil)
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("Wrong credentials fail at the first next(), before any element")
@@ -231,7 +233,7 @@ struct LazyReadLiveTests: Sendable {
             for try await _ in unauthorised.read().lazy { count += 1 }
         }
         #expect(count == 0)
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("$all lazy read honours the limit")
@@ -240,7 +242,7 @@ struct LazyReadLiveTests: Sendable {
         defer { try? client.shutdown() }
         let count = try await client.allStreams.read { $0.limit = 5 }.lazy.reduce(0) { total, _ in total + 1 }
         #expect(count == 5)
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     @Test("After shutdown, the first next() throws connectionClosed")
@@ -290,7 +292,7 @@ struct LazyReadLiveTests: Sendable {
         #expect(before == 300)
         #expect(after == 300)
         #expect(client.selector.connections.createdSharedConnectionCount == createdBefore)
-        #expect(try await eventually { (try? await sharedRetainCount(client)) == 0 })
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
     /// A `Streams` value whose every call carries the given deadline.
@@ -355,4 +357,74 @@ struct LazyReadLiveTests: Sendable {
         let error = try #require(failure, "the loop ended cleanly instead of with the deadline error")
         #expect(error as? KurrentError == .deadlineExceeded)
     }
+
+    @Test("150 concurrent lazy reads with a slow consumer do not delay an append on the main connection")
+    func slowLazyReadsDoNotDelayAppend() async throws {
+        // A 64 KiB HTTP/2 window and ~4 KB events: the server can send a read (~200 KB) only as its
+        // consumer pulls, so the read holds its stream until all but the last window is consumed
+        // (~34 events × 60 ms ≈ 2 s). With the default 8 MiB window every read would
+        // end on the server at once and free its slot, and the test could not tell the connections apart.
+        let client = KurrentDBClient(settings: settings.smallHTTP2Window())
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "LazyRead-Slow-\(UUID().uuidString)")
+        let padding = String(repeating: "x", count: 4000)
+        _ = try await stream.append(events: (0 ..< 50).map { _ in
+            EventData(eventType: "LazyRead-Test", model: ["Description": padding])
+        }) { $0.expectedRevision = .any }
+        let target = client.streams(specified: "LazyRead-Append-\(UUID().uuidString)")
+
+        // Every read that holds its stream has received its first element; above the server's
+        // 100-stream limit per connection the rest wait for a slot. On the main connection the append
+        // would wait behind them until the first reads free their streams (~2 s; measured 1.7 s with
+        // 2 KB events); on the read connection it takes milliseconds.
+        let started = StartedCount()
+        let elapsed = try await withThrowingTaskGroup(of: Void.self) { group in
+            for _ in 0 ..< 150 {
+                group.addTask {
+                    var first = true
+                    for try await _ in stream.read().lazy {
+                        if first { first = false; started.increment() }
+                        try await Task.sleep(for: .milliseconds(60))
+                    }
+                }
+            }
+            let readsHolding = try await eventually { started.value >= 100 }
+            try #require(readsHolding, "fewer than 100 lazy reads started")
+            let clock = ContinuousClock()
+            let elapsed = try await clock.measure {
+                _ = try await target.append(events: [event()]) { $0.expectedRevision = .any }
+            }
+            try await group.waitForAll()
+            return elapsed
+        }
+        #expect(elapsed < .seconds(1), "the append took \(elapsed) behind 150 held lazy reads")
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
+    }
+
+    @Test("A lazy read inside a lazy read's loop body completes")
+    func nestedLazyReadCompletes() async throws {
+        let client = KurrentDBClient(settings: settings)
+        defer { try? client.shutdown() }
+        let outer = client.streams(specified: "LazyRead-Outer-\(UUID().uuidString)")
+        let inner = client.streams(specified: "LazyRead-Inner-\(UUID().uuidString)")
+        try await appendEvents(count: 5, to: outer)
+        try await appendEvents(count: 5, to: inner)
+
+        var outerCount = 0
+        var innerCount = 0
+        for try await _ in outer.read().lazy {
+            outerCount += 1
+            for try await _ in inner.read().lazy { innerCount += 1 }
+        }
+        #expect(outerCount == 5)
+        #expect(innerCount == 25)
+        #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
+    }
+}
+
+/// How many lazy reads have received their first element.
+private final class StartedCount: Sendable {
+    private let count = Mutex(0)
+    var value: Int { count.withLock { $0 } }
+    func increment() { count.withLock { $0 += 1 } }
 }

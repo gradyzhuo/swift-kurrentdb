@@ -93,7 +93,7 @@ package final class ScopedCall<Response: Sendable>: Sendable {
 }
 
 extension ScopedStreamResponse where Transport == AnyClientTransport {
-    /// Starts the RPC on the shared connection and returns once the server accepted it.
+    /// Starts the RPC on the endpoint's shared `.read` connection and returns once the server accepted it.
     ///
     /// A call the server rejects before accepting it (status-only response) or that fails to
     /// connect throws here, as `KurrentError`, with the lease already returned; `withRetry`
@@ -105,7 +105,7 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
             throw .unsupportedFeature(methodDescriptor)
         }
 
-        let lease = try node.connections.acquire(node.endpoint)
+        let lease = try node.connections.acquire(node.endpoint, purpose: .read)
         let request: ClientRequest<UnderlyingRequest>
         do {
             request = try withRethrowingError(usage: "\(Self.self).\(#function)") {
