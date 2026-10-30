@@ -225,6 +225,12 @@ jobs:
           # wraps the first build because a later build is incremental and prints nothing.
           # NO_COLOR=1 is required: without it the compiler colours "warning:" even into a pipe
           # and the regex never matches.
+          # After the tests it is also the docs warning check: the documentation examples are
+          # generated and rebuilt with KURRENTDB_DOC_WARNINGS=1 (Package.swift then drops
+          # -suppress-warnings from DocSnippetsTests) into a separate log, which fails on an
+          # unnecessary try/await or a deprecated API. The filter is by diagnostic group, not path,
+          # because #sourceLocation points Markdown examples at their .md file; the examples'
+          # ~330 NoUsage warnings are ignored.
           - image: "swift:6.4-bookworm"
             benchmarks: "1"
     runs-on: ubuntu-latest
@@ -239,7 +245,7 @@ jobs:
               -w /workspace \
               -e KURRENTDB_BENCHMARKS=1 -e NO_COLOR=1 \
               ${{ matrix.image }} \
-              bash -c "apt-get update && apt-get install -y libjemalloc-dev || exit 1; set -o pipefail; swift build --build-tests 2>&1 | tee build.log || exit 1; if grep -E '^/workspace/(Sources|Tests|Benchmarks)/[^:]+:[0-9]+:[0-9]+: warning:' build.log | grep -vE 'took [0-9]+ms to type-check'; then exit 1; fi; swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
+              bash -c "apt-get update && apt-get install -y libjemalloc-dev || exit 1; set -o pipefail; swift build --build-tests 2>&1 | tee build.log || exit 1; if grep -E '^/workspace/(Sources|Tests|Benchmarks)/[^:]+:[0-9]+:[0-9]+: warning:' build.log | grep -vE 'took [0-9]+ms to type-check'; then exit 1; fi; swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests || exit 1; git config --global --add safe.directory /workspace || exit 1; swift run --package-path scripts generate-doc-snippets || exit 1; KURRENTDB_DOC_WARNINGS=1 swift build --target DocSnippetsTests 2>&1 | tee docs.log || exit 1; if grep -E '\[#(UnnecessaryEffectMarker|DeprecatedDeclaration)\]' docs.log; then exit 1; fi"
           else
             docker run --rm \
               -v ${{ github.workspace }}:/workspace \
