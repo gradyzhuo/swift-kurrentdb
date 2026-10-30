@@ -60,7 +60,7 @@ struct X509Tests {
         defer { client.shutdown() }
 
         var count = 0
-        for try await response in try await client.allStreams.read(configure: { $0.limit = 1 }).buffered {
+        for try await response in client.allStreams.read(configure: { $0.limit = 1 }) {
             _ = try response.event
             count += 1
         }
@@ -78,7 +78,7 @@ struct X509Tests {
         }
 
         var eventTypes: [String] = []
-        for try await response in try await stream.read().buffered {
+        for try await response in stream.read() {
             try eventTypes.append(response.event.record.eventType)
         }
         #expect(eventTypes == ["X509Tested"])

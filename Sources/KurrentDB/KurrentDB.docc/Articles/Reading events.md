@@ -15,12 +15,12 @@ Get a ``Streams`` value for the stream with ``KurrentDBClient/streams(specified:
 ### Reading forwards
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+let responses = client.streams(specified: "some-stream").read {
     $0.revision = .start
-}.buffered
+}
 ```
 
-`read` returns an `AsyncThrowingStream` you iterate with `for try await`:
+`read` returns a ``Streams/ReadCall``, an `AsyncSequence` you iterate with `for try await`; the RPC opens at the first element and ends when the loop does:
 
 <!-- snippet:continue -->
 ```swift
@@ -48,9 +48,9 @@ for try await response in responses {
 Credentials set on ``ClientSettings`` apply to every call. To use different credentials for a single operation, call `authenticated(_:)` on the ``Streams`` value:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream")
+let responses = client.streams(specified: "some-stream")
     .authenticated(.credentials(username: "admin", password: "changeit"))
-    .read().buffered
+    .read()
 ```
 
 ## Reading from a revision
@@ -58,10 +58,10 @@ let responses = try await client.streams(specified: "some-stream")
 Pass a specific revision to start from it:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+let responses = client.streams(specified: "some-stream").read {
     $0.revision = .specified(10)
     $0.limit = 20
-}.buffered
+}
 ```
 
 ## Reading backwards
@@ -69,10 +69,10 @@ let responses = try await client.streams(specified: "some-stream").read {
 To read a stream backwards, start from the end and set the direction:
 
 ```swift
-let responses = try await client.streams(specified: "some-stream").read {
+let responses = client.streams(specified: "some-stream").read {
     $0.revision = .end
     $0.direction = .backward
-}.buffered
+}
 
 for try await response in responses {
     print(try response.event.record)
@@ -87,9 +87,9 @@ Reading a stream that doesn't exist throws ``KurrentError/resourceNotFound(reaso
 
 ```swift
 do {
-    let responses = try await client.streams(specified: "some-stream").read {
+    let responses = client.streams(specified: "some-stream").read {
         $0.revision = .specified(10)
-    }.buffered
+    }
     for try await response in responses {
         print(try response.event.record)
     }
@@ -98,7 +98,7 @@ do {
 }
 ```
 
-A stream that was tombstoned throws ``KurrentError/resourceDeleted(resource:)`` instead, and a read the server refuses — for example `$all` without credentials — throws ``KurrentError/accessDenied``. These also arrive while you iterate, whether you use `read()` or `read().lazy`.
+A stream that was tombstoned throws ``KurrentError/resourceDeleted(resource:)`` instead, and a read the server refuses — for example `$all` without credentials — throws ``KurrentError/accessDenied``. These also arrive while you iterate.
 
 > Console:
 > reason: The name 'some-stream' of streams not found.
@@ -110,9 +110,9 @@ Reading `$all` works like reading an individual stream, with two differences: it
 ### Reading forwards
 
 ```swift
-let responses = try await client.allStreams.read {
+let responses = client.allStreams.read {
     $0.position = .start
-}.buffered
+}
 
 for try await response in responses {
     print("Event>", try response.event.record)
@@ -124,30 +124,30 @@ for try await response in responses {
 To resolve link events, set `resolveLinksEnabled`:
 
 ```swift
-let responses = try await client.allStreams.read {
+let responses = client.allStreams.read {
     $0.position = .start
     $0.resolveLinksEnabled = true
-}.buffered
+}
 ```
 
 To start from a known position:
 
 ```swift
-let responses = try await client.allStreams
+let responses = client.allStreams
     .authenticated(.credentials(username: "admin", password: "changeit"))
     .read {
         $0.position = .specified(commit: 1110, prepare: 1110)
-    }.buffered
+    }
 ```
 
 ### Reading backwards
 
 ```swift
-let responses = try await client.allStreams.read {
+let responses = client.allStreams.read {
     $0.position = .end
     $0.direction = .backward
     $0.limit = 1
-}.buffered
+}
 ```
 
 > Tip: Read one event backwards to find the last position in `$all`.
@@ -158,14 +158,14 @@ Set `filter` to a ``StreamFilter`` to have the server return only events whose s
 
 ```swift
 // Events whose type starts with "Order"
-let orderEvents = try await client.allStreams.read {
+let orderEvents = client.allStreams.read {
     $0.filter = .onEventType(prefixes: "Order")
-}.buffered
+}
 
 // Events from streams whose name matches a regular expression
-let customerEvents = try await client.allStreams.read {
+let customerEvents = client.allStreams.read {
     $0.filter = .onStreamName(regex: "^customer-")
-}.buffered
+}
 ```
 
 ### Handling system events
@@ -173,9 +173,9 @@ let customerEvents = try await client.allStreams.read {
 `$all` also returns system events. Their event types start with `$`, so you can skip them by checking `eventType`:
 
 ```swift
-let responses = try await client.allStreams.read {
+let responses = client.allStreams.read {
     $0.position = .start
-}.buffered
+}
 
 for try await response in responses {
     let readEvent = try response.event
@@ -332,59 +332,72 @@ for try await readEvent in subscription.events {
 
 ### Backpressure
 
-Subscriptions are backpressured: the client takes the next event from the server only when your code asks for it, so a slow consumer holds the server back through HTTP/2 flow control instead of growing client memory. The memory one subscription holds is bounded like a lazy read's (next section). Each subscription has its own connection (see <doc:Getting-started>), so a long-lived subscription never competes with other calls.
+Subscriptions are backpressured: the client takes the next event from the server only when your code asks for it, so a slow consumer holds the server back through HTTP/2 flow control instead of growing client memory. The memory one subscription holds is bounded like a read's (see Bounded memory below). Each subscription has its own connection (see <doc:Getting-started>), so a long-lived subscription never competes with other calls.
 
 The server's caught-up and fell-behind notifications are delivered through `messages` (above); `events` leaves them out.
 
-## Bounded memory: `read().lazy`
+## Bounded memory
 
-`read()` fetches the whole result before it returns, so memory grows with the result. For large
-reads use the lazy form: events arrive as you iterate, and the RPC ends when the loop does. Memory per lazy read is
-bounded by the hand-off (one element, held by the suspended producer), the
-transport's inbound message queue (10 messages by default) and one HTTP/2 stream flow-control
-window (about 8 MiB by default) — not proportional to the result size.
+`read()` delivers lazily: events arrive as you iterate, and the RPC ends when the loop does, so memory
+does not grow with the result. Off an actor the loop reads grpc-swift's stream directly; on an actor each
+element is handed over once. Either way, memory per read is bounded by the transport's inbound message queue
+(10 messages by default), one HTTP/2 stream flow-control window (about 8 MiB by default) and, on an actor,
+the one element in hand-off — not proportional to the result size.
 
 ```swift
 var total = 0.0
-for try await response in client.streams(specified: "orders").read().lazy {
+for try await response in client.streams(specified: "orders").read() {
     if let order = try response.event.record.decode(to: OrderPlaced.self) {
         total += order.total
     }
 }
 ```
 
-`lazy` is an `AsyncSequence`, so the usual operations apply and stop the RPC as soon as they are
-done:
+``Streams/ReadCall`` is an `AsyncSequence`, so the usual operations apply and stop the RPC as soon as they
+are done:
 
 ```swift
-let cancelled = try await client.allStreams.read().lazy.first {
+let cancelled = try await client.allStreams.read().first {
     try $0.event.record.eventType == "OrderCancelled"
 }
-let count = try await client.streams(specified: "orders").read { $0.limit = 1000 }.lazy.reduce(0) { n, _ in n + 1 }
+let count = try await client.streams(specified: "orders").read { $0.limit = 1000 }.reduce(0) { n, _ in n + 1 }
 let latest = try await client.streams(specified: "orders").read {
     $0.direction = .backward
     $0.revision = .end
-}.lazy.prefix(10).reduce(into: [RecordedEvent]()) { $0.append(try $1.event.record) }
+}.prefix(10).reduce(into: [RecordedEvent]()) { $0.append(try $1.event.record) }
 ```
 
-The RPC ends when the iterator is released: after the loop, on `break`, on a thrown error, or when
-your task is cancelled (`next()` then throws `CancellationError`). Only an iterator you obtain with
-`makeAsyncIterator()` and keep keeps the RPC open. A loop body that stops iterating (stuck on another `await`) also keeps the RPC open until it continues or exits; the server is held by backpressure meanwhile. Many concurrent `.lazy` reads with slow loop bodies each hold an HTTP/2 stream on the shared connection for as long as they iterate. A call the server rejects before accepting it
-(for example bad credentials) fails at the first element; only node failures are retried under the client's retry policy.
-Later errors, including a missing stream, surface while you iterate, as with `read()`.
+Calling `read` performs no network activity; each iteration opens its own RPC, so iterating the same call
+twice reads the stream twice. The RPC ends when the iterator is released: after the loop, on `break`, on a
+thrown error, or when your task is cancelled (`next()` then throws `CancellationError`). Only an iterator you
+obtain with `makeAsyncIterator()` and keep keeps the RPC open; inside an actor, advance a stored iterator with
+`next(isolation: self)`. A loop body that stops iterating (stuck on another `await`) also keeps the RPC open
+until it continues or exits; the server is held by backpressure meanwhile.
 
-`read().buffered` is the explicit spelling of what `read()` does today:
+`read()` calls share a second connection per node, the read connection, so a read that is still iterating
+never makes appends or other calls wait. The read connection opens on the first `read()` to a node, so that
+read also pays the connection setup (and the TLS handshake, on a secure connection). A read in progress holds
+one HTTP/2 stream on it until the server has sent the rest of the result, and the server allows about 100 per
+connection: further reads wait for one to end, and reads nested more than 100 deep deadlock — the innermost
+waits for a slot only an outer read can free — so they hang unless `defaultDeadline` or a `CallOptions.timeout`
+ends them with ``KurrentError/deadlineExceeded``. ``KurrentDBClient/shutdown()`` ends a read in progress with ``KurrentError/connectionClosed``.
+
+`ClientSettings.defaultDeadline` bounds establishing a `read()` — from node selection to the server's first
+response, waiting for a stream slot included — as one budget that is not retried; it then throws
+``KurrentError/deadlineExceeded``. The iteration itself is not bounded by it. Before the server accepts the
+read, node failures are retried under the client's retry policy; a call the server rejects (for example bad
+credentials) fails at the first element. Every other error is a `KurrentError`, and later errors, including a
+missing stream, surface while you iterate.
+
+`.buffered` fetches the whole result before it returns, so memory grows with the result. Use it for a
+snapshot, for a result you iterate later, or when the whole read should be bounded by `defaultDeadline`: there
+the deadline bounds each attempt, from after node selection to the end of the result, so a read retried under
+the retry policy can take up to `maxAttempts` × the deadline plus the backoff, with node rediscovery between
+attempts.
 
 ```swift
 let responses = try await client.streams(specified: "orders").read { $0.limit = 10 }.buffered
 ```
-
-To hold a prepared read without iterating, spell its type: `let call: Streams<SpecifiedStream>.ReadCall = stream.read()`.
-
-### Roadmap
-
-In 3.0 `read()` itself delivers lazily; code that needs the whole result up front will write
-`.buffered`. See `docs/adr/0001-read-becomes-lazy-in-3-0.md`. Subscriptions already deliver this way (see Catch-up subscriptions above).
 
 ## Architecture
 
