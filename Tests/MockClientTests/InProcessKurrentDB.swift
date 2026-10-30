@@ -131,6 +131,12 @@ final class InProcessKurrentDB: TransportProvider, Sendable {
         service.readsStarted.withLock { $0 }
     }
 
+    /// How many server-features calls the fake has answered: one per node discovery, so a count that
+    /// grows after a failed read shows the client invalidated the node and discovered it again.
+    var discoveries: Int {
+        service.discoveries.withLock { $0 }
+    }
+
     /// How many RPC streams the client has open on the fake right now, over all its connections.
     var openStreams: Int {
         openStreamCount.withLock { $0 }
@@ -156,6 +162,7 @@ extension InProcessKurrentDB {
         let read: ReadScript
         let calls: ClientCalls
         let readsStarted = Mutex(0)
+        let discoveries = Mutex(0)
 
         init(endpoint: Endpoint, read: ReadScript, calls: ClientCalls) {
             self.calls = calls
@@ -188,6 +195,7 @@ extension InProcessKurrentDB {
                 deserializer: DiscardingDeserializer(),
                 serializer: PreSerializedSerializer()
             ) { request, _ in
+                self.discoveries.withLock { $0 += 1 }
                 try await request.expectMessages(1)
                 // Only reads are served; subscriptions to a stream or to $all use the Read RPC too.
                 let methods = [StreamsService.Method.Read.descriptor]
