@@ -109,9 +109,10 @@ extension Duration {
 /// Executes `operation` with retry logic driven by `policy`.
 ///
 /// On each attempt a node is obtained via `selectNode`. If the operation throws
-/// a ``KurrentError`` whose `isNodeFailure` is `true` and there are remaining
-/// attempts, `invalidate` is called, the backoff delay is applied, and a new
-/// node is selected for the next attempt. Any other error propagates immediately.
+/// a ``KurrentError`` that `isRetryable` accepts (by default: whose `isNodeFailure` is
+/// `true`) and there are remaining attempts, `invalidate` is called, the backoff delay
+/// is applied, and a new node is selected for the next attempt. Any other error
+/// propagates immediately, without `invalidate`.
 ///
 /// A cancelled task never retries: the transport reports a cancelled call as a node
 /// failure (`unknown: "The transport threw an unexpected error."`), and treating it as one
@@ -124,14 +125,19 @@ extension Duration {
 ///
 /// - Parameters:
 ///   - policy: The retry policy controlling attempts and backoff.
+///   - isRetryable: Decides whether a ``KurrentError`` thrown by `operation` invalidates
+///     the node and is retried. Defaults to `isNodeFailure`; a caller passes a narrower
+///     predicate to keep an error that is a node failure in general (a deadline that
+///     expired on the client side, for one) from dropping the cached node.
 ///   - selectNode: Returns the node to use for the next attempt.
-///   - invalidate: Called after a node-failure to clear the cached node.
+///   - invalidate: Called after a retryable failure to clear the cached node.
 ///   - operation: The operation to execute, receiving the selected node.
 /// - Returns: The value returned by a successful `operation` call.
 /// - Throws: The last `KurrentError` after exhausting all attempts, or any
-///   non-node-failure error immediately.
+///   error `isRetryable` rejects immediately.
 package func withRetry<NodeType: Sendable, T: Sendable>(
     policy: OperationRetryPolicy,
+    isRetryable: @escaping @Sendable (KurrentError) -> Bool = { $0.isNodeFailure },
     selectNode: @Sendable () async throws -> NodeType,
     invalidate: @Sendable () async -> Void,
     operation: @Sendable (NodeType) async throws -> T
@@ -153,9 +159,9 @@ package func withRetry<NodeType: Sendable, T: Sendable>(
 
         do {
             return try await operation(node)
-        } catch let error as KurrentError where error.isNodeFailure && !Task.isCancelled && attempt < policy.maxAttempts {
+        } catch let error as KurrentError where isRetryable(error) && !Task.isCancelled && attempt < policy.maxAttempts {
             // Visible in the client's log so a rediscovery can be traced to the call that caused it.
-            logger.info("[withRetry] attempt \(attempt) of \(policy.maxAttempts) failed with a node failure, invalidating the cached node and retrying: \(error)")
+            logger.info("[withRetry] attempt \(attempt) of \(policy.maxAttempts) failed with a retryable error, invalidating the cached node and retrying: \(error)")
             await invalidate()
 
             if currentDelay > .zero {
