@@ -78,4 +78,4 @@ let result = try await withBorrowedClient(eventLoopGroup: eventLoopGroup, maxAtt
 
 ## After giving it back
 
-Giving an instance back closes the borrowed ``KurrentDBClient``'s connections before the instance returns to the pool, so nothing you keep can reach an instance another caller may be using. Every later call on the client, on a facade made from it, or on a `ReadCall` or `Subscription` kept past the closure throws `KurrentError.connectionClosed`. `isGivenBack` tells a kept `BorrowedClient` that this has happened.
+Giving an instance back closes the borrowed ``KurrentDBClient``'s connections before the instance returns to the pool, so nothing you keep can reach an instance another caller may be using. Every later call on the client, on a facade made from it, or on a `ReadCall` or `Subscription` kept past the closure throws `KurrentError.connectionClosed`. `isGivenBack` tells a kept `BorrowedClient` that this has happened: it becomes `true` only once give-back has finished, with the connections closed, every call they carried ended and the instance back in the pool.
