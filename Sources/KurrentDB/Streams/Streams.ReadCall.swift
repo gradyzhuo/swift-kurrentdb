@@ -50,6 +50,9 @@ extension Streams.ReadCall {
     /// inbound message queue (10 messages by default) and one HTTP/2 stream flow-control window
     /// (about 8 MiB by default) — not proportional to the result size. The only way to keep the RPC open is
     /// to call `makeAsyncIterator()` yourself and hold on to the iterator.
+    ///
+    /// `KurrentDBClient.shutdown()` ends an iteration in progress, or one still opening its RPC, with
+    /// `KurrentError.connectionClosed` at the next `next()`, also when it is called from the loop body.
     public struct Lazy: AsyncSequence, Sendable {
         public typealias Element = Streams.ReadResponse
         public typealias Failure = any Error

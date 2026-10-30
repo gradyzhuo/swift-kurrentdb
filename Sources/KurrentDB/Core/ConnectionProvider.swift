@@ -84,6 +84,7 @@ package final class ConnectionProvider: Sendable {
         var createdReadConnectionCount = 0
         var createdDedicatedConnectionCount = 0
         var sweeper: Task<Void, Never>?
+        var shutdownHandlers: [ShutdownHandlerID: @Sendable () -> Void] = [:]
     }
 
     private let settings: ClientSettings
@@ -296,26 +297,83 @@ package final class ConnectionProvider: Sendable {
         }
     }
 
+    // MARK: - Shutdown handlers
+
+    /// Identifies a handler registered with ``registerShutdownHandler(_:)``. Never 0 for a handler
+    /// that was stored; 0 means it already ran because the provider was shut down.
+    package typealias ShutdownHandlerID = UInt64
+
+    /// Runs `handler` once when the provider shuts down, outside the lock, before any run task is
+    /// cancelled; runs it immediately (and returns 0) if the provider is already shut down.
+    ///
+    /// For a call that holds a shared connection beyond one `perform` (a lazy read, on either of its
+    /// delivery paths): the handler ends the call with `KurrentError.connectionClosed` before the
+    /// transport is torn down, so the caller sees why the call ended instead of whatever error the
+    /// teardown produces (which `withRetry` would take for a node failure). It must be synchronous,
+    /// must not block, and must capture only what it needs to end the call, never the call's owner:
+    /// the registry keeps it alive until it is removed or run. A handler may call back into the
+    /// provider. Remove it with ``removeShutdownHandler(_:)`` when the call ends.
+    package func registerShutdownHandler(_ handler: @escaping @Sendable () -> Void) -> ShutdownHandlerID {
+        let id: ShutdownHandlerID? = state.withLock { state in
+            guard !state.isShutdown else { return nil }
+            state.nextID += 1
+            state.shutdownHandlers[state.nextID] = handler
+            return state.nextID
+        }
+        guard let id else {
+            handler()
+            return 0
+        }
+        return id
+    }
+
+    /// Removes a handler so it does not run at shutdown. A no-op for 0, for an id already removed,
+    /// and after shutdown (the handler has run or is running).
+    package func removeShutdownHandler(_ id: ShutdownHandlerID) {
+        guard id != 0 else { return }
+        state.withLock { state in
+            state.shutdownHandlers[id] = nil
+        }
+    }
+
+    /// For tests: how many shutdown handlers are registered.
+    package var shutdownHandlerCount: Int {
+        state.withLock { $0.shutdownHandlers.count }
+    }
+
     // MARK: - Shutdown
 
     /// 拒絕之後所有的准入,並取消所有共用連線(兩種 purpose)、已登記的獨立連線與 sweeper。冪等。
     ///
+    /// Order: under the lock it marks the provider shut down and takes everything; outside it, it
+    /// first runs the registered shutdown handlers (synchronously, in registration order), then
+    /// cancels the shared run tasks and the sweeper, then terminates the dedicated connections. The
+    /// handlers go first so each call they end reports `connectionClosed` before cancelling a run
+    /// task fails it as a transport error (the pattern of `DedicatedLifecycle.terminate()`). Every
+    /// handler has run when this returns, so a call that held a connection has ended by then, even
+    /// though the transports may still be tearing down.
+    ///
     /// 這是**發起**關閉:返回時連線不保證已經關閉完成。
     package func shutdown() {
-        let (tasks, dedicated) = state.withLock { state -> ([Task<Void, Never>], [DedicatedLifecycle]) in
+        let (handlers, tasks, dedicated) = state.withLock { state -> ([@Sendable () -> Void], [Task<Void, Never>], [DedicatedLifecycle]) in
             guard !state.isShutdown else {
-                return ([], [])
+                return ([], [], [])
             }
             state.isShutdown = true
+            let handlers = state.shutdownHandlers.sorted { $0.key < $1.key }.map(\.value)
             var tasks = state.shared.values.map(\.runTask)
             if let sweeper = state.sweeper {
                 tasks.append(sweeper)
             }
             let dedicated = Array(state.dedicated.values)
+            state.shutdownHandlers.removeAll()
             state.shared.removeAll()
             state.dedicated.removeAll()
             state.sweeper = nil
-            return (tasks, dedicated)
+            return (handlers, tasks, dedicated)
+        }
+        for handler in handlers {
+            handler()
         }
         for task in tasks {
             task.cancel()
