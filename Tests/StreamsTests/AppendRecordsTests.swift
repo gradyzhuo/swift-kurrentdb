@@ -184,7 +184,7 @@ struct AppendRecordsTests: Sendable {
         #expect(second.position == first.position)
 
         var count = 0
-        for try await _ in try await client.streams(specified: stream).read() {
+        for try await _ in client.streams(specified: stream).read() {
             count += 1
         }
         #expect(count == 2)
@@ -227,8 +227,7 @@ struct AppendRecordsTests: Sendable {
             StreamEvent(stream: stream, records: record, expectedRevision: .noStream),
         ])
 
-        let responses = try await client.streams(specified: stream).read()
-        let first = try await responses.first { _ in true }
+        let first = try await client.streams(specified: stream).read().first { _ in true }
         guard case let .event(readEvent) = first else {
             Issue.record("Expected an event, got \(String(describing: first)).")
             return
