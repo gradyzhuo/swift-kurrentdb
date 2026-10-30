@@ -357,7 +357,7 @@ We follow the [Swift API Design Guidelines](https://swift.org/documentation/api-
 4. **Async/Await**
    ```swift
    // ✅ Good: Use async/await
-   func read(configure: @Sendable (inout Read.Options) -> Void) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error>
+   func read(configure: @Sendable (inout Read.Options) -> Void) -> ReadCall  // an AsyncSequence: iterate with for try await
    
    // ❌ Bad: Completion handlers (unless necessary for compatibility)
    func read(completion: @escaping (Result<[Read.Response], Error>) -> Void)

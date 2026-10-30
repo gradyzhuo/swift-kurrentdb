@@ -139,7 +139,7 @@ try await client.streams(specified: "orders").append(events: events) {
     $0.expectedRevision = .streamExists
 }
 
-let responses = try await client.streams(specified: "orders").read {
+let responses = client.streams(specified: "orders").read {
     $0.direction = .backward
     $0.revision = .end
     $0.limit = 10

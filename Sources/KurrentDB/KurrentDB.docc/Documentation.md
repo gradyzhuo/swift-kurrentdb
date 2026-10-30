@@ -40,7 +40,7 @@ let client = KurrentDBClient(settings: settings)
 try await client.streams(specified: "orders").append(events: [eventData])
 
 // Read it back
-for try await response in try await client.streams(specified: "orders").read().buffered {
+for try await response in client.streams(specified: "orders").read() {
     print(try response.event.record)
 }
 ```
@@ -70,6 +70,7 @@ for try await result in subscription.events {
 
 ### 3.0
 
+- **`read()` delivers lazily.** `read()` returns a ``Streams/ReadCall``, an `AsyncSequence` you iterate with `for try await`: events arrive as you iterate, with backpressure, and the RPC ends when the loop does, so memory no longer grows with the result. Off an actor it costs about what `.buffered` costs per event. `.buffered` keeps the whole-result form, for snapshots and results iterated later; `.lazy` is deprecated (drop it). `defaultDeadline` bounds establishing the read, from node selection to the server's first response, as one budget that is not retried; the iteration is not bounded by it. Errors after the server accepts the read are `KurrentError`, and a cancelled read throws `CancellationError`. `KurrentDBClient(settings:eventLoopGroup:)` replaces `numberOfThreads:`, and `shutdown()` no longer throws; it ends a read in progress with `connectionClosed`. See <doc:Reading-events>.
 - **Removed: the 1.x module and the deprecated names.** `KurrentDB_V1` is gone (migrate on 2.6 first: <doc:Migration-guide>); so are these deprecated names, each replaced in 2.x: `certificate(path:)` (use `certificate(path:fallback:)`), the misspelled `cerificates` / `cerificate(source:)` / `cerificate(path:)` (`certificates` / `certificate(source:)` / `certificate(path:fallback:)`), `KurrentError.CurrentRevisionOption` (`KurrentError.CurrentRevisionState`), `EventData.init(eventType:payload: Codable)` (`payload: .json(value)`, which it forwarded to), `StreamFilter.onStreamName(prefix:)` (`onStreamName(prefixes:)`) and `SubscriptionFilter` (`StreamFilter`). One `KurrentDB_V1` call does not stop compiling: its `client.shutdown()` shut the server down, and without the import the same line closes the client instead (<doc:Migration-guide>). **Upgrade note:** events built with the removed `EventData` initialiser from a `Data` value were stored as base64 JSON strings — use `payload: .json(data)` to keep that format; `data:` stores the raw bytes.
 - **Subscription notifications.** ``Streams/Subscription/messages`` delivers the server's `caughtUp`, `fellBehind` (KurrentDB 26.2.2+) and (for a filtered `$all` subscription) `checkpoint` notifications next to the events, as a ``Streams/Subscription/Message``, so a read model can tell when it is current and a filtered subscription can store a resume position while nothing matches. `events` is unchanged. See <doc:Reading-events>.
 - **A subscription to a tombstoned stream ends with `resourceDeleted`.** When the stream a catch-up subscription follows is tombstoned, `events` now throws `KurrentError.resourceDeleted`, the error a read of a tombstoned stream throws, after delivering the events written before it; subscribing to an already tombstoned stream throws it from `subscribe`. **Upgrade note:** the `$streamDeleted` marker is no longer delivered as an event, and the raw `RPCError` that followed it is gone. Subscriptions to `$all` still deliver `$streamDeleted` as a system event. See <doc:Reading-events>.
@@ -83,9 +84,9 @@ for try await result in subscription.events {
 
 ### 2.5
 
-- **Lazy reads and backpressured subscriptions.** `read().lazy` streams events as you iterate and ends the RPC when the loop does, so memory no longer grows with the result; `read().buffered` (and plain `read()`) keep today's behaviour. Subscriptions are now backpressured with bounded memory. See <doc:Reading-events>.
+- **Lazy reads and backpressured subscriptions.** `read().lazy` streams events as you iterate and ends the RPC when the loop does, so memory no longer grows with the result; `read().buffered` (and plain `read()`) keep today's behaviour (3.0: `read()` itself delivers lazily). Subscriptions are now backpressured with bounded memory. See <doc:Reading-events>.
 - **Strict connection strings.** Connection strings are parsed according to RFC 3986: unknown, duplicate or invalid parameters throw, credentials and values are percent-decoded, and characters in a password can no longer change hosts or TLS settings. New `policy:` entry point (`.rfc3986`). **Upgrade note:** strings that used to be accepted may now throw — see <doc:Getting-started>.
-- **`defaultDeadline` takes effect.** It now bounds calls that complete before they return (appends, deletes, management calls, `read()`); subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it.
+- **`defaultDeadline` takes effect.** It now bounds calls that complete before they return (appends, deletes, management calls, `read()`); subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it (3.0: for `read()` it bounds establishing the call; `.buffered` keeps this bound, per attempt).
 - **Unreadable CA certificates are reported.** An unreadable `tlsCaFile` makes `parse` throw; `certificate(path:fallback:)` replaces `certificate(path:)`, which is deprecated (removed in 3.0) and refuses to connect instead of trusting the system roots.
 - **One `gossipTimeout` default.** Connection strings now default to 3 seconds, like settings built in code (they used to default to 5).
 - **Untrusted input no longer crashes or leaks.** Negative revisions or positions from the server, credentials that cannot be encoded, and connection strings in error messages are handled safely.
@@ -123,9 +124,9 @@ try await client.multiStreams.appendRecords(
     checks: [.streamState("customer-42", .streamExists)]
 )
 
-let filtered = try await client.allStreams.read {
+let filtered = client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
-}.buffered
+}
 
 try await client.streams(specified: "orders")
     .authenticated(.bearer(token: "user-access-token"))

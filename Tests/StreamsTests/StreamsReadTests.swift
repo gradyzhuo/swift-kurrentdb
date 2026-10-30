@@ -35,8 +35,8 @@ struct StreamsReadTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         var readTypes: [String] = []
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .start }.buffered
+        let responses = client.streams(specified: streamName)
+            .read { $0.direction = .forward; $0.revision = .start }
         for try await response in responses {
             if case let .event(event) = response {
                 readTypes.append(event.record.eventType)
@@ -60,8 +60,8 @@ struct StreamsReadTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         var readTypes: [String] = []
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .backward; $0.revision = .end }.buffered
+        let responses = client.streams(specified: streamName)
+            .read { $0.direction = .backward; $0.revision = .end }
         for try await response in responses {
             if case let .event(event) = response {
                 readTypes.append(event.record.eventType)
@@ -84,8 +84,8 @@ struct StreamsReadTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         var count = 0
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 }.buffered
+        let responses = client.streams(specified: streamName)
+            .read { $0.direction = .forward; $0.revision = .start; $0.limit = 3 }
         for try await response in responses {
             if case .event = response { count += 1 }
         }
@@ -108,8 +108,8 @@ struct StreamsReadTests: Sendable {
 
         // Read from revision 2 → should get events at revisions 2, 3, 4
         var readRevisions: [UInt64] = []
-        let responses = try await client.streams(specified: streamName)
-            .read { $0.direction = .forward; $0.revision = .specified(2) }.buffered
+        let responses = client.streams(specified: streamName)
+            .read { $0.direction = .forward; $0.revision = .specified(2) }
         for try await response in responses {
             if case let .event(event) = response {
                 readRevisions.append(event.record.revision)
@@ -137,8 +137,8 @@ struct StreamsReadTests: Sendable {
         try await client.streams(specified: streamName).delete()
 
         await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamName)' of streams not found.")) {
-            let responses = try await client.streams(specified: streamName).read().buffered
-            var iter = responses.makeAsyncIterator()
+            let responses = client.streams(specified: streamName).read()
+            let iter = responses.makeAsyncIterator()
             _ = try await iter.next()
         }
     }
@@ -279,7 +279,7 @@ struct StreamsReadTests: Sendable {
             for try await _ in try await client.streams(specified: streamName).read().buffered {}
         }
         await #expect(throws: KurrentError.resourceDeleted(resource: streamName)) {
-            for try await _ in client.streams(specified: streamName).read().lazy {}
+            for try await _ in client.streams(specified: streamName).read() {}
         }
     }
 
@@ -294,12 +294,12 @@ struct StreamsReadTests: Sendable {
         defer { client.shutdown() }
 
         // A buffered read receives the rejection inside its response stream; it used to surface
-        // there as a raw RPCError while read().lazy already threw accessDenied.
+        // there as a raw RPCError while the lazy form already threw accessDenied.
         await #expect(throws: KurrentError.accessDenied) {
             for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }).buffered {}
         }
         await #expect(throws: KurrentError.accessDenied) {
-            for try await _ in client.allStreams.read(configure: { $0.limit = 1 }).lazy {}
+            for try await _ in client.allStreams.read(configure: { $0.limit = 1 }) {}
         }
     }
 

@@ -92,7 +92,7 @@ let fromEnvironment = try ClientSettings.fromEnv()
 let client = KurrentDBClient(settings: settings)
 ```
 
-Create one client per application and reuse it. Calls that complete before they return — appends, deletes, metadata, reads, projection statistics, management operations — share one connection per node. Calls that hand you a live stream — subscriptions and persistent subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`; calling it again does nothing.
+Create one client per application and reuse it. Calls that complete before they return — appends, deletes, metadata, projection statistics, management operations, `.buffered` reads — share one connection per node; `read()` calls on a stream or on `$all`, which can hold their HTTP/2 stream until the server has sent the rest of the result, share a second one, so a long read never makes those calls wait. Calls that hand you a live stream — subscriptions and persistent subscriptions — each get their own connection, so long-lived subscriptions never compete with other calls for capacity. `client.shutdown()` closes every connection the client opened and makes further calls throw `KurrentError.connectionClosed`; calling it again does nothing.
 
 Need a database per test? The `KurrentDBPool` library lends out clients for a set of independent KurrentDB instances, one caller per instance at a time — see [Client pools](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/client-pools).
 
@@ -117,21 +117,19 @@ try await client.streams(specified: "orders").append(events: [event]) {
     $0.expectedRevision = .any
 }
 
-// Read events
-let responses = try await client.streams(specified: "orders").read {
+// Read events: they arrive as you iterate, and the RPC ends with the loop
+let responses = client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 10
-}.buffered
+}
 
 for try await response in responses {
     let readEvent = try response.event
     print("Event: \(readEvent.record.eventType)")
 }
 
-// Bounded memory: events arrive as you iterate and the RPC ends with the loop
-for try await response in client.streams(specified: "orders").read().lazy {
-    _ = response
-}
+// The whole result at once, for a snapshot you iterate later
+let snapshot = try await client.streams(specified: "orders").read().buffered
 ```
 
 ---
@@ -147,27 +145,27 @@ try await client.streams(specified: "orders").append(events: [event]) {
 }
 
 // Read forward
-let forward = try await client.streams(specified: "orders").read {
+let forward = client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 50
-}.buffered
+}
 
 // Read backward
-let backward = try await client.streams(specified: "orders").read {
+let backward = client.streams(specified: "orders").read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 10
-}.buffered
+}
 
 // Read $all
-let allResponses = try await client.allStreams.read {
+let allResponses = client.allStreams.read {
     $0.limit = 100
-}.buffered
+}
 
 // Read $all with server-side filtering
-let filtered = try await client.allStreams.read {
+let filtered = client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
-}.buffered
+}
 
 // Subscribe (catch-up)
 let subscription = try await client.streams(specified: "orders").subscribe()
@@ -440,8 +438,8 @@ Stream error paths are explicitly covered:
 | Two concurrent writers at the same revision | One succeeds, one `wrongExpectedVersion` |
 | Delete or tombstone a missing stream with `.streamExists` | `wrongExpectedVersion` with `current: .noStream` |
 | Tombstone at stale revision (`.at(5)`, stream at 0) | `wrongExpectedVersion` with `current: .revision(0)` |
-| Read a tombstoned stream, buffered and lazy | `resourceDeleted` |
-| Read `$all` without credentials, buffered and lazy | `accessDenied` |
+| Read a tombstoned stream | `resourceDeleted` |
+| Read `$all` without credentials | `accessDenied` |
 
 ### Persistent Subscription Lifecycle
 

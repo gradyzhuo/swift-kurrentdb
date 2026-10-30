@@ -27,7 +27,7 @@ import NIOSSL
 /// try await client.streams(specified: "orders").append(events: events)
 ///
 /// // Read from the global $all stream
-/// for try await event in try await client.allStreams.read().buffered {
+/// for try await event in client.allStreams.read() {
 ///     print(event)
 /// }
 /// ```
