@@ -45,9 +45,12 @@ public struct ClientSettings: Sendable {
     public private(set) var tlsVerifyCert: Bool
 
     /// Default deadline in milliseconds for calls that complete before they return (single
-    /// responses, appends, buffered reads, batch appends); `.max` means no deadline. Subscriptions,
-    /// persistent-subscription reads, server statistics and `read().lazy` are not bounded by it, and
-    /// a `CallOptions.timeout` set on the client wins.
+    /// responses, appends, buffered reads, batch appends, each attempt on its own), unless a
+    /// `CallOptions.timeout` set on the client wins; `.max` means no deadline. It also bounds
+    /// establishing a `read()` — node selection to the server's first response — as one budget, not
+    /// retried, alongside any `CallOptions.timeout` (whichever expires first ends establishment);
+    /// iteration is unbounded by it. Subscriptions, persistent-subscription reads and server
+    /// statistics are not bounded by it.
     public private(set) var defaultDeadline: Int
     /// Optional human-readable label for this connection.
     public private(set) var connectionName: String?

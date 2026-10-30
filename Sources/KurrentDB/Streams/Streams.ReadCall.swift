@@ -78,7 +78,7 @@ extension Streams.ReadCall {
                 case handoff
             }
 
-            private enum Delivery {
+            private enum Delivery: Sendable {
                 case handoff(ScopedCall<Streams.ReadResponse>)
                 case direct(ParkedCall<Streams.Read.UnderlyingResponse, Streams.ReadResponse>)
 
@@ -182,26 +182,37 @@ extension Streams.ReadCall {
             }
 
             /// Establishes the RPC on `path`. Retry covers only this: no element has been delivered yet.
+            ///
+            /// `defaultDeadline` bounds the whole of it — node selection, every attempt, the wait for a
+            /// stream slot and for the server's first response — as one budget (§5.1.3). A deadline
+            /// before acceptance, the budget's or a caller-set `CallOptions.timeout`'s, is final: it is
+            /// not retried and does not reset the cached node, although `deadlineExceeded` is a node
+            /// failure for every other call.
             private func open(_ path: DeliveryPath, isolation _: isolated (any Actor)?) async throws -> Delivery {
                 let call = call   // the retry closures are @Sendable; capture the value, not `self`
+                let isRetryable: @Sendable (KurrentError) -> Bool = { $0.isNodeFailure && $0 != .deadlineExceeded }
                 do {
-                    switch path {
-                    case .handoff:
-                        return try await .handoff(withRetry(
-                            policy: call.selector.retryPolicy,
-                            selectNode: { try await call.selector.select() },
-                            invalidate: { await call.selector.invalidate() }
-                        ) { node in
-                            try await call.openCall(node)
-                        })
-                    case .direct:
-                        return try await .direct(withRetry(
-                            policy: call.selector.retryPolicy,
-                            selectNode: { try await call.selector.select() },
-                            invalidate: { await call.selector.invalidate() }
-                        ) { node in
-                            try await call.openParkedCall(node)
-                        })
+                    return try await withEstablishmentBudget(milliseconds: call.selector.settings.defaultDeadline) { () throws(KurrentError) -> Delivery in
+                        switch path {
+                        case .handoff:
+                            return try await .handoff(withRetry(
+                                policy: call.selector.retryPolicy,
+                                isRetryable: isRetryable,
+                                selectNode: { try await call.selector.select() },
+                                invalidate: { await call.selector.invalidate() }
+                            ) { node in
+                                try await call.openCall(node)
+                            })
+                        case .direct:
+                            return try await .direct(withRetry(
+                                policy: call.selector.retryPolicy,
+                                isRetryable: isRetryable,
+                                selectNode: { try await call.selector.select() },
+                                invalidate: { await call.selector.invalidate() }
+                            ) { node in
+                                try await call.openParkedCall(node)
+                            })
+                        }
                     }
                 } catch {
                     finished = true   // one throw ends the sequence; never reopen on the next call

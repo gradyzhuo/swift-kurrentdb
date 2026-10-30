@@ -191,7 +191,9 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
                             throw CancellationError()
                         }
                     case let .failure(error):
-                        rpc.accepted.fail(error)
+                        // Rethrown for the catch below to map on this task, as open() does: a call
+                        // timeout that expired before acceptance becomes deadlineExceeded.
+                        throw error
                     }
                 }
                 // Older grpc-swift returns normally when the deadline cancelled the handler; this

@@ -44,6 +44,11 @@ public actor NodeSelector: Sendable {
         selectedNodeExpiry = Date.now.addingTimeInterval(settings.nodeCacheTTL.timeInterval)
     }
 
+    /// Test hook: the cached node, or `nil` once it was invalidated (or never discovered).
+    package var cachedNodeForTesting: Node? {
+        selectedNode
+    }
+
     /// Returns the best available cluster node, using a cached result when still valid.
     ///
     /// Runs gossip-based discovery when the cache is empty or expired. Retries up to
