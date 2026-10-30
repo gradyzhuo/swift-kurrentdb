@@ -46,7 +46,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
     @Test("丟棄從未 iterate 的 handle,會關閉連線(指定 stream)")
     func droppingUniteratedSpecifiedSubscriptionClosesConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let group = "retain-cycle-\(UUID().uuidString)"
         let persistent = client.persistentSubscriptions(stream: "RetainCycle-\(UUID().uuidString)", group: group)
         try await persistent.create()
@@ -71,7 +71,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
     @Test("丟棄從未 iterate 的 handle,會關閉連線($all)")
     func droppingUniteratedAllStreamSubscriptionClosesConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let group = "retain-cycle-all-\(UUID().uuidString)"
         let persistent = client.persistentSubscriptions(of: .allStreams(group: group))
         try await persistent.create()
@@ -96,7 +96,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
     @Test("只持有 events、不持有 handle 時,事件不會在途中遺失")
     func iteratingEventsWithoutHoldingHandleDeliversEverything() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let streamName = "RetainCycle-\(UUID().uuidString)"
         let persistent = client.persistentSubscriptions(stream: streamName, group: "retain-cycle-\(UUID().uuidString)")
         try await persistent.create()
@@ -131,7 +131,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
     @Test("持有 handle 的一般用法照常運作,handle 釋放時收尾")
     func holdingHandleStillWorksAndTearsDown() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let streamName = "RetainCycle-\(UUID().uuidString)"
         let persistent = client.persistentSubscriptions(stream: streamName, group: "retain-cycle-\(UUID().uuidString)")
         try await persistent.create()

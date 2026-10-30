@@ -68,10 +68,10 @@ Iterate inside the closure and return values, not calls or clients: the closure 
 - Before lending an instance, the pool checks that it's reachable along the same path real calls use — gossip discovery, endpoint resolution and server feature detection — so a borrowed client works on its first call.
 - An unreachable instance is set aside and the next idle one is tried, up to `maxAttempts` (3 by default). Later attempts don't wait: if no other instance is idle, the call gives up and returns `nil`. Instances set aside are returned to the pool when the call ends, to be checked again next time.
 
-Pass `numberOfThreads` to size the borrowed client's event loop group, and `maxAttempts` to change how many instances are tried:
+Pass `maxAttempts` to change how many instances are tried, and `eventLoopGroup` to run the borrowed client's connections on an event-loop group you already have, such as your server's or a `MultiThreadedEventLoopGroup(numberOfThreads:)` of your own. By default they run on NIO's `.singletonMultiThreadedEventLoopGroup`, like those of any ``KurrentDBClient``. The pool never shuts the group down: a group you created is yours to shut down after the borrow.
 
 ```swift
-let result = try await withBorrowedClient(numberOfThreads: 2, maxAttempts: 5) { borrowed in
+let result = try await withBorrowedClient(eventLoopGroup: eventLoopGroup, maxAttempts: 5) { borrowed in
     try await borrowed.client.streams(specified: "orders").append(events: [eventData])
 }
 ```

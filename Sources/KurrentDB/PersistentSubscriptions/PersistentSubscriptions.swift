@@ -19,7 +19,6 @@ public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions
-    internal let eventLoopGroup: EventLoopGroup
 
     /// Target that defines which stream or scope this service instance operates on.
     public let target: Target
@@ -28,10 +27,9 @@ public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>
     /// authentication from ``ClientSettings`` is used.
     internal let overrideCredentials: Authentication?
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, overrideCredentials: Authentication? = nil) {
         self.selector = selector
         self.callOptions = callOptions
-        self.eventLoopGroup = eventLoopGroup
         self.target = target
         self.overrideCredentials = overrideCredentials
     }
@@ -42,7 +40,7 @@ public final class PersistentSubscriptions<Target: PersistentSubscriptionTarget>
     /// - Parameter credentials: Authentication to use for calls made on the returned instance.
     /// - Returns: A new interface scoped to `credentials`.
     public func authenticated(_ credentials: Authentication) -> Self {
-        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
+        .init(target: target, selector: selector, callOptions: callOptions, overrideCredentials: credentials)
     }
 }
 

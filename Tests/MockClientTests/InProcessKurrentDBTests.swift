@@ -25,7 +25,7 @@ struct InProcessKurrentDBTests {
     func lazyReadOfScriptedEvents() async throws {
         let fake = InProcessKurrentDB(read: .events(3))
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         var revisions: [UInt64] = []
         for try await response in client.streams(specified: "orders").read() {
             try revisions.append(response.event.record.revision)
@@ -43,7 +43,7 @@ struct InProcessKurrentDBTests {
             break
         }
         #expect(fake.readsStarted == 1)
-        try client.shutdown()
+        client.shutdown()
         #expect(try await eventually { fake.openStreams == 0 })
     }
 
@@ -53,7 +53,7 @@ struct InProcessKurrentDBTests {
         // No call timeout: the held read must keep its slot for the whole test, so the second read is
         // ended by cancelling its task instead of by a deadline both reads would share.
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         // Discovery runs on the main connection; the first read holds the read connection's one slot.
         let held = client.streams(specified: "orders").read().makeAsyncIterator()
         _ = try await held.next()

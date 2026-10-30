@@ -290,9 +290,9 @@ struct LazyReadEstablishmentDeadlineTests {
         script.acceptDelay = .milliseconds(400)
         let fake = InProcessKurrentDB(read: script)
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let (streams, other) = boundedStreams(client, fake: fake, bound)
-        defer { try? other?.shutdown() }
+        defer { other?.shutdown() }
         let selector = other?.selector ?? client.selector
         _ = try await selector.select()   // discovered before the read, so the count below is the read's
         let discoveries = fake.discoveries
@@ -316,9 +316,9 @@ struct LazyReadEstablishmentDeadlineTests {
     func slotWaitOutlastsTheBound(_ path: EstablishmentPath, _ bound: Bound) async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold), maxConcurrentStreams: 1)
         let client = KurrentDBClient(settings: fake.settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let (streams, other) = boundedStreams(client, fake: fake, bound)
-        defer { try? other?.shutdown() }
+        defer { other?.shutdown() }
         let selector = other?.selector ?? client.selector
         // The held read takes the only slot of the read connection the bounded read then uses.
         let holder = other ?? client
@@ -347,7 +347,7 @@ struct LazyReadEstablishmentDeadlineTests {
     func budgetBeaten(_ path: EstablishmentPath) async throws {
         let fake = InProcessKurrentDB(read: .events(3))
         let client = KurrentDBClient(settings: fake.settings.defaultDeadline(5_000))
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         let drained = await drain(client.streams(specified: "orders").read(), on: path)
 
@@ -367,7 +367,7 @@ struct LazyReadEstablishmentDeadlineTests {
         for run in 0 ..< 20 {
             let budget = 96 + (run % 5) * 3   // 96 … 108 ms
             let client = KurrentDBClient(settings: fake.settings.defaultDeadline(budget))
-            defer { try? client.shutdown() }
+            defer { client.shutdown() }
             let connections = client.selector.connections
             _ = try await client.selector.select()
             _ = try? connections.acquire(fake.endpoint, purpose: .read).release()
@@ -387,7 +387,7 @@ struct LazyReadEstablishmentDeadlineTests {
     func bufferedDeadlineIsPerAttempt() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
         let client = KurrentDBClient(settings: fake.settings.defaultDeadline(150))
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         await #expect(throws: KurrentError.deadlineExceeded) {
             for try await _ in try await client.streams(specified: "orders").read().buffered {}

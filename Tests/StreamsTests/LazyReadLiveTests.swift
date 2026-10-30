@@ -52,7 +52,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("Cancelling one in-flight server-streaming RPC does not disturb another on the same shared connection")
     func cancellingOneRPCKeepsSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "LazyRead-Spike-\(UUID().uuidString)"
         let stream = client.streams(specified: name)
         try await appendEvents(count: 200, to: stream)
@@ -118,7 +118,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("lazy returns the same events as read() and as buffered")
     func lazyMatchesBuffered() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 50, to: stream)
 
@@ -134,7 +134,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("Breaking after the first event returns the lease and production stays bounded")
     func earlyBreakReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 300, to: stream)
 
@@ -162,7 +162,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("A Lazy value can be iterated twice; each iteration is its own RPC")
     func lazyIsReiterable() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 20, to: stream)
         let lazy = stream.read().lazy
@@ -179,7 +179,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("Cancelling the iterating task throws CancellationError and returns the lease")
     func callerCancellation() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 300, to: stream)
 
@@ -203,7 +203,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("A missing stream fails during iteration with the same error as read(), then ends")
     func missingStreamMatchesBuffered() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-missing-\(UUID().uuidString)")
 
         var bufferedError: (any Error)?
@@ -223,7 +223,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("Wrong credentials fail at the first next(), before any element")
     func wrongCredentials() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 5, to: stream)
 
@@ -239,7 +239,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("$all lazy read honours the limit")
     func allStreamsLazy() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let count = try await client.allStreams.read { $0.limit = 5 }.lazy.reduce(0) { total, _ in total + 1 }
         #expect(count == 5)
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
@@ -250,7 +250,7 @@ struct LazyReadLiveTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 1, to: stream)
-        try client.shutdown()
+        client.shutdown()
         await #expect(throws: KurrentError.connectionClosed) {
             for try await _ in stream.read().lazy {}
         }
@@ -281,7 +281,7 @@ struct LazyReadLiveTests: Sendable {
         }
         for await _ in firstElement { break }
         try await Task.sleep(for: .milliseconds(5))
-        try client.shutdown()
+        client.shutdown()
 
         let outcome = await withTaskGroup(of: (count: Int, error: (any Error)?)?.self) { group in
             // cancelAll() does not end a wait on reader.value by itself; cancel the reader so a
@@ -301,7 +301,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("Cancelling one lazy read leaves a concurrent read on the shared connection intact")
     func cancellingLazyKeepsSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-\(UUID().uuidString)")
         try await appendEvents(count: 300, to: stream)
         let createdBefore = client.selector.connections.createdSharedConnectionCount
@@ -347,7 +347,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("An RPC deadline surfaces as the RPC's error, not CancellationError, for an idle lazy consumer")
     func deadlineIsNotCancellation() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "LazyRead-Deadline-\(UUID().uuidString)"
         try await appendEvents(count: 300, to: client.streams(specified: name))
         let timed = streams(client, name: name, timeout: .seconds(2))
@@ -367,7 +367,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("A subscription whose deadline expires while its consumer is idle ends with the deadline error")
     func subscriptionDeadlineIsNotCancellation() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "LazyRead-SubDeadline-\(UUID().uuidString)"
         try await appendEvents(count: 300, to: client.streams(specified: name))
         let timed = streams(client, name: name, timeout: .seconds(2))
@@ -387,7 +387,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("A caught-up subscription whose deadline expires while the consumer waits ends with the deadline error")
     func caughtUpSubscriptionDeadline() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "LazyRead-CaughtUp-\(UUID().uuidString)"
         try await appendEvents(count: 1, to: client.streams(specified: name))
         let timed = streams(client, name: name, timeout: .seconds(2))
@@ -407,7 +407,7 @@ struct LazyReadLiveTests: Sendable {
         // (~34 events × 60 ms ≈ 2 s). With the default 8 MiB window every read would
         // end on the server at once and free its slot, and the test could not tell the connections apart.
         let client = KurrentDBClient(settings: settings.smallHTTP2Window())
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-Slow-\(UUID().uuidString)")
         let padding = String(repeating: "x", count: 4000)
         _ = try await stream.append(events: (0 ..< 50).map { _ in
@@ -450,7 +450,7 @@ struct LazyReadLiveTests: Sendable {
         // 100 of them fill the read connection (KurrentDB's SETTINGS_MAX_CONCURRENT_STREAMS); the
         // 101st waits for a slot, and that wait is part of the budget.
         let client = KurrentDBClient(settings: settings.smallHTTP2Window().defaultDeadline(1_000))
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "LazyRead-Held-\(UUID().uuidString)")
         let padding = String(repeating: "x", count: 4000)
         _ = try await stream.append(events: (0 ..< 50).map { _ in
@@ -501,7 +501,7 @@ struct LazyReadLiveTests: Sendable {
     @Test("A lazy read inside a lazy read's loop body completes")
     func nestedLazyReadCompletes() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let outer = client.streams(specified: "LazyRead-Outer-\(UUID().uuidString)")
         let inner = client.streams(specified: "LazyRead-Inner-\(UUID().uuidString)")
         try await appendEvents(count: 5, to: outer)

@@ -36,9 +36,9 @@ struct DefaultDeadlineLiveTests: Sendable {
     @Test("A subscription outlives the default deadline and still receives events")
     func subscriptionIsNotBounded() async throws {
         let writer = KurrentDBClient(settings: settings)
-        defer { try? writer.shutdown() }
+        defer { writer.shutdown() }
         let client = KurrentDBClient(settings: impatient)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "DefaultDeadline-\(UUID().uuidString)"
 
         let subscription = try await client.streams(specified: name).subscribe()
@@ -54,9 +54,9 @@ struct DefaultDeadlineLiveTests: Sendable {
     @Test("Establishing a lazy read is bounded by the default deadline")
     func lazyReadEstablishmentIsBounded() async throws {
         let writer = KurrentDBClient(settings: settings)
-        defer { try? writer.shutdown() }
+        defer { writer.shutdown() }
         let client = KurrentDBClient(settings: impatient)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "DefaultDeadline-\(UUID().uuidString)"
         _ = try await writer.streams(specified: name).append(events: (0 ..< 5).map { _ in event() }) { $0.expectedRevision = .any }
 
@@ -68,9 +68,9 @@ struct DefaultDeadlineLiveTests: Sendable {
     @Test("A lazy read's iteration outlives the default deadline")
     func lazyReadIterationOutlivesTheDeadline() async throws {
         let writer = KurrentDBClient(settings: settings)
-        defer { try? writer.shutdown() }
+        defer { writer.shutdown() }
         let client = KurrentDBClient(settings: settings.defaultDeadline(500))
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let name = "DefaultDeadline-\(UUID().uuidString)"
         _ = try await writer.streams(specified: name).append(events: (0 ..< 30).map { _ in event() }) { $0.expectedRevision = .any }
         // Discovered beforehand, so the 500 ms budget covers the read's own establishment only.

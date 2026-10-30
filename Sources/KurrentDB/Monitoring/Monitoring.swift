@@ -18,16 +18,14 @@ public final class Monitoring: GRPCConcreteService {
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions
-    internal let eventLoopGroup: EventLoopGroup
 
     /// Per-call authentication override, set via ``authenticated(_:)``. When nil, the client-level
     /// authentication from ``ClientSettings`` is used.
     internal let overrideCredentials: Authentication?
 
-    init(selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
+    init(selector: NodeSelector, callOptions: CallOptions = .defaults, overrideCredentials: Authentication? = nil) {
         self.selector = selector
         self.callOptions = callOptions
-        self.eventLoopGroup = eventLoopGroup
         self.overrideCredentials = overrideCredentials
     }
 
@@ -37,7 +35,7 @@ public final class Monitoring: GRPCConcreteService {
     /// - Parameter credentials: Authentication to use for calls made on the returned instance.
     /// - Returns: A new interface scoped to `credentials`.
     public func authenticated(_ credentials: Authentication) -> Self {
-        .init(selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
+        .init(selector: selector, callOptions: callOptions, overrideCredentials: credentials)
     }
 }
 
