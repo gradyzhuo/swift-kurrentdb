@@ -26,7 +26,7 @@ struct SubscriptionTombstoneLiveTests: Sendable {
     func testTombstoneWhileSubscribedEndsWithResourceDeleted() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         try await client.streams(specified: streamName)
             .append(events: [EventData(eventType: "Before-Tombstone", data: Data(), contentType: .json)]) { $0.expectedRevision = .any }
@@ -48,7 +48,7 @@ struct SubscriptionTombstoneLiveTests: Sendable {
     func testSubscribeToTombstonedStreamThrowsResourceDeleted() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         try await client.streams(specified: streamName)
             .append(events: [EventData(eventType: "Before-Tombstone", data: Data(), contentType: .json)]) { $0.expectedRevision = .any }
@@ -64,7 +64,7 @@ struct SubscriptionTombstoneLiveTests: Sendable {
     func testAllSubscriptionKeepsGoingPastATombstone() async throws {
         let streamName = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         let subscription = try await client.allStreams.subscribe { $0.filter = .onStreamName(prefixes: streamName) }
         try await client.streams(specified: streamName)

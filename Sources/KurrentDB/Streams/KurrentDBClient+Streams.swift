@@ -18,7 +18,7 @@ extension KurrentDBClient {
     /// - Parameter target: The stream target. Use static factories such as `.specified(_:)`, `.all`, or `.multiple`.
     /// - Returns: A ``Streams`` instance configured for the given target.
     public func streams<Target: StreamsTarget>(of target: Target) -> Streams<Target> {
-        .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+        .init(target: target, selector: selector, callOptions: defaultCallOptions)
     }
 }
 

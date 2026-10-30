@@ -9,6 +9,8 @@
 
 import Foundation
 import KurrentDB
+import NIOCore
+import NIOPosix
 import Testing
 
 struct OrderPlaced: Codable, Sendable {
@@ -23,6 +25,8 @@ struct MyState: Codable {}
 
 let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
+/// The event-loop group `Client pools.md` passes to `withBorrowedClient(eventLoopGroup:maxAttempts:_:)`.
+let eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton
 
 let eventData = EventData(eventType: "OrderPlaced", model: OrderPlaced(orderId: "order-1"))
 let event = eventData

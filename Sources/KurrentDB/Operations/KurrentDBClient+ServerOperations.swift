@@ -26,6 +26,6 @@ extension KurrentDBClient {
     /// - Parameter target: Operations target specifying scope and capabilities.
     /// - Returns: An ``Operations`` instance constrained by the target type.
     public func operations<Target: OperationsTarget>(of target: Target) -> Operations<Target> {
-        .init(target: target, selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+        .init(target: target, selector: selector, callOptions: defaultCallOptions)
     }
 }

@@ -10,7 +10,7 @@
 extension KurrentDBClient {
     /// Monitoring service for querying real-time KurrentDB server statistics.
     public var monitoring: Monitoring {
-        .init(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+        .init(selector: selector, callOptions: defaultCallOptions)
     }
 
     /// Streams server statistics snapshots from the monitoring service.
@@ -30,7 +30,7 @@ extension KurrentDBClient {
     /// - Throws: `KurrentError.accessDenied` if the caller lacks permission to read stats.
     ///   `KurrentError.unavailable` if the server cannot be reached.
     public func stats(useMetadata: Bool = false, refreshTimePeriodInMs: UInt64 = 10000) async throws(KurrentError) -> Monitoring.Stats.Responses {
-        let monitoring = Monitoring(selector: selector, callOptions: defaultCallOptions, eventLoopGroup: eventLoopGroup)
+        let monitoring = Monitoring(selector: selector, callOptions: defaultCallOptions)
         return try await monitoring.stats(useMetadata: useMetadata, refreshTimePeriodInMs: refreshTimePeriodInMs)
     }
 }

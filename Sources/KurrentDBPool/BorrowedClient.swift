@@ -11,9 +11,9 @@ import Synchronization
 /// calls, facades or clients.
 ///
 /// Give-back happens once: `withBorrowedClient(_:)` calls it, and `deinit` does it if nobody did.
-/// It closes the connections with the provider's shutdown, not `KurrentDBClient.shutdown()`, whose
-/// synchronous event-loop-group shutdown must not run on an event-loop thread (and `deinit` can run
-/// on any thread). If the client's own `shutdown()` races give-back, give-back still waits until
+/// It closes the connections with the provider's shutdown, not `KurrentDBClient.shutdown()`, because
+/// it must wait until that shutdown has ended every call, which `KurrentDBClient.shutdown()` only
+/// initiates. If the client's own `shutdown()` races give-back, give-back still waits until
 /// that shutdown has ended every call before releasing the instance: the provider's shutdown
 /// handlers (lazy reads) and its dedicated connections' close hooks (subscriptions) included.
 public final class BorrowedClient: Sendable {

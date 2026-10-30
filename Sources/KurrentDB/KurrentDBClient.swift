@@ -11,7 +11,6 @@ import GRPCEncapsulates
 import GRPCNIOTransportHTTP2
 import NIO
 import NIOSSL
-import Synchronization
 
 /// Primary entry point for interacting with a KurrentDB cluster.
 ///
@@ -42,56 +41,39 @@ public final class KurrentDBClient: Sendable, Buildable {
     /// Connection and authentication settings used by this client.
     public let settings: ClientSettings
 
-    /// Event loop group that drives all asynchronous network I/O for this client.
-    package let eventLoopGroup: EventLoopGroup
+    /// The event-loop group this client's connections run on. Injected, never owned: the client
+    /// does not shut it down.
+    package let eventLoopGroup: any EventLoopGroup
 
     /// Node selector that performs cluster discovery and routes requests to the best node.
+    ///
+    /// The client has no `deinit` that closes connections: facades (`Streams`, `Projections`, ...)
+    /// and returned subscriptions may outlive this client and keep the connection provider alive
+    /// through the selector; the provider closes its own connections when its last reference goes.
     package let selector: NodeSelector
 
-    private let isShutdown = Mutex<Bool>(false)
-
-    /// Creates a client that manages its own event loop group.
+    /// Creates a client.
     ///
     /// - Parameters:
     ///   - settings: Connection and authentication configuration. Use `.localhost()` for local development.
-    ///   - numberOfThreads: Number of threads to allocate for the internal event loop group. Defaults to `1`.
+    ///   - eventLoopGroup: The event-loop group every connection of this client runs on. Defaults to
+    ///     NIO's process-wide `.singletonMultiThreadedEventLoopGroup`, which grpc-swift uses anyway.
+    ///     Pass a group you already run (a Hummingbird server's, for example) so KurrentDB I/O shares
+    ///     its loops, or a private `MultiThreadedEventLoopGroup(numberOfThreads:)` to keep it apart.
+    ///     The connections use grpc-swift's NIO Posix transport, which needs a
+    ///     `MultiThreadedEventLoopGroup` or one of its event loops; a NIO Transport Services group
+    ///     does not work. The client never shuts the group down: you own its lifetime, and shut it
+    ///     down (if it is not the singleton) only after ``shutdown()``.
     ///   - defaultCallOptions: gRPC call options applied to all outgoing requests. Defaults to `.defaults`.
-    public init(settings: ClientSettings, numberOfThreads: Int = 1, defaultCallOptions: CallOptions = .defaults) {
+    public init(
+        settings: ClientSettings,
+        eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup,
+        defaultCallOptions: CallOptions = .defaults
+    ) {
         self.defaultCallOptions = defaultCallOptions
         self.settings = settings
-        self.selector = .init(settings: settings)
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: numberOfThreads)
-    }
-
-    /// Creates a client sharing an externally owned event loop group.
-    ///
-    /// - Parameters:
-    ///   - settings: Connection and authentication configuration.
-    ///   - eventLoopGroup: An existing event loop group whose lifetime the caller manages.
-    ///   - defaultCallOptions: gRPC call options applied to all outgoing requests. Defaults to `.defaults`.
-    private init(settings: ClientSettings, eventLoopGroup: EventLoopGroup, defaultCallOptions: CallOptions = .defaults) {
-        self.defaultCallOptions = defaultCallOptions
-        self.settings = settings
-        self.selector = .init(settings: settings)
         self.eventLoopGroup = eventLoopGroup
-    }
-
-    deinit {
-        // The connection provider is deliberately NOT torn down here: facades
-        // (`Streams`, `Projections`, ...) and returned subscriptions may outlive this
-        // client, and they keep the provider alive through the node selector. The
-        // provider closes its own connections when its last reference goes away.
-        let alreadyShutdown = isShutdown.withLock {
-            let old = $0
-            $0 = true
-            return old
-        }
-        guard !alreadyShutdown else { return }
-        eventLoopGroup.shutdownGracefully { error in
-            if let error {
-                logger.warning("EventLoopGroup shutdown error during deinit: \(error)")
-            }
-        }
+        self.selector = .init(settings: settings, eventLoopGroup: eventLoopGroup)
     }
 }
 
@@ -100,22 +82,19 @@ extension KurrentDBClient {
     ///
     /// After shutdown, every operation made through this client — including through
     /// facades obtained from it earlier — throws `KurrentError.connectionClosed`, and
-    /// active subscriptions end.
+    /// in-progress reads and active subscriptions end.
     ///
     /// Shutdown is *initiated*, not awaited: connections are cancelled, but may still be
-    /// closing when this method returns.
+    /// closing when this method returns. The event-loop group passed to
+    /// ``init(settings:eventLoopGroup:defaultCallOptions:)`` is left running; its owner shuts it
+    /// down.
+    ///
+    /// This closes this client; it never stops the server. Code written against `KurrentDB_V1`,
+    /// whose `client.shutdown()` shut the server down, uses
+    /// `try await client.operations(of: .system).shutdown()` for that.
     ///
     /// Safe to call multiple times; calls after the first have no effect.
-    ///
-    /// - Throws: Any error raised by the underlying NIO `syncShutdownGracefully()`.
-    public func shutdown() throws {
-        let alreadyShutdown = isShutdown.withLock {
-            let old = $0
-            $0 = true
-            return old
-        }
-        guard !alreadyShutdown else { return }
+    public func shutdown() {
         selector.connections.shutdown()
-        try eventLoopGroup.syncShutdownGracefully()
     }
 }
