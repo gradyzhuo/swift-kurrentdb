@@ -443,6 +443,61 @@ struct LazyReadLiveTests: Sendable {
         #expect(try await eventually { (try? await readRetainCount(client)) == 0 })
     }
 
+    @Test("The 101st lazy read held open on one read connection gets deadlineExceeded within the budget, without a node reset")
+    func readBeyondTheStreamLimitHitsTheBudget() async throws {
+        // A 64 KiB HTTP/2 window and ~4 KB events (~200 KB per read): a read advanced once and then
+        // left alone keeps its stream, since the server cannot send the rest until it is pulled.
+        // 100 of them fill the read connection (KurrentDB's SETTINGS_MAX_CONCURRENT_STREAMS); the
+        // 101st waits for a slot, and that wait is part of the budget.
+        let client = KurrentDBClient(settings: settings.smallHTTP2Window().defaultDeadline(1_000))
+        defer { try? client.shutdown() }
+        let stream = client.streams(specified: "LazyRead-Held-\(UUID().uuidString)")
+        let padding = String(repeating: "x", count: 4000)
+        _ = try await stream.append(events: (0 ..< 50).map { _ in
+            EventData(eventType: "LazyRead-Test", model: ["Description": padding])
+        }) { $0.expectedRevision = .any }
+        let node = try await client.selector.select()
+        let expiry = await client.selector.selectedNodeExpiry   // a rediscovery would renew it
+
+        var held: [Streams<SpecifiedStream>.ReadCall.Lazy.Iterator] = []
+        for _ in 0 ..< 100 {
+            let iterator = stream.read().lazy.makeAsyncIterator()
+            _ = try await iterator.next()
+            held.append(iterator)
+        }
+        let connections = client.selector.connections
+        #expect(connections.createdReadConnectionCount == 1)
+        #expect(connections.readEntrySnapshot(for: node.endpoint)?.retainCount == 100)
+
+        // Raced against 3 s, so a read the budget does not bound fails here instead of at the time limit.
+        let start = ContinuousClock.now
+        let blocked = Task { () -> (any Error)? in
+            do {
+                _ = try await stream.read().lazy.makeAsyncIterator().next()
+                return nil
+            } catch {
+                return error
+            }
+        }
+        let watchdog = Task {
+            try await Task.sleep(for: .seconds(3))
+            blocked.cancel()
+        }
+        let error = await blocked.value
+        watchdog.cancel()
+        let elapsed = ContinuousClock.now - start
+
+        #expect((error as? KurrentError) == .deadlineExceeded, "\(String(describing: error)) after \(elapsed)")
+        #expect(elapsed <= .milliseconds(1_200), "\(elapsed)")
+        #expect(connections.createdReadConnectionCount == 1)
+        #expect(await client.selector.cachedNodeForTesting?.endpoint == node.endpoint)
+        #expect(await client.selector.selectedNodeExpiry == expiry, "the node was invalidated and discovered again")
+
+        held.removeAll()
+        #expect(try await eventually { connections.readEntrySnapshot(for: node.endpoint)?.retainCount == 0 })
+    }
+
+
     @Test("A lazy read inside a lazy read's loop body completes")
     func nestedLazyReadCompletes() async throws {
         let client = KurrentDBClient(settings: settings)

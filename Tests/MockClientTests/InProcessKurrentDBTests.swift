@@ -50,17 +50,15 @@ struct InProcessKurrentDBTests {
     @Test("With maxConcurrentStreams, a stream beyond the limit waits for a slot until its task is cancelled")
     func streamBeyondTheLimitWaits() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold), maxConcurrentStreams: 1)
-        // One attempt: a retry would invalidate the node and could read on a new connection.
-        var settings = fake.settings
-        settings.operationRetryPolicy.maxAttempts = 1
         // No call timeout: the held read must keep its slot for the whole test, so the second read is
         // ended by cancelling its task instead of by a deadline both reads would share.
-        let client = KurrentDBClient(settings: settings)
+        let client = KurrentDBClient(settings: fake.settings)
         defer { try? client.shutdown() }
-        // Discovery takes the one slot and gives it back; the first read then holds it.
+        // Discovery runs on the main connection; the first read holds the read connection's one slot.
         let held = client.streams(specified: "orders").read().lazy.makeAsyncIterator()
         _ = try await held.next()
         #expect(fake.openStreams == 1)
+        let discoveries = fake.discoveries
         let start = ContinuousClock.now
         let waiting = Task {
             for try await _ in client.streams(specified: "orders").read().lazy {}
@@ -68,9 +66,10 @@ struct InProcessKurrentDBTests {
         try await Task.sleep(for: .milliseconds(300))
         #expect(fake.readsStarted == 1)
         waiting.cancel()
-        await #expect(throws: (any Error).self) { try await waiting.value }
+        await #expect(throws: CancellationError.self) { try await waiting.value }
         #expect(ContinuousClock.now - start >= .milliseconds(300))
         #expect(fake.readsStarted == 1)
+        #expect(fake.discoveries == discoveries)   // a cancelled wait is never retried
         withExtendedLifetime(held) {}
     }
 

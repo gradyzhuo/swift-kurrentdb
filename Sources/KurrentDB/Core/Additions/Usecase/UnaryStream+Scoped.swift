@@ -121,7 +121,11 @@ extension ScopedStreamResponse where Transport == AnyClientTransport {
                         }
                         if Task.isCancelled { handlerCancellation.mark() }
                     case let .failure(error):
-                        accepted.fail(error)
+                        // Rethrown, not failed into the gate here: the catch below maps it on this
+                        // task, where a call timeout that expired before acceptance (which grpc-swift
+                        // reports as `unknown` caused by CancellationError) is told apart from a
+                        // requested close() and becomes deadlineExceeded, which is not retried.
+                        throw error
                     }
                 }
                 // Older grpc-swift returns normally when the deadline cancelled the handler; this
