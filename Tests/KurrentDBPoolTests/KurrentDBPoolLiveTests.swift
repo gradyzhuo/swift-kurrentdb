@@ -83,10 +83,10 @@ struct KurrentDBPoolLiveTests {
             .append(events: events) { $0.expectedRevision = .any }
 
         var readBackOnFirst: [String] = []
-        let responses = try await first.client.streams(specified: streamName).read {
+        let responses = first.client.streams(specified: streamName).read {
             $0.direction = .forward
             $0.revision = .start
-        }.buffered
+        }
         for try await response in responses {
             if case let .event(event) = response {
                 readBackOnFirst.append(event.record.eventType)

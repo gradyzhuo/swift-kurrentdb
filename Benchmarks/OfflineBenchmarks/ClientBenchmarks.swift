@@ -51,7 +51,7 @@ func clientBenchmarks() {
 
         Benchmark("Client/read-lazy/\(count)x100B") { (benchmark, fixture: StreamFixture) in
             for _ in benchmark.scaledIterations {
-                for try await response in fixture.stream.read().lazy {
+                for try await response in fixture.stream.read() {
                     blackHole(response)
                 }
             }
@@ -142,7 +142,7 @@ private struct StreamFixture {
             try buffered.append(response.event.record.revision)
         }
         var lazy: [UInt64] = []
-        for try await response in fixture.stream.read().lazy {
+        for try await response in fixture.stream.read() {
             try lazy.append(response.event.record.revision)
         }
         let expected = Array(0 ..< UInt64(count))
@@ -234,7 +234,7 @@ private struct FixtureError: Error, CustomStringConvertible {
 /// One lazy read, iterated on the main actor (the hand-off path).
 @MainActor
 private func readOnMainActor(_ stream: Streams<SpecifiedStream>) async throws {
-    for try await response in stream.read().lazy {
+    for try await response in stream.read() {
         blackHole(response)
     }
 }

@@ -79,8 +79,8 @@ try await client.streams(of: .specified("orders"))
     .append(events: [eventData])
 
 // ✓ Read from $all
-let responses = try await client.streams(of: .all)
-    .read { $0.direction = .forward }.buffered
+let responses = client.streams(of: .all)
+    .read { $0.direction = .forward }
 
 // ✓ Append to several streams at once
 try await client.streams(of: .multiple)
@@ -96,7 +96,7 @@ try await client.streams(of: .all).append(events: [eventData])
 try await client.streams(of: .all).delete()
 
 // ✗ Compile error: cannot read from MultiStreamsTarget
-try await client.streams(of: .multiple).read()
+_ = client.streams(of: .multiple).read()
 ```
 
 ## Comparison with other targets

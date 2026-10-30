@@ -116,11 +116,11 @@ try await stream.append(events: EventData(eventType: "some-event", model: TestEv
 ```swift
 let stream = client.streams(specified: "concurrency-stream")
 
-let responses = try await stream.read {
+let responses = stream.read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 1
-}.buffered
+}
 
 for try await response in responses {
     let revision = try response.event.record.revision

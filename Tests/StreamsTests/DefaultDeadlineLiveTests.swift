@@ -61,7 +61,7 @@ struct DefaultDeadlineLiveTests: Sendable {
         _ = try await writer.streams(specified: name).append(events: (0 ..< 5).map { _ in event() }) { $0.expectedRevision = .any }
 
         // Node selection alone takes longer than 1 ms: the first next() ends with the budget.
-        let iterator = client.streams(specified: name).read().lazy.makeAsyncIterator()
+        let iterator = client.streams(specified: name).read().makeAsyncIterator()
         await #expect(throws: KurrentError.deadlineExceeded) { _ = try await iterator.next() }
     }
 
@@ -78,7 +78,7 @@ struct DefaultDeadlineLiveTests: Sendable {
 
         // 30 events at 50 ms each: about three times the deadline.
         var count = 0
-        for try await _ in client.streams(specified: name).read().lazy {
+        for try await _ in client.streams(specified: name).read() {
             count += 1
             try await Task.sleep(for: .milliseconds(50))
         }
