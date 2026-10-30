@@ -35,7 +35,7 @@ struct InProcessKurrentDBTests {
         #expect(try await eventually { fake.openStreams == 0 })
     }
 
-    @Test("A read broken off on a .hold script leaves no open stream once the connection is closed")
+    @Test("A read broken off on a .hold script leaves no open stream, and none after the connection is closed")
     func brokenHoldReadClosesWithTheConnection() async throws {
         let fake = InProcessKurrentDB(read: .events(3, then: .hold))
         let client = KurrentDBClient(settings: fake.settings)

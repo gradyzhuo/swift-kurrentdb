@@ -58,6 +58,17 @@ func clientBenchmarks() {
         } setup: {
             try await .reading(count)
         }
+
+        // The same read iterated from the main actor: `for try await` passes the actor as
+        // `#isolation`, so the iterator takes the hand-off path. `Client/read-lazy` above iterates off
+        // any actor and takes the direct path.
+        Benchmark("Client/read-lazy-actor/\(count)x100B") { (benchmark, fixture: StreamFixture) in
+            for _ in benchmark.scaledIterations {
+                try await readOnMainActor(fixture.stream)
+            }
+        } setup: {
+            try await .reading(count)
+        }
     }
 
     for count in [1, 100] {
@@ -217,5 +228,13 @@ private struct FixtureError: Error, CustomStringConvertible {
 
     init(_ description: String) {
         self.description = description
+    }
+}
+
+/// One lazy read, iterated on the main actor (the hand-off path).
+@MainActor
+private func readOnMainActor(_ stream: Streams<SpecifiedStream>) async throws {
+    for try await response in stream.read().lazy {
+        blackHole(response)
     }
 }
