@@ -121,7 +121,7 @@ try await client.streams(specified: "orders").append(events: [event]) {
 let responses = try await client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 10
-}
+}.buffered
 
 for try await response in responses {
     let readEvent = try response.event
@@ -150,24 +150,24 @@ try await client.streams(specified: "orders").append(events: [event]) {
 let forward = try await client.streams(specified: "orders").read {
     $0.revision = .start
     $0.limit = 50
-}
+}.buffered
 
 // Read backward
 let backward = try await client.streams(specified: "orders").read {
     $0.revision = .end
     $0.direction = .backward
     $0.limit = 10
-}
+}.buffered
 
 // Read $all
 let allResponses = try await client.allStreams.read {
     $0.limit = 100
-}
+}.buffered
 
 // Read $all with server-side filtering
 let filtered = try await client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
-}
+}.buffered
 
 // Subscribe (catch-up)
 let subscription = try await client.streams(specified: "orders").subscribe()

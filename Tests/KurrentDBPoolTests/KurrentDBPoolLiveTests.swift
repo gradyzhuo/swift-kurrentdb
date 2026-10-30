@@ -71,7 +71,7 @@ struct KurrentDBPoolLiveTests {
         let responses = try await first.client.streams(specified: streamName).read {
             $0.direction = .forward
             $0.revision = .start
-        }
+        }.buffered
         for try await response in responses {
             if case let .event(event) = response {
                 readBackOnFirst.append(event.record.eventType)
@@ -82,7 +82,7 @@ struct KurrentDBPoolLiveTests {
         await #expect(throws: KurrentError.resourceNotFound(
             reason: "The name '\(streamName)' of streams not found."
         )) {
-            let responses = try await second.client.streams(specified: streamName).read()
+            let responses = try await second.client.streams(specified: streamName).read().buffered
             var iterator = responses.makeAsyncIterator()
             _ = try await iterator.next()
         }

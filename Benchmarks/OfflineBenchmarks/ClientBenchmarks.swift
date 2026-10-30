@@ -41,7 +41,7 @@ func clientBenchmarks() {
     for count in [1, 100, 1000] {
         Benchmark("Client/read-buffered/\(count)x100B") { (benchmark, fixture: StreamFixture) in
             for _ in benchmark.scaledIterations {
-                for try await response in try await fixture.stream.read() {
+                for try await response in try await fixture.stream.read().buffered {
                     blackHole(response)
                 }
             }
@@ -127,7 +127,7 @@ private struct StreamFixture {
     static func reading(_ count: Int) async throws -> Self {
         let fixture = try Self(readResponses: serializedReadResponses(count: count, payload: payload))
         var buffered: [UInt64] = []
-        for try await response in try await fixture.stream.read() {
+        for try await response in try await fixture.stream.read().buffered {
             try buffered.append(response.event.record.revision)
         }
         var lazy: [UInt64] = []
