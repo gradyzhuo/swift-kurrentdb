@@ -44,7 +44,7 @@ let count = try await withBorrowedClient { borrowed in
     try await client.streams(specified: "orders").append(events: [eventData])
 
     var count = 0
-    for try await _ in try await client.streams(specified: "orders").read().buffered {
+    for try await _ in client.streams(specified: "orders").read() {
         count += 1
     }
     return count
@@ -59,6 +59,8 @@ print(count)
 ```
 
 The result is optional: `withBorrowedClient` returns `nil` without calling your closure when it can't lend an instance.
+
+Iterate inside the closure and return values, not calls or clients: the closure above returns the count, not the `ReadCall`. A `ReadCall`, a facade such as `client.streams(specified:)` or a `Subscription` returned from the closure outlives the borrow and ends with `KurrentError.connectionClosed` (see "After giving it back" below).
 
 ### How an instance is chosen
 
@@ -76,4 +78,4 @@ let result = try await withBorrowedClient(numberOfThreads: 2, maxAttempts: 5) { 
 
 ## After giving it back
 
-Giving an instance back only returns it to the pool; the borrowed ``KurrentDBClient`` itself keeps working. Don't keep using it outside the closure — another caller may be using the same instance. If you keep the `BorrowedClient`, check `isGivenBack` before using it.
+Giving an instance back closes the borrowed ``KurrentDBClient``'s connections before the instance returns to the pool, so nothing you keep can reach an instance another caller may be using. Every later call on the client, on a facade made from it, or on a `ReadCall` or `Subscription` kept past the closure throws `KurrentError.connectionClosed`. `isGivenBack` tells a kept `BorrowedClient` that this has happened.
