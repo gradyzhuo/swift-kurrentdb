@@ -65,8 +65,8 @@ extension Streams {
             // One hold for both streams: releasing one of them (keeping only `events`, say) must
             // not end the other; the hand-off is cancelled when the last one is released.
             let hold = handoff.hold()
-            messages = handoff.makeStream(hold: hold, mapError: serverExceptionOrOriginal, decode)
-            events = handoff.makeStream(hold: hold, mapError: serverExceptionOrOriginal) { response in
+            messages = handoff.makeStream(hold: hold, mapError: { mapStreamError($0, usage: "subscribe") }, decode)
+            events = handoff.makeStream(hold: hold, mapError: { mapStreamError($0, usage: "subscribe") }) { response in
                 if case let .event(readEvent)? = try decode(response) { return readEvent }
                 return nil
             }

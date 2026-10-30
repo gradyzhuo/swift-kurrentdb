@@ -79,7 +79,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                     // deadline error. An unrequested CancellationError is raised either by grpc-swift enforcing the call deadline,
                     // or by the consumer cancelling the hand-off; the latter is harmless because the
                     // hand-off is already terminal, so finish(throwing:) is a no-op.
-                    messages.finish(throwing: deadlineOrOriginal(error))
+                    messages.finish(throwing: mapStreamError(deadlineOrOriginal(error), usage: "\(Self.name)"))
                 }
             }
             return try await .init(messages: messages, stream: streamIdentifier)
