@@ -34,8 +34,13 @@ public struct StreamPosition: Sendable {
     }
 }
 
-extension StreamPosition: Equatable {
+extension StreamPosition: Hashable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.commit == rhs.commit && lhs.prepare == rhs.prepare
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(commit)
+        hasher.combine(prepare)
     }
 }
