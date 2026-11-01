@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import GRPCCore
 import KurrentDB
 import NIOCore
 import NIOPosix
@@ -36,6 +37,8 @@ let record = try! EventRecord(eventType: "OrderPlaced", payload: .json(OrderPlac
 /// Names the 3.0 migration article refers to.
 let orders = client.streams(specified: "orders")
 let someData = Data("{\"orderId\":\"order-1\"}".utf8)
+/// The examples `import GRPCCore` for `CallOptions`; the generator drops import lines, so the name comes from here.
+typealias CallOptions = GRPCCore.CallOptions
 
 @Test("Documentation examples compile")
 func documentationExamplesCompile() {
