@@ -178,6 +178,12 @@ These close the gaps that would make percentiles or parity misleading.
   allowance, is spelled out in `Benchmarks/Live/docs/driver-contract.md` rule 11). Latency
   from a step that is not sustained is never used in a headline comparison; where it is
   shown, its upper percentiles are marked as censored.
+- **One bad round is tolerated.** A client sustains a step when it sustains it in every
+  valid round but one (`EvaluationThresholds.toleratedUnsustainedRounds`). The calibration
+  runs showed both clients dropping a fraction of a percent in a single round at steps
+  they otherwise held easily, which made the whole step uncomparable. The round a client
+  did not sustain is left out of every ratio at that step, so cells run one round more
+  than their tier's minimum: 6 for headline cells, 4 for appendix cells.
 - **Percentiles are ranked over all scheduled attempts**, not over successes only.
   A failed, dropped or timed-out attempt counts as a latency of +∞ (worse than the
   deadline). Any percentile that lands among those attempts is reported as
@@ -207,7 +213,8 @@ These close the gaps that would make percentiles or parity misleading.
     zero).
 - **Statistics.** Each round yields one paired ratio per metric (Swift ÷ .NET, both
   measured in that round). The interval is a 95% confidence interval over the
-  round-level log-ratios. Minimum 5 rounds for headline cells, 3 for appendix cells.
+  round-level log-ratios. Minimum 5 paired rounds for headline cells, 3 for appendix
+  cells (out of 6 and 4 run).
   Every ratio is oriented so that **higher means Swift is worse**: Swift ÷ .NET for
   lower-is-better metrics (latency, CPU per operation, RSS), .NET ÷ Swift for
   higher-is-better metrics (throughput). Verdict against 1.2×: **meets** when the upper

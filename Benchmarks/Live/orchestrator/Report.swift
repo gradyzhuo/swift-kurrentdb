@@ -58,9 +58,10 @@ enum Report {
         +∞, and a percentile that lands among them reads <em>&gt; deadline</em>. Tables show the lower median over the
         valid rounds.</li>
         <li><strong>Sustained</strong>: successful rate ≥ \(fixed(t.sustainedRateFraction * 100, 0))% of the target and
-        failed + dropped + timed out ≤ \(fixed(t.maxLossRatio * 100, 1))% of scheduled, in every valid round (a growing
-        backlog shows up as drops and timeouts under the in-flight cap and deadline). A step gets ratios only when both
-        clients sustained it.</li>
+        failed + dropped + timed out ≤ \(fixed(t.maxLossRatio * 100, 1))% of scheduled, and the backlog not growing, in
+        every valid round but at most \(t.toleratedUnsustainedRounds). A step gets ratios only when both clients sustained
+        it, and a round either client did not sustain is left out of them; cells run one round more than their tier's
+        minimum for that.</li>
         <li><strong>Server headroom</strong>: every server core ≤ \(fixed(t.maxCoreBusy * 100, 0))% busy, disk await ≤
         \(fixed(t.maxDiskAwaitMillis, 0)) ms, disk queue ≤ \(fixed(t.maxDiskQueueDepth, 0)), and the
         <code>$by_category</code> projection having processed the last event written in the window within
@@ -188,6 +189,7 @@ enum Report {
                     ? "<span class=\"badge bad\">no valid trial</span>"
                     : client.sustained
                         ? "<span class=\"badge good\">sustained</span>"
+                            + (client.sustainedCount < client.valid.count ? " <span class=\"muted\">(\(client.sustainedCount) of \(client.valid.count))</span>" : "")
                         : "<span class=\"badge bad\">not sustained</span> <span class=\"muted\">(\(client.sustainedCount) of \(client.valid.count))</span>"
                 cells.append("<td>\(sustained)</td>")
                 cells.append("<td>\(headroomBadge(client.headroom, empty: client.valid.isEmpty))</td>")

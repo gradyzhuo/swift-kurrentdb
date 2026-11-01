@@ -18,7 +18,8 @@ struct ScenarioTests {
         #expect(cells.contains { $0.id == "append-latency-300-tls" && $0.tier == .headline && $0.rounds >= 5 })
         #expect(cells.filter { $0.kind == .rebuild && $0.tier == .headline }.compactMap(\.streamLength).sorted() == [10, 100, 1000])
         #expect(cells.first { $0.id == "rebuild-300-tls-L10000" }?.tier == .appendix)
-        #expect(cells.allSatisfy { $0.tier == .headline ? $0.rounds >= 5 : $0.rounds >= 3 })
+        // One round above the tier minimum (5 headline, 3 appendix), for the tolerated unsustained round.
+        #expect(cells.allSatisfy { $0.tier == .headline ? $0.rounds == 6 : $0.rounds == 4 })
     }
 
     @Test func cellIdsAreUniqueAndFollowThePattern() throws {
@@ -41,7 +42,7 @@ struct ScenarioTests {
         let c = try #require(cells.first { $0.id == "persistent-300-tls-c4" })
         #expect(c.consumers == 4)
         #expect(c.kind == .persistentSubscription && c.tier == .appendix && c.tls && c.eventSize == 300)
-        #expect(c.rates == [250, 400] && c.rounds == 3)
+        #expect(c.rates == [250, 400] && c.rounds == 4)
         #expect(cells.first { $0.id == "persistent-300-tls" }?.consumers == nil)
     }
 
