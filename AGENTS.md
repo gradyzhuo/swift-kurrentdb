@@ -6,7 +6,7 @@ Short, verifiable facts about this repository for coding agents and new contribu
 - `Sources/KurrentDB` — the public client (`KurrentDBClient`, target-based `Streams`, `Projections`, `PersistentSubscriptions`, `Users`, `Monitoring`, `Operations`, `Gossip`) plus the DocC catalog `KurrentDB.docc`.
 - `Sources/KurrentDBPool` — lends clients for independent KurrentDB instances; entry point `withBorrowedClient(_:)`.
 - `Sources/GRPCEncapsulates` — gRPC call-shape protocols (`UnaryUnary`, `UnaryStream`, `StreamUnary`, `StreamStream`) and request/response composition.
-- `Sources/_GRPCProtobufGenerated` — code generated from `proto/`; never hand-edit.
+- `Sources/_GRPCProtobufGenerated` — code generated from `proto/`; never hand-edit. Reviewers — Codex review included — skip this directory; the `generated-code` CI job (regenerate-and-diff) is its review.
 - `Tests/<Area>Tests` — one Swift Testing target per area (`StreamsTests`, `ProjectionsTests`, `PersistentSubscriptionsTests`, `UsersTests`, `OperationsTests`, `MonitoringTests`, `GossipTests`, `KurrentCoreTests`, `MockClientTests`, `KurrentDBPoolTests`, `X509Tests`, `DocSnippetsTests`). Live suites keep their CA fixture under `Resources/`.
 - `Benchmarks/OfflineBenchmarks` — benchmark suite whose results `.github/workflows/benchmarks.yml` uploads to Bencher; `scripts/` — a dependency-free SwiftPM package of helper executables (`swift run --package-path scripts <name>`: doc snippets, doc versions, site assembly, release readiness, benchmark conversion), tested with `swift test --package-path scripts`. The repository has no Python.
 - `server/` — Docker Compose files for the local 3-node TLS cluster and the X.509 setup.
@@ -20,7 +20,7 @@ Short, verifiable facts about this repository for coding agents and new contribu
 - `swift test --filter StreamsTests` / `swift test --filter "LazyReadLiveTests|ResponseHandoffTests"` — a suite or a regex of suites. `MockClientTests` and `KurrentCoreTests` run offline (no cluster).
 - `OperationsTests` runs as its own CI step after the main suites because it resigns the leader and restarts the persistent-subscriptions subsystem.
 - `scripts/check-doc-snippets.sh` — compiles every ```` ```swift ```` block in `README.md`, the DocC articles and the `///` comments of `Sources/KurrentDB` and `Sources/KurrentDBPool` (via the git-ignored `Tests/DocSnippetsTests/DocSnippets.generated.swift`). Run it after touching any documentation example.
-- Regenerating gRPC code: see `proto/README.md` (`swift package --allow-writing-to-package-directory generate-grpc-code-from-protos … --output-path Sources/_GRPCProtobufGenerated`). Commit the proto change and the regenerated sources together.
+- Regenerating gRPC code: `scripts/regenerate-protos.sh` (pinned generators, see `proto/README.md`). Commit the proto change and the regenerated sources together; CI regenerates and diffs.
 - Swift 6.0 compatibility check for a clean checkout: `docker run --rm --platform linux/arm64 -v "$PWD":/w -w /w swift:6.0-jammy swift build --build-tests` (use a fresh `git worktree`; a local `Package.resolved` would pin newer dependencies).
 
 ## Coding Style & Naming Conventions

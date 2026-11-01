@@ -56,11 +56,11 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.0.0"),
+        .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.3.0"),
         .package(url: "https://github.com/grpc/grpc-swift-nio-transport.git", from: "2.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.37.0"),
     ] + (benchmarksEnabled
         ? [Package.Dependency.package(url: "https://github.com/ordo-one/benchmark.git", from: "1.36.2")]
         : []),
