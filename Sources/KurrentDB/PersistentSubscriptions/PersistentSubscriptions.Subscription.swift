@@ -15,9 +15,9 @@ import Synchronization
 extension PersistentSubscriptions {
     /// An active handle to a persistent subscription session.
     ///
-    /// Obtain an instance through ``PersistentSubscriptions/subscribe(configure:)``.
-    /// Iterate ``events`` to receive delivered events, then call ``ack(readEvents:)``
-    /// or ``nack(readEvents:action:reason:)`` for each one.
+    /// Obtain an instance through ``PersistentSubscriptions/subscribe(configure:)-((SpecifiedStream.Read.Options)->Void)``.
+    /// Iterate ``events`` to receive delivered events, then call ``ack(readEvents:)-([ReadEvent])``
+    /// or ``nack(readEvents:action:reason:)-([ReadEvent],_,_)`` for each one.
     ///
     /// The subscription's connection closes when nothing references the subscription or
     /// its ``events`` stream any more — for example when the scope holding them ends. You
