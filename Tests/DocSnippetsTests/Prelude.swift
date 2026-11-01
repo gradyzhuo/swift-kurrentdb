@@ -33,6 +33,10 @@ let event = eventData
 let events = [eventData]
 let record = try! EventRecord(eventType: "OrderPlaced", payload: .json(OrderPlaced(orderId: "order-1")))
 
+/// Names the 3.0 migration article refers to.
+let orders = client.streams(specified: "orders")
+let someData = Data("{\"orderId\":\"order-1\"}".utf8)
+
 @Test("Documentation examples compile")
 func documentationExamplesCompile() {
     // Building this target is the check; see `swift run --package-path scripts generate-doc-snippets`.

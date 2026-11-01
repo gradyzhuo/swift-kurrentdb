@@ -17,6 +17,7 @@ A modern, type-safe Swift client for KurrentDB (formerly EventStoreDB), built on
 - <doc:Server-statistics>
 - <doc:Server-operations>
 - <doc:Client-pools>
+- <doc:Migrating-to-3.0>
 - <doc:Migration-guide>
 
 ## Architecture
