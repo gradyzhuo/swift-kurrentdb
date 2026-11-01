@@ -27,6 +27,334 @@ Then check four things before you build.
 
 ## read() is lazy
 
+In 2.x, `try await s.read()` fetched the whole result before it returned. In 3.0, `read()` is synchronous and does not throw: it returns a ``Streams/ReadCall`` and opens nothing. The RPC opens at the first element, errors are thrown from the loop, and the RPC stays open until the loop ends. <doc:Reading-events> explains how that keeps memory bounded.
+
+Most 2.x read code still compiles. The table lists what the compiler says about each shape; the subsections after it cover what it does not say.
+
+| 2.x code | 3.0 | Diagnostic |
+|----------|-----|------------|
+| `for try await r in try await s.read()` | lazy; the RPC is open during the loop | 2 warnings: "no 'async' operations occur within 'await' expression", "no calls to throwing functions occur within 'try' expression" |
+| `let rs = try await s.read(); … for try await r in rs` | lazy; each `for` re-opens the RPC | the same 2 warnings |
+| `try await s.read().reduce(…)` and the other shapes under "reduce, first and friends now stream" | lazy | **none** |
+| `#expect(throws:) { try await s.read() }` | never throws, so the expectation fails | the same 2 warnings, inside the macro expansion |
+| `do { rs = try await s.read() } catch { … }` | never throws | the same 2 warnings; "'catch' block is unreachable because no errors are thrown in 'do' block" only if nothing else in the block throws |
+| A property, return type or parameter typed `AsyncThrowingStream<…ReadResponse, Error>` receiving `try await s.read()` | compile error; fix: `.buffered` | error: "cannot assign value of type 'Streams<SpecifiedStream>.ReadCall' to type 'AsyncThrowingStream<Streams<SpecifiedStream>.ReadResponse, any Error>'" |
+| `s.read().lazy` | works | "'lazy' is deprecated: read() is lazy in 3.0; drop .lazy. Removed in 4.0." |
+| `try client.shutdown()` | works; `shutdown()` no longer throws, because the client no longer stops an event-loop group | "no calls to throwing functions occur within 'try' expression"; fix: drop the `try` (for a `try await client.shutdown()` that came from `KurrentDB_V1` code, see Before you start) |
+| `try await s.read().buffered` | unchanged | none |
+| `let call: Streams<SpecifiedStream>.ReadCall = s.read()` | the annotation is no longer needed | none |
+| `var it = rs.makeAsyncIterator()` | the iterator is a class | "variable 'it' was never mutated; consider changing to 'let' constant"; use `let` |
+
+New in 3.0: inside an actor, a stored iterator is advanced with `it.next(isolation: self)`; 2.x's lazy iterator could not be (see Reads from an actor below).
+
+### The try await moves to the loop
+<!-- S8 -->
+
+`read()` no longer has anything to wait for or throw. A loop over `try await s.read()` still compiles, with the two warnings above, and reads lazily. Drop both markers; the loop's own `try await` stays.
+
+<!-- snippet:skip -->
+```swift
+for try await response in try await orders.read() { _ = response }
+let responses = try await orders.read()
+```
+
+```swift
+for try await response in orders.read() { _ = response }
+let responses = orders.read()
+```
+
+### reduce, first and friends now stream
+<!-- S1 -->
+
+When `read()` is the operand of another `try await` — `reduce`, `first(where:)`, `contains`, `min`, `max`, `allSatisfy`, `prefix(…)` followed by a fold, your own `try await f(s.read())`, or `async let r = s.read()` — the outer call uses up the `try` and the `await`, and the compiler says nothing. The text is the same in both versions and is the right 3.0 code. What changes is when things happen: the RPC stays open while the operation runs, and the deadline, retry and error rules below apply. Add `.buffered` where you need the whole result first.
+
+<!-- snippet:skip -->
+```swift
+let count = try await orders.read().reduce(0) { n, _ in n + 1 }   // 2.x: read() fetched everything first
+```
+
+```swift
+let count = try await orders.read().reduce(0) { n, _ in n + 1 }   // 3.0: one RPC that ends when reduce does
+let snapshot = try await orders.read().buffered                    // the whole result first, as in 2.x
+```
+
+### A stored read replays on every loop
+<!-- S5 -->
+
+A 2.x result was a snapshot: a second loop over it yielded nothing. A `ReadCall` describes a read: every loop opens a new RPC and reads from the start again, including events appended in between. Use `.buffered` where you relied on one fetch.
+
+<!-- snippet:skip -->
+```swift
+let responses = try await orders.read()
+for try await response in responses { _ = response }
+for try await response in responses { _ = response }   // 2.x: nothing; the result was used up
+```
+
+```swift
+let call = orders.read()
+for try await response in call { _ = response }
+for try await response in call { _ = response }   // a second RPC, from the start, with later appends
+```
+
+### A guard that no longer guards
+<!-- S7 -->
+
+`_ = try await s.read()`, or a `do`/`catch` around it, threw in 2.x when no node could be found. In 3.0 it opens nothing and never throws, so the code after it always runs; only the two warnings remain. A `#expect(throws:)` around `read()` now fails. To check that the read can be established, read one element: that throws what opening the read throws, including a missing stream, which 2.x reported only while you iterated. It cannot report a failure after the first event; iterate to the end, or use `.buffered`, when the caller must see every error the read can throw.
+
+<!-- snippet:skip -->
+```swift
+_ = try await orders.read()   // 2.x: threw when no node could be found
+```
+
+```swift
+for try await _ in orders.read().prefix(1) {}   // opens the RPC; throws what the read throws
+```
+
+### defaultDeadline bounds establishing the read
+<!-- S2 -->
+
+In 2.x, `defaultDeadline` bounded each attempt of a read, from after node selection to the end of the result. In 3.0 it bounds establishing a `read()` as one budget: node selection, every retry, the wait for a stream slot and for the server's first response. When it runs out, the first element throws `KurrentError.deadlineExceeded`, which is not retried. The iteration is not bounded. `.buffered` keeps the 2.x bound. A 2.6 `read().lazy` had no deadline at all: it now gets the establishment budget, so a node that is slow to select, or a wait for a stream slot, can throw `deadlineExceeded` where 2.6 waited. Raise `defaultDeadline`, or leave it at `.max`, if those reads must wait.
+
+<!-- snippet:skip -->
+```swift
+let settings = ClientSettings.localhost().defaultDeadline(5_000)
+let client = KurrentDBClient(settings: settings)
+for try await response in try await client.streams(specified: "orders").read() {   // 2.x: 5 s per attempt, to the end
+    _ = response
+}
+```
+
+```swift
+let settings = ClientSettings.localhost().defaultDeadline(5_000)
+let client = KurrentDBClient(settings: settings)
+for try await response in client.streams(specified: "orders").read() {   // 5 s to the first response; the loop is unbounded
+    _ = response
+}
+let bounded = try await client.streams(specified: "orders").read().buffered   // 5 s per attempt, to the end
+```
+
+### CallOptions.timeout now spans the loop
+<!-- S3 -->
+
+A `CallOptions.timeout` is the gRPC call's deadline. In 2.x the call ended once the result was downloaded, so the timeout bounded the download. In 3.0 the call lasts as long as your loop, so the timeout includes the time the loop body takes. When it expires, the read ends at the next element with `KurrentError.deadlineExceeded` (see Errors a read throws below). For long loops, raise or drop the timeout, or read with `.buffered` and iterate the result afterwards.
+
+<!-- snippet:skip -->
+```swift
+import GRPCCore
+
+var options = CallOptions.defaults
+options.timeout = .seconds(30)
+let client = KurrentDBClient(settings: settings, defaultCallOptions: options)
+for try await response in try await client.streams(specified: "orders").read() {
+    _ = response
+    try await Task.sleep(for: .milliseconds(10))   // 2.x: not counted; the 30 s covered the download
+}
+```
+
+```swift
+import GRPCCore
+
+var options = CallOptions.defaults
+options.timeout = .seconds(30)
+let client = KurrentDBClient(settings: settings, defaultCallOptions: options)
+for try await response in client.streams(specified: "orders").read() {
+    _ = response
+    try await Task.sleep(for: .milliseconds(10))   // counts against the 30 s
+}
+```
+
+### Cancellation throws
+<!-- S4 -->
+
+In 2.x, `read()` returned only after it had fetched the whole result, so a loop whose task was cancelled still received every event and ended normally; only a task cancelled inside `read()` itself got `KurrentError.connectionClosed`. In 3.0 events arrive as you iterate, and after cancellation the next element throws `CancellationError`, which is not a `KurrentError`. A loop that used to finish with every event now stops partway through and throws. Catch `CancellationError` where a cancelled task must not count as a failed read, and never treat what such a loop saw as the whole result.
+
+<!-- snippet:skip -->
+```swift
+let task = Task {
+    for try await response in try await orders.read() { _ = response }   // 2.x: every event, then a normal end
+}
+task.cancel()
+try await task.value
+```
+
+```swift
+let task = Task {
+    for try await response in orders.read() { _ = response }
+}
+task.cancel()
+do {
+    try await task.value
+} catch is CancellationError {
+    // the read was cut short
+}
+```
+
+### Retries happen at the first element
+<!-- S6 -->
+
+2.x retried a read only when its deadline expired: an expired `defaultDeadline` or `CallOptions.timeout` was thrown from `read()` as `KurrentError.deadlineExceeded`, which reset the cached node and tried again. Every other failure of the selected node arrived while you iterated. 3.0 does the opposite: it retries a read until the server accepts it: a node failure — `notLeaderException`, `grpcConnectionError`, `grpcError` or `grpcRuntimeError` — resets the cached node, rediscovers and tries again under `ClientSettings.operationRetryPolicy`. An expired deadline before acceptance is final and keeps the node. Once the first element has arrived nothing is retried. When the attempts run out, the last error is thrown from the first element.
+
+```swift
+do {
+    for try await response in orders.read() { _ = response }
+} catch KurrentError.grpcConnectionError(let cause) {
+    _ = cause   // the node refused the connection on every attempt, or became unavailable mid-read
+}
+```
+
+### Give the client back with values, not reads
+<!-- S10 -->
+
+In 2.x, giving a borrowed client back shut nothing down: a client, facade or `Subscription` kept after `withBorrowedClient` returned went on working, and a read returned from the closure had already been fetched. In 3.0, giving back closes the borrowed client's connections, and everything kept past the closure ends with `KurrentError.connectionClosed`. The 2.x closure below now returns a `ReadCall` (with the two warnings) whose RPC opens after give-back and throws `connectionClosed`. Iterate inside the closure and return values. `withBorrowedClient` returns `nil` when no instance could be lent.
+
+<!-- snippet:skip -->
+```swift
+let responses = try await withBorrowedClient { borrowed in
+    try await borrowed.client.streams(specified: "orders").read()   // 2.x: fetched before give-back
+}
+```
+
+```swift
+let count = try await withBorrowedClient { borrowed in
+    var n = 0
+    for try await _ in borrowed.client.streams(specified: "orders").read() { n += 1 }
+    return n
+}   // Int?: nil when no instance could be lent
+```
+
+### A second connection per node
+<!-- S11 -->
+
+2.x opened one shared connection per node, plus a connection of its own for each subscription, persistent subscription and server-statistics call. 3.0 opens a second shared connection for `read()`, so a read still iterating never makes an append wait; `.buffered` reads and every other call stay on the first. Proxies and server connection limits see one more connection per node.
+
+The server allows about 100 reads in progress per connection: the 101st waits inside its `defaultDeadline` budget, and reads nested 100 deep deadlock. The first `read()` to a node pays the connection setup, TLS included, inside its budget. <doc:Reading-events> has the details.
+
+### Position frames are skipped
+<!-- S12 -->
+
+With `Read.Options.compatibility` at 1 or above, the server interleaves position frames with a stream read's events. 2.x failed every such read with `KurrentError.internalParsingError`. 3.0 skips the frames, as `$all` reads already did, and delivers the events.
+
+<!-- snippet:skip -->
+```swift
+for try await response in try await orders.read(configure: { $0.compatibility = 1 }) {   // 2.x: internalParsingError
+    _ = response
+}
+```
+
+```swift
+let call = orders.read { $0.compatibility = 1 }
+for try await response in call { _ = response }   // events only
+```
+
+### Per-event cost
+<!-- S13 -->
+
+Off an actor, `read()` costs about what `.buffered` costs per event; from an actor, about 1.1×. `.buffered` is for snapshots, results iterated later and deadline-bounded reads, not for speed.
+
+### shutdown() ends an open read
+<!-- S14 -->
+
+In 2.x a read went on after `shutdown()`, and an operation still discovering a node failed only after `maxDiscoveryAttempts`, with `KurrentError.serverError("Connection node not found.")`. In 3.0 `shutdown()` ends a read in progress with `KurrentError.connectionClosed` at its next element, also when the loop body calls it, and an operation in node discovery throws `connectionClosed` at once.
+
+```swift
+let reading = Task {
+    for try await response in orders.read() { _ = response }
+}
+client.shutdown()
+do {
+    try await reading.value
+} catch KurrentError.connectionClosed {
+    // shutdown() ended the read
+}
+```
+
+### Errors a read throws
+<!-- S15 -->
+
+In 2.x an error after the server had accepted a read or a catch-up subscription — the call cancelled, the node becoming unavailable — reached you as a raw `RPCError`. An expiring `CallOptions.timeout` did too on a `.lazy` read or a subscription; a 2.x `read()` threw it as a retried `KurrentError.deadlineExceeded` instead. In 3.0 a read throws exactly two types: `KurrentError` for everything the client or the server reports, and `CancellationError` when your task is cancelled. The gRPC status maps as for every other call: an expired timeout is `deadlineExceeded`, an unavailable node usually `grpcConnectionError(cause:)`, a cancelled call `connectionClosed`, and a status KurrentDB has no meaning for is `grpcError(cause:)`, with the `RPCError` as its cause.
+
+`.buffered` and a subscription's `events` and `messages` map errors to `KurrentError` the same way, but they never throw `CancellationError`. A `.buffered` fetch cancelled midway throws `connectionClosed`, and a loop over a fetched `.buffered` result or over a subscription ends without throwing when its task is cancelled, so a `catch is CancellationError` around it never runs.
+
+A `catch let error as RPCError` around a read or a catch-up subscription still compiles but never matches: the error falls through to the next clause or out of the function. Catch `KurrentError` instead. Persistent subscriptions are not affected (see "What did not change").
+
+<!-- snippet:skip -->
+```swift
+do {
+    for try await response in try await orders.read() { _ = response }
+} catch let error as RPCError {
+    _ = error   // 2.x: errors after the server accepted the read
+}
+```
+
+```swift
+do {
+    for try await response in orders.read() { _ = response }
+} catch let error as KurrentError {
+    _ = error
+} catch is CancellationError {
+    // the task was cancelled
+}
+```
+
+### When to write .buffered
+
+Write `.buffered` where the 2.x behaviour was the point:
+
+- a snapshot that later appends must not change;
+- a read that `defaultDeadline` must bound to its end;
+- a result you store and iterate later, after the code that fetched it has moved on;
+- a property, parameter or return type typed `AsyncThrowingStream<…ReadResponse, any Error>`.
+
+Everywhere else, drop the `try await` and iterate `read()`.
+
+```swift
+let all = try await orders.read { $0.limit = 1_000 }.buffered
+```
+
+### Reads from an actor
+
+`for try await` over `read()` needs nothing new inside an actor: it passes the actor's isolation to the iterator. An iterator kept in actor state is advanced with `next(isolation: self)`. Call it from one task at a time, as with any async iterator: actor isolation does not serialize two calls across the `await`, and overlapping calls can open a second RPC that the iterator then loses track of.
+
+<!-- snippet:toplevel -->
+```swift
+@MainActor final class OrdersViewModel {
+    var rows: [String] = []
+
+    func load() async throws {
+        for try await response in orders.read() {   // nothing to add
+            let eventType = try response.event.record.eventType
+            rows.append(eventType)
+        }
+    }
+}
+
+actor Cursor {
+    let iterator = orders.read().makeAsyncIterator()
+
+    func next() async throws -> ReadEvent? {
+        try await iterator.next(isolation: self)?.event
+    }
+}
+
+func count<T: SpecifiedStreamTarget>(_ call: Streams<T>.ReadCall) async throws -> Int {
+    try await call.reduce(0) { n, _ in n + 1 }
+}
+```
+
+`ReadCall` belongs to its target: `client.streams(of: "orders")` is a `Streams<String>` and `client.streams(specified: "orders")` a `Streams<SpecifiedStream>`, so their reads have different types. A helper for reads of any named stream is generic, `where T: SpecifiedStreamTarget`, like `count` above.
+
+### .lazy still compiles, with a warning
+
+`read().lazy` returns the read itself and warns that it is deprecated; `ReadCall.Lazy` is a deprecated name for `ReadCall`. Both are removed in 4.0. Drop `.lazy`.
+
+<!-- snippet:toplevel -->
+```swift
+@available(*, deprecated, message: "drop .lazy")
+func legacy() async throws {
+    for try await response in orders.read().lazy { _ = response }   // warning: 'lazy' is deprecated
+}
+```
+
 ## Removed and renamed API
 
 ## Subscription notifications
