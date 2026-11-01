@@ -10,8 +10,9 @@ import LiveBenchCore
 ///   have such a trial in that round; a round where one side is missing contributes nothing.
 /// - Ratios are oriented so that higher means Swift is worse (Swift ÷ .NET when lower is better, .NET ÷ Swift when
 ///   higher is better) and estimated with `estimateRatio` (95% Student t over round log-ratios).
-/// - A step gets ratios (and verdicts) only when both clients sustained it in every valid trial and every paired trial
-///   had server headroom. A failing gate is "system-limited", a missing sample "headroom unavailable": the step is
+/// - A step gets ratios (and verdicts) only when both clients sustained it in all but at most
+///   `EvaluationThresholds.toleratedUnsustainedRounds` valid trials and every paired trial had server headroom; a
+///   round either client did not sustain is left out of the ratios. A failing gate is "system-limited", a missing sample "headroom unavailable": the step is
 ///   shown (per-client figures) but no SDK comparison is drawn from it. The same holds for the ceiling ratio.
 /// - A censored percentile (rank among non-successes) on either side drops that round from that percentile's ratio.
 /// - "Backlog not growing" uses the drivers' backlog samples (`TrialResult.backlog`, `backlogGrew`): a client that
@@ -199,8 +200,10 @@ struct StepComparison {
             return
         }
         noRatioReason = nil
+        // A round either client did not sustain (at most one per client) is left out: its latency was measured under overload.
+        let sustainedPairs = pairs.filter { $0.swift.sustained && $0.dotnet.sustained }
         ratios = RatioMetric.stepMetrics(kind).map { metric in
-            let roundPairs = pairs.map { RoundPair(swift: metric.value($0.swift), dotnet: metric.value($0.dotnet)) }
+            let roundPairs = sustainedPairs.map { RoundPair(swift: metric.value($0.swift), dotnet: metric.value($0.dotnet)) }
             let (estimate, verdict) = estimateRatio(roundPairs, direction: metric.direction, minimumRounds: minimumRounds)
             return MetricRatio(metric: metric, estimate: estimate, verdict: metric.hasVerdict ? verdict : nil)
         }
@@ -273,8 +276,10 @@ struct ClientStep {
     let driver: String
     let figures: [TrialFigures]
     var valid: [TrialFigures] { figures.filter(\.valid) }
-    /// Sustained in every valid trial (and at least one).
-    var sustained: Bool { !valid.isEmpty && valid.allSatisfy(\.sustained) }
+    /// Sustained in at least one valid trial and in all but at most `toleratedUnsustainedRounds` of them.
+    var sustained: Bool {
+        sustainedCount > 0 && valid.count - sustainedCount <= EvaluationThresholds.toleratedUnsustainedRounds
+    }
     var sustainedCount: Int { valid.filter(\.sustained).count }
     var headroom: HeadroomState { HeadroomState(valid) }
 

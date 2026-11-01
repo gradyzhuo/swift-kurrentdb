@@ -6,6 +6,9 @@ public enum EvaluationThresholds {
     public static let sustainedRateFraction = 0.99
     /// Maximum (failed + dropped + timed out) / scheduled for a sustained step.
     public static let maxLossRatio = 0.001
+    /// Valid rounds a client may fail to sustain at a step while the step still counts as sustained by it. The failed
+    /// round is left out of every ratio at that step, so cells run one round more than their tier's minimum.
+    public static let toleratedUnsustainedRounds = 1
     /// The open loop's backlog grew when its minimum over the window's last second exceeds its minimum over the second
     /// ending at the midpoint by more than the largest of: this fraction of the operations scheduled in the second
     /// half, `minBacklogGrowth`, and the operations scheduled during `backlogSpikeAllowanceSeconds` (see `backlogGrew`

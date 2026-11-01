@@ -99,6 +99,38 @@ struct ReportTests {
         #expect(low.ratios.first { $0.metric == .p99 }?.estimate?.rounds == 5)
     }
 
+    /// Six rounds where `lossyRounds[driver]` lists the rounds that driver loses 2% in, at both rates.
+    private func sixRounds(lossyRounds: [String: Set<Int>]) -> CellResult {
+        ReportFixture.result(ReportFixture.cell("append-latency-one-bad-round", rates: [250, 500], rounds: 6)) { round, rate, driver in
+            let w = ReportFixture.wobble(round)
+            return ReportFixture.trial(
+                round: round, rate: rate, driver: driver, fast: UInt64(1000 * w), slow: UInt64(3000 * w),
+                lost: lossyRounds[driver, default: []].contains(round) ? Int(rate * 60 * 0.02) : 0
+            )
+        }
+    }
+
+    @Test func oneUnsustainedRoundPerClientIsToleratedAndLeftOut() throws {
+        // Swift fails round 1, .NET round 4: both still sustain the step, and the ratios use the four other rounds.
+        let result = sixRounds(lossyRounds: ["swift": [1], "dotnet": [4]])
+        let step = try #require(comparison(result, rate: 500))
+        #expect(step.noRatioReason == nil)
+        #expect(step.ratios.first { $0.metric == .p50 }?.estimate?.rounds == 4)
+        // Four paired rounds are below the headline minimum of five.
+        #expect(step.ratios.first { $0.metric == .p50 }?.verdict == .insufficientRounds)
+        // One side failing one round leaves five paired rounds, enough for a verdict.
+        let oneSide = try #require(comparison(sixRounds(lossyRounds: ["swift": [1]]), rate: 500))
+        #expect(oneSide.ratios.first { $0.metric == .p50 }?.estimate?.rounds == 5)
+        #expect(oneSide.ratios.first { $0.metric == .p50 }?.verdict == .meets)
+        #expect(Report.render([result]).contains("sustained</span> <span class=\"muted\">(5 of 6)</span>"))
+    }
+
+    @Test func twoUnsustainedRoundsMeanNotSustained() throws {
+        let step = try #require(comparison(sixRounds(lossyRounds: ["swift": [1, 3]]), rate: 500))
+        #expect(step.ratios.isEmpty)
+        #expect(step.noRatioReason?.contains("Swift") == true)
+    }
+
     @Test func growingBacklogIsNotSustained() throws {
         // 250/s for 60 s: 7,500 indices in the second half, so up to 75 more outstanding at the end is tolerated.
         let cell = ReportFixture.cell("backlog", rates: [250], rounds: 1)
