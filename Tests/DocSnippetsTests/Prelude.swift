@@ -39,6 +39,8 @@ let orders = client.streams(specified: "orders")
 let someData = Data("{\"orderId\":\"order-1\"}".utf8)
 /// The examples `import GRPCCore` for `CallOptions`; the generator drops import lines, so the name comes from here.
 typealias CallOptions = GRPCCore.CallOptions
+/// The same for `MultiThreadedEventLoopGroup`, which the examples `import NIOPosix` for.
+typealias MultiThreadedEventLoopGroup = NIOPosix.MultiThreadedEventLoopGroup
 
 @Test("Documentation examples compile")
 func documentationExamplesCompile() {
