@@ -430,4 +430,42 @@ client.shutdown()
 
 ## Subscription notifications
 
+``Streams/Subscription/messages`` and its ``Streams/Subscription/Message`` enum are new in 3.0: they deliver the server's `caughtUp`, `fellBehind` and `checkpoint` notifications next to the events. A 2.x program does not use them, so nothing here breaks its build. <doc:Reading-events> shows the notifications and their payloads, and why a switch over `Message` ends with `@unknown default`, which a switch in your own package needs from Swift 6.2.3. If you built against `main` between PR #187 and the 3.0 release, the notification cases now carry payloads: `.checkpoint` binds a ``Streams/Subscription/Checkpoint``, not a ``StreamPosition``, so read its `position`. `"\(position)"` on the old binding still compiles, and now prints the whole `Checkpoint`.
+
+### A tombstoned stream ends the subscription
+<!-- S9 -->
+
+Up to 2.6.0, when the stream a catch-up subscription followed was tombstoned, `events` delivered the server's `$streamDeleted` marker as an ordinary event, and the loop then threw a raw `RPCError`. Since 2.6.1, and in 3.0, `events` and `messages` deliver the events written before the tombstone, then throw `KurrentError.resourceDeleted(resource:)`, the error a read of a tombstoned stream throws; the marker is not delivered. A check for the stream's own `$streamDeleted` inside the loop never matches any more (one reached through a link still arrives): move what it did into a `catch`. Subscribing to a stream that is already tombstoned throws the same error from `subscribe`, as in 2.6. On `$all`, `$streamDeleted` is still delivered as a system event about the stream it names, and the subscription goes on. Code that already runs on 2.6.1 needs no change here.
+
+<!-- snippet:skip -->
+```swift
+let subscription = try await orders.subscribe { $0.revision = .start }
+for try await readEvent in subscription.events {
+    if readEvent.record.eventType == "$streamDeleted" {
+        break   // 2.6.0 and earlier: the tombstone arrived as an event, and a raw RPCError followed it
+    }
+}
+```
+
+```swift
+do {
+    let subscription = try await orders.subscribe { $0.revision = .start }
+    for try await readEvent in subscription.events {
+        _ = readEvent   // never the stream's own "$streamDeleted"
+    }
+} catch KurrentError.resourceDeleted(let stream) {
+    print(stream, "was tombstoned")   // after any events written before the tombstone
+}
+```
+
 ## What did not change
+
+Everything not listed above works as in 2.6.1. In particular:
+
+- **`read().buffered`** fetches the whole result before it returns, as 2.x's `read()` did, with `defaultDeadline` bounding each attempt. Its type, `AsyncThrowingStream<ReadResponse, any Error>`, is unchanged; what it throws is under "Errors a read throws".
+- **Catch-up subscriptions.** `subscribe` and `events` keep their API and deliver the same events, apart from the tombstone above and the error types under "Errors a read throws". Establishing a subscription is still not bounded by `defaultDeadline`.
+- **Persistent subscriptions.** Their API, and how they deliver, acknowledge and report errors, are unchanged. Their errors are not mapped to `KurrentError` as a read's are: a `catch let error as RPCError` around one still matches.
+- **Appends, deletes and the management calls** (projections, users, operations) keep their API, and `defaultDeadline` still bounds each attempt.
+- **`ClientSettings`**, apart from the removed certificate members and what `defaultDeadline` means for `read()`. The default `operationRetryPolicy` is still two attempts without delay, and connection strings parse as in 2.6.
+
+<doc:Reading-events> and <doc:Getting-started> describe the 3.0 API as a whole.
