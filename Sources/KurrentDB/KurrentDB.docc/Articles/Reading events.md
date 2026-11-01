@@ -303,9 +303,9 @@ for try await message in subscription.messages {
     case let .event(readEvent):
         // Update the read model, then store readEvent.record.position.
         print("handled", readEvent.record.position.commit)
-    case let .checkpoint(position):
-        // Nothing matched up to here: store position the same way.
-        print("scanned up to", position.commit)
+    case let .checkpoint(checkpoint):
+        // Nothing matched up to here: store checkpoint.position the same way.
+        print("scanned up to", checkpoint.position.commit)
     case .caughtUp, .fellBehind:
         break
     }

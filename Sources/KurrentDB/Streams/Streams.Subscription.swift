@@ -16,24 +16,6 @@ extension Streams {
     /// notifications about the subscription itself (``Message``). Both draw from the same
     /// connection, so iterate one of them, not both.
     public struct Subscription: Sendable {
-        /// What the server sends on a subscription: an event, or a notification about the
-        /// subscription itself.
-        public enum Message: Sendable {
-            /// An event of the subscribed stream (or of `$all`).
-            case event(ReadEvent)
-            /// Everything written before the subscription has been delivered; from here on events
-            /// arrive as they are written. Sent again after every ``fellBehind``.
-            case caughtUp
-            /// Writes have outpaced the consumer, so the subscription is reading history again;
-            /// ``caughtUp`` follows once it is current. Sent by KurrentDB 26.2.2 and later; an older
-            /// server returns to catch-up silently.
-            case fellBehind
-            /// A `$all` subscription with a filter has scanned everything up to this position
-            /// without a match. Store it as the resume point, so a long stretch without matching
-            /// events does not have to be scanned again after a restart.
-            case checkpoint(StreamPosition)
-        }
-
         /// Async throwing stream of events received from the server.
         public let events: AsyncThrowingStream<ReadEvent, Error>
 
@@ -80,18 +62,52 @@ extension Streams {
         /// The notification a non-event response carries, or nil for one the consumer does not see.
         package static func notification(_ content: Read.UnderlyingResponse.OneOf_Content?, usage: String) -> Message? {
             switch content {
-            case .caughtUp:
-                return .caughtUp
-            case .fellBehind:
-                return .fellBehind
+            case let .caughtUp(message):
+                let (revision, position) = resumePoint(
+                    hasRevision: message.hasStreamRevision, revision: message.streamRevision,
+                    hasPosition: message.hasPosition, position: message.position
+                )
+                return .caughtUp(CaughtUp(
+                    timestamp: message.hasTimestamp ? message.timestamp.date : nil,
+                    streamRevision: revision,
+                    allPosition: position
+                ))
+            case let .fellBehind(message):
+                let (revision, position) = resumePoint(
+                    hasRevision: message.hasStreamRevision, revision: message.streamRevision,
+                    hasPosition: message.hasPosition, position: message.position
+                )
+                return .fellBehind(FellBehind(
+                    timestamp: message.hasTimestamp ? message.timestamp.date : nil,
+                    streamRevision: revision,
+                    allPosition: position
+                ))
             case let .checkpoint(checkpoint):
-                return .checkpoint(.at(commitPosition: checkpoint.commitPosition, preparePosition: checkpoint.preparePosition))
+                return .checkpoint(Checkpoint(
+                    position: .at(commitPosition: checkpoint.commitPosition, preparePosition: checkpoint.preparePosition),
+                    timestamp: checkpoint.hasTimestamp ? checkpoint.timestamp.date : nil
+                ))
             case let content?:
                 logger.debug("[\(usage)] Received non-event subscription message: \(content)")
                 return nil
             case nil:
                 return nil
             }
+        }
+
+        /// The target's own resume point and nothing else, so `==` never differs on the hidden field.
+        /// A negative revision is the server's "no position yet" and decodes as nil — deliberately not
+        /// `unsignedWireValue`, which throws: a notification must not end the subscription.
+        private static func resumePoint(
+            hasRevision: Bool,
+            revision: Int64,
+            hasPosition: Bool,
+            position: Read.UnderlyingResponse.Position
+        ) -> (UInt64?, StreamPosition?) {
+            if Target.self is any SpecifiedStreamTarget.Type {
+                return (hasRevision && revision >= 0 ? UInt64(revision) : nil, nil)
+            }
+            return (nil, hasPosition ? .at(commitPosition: position.commitPosition, preparePosition: position.preparePosition) : nil)
         }
     }
 }

@@ -87,7 +87,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
         // The first checkpoint is the start position itself; the next ones move forward.
         var checkpoints: [UInt64] = []
         for try await message in subscription.messages {
-            if case let .checkpoint(position) = message { checkpoints.append(position.commit) }
+            if case let .checkpoint(checkpoint) = message { checkpoints.append(checkpoint.position.commit) }
             if case .caughtUp = message { break }
             if checkpoints.count == 3 { break }
         }
