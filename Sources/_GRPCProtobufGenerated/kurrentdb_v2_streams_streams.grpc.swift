@@ -33,7 +33,8 @@ package enum Kurrentdb_Protocol_V2_Streams_StreamsService: Sendable {
             /// Descriptor for "AppendSession".
             package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "kurrentdb.protocol.v2.streams.StreamsService"),
-                method: "AppendSession"
+                method: "AppendSession",
+                type: .clientStreaming
             )
         }
         /// Namespace for "AppendRecords" metadata.
@@ -45,7 +46,8 @@ package enum Kurrentdb_Protocol_V2_Streams_StreamsService: Sendable {
             /// Descriptor for "AppendRecords".
             package static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "kurrentdb.protocol.v2.streams.StreamsService"),
-                method: "AppendRecords"
+                method: "AppendRecords",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "kurrentdb.protocol.v2.streams.StreamsService" service.
@@ -100,9 +102,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService {
         ///   - serializer: A serializer for `Kurrentdb_Protocol_V2_Streams_AppendRequest` messages.
         ///   - deserializer: A deserializer for `Kurrentdb_Protocol_V2_Streams_AppendSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func appendSession<Result>(
             request: GRPCCore.StreamingClientRequest<Kurrentdb_Protocol_V2_Streams_AppendRequest>,
@@ -142,9 +144,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService {
         ///   - serializer: A serializer for `Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest` messages.
         ///   - deserializer: A deserializer for `Kurrentdb_Protocol_V2_Streams_AppendRecordsResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func appendRecords<Result>(
             request: GRPCCore.ClientRequest<Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest>,
@@ -200,9 +202,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService {
         ///   - serializer: A serializer for `Kurrentdb_Protocol_V2_Streams_AppendRequest` messages.
         ///   - deserializer: A deserializer for `Kurrentdb_Protocol_V2_Streams_AppendSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         package func appendSession<Result>(
             request: GRPCCore.StreamingClientRequest<Kurrentdb_Protocol_V2_Streams_AppendRequest>,
@@ -253,9 +255,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService {
         ///   - serializer: A serializer for `Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest` messages.
         ///   - deserializer: A deserializer for `Kurrentdb_Protocol_V2_Streams_AppendRecordsResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         package func appendRecords<Result>(
             request: GRPCCore.ClientRequest<Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest>,
@@ -308,9 +310,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService.ClientProtocol {
     /// - Parameters:
     ///   - request: A streaming request producing `Kurrentdb_Protocol_V2_Streams_AppendRequest` messages.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     package func appendSession<Result>(
         request: GRPCCore.StreamingClientRequest<Kurrentdb_Protocol_V2_Streams_AppendRequest>,
@@ -356,9 +358,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     package func appendRecords<Result>(
         request: GRPCCore.ClientRequest<Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest>,
@@ -407,11 +409,11 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService.ClientProtocol {
     /// - Parameters:
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - producer: A closure producing request messages to send to the server. The request
-    ///       stream is closed when the closure returns.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - producer: A closure producing request messages to send to the server. Returning
+    ///       from the closure closes the request stream.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     package func appendSession<Result>(
         metadata: GRPCCore.Metadata = [:],
@@ -461,9 +463,9 @@ extension Kurrentdb_Protocol_V2_Streams_StreamsService.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     package func appendRecords<Result>(
         _ message: Kurrentdb_Protocol_V2_Streams_AppendRecordsRequest,
