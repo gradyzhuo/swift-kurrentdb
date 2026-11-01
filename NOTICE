@@ -12,8 +12,7 @@ this repository differ from upstream.
 
 Files: `cluster.proto`, `gossip.proto`, `monitoring.proto`,
 `operations.proto`, `persistent.proto`, `projections.proto`,
-`redaction.proto`, `serverfeatures.proto`, `shared.proto`, `streams.proto`,
-`users.proto`.
+`redaction.proto`, `serverfeatures.proto`, `shared.proto`, `users.proto`.
 
 Source: https://github.com/EventStore/EventStore, directory
 `src/Protos/Grpc/`, tag `oss-v23.10.0`.
@@ -31,6 +30,21 @@ https://github.com/kurrent-io/KurrentDB-Client-Dotnet and
 https://github.com/kurrent-io/KurrentDB-Client-Go, and under the MIT License
 in https://github.com/kurrent-io/KurrentDB-Client-Rust.
 
+## proto/kurrentdb/v1/streams.proto — KurrentDB v1 Streams service
+
+Source: https://github.com/kurrent-io/KurrentDB-Client-Dotnet, file
+`src/KurrentDB.Client/Core/proto/kurrentdb/protocol/v1/streams.proto`, as of
+commit `4a81d9f6` (2026-10-07); the subscription notification fields were added
+upstream in commit `2112ec60` (2025-10-22).
+
+License: Apache License 2.0. Copyright 2011-2025 Kurrent, Inc. The license
+text is in `LICENSES/Apache-2.0.txt`.
+
+Local changes: the file imports `kurrentdb/v1/shared.proto` and
+`kurrentdb/v1/status.proto` (Event Store's variant of `google.rpc.Status`, see
+below) instead of `shared.proto` and `google/rpc/status.proto`. The header
+comment at the top of the file records the same.
+
 ## proto/kurrent/rpc/ and proto/kurrentdb/v2/streams/ — KurrentDB v2 gRPC API
 
 Files: `kurrent/rpc/errors.proto`, `kurrent/rpc/rpc.proto`,
@@ -45,6 +59,7 @@ text is in `LICENSES/Apache-2.0.txt`.
 Local changes: the files are copied verbatim except that in
 `kurrent/rpc/rpc.proto` the `ErrorMetadata error` extension of
 `google.protobuf.EnumValueOptions` uses field number 50000 instead of 2113.
+`kurrent/rpc/rpc.proto` carries a header comment recording this.
 
 ## proto/google/rpc/code.proto and proto/kurrentdb/v1/status.proto
 
@@ -73,7 +88,7 @@ library and is not affiliated with or endorsed by Kurrent, Inc.
 
 ---
 
-## EventStoreDB License (3-clause BSD), as applied to proto/kurrentdb/v1/
+## EventStoreDB License (3-clause BSD), as applied to the ten proto/kurrentdb/v1/ files listed above
 
 Copyright (c) 2011-2023, Event Store Ltd. All rights reserved.
 

@@ -1,3 +1,10 @@
+// Copyright 2011-2025 Kurrent, Inc.
+// Licensed under the Apache License 2.0 (LICENSES/Apache-2.0.txt).
+// Source: https://github.com/kurrent-io/KurrentDB-Client-Dotnet/blob/4a81d9f6c8995e2c8e8a0cc30f4cb07248dcd411/src/KurrentDB.Client/Core/proto/kurrentdb/protocol/v1/streams.proto
+// Modified by swift-kurrentdb: imports `kurrentdb/v1/shared.proto` and `kurrentdb/v1/status.proto`
+// (Event Store's variant of `google.rpc.Status`: `google.rpc.Code` enum, single `Any`) instead of
+// `shared.proto` and `google/rpc/status.proto`.
+
 // DO NOT EDIT.
 // swift-format-ignore-file
 // swiftlint:disable all
