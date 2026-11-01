@@ -22,24 +22,24 @@ extension Streams.Subscription {
         /// An event of the subscribed stream (or of `$all`).
         case event(ReadEvent)
         /// Everything written before the subscription has been delivered; from here on events
-        /// arrive as they are written. Sent again after every ``fellBehind(_:)``, with the
-        /// server's time and the resume position.
+        /// arrive as they are written. Sent again after every ``fellBehind(_:)``. ``CaughtUp``
+        /// carries the server's time and the resume position.
         case caughtUp(CaughtUp)
         /// Writes have outpaced the consumer, so the subscription is reading history again;
         /// ``caughtUp(_:)`` follows once it is current. Sent by KurrentDB 26.2.2 and later; an older
-        /// server returns to catch-up silently. Carries the server's time and the resume position.
+        /// server returns to catch-up silently. ``FellBehind`` carries the server's time and the resume position.
         case fellBehind(FellBehind)
         /// A `$all` subscription with a filter has scanned everything up to this position
         /// without a match. Store it as the resume point, so a long stretch without matching
-        /// events does not have to be scanned again after a restart. Carries the position
-        /// scanned up to and the server's time.
+        /// events does not have to be scanned again after a restart. ``Checkpoint`` carries the
+        /// position scanned up to and the server's time.
         case checkpoint(Checkpoint)
     }
 
     /// The subscription has delivered everything written so far and is live.
     public struct CaughtUp: Sendable, Equatable, Hashable, CustomStringConvertible {
-        /// The server's clock when it caught up. `nil` from a server older than
-        /// KurrentDB 24.10.5 / 25.0.1 / 25.1.0, which sends the notification without fields.
+        /// The server's clock when it caught up. `nil` only from a server that sends the
+        /// notification without fields: KurrentDB 24.10.4 or earlier, or 25.0.0.
         public let timestamp: Date?
         /// Filled only for stream targets (the decoder checks `Target`).
         let streamRevision: UInt64?

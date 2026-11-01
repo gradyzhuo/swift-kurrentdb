@@ -278,17 +278,43 @@ for try await message in subscription.messages {
     switch message {
     case let .event(readEvent):
         print("apply", readEvent.record.eventType)
-    case .caughtUp:
-        print("the read model is current")
+    case let .caughtUp(caughtUp):
+        // caughtUp.timestamp: the server's clock; caughtUp.revision: the last event delivered (nil until one was)
+        print("current as of", caughtUp.timestamp.map { "\($0)" } ?? "unknown", "revision", caughtUp.revision.map(String.init) ?? "none")
     case .fellBehind:
         print("reading history again")
     case .checkpoint:
         break  // $all with a filter only
+    @unknown default:
+        break  // the server may add notifications; Swift 6.4 and later require this line
     }
 }
 ```
 
 KurrentDB 26.2.2 is the first server that sends `fellBehind`. An older one returns to catch-up silently, and `caughtUp` still follows once it is current again.
+
+Each notification carries a payload: ``Streams/Subscription/CaughtUp``, ``Streams/Subscription/FellBehind`` or ``Streams/Subscription/Checkpoint``. All three have the server's `timestamp`. `CaughtUp` and `FellBehind` also say where to resume: `revision` on a stream subscription, `position` on a `$all` subscription. Each property exists only on its own target, so the compiler rejects `position` on a stream subscription and `revision` on `$all`. The value is the last point already delivered: store it like an event's revision or position, and `.specified` resumes after it.
+
+`timestamp` is `nil` only from a server that sends the notifications without fields: KurrentDB 24.10.4 or earlier, or 25.0.0. `revision` is `nil` until there is something to resume after: from `.start` before the first event, or from `.end` of a stream with no events. On `$all`, `position` is `nil` from `.start` until the first event or checkpoint, and set at once from `.end`. A missing or negative revision from the server arrives as `nil` and does not end the subscription.
+
+The payload types belong to the subscription's target. `client.streams(of: "orders")` is a `Streams<String>` and `client.streams(specified: "orders")` is a `Streams<SpecifiedStream>`, so their `Message` types differ. A handler for any stream subscription is generic over the target with `where T: SpecifiedStreamTarget`; otherwise, pick one spelling and use it everywhere:
+
+```swift
+func handle<T>(_ message: Streams<T>.Subscription.Message) where T: SpecifiedStreamTarget {
+    switch message {
+    case let .event(readEvent):
+        print("apply", readEvent.record.eventType)
+    case let .caughtUp(caughtUp):
+        print("current at revision", caughtUp.revision.map(String.init) ?? "none")
+    case .fellBehind, .checkpoint:
+        break
+    @unknown default:
+        break
+    }
+}
+```
+
+End every switch over `Message` with `@unknown default`. On Swift 6.2.3 and later `Message` is `@nonexhaustive`, so a switch without it does not compile in your package. Swift 6.0 to 6.2.2 accept the switch without it; while the client supports them, a new case comes only in a major release.
 
 A `$all` subscription with a filter also reports checkpoints: the position up to which the server has scanned without a match. Store a checkpoint like the position of an event, so that after a restart a long stretch without matching events is not scanned again. The first one reported is the start position itself; how often the next ones arrive follows the filter's ``StreamFilter/max(_:)`` window and ``StreamFilter/checkpointIntervalMultiplier(_:)``:
 
@@ -306,11 +332,18 @@ for try await message in subscription.messages {
     case let .checkpoint(checkpoint):
         // Nothing matched up to here: store checkpoint.position the same way.
         print("scanned up to", checkpoint.position.commit)
-    case .caughtUp, .fellBehind:
+    case let .caughtUp(caughtUp):
+        // caughtUp.position: the last event or checkpoint delivered; resume after it
+        print("current at position", caughtUp.position.map { "\($0.commit)" } ?? "none")
+    case .fellBehind:
+        break
+    @unknown default:
         break
     }
 }
 ```
+
+`checkpoint` carries a ``Streams/Subscription/Checkpoint``, not a ``StreamPosition``. A pattern written `case let .checkpoint(position)` binds the whole checkpoint: `position.commit` is a compile error, and `"\(position)"` compiles but prints the struct instead of the position. Read `checkpoint.position`.
 
 ### Stopping
 
