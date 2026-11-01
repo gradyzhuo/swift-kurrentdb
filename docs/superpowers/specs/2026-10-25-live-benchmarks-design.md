@@ -286,7 +286,9 @@ clients interleaved, collects results, and renders the report. Histograms via or
   every job runs all clients interleaved, so each ratio still comes from one VM. Tiers:
   - Headline: 300 B, TLS on, full rate ramp, all rounds.
   - Appendix: 1 KB, 4 KB and the TLS-off run use 2 rate steps (low and mid) and fewer
-    rounds; multi-consumer persistent subscription is appendix too.
+    rounds; multi-consumer persistent subscription is appendix too. So is rebuild of
+    10,000-event streams: on the 2-core server it saturates both cores at one read per
+    second for every client, ghz included, so no step of it passes the headroom gate.
   The report never divides numbers from different jobs.
 - **Getting results into the repo.** Workflows stay read-only, matching the existing
   policy that a person reviews numbers before they land. The comparison workflow
