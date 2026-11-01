@@ -388,6 +388,17 @@ jobs:
               ${{ matrix.image }} \
               bash -c "swift build --build-tests && swift test -v --no-parallel --disable-xctest --enable-swift-testing --filter MockClientTests"
           fi
+      # Tests/Fixtures/Consumer/check.sh: the only place `@nonexhaustive` on Subscription.Message is
+      # observable. Swift 6.2.3 is the first toolchain with the attribute; every Debian cell (6.2, 6.3,
+      # 6.4) runs it, and the floating 6.2 tag is past 6.2.3. SwiftPM runs
+      # `git rev-parse` / `git describe` on the fixture's path dependency (this checkout); as root
+      # over a runner-owned checkout they fail with "dubious ownership" (SwiftPM ignores that
+      # today), so the container trusts /workspace first, as the step above does.
+      - name: Consumer fixture
+        if: endsWith(matrix.image, '-bookworm')
+        run: |
+          docker run --rm -e NO_COLOR=1 -v ${{ github.workspace }}:/workspace -w /workspace ${{ matrix.image }} \
+            bash -c "git config --global --add safe.directory /workspace && bash Tests/Fixtures/Consumer/check.sh"
 
   # The scripts package (scripts/Package.swift: doc snippets, doc versions, site assembly,
   # release readiness, benchmark conversion) is tested on every push. The release tag locks
@@ -417,3 +428,22 @@ jobs:
           else
             echo "not a Prepare PR; nothing to check"
           fi
+
+  # Sources/_GRPCProtobufGenerated is reviewed by this job, not by a person (AGENTS.md): it must be
+  # exactly what the pinned generators (scripts/regenerate-protos.sh) produce from proto/.
+  generated-code:
+    name: Generated code
+    runs-on: ubuntu-24.04  # pinned like the test matrix; the build runs in the container
+    container: swift:6.4-bookworm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      # libprotobuf-dev ships google/protobuf/descriptor.proto, which proto/kurrent/rpc/rpc.proto imports.
+      - name: protoc
+        run: apt-get update && apt-get install -y --no-install-recommends protobuf-compiler libprotobuf-dev && protoc --version
+      # The script builds the two generators itself; `diff -r` exits 1 on any difference and prints it.
+      - name: Regenerate into a scratch directory and diff
+        run: |
+          scripts/regenerate-protos.sh --output "$RUNNER_TEMP/generated" --generators "$RUNNER_TEMP/generators"
+          diff -r "$RUNNER_TEMP/generated" Sources/_GRPCProtobufGenerated
