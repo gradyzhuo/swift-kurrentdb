@@ -28,7 +28,7 @@ extension Streams {
 
         /// The `ReadReq.Options.ControlOption.compatibility` a subscription declares: the highest
         /// level of server behaviour the client handles. Level 2 is what makes the server send
-        /// ``Message/fellBehind``; ``Message/caughtUp`` and checkpoints need no level.
+        /// ``Message/fellBehind(_:)``; ``Message/caughtUp(_:)`` and ``Message/checkpoint(_:)`` need no level.
         package static var compatibility: UInt32 { 2 }
 
         /// Bounded hand-off between the gRPC response handler and the two streams.
