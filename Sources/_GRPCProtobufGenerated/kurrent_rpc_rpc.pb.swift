@@ -8,6 +8,11 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+// Copyright 2011-2025 Kurrent, Inc.
+// Licensed under the Apache License 2.0 (LICENSES/Apache-2.0.txt).
+// Source: https://github.com/kurrent-io/KurrentDB-Client-Dotnet/blob/0407e281/src/KurrentDB.Client/Core/proto/kurrent/rpc/rpc.proto
+// Modified by swift-kurrentdb: the ErrorMetadata extension of google.protobuf.EnumValueOptions uses field number 50000 instead of 2113.
+
 // ******************************************************************************************
 // This protocol is UNSTABLE in the sense of being subject to change.
 // ******************************************************************************************
