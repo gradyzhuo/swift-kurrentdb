@@ -24,10 +24,13 @@ struct SubscriptionMessagesLiveTests: Sendable {
 
     static func label(_ message: Streams<SpecifiedStream>.Subscription.Message) -> String {
         switch message {
-        case let .event(readEvent): readEvent.record.eventType
-        case .caughtUp: "caughtUp"
-        case .fellBehind: "fellBehind"
-        case .checkpoint: "checkpoint"
+        case let .event(readEvent): return readEvent.record.eventType
+        case .caughtUp: return "caughtUp"
+        case .fellBehind: return "fellBehind"
+        case .checkpoint: return "checkpoint"
+        @unknown default:
+            Issue.record("unknown subscription message")
+            return "unknown"
         }
     }
 
@@ -218,6 +221,7 @@ struct SubscriptionMessagesLiveTests: Sendable {
                 allTimestamped = allTimestamped && caughtUp.timestamp != nil
                 lastCaughtUp = caughtUp; eventsBeforeLastCaughtUp = events
             case .checkpoint: notifications.append("checkpoint")
+            @unknown default: Issue.record("unknown subscription message")
             }
             // The last events may arrive live after the final caughtUp, so stop on the count.
             if events == batches * perBatch, !behind { break }
