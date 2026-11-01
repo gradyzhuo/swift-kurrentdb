@@ -35,6 +35,7 @@ extension Gossip {
     /// Members whose state appears in `notAllowedStates` are excluded from the result.
     /// The returned array is sorted by node preference priority as defined in `ClientSettings`.
     ///
+    /// - Parameter timeout: How long to wait for the gossip reply.
     /// - Parameter notAllowedStates: Node states excluded from the result.
     /// - Returns: An array of ``MemberInfo`` sorted by preference priority, excluding any disallowed states.
     /// - Throws: `KurrentError` if the gRPC call fails or the response cannot be decoded.

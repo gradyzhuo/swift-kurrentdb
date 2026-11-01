@@ -19,8 +19,8 @@ public protocol ConnectionStringPolicy: Sendable {}
 /// - The authority holds at most one `@`. Credentials and query parameters accept only the
 ///   characters RFC 3986 allows there (plus `%XX` escapes), and an unencoded `@` in the query is
 ///   rejected on purpose: write it as `%40`.
-/// - Anything outside the allowed sets (non-ASCII, control characters, `"` `<` `>` `\` `^` `` ` ``
-///   `{` `|` `}`, ...) must be percent-encoded.
+/// - Anything outside the allowed sets (non-ASCII, control characters, `"` `<` `>` `\` `^`
+///   `{` `|` `}`, the backtick, ...) must be percent-encoded.
 ///
 /// Passwords with arbitrary characters do not have to go through a connection string at all; use
 /// `ClientSettings.authenticated(.credentials(username:password:))` instead.

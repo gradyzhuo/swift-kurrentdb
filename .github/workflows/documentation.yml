@@ -123,6 +123,17 @@ jobs:
           mkdir -p symbol-graph
           cp "$RUNNER_TEMP/symbol-graphs/KurrentDB.symbols.json" symbol-graph/
 
+      # The checked-out catalog must convert without warnings. Only main's row checks it: the
+      # release rows are historical catalogs, which `build-docs-site` converts without this flag.
+      # symbol-graph/ holds KurrentDB.symbols.json alone, the same input the site is built from.
+      - name: DocC warnings are errors
+        if: matrix.label == 'main'
+        run: |
+          docc convert Sources/KurrentDB/KurrentDB.docc \
+            --additional-symbol-graph-dir symbol-graph \
+            --fallback-display-name KurrentDB --fallback-bundle-identifier KurrentDB \
+            --warnings-as-errors --output-path "$RUNNER_TEMP/docc-check"
+
       - name: Collect the symbol graph and the catalog
         run: |
           mkdir doc-input
