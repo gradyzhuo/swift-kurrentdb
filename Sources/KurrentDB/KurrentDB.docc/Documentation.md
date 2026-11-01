@@ -45,7 +45,7 @@ for try await response in client.streams(specified: "orders").read() {
 }
 ```
 
-### Persistent subscriptions
+### Persistent subscription groups
 
 ```swift
 let settings = ClientSettings.localhost()
