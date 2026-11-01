@@ -12,7 +12,7 @@
         500,
         650
       ],
-      "rounds": 5
+      "rounds": 6
     },
     {
       "id": "append-throughput-300-tls",
@@ -26,7 +26,7 @@
         80,
         110
       ],
-      "rounds": 5
+      "rounds": 6
     },
     {
       "id": "persistent-300-tls",
@@ -39,7 +39,7 @@
         250,
         400
       ],
-      "rounds": 5
+      "rounds": 6
     },
     {
       "id": "catch-up-300-tls",
@@ -51,7 +51,7 @@
         250,
         500
       ],
-      "rounds": 5
+      "rounds": 6
     },
     {
       "id": "rebuild-300-tls-L10",
@@ -64,7 +64,7 @@
         500,
         1200
       ],
-      "rounds": 5,
+      "rounds": 6,
       "streamLength": 10
     },
     {
@@ -78,7 +78,7 @@
         200,
         500
       ],
-      "rounds": 5,
+      "rounds": 6,
       "streamLength": 100
     },
     {
@@ -92,7 +92,7 @@
         20,
         50
       ],
-      "rounds": 5,
+      "rounds": 6,
       "streamLength": 1000
     },
     {
@@ -105,7 +105,7 @@
         1,
         2
       ],
-      "rounds": 3,
+      "rounds": 4,
       "streamLength": 10000
     },
     {
@@ -118,7 +118,7 @@
         250,
         500
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "append-throughput-1024-tls",
@@ -130,7 +130,7 @@
         50,
         110
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "persistent-1024-tls",
@@ -142,7 +142,7 @@
         250,
         400
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "catch-up-1024-tls",
@@ -154,7 +154,7 @@
         250,
         500
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "rebuild-1024-tls-L100",
@@ -166,7 +166,7 @@
         200,
         500
       ],
-      "rounds": 3,
+      "rounds": 4,
       "streamLength": 100
     },
     {
@@ -179,7 +179,7 @@
         250,
         500
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "append-throughput-4096-tls",
@@ -191,7 +191,7 @@
         50,
         110
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "persistent-4096-tls",
@@ -203,7 +203,7 @@
         250,
         400
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "catch-up-4096-tls",
@@ -215,7 +215,7 @@
         250,
         500
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "rebuild-4096-tls-L100",
@@ -227,7 +227,7 @@
         200,
         500
       ],
-      "rounds": 3,
+      "rounds": 4,
       "streamLength": 100
     },
     {
@@ -240,7 +240,7 @@
         250,
         500
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "append-throughput-300-notls",
@@ -252,7 +252,7 @@
         50,
         110
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "persistent-300-notls",
@@ -264,7 +264,7 @@
         250,
         400
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "catch-up-300-notls",
@@ -276,7 +276,7 @@
         250,
         500
       ],
-      "rounds": 3
+      "rounds": 4
     },
     {
       "id": "rebuild-300-notls-L100",
@@ -288,7 +288,7 @@
         200,
         500
       ],
-      "rounds": 3,
+      "rounds": 4,
       "streamLength": 100
     },
     {
@@ -301,7 +301,7 @@
         250,
         400
       ],
-      "rounds": 3,
+      "rounds": 4,
       "consumers": 4
     }
   ]
