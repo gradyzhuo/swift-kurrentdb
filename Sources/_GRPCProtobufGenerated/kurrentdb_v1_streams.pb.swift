@@ -8,6 +8,13 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+// Copyright 2011-2025 Kurrent, Inc.
+// Licensed under the Apache License 2.0 (LICENSES/Apache-2.0.txt).
+// Source: https://github.com/kurrent-io/KurrentDB-Client-Dotnet/blob/4a81d9f6c8995e2c8e8a0cc30f4cb07248dcd411/src/KurrentDB.Client/Core/proto/kurrentdb/protocol/v1/streams.proto
+// Modified by swift-kurrentdb: imports `kurrentdb/v1/shared.proto` and `kurrentdb/v1/status.proto`
+// (Event Store's variant of `google.rpc.Status`: `google.rpc.Code` enum, single `Any`) instead of
+// `shared.proto` and `google/rpc/status.proto`.
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -410,6 +417,10 @@ package struct EventStore_Client_Streams_ReadReq: Sendable {
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
+      /// The highest level of server behaviour that the client can handle. Each level includes the ones below it.
+      /// 0: default.
+      /// 1: stream reads also receive first_stream_position and last_stream_position.
+      /// 2: subscriptions also receive fell_behind, which may or may not carry a checkpoint.
       package var compatibility: UInt32 = 0
 
       package var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -522,24 +533,106 @@ package struct EventStore_Client_Streams_ReadResp: Sendable {
 
   }
 
+  /// The $all or stream subscription has caught up and become live.
   package struct CaughtUp: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
+    /// Current time in the server when the subscription caught up
+    package var timestamp: SwiftProtobuf.Google_Protobuf_Timestamp {
+      get {_timestamp ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+      set {_timestamp = newValue}
+    }
+    /// Returns true if `timestamp` has been explicitly set.
+    package var hasTimestamp: Bool {self._timestamp != nil}
+    /// Clears the value of `timestamp`. Subsequent reads from it will return its default value.
+    package mutating func clearTimestamp() {self._timestamp = nil}
+
+    /// Checkpoint for resuming a stream subscription.
+    /// For stream subscriptions it is populated unless the subscription started from the
+    /// beginning of the stream and has not sent any events yet.
+    /// For $all subscriptions it is not populated.
+    package var streamRevision: Int64 {
+      get {_streamRevision ?? 0}
+      set {_streamRevision = newValue}
+    }
+    /// Returns true if `streamRevision` has been explicitly set.
+    package var hasStreamRevision: Bool {self._streamRevision != nil}
+    /// Clears the value of `streamRevision`. Subsequent reads from it will return its default value.
+    package mutating func clearStreamRevision() {self._streamRevision = nil}
+
+    /// Checkpoint for resuming a $all subscription.
+    /// For stream subscriptions it is not populated.
+    /// For $all subscriptions it is populated unless the subscription started from the
+    /// beginning of $all and has not sent any events or checkpoints yet.
+    package var position: EventStore_Client_Streams_ReadResp.Position {
+      get {_position ?? EventStore_Client_Streams_ReadResp.Position()}
+      set {_position = newValue}
+    }
+    /// Returns true if `position` has been explicitly set.
+    package var hasPosition: Bool {self._position != nil}
+    /// Clears the value of `position`. Subsequent reads from it will return its default value.
+    package mutating func clearPosition() {self._position = nil}
+
     package var unknownFields = SwiftProtobuf.UnknownStorage()
 
     package init() {}
+
+    fileprivate var _timestamp: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+    fileprivate var _streamRevision: Int64? = nil
+    fileprivate var _position: EventStore_Client_Streams_ReadResp.Position? = nil
   }
 
+  /// The $all or stream subscription has fallen back into catchup mode and is no longer live.
   package struct FellBehind: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
+    /// Current time in the server when the subscription fell behind
+    package var timestamp: SwiftProtobuf.Google_Protobuf_Timestamp {
+      get {_timestamp ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+      set {_timestamp = newValue}
+    }
+    /// Returns true if `timestamp` has been explicitly set.
+    package var hasTimestamp: Bool {self._timestamp != nil}
+    /// Clears the value of `timestamp`. Subsequent reads from it will return its default value.
+    package mutating func clearTimestamp() {self._timestamp = nil}
+
+    /// Checkpoint for resuming a stream subscription.
+    /// For stream subscriptions it is populated unless the subscription started from the
+    /// beginning of the stream and has not sent any events yet.
+    /// For $all subscriptions it is not populated.
+    package var streamRevision: Int64 {
+      get {_streamRevision ?? 0}
+      set {_streamRevision = newValue}
+    }
+    /// Returns true if `streamRevision` has been explicitly set.
+    package var hasStreamRevision: Bool {self._streamRevision != nil}
+    /// Clears the value of `streamRevision`. Subsequent reads from it will return its default value.
+    package mutating func clearStreamRevision() {self._streamRevision = nil}
+
+    /// Checkpoint for resuming a $all subscription.
+    /// For stream subscriptions it is not populated.
+    /// For $all subscriptions it is populated unless the subscription started from the
+    /// beginning of $all and has not sent any events or checkpoints yet.
+    package var position: EventStore_Client_Streams_ReadResp.Position {
+      get {_position ?? EventStore_Client_Streams_ReadResp.Position()}
+      set {_position = newValue}
+    }
+    /// Returns true if `position` has been explicitly set.
+    package var hasPosition: Bool {self._position != nil}
+    /// Clears the value of `position`. Subsequent reads from it will return its default value.
+    package mutating func clearPosition() {self._position = nil}
+
     package var unknownFields = SwiftProtobuf.UnknownStorage()
 
     package init() {}
+
+    fileprivate var _timestamp: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+    fileprivate var _streamRevision: Int64? = nil
+    fileprivate var _position: EventStore_Client_Streams_ReadResp.Position? = nil
   }
 
   package struct ReadEvent: @unchecked Sendable {
@@ -655,6 +748,32 @@ package struct EventStore_Client_Streams_ReadResp: Sendable {
   }
 
   package struct Checkpoint: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    package var commitPosition: UInt64 = 0
+
+    package var preparePosition: UInt64 = 0
+
+    /// Current time in the server when the checkpoint was reached
+    package var timestamp: SwiftProtobuf.Google_Protobuf_Timestamp {
+      get {_timestamp ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+      set {_timestamp = newValue}
+    }
+    /// Returns true if `timestamp` has been explicitly set.
+    package var hasTimestamp: Bool {self._timestamp != nil}
+    /// Clears the value of `timestamp`. Subsequent reads from it will return its default value.
+    package mutating func clearTimestamp() {self._timestamp = nil}
+
+    package var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    package init() {}
+
+    fileprivate var _timestamp: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+  }
+
+  package struct Position: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -2460,18 +2579,43 @@ extension EventStore_Client_Streams_ReadResp: SwiftProtobuf.Message, SwiftProtob
 
 extension EventStore_Client_Streams_ReadResp.CaughtUp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".CaughtUp"
-  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}timestamp\0\u{3}stream_revision\0\u{1}position\0")
 
   package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    // Load everything into unknown fields
-    while try decoder.nextFieldNumber() != nil {}
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._timestamp) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self._streamRevision) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._position) }()
+      default: break
+      }
+    }
   }
 
   package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._timestamp {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._streamRevision {
+      try visitor.visitSingularInt64Field(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._position {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   package static func ==(lhs: EventStore_Client_Streams_ReadResp.CaughtUp, rhs: EventStore_Client_Streams_ReadResp.CaughtUp) -> Bool {
+    if lhs._timestamp != rhs._timestamp {return false}
+    if lhs._streamRevision != rhs._streamRevision {return false}
+    if lhs._position != rhs._position {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2479,18 +2623,43 @@ extension EventStore_Client_Streams_ReadResp.CaughtUp: SwiftProtobuf.Message, Sw
 
 extension EventStore_Client_Streams_ReadResp.FellBehind: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".FellBehind"
-  package static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}timestamp\0\u{3}stream_revision\0\u{1}position\0")
 
   package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    // Load everything into unknown fields
-    while try decoder.nextFieldNumber() != nil {}
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._timestamp) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self._streamRevision) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._position) }()
+      default: break
+      }
+    }
   }
 
   package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._timestamp {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._streamRevision {
+      try visitor.visitSingularInt64Field(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._position {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   package static func ==(lhs: EventStore_Client_Streams_ReadResp.FellBehind, rhs: EventStore_Client_Streams_ReadResp.FellBehind) -> Bool {
+    if lhs._timestamp != rhs._timestamp {return false}
+    if lhs._streamRevision != rhs._streamRevision {return false}
+    if lhs._position != rhs._position {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2709,6 +2878,50 @@ extension EventStore_Client_Streams_ReadResp.SubscriptionConfirmation: SwiftProt
 
 extension EventStore_Client_Streams_ReadResp.Checkpoint: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".Checkpoint"
+  package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}commit_position\0\u{3}prepare_position\0\u{1}timestamp\0")
+
+  package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.commitPosition) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.preparePosition) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._timestamp) }()
+      default: break
+      }
+    }
+  }
+
+  package func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.commitPosition != 0 {
+      try visitor.visitSingularUInt64Field(value: self.commitPosition, fieldNumber: 1)
+    }
+    if self.preparePosition != 0 {
+      try visitor.visitSingularUInt64Field(value: self.preparePosition, fieldNumber: 2)
+    }
+    try { if let v = self._timestamp {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.Checkpoint, rhs: EventStore_Client_Streams_ReadResp.Checkpoint) -> Bool {
+    if lhs.commitPosition != rhs.commitPosition {return false}
+    if lhs.preparePosition != rhs.preparePosition {return false}
+    if lhs._timestamp != rhs._timestamp {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension EventStore_Client_Streams_ReadResp.Position: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  package static let protoMessageName: String = EventStore_Client_Streams_ReadResp.protoMessageName + ".Position"
   package static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}commit_position\0\u{3}prepare_position\0")
 
   package mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2734,7 +2947,7 @@ extension EventStore_Client_Streams_ReadResp.Checkpoint: SwiftProtobuf.Message, 
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  package static func ==(lhs: EventStore_Client_Streams_ReadResp.Checkpoint, rhs: EventStore_Client_Streams_ReadResp.Checkpoint) -> Bool {
+  package static func ==(lhs: EventStore_Client_Streams_ReadResp.Position, rhs: EventStore_Client_Streams_ReadResp.Position) -> Bool {
     if lhs.commitPosition != rhs.commitPosition {return false}
     if lhs.preparePosition != rhs.preparePosition {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
