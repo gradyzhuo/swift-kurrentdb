@@ -357,6 +357,77 @@ func legacy() async throws {
 
 ## Removed and renamed API
 
+Every declaration 2.x deprecated is gone. All rows but the last two carry a deprecation warning on 2.6, so a 2.6 build without deprecation warnings uses none of them. The `numberOfThreads:` rows were not deprecated: they fail to compile without a warning beforehand.
+
+| Removed in 3.0 | Use instead | Note |
+|----------------|-------------|------|
+| `ClientSettings.certificate(path:)` | `certificate(path:fallback:)` | `fallback:` has no default value. `.none` keeps 2.6's refusal of an unreadable file, but throws `KurrentError.initializationError` when the settings are built (so it needs `try`), where 2.6 failed at the first connection; `.systemTrustRoots` leaves the file out, so the system's root certificates are trusted if no other CA is configured. |
+| `cerificates` | `certificates` | |
+| `cerificate(source:)` | `certificate(source:)` | |
+| `cerificate(path:)` | `certificate(path:fallback:)` | As `certificate(path:)`. |
+| `KurrentError.CurrentRevisionOption` | `KurrentError.CurrentRevisionState` | The same type, renamed. |
+| `EventData(id:eventType:payload:customMetadata:)` with a value that is not a `Payload` | `EventData(eventType:model:)`, or `payload: .json(value)` | If the value was `Data` or `[UInt8]`, see "EventData with a Data payload" below. |
+| `StreamFilter.onStreamName(prefix:)` | `onStreamName(prefixes:)` | |
+| `SubscriptionFilter` | `StreamFilter` | The same type, renamed. |
+| `KurrentDB_V1` (library and module) | the 2.x API | Migrate on 2.6 first (Before you start). |
+| `client.shutdown()` from `KurrentDB_V1`, which shut the server down | `try await client.operations(of: .system).shutdown()` | Without the import the same line still compiles and closes the client instead: sort these on 2.6 (Before you start). |
+| `KurrentDBClient(settings:numberOfThreads:defaultCallOptions:)` | `KurrentDBClient(settings:eventLoopGroup:defaultCallOptions:)` | See "eventLoopGroup replaces numberOfThreads" below. |
+| `withBorrowedClient(numberOfThreads:maxAttempts:_:)` | `withBorrowedClient(eventLoopGroup:maxAttempts:_:)` | As above. |
+
+### EventData with a Data payload
+
+The removed initialiser took any `Codable` value and stored it JSON-encoded. For `Data` that is a JSON string holding the bytes in base64, and for `[UInt8]` a JSON array of numbers. `payload: .json(value)` is the same encoding: write it to keep appending what the stream already holds. `data:` and `bytes:` store the bytes themselves, so they change the stored format; switch to them only once every reader of the stream expects the new one. Both default to `contentType: .json`: for bytes that are not JSON, pass `contentType: .binary`.
+
+<!-- snippet:skip -->
+```swift
+let snapshot = EventData(eventType: "Snapshot", payload: someData)   // 2.x: stored "eyJvcmRlcklkIjoib3JkZXItMSJ9", a base64 JSON string
+```
+
+```swift
+let same = EventData(eventType: "Snapshot", payload: .json(someData))               // the bytes 2.x stored
+let raw = EventData(eventType: "Snapshot", data: someData)                          // the Data itself, labelled JSON on append
+let blob = EventData(eventType: "Snapshot", data: someData, contentType: .binary)   // bytes that are not JSON
+```
+
+### eventLoopGroup replaces numberOfThreads
+<!-- S16 -->
+
+A 2.x client created a group of `numberOfThreads` threads, ran no connection on it — every connection ran on NIO's process-wide `.singletonMultiThreadedEventLoopGroup` — and stopped it in `shutdown()`. A 3.0 client runs every connection on the group you pass, by default that same singleton, so dropping the argument changes nothing at run time. A group you pass, such as your server's, now really carries the client's I/O. It must be a `MultiThreadedEventLoopGroup` or one of its event loops; a NIO Transport Services group crashes the process at the first connection. The client never shuts the group down: a group you create is yours to shut down. `client.shutdown()` only starts closing the connections, so stop the group once nothing else needs it, such as at process exit. `withBorrowedClient` takes the same parameter.
+
+<!-- snippet:skip -->
+```swift
+let client = KurrentDBClient(settings: settings, numberOfThreads: 2)
+```
+
+```swift
+import NIOPosix
+
+let client = KurrentDBClient(settings: settings)                                    // the singleton group, which 2.x ran on
+let shared = KurrentDBClient(settings: settings, eventLoopGroup: eventLoopGroup)    // a group your server already runs
+
+let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+let isolated = KurrentDBClient(settings: settings, eventLoopGroup: group)          // threads of its own
+isolated.shutdown()
+try await group.shutdownGracefully()                                                // yours to stop, after the client
+```
+
+### shutdown() no longer throws
+
+In 2.x, `shutdown()` threw what stopping the client's group threw. A 3.0 client owns no group, so `shutdown()` only closes its connections and throws nothing. `try client.shutdown()` compiles with the warning in the diagnostics table above, and a `do`/`catch` around it alone gets "'catch' block is unreachable because no errors are thrown in 'do' block": drop the `try` and the `do`/`catch`. A `try await client.shutdown()` from `KurrentDB_V1` code is the exception: on 2.6, decide whether it means the server or the client before you drop anything (Before you start).
+
+<!-- snippet:skip -->
+```swift
+do {
+    try client.shutdown()   // 2.x: threw when the event-loop group failed to stop
+} catch {
+    print("shutdown failed: \(error)")
+}
+```
+
+```swift
+client.shutdown()
+```
+
 ## Subscription notifications
 
 ## What did not change
