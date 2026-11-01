@@ -271,6 +271,9 @@ let package = Package(
                 // InProcessKurrentDB: a fake node on grpc-swift's in-process transport.
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCInProcessTransport", package: "grpc-swift-2"),
+                // SubscriptionMessageDecodingTests: builds the generated responses the decoder reads.
+                "_GRPCProtobufGenerated",
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ],
             swiftSettings: [
                 .unsafeFlags([
