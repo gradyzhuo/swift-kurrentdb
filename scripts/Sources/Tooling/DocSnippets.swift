@@ -14,7 +14,8 @@ import Foundation
 /// Directives, written as an HTML comment on the line directly above a code fence
 /// (DocC and GitHub both hide HTML comments):
 ///
-///     <!-- snippet:skip -->      don't compile this block (1.x code, deliberate errors)
+///     <!-- snippet:skip -->      don't compile this block (1.x code, deliberate errors), and
+///                                end the current `continue` chain
 ///     <!-- snippet:continue -->  append this block to the previous one in the same file,
 ///                                so it can use the names that block declared
 ///     <!-- snippet:toplevel -->  declare the block's types and functions alongside the file's
@@ -91,6 +92,7 @@ public enum DocSnippets {
             "import Foundation",
             "import KurrentDB",
             "import KurrentDBPool",
+            "import Testing",
             "",
         ]
         var count = 0
@@ -110,7 +112,12 @@ public enum DocSnippets {
             var functions: [[String]] = []
             var current: Int?
             for (index, block) in blocks.enumerated() {
-                if block.directive == .skip { continue }
+                if block.directive == .skip {
+                    // A skipped block ends a `continue` chain: what follows it starts a new
+                    // snippet, so before/after pairs can interleave.
+                    current = nil
+                    continue
+                }
                 var code = [location(of: path, line: block.line)] + block.body.map { isImport($0) ? "" : $0 }
                 if block.directive == .toplevel {
                     code = code.map(staticDeclaration)
