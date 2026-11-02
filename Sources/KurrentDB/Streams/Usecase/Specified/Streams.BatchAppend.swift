@@ -56,8 +56,8 @@ extension Streams {
                             options.streamPosition = revision
                         }
                     }
-                    request.proposedMessages = streamEvent.records.map { record in
-                        .with { message in
+                    request.proposedMessages = try streamEvent.records.map { record in
+                        try .with { message in
                             // BatchAppend requires a non-empty message id; generate one when the
                             // record does not carry its own.
                             message.id = (record.id ?? UUID()).toEventStoreUUID()
@@ -67,9 +67,7 @@ extension Streams {
                                 "type": record.schema.name,
                                 "content-type": contentType,
                             ]
-                            if !record.properties.isEmpty,
-                               JSONSerialization.isValidJSONObject(record.properties),
-                               let customData = try? JSONSerialization.data(withJSONObject: record.properties) {
+                            if let customData = try record.customMetadataJSON() {
                                 message.customMetadata = customData
                             }
                         }

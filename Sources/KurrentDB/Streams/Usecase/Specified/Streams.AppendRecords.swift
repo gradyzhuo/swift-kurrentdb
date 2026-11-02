@@ -55,15 +55,15 @@ extension Streams {
 
         package func requestMessage() throws -> UnderlyingRequest {
             try .with { request in
-                request.records = streamEvents.flatMap { streamEvent in
-                    streamEvent.records.map { record in
-                        Kurrentdb_Protocol_V2_Streams_AppendRecord.with {
+                request.records = try streamEvents.flatMap { streamEvent in
+                    try streamEvent.records.map { record in
+                        try Kurrentdb_Protocol_V2_Streams_AppendRecord.with {
                             if let recordId = record.id {
                                 $0.recordID = recordId.uuidString
                             }
                             $0.stream = streamEvent.streamIdentifier.name
                             $0.data = record.data
-                            $0.properties = record.properties.structValue.fields
+                            $0.properties = try record.protobufProperties()
                             $0.schema = .with {
                                 $0.name = record.schema.name
                                 $0.format = .init(rawValue: record.schema.format.rawValue) ?? .unspecified
