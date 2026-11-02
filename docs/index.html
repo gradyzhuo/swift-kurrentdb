@@ -71,7 +71,7 @@
   <p lang="en">Add to your <code>Package.swift</code>:</p>
   <p lang="zh-Hant">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.0")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.1")
 ]</code></pre>
   <p class="note" lang="en">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note" lang="zh-Hant">🎉 <strong>2.0 已上線</strong> —— 目前推薦使用 target-based API。仍在 1.x？改用 <code>KurrentDB_V1</code>，原本的程式碼可以繼續運作，遷移節奏由你決定。</p>
@@ -98,7 +98,7 @@
 
   <!-- ===================================================================== -->
   <article class="release" id="v2.6">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.6.0</span><span lang="zh-Hant">最新 · v2.6.0</span></div>
+    <div class="whats-new-tag"><span lang="en">Latest · v2.6.1</span><span lang="zh-Hant">最新 · v2.6.1</span></div>
     <h3 class="release-title"><span lang="en">Typed errors for deleted streams and conflicts, and KurrentDB 26.2</span><span lang="zh-Hant">刪除的 stream 與版本衝突改成型別化錯誤，並支援 KurrentDB 26.2</span></h3>
     <p class="lead" lang="en">
       2.6 turns server errors that used to surface as raw gRPC errors into typed
@@ -144,6 +144,19 @@
       <li lang="en">A buffered <code>read()</code> the server rejects throws <code>resourceDeleted</code> or <code>accessDenied</code> instead of a raw <code>RPCError</code>, still while iterating. Errors after the server accepted the call are unchanged.</li>
       <li lang="zh-Hant">被伺服器拒絕的一般 <code>read()</code>，改丟 <code>resourceDeleted</code> 或 <code>accessDenied</code>，不再是原始的 <code>RPCError</code>；一樣是在迭代時丟出。伺服器接受呼叫之後發生的錯誤不變。</li>
     </ul>
+
+    <h4 class="subsection-title"><span lang="en">2.6.1: multi-stream appends keep metadata and check revisions</span><span lang="zh-Hant">2.6.1：多 stream append 保留 metadata，並檢查版本</span></h4>
+    <ul>
+      <li lang="en">An <code>EventRecord</code>'s custom metadata is no longer dropped: <code>customMetadata:</code> keeps every member, nested objects and arrays included, and all three <code>multiStreams</code> methods send every property that encodes as JSON. Metadata that is not a JSON object throws, and NaN, an infinity or an integer beyond 64 bits makes the append throw <code>encodingError</code>. <code>append</code> and <code>appendRecords</code> carry numbers as <code>Double</code>, so an integer beyond ±2<sup>53</sup> arrives rounded.</li>
+      <li lang="zh-Hant"><code>EventRecord</code> 的 custom metadata 不再被丟掉：<code>customMetadata:</code> 會保留每個成員，包括巢狀物件與陣列；<code>multiStreams</code> 的三個方法都會送出每個能編成 JSON 的 property。不是 JSON 物件的 metadata 會丟錯；NaN、無限大或超過 64 位元的整數會讓 append 丟 <code>encodingError</code>。<code>append</code> 和 <code>appendRecords</code> 用 <code>Double</code> 傳數字，所以超過 ±2<sup>53</sup> 的整數會變成最接近的 <code>Double</code>。</li>
+      <li lang="en"><code>multiStreams.append</code> now sends each <code>StreamEvent</code>'s expected revision, which it left out, so a conflict throws <code>wrongExpectedVersion</code> instead of the append succeeding. A tombstoned stream throws <code>resourceDeleted</code> instead of a <code>grpcError</code> that was retried as a node failure.</li>
+      <li lang="zh-Hant"><code>multiStreams.append</code> 現在會送出每個 <code>StreamEvent</code> 的 expected revision（以前漏送），版本衝突時丟 <code>wrongExpectedVersion</code>，不再照樣寫入成功。stream 被 tombstone 時丟 <code>resourceDeleted</code>，不再是被當成節點故障重試的 <code>grpcError</code>。</li>
+      <li lang="en">A catch-up subscription to a stream that is tombstoned ends with <code>resourceDeleted</code>, after the events written before it, instead of delivering <code>$streamDeleted</code> followed by a raw <code>RPCError</code>.</li>
+      <li lang="zh-Hant">追趕式訂閱的 stream 被 tombstone 時，會在送完之前寫入的事件後以 <code>resourceDeleted</code> 結束，不再送出 <code>$streamDeleted</code> 再接一個原始的 <code>RPCError</code>。</li>
+      <li lang="en"><strong>Upgrade note:</strong> a <code>multiStreams.append</code> whose expected revision no longer matches, which used to succeed, now throws.</li>
+      <li lang="zh-Hant"><strong>升級注意：</strong>expected revision 已經不符的 <code>multiStreams.append</code>，以前會成功，現在會丟錯。</li>
+    </ul>
+    <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.6.1" target="_blank" rel="noopener"><span lang="en">Full 2.6.1 release notes →</span><span lang="zh-Hant">2.6.1 完整 release notes →</span></a></p>
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.6.0" target="_blank" rel="noopener"><span lang="en">Full 2.6.0 release notes →</span><span lang="zh-Hant">2.6.0 完整 release notes →</span></a></p>
   </article>
 

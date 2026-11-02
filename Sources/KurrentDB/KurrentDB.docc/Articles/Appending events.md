@@ -197,6 +197,8 @@ try await client.multiStreams.append(events: [
 ])
 ```
 
+`append(events:)` writes every stream or none. When a stream is not at its expected revision it throws ``KurrentError/wrongExpectedVersion(expected:current:)``, and when a stream was tombstoned it throws ``KurrentError/resourceDeleted(resource:)``. Neither is retried.
+
 ### AppendRecords — Dynamic Consistency Boundary
 
 `appendRecords(events:checks:)` commits atomically and lets the write depend on streams it doesn't write to. Every ``StreamEvent`` whose expected revision isn't `.any` becomes a check on its own stream; ``ConsistencyCheck`` values in `checks` can name any other stream. If any check fails, nothing is written and the call throws ``KurrentError/consistencyViolation(violations:)`` listing every failed check.
@@ -227,6 +229,23 @@ for failure in response.failed {
     print(failure.streamIdentifier.name, failure.message)
 }
 ```
+
+### Record metadata
+
+An ``EventRecord`` carries its metadata as `properties`. `customMetadata:` takes a JSON object, whose members become the properties, and `setValue(_:forKey:)` adds one. A property can be any value that encodes as JSON, nested objects and arrays included. Metadata that is not a JSON object throws. `setValue(_:forKey:)` does not check the value: one that cannot be sent (NaN, an infinity, an integer beyond 64 bits, or a value `JSONEncoder` rejects) makes the append throw ``KurrentError/encodingError(message:encoding:)``. All three methods store the properties as the event's custom metadata, where a read returns them as JSON next to the keys the server adds.
+
+```swift
+let metadata = try JSONEncoder().encode(["correlationId": "abc-123"])
+
+let tagged = try EventRecord(
+    eventType: "OrderPlaced",
+    payload: .json(OrderPlaced(orderId: "order-1")),
+    customMetadata: metadata
+)
+.setValue("operator-7", forKey: "operatorId")
+```
+
+`append(events:)` and `appendRecords(events:checks:)` send each property as a `google.protobuf.Value`, whose numbers are `Double`: an integer beyond ±2^53 arrives as the nearest `Double`. Store such a value as a string to keep every digit. `batchAppend(events:)` writes the properties as JSON again: an integer stays exact while it fits in 64 bits, and any other number keeps the precision of a `Double`.
 
 ## Architecture
 
