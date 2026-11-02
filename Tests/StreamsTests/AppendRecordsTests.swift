@@ -97,4 +97,98 @@ struct AppendRecordsTests: Sendable {
 
         try await client.streams(specified: seat).delete()
     }
+
+    // MARK: - Deleted streams, revision conflicts and resent records
+
+    /// A stream that existed and was tombstoned.
+    private func tombstonedStream(_ client: KurrentDBClient) async throws -> String {
+        let stream = "tombstoned-\(UUID().uuidString)"
+        _ = try await client.multiStreams.appendRecords(events: [
+            StreamEvent(stream: stream, records: try record("created", ["k": "v"]), expectedRevision: .noStream),
+        ])
+        _ = try await client.streams(specified: stream).tombstone()
+        return stream
+    }
+
+    @Test("AppendRecords to a tombstoned stream reports a consistency violation with actual state -6.")
+    func testAppendRecordsToTombstonedStream() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = try await tombstonedStream(client)
+
+        do {
+            _ = try await client.multiStreams.appendRecords(events: [
+                StreamEvent(stream: stream, records: try record("after", ["k": "v"]), expectedRevision: .noStream),
+            ])
+            Issue.record("Expected a consistency violation, but the append succeeded.")
+        } catch let KurrentError.consistencyViolation(violations) {
+            #expect(violations == [.init(checkIndex: 0, stream: stream, expectedState: -1, actualState: -6)])
+        }
+    }
+
+    @Test("A tombstoned stream and a revision conflict in one AppendRecords request are reported together.")
+    func testTombstoneAndConflictTogether() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let tombstoned = try await tombstonedStream(client)
+        let other = "conflict-\(UUID().uuidString)"
+        _ = try await client.multiStreams.appendRecords(events: [
+            StreamEvent(stream: other, records: try record("created", ["k": "v"]), expectedRevision: .noStream),
+        ])
+
+        do {
+            _ = try await client.multiStreams.appendRecords(events: [
+                StreamEvent(stream: tombstoned, records: try record("after", ["k": "v"]), expectedRevision: .noStream),
+                StreamEvent(stream: other, records: try record("stale", ["k": "v"]), expectedRevision: .at(5)),
+            ])
+            Issue.record("Expected a consistency violation, but the append succeeded.")
+        } catch let KurrentError.consistencyViolation(violations) {
+            #expect(violations.count == 2)
+            #expect(violations.contains { $0.stream == tombstoned && $0.actualState == -6 })
+            #expect(violations.contains { $0.stream == other && $0.expectedState == 5 && $0.actualState == 0 })
+        }
+
+        try await client.streams(specified: other).delete()
+    }
+
+    @Test("AppendRecords with .noStream recreates a soft-deleted stream after its last revision.")
+    func testRecreateSoftDeletedStream() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = "soft-deleted-\(UUID().uuidString)"
+        _ = try await client.multiStreams.appendRecords(events: [
+            StreamEvent(stream: stream, records: try record("a", [:]), try record("b", [:]), try record("c", [:]), expectedRevision: .noStream),
+        ])
+        _ = try await client.streams(specified: stream).delete()
+
+        let response = try await client.multiStreams.appendRecords(events: [
+            StreamEvent(stream: stream, records: try record("recreated", [:]), expectedRevision: .noStream),
+        ])
+        #expect(response.revisions.first?.revision == 3)
+
+        try await client.streams(specified: stream).delete()
+    }
+
+    @Test("Resending AppendRecords with the same record ids is idempotent, even with .noStream.")
+    func testResendSameRecordIds() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = "idempotent-\(UUID().uuidString)"
+        let ids = [UUID(), UUID()]
+        let events = { () throws -> [StreamEvent] in
+            [StreamEvent(stream: stream, records: try ids.map {
+                try EventRecord(id: $0, eventType: "e", payload: .json(["k": "v"]))
+            }, expectedRevision: .noStream)]
+        }
+
+        let first = try await client.multiStreams.appendRecords(events: events())
+        let second = try await client.multiStreams.appendRecords(events: events())
+        #expect(first.revisions.first?.revision == 1)
+        #expect(second.revisions.first?.revision == 1)
+        #expect(second.position == first.position)
+
+        var count = 0
+        for try await _ in try await client.streams(specified: stream).read() {
+            count += 1
+        }
+        #expect(count == 2)
+
+        try await client.streams(specified: stream).delete()
+    }
 }
