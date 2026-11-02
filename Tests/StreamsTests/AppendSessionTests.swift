@@ -42,4 +42,33 @@ struct AppendSessionTests: Sendable {
             ])
         }
     }
+
+    @Test("AppendSession sends the expected revision and reports a conflict as wrongExpectedVersion.")
+    func testRevisionConflict() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = "session-conflict-\(UUID().uuidString)"
+        _ = try await client.multiStreams.append(events: [
+            StreamEvent(stream: stream, records: try record("created"), expectedRevision: .noStream),
+        ])
+
+        do {
+            _ = try await client.multiStreams.append(events: [
+                StreamEvent(stream: stream, records: try record("stale"), expectedRevision: .at(5)),
+            ])
+            Issue.record("Expected wrongExpectedVersion, but the append succeeded.")
+        } catch let KurrentError.wrongExpectedVersion(expected, current) {
+            guard case .revision(5) = expected, case .revision(0) = current else {
+                Issue.record("Expected (5, 0), got (\(expected), \(current)).")
+                return
+            }
+        }
+
+        // A matching revision still appends.
+        let response = try await client.multiStreams.append(events: [
+            StreamEvent(stream: stream, records: try record("next"), expectedRevision: .at(0)),
+        ])
+        #expect(response.results.first?.currentRevision == 1)
+
+        try await client.streams(specified: stream).delete()
+    }
 }

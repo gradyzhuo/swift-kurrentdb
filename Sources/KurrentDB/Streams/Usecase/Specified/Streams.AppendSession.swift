@@ -32,9 +32,10 @@ extension Streams {
         }
 
         package func requestMessages() throws -> [UnderlyingRequest] {
-            streamEvents.map { streamEvent in
-                .with {
+            try streamEvents.map { streamEvent in
+                try .with {
                     $0.stream = streamEvent.streamIdentifier.name
+                    $0.expectedRevision = try streamEvent.expectedRevision.v2ExpectedState()
                     $0.records = streamEvent.records.map { record in
                         .with {
                             if let recordId = record.id {
