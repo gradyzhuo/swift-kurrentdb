@@ -191,4 +191,54 @@ struct AppendRecordsTests: Sendable {
 
         try await client.streams(specified: stream).delete()
     }
+
+    struct OperatorMetadata: Codable, Equatable, Sendable {
+        struct Origin: Codable, Equatable, Sendable {
+            let service: String
+            let tags: [String]
+        }
+
+        let operatorId: String
+        let attempt: Int
+        let negative: Int
+        let ratio: Double
+        let isRetry: Bool
+        let issuedAt: Date
+        let note: String?
+        let origin: Origin
+    }
+
+    @Test("Custom metadata written through AppendRecords reads back through the v1 read unchanged.")
+    func testCustomMetadataRoundTrip() async throws {
+        let client = KurrentDBClient(settings: settings)
+        let stream = "metadata-\(UUID().uuidString)"
+        let metadata = OperatorMetadata(
+            operatorId: "op-1", attempt: 3, negative: -42, ratio: 0.25, isRetry: true,
+            issuedAt: Date(), note: nil,
+            origin: .init(service: "billing", tags: ["a", "b"])
+        )
+        let recordId = UUID()
+        let record = try EventRecord(
+            id: recordId, eventType: "operator-acted", payload: .json(["k": "v"]),
+            customMetadata: JSONEncoder().encode(metadata)
+        )
+
+        _ = try await client.multiStreams.appendRecords(events: [
+            StreamEvent(stream: stream, records: record, expectedRevision: .noStream),
+        ])
+
+        let responses = try await client.streams(specified: stream).read()
+        let first = try await responses.first { _ in true }
+        guard case let .event(readEvent) = first else {
+            Issue.record("Expected an event, got \(String(describing: first)).")
+            return
+        }
+        let recorded = readEvent.record
+        #expect(recorded.id == recordId)
+        #expect(recorded.eventType == "operator-acted")
+        #expect(recorded.contentType == .json)
+        #expect(try JSONDecoder().decode(OperatorMetadata.self, from: recorded.customMetadata) == metadata)
+
+        try await client.streams(specified: stream).delete()
+    }
 }

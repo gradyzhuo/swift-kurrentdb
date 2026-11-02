@@ -36,14 +36,14 @@ extension Streams {
                 try .with {
                     $0.stream = streamEvent.streamIdentifier.name
                     $0.expectedRevision = try streamEvent.expectedRevision.v2ExpectedState()
-                    $0.records = streamEvent.records.map { record in
-                        .with {
+                    $0.records = try streamEvent.records.map { record in
+                        try .with {
                             if let recordId = record.id {
                                 $0.recordID = recordId.uuidString
                             }
 
                             $0.data = record.data
-                            $0.properties = record.properties.structValue.fields
+                            $0.properties = try record.protobufProperties()
                             $0.schema = .with {
                                 $0.name = record.schema.name
                                 $0.format = .init(rawValue: record.schema.format.rawValue) ?? .unspecified

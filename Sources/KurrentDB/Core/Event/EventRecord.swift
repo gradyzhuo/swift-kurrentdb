@@ -50,13 +50,19 @@ extension EventRecord {
     ///   - id: Optional unique identifier; defaults to `nil` so the server can assign one.
     ///   - eventType: Logical schema name set as `schema.name` (e.g., `"order-placed"`).
     ///   - payload: Typed payload; its format is inferred and used to populate `schema.format`.
-    ///   - customMetadata: Optional JSON bytes parsed into `properties`; keys starting with `$` are system-reserved.
-    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `Error` if metadata parsing fails.
+    ///   - customMetadata: Optional JSON object whose members become `properties`; keys starting with `$`
+    ///     are system-reserved. Empty data means no metadata. String, boolean and number members are
+    ///     stored as `String`, `Bool`, `Int` or `Double`.
+    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
+    ///   `customMetadata` is not a JSON object.
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data? = nil) throws {
         let schema = Schema(format: payload.format, name: eventType)
-        let properties = try customMetadata.flatMap {
-            try JSONSerialization.jsonObject(with: $0) as? [String: Codable & Sendable]
-        } ?? [:]
+        var properties: [String: Codable & Sendable] = [:]
+        if let customMetadata, !customMetadata.isEmpty {
+            properties = try JSONDecoder()
+                .decode([String: PropertyValue].self, from: customMetadata)
+                .mapValues(\.unwrapped)
+        }
         try self.init(id: id, data: payload.data, schema: schema, properties: properties)
     }
 }
