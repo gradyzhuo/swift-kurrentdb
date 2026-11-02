@@ -278,11 +278,17 @@ extension KurrentError {
     /// The domain error the server reported in `rpcError`, or `nil` when it carries none.
     ///
     /// Covers what the server attaches beyond the status code: AppendRecords consistency
-    /// violations packed in the status details, and the `exception` trailer.
+    /// violations and the other v2 Streams errors packed in the status details, and the
+    /// `exception` trailer.
     static func serverException(from rpcError: RPCError) -> KurrentError? {
         // AppendRecords (v2) reports failed consistency checks as packed status details.
         if let violation = consistencyViolation(from: rpcError) {
             return violation
+        }
+
+        // Other v2 Streams errors (tombstoned stream, revision conflict, ...) as packed status details.
+        if let streamsError = streamsErrorDetails(from: rpcError) {
+            return streamsError
         }
 
         let metadata = rpcError.metadata
