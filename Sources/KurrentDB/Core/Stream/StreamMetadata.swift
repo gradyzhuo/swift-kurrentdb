@@ -12,13 +12,20 @@ import GRPCEncapsulates
 ///
 /// Controls retention, truncation, caching, and access control for a stream.
 /// Use the builder methods to configure individual fields and pass the result to
-/// `setStreamMetadata` on the client.
+/// `setMetadata(metadata:expectedRevision:)` on a stream; `getMetadata()` returns what is stored.
 ///
 /// The value holds the JSON object stored in the stream's `$$<stream>` metadata stream, in
-/// ``data``. The system fields are read from and written to that object, and every other key,
-/// including one written by another client, is kept. Read the data of a `$$<stream>` event with
+/// ``data``. That object is the source of truth: the system fields (``maxCount``, ``maxAge``,
+/// ``truncateBefore``, ``cacheControl`` and ``acl``) are read from and written to it, and every
+/// other key, including one written by another client or a `$` key a later server adds, is kept.
+///
+/// ``maxAge`` and ``cacheControl`` are stored in whole seconds, as the server reads them, so a
+/// sub-second part is truncated. Keys starting with `$` are reserved for the server; custom keys
+/// sit next to them at the top level of the object. ``init(data:)`` reads the object as strictly as
+/// the server does and throws for one the server ignores. Read the data of a `$$<stream>` event with
 /// ``init(data:)``, as `getMetadata()` does, rather than with `JSONDecoder`: `init(from:)` keeps the
-/// first occurrence of a repeated key and accepts `60.0`, which the server does not.
+/// first occurrence of a repeated key and accepts `60.0`, which the server does not. See
+/// <doc:Stream-metadata>.
 public struct StreamMetadata: Buildable, Codable {
     private enum Key {
         static let maxCount = "$maxCount"
@@ -497,9 +504,11 @@ extension StreamMetadata {
 extension StreamMetadata {
     /// Decodes a JSON object, every key kept as it is.
     ///
-    /// The system keys are checked as ``init(data:)`` checks them, but against the values the
-    /// decoder hands over, not the text: a whole number written with a fraction, such as `60.0`,
-    /// passes here.
+    /// The members come from the decoder, so when an object repeats a key this keeps whichever
+    /// occurrence the decoder keeps: the first, for `JSONDecoder`. ``init(data:)`` reads the last
+    /// occurrence, as the server does. The system keys are checked as ``init(data:)`` checks them,
+    /// but against the values the decoder hands over, not the text: a whole number written with a
+    /// fraction, such as `60.0`, passes here.
     ///
     /// To read the data of a `$$<stream>` event, use ``init(data:)``, as `getMetadata()` does, not
     /// `JSONDecoder().decode(StreamMetadata.self, from:)`: only ``init(data:)`` reads the object as
@@ -519,6 +528,7 @@ extension StreamMetadata {
         }
     }
 
+    /// Encodes the JSON object: the system fields, the custom keys and every other key it holds.
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(object)
