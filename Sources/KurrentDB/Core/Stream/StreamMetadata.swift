@@ -232,11 +232,109 @@ public struct StreamMetadata: Buildable, Codable {
     /// Sets user-defined key-value metadata on the stream.
     ///
     /// Each pair is stored as a top-level string key of the metadata object, next to the system fields.
+    /// A key starting with `$` is reserved for the server, so it is skipped and logged as a warning;
+    /// ``customProperties(encoding:)`` throws for it instead.
     ///
     /// - Parameter customProperties: Dictionary of string keys to string values.
     /// - Returns: An updated copy of the metadata.
+    @available(*, deprecated, message: "use customProperties(encoding:). Removed in 4.0.")
     public func customProperties(_ customProperties: [String: String]) -> Self {
-        setting(customProperties)
+        let reserved = customProperties.keys.filter(Self.isReserved)
+        if !reserved.isEmpty {
+            logger.warning("StreamMetadata.customProperties(_:) skipped the reserved keys \(reserved.sorted()); custom keys must not start with '$'.")
+        }
+        return merging(customProperties.filter { !Self.isReserved($0.key) }.mapValues(PropertyValue.string))
+    }
+
+    /// Decodes the custom keys, every key not starting with `$`, into `T`.
+    ///
+    /// The system keys (`$maxCount`, `$acl`, ...) and any other `$` key are left out before decoding,
+    /// so `T` never sees them, and a `[String: V]` dictionary holds only the custom keys.
+    /// `JSONDecoder` uses its default strategies, so a `Date` field expects seconds since 2001-01-01
+    /// and `Data` expects Base64.
+    ///
+    /// - Parameter type: The type the custom keys decode into, such as a `Decodable` struct.
+    /// - Returns: The decoded value.
+    /// - Throws: `KurrentError.internalParsingError` if the custom keys do not decode as `T`.
+    public func customProperties<T: Decodable>(as type: T.Type) throws(KurrentError) -> T {
+        let custom = PropertyValue.object(object.filter { !Self.isReserved($0.key) })
+        do {
+            return try JSONDecoder().decode(type, from: JSONEncoder().encode(custom))
+        } catch {
+            throw .internalParsingError(reason: "The custom stream metadata does not decode as \(type): \(error)")
+        }
+    }
+
+    /// Decodes the value of one custom key into `T`.
+    ///
+    /// Only custom keys are read: a key starting with `$` returns `nil`, like an absent key.
+    /// Read the system fields through their properties, such as ``maxCount``.
+    ///
+    /// - Parameters:
+    ///   - key: The custom key.
+    ///   - type: The type its value decodes into, such as `String`, `Int` or a `Decodable` struct.
+    /// - Returns: The decoded value, or `nil` when the key is absent or starts with `$`.
+    /// - Throws: `KurrentError.internalParsingError` if the value does not decode as `T`.
+    public func customProperty<T: Decodable>(_ key: String, as type: T.Type) throws(KurrentError) -> T? {
+        guard !Self.isReserved(key), let value = object[key] else {
+            return nil
+        }
+        do {
+            return try JSONDecoder().decode(type, from: JSONEncoder().encode(value))
+        } catch {
+            throw .internalParsingError(reason: "The custom stream metadata key '\(key)' does not decode as \(type): \(error)")
+        }
+    }
+
+    /// Merges the top-level keys of an encoded value into the metadata object as custom keys.
+    ///
+    /// The value is encoded with `JSONEncoder`, so a nested struct, a number, a boolean or an array
+    /// is stored as the JSON it encodes to. A key the metadata already holds is replaced; keys the
+    /// value does not hold are left as they are.
+    ///
+    /// `JSONEncoder` uses its default strategies: a `Date` is stored as seconds since 2001-01-01 and
+    /// `Data` as Base64. Encode such fields yourself (an ISO 8601 string, for example) when other
+    /// clients read them.
+    ///
+    /// - Parameter value: A value that encodes to a JSON object, such as a `Codable` struct or a dictionary.
+    /// - Returns: An updated copy of the metadata.
+    /// - Throws: `KurrentError.encodingError` if the value cannot be encoded, does not encode to a
+    ///   JSON object, holds a key starting with `$`, which is reserved for the server, or nests
+    ///   arrays and objects more than 64 levels deep, the value itself being the first level.
+    public func customProperties(encoding value: some Encodable & Sendable) throws(KurrentError) -> Self {
+        guard case let .object(values) = try Self.propertyValue(encoding: value) else {
+            throw .encodingError(message: "Custom stream metadata must encode to a JSON object, but \(type(of: value)) does not.", encoding: .utf8)
+        }
+        let reserved = values.keys.filter(Self.isReserved)
+        guard reserved.isEmpty else {
+            throw .encodingError(message: "Custom stream metadata keys must not start with '$': \(reserved.sorted()).", encoding: .utf8)
+        }
+        return merging(values)
+    }
+
+    /// Sets one custom key to an encoded value.
+    ///
+    /// The value is encoded with `JSONEncoder`, so it may be any JSON value: a string, a number, a
+    /// boolean, an array, an object or null.
+    ///
+    /// - Parameters:
+    ///   - key: The custom key. It must not start with `$`, which is reserved for the server.
+    ///   - value: The value to store.
+    /// - Returns: An updated copy of the metadata.
+    /// - Throws: `KurrentError.encodingError` if `key` starts with `$`, if `JSONEncoder` rejects
+    ///   the value (a NaN or infinite number, for example), or if the value nests arrays and objects
+    ///   more than 63 levels deep: with the metadata object around it, the stored JSON may nest at
+    ///   most 64 levels.
+    public func customProperty(_ key: String, encoding value: some Encodable & Sendable) throws(KurrentError) -> Self {
+        guard !Self.isReserved(key) else {
+            throw .encodingError(message: "Custom stream metadata key '\(key)' must not start with '$'.", encoding: .utf8)
+        }
+        let encoded = try Self.propertyValue(encoding: value)
+        // The metadata object is the first level, so the value may take the remaining ones.
+        guard encoded.depth < PropertyValue.maximumDepth else {
+            throw .encodingError(message: "Custom stream metadata key '\(key)' nests \(encoded.depth) levels deep; with the metadata object around it, the stored JSON may nest at most \(PropertyValue.maximumDepth) levels.", encoding: .utf8)
+        }
+        return merging([key: encoded])
     }
 }
 
@@ -255,15 +353,22 @@ extension StreamMetadata {
 
     /// A copy with `values` written to their keys, every other key left as it is.
     private func setting(_ values: [String: any Codable & Sendable]) -> Self {
+        do {
+            return try merging(values.mapValues { try PropertyValue($0) })
+        } catch {
+            // The values are strings, 64-bit integers and `StreamAcl`s, which always encode.
+            preconditionFailure("StreamMetadata could not encode \(values.keys.sorted()): \(error)")
+        }
+    }
+
+    /// A copy with `values` written to their keys, every other key left as it is.
+    private func merging(_ values: [String: PropertyValue]) -> Self {
         withCopy { copied in
-            var object = object
+            let object = object.merging(values) { _, new in new }
             do {
-                for (key, value) in values {
-                    object[key] = try PropertyValue(value)
-                }
                 copied.data = try Self.encode(object)
             } catch {
-                // The values are strings, 64-bit integers and `StreamAcl`s, which always encode.
+                // Every `PropertyValue` here was decoded from JSON or holds a finite number, so it encodes.
                 preconditionFailure("StreamMetadata could not encode \(values.keys.sorted()): \(error)")
             }
         }
@@ -280,6 +385,20 @@ extension StreamMetadata {
                 // Every `PropertyValue` here was decoded from JSON, so it encodes.
                 preconditionFailure("StreamMetadata could not encode the object without \(key): \(error)")
             }
+        }
+    }
+
+    /// Whether `key` is reserved for the server: a system field such as `$maxCount`, or a future one.
+    private static func isReserved(_ key: String) -> Bool {
+        key.hasPrefix("$")
+    }
+
+    /// `value` encoded with `JSONEncoder` and read back as a JSON value.
+    private static func propertyValue(encoding value: some Encodable) throws(KurrentError) -> PropertyValue {
+        do {
+            return try JSONDecoder().decode(PropertyValue.self, from: JSONEncoder().encode(value))
+        } catch {
+            throw .encodingError(message: "Custom stream metadata of type \(type(of: value)) cannot be encoded: \(error)", encoding: .utf8)
         }
     }
 

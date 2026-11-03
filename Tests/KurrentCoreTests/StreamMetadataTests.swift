@@ -66,11 +66,13 @@ struct StreamMetadataTests {
         #expect(StreamMetadata().acl(.serverDefault).data == Data("{}".utf8))
     }
 
-    @Test("customProperties builder sets value")
+    @available(*, deprecated)
+    @Test("The deprecated customProperties(_:) writes top-level string keys and skips $ keys")
     func testCustomProperties() throws {
         let props = ["env": "test", "owner": "team-a"]
         let metadata = StreamMetadata().customProperties(props)
         #expect(try object(of: metadata) == ["env": .string("test"), "owner": .string("team-a")])
+        #expect(try object(of: StreamMetadata().customProperties(["$maxCount": "1", "env": "test"])) == ["env": .string("test")])
     }
 
     // MARK: - Immutability
@@ -584,7 +586,7 @@ struct StreamMetadataTests {
         let lhs = try StreamMetadata(data: Data(#"{"$maxCount":10,"tenant":"acme","$maxAge":60,"n":10}"#.utf8))
         let rhs = try StreamMetadata(data: Data(#"{"$maxAge":60,"tenant":"acme","$maxCount":10,"n":1e1}"#.utf8))
         #expect(lhs == rhs)
-        #expect(lhs != rhs.customProperties(["tenant": "other"]))
+        #expect(try lhs != rhs.customProperty("tenant", encoding: "other"))
     }
 
     @Test("A Codable round trip keeps the JSON object")
@@ -597,10 +599,170 @@ struct StreamMetadataTests {
         #expect(try object(of: decoded) == object(of: Self.otherClientJSON))
     }
 
-    @Test("customProperties merges top-level string keys")
+    @Test("customProperties(encoding:) merges top-level keys")
     func testCustomPropertiesMerge() throws {
         let metadata = try StreamMetadata(data: Data(#"{"tenant":"acme","retries":3}"#.utf8))
-            .customProperties(["tenant": "other", "env": "test"])
+            .customProperties(encoding: ["tenant": "other", "env": "test"])
         #expect(try object(of: metadata) == object(of: #"{"tenant":"other","retries":3,"env":"test"}"#))
+    }
+
+    // MARK: - Custom properties of any JSON value
+
+    private struct Settings: Codable, Equatable {
+        struct Owner: Codable, Equatable {
+            var team: String
+            var oncall: [String]
+        }
+
+        var tenant: String
+        var retries: Int
+        var archived: Bool
+        var ratio: Double
+        var owner: Owner
+    }
+
+    private static let settings = Settings(
+        tenant: "acme", retries: 3, archived: false, ratio: 0.25,
+        owner: .init(team: "orders", oncall: ["ann", "bob"])
+    )
+
+    @Test("Nested objects, numbers and booleans round trip through customProperties(encoding:) and (as:)")
+    func testCustomPropertiesRoundTrip() throws {
+        let metadata = try StreamMetadata().maxCount(10).customProperties(encoding: Self.settings)
+        #expect(try object(of: metadata) == object(of: #"{"$maxCount":10,"tenant":"acme","retries":3,"archived":false,"ratio":0.25,"owner":{"team":"orders","oncall":["ann","bob"]}}"#))
+        #expect(try metadata.customProperties(as: Settings.self) == Self.settings)
+        #expect(metadata.maxCount == 10)
+
+        let reread = try StreamMetadata(data: metadata.data)
+        #expect(try reread.customProperty("retries", as: Int.self) == 3)
+        #expect(try reread.customProperty("archived", as: Bool.self) == false)
+        #expect(try reread.customProperty("owner", as: Settings.Owner.self) == Self.settings.owner)
+    }
+
+    @Test("customProperties(as:) decodes only the keys not starting with $")
+    func testCustomPropertiesAsSkipsReservedKeys() throws {
+        let metadata = try StreamMetadata(data: Data(Self.otherClientJSON.utf8))
+        let custom = try metadata.customProperties(as: [String: PropertyValue].self)
+        #expect(custom == ["tenant": .string("acme"), "retries": .integer(3)])
+    }
+
+    @Test("customProperty(_:encoding:) stores any JSON value under one key, leaving the others")
+    func testCustomPropertyEncoding() throws {
+        let metadata = try StreamMetadata(data: Data(#"{"$maxCount":5,"tenant":"acme"}"#.utf8))
+            .customProperty("limits", encoding: [1, 2, 3])
+            .customProperty("enabled", encoding: true)
+            .customProperty("note", encoding: String?.none)
+        #expect(try object(of: metadata) == object(of: #"{"$maxCount":5,"tenant":"acme","limits":[1,2,3],"enabled":true,"note":null}"#))
+        #expect(try metadata.customProperty("limits", as: [Int].self) == [1, 2, 3])
+    }
+
+    @Test("customProperty(_:as:) returns nil for an absent key and for a $ key")
+    func testCustomPropertyAbsent() throws {
+        let metadata = try StreamMetadata(data: Data(Self.otherClientJSON.utf8))
+        #expect(try metadata.customProperty("missing", as: String.self) == nil)
+        #expect(try metadata.customProperty("$maxCount", as: Int.self) == nil)
+    }
+
+    @Test("A custom value of the wrong type throws internalParsingError")
+    func testCustomPropertyWrongType() throws {
+        let metadata = try StreamMetadata(data: Data(Self.otherClientJSON.utf8))
+        #expect {
+            try metadata.customProperty("tenant", as: Int.self)
+        } throws: { error in
+            guard case .internalParsingError = error as? KurrentError else { return false }
+            return true
+        }
+        #expect(throws: KurrentError.self) {
+            try metadata.customProperties(as: Settings.self)
+        }
+    }
+
+    @Test("A $ key throws encodingError")
+    func testReservedKeyThrows() {
+        #expect {
+            try StreamMetadata().customProperty("$maxCount", encoding: 1)
+        } throws: { error in
+            guard case .encodingError = error as? KurrentError else { return false }
+            return true
+        }
+        #expect {
+            try StreamMetadata().customProperties(encoding: ["tenant": "acme", "$tb": "1"])
+        } throws: { error in
+            guard case .encodingError = error as? KurrentError else { return false }
+            return true
+        }
+    }
+
+    @Test("customProperties(encoding:) throws unless the value encodes to a JSON object", arguments: [
+        #"["a","b"]"#,
+        #""acme""#,
+        "42",
+        "null",
+    ])
+    func testNonObjectEncodingThrows(json: String) throws {
+        let value = try JSONDecoder().decode(PropertyValue.self, from: Data(json.utf8))
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata().customProperties(encoding: value)
+        }
+    }
+
+    @Test("customProperties(encoding:) throws for public non-object values")
+    func testPublicNonObjectEncodingThrows() {
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata().customProperties(encoding: [1, 2])
+        }
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata().customProperties(encoding: String?.none)
+        }
+    }
+
+    @Test("A custom integer above 2^53 round trips exactly")
+    func testLargeCustomInteger() throws {
+        let metadata = try StreamMetadata()
+            .customProperty("big", encoding: UInt64.max)
+            .customProperty("signed", encoding: Int64.min)
+        #expect(try metadata.customProperty("big", as: UInt64.self) == UInt64.max)
+        #expect(try metadata.customProperty("signed", as: Int64.self) == Int64.min)
+    }
+
+    @Test("customProperty(_:encoding:) throws for a value JSONEncoder rejects")
+    func testNonFiniteNumberThrows() {
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata().customProperty("ratio", encoding: Double.nan)
+        }
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata().customProperty("ratio", encoding: Double.infinity)
+        }
+    }
+
+    // MARK: - Nesting depth of custom values
+
+    /// `depth` arrays around a scalar.
+    private static func nestedArray(depth: Int) -> PropertyValue {
+        (0 ..< depth).reduce(PropertyValue.integer(1)) { value, _ in .array([value]) }
+    }
+
+    @Test("A custom value that keeps the stored object within 64 levels is written and read back")
+    func testCustomValueAtTheDepthLimit() throws {
+        let single = try StreamMetadata().customProperty("k", encoding: Self.nestedArray(depth: 63))
+        #expect(try StreamMetadata(data: single.data).customProperty("k", as: PropertyValue.self) == Self.nestedArray(depth: 63))
+        let merged = try StreamMetadata().customProperties(encoding: PropertyValue.object(["k": Self.nestedArray(depth: 63)]))
+        #expect(try StreamMetadata(data: merged.data) == single)
+    }
+
+    @Test("A custom value that would make the stored object nest more than 64 levels throws encodingError", arguments: [64, 65, 100])
+    func testCustomValuePastTheDepthLimit(depth: Int) {
+        #expect {
+            try StreamMetadata().customProperty("k", encoding: Self.nestedArray(depth: depth))
+        } throws: { error in
+            guard case .encodingError = error as? KurrentError else { return false }
+            return true
+        }
+        #expect {
+            try StreamMetadata().customProperties(encoding: PropertyValue.object(["k": Self.nestedArray(depth: depth)]))
+        } throws: { error in
+            guard case .encodingError = error as? KurrentError else { return false }
+            return true
+        }
     }
 }
