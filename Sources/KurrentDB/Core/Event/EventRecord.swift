@@ -54,7 +54,7 @@ extension EventRecord {
     ///     are system-reserved. Empty data means no metadata. String, boolean and number members are
     ///     stored as `String`, `Bool`, `Int` or `Double`.
     /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
-    ///   `customMetadata` is not a JSON object.
+    ///   `customMetadata` is not a JSON object or nests arrays and objects more than 64 levels deep.
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data? = nil) throws {
         let schema = Schema(format: payload.format, name: eventType)
         var properties: [String: Codable & Sendable] = [:]
