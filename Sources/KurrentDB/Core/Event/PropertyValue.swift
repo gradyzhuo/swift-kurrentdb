@@ -220,3 +220,14 @@ extension EventRecord {
         }
     }
 }
+
+extension PropertyValue {
+    /// How many arrays and objects deep the value nests: 0 for a scalar, 1 for `[1]` or `{}`.
+    package var depth: Int {
+        switch self {
+        case let .array(values): 1 + (values.map(\.depth).max() ?? 0)
+        case let .object(fields): 1 + (fields.values.map(\.depth).max() ?? 0)
+        default: 0
+        }
+    }
+}
