@@ -39,6 +39,13 @@ jobs:
     name: List versions
     runs-on: ubuntu-latest
     container: swift:6.4-bookworm  # for the scripts package
+    # The container's default shell is sh (dash), which has no `[[`: the release readiness and
+    # Prepare-commit steps below failed with "[[: not found" and fell through to "not a release
+    # tag" and prepare=false, so 2.6.1's Prepare commit deployed from main and its tag's deploy was
+    # ignored.
+    defaults:
+      run:
+        shell: bash
     outputs:
       releases: ${{ steps.list.outputs.releases }}
       matrix: ${{ steps.list.outputs.matrix }}
