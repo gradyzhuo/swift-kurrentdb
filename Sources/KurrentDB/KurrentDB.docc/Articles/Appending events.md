@@ -155,30 +155,6 @@ do {
 
 With `.any` or `.noStream`, tombstoning a stream that never existed succeeds and reserves the name for good; pass `.streamExists` to require that the stream exists.
 
-## Stream metadata
-
-A stream's metadata sets its retention, its truncation point and who may access it. `setMetadata` writes it as a `$metadata` event to the stream's `$$<stream>` metadata stream, and `getMetadata` reads the latest one back:
-
-```swift
-let orders = client.streams(specified: "orders")
-try await orders.setMetadata(metadata: StreamMetadata()
-    .maxCount(1000)
-    .maxAge(.seconds(86_400))
-    .acl(.systemStream))
-let metadata = try await orders.getMetadata()
-```
-
-The server ignores the **whole** metadata object when one system field has a shape it does not read, and it still accepts and stores the write; only the leader's log says so. `StreamMetadata` writes what the server applies:
-
-- `maxAge` and `cacheControl` are whole seconds. The sub-second part is dropped, and a value under one second is logged, since the server ignores that field.
-- ``StreamMetadata/Acl/userStream`` writes no `$acl`, so the server applies the `$userStreamAcl` default from `$settings`. The metadata reads back with no ACL.
-- ``StreamMetadata/Acl/systemStream`` writes the server's built-in `$systemStreamAcl`, `$admins` for every permission, and reads back as ``StreamMetadata/Acl/stream(_:)``. A `$systemStreamAcl` changed in `$settings` does not apply to it.
-- A value the server cannot apply makes `setMetadata` throw ``KurrentError/encodingError(message:encoding:)`` instead of writing it:
-  - `maxCount` or `truncateBefore` above `Int64.max`, and `cacheControl` above 922,337,203,685 seconds or either duration below -922,337,203,685 seconds: the server ignores the whole object for these;
-  - `maxAge` above 62,000,000,000 seconds: an age reaching back before the year 1 makes the stream unreadable, and the limit holds for every date from now on.
-
-Before 2.6.2, `maxAge` and `cacheControl` were written as an array, and `.userStream` and `.systemStream` as a string, so metadata that set any of them, `$maxCount`, `$tb` and `$acl` included, was never enforced, and the stream fell back to the server's default ACL. `getMetadata` still reads that format, the strings as `.userStream` and `.systemStream`; write the metadata again with 2.6.2 or later for the server to apply it.
-
 ## User credentials
 
 Credentials set on ``ClientSettings`` apply to every call:
