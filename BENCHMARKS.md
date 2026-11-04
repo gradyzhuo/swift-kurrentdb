@@ -336,3 +336,69 @@ swift test --package-path scripts --filter BenchToBMFTests
 swift package --disable-sandbox benchmark --target OfflineBenchmarks --format jmh --path bench-out
 swift run --package-path scripts bench-to-bmf bench-out/Current_run.jmh.json > bmf.json
 ```
+
+---
+
+## Live benchmarks
+
+The offline suite above needs no server. The live suite (`Benchmarks/Live`, its own SwiftPM package) runs the SDK
+against a real KurrentDB server (`kurrentplatform/kurrentdb:26.2.x`, the tag pinned in
+`Benchmarks/Live/config/server.json`) next to the official .NET client (`KurrentDB.Client`) and, for append and
+rebuild, [ghz](https://github.com/bojand/ghz) as a transport reference. Local runs, building the drivers and the
+command line are in [Benchmarks/Live/README.md](Benchmarks/Live/README.md); what every client must do is in
+[Benchmarks/Live/docs/driver-contract.md](Benchmarks/Live/docs/driver-contract.md).
+
+### What runs
+
+Each **cell** is one scenario at one event size, TLS on or off (`Benchmarks/Live/config/cells.json`):
+
+| Scenario | Clients | Measures |
+|---|---|---|
+| Append latency (batch 1) | Swift, .NET, ghz | latency from scheduled send time at fixed rates |
+| Append throughput (batch 50) | Swift, .NET, ghz | the same, in batches per second |
+| Persistent subscription | Swift, .NET | from an event's scheduled append to its first receipt, acked on receipt |
+| Catch-up subscription | Swift, .NET | catch-up of a seeded category, then live delivery as above |
+| Rebuild | Swift, .NET, ghz | whole-stream reads decoding every event (ghz without decoding); one cell per stream length, 10 to 10,000 events |
+
+Headline cells (300 B events, TLS) run the full rate ramp over at least 5 rounds; the appendix (1 KB, 4 KB, TLS off,
+four persistent subscription consumers) runs two rates over fewer rounds. Load is an open loop at fixed rates, every
+client with the same in-flight cap and per-operation deadline and with its SDK's default client settings. Percentiles
+count failed, dropped and timed-out attempts as worse than the deadline, and a step that does not sustain its rate is
+never used in a comparison.
+
+Every cell is one job on one `ubuntu-latest` runner (4 vCPU): the server container is pinned to two cores and the
+client under test to the other two, and the clients take turns in rotated order over the rounds. The report's
+headline is the **ratio** Swift ÷ .NET (p50, p99, client CPU per 1,000 operations, RSS) with a 95% confidence interval
+over the rounds; the target is 1.2. Ratios are only published for steps where the server had headroom, and numbers
+from different jobs are never divided. The network is loopback, so real network effects are not included.
+
+### How to trigger
+
+The `Live benchmarks` workflow (`.github/workflows/live-benchmarks.yml`) runs:
+
+- **On demand**, from the Actions tab or `gh workflow run live-benchmarks.yml -f cells=<id>,<id>`. The `cells` input
+  takes comma-separated cell ids; empty runs every cell.
+- **On every release tag**, every cell.
+- **Nightly on `main`** (18:00 UTC), the trend job only: every headline cell at one moderate rate, one round, Swift
+  only, uploaded to [Bencher](https://bencher.dev/perf/gradyzhuo-s-project) on the testbed `ubuntu-latest-live`. It
+  uses the latency t-test of the offline suite (10 runs of history, 99% band of the last 64) but never fails the job
+  on an alert: live latency on shared runners is too noisy for a hard threshold.
+
+A comparison run has one job per cell (each under 350 minutes, uploading the artifact `cell-<id>`) and a `merge` job
+that turns them into the artifact `live-benchmark-report`: a results bundle `<YYYY-MM-DD>-<server version>/` with
+every cell's raw histograms and trial results, `metadata.json` (SDK and harness commits, Swift toolchain, .NET runtime,
+`KurrentDB.Client` and ghz versions, server image digest and configuration, runner image and CPU model), the resolved
+Swift and .NET dependency graphs, and `report.html`.
+
+### How results land
+
+The workflows commit and publish nothing, matching the offline suite: GitHub-hosted runners differ between runs, so a
+person reviews a run before it becomes a reference. Publishing is manual; the maintainer:
+
+1. Downloads `live-benchmark-report` from the run and checks `report.html`.
+2. Commits the bundle under `Benchmarks/Live/results/<YYYY-MM-DD>-<server version>/` in a pull request.
+3. Adds a summary of the run below, with a link to the committed `report.html`, in the same pull request.
+
+### Published runs
+
+None yet.
