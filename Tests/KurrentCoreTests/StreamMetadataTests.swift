@@ -244,6 +244,12 @@ struct StreamMetadataTests {
         #expect(try decode(#"{"$acl":"$userStreamAcl"}"#).acl == .userStream)
     }
 
+    @Test("null reads as unset, as it did in 2.6.1")
+    func testNullReadsAsUnset() throws {
+        let metadata = try decode(#"{"$maxCount":null,"$maxAge":null,"$cacheControl":null,"$acl":{"$r":null,"$w":"ops"}}"#)
+        #expect(metadata == StreamMetadata().acl(.stream(StreamMetadata.StreamAcl().writeRoles(["ops"]))))
+    }
+
     @Test("== compares maxCount")
     func testEqualityComparesMaxCount() {
         #expect(StreamMetadata().maxCount(1) != StreamMetadata().maxCount(2))
