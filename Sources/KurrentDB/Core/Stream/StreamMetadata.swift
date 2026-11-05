@@ -293,6 +293,9 @@ extension StreamMetadata {
         static let negativeDuration: Int64 = -922_337_203_685
     }
 
+    /// Reads the object the server stores and the one 2.6.1 and earlier wrote: durations as whole
+    /// seconds or as Swift `Duration` arrays, `$acl` as an object or as the `"$userStreamAcl"` /
+    /// `"$systemStreamAcl"` strings, each role as a string or an array. `null` reads as unset.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         maxCount = try container.decodeIfPresent(UInt64.self, forKey: .maxCount)
@@ -343,6 +346,8 @@ extension StreamMetadata {
         return try container.decode(Duration.self, forKey: key)
     }
 
+    /// `value` unchanged, or an `EncodingError` when the server, which reads it as `Int64`, would
+    /// ignore the whole object for it.
     private static func revision(_ value: UInt64?, forKey key: CodingKeys) throws -> UInt64? {
         guard let value else {
             return nil
@@ -353,6 +358,9 @@ extension StreamMetadata {
         return value
     }
 
+    /// `duration` in whole seconds, the sub-second part dropped, or an `EncodingError` outside
+    /// `Limit.negativeDuration ... maximum`. A result under one second is logged, since the server
+    /// ignores the field.
     private static func wholeSeconds(_ duration: Duration?, forKey key: CodingKeys, atMost maximum: Int64) throws -> Int64? {
         guard let duration else {
             return nil
@@ -387,6 +395,7 @@ extension StreamMetadata.StreamAcl {
         metaWriteRoles = try Self.roles(in: container, forKey: .metaWriteRoles)
     }
 
+    /// The roles under `key`: a single string or an array, `nil` when absent or `null`.
     private static func roles(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> [String]? {
         guard container.contains(key), try !container.decodeNil(forKey: key) else {
             return nil
