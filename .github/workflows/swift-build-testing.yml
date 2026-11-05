@@ -23,14 +23,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Full integration test suite (Ubuntu + KurrentDB cluster)
+  # One build per Swift version, shared by that version's five KurrentDB test jobs below: the build
+  # takes 3–6 minutes and the tests about one, so 25 identical builds become 5. `.build` travels as
+  # a tar file because upload-artifact drops the executable bit and symlinks. GitHub runners check
+  # out at the same absolute path, so the test jobs' `swift test --skip-build` and llvm-cov find
+  # everything where the build left it.
   build:
-    name: Swift ${{ matrix.swift }} / KurrentDB ${{ matrix.kurrentdb.version }}
+    name: Build Swift ${{ matrix.swift }}
     strategy:
       fail-fast: false
       matrix:
         # Pinned: ubuntu-latest moved to 26.04 on 2026-10-26, and swift.org builds the 6.0–6.3
         # toolchains for 24.04 only (they need libxml2.so.2, which 26.04 no longer ships).
+        os: [ubuntu-24.04]
+        swift: ["6.0", "6.1", "6.2", "6.3", "6.4"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
+        with:
+           swift-version: ${{ matrix.swift }}
+
+      # Every Swift example in the docs becomes part of the DocSnippetsTests
+      # target, so the build below fails if an example no longer compiles.
+      - name: Generate documentation snippets
+        run: swift run --package-path scripts generate-doc-snippets
+
+      - name: Build
+        run: swift build --build-tests --enable-code-coverage
+
+      - name: Pack the build directory
+        run: |
+          du -sh .build
+          tar --zstd -cf "$RUNNER_TEMP/build.tar.zst" .build
+          ls -lh "$RUNNER_TEMP/build.tar.zst"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-swift-${{ matrix.swift }}
+          path: ${{ runner.temp }}/build.tar.zst
+          compression-level: 0  # already zstd
+          retention-days: 1
+
+  # Full integration test suite (Ubuntu + KurrentDB cluster), on the build of its Swift version
+  test:
+    name: Swift ${{ matrix.swift }} / KurrentDB ${{ matrix.kurrentdb.version }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        # The same runner image and toolchains as the build job, whose output these jobs run.
         os: [ubuntu-24.04]
         swift: ["6.0", "6.1", "6.2", "6.3", "6.4"]
         kurrentdb:
@@ -54,6 +96,7 @@ jobs:
       KURRENTDB_SUPPORTS_TRANSIENT_PROJECTIONS: ${{ matrix.kurrentdb.supports_transient_projections }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # The toolchain is still needed: the test binary links its runtime, and swift test and llvm-cov come with it.
       - uses: SwiftyLab/setup-swift@9014d4136569075c696d4151c7810ecde8712907 # v1.14.1 (was @latest, same commit)
         with:
            swift-version: ${{ matrix.swift }}
@@ -61,6 +104,14 @@ jobs:
 
       - name: Start KurrentDB cluster
         run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f ${{ matrix.kurrentdb.compose_file }} up -d
+
+      # Fetched while the cluster starts up.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: build-swift-${{ matrix.swift }}
+          path: ${{ runner.temp }}
+      - name: Unpack the build directory
+        run: tar --zstd -xf "$RUNNER_TEMP/build.tar.zst"
 
       - name: Wait for cluster to be healthy
         run: |
@@ -79,30 +130,38 @@ jobs:
           docker compose -f ${{ matrix.kurrentdb.compose_file }} logs
           exit 1
 
-      - name: Copy generated CA certificate to test resources
+      # The `.copy("Resources/ca.crt")` resources were copied into the test bundles at build time,
+      # from the placeholder in the repository; this cluster generated its own CA, so it replaces
+      # the copy inside every built bundle.
+      - name: Copy generated CA certificate to the built test resources
         run: |
-          docker cp setup:/certs/ca/ca.crt /tmp/ca.crt
-          for dir in Tests/*/Resources; do
-            cp /tmp/ca.crt "$dir/ca.crt"
+          docker cp setup:/certs/ca/ca.crt "$RUNNER_TEMP/ca.crt"
+          for crt in "$(swift build --show-bin-path)"/*.resources/ca.crt; do
+            cp "$RUNNER_TEMP/ca.crt" "$crt"
           done
 
-      # Every Swift example in the docs becomes part of the DocSnippetsTests
-      # target, so the build below fails if an example no longer compiles.
-      - name: Generate documentation snippets
-        run: swift run --package-path scripts generate-doc-snippets
-
-      - name: Build
-        run: swift build --build-tests --enable-code-coverage
       # stdbuf -oL: the test runner's stdout is a pipe here and gets block-buffered, so a hung
       # step is killed with every line still in the buffer — the log then shows nothing past
       # "Planning build". Line buffering keeps the output as far as the hang.
+      # --enable-code-coverage on `swift test` as well as on `swift build`: only the test run
+      # writes the profraw files and merges them into codecov/default.profdata, which is what
+      # swift-coverage-action looks for. Without it the action finds no file and nothing is uploaded.
       - name: Swift Testing
-        run: stdbuf -oL swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests|KurrentDBPoolTests"
+        run: stdbuf -oL swift test -v --skip-build --enable-code-coverage --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests|KurrentDBPoolTests"
+      # A coverage run of `swift test` starts by deleting the codecov directory, so the
+      # Operations run below would wipe the main suites' profile; keep it aside and merge it back.
+      - name: Keep the main suites' coverage
+        run: cp "$(swift build --show-bin-path)"/codecov/*.profdata "$RUNNER_TEMP/suites.profdata"
       # OperationsTests drive admin RPCs (scavenge, resign node, restart the persistent
       # subscriptions subsystem) that briefly disturb the cluster, so they run on their own
       # after the main suites instead of interleaved with them.
       - name: Swift Testing (Operations)
-        run: stdbuf -oL swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
+        run: stdbuf -oL swift test -v --skip-build --enable-code-coverage --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
+      - name: Merge the coverage of both test runs
+        run: |
+          profdata=$(ls "$(swift build --show-bin-path)"/codecov/*.profdata)
+          llvm-profdata merge -o "$RUNNER_TEMP/merged.profdata" "$profdata" "$RUNNER_TEMP/suites.profdata"
+          mv "$RUNNER_TEMP/merged.profdata" "$profdata"
       # Server-side view of a failed run: leader elections, dropped connections and the like
       # never show up in the Swift test output.
       - name: Dump cluster logs
@@ -110,6 +169,9 @@ jobs:
         run: docker compose -f ${{ matrix.kurrentdb.compose_file }} logs --tail 200
       - uses: sersoft-gmbh/swift-coverage-action@33c46a78bc78e0746a3d9fe2f5372a47736399b4 # v4.0.0
         id: coverage-files
+        # Fail here rather than let the Codecov step upload nothing and still pass.
+        with:
+          fail-on-empty-output: true
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
@@ -117,7 +179,7 @@ jobs:
           files: ${{ join(fromJSON(steps.coverage-files.outputs.files), ',') }}
 
   # KurrentDBPool's live suite needs genuinely independent (non-clustered)
-  # KurrentDB instances, unlike the `build` job's gossip cluster above — a
+  # KurrentDB instances, unlike the `test` job's gossip cluster above — a
   # pool member is supposed to be its own unrelated database, not a replica.
   # Each instance sets KURRENTDB_ADVERTISE_NODE_PORT_TO_CLIENT_AS to its own
   # mapped host port: without it, every instance's gossip response reports
