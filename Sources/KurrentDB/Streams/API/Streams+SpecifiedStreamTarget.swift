@@ -22,15 +22,25 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - metadata: The ``StreamMetadata`` to store.
     ///   - expectedRevision: The revision expected at the metadata stream before writing. Defaults to `.any`.
     /// - Returns: An `Append.Response` containing the result of the metadata write.
-    /// - Throws: `KurrentError` if the write fails or a revision conflict occurs.
+    /// - Throws: `KurrentError.encodingError` for a value the server would ignore the whole
+    ///   metadata for (see ``StreamMetadata/encode(to:)``), or `KurrentError` if the write fails
+    ///   or a revision conflict occurs.
     @discardableResult
     public func setMetadata(metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Append.Response {
+        let data: Data
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
+            data = try encoder.encode(metadata)
+        } catch {
+            throw .encodingError(message: "The stream metadata cannot be written: \(error)", encoding: .utf8)
+        }
         var options = Append.Options()
         options.expectedRevision = expectedRevision
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
-                model: metadata
+                data: data
             ),
         ], options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
