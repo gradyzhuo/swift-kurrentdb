@@ -71,7 +71,7 @@
   <p lang="en">Add to your <code>Package.swift</code>:</p>
   <p lang="zh-Hant">在 <code>Package.swift</code> 加入：</p>
   <pre><code class="lang-swift">dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.1")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.2")
 ]</code></pre>
   <p class="note" lang="en">🎉 <strong>2.0 is here</strong> — the target-based API is the recommended way to use swift-kurrentdb. Already on 1.x? Use <code>KurrentDB_V1</code> to keep your existing code while you migrate.</p>
   <p class="note" lang="zh-Hant">🎉 <strong>2.0 已上線</strong> —— 目前推薦使用 target-based API。仍在 1.x？改用 <code>KurrentDB_V1</code>，原本的程式碼可以繼續運作，遷移節奏由你決定。</p>
@@ -98,7 +98,7 @@
 
   <!-- ===================================================================== -->
   <article class="release" id="v2.6">
-    <div class="whats-new-tag"><span lang="en">Latest · v2.6.1</span><span lang="zh-Hant">最新 · v2.6.1</span></div>
+    <div class="whats-new-tag"><span lang="en">Latest · v2.6.2</span><span lang="zh-Hant">最新 · v2.6.2</span></div>
     <h3 class="release-title"><span lang="en">Typed errors for deleted streams and conflicts, and KurrentDB 26.2</span><span lang="zh-Hant">刪除的 stream 與版本衝突改成型別化錯誤，並支援 KurrentDB 26.2</span></h3>
     <p class="lead" lang="en">
       2.6 turns server errors that used to surface as raw gRPC errors into typed
@@ -145,6 +145,16 @@
       <li lang="zh-Hant">被伺服器拒絕的一般 <code>read()</code>，改丟 <code>resourceDeleted</code> 或 <code>accessDenied</code>，不再是原始的 <code>RPCError</code>；一樣是在迭代時丟出。伺服器接受呼叫之後發生的錯誤不變。</li>
     </ul>
 
+    <h4 class="subsection-title"><span lang="en">2.6.2: stream metadata the server applies</span><span lang="zh-Hant">2.6.2：寫出伺服器會套用的 stream metadata</span></h4>
+    <ul>
+      <li lang="en"><code>setMetadata</code> wrote <code>maxAge</code> and <code>cacheControl</code> as arrays, and <code>.userStream</code> and <code>.systemStream</code> as an <code>$acl</code> string. The server ignores the whole metadata object for either, so the <code>$maxCount</code>, <code>$tb</code> and <code>$acl</code> written with them were never enforced: the stream fell back to the server's default ACL, which under the default <code>$settings</code> lets every user read it.</li>
+      <li lang="zh-Hant"><code>setMetadata</code> 以前把 <code>maxAge</code>、<code>cacheControl</code> 寫成陣列，把 <code>.userStream</code>、<code>.systemStream</code> 寫成 <code>$acl</code> 字串。伺服器遇到任何一種都會忽略整個 metadata 物件，所以一起寫入的 <code>$maxCount</code>、<code>$tb</code>、<code>$acl</code> 從來沒有生效：stream 會改用伺服器的預設 ACL，在預設的 <code>$settings</code> 下，所有使用者都讀得到。</li>
+      <li lang="en">Durations are now whole seconds, <code>.userStream</code> writes no <code>$acl</code> (the server's <code>$userStreamAcl</code> default), and <code>.systemStream</code> writes <code>$admins</code> for every permission. A value the server cannot apply throws <code>encodingError</code> instead of being written. <code>getMetadata</code> reads both formats.</li>
+      <li lang="zh-Hant">時間改寫成整數秒；<code>.userStream</code> 不寫 <code>$acl</code>，套用伺服器的 <code>$userStreamAcl</code> 預設；<code>.systemStream</code> 每個權限都寫 <code>$admins</code>。伺服器無法套用的值不再送出，改丟 <code>encodingError</code>。<code>getMetadata</code> 新舊兩種格式都讀得懂。</li>
+      <li lang="en"><strong>Upgrade note:</strong> metadata that 2.6.1 or earlier wrote with <code>maxAge</code>, <code>cacheControl</code>, <code>.userStream</code> or <code>.systemStream</code> stays ignored by the server until it is written again with 2.6.2. Once rewritten, <code>.userStream</code> reads back with no ACL and <code>.systemStream</code> as <code>.stream(_:)</code>.</li>
+      <li lang="zh-Hant"><strong>升級注意：</strong>2.6.1 以前寫入、且設了 <code>maxAge</code>、<code>cacheControl</code>、<code>.userStream</code> 或 <code>.systemStream</code> 的 metadata，伺服器會持續忽略，直到用 2.6.2 重新寫入。重新寫入後，<code>.userStream</code> 讀回來會是沒有 ACL，<code>.systemStream</code> 讀回來會是 <code>.stream(_:)</code>。</li>
+    </ul>
+
     <h4 class="subsection-title"><span lang="en">2.6.1: multi-stream appends keep metadata and check revisions</span><span lang="zh-Hant">2.6.1：多 stream append 保留 metadata，並檢查版本</span></h4>
     <ul>
       <li lang="en">An <code>EventRecord</code>'s custom metadata is no longer dropped: <code>customMetadata:</code> keeps every member, nested objects and arrays included, and all three <code>multiStreams</code> methods send every property that encodes as JSON. Metadata that is not a JSON object throws, and NaN, an infinity or an integer beyond 64 bits makes the append throw <code>encodingError</code>. <code>append</code> and <code>appendRecords</code> carry numbers as <code>Double</code>, so an integer beyond ±2<sup>53</sup> arrives rounded.</li>
@@ -156,6 +166,7 @@
       <li lang="en"><strong>Upgrade note:</strong> a <code>multiStreams.append</code> whose expected revision no longer matches, which used to succeed, now throws.</li>
       <li lang="zh-Hant"><strong>升級注意：</strong>expected revision 已經不符的 <code>multiStreams.append</code>，以前會成功，現在會丟錯。</li>
     </ul>
+    <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.6.2" target="_blank" rel="noopener"><span lang="en">Full 2.6.2 release notes →</span><span lang="zh-Hant">2.6.2 完整 release notes →</span></a></p>
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.6.1" target="_blank" rel="noopener"><span lang="en">Full 2.6.1 release notes →</span><span lang="zh-Hant">2.6.1 完整 release notes →</span></a></p>
     <p class="release-link"><a href="https://github.com/gradyzhuo/swift-kurrentdb/releases/tag/2.6.0" target="_blank" rel="noopener"><span lang="en">Full 2.6.0 release notes →</span><span lang="zh-Hant">2.6.0 完整 release notes →</span></a></p>
   </article>
