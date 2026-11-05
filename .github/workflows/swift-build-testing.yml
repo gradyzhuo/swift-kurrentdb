@@ -132,12 +132,20 @@ jobs:
 
       # The `.copy("Resources/ca.crt")` resources were copied into the test bundles at build time,
       # from the placeholder in the repository; this cluster generated its own CA, so it replaces
-      # the copy inside every built bundle.
+      # the copy inside every built bundle. The native build system names the bundles *.resources,
+      # Swift Build (the default from 6.4) *.bundle; finding neither fails the step.
       - name: Copy generated CA certificate to the built test resources
         run: |
           docker cp setup:/certs/ca/ca.crt "$RUNNER_TEMP/ca.crt"
-          for crt in "$(swift build --show-bin-path)"/*.resources/ca.crt; do
+          shopt -s nullglob
+          bundled=("$(swift build --show-bin-path)"/*.{resources,bundle}/ca.crt)
+          if [ ${#bundled[@]} -eq 0 ]; then
+            echo "No ca.crt in the built test bundles under $(swift build --show-bin-path)"
+            exit 1
+          fi
+          for crt in "${bundled[@]}"; do
             cp "$RUNNER_TEMP/ca.crt" "$crt"
+            echo "Replaced $crt"
           done
 
       # stdbuf -oL: the test runner's stdout is a pipe here and gets block-buffered, so a hung
