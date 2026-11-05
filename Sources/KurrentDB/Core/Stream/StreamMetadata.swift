@@ -331,9 +331,10 @@ extension StreamMetadata {
         try container.encodeIfPresent(customProperties, forKey: .customProperties)
     }
 
-    /// Whole seconds, or the `[seconds, attoseconds]` pair 2.6.1 and earlier wrote.
+    /// Whole seconds, or the `Duration` array 2.6.1 and earlier wrote; `null` reads as unset, as
+    /// it did in 2.6.1.
     private static func decodeDuration(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Duration? {
-        guard container.contains(key) else {
+        guard container.contains(key), try !container.decodeNil(forKey: key) else {
             return nil
         }
         if let seconds = try? container.decode(Int64.self, forKey: key) {
@@ -387,7 +388,7 @@ extension StreamMetadata.StreamAcl {
     }
 
     private static func roles(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> [String]? {
-        guard container.contains(key) else {
+        guard container.contains(key), try !container.decodeNil(forKey: key) else {
             return nil
         }
         if let role = try? container.decode(String.self, forKey: key) {
