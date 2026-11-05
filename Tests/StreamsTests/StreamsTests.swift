@@ -129,7 +129,8 @@ struct StreamTests: Sendable {
         try await client.streams(specified: streamIdentifier.name).setMetadata(metadata: metadata)
 
         let responseMetadata = try #require(try await client.streams(specified: streamIdentifier.name).getMetadata())
-        #expect(metadata == responseMetadata)
+        // .userStream is written as no $acl, the server's $userStreamAcl default.
+        #expect(responseMetadata == StreamMetadata().cacheControl(.seconds(3)).maxAge(.seconds(30)))
         try await client.streams(specified: streamIdentifier.name).delete()
     }
 
@@ -404,5 +405,47 @@ struct StreamTests: Sendable {
 
         let decoder = JSONDecoder()
         #expect(try decoder.decode(StreamMetadata.Acl.self, from: encodedData) == acl)
+    }
+    @Test("The server applies the metadata setMetadata writes: maxCount, durations and the ACL together")
+    func testMetadataIsApplied() async throws {
+        let stream = UUID().uuidString
+        let client = KurrentDBClient(settings: settings)
+        let orders = client.streams(specified: stream)
+        try await orders.append(events: (0 ..< 3).map { EventData(eventType: "Applied", model: ["index": $0]) })
+
+        // 2.6.1 wrote maxAge and .systemStream in shapes that made the server ignore all of this.
+        try await orders.setMetadata(metadata: StreamMetadata()
+            .maxCount(1)
+            .maxAge(.seconds(3600))
+            .cacheControl(.seconds(3))
+            .acl(.systemStream))
+        let stored = try #require(try await client.streams(specified: "$$\(stream)").read {
+            $0.direction = .backward
+            $0.revision = .end
+            $0.limit = 1
+        }.first { if case .event = $0 { true } else { false } })
+        guard case let .event(event) = stored else {
+            Issue.record("Expected the metadata event, got \(stored).")
+            return
+        }
+        #expect(String(decoding: event.record.data, as: UTF8.self) == #"{"$acl":{"$d":["$admins"],"$mr":["$admins"],"$mw":["$admins"],"$r":["$admins"],"$w":["$admins"]},"$cacheControl":3,"$maxAge":3600,"$maxCount":1}"#)
+
+        var indices: [Int] = []
+        for try await response in try await orders.read() {
+            if case let .event(event) = response {
+                try indices.append(#require(try JSONDecoder().decode([String: Int].self, from: event.record.data)["index"]))
+            }
+        }
+        #expect(indices == [2])
+
+        let loginName = "metadata-\(UUID().uuidString.prefix(8))"
+        _ = try await client.users.create(loginName: loginName, password: "Password123!", fullName: "Metadata Test", groups: [.ops])
+        let user = KurrentDBClient(settings: settings.authenticated(.credentials(username: loginName, password: "Password123!")))
+        await #expect(throws: KurrentError.accessDenied) {
+            for try await _ in try await user.streams(specified: stream).read() {}
+        }
+
+        try await client.user(loginName).disable()
+        _ = try? await orders.delete()
     }
 }
