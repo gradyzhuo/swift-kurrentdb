@@ -184,20 +184,21 @@ jobs:
       # step is killed with every line still in the buffer — the log then shows nothing past
       # "Planning build". Line buffering keeps the output as far as the hang.
       # Coverage: the binaries were built with --enable-code-coverage, so every test process writes
-      # a profile to LLVM_PROFILE_FILE (%p, its pid, keeps processes apart). `swift test` itself runs
+      # a profile to LLVM_PROFILE_FILE: %p (the pid) keeps processes apart, and %m makes a process
+      # whose pid was reused merge into that file instead of truncating it. `swift test` itself runs
       # without --enable-code-coverage, which would add its own export of the whole coverage as
       # JSON: about 140 s per run over Swift 6.4's twelve test libraries, against the 4 s of the
       # lcov conversion below. Each run writes to its own directory, merged after both.
       - name: Swift Testing
         env:
-          LLVM_PROFILE_FILE: ${{ runner.temp }}/profraw/suites/%p.profraw
+          LLVM_PROFILE_FILE: ${{ runner.temp }}/profraw/suites/%p-%m.profraw
         run: stdbuf -oL swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests|KurrentDBPoolTests"
       # OperationsTests drive admin RPCs (scavenge, resign node, restart the persistent
       # subscriptions subsystem) that briefly disturb the cluster, so they run on their own
       # after the main suites instead of interleaved with them.
       - name: Swift Testing (Operations)
         env:
-          LLVM_PROFILE_FILE: ${{ runner.temp }}/profraw/operations/%p.profraw
+          LLVM_PROFILE_FILE: ${{ runner.temp }}/profraw/operations/%p-%m.profraw
         run: stdbuf -oL swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
       # Server-side view of a failed run: leader elections, dropped connections and the like
       # never show up in the Swift test output.
@@ -207,16 +208,19 @@ jobs:
       # The native build system links every test target into one swift-kurrentdbPackageTests.xctest;
       # Swift Build (the default from 6.4) builds one <Target>.so per test target instead, which
       # swift-coverage-action does not look for. llvm-cov takes either, every binary after the first
-      # as an -object. No profile, a missing binary or an empty report fails here instead of
-      # uploading nothing.
+      # as an -object. A test run without a profile, a missing binary or an empty report fails here
+      # instead of uploading an incomplete report.
       - name: Convert coverage to lcov
         run: |
           shopt -s nullglob
+          for run in suites operations; do
+            run_profiles=("$RUNNER_TEMP/profraw/$run"/*.profraw)
+            if [ ${#run_profiles[@]} -eq 0 ]; then
+              echo "No profile from the $run test run under $RUNNER_TEMP/profraw/$run"
+              exit 1
+            fi
+          done
           profiles=("$RUNNER_TEMP"/profraw/*/*.profraw)
-          if [ ${#profiles[@]} -eq 0 ]; then
-            echo "No profile under $RUNNER_TEMP/profraw"
-            exit 1
-          fi
           llvm-profdata merge -sparse -o "$RUNNER_TEMP/coverage.profdata" "${profiles[@]}"
           bin=$(swift build --show-bin-path)
           binaries=("$bin"/*.xctest "$bin"/*Tests.so)
