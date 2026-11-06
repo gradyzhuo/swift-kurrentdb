@@ -446,7 +446,7 @@ struct StreamMetadataTests {
         #expect(try StreamMetadata(data: Data(json.utf8)).data == Data(json.utf8))
         // An escape denotes the same scalars as the character it stands for.
         let escaped = "{\"caf\\u00e9\":1,\"cafe\u{301}\":2,\"caf\u{E9}\":3}"
-        #expect(try String(decoding: StreamMetadata(data: Data(escaped.utf8)).data, as: UTF8.self) == "{\"cafe\u{301}\":2,\"caf\u{E9}\":3}")
+        #expect(try StreamMetadata(data: Data(escaped.utf8)).data == Data("{\"cafe\u{301}\":2,\"caf\u{E9}\":3}".utf8))
     }
 
     @Test("A builder keeps every other member's bytes and place, and appends a new key")
@@ -463,11 +463,11 @@ struct StreamMetadataTests {
     func testBuilderKeepsCanonicallyEquivalentKeys() throws {
         let json = "{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"}}"
         let metadata = try StreamMetadata(data: Data(json.utf8))
-        #expect(String(decoding: metadata.maxCount(2).data, as: UTF8.self) == "{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"},\"$maxCount\":2}")
-        #expect(String(decoding: metadata.acl(.serverDefault).data, as: UTF8.self) == "{\"caf\u{E9}\":1,\"cafe\u{301}\":2}")
+        #expect(metadata.maxCount(2).data == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"},\"$maxCount\":2}".utf8))
+        #expect(metadata.acl(.serverDefault).data == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":2}".utf8))
         #expect(try metadata.customProperty("caf\u{E9}", as: Int.self) == 1)
         #expect(try metadata.customProperty("cafe\u{301}", as: Int.self) == 2)
-        #expect(String(decoding: try metadata.customProperty("cafe\u{301}", encoding: 3).data, as: UTF8.self) == "{\"caf\u{E9}\":1,\"cafe\u{301}\":3,\"$acl\":{\"$r\":\"ops\"}}")
+        #expect(try metadata.customProperty("cafe\u{301}", encoding: 3).data == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":3,\"$acl\":{\"$r\":\"ops\"}}".utf8))
     }
 
     @Test("A builder keeps every digit of a number it does not set")
