@@ -449,13 +449,35 @@ struct StreamMetadataTests {
         #expect(try String(decoding: StreamMetadata(data: Data(escaped.utf8)).data, as: UTF8.self) == "{\"cafe\u{301}\":2,\"caf\u{E9}\":3}")
     }
 
-    @Test("A builder writes the object with sorted keys")
-    func testBuilderOutputIsSorted() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"z":1,"$tb":3,"a":{"y":true,"b":null}}"#.utf8))
+    @Test("A builder keeps every other member's bytes and place, and appends a new key")
+    func testBuilderKeepsOtherMembers() throws {
+        let metadata = try StreamMetadata(data: Data(#"{"z":1,"$tb":3,"a":{"y":true, "b":null}}"#.utf8))
             .maxCount(2)
             .acl(.stream(StreamMetadata.StreamAcl.defaults.writeRoles(["w"]).readRoles(["r"])))
             .cacheControl(.seconds(5))
-        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"$acl":{"$r":["r"],"$w":["w"]},"$cacheControl":5,"$maxCount":2,"$tb":3,"a":{"b":null,"y":true},"z":1}"#)
+            .truncateBefore(4)
+        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"z":1,"$tb":4,"a":{"y":true, "b":null},"$maxCount":2,"$acl":{"$r":["r"],"$w":["w"]},"$cacheControl":5}"#)
+    }
+
+    @Test("A builder keeps keys that differ only in Unicode normalization apart")
+    func testBuilderKeepsCanonicallyEquivalentKeys() throws {
+        let json = "{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"}}"
+        let metadata = try StreamMetadata(data: Data(json.utf8))
+        #expect(String(decoding: metadata.maxCount(2).data, as: UTF8.self) == "{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"},\"$maxCount\":2}")
+        #expect(String(decoding: metadata.acl(.serverDefault).data, as: UTF8.self) == "{\"caf\u{E9}\":1,\"cafe\u{301}\":2}")
+        #expect(try metadata.customProperty("caf\u{E9}", as: Int.self) == 1)
+        #expect(try metadata.customProperty("cafe\u{301}", as: Int.self) == 2)
+        #expect(String(decoding: try metadata.customProperty("cafe\u{301}", encoding: 3).data, as: UTF8.self) == "{\"caf\u{E9}\":1,\"cafe\u{301}\":3,\"$acl\":{\"$r\":\"ops\"}}")
+    }
+
+    @Test("A builder keeps every digit of a number it does not set")
+    func testBuilderKeepsNumbers() throws {
+        let json = #"{"ratio":1.234567890123456789,"big":123456789012345678901234567890,"e":6e1}"#
+        let metadata = try StreamMetadata(data: Data(json.utf8))
+            .maxAge(.seconds(60))
+            .customProperty("tenant", encoding: "acme")
+        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"ratio":1.234567890123456789,"big":123456789012345678901234567890,"e":6e1,"$maxAge":60,"tenant":"acme"}"#)
+        #expect(try metadata.customProperty("ratio", as: Decimal.self) == Decimal(string: "1.234567890123456789"))
     }
 
     // MARK: - Nesting depth
@@ -492,7 +514,7 @@ struct StreamMetadataTests {
         #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"$maxCount":100}"#)
         let rewritten = metadata.cacheControl(.seconds(5))
         #expect(rewritten.maxCount == 100)
-        #expect(String(decoding: rewritten.data, as: UTF8.self) == #"{"$cacheControl":5,"$maxCount":100}"#)
+        #expect(String(decoding: rewritten.data, as: UTF8.self) == #"{"$maxCount":100,"$cacheControl":5}"#)
     }
 
     @Test("A repeated key after a UTF-8 byte order mark reads as its last occurrence")

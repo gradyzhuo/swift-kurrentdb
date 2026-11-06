@@ -204,7 +204,7 @@ struct StreamTests: Sendable {
 
         // Reading the first occurrence would have written $maxCount 2 back and hidden 3 events.
         let rewritten = try #require(try await storedMetadata(of: stream, client: client))
-        #expect(String(decoding: rewritten, as: UTF8.self) == #"{"$cacheControl":5,"$maxCount":100}"#)
+        #expect(String(decoding: rewritten, as: UTF8.self) == #"{"$maxCount":100,"$cacheControl":5}"#)
         var count = 0
         for try await _ in client.streams(specified: stream).read() {
             count += 1
