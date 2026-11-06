@@ -67,17 +67,16 @@ jobs:
             du -ch "${libraries[@]}" | tail -n 1
           fi
 
-      # Left out of the tar, as running the built tests and llvm-cov do not read them:
-      # - out/Intermediates.noindex, Swift Build's objects, modules and build descriptions (the
-      #   native build system has no such directory);
-      # - repositories, SwiftPM's git mirrors of the dependencies, which checkouts was made from.
-      # zstd -10 instead of tar's default level 3: packing once costs a few seconds, and every
-      # test job downloads the smaller file.
+      # Swift Build (the default from 6.4) keeps the compiler's intermediate files (objects,
+      # modules, build descriptions) under out/Intermediates.noindex; running the built tests and
+      # llvm-cov need only out/Products, so they stay behind. The native build system has no such
+      # directory. `repositories` stays in: without SwiftPM's git mirrors, swift test on 6.0–6.3
+      # fetches every dependency again. zstd -10 instead of tar's default level 3: packing once
+      # costs a few seconds, and every test job downloads the smaller file.
       - name: Pack the build directory
         run: |
           du -h -d 3 .build | sort -h | tail -n 15
-          tar --exclude=.build/out/Intermediates.noindex --exclude=.build/repositories \
-            -I 'zstd -T0 -10' -cf "$RUNNER_TEMP/build.tar.zst" .build
+          tar --exclude=.build/out/Intermediates.noindex -I 'zstd -T0 -10' -cf "$RUNNER_TEMP/build.tar.zst" .build
           ls -lh "$RUNNER_TEMP/build.tar.zst"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -184,25 +183,22 @@ jobs:
       # stdbuf -oL: the test runner's stdout is a pipe here and gets block-buffered, so a hung
       # step is killed with every line still in the buffer — the log then shows nothing past
       # "Planning build". Line buffering keeps the output as far as the hang.
-      # --enable-code-coverage on `swift test` as well as on `swift build`: only the test run
-      # writes the profraw files and merges them into codecov/default.profdata. Without it there is
-      # no profile, and Codecov received nothing from March to November 2026.
+      # Coverage: the binaries were built with --enable-code-coverage, so every test process writes
+      # a profile to LLVM_PROFILE_FILE (%p, its pid, keeps processes apart). `swift test` itself runs
+      # without --enable-code-coverage, which would add its own export of the whole coverage as
+      # JSON: about 140 s per run over Swift 6.4's twelve test libraries, against the 4 s of the
+      # lcov conversion below. Each run writes to its own directory, merged after both.
       - name: Swift Testing
-        run: stdbuf -oL swift test -v --skip-build --enable-code-coverage --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests|KurrentDBPoolTests"
-      # A coverage run of `swift test` starts by deleting the codecov directory, so the
-      # Operations run below would wipe the main suites' profile; keep it aside and merge it back.
-      - name: Keep the main suites' coverage
-        run: cp "$(swift build --show-bin-path)"/codecov/*.profdata "$RUNNER_TEMP/suites.profdata"
+        env:
+          LLVM_PROFILE_FILE: ${{ runner.temp }}/profraw/suites/%p.profraw
+        run: stdbuf -oL swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter "StreamsTests|ProjectionsTests|PersistentSubscriptionsTests|UsersTests|MonitoringTests|GossipTests|KurrentCoreTests|MockClientTests|KurrentDBPoolTests"
       # OperationsTests drive admin RPCs (scavenge, resign node, restart the persistent
       # subscriptions subsystem) that briefly disturb the cluster, so they run on their own
       # after the main suites instead of interleaved with them.
       - name: Swift Testing (Operations)
-        run: stdbuf -oL swift test -v --skip-build --enable-code-coverage --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
-      - name: Merge the coverage of both test runs
-        run: |
-          profdata=$(ls "$(swift build --show-bin-path)"/codecov/*.profdata)
-          llvm-profdata merge -o "$RUNNER_TEMP/merged.profdata" "$profdata" "$RUNNER_TEMP/suites.profdata"
-          mv "$RUNNER_TEMP/merged.profdata" "$profdata"
+        env:
+          LLVM_PROFILE_FILE: ${{ runner.temp }}/profraw/operations/%p.profraw
+        run: stdbuf -oL swift test -v --skip-build --no-parallel --disable-xctest --enable-swift-testing --filter OperationsTests
       # Server-side view of a failed run: leader elections, dropped connections and the like
       # never show up in the Swift test output.
       - name: Dump cluster logs
@@ -211,10 +207,17 @@ jobs:
       # The native build system links every test target into one swift-kurrentdbPackageTests.xctest;
       # Swift Build (the default from 6.4) builds one <Target>.so per test target instead, which
       # swift-coverage-action does not look for. llvm-cov takes either, every binary after the first
-      # as an -object. A missing binary or an empty report fails here instead of uploading nothing.
+      # as an -object. No profile, a missing binary or an empty report fails here instead of
+      # uploading nothing.
       - name: Convert coverage to lcov
         run: |
           shopt -s nullglob
+          profiles=("$RUNNER_TEMP"/profraw/*/*.profraw)
+          if [ ${#profiles[@]} -eq 0 ]; then
+            echo "No profile under $RUNNER_TEMP/profraw"
+            exit 1
+          fi
+          llvm-profdata merge -sparse -o "$RUNNER_TEMP/coverage.profdata" "${profiles[@]}"
           bin=$(swift build --show-bin-path)
           binaries=("$bin"/*.xctest "$bin"/*Tests.so)
           if [ ${#binaries[@]} -eq 0 ]; then
@@ -226,7 +229,7 @@ jobs:
             objects+=("-object=$binary")
           done
           llvm-cov export -format=lcov -ignore-filename-regex='/\.build/' \
-            -instr-profile "$(ls "$bin"/codecov/*.profdata)" "${binaries[0]}" "${objects[@]}" \
+            -instr-profile "$RUNNER_TEMP/coverage.profdata" "${binaries[0]}" "${objects[@]}" \
             > "$RUNNER_TEMP/coverage.lcov"
           test -s "$RUNNER_TEMP/coverage.lcov"
           echo "$(grep -c '^SF:' "$RUNNER_TEMP/coverage.lcov") source files from ${#binaries[@]} binaries"
