@@ -53,10 +53,15 @@ jobs:
       - name: Build
         run: swift build --build-tests --enable-code-coverage
 
+      # Swift Build (the default from 6.4) keeps the compiler's intermediate files (objects,
+      # modules, build descriptions) under out/Intermediates.noindex; running the built tests and
+      # llvm-cov need only out/Products, so they stay behind. The native build system has no such
+      # directory. zstd -10 instead of tar's default level 3: packing once costs a few seconds,
+      # and every test job downloads the smaller file.
       - name: Pack the build directory
         run: |
-          du -sh .build
-          tar --zstd -cf "$RUNNER_TEMP/build.tar.zst" .build
+          du -sh .build .build/* .build/out/* 2>/dev/null || true
+          tar --exclude=.build/out/Intermediates.noindex -I 'zstd -T0 -10' -cf "$RUNNER_TEMP/build.tar.zst" .build
           ls -lh "$RUNNER_TEMP/build.tar.zst"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -105,8 +110,20 @@ jobs:
       - name: Start KurrentDB cluster
         run: KURRENTDB_IMAGE=${{ matrix.kurrentdb.image }} docker compose -f ${{ matrix.kurrentdb.compose_file }} up -d
 
-      # Fetched while the cluster starts up.
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      # Fetched while the cluster starts up. A download can stall without an error (a 1.2 GB
+      # Swift 6.4 download printed nothing for 25 minutes until the job timed out), so each
+      # attempt gets 5 minutes and a stalled or failed first attempt is retried once.
+      - id: download
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        timeout-minutes: 5
+        continue-on-error: true
+        with:
+          name: build-swift-${{ matrix.swift }}
+          path: ${{ runner.temp }}
+      - name: Retry the download
+        if: steps.download.outcome != 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        timeout-minutes: 5
         with:
           name: build-swift-${{ matrix.swift }}
           path: ${{ runner.temp }}
