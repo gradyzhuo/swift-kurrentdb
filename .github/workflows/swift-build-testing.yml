@@ -60,7 +60,7 @@ jobs:
       # and every test job downloads the smaller file.
       - name: Pack the build directory
         run: |
-          du -sh .build .build/* .build/out/* 2>/dev/null || true
+          du -h -d 3 .build | sort -h | tail -n 15
           tar --exclude=.build/out/Intermediates.noindex -I 'zstd -T0 -10' -cf "$RUNNER_TEMP/build.tar.zst" .build
           ls -lh "$RUNNER_TEMP/build.tar.zst"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
