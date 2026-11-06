@@ -143,11 +143,11 @@ public struct StreamMetadata: Buildable, Codable {
     /// ``Acl/serverDefault`` when the object holds no `$acl`, so the server applies its default
     /// access rules; otherwise the stream's own roles, ``Acl/stream(_:)``.
     public var acl: Acl {
-        guard let value = object[Key.acl] else {
+        guard let member = member(Key.acl) else {
             return .serverDefault
         }
         do {
-            return try .stream(JSONDecoder().decode(StreamAcl.self, from: JSONEncoder().encode(value)))
+            return try .stream(Self.decode(StreamAcl.self, from: member.value.text))
         } catch {
             // `init(data:)` and `init(from:)` check `$acl`, and `acl(_:)` writes a `StreamAcl`.
             preconditionFailure("StreamMetadata.data holds an $acl the server cannot read: \(error)")
@@ -230,7 +230,7 @@ public struct StreamMetadata: Buildable, Codable {
     public func acl(_ acl: Acl) -> Self {
         switch acl {
         case .serverDefault:
-            removing(Key.acl)
+            replacing([(Key.acl, nil)])
         case let .stream(roles):
             setting([Key.acl: roles])
         }
@@ -250,7 +250,7 @@ public struct StreamMetadata: Buildable, Codable {
         if !reserved.isEmpty {
             logger.warning("StreamMetadata.customProperties(_:) skipped the reserved keys \(reserved.sorted()); custom keys must not start with '$'.")
         }
-        return merging(customProperties.filter { !Self.isReserved($0.key) }.mapValues(PropertyValue.string))
+        return replacing(customProperties.filter { !Self.isReserved($0.key) }.map { (key: $0.key, value: Optional(PropertyValue.string($0.value))) })
     }
 
     /// Decodes the custom keys, every key not starting with `$`, into `T`.
@@ -264,9 +264,9 @@ public struct StreamMetadata: Buildable, Codable {
     /// - Returns: The decoded value.
     /// - Throws: `KurrentError.internalParsingError` if the custom keys do not decode as `T`.
     public func customProperties<T: Decodable>(as type: T.Type) throws(KurrentError) -> T {
-        let custom = PropertyValue.object(object.filter { !Self.isReserved($0.key) })
+        let custom = members.filter { !Self.isReserved($0) }.map { Array($0.quotedName) + [UInt8(ascii: ":")] + Array($0.value.text) }
         do {
-            return try JSONDecoder().decode(type, from: JSONEncoder().encode(custom))
+            return try Self.decode(type, from: [UInt8(ascii: "{")] + custom.joined(separator: [UInt8(ascii: ",")]) + [UInt8(ascii: "}")])
         } catch {
             throw .internalParsingError(reason: "The custom stream metadata does not decode as \(type): \(error)")
         }
@@ -283,11 +283,11 @@ public struct StreamMetadata: Buildable, Codable {
     /// - Returns: The decoded value, or `nil` when the key is absent or starts with `$`.
     /// - Throws: `KurrentError.internalParsingError` if the value does not decode as `T`.
     public func customProperty<T: Decodable>(_ key: String, as type: T.Type) throws(KurrentError) -> T? {
-        guard !Self.isReserved(key), let value = object[key] else {
+        guard !Self.isReserved(key), let member = member(key) else {
             return nil
         }
         do {
-            return try JSONDecoder().decode(type, from: JSONEncoder().encode(value))
+            return try Self.decode(type, from: member.value.text)
         } catch {
             throw .internalParsingError(reason: "The custom stream metadata key '\(key)' does not decode as \(type): \(error)")
         }
@@ -316,7 +316,7 @@ public struct StreamMetadata: Buildable, Codable {
         guard reserved.isEmpty else {
             throw .encodingError(message: "Custom stream metadata keys must not start with '$': \(reserved.sorted()).", encoding: .utf8)
         }
-        return merging(values)
+        return replacing(values.map { (key: $0.key, value: Optional($0.value)) })
     }
 
     /// Sets one custom key to an encoded value.
@@ -341,15 +341,15 @@ public struct StreamMetadata: Buildable, Codable {
         guard encoded.depth < PropertyValue.maximumDepth else {
             throw .encodingError(message: "Custom stream metadata key '\(key)' nests \(encoded.depth) levels deep; with the metadata object around it, the stored JSON may nest at most \(PropertyValue.maximumDepth) levels.", encoding: .utf8)
         }
-        return merging([key: encoded])
+        return replacing([(key, encoded)])
     }
 }
 
 extension StreamMetadata {
-    /// The decoded JSON object.
+    /// The decoded JSON object, for `==` and `encode(to:)`.
     ///
-    /// `data` always holds a JSON object: ``init(data:)`` and `init(from:)` check it, and every
-    /// builder writes `JSONEncoder` output.
+    /// Its keys are Swift strings, so keys that differ only in Unicode normalization merge here;
+    /// the builders and getters read ``members`` instead.
     private var object: [String: PropertyValue] {
         do {
             return try JSONDecoder().decode([String: PropertyValue].self, from: data)
@@ -358,46 +358,85 @@ extension StreamMetadata {
         }
     }
 
-    /// A copy with `values` written to their keys, every other key left as it is.
+    /// The top-level members of `data`, each key once, keys compared by Unicode scalars.
+    ///
+    /// `data` always holds a JSON object without a repeated key: ``init(data:)`` keeps the last
+    /// occurrence, `init(from:)` writes `JSONEncoder` output, and the builders replace members.
+    private var members: [JSONText.Member] {
+        guard let text = JSONText(data), case let .object(members) = text.root.token else {
+            preconditionFailure("StreamMetadata.data does not hold a JSON object.")
+        }
+        return members
+    }
+
+    /// The member whose key is `key`, Unicode scalar for Unicode scalar.
+    private func member(_ key: String) -> JSONText.Member? {
+        members.first { $0.isNamed(key) }
+    }
+
+    /// A copy with `values` written to their keys, every other member left as it is.
     private func setting(_ values: [String: any Codable & Sendable]) -> Self {
         do {
-            return try merging(values.mapValues { try PropertyValue($0) })
+            return try replacing(values.map { try (key: $0.key, value: Optional(PropertyValue($0.value))) })
         } catch {
             // The values are strings, 64-bit integers and `StreamAcl`s, which always encode.
             preconditionFailure("StreamMetadata could not encode \(values.keys.sorted()): \(error)")
         }
     }
 
-    /// A copy with `values` written to their keys, every other key left as it is.
-    private func merging(_ values: [String: PropertyValue]) -> Self {
+    /// A copy with each key in `values` set to its value, or removed when the value is `nil`.
+    ///
+    /// Every other member keeps its bytes and its place, so a builder never re-keys or
+    /// re-encodes data it does not set: keys that differ only in Unicode normalization stay
+    /// two keys, and a number keeps every digit. A key already present is replaced where it is;
+    /// a new key is appended, the new keys in sorted order.
+    private func replacing(_ values: [(key: String, value: PropertyValue?)]) -> Self {
         withCopy { copied in
-            let object = object.merging(values) { _, new in new }
+            var pending = values
+            var written: [[UInt8]] = []
             do {
-                copied.data = try Self.encode(object)
+                for member in members {
+                    guard let index = pending.firstIndex(where: { member.isNamed($0.key) }) else {
+                        written.append(Array(member.quotedName) + [UInt8(ascii: ":")] + Array(member.value.text))
+                        continue
+                    }
+                    if let value = pending.remove(at: index).value {
+                        try written.append(Array(member.quotedName) + [UInt8(ascii: ":")] + Self.bytes(of: value))
+                    }
+                }
+                for (key, value) in pending.sorted(by: { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }) {
+                    if let value {
+                        try written.append(Self.bytes(of: .string(key)) + [UInt8(ascii: ":")] + Self.bytes(of: value))
+                    }
+                }
             } catch {
                 // Every `PropertyValue` here was decoded from JSON or holds a finite number, so it encodes.
-                preconditionFailure("StreamMetadata could not encode \(values.keys.sorted()): \(error)")
+                preconditionFailure("StreamMetadata could not encode \(values.map(\.key).sorted()): \(error)")
             }
-        }
-    }
-
-    /// A copy without `key`, every other key left as it is.
-    private func removing(_ key: String) -> Self {
-        withCopy { copied in
-            var object = object
-            object[key] = nil
-            do {
-                copied.data = try Self.encode(object)
-            } catch {
-                // Every `PropertyValue` here was decoded from JSON, so it encodes.
-                preconditionFailure("StreamMetadata could not encode the object without \(key): \(error)")
-            }
+            copied.data = Data([UInt8(ascii: "{")] + written.joined(separator: [UInt8(ascii: ",")]) + [UInt8(ascii: "}")])
         }
     }
 
     /// Whether `key` is reserved for the server: a system field such as `$maxCount`, or a future one.
     private static func isReserved(_ key: String) -> Bool {
         key.hasPrefix("$")
+    }
+
+    /// Whether a member's key is reserved for the server, as ``isReserved(_:)`` decides for a `String`.
+    private static func isReserved(_ member: JSONText.Member) -> Bool {
+        member.name.first == UInt8(ascii: "$")
+    }
+
+    /// `value` as `JSONEncoder` writes it, with sorted keys and unescaped slashes.
+    private static func bytes(of value: PropertyValue) throws -> [UInt8] {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try Array(encoder.encode(value))
+    }
+
+    /// The JSON `bytes` hold decoded as `T`.
+    private static func decode<T: Decodable>(_ type: T.Type, from bytes: some Sequence<UInt8>) throws -> T {
+        try JSONDecoder().decode(type, from: Data(bytes))
     }
 
     /// `value` encoded with `JSONEncoder` and read back as a JSON value.
@@ -431,14 +470,12 @@ extension StreamMetadata {
     /// The integer at `key`, which `init(data:)` and `init(from:)` check fits in `Int64`; `nil`
     /// when it is absent or negative.
     private func unsignedInteger(at key: String) -> UInt64? {
-        guard case let .integer(value) = object[key] else { return nil }
-        return UInt64(exactly: value)
+        member(key)?.value.integer.flatMap { UInt64(exactly: $0) }
     }
 
     /// The whole seconds at `key`, which `init(data:)` and `init(from:)` check fit in `Int64`.
     private func seconds(at key: String) -> Duration? {
-        guard case let .integer(value) = object[key] else { return nil }
-        return .seconds(value)
+        member(key)?.value.integer.map { .seconds($0) }
     }
 }
 
