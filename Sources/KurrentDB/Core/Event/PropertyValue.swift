@@ -22,6 +22,9 @@ import SwiftProtobuf
 /// A `google.protobuf.Value` number is a `Double`, so AppendRecords and AppendSession send the
 /// `Double` nearest to each number: an integer beyond ±2^53 arrives rounded, as it does from
 /// every KurrentDB client. Store such a value as a string to keep every digit.
+///
+/// A decoded text may nest arrays and objects at most ``maximumDepth`` (64) levels deep; a deeper
+/// one throws `DecodingError.dataCorrupted` instead of overflowing the stack.
 package enum PropertyValue: Sendable, Equatable {
     case null
     case bool(Bool)
@@ -48,12 +51,27 @@ extension PropertyValue: Codable {
             self = .double(value)
         } else if let value = try? container.decode(String.self) {
             self = .string(value)
-        } else if let value = try? container.decode([PropertyValue].self) {
-            self = .array(value)
         } else {
-            self = try .object(container.decode([String: PropertyValue].self))
+            // Decoding recurses once per array or object, and a text nested a few hundred levels deep
+            // overflows the stack before JSONDecoder's own limit of 512 levels. Refuse the level past
+            // the limit before descending into it. A container at `codingPath.count` n is level n + 1.
+            guard decoder.codingPath.count < Self.maximumDepth else {
+                throw DecodingError.dataCorrupted(.init(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "The JSON nests arrays and objects more than \(Self.maximumDepth) levels deep."
+                ))
+            }
+            do {
+                self = try .array(container.decode([PropertyValue].self))
+            } catch DecodingError.typeMismatch {
+                self = try .object(container.decode([String: PropertyValue].self))
+            }
         }
     }
+
+    /// The deepest nesting of arrays and objects a decoded JSON text may have: 64 levels, the
+    /// outermost array or object being the first. A deeper text throws `DecodingError.dataCorrupted`.
+    package static let maximumDepth = 64
 
     /// Whether the number in `container` is exactly `integer`.
     ///
@@ -199,6 +217,17 @@ extension EventRecord {
             return try JSONEncoder().encode(normalizedProperties())
         } catch {
             throw .encodingError(message: "the properties of record of type '\(schema.name)' cannot be encoded: \(error)", encoding: .utf8)
+        }
+    }
+}
+
+extension PropertyValue {
+    /// How many arrays and objects deep the value nests: 0 for a scalar, 1 for `[1]` or `{}`.
+    package var depth: Int {
+        switch self {
+        case let .array(values): 1 + (values.map(\.depth).max() ?? 0)
+        case let .object(fields): 1 + (fields.values.map(\.depth).max() ?? 0)
+        default: 0
         }
     }
 }

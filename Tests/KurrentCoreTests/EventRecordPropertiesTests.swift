@@ -187,4 +187,24 @@ struct EventRecordPropertiesTests {
         #expect(decoded == expected)
         #expect(try makeRecord(customMetadata: nil).customMetadataJSON() == nil)
     }
+
+    // MARK: - Nesting depth
+
+    /// A metadata object whose `k` member nests arrays, so the text is `depth` levels deep.
+    private static func nested(depth: Int) -> String {
+        #"{"k":"# + String(repeating: "[", count: depth - 1) + String(repeating: "]", count: depth - 1) + "}"
+    }
+
+    @Test("Metadata nested 64 levels deep is parsed")
+    func nestedAtTheLimit() throws {
+        let record = try makeRecord(customMetadata: Self.nested(depth: 64))
+        #expect(record.properties["k"] is PropertyValue)
+    }
+
+    @Test("Metadata nested deeper than 64 levels throws DecodingError instead of overflowing the stack", arguments: [65, 1_000, 100_000])
+    func nestedPastTheLimit(depth: Int) {
+        #expect(throws: DecodingError.self) {
+            try makeRecord(customMetadata: Self.nested(depth: depth))
+        }
+    }
 }

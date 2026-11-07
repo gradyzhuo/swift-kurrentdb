@@ -1,6 +1,6 @@
 # Migrating from 2.x to 3.0
 
-Learn what changes when you move a 2.x program to 3.0: reads deliver events as you iterate, deprecated API is gone, and subscriptions can deliver the server's notifications next to the events.
+Learn what changes when you move a 2.x program to 3.0: reads deliver events as you iterate, deprecated API is gone, subscriptions can deliver the server's notifications next to the events, and stream metadata is stored in the server's format.
 
 ## Overview
 
@@ -17,13 +17,14 @@ dependencies: [
 ]
 ```
 
-Then check four things before you build.
+Then check five things before you build.
 
 <!-- S17 -->
 - **Packages that pin swift-kurrentdb.** If a package you depend on pins swift-kurrentdb (swift-ddd-kit does), update it first or your resolution keeps 2.x.
 - **Dependency floors.** 3.0 requires swift-protobuf 1.37.0 or later and grpc-swift-2 2.3.0 or later. If your package, or one you depend on, caps either below those versions (`exact:`, `.upToNextMinor(from:)` or a range that ends below them), resolution fails: lift the cap, or update that package or ask its maintainer to.
 - **On 2.6.1 or earlier.** Upgrade to 2.6.2 first and run your tests there. 2.6.1 and 2.6.2 changed four behaviours that 3.0 keeps, all listed under 2.6 in What's new: a record's custom metadata reaches the server (and metadata that is not a JSON object now throws), `multiStreams.append` checks each event's expected revision, a subscription to a tombstoned stream ends with `resourceDeleted`, and `setMetadata` writes stream metadata the server applies, so metadata an earlier 2.x wrote with `maxAge`, `cacheControl`, `.userStream` or `.systemStream` has to be written again. This page compares 3.0 with 2.6.2.
 - **`KurrentDB_V1`.** 3.0 has no `KurrentDB_V1` module. If you still `import KurrentDB_V1`, migrate on 2.6 first: pin `from: "2.6.2"`, follow [the 2.6 migration guide](https://gradyzhuo.github.io/swift-kurrentdb/2.6/documentation/kurrentdb/migration-guide), then delete the import and come back here. Before you delete it, sort every `client.shutdown()`: with `KurrentDB_V1` imported it shuts the **server** down, and once the import is gone the same line closes only the client, still compiling. Rewrite each one that means the server as `try await client.operations(of: .system).shutdown()`; leave each one that means the client as it is until the import is gone. The box at the top of <doc:Migration-guide> lists the uses no warning points at, such as a protocol of yours that requires `func shutdown() async throws`.
+- **Stream metadata written by 2.6.1 or earlier.** Up to 2.6.1, `maxAge`, `cacheControl` and the two built-in ACLs were stored in a form the server ignores, together with the rest of that stream's metadata, and 3.0's `getMetadata()` throws for it; 2.6.2 stores them as the server reads them. Rewriting such metadata enforces `$maxCount`, `$tb` and `$acl` for the first time, and a 2.x client that writes metadata drops the top-level custom keys 3.0 writes. Read "Metadata is stored in the server's format" below before you write any stream's metadata.
 
 ## read() is lazy
 
@@ -457,6 +458,127 @@ do {
     print(stream, "was tombstoned")   // after any events written before the tombstone
 }
 ```
+
+## Stream metadata
+
+### Metadata is stored in the server's format
+<!-- S18 -->
+
+Up to 2.6.1, ``StreamMetadata`` was encoded with Swift's synthesized `Codable`: `maxAge` and `cacheControl` became `Duration`'s `[high, low]` array, not seconds, and `.acl(.userStream)` and `.acl(.systemStream)` became the strings `"$userStreamAcl"` and `"$systemStreamAcl"`. 2.6.2 writes whole seconds, no `$acl` for `.userStream` and `$admins` for every permission for `.systemStream`. Every 2.x version nests custom properties under a `"customProperties"` key. 3.0 writes the object the server and other clients read: whole seconds, an `$acl` object or none, and custom keys at the top level. The same builder calls compile and store the new form, apart from the ACL cases and the deprecation below.
+
+The server reads `$acl` only as an object of roles; `$userStreamAcl` and `$systemStreamAcl` are keys of the `$settings` stream that hold the defaults, not values of a stream's `$acl`. So 3.0 removes `.userStream` and `.systemStream`. Use ``StreamMetadata/Acl/serverDefault``, which removes `$acl` so the server applies the default from `$settings`, or ``StreamMetadata/Acl/stream(_:)`` with the stream's own roles. 2.x had no public initializer for ``StreamMetadata/StreamAcl``; 3.0 starts one from ``StreamMetadata/StreamAcl/defaults``, in which every permission falls back to `$settings`: `.acl(.stream(.defaults.writeRoles(["ops"])))`. Each permission is now a ``StreamMetadata/StreamAcl/Roles`` value, ``StreamMetadata/StreamAcl/Roles/defaults`` or ``StreamMetadata/StreamAcl/Roles/granted(_:)``: the role builders take it, so an array literal still compiles and a `[String]` variable is passed as `.granted(names)`, and the role properties return it, `.defaults` where 2.x returned `nil`. ``StreamMetadata/Acl`` is no longer `Codable` and has no `rawValue`: ``StreamMetadata/Acl/serverDefault`` has no JSON form, since it is the absence of `$acl`, and the server ignores the whole metadata for `"$acl":null` as for a string. `acl(_:)` writes `$acl` as an object or removes it.
+
+Metadata a 2.6.1 or earlier client wrote stays as it was until you write it again. If it set `maxAge`, `cacheControl` or one of the two ACL strings, the server accepted the write and then ignored the whole object: `$maxCount`, `$tb` and `$acl` in it were never enforced, so the stream kept every event and the default access rules applied to it. 3.0 reads metadata as strictly as the server and the .NET client do, so `getMetadata()` throws `KurrentError.internalParsingError` for such an object, naming the key, rather than report settings the server does not apply. Metadata 2.6.2 wrote, and metadata an earlier client wrote with custom properties only, reads, but `customProperties(as:)` sees the custom properties as one key named `customProperties`.
+
+Write the metadata of those streams again from 3.0, as in the code below. Check each value before you write it: the rewrite enforces `$maxCount`, `$tb` and `$acl` for the first time. Events beyond `$maxCount`, or before `$tb`, become unreadable at once, and an `$acl` whose metadata write roles (`$mw`) leave out your own user stops you from changing the metadata again.
+
+The other way round, a 2.6.1 or earlier client's `getMetadata()` throws on metadata that holds `$maxAge` or `$cacheControl` in seconds, whether 3.0, 2.6.2 or another client wrote it. Every 2.x client ignores top-level custom keys, and one that writes metadata drops 3.0's top-level custom keys; up to 2.6.1 it also stores the `[high, low]` form again. Upgrade every Swift client that reads or writes a stream's metadata before you write it from 3.0.
+
+| 2.x code | 3.0 | Diagnostic |
+|----------|-----|------------|
+| `StreamMetadata().maxAge(…)`, `cacheControl(…)` | stores whole seconds; a sub-second part is truncated | none |
+| `acl(.userStream)`, `acl(.systemStream)` | removed: up to 2.6.1 they wrote a string the server rejects, which made it ignore the whole metadata, and 2.6.2 writes no `$acl` and `$admins`. Use `acl(.serverDefault)` for the default, or `acl(.stream(…))` | "type 'StreamMetadata.Acl' has no member 'userStream'" |
+| `StreamAcl` `readRoles(names)` … `metaWriteRoles(names)` with a `[String]` variable | pass `.granted(names)`; an array literal compiles as before, and `.defaults` removes the permission so the server applies the default from `$settings` | "cannot convert value of type '[String]' to expected argument type 'StreamMetadata.StreamAcl.Roles'" |
+| `StreamAcl` `readRoles` … `metaWriteRoles` as `[String]?` | return ``StreamMetadata/StreamAcl/Roles``: `.defaults` for an absent permission, `.granted(roles)` otherwise | "initializer for conditional binding must have Optional type, not 'StreamMetadata.StreamAcl.Roles'"; `roles ?? []` still compiles, with a warning, and yields a `Roles` |
+| `Acl.rawValue`, encoding or decoding an `Acl` | removed: `.serverDefault` is the absence of `$acl`, and `acl(_:)` writes `$acl` as an object or removes it. Read the stored JSON from ``StreamMetadata/data`` | "value of type 'StreamMetadata.Acl' has no member 'rawValue'", "instance method 'encode' requires that 'StreamMetadata.Acl' conform to 'Encodable'" |
+| `customProperties(["tenant": "acme"])` | merges top-level keys into the object, where 2.x replaced the whole custom dictionary; a key starting with `$` is skipped and logged as a warning | "'customProperties' is deprecated: use customProperties(encoding:). Removed in 4.0." |
+| `maxCount(…)`, `truncateBefore(…)`, `maxAge(…)`, `cacheControl(…)` | a value above the server's limit stops the program (see Limits in <doc:Stream-metadata>); `0` or a duration under one second is written and logged as a warning, and the server ignores that field | none |
+| `getMetadata()` on metadata the server ignores | throws `KurrentError.internalParsingError` (see Metadata the server ignores in <doc:Stream-metadata>) | none |
+| `metadata == other` | compares the whole object, `maxCount` included | none |
+
+<!-- snippet:skip -->
+```swift
+let metadata = StreamMetadata()
+    .maxAge(.seconds(60))
+    .acl(.userStream)
+    .customProperties(["tenant": "acme"])
+try await orders.setMetadata(metadata: metadata)   // 2.6.1: {"$acl":"$userStreamAcl","$maxAge":[3,4659767778871345152],"customProperties":{"tenant":"acme"}}
+                                                    // 2.6.2: {"$maxAge":60,"customProperties":{"tenant":"acme"}}
+```
+
+```swift
+let metadata = try StreamMetadata()
+    .maxAge(.seconds(60))
+    .acl(.serverDefault)
+    .customProperties(encoding: ["tenant": "acme"])
+try await orders.setMetadata(metadata: metadata)   // {"$maxAge":60,"tenant":"acme"}
+```
+
+To rewrite what a 2.x client stored, decode the latest event of the `$$<stream>` metadata stream with a type that mirrors 2.x's encoding. Decoding `Duration` itself reads 2.6.1's `[high, low]` pair exactly, negative durations included, 2.6.2's whole seconds are read as they are, and `maxAge(_:)` and `cacheControl(_:)` store it in whole seconds:
+
+<!-- snippet:toplevel -->
+```swift
+/// A stream's metadata as a 2.x Swift client stored it.
+struct Legacy2xMetadata: Decodable {
+    var maxCount: UInt64?
+    var maxAge: Duration?                       // whole seconds (2.6.2) or Duration's [high, low]
+    var truncateBefore: UInt64?
+    var cacheControl: Duration?
+    var acl: StreamMetadata.StreamAcl?          // nil for "$userStreamAcl" and "$systemStreamAcl"
+    var customProperties: [String: String]?     // nested, not top-level keys
+
+    enum CodingKeys: String, CodingKey {
+        case maxCount = "$maxCount", maxAge = "$maxAge", truncateBefore = "$tb"
+        case cacheControl = "$cacheControl", acl = "$acl", customProperties
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        maxCount = try container.decodeIfPresent(UInt64.self, forKey: .maxCount)
+        maxAge = try Self.duration(in: container, forKey: .maxAge)
+        truncateBefore = try container.decodeIfPresent(UInt64.self, forKey: .truncateBefore)
+        cacheControl = try Self.duration(in: container, forKey: .cacheControl)
+        acl = try? container.decodeIfPresent(StreamMetadata.StreamAcl.self, forKey: .acl)
+        customProperties = try container.decodeIfPresent([String: String].self, forKey: .customProperties)
+    }
+
+    /// Whole seconds, as 2.6.2 wrote them, or `Duration`'s `[high, low]`, as earlier versions did.
+    static func duration(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Duration? {
+        if let seconds = try? container.decodeIfPresent(Int64.self, forKey: key) {
+            return .seconds(seconds)
+        }
+        return try container.decodeIfPresent(Duration.self, forKey: key)
+    }
+
+    /// The same settings as 3.0 writes them; a 2.x string ACL becomes the server's default.
+    func metadata() throws -> StreamMetadata {
+        var metadata = StreamMetadata()
+        if let maxCount { metadata = metadata.maxCount(maxCount) }
+        if let maxAge { metadata = metadata.maxAge(maxAge) }
+        if let truncateBefore { metadata = metadata.truncateBefore(truncateBefore) }
+        if let cacheControl { metadata = metadata.cacheControl(cacheControl) }
+        if let acl { metadata = metadata.acl(.stream(acl)) }
+        if let customProperties { metadata = try metadata.customProperties(encoding: customProperties) }
+        return metadata
+    }
+}
+```
+
+A 2.x client replaced the whole object on every write, so the latest event holds only these keys. Rewrite it when `getMetadata()` throws, or returns the nested key:
+
+```swift
+let written2x: Bool
+do {
+    written2x = try await orders.getMetadata()?.customProperty("customProperties", as: [String: String].self) != nil
+} catch KurrentError.internalParsingError {
+    written2x = true   // a [high, low] duration or a string $acl: the server ignores the whole object
+}
+if written2x {
+    let latest = client.streams(specified: "$$orders").read {
+        $0.direction = .backward
+        $0.revision = .end
+        $0.limit = 1
+    }
+    for try await response in latest {
+        let legacy = try JSONDecoder().decode(Legacy2xMetadata.self, from: response.event.record.data)
+        try await orders.setMetadata(metadata: legacy.metadata())   // check $maxCount, $tb and $acl first
+    }
+}
+```
+
+The code assumes a 2.x Swift client wrote the stream's metadata: any metadata `getMetadata()` cannot read takes the rewrite path, and metadata another tool wrote with other top-level keys would be rewritten without them, so check what a stream holds before you rewrite it. A 2.x duration above the `maxAge(_:)` limit, 62,000,000,000 seconds, or the `cacheControl(_:)` limit, 922,337,203,685 seconds, stops the program at the builder's precondition: check `legacy.maxAge` and `legacy.cacheControl` first.
+
+<doc:Stream-metadata> describes the 3.0 API, including custom keys of any JSON value with a `Codable` type.
 
 ## What did not change
 

@@ -12,274 +12,34 @@ import GRPCEncapsulates
 ///
 /// Controls retention, truncation, caching, and access control for a stream.
 /// Use the builder methods to configure individual fields and pass the result to
-/// `setStreamMetadata` on the client.
+/// `setMetadata(metadata:expectedRevision:)` on a stream; `getMetadata()` returns what is stored.
+///
+/// The value holds the JSON object stored in the stream's `$$<stream>` metadata stream, in
+/// ``data``. That object is the source of truth: the system fields (``maxCount``, ``maxAge``,
+/// ``truncateBefore``, ``cacheControl`` and ``acl``) are read from and written to it, and every
+/// other key, including one written by another client or a `$` key a later server adds, is kept.
+///
+/// ``maxAge`` and ``cacheControl`` are stored in whole seconds, as the server reads them, so a
+/// sub-second part is truncated. Keys starting with `$` are reserved for the server; custom keys
+/// sit next to them at the top level of the object. ``init(data:)`` reads the object as strictly as
+/// the server does and throws for one the server ignores. Read the data of a `$$<stream>` event with
+/// ``init(data:)``, as `getMetadata()` does, rather than with `JSONDecoder`: `init(from:)` keeps the
+/// first occurrence of a repeated key and accepts `60.0`, which the server does not. See
+/// <doc:Stream-metadata>.
 public struct StreamMetadata: Buildable, Codable {
-    enum CodingKeys: String, CodingKey {
-        case maxCount = "$maxCount"
-        case maxAge = "$maxAge"
-        case truncateBefore = "$tb"
-        case cacheControl = "$cacheControl"
-        case acl = "$acl"
-        case customProperties
+    private enum Key {
+        static let maxCount = "$maxCount"
+        static let maxAge = "$maxAge"
+        static let truncateBefore = "$tb"
+        static let cacheControl = "$cacheControl"
+        static let acl = "$acl"
+        /// Not modelled, but checked: the server reads it as a boolean.
+        static let tempStream = "$tmp"
+        /// The keys of the `$acl` object.
+        static let aclRoles = ["$r", "$w", "$d", "$mr", "$mw"]
     }
 
-    // A sliding window based on the number of items in the stream. When data reaches
-    // a certain length it disappears automatically from the stream and is considered
-    // eligible for scavenging.
-    var maxCount: UInt64?
-
-    // A sliding window based on dates. When data reaches a certain age it disappears
-    // automatically from the stream and is considered eligible for scavenging.
-    var maxAge: Duration?
-
-    // The event number from which previous events can be scavenged. This is
-    // used to implement soft-deletion of streams.
-    var truncateBefore: UInt64?
-
-    // Controls the cache of the head of a stream. Most URIs in a stream are infinitely
-    // cacheable but the head by default will not cache. It may be preferable
-    // in some situations to set a small amount of caching on the head to allow
-    // intermediaries to handle polls (say 10 seconds).
-    var cacheControl: Duration?
-
-    // The access control list for the stream.
-    var acl: Acl?
-
-    // An enumerable of key-value pairs of keys to JSON value for
-    // user-provided metadata.
-    var customProperties: [String: String]?
-
-    /// Creates a `StreamMetadata` value with all fields unset.
-    public init() {
-        maxCount = nil
-        maxAge = nil
-        truncateBefore = nil
-        cacheControl = nil
-        acl = nil
-        customProperties = nil
-    }
-
-    /// Sets the maximum number of events retained in the stream.
-    ///
-    /// - Parameter maxCount: Maximum event count before older events become eligible for scavenging.
-    /// - Returns: An updated copy of the metadata.
-    public func maxCount(_ maxCount: UInt64) -> Self {
-        withCopy { copied in
-            copied.maxCount = maxCount
-        }
-    }
-
-    /// Sets the maximum age of events retained in the stream.
-    ///
-    /// - Parameter maxAge: Maximum age before events become eligible for scavenging.
-    /// - Returns: An updated copy of the metadata.
-    public func maxAge(_ maxAge: Duration) -> Self {
-        withCopy { copied in
-            copied.maxAge = maxAge
-        }
-    }
-
-    /// Sets the event revision before which all events may be scavenged.
-    ///
-    /// - Parameter truncateBefore: Event revision acting as the soft-delete boundary.
-    /// - Returns: An updated copy of the metadata.
-    public func truncateBefore(_ truncateBefore: UInt64) -> Self {
-        withCopy { copied in
-            copied.truncateBefore = truncateBefore
-        }
-    }
-
-    /// Sets the cache-control duration for the stream head.
-    ///
-    /// - Parameter cacheControl: Duration for which intermediaries may cache the stream head.
-    /// - Returns: An updated copy of the metadata.
-    public func cacheControl(_ cacheControl: Duration) -> Self {
-        withCopy { copied in
-            copied.cacheControl = cacheControl
-        }
-    }
-
-    /// Sets the access control list for the stream.
-    ///
-    /// - Parameter acl: The `Acl` value to apply.
-    /// - Returns: An updated copy of the metadata.
-    public func acl(_ acl: Acl) -> Self {
-        withCopy { copied in
-            copied.acl = acl
-        }
-    }
-
-    /// Sets user-defined key-value metadata on the stream.
-    ///
-    /// - Parameter customProperties: Dictionary of string keys to JSON-serialisable string values.
-    /// - Returns: An updated copy of the metadata.
-    public func customProperties(_ customProperties: [String: String]) -> Self {
-        withCopy { copied in
-            copied.customProperties = customProperties
-        }
-    }
-
-    func jsonData() throws -> Data? {
-        guard let customProperties else {
-            return nil
-        }
-        return try JSONSerialization.data(withJSONObject: customProperties)
-    }
-}
-
-extension StreamMetadata {
-    /// Access control list applied to a stream.
-    public enum Acl: Codable, Sendable {
-        public typealias RawValue = Data
-
-        /// This value encoded on its own, the way 2.6.1 and earlier wrote `$acl`.
-        ///
-        /// ``StreamMetadata`` writes ``userStream`` and ``systemStream`` differently, in the form the
-        /// server applies; see those cases.
-        public var rawValue: Data {
-            get throws {
-                let encoder = JSONEncoder()
-                return switch self {
-                case .userStream:
-                    try encoder.encode("$userStreamAcl")
-                case .systemStream:
-                    try encoder.encode("$systemStreamAcl")
-                case let .stream(acl):
-                    try encoder.encode(acl)
-                }
-            }
-        }
-
-        /// Applies the server's `$userStreamAcl` from `$settings`.
-        ///
-        /// Written as no `$acl`, which is how the server falls back to that default, so the metadata
-        /// reads back with no ACL.
-        case userStream
-        /// Applies the server's built-in `$systemStreamAcl`: `$admins` for every permission.
-        ///
-        /// Written as that ``StreamAcl``, since the server reads no reference to `$settings` in
-        /// `$acl`; a `$systemStreamAcl` changed in `$settings` does not apply, and it reads back as
-        /// ``stream(_:)``.
-        case systemStream
-        /// Applies a custom `StreamAcl` policy.
-        case stream(StreamAcl)
-
-        public init(from decoder: any Decoder) throws {
-            let container = try decoder.singleValueContainer()
-
-            if let rawValue = try? container.decode(String.self) {
-                if rawValue == "$userStreamAcl" {
-                    self = .userStream
-                } else if rawValue == "$systemStreamAcl" {
-                    self = .systemStream
-                } else {
-                    throw DecodingError.valueNotFound(String.self, .init(codingPath: [], debugDescription: ""))
-                }
-            } else if let acl = try? container.decode(StreamAcl.self) {
-                self = .stream(acl)
-            } else {
-                throw DecodingError.valueNotFound(String.self, .init(codingPath: [], debugDescription: ""))
-            }
-        }
-
-        public func encode(to encoder: any Encoder) throws {
-            var container = encoder.singleValueContainer()
-            switch self {
-            case .userStream:
-                try container.encode("$userStreamAcl")
-            case .systemStream:
-                try container.encode("$systemStreamAcl")
-            case let .stream(acl):
-                try container.encode(acl)
-            }
-        }
-    }
-
-    /// Fine-grained role-based access control for a stream.
-    public struct StreamAcl: Codable, Sendable {
-        enum CodingKeys: String, CodingKey {
-            case readRoles = "$r"
-            case writeRoles = "$w"
-            case deleteRoles = "$d"
-            case metaReadRoles = "$mr"
-            case metaWriteRoles = "$mw"
-        }
-
-        /// Roles and users permitted to read the stream.
-        public private(set) var readRoles: [String]?
-
-        /// Roles and users permitted to write to the stream.
-        public private(set) var writeRoles: [String]?
-
-        /// Roles and users permitted to delete the stream.
-        public private(set) var deleteRoles: [String]?
-
-        /// Roles and users permitted to read stream metadata.
-        public private(set) var metaReadRoles: [String]?
-
-        /// Roles and users permitted to write stream metadata.
-        public private(set) var metaWriteRoles: [String]?
-    }
-}
-
-extension StreamMetadata.StreamAcl: Buildable {
-    /// Sets the roles permitted to read the stream.
-    ///
-    /// - Parameter roles: Array of role or username strings.
-    /// - Returns: An updated copy of the ACL.
-    public func readRoles(_ roles: [String]) -> Self {
-        withCopy { copied in
-            copied.readRoles = roles
-        }
-    }
-
-    /// Sets the roles permitted to write to the stream.
-    ///
-    /// - Parameter roles: Array of role or username strings.
-    /// - Returns: An updated copy of the ACL.
-    public func writeRoles(_ roles: [String]) -> Self {
-        withCopy { copied in
-            copied.writeRoles = roles
-        }
-    }
-
-    /// Sets the roles permitted to delete the stream.
-    ///
-    /// - Parameter roles: Array of role or username strings.
-    /// - Returns: An updated copy of the ACL.
-    public func deleteRoles(_ roles: [String]) -> Self {
-        withCopy { copied in
-            copied.deleteRoles = roles
-        }
-    }
-
-    /// Sets the roles permitted to read stream metadata.
-    ///
-    /// - Parameter roles: Array of role or username strings.
-    /// - Returns: An updated copy of the ACL.
-    public func metaReadRoles(_ roles: [String]) -> Self {
-        withCopy { copied in
-            copied.metaReadRoles = roles
-        }
-    }
-
-    /// Sets the roles permitted to write stream metadata.
-    ///
-    /// - Parameter roles: Array of role or username strings.
-    /// - Returns: An updated copy of the ACL.
-    public func metaWriteRoles(_ roles: [String]) -> Self {
-        withCopy { copied in
-            copied.metaWriteRoles = roles
-        }
-    }
-}
-
-// The server reads `$$<stream>` with its own parser and ignores the whole object when one
-// system key has the wrong shape, so `$maxCount`, `$tb` and `$acl` written next to it are never
-// applied. These implementations write the shapes the server reads, and read both those and
-// the ones 2.6.1 and earlier wrote.
-extension StreamMetadata {
-    /// The largest values the server applies.
+    /// The largest values the server applies; see the builders.
     private enum Limit {
         /// `$maxCount` and `$tb`: the server reads them as `Int64`.
         static let revision = UInt64(Int64.max)
@@ -293,100 +53,627 @@ extension StreamMetadata {
         static let negativeDuration: Int64 = -922_337_203_685
     }
 
-    /// Reads the object the server stores and the one 2.6.1 and earlier wrote: durations as whole
-    /// seconds or as Swift `Duration` arrays, `$acl` as an object or as the `"$userStreamAcl"` /
-    /// `"$systemStreamAcl"` strings, each role as a string or an array. `null` reads as unset.
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        maxCount = try container.decodeIfPresent(UInt64.self, forKey: .maxCount)
-        maxAge = try Self.decodeDuration(from: container, forKey: .maxAge)
-        truncateBefore = try container.decodeIfPresent(UInt64.self, forKey: .truncateBefore)
-        cacheControl = try Self.decodeDuration(from: container, forKey: .cacheControl)
-        acl = try container.decodeIfPresent(Acl.self, forKey: .acl)
-        customProperties = try container.decodeIfPresent([String: String].self, forKey: .customProperties)
+    /// The JSON object, exactly as stored in the stream's `$$<stream>` metadata stream.
+    public private(set) var data: Data
+
+    /// Creates a `StreamMetadata` value with all fields unset: the empty JSON object `{}`.
+    public init() {
+        data = Data("{}".utf8)
     }
 
-    /// Writes the object the server applies.
+    /// Creates a `StreamMetadata` value from the JSON stored in a stream's metadata stream.
     ///
-    /// - `$maxAge` and `$cacheControl` are whole seconds; a sub-second part is dropped.
-    /// - ``Acl/userStream`` writes no `$acl`, so the server applies its `$userStreamAcl` default.
-    /// - ``Acl/systemStream`` writes `$admins` for every permission, the server's built-in
-    ///   `$systemStreamAcl`; a `$systemStreamAcl` changed in `$settings` does not apply.
+    /// The object is checked as the server reads it, so a value is created only from metadata the
+    /// server applies. The server ignores the whole object, `$acl` included, when a system key holds
+    /// something it cannot read, and this initializer throws for it, as the .NET client does:
     ///
-    /// - Throws: `EncodingError.invalidValue` for a value the server would ignore the whole
-    ///   object for: `maxCount` or `truncateBefore` above `Int64.max`, `maxAge` above
-    ///   62,000,000,000 seconds, `cacheControl` above 922,337,203,685 seconds, or either duration
-    ///   below -922,337,203,685 seconds.
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(Self.revision(maxCount, forKey: .maxCount), forKey: .maxCount)
-        try container.encodeIfPresent(Self.wholeSeconds(maxAge, forKey: .maxAge, atMost: Limit.maxAge), forKey: .maxAge)
-        try container.encodeIfPresent(Self.revision(truncateBefore, forKey: .truncateBefore), forKey: .truncateBefore)
-        try container.encodeIfPresent(Self.wholeSeconds(cacheControl, forKey: .cacheControl, atMost: Limit.cacheControl), forKey: .cacheControl)
+    /// - `$maxCount`, `$tb`, `$maxAge` and `$cacheControl` must be integers within `Int64`, written
+    ///   without a fraction or an exponent (`60`, not `60.0` or `6e1`); `$maxAge` and
+    ///   `$cacheControl` must also lie within ±922,337,203,685 seconds, .NET's `TimeSpan` range.
+    ///   Zero and negative values are read: the server ignores only that field.
+    /// - `$tmp` must be a boolean.
+    /// - `$acl` must be an object whose keys are `$r`, `$w`, `$d`, `$mr` and `$mw`, each holding a
+    ///   string or an array of strings.
+    ///
+    /// Other keys may hold any JSON value. Every occurrence of a repeated key is checked, as the
+    /// server checks them in turn.
+    ///
+    /// - Parameter data: UTF-8 JSON bytes holding a top-level object. They are kept as they are,
+    ///   unless an object in them repeats a key: the server reads the last occurrence of such a key,
+    ///   so ``data`` then holds the object with only the last occurrence of each repeated key.
+    /// - Throws: `KurrentError.internalParsingError` if `data` is not UTF-8, is not a JSON object,
+    ///   nests arrays and objects more than 64 levels deep, or holds a system key the server cannot
+    ///   read.
+    public init(data: Data) throws(KurrentError) {
+        guard JSONText.isUTF8(data) else {
+            throw .internalParsingError(reason: "Stream metadata must be UTF-8 JSON, as the server stores it.")
+        }
+        do {
+            _ = try JSONDecoder().decode([String: PropertyValue].self, from: data)
+        } catch {
+            throw .internalParsingError(reason: "Stream metadata must be a JSON object: \(error)")
+        }
+        guard let text = JSONText(data) else {
+            throw .internalParsingError(reason: "Stream metadata could not be scanned, although it decodes as a JSON object.")
+        }
+        if let reason = Self.invalidSystemKey(in: text.root) {
+            throw .internalParsingError(reason: reason)
+        }
+        self.data = text.keepingLastOccurrences ?? data
+    }
+
+    /// The maximum number of events retained in the stream (`$maxCount`).
+    ///
+    /// A sliding window based on the number of events: older events disappear from the stream
+    /// and become eligible for scavenging. `nil` when the key is absent or negative, which the
+    /// server ignores.
+    public var maxCount: UInt64? {
+        unsignedInteger(at: Key.maxCount)
+    }
+
+    /// The maximum age of events retained in the stream (`$maxAge`, in whole seconds).
+    ///
+    /// A sliding window based on dates: older events disappear from the stream and become
+    /// eligible for scavenging. `nil` when the key is absent. A value another client stored can
+    /// exceed what ``maxAge(_:)`` accepts: above 62,000,000,000 seconds it may make the stream
+    /// unreadable, so do not pass it back unchecked.
+    public var maxAge: Duration? {
+        seconds(at: Key.maxAge)
+    }
+
+    /// The truncate-before revision (`$tb`): events before this revision are hidden from reads
+    /// and later scavenged.
+    ///
+    /// Used to implement soft deletion of streams. `nil` when the key is absent or negative,
+    /// which the server ignores.
+    public var truncateBefore: UInt64? {
+        unsignedInteger(at: Key.truncateBefore)
+    }
+
+    /// The cache-control duration for the stream head (`$cacheControl`, in whole seconds).
+    ///
+    /// The head of a stream is not cached by default; a small value lets intermediaries handle
+    /// polls. `nil` when the key is absent.
+    public var cacheControl: Duration? {
+        seconds(at: Key.cacheControl)
+    }
+
+    /// The access control list for the stream (`$acl`).
+    ///
+    /// ``Acl/serverDefault`` when the object holds no `$acl`, so the server applies its default
+    /// access rules; otherwise the stream's own roles, ``Acl/stream(_:)``.
+    public var acl: Acl {
+        guard let member = member(Key.acl) else {
+            return .serverDefault
+        }
+        do {
+            return try .stream(Self.decode(StreamAcl.self, from: member.value.text))
+        } catch {
+            // `init(data:)` and `init(from:)` check `$acl`, and `acl(_:)` writes a `StreamAcl`.
+            preconditionFailure("StreamMetadata.data holds an $acl the server cannot read: \(error)")
+        }
+    }
+
+    /// Sets the maximum number of events retained in the stream.
+    ///
+    /// The server reads `$maxCount` as a signed 64-bit integer and ignores the whole metadata
+    /// object, `$acl` included, when it is larger, so `maxCount` must not exceed `Int64.max`.
+    /// `0` is written as it is and logged as a warning: the server ignores this field.
+    ///
+    /// - Precondition: `maxCount` is at most `Int64.max` (9,223,372,036,854,775,807).
+    /// - Parameter maxCount: Maximum event count before older events become eligible for scavenging.
+    /// - Returns: An updated copy of the metadata.
+    public func maxCount(_ maxCount: UInt64) -> Self {
+        precondition(maxCount <= Limit.revision, "StreamMetadata.maxCount(_:) takes at most Int64.max (\(Limit.revision)), but got \(maxCount): the server ignores the whole metadata object for a larger $maxCount.")
+        if maxCount == 0 {
+            logger.warning("StreamMetadata \(Key.maxCount) is 0; the server ignores this field.")
+        }
+        return setting([Key.maxCount: maxCount])
+    }
+
+    /// Sets the maximum age of events retained in the stream.
+    ///
+    /// The server stores the age in whole seconds, so any sub-second part is truncated.
+    /// A duration under one second is written as it is (`0` or negative) and logged as a
+    /// warning: the server ignores this field.
+    ///
+    /// The age must not exceed 62,000,000,000 seconds (about 1,964 years). The server subtracts
+    /// it from the current time, and an age reaching back before the year 1 (about
+    /// 63,900,000,000 seconds in 2026) makes every read of the stream return nothing.
+    ///
+    /// - Precondition: `maxAge` is at most 62,000,000,000 seconds and at least -922,337,203,685 seconds.
+    /// - Parameter maxAge: Maximum age before events become eligible for scavenging.
+    /// - Returns: An updated copy of the metadata.
+    public func maxAge(_ maxAge: Duration) -> Self {
+        setting([Key.maxAge: Self.wholeSeconds(maxAge, for: Key.maxAge, atMost: Limit.maxAge, "a longer age makes the stream unreadable")])
+    }
+
+    /// Sets the truncate-before revision: events before this revision are hidden from reads and
+    /// later scavenged.
+    ///
+    /// The server reads `$tb` as a signed 64-bit integer and ignores the whole metadata object,
+    /// `$acl` included, when it is larger, so `truncateBefore` must not exceed `Int64.max`, the
+    /// value a soft delete writes.
+    ///
+    /// - Precondition: `truncateBefore` is at most `Int64.max` (9,223,372,036,854,775,807).
+    /// - Parameter truncateBefore: Event revision acting as the soft-delete boundary.
+    /// - Returns: An updated copy of the metadata.
+    public func truncateBefore(_ truncateBefore: UInt64) -> Self {
+        precondition(truncateBefore <= Limit.revision, "StreamMetadata.truncateBefore(_:) takes at most Int64.max (\(Limit.revision)), but got \(truncateBefore): the server ignores the whole metadata object for a larger $tb.")
+        return setting([Key.truncateBefore: truncateBefore])
+    }
+
+    /// Sets the cache-control duration for the stream head.
+    ///
+    /// The server stores the duration in whole seconds, so any sub-second part is truncated.
+    /// A duration under one second is written as it is (`0` or negative) and logged as a
+    /// warning: the server ignores this field.
+    ///
+    /// The duration must not exceed 922,337,203,685 seconds, the longest the server can hold;
+    /// it ignores the whole metadata object, `$acl` included, for a longer one.
+    ///
+    /// - Precondition: `cacheControl` is at most 922,337,203,685 seconds and at least -922,337,203,685 seconds.
+    /// - Parameter cacheControl: Duration for which intermediaries may cache the stream head.
+    /// - Returns: An updated copy of the metadata.
+    public func cacheControl(_ cacheControl: Duration) -> Self {
+        setting([Key.cacheControl: Self.wholeSeconds(cacheControl, for: Key.cacheControl, atMost: Limit.cacheControl, "the server ignores the whole metadata object for a longer one")])
+    }
+
+    /// Sets the access control list for the stream.
+    ///
+    /// ``Acl/stream(_:)`` writes the roles as the `$acl` object. ``Acl/serverDefault`` removes
+    /// `$acl`, the only way to have the server apply its default access rules, and leaves every
+    /// other key as it is.
+    ///
+    /// - Parameter acl: The `Acl` value to apply.
+    /// - Returns: An updated copy of the metadata.
+    public func acl(_ acl: Acl) -> Self {
         switch acl {
-        case .none, .userStream:
-            break
-        case .systemStream:
-            try container.encode(StreamAcl.systemStreamDefault, forKey: .acl)
-        case let .stream(streamAcl):
-            try container.encode(streamAcl, forKey: .acl)
+        case .serverDefault:
+            replacing([(Key.acl, nil)])
+        case let .stream(roles):
+            setting([Key.acl: roles])
         }
-        try container.encodeIfPresent(customProperties, forKey: .customProperties)
     }
 
-    /// Whole seconds, or the `Duration` array 2.6.1 and earlier wrote; `null` reads as unset, as
-    /// it did in 2.6.1.
-    private static func decodeDuration(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Duration? {
-        guard container.contains(key), try !container.decodeNil(forKey: key) else {
-            return nil
+    /// Sets user-defined key-value metadata on the stream.
+    ///
+    /// Each pair is stored as a top-level string key of the metadata object, next to the system fields.
+    /// A key starting with `$` is reserved for the server, so it is skipped and logged as a warning;
+    /// ``customProperties(encoding:)`` throws for it instead.
+    ///
+    /// - Parameter customProperties: Dictionary of string keys to string values.
+    /// - Returns: An updated copy of the metadata.
+    @available(*, deprecated, message: "use customProperties(encoding:). Removed in 4.0.")
+    public func customProperties(_ customProperties: [String: String]) -> Self {
+        let reserved = customProperties.keys.filter(Self.isReserved)
+        if !reserved.isEmpty {
+            logger.warning("StreamMetadata.customProperties(_:) skipped the reserved keys \(reserved.sorted()); custom keys must not start with '$'.")
         }
-        if let seconds = try? container.decode(Int64.self, forKey: key) {
-            return .seconds(seconds)
-        }
-        return try container.decode(Duration.self, forKey: key)
+        return replacing(customProperties.filter { !Self.isReserved($0.key) }.map { (key: $0.key, value: Optional(PropertyValue.string($0.value))) })
     }
 
-    /// `value` unchanged, or an `EncodingError` when the server, which reads it as `Int64`, would
-    /// ignore the whole object for it.
-    private static func revision(_ value: UInt64?, forKey key: CodingKeys) throws -> UInt64? {
-        guard let value else {
-            return nil
+    /// Decodes the custom keys, every key not starting with `$`, into `T`.
+    ///
+    /// The system keys (`$maxCount`, `$acl`, ...) and any other `$` key are left out before decoding,
+    /// so `T` never sees them, and a `[String: V]` dictionary holds only the custom keys.
+    /// `JSONDecoder` uses its default strategies, so a `Date` field expects seconds since 2001-01-01
+    /// and `Data` expects Base64.
+    ///
+    /// - Parameter type: The type the custom keys decode into, such as a `Decodable` struct.
+    /// - Returns: The decoded value.
+    /// - Throws: `KurrentError.internalParsingError` if the custom keys do not decode as `T`.
+    public func customProperties<T: Decodable>(as type: T.Type) throws(KurrentError) -> T {
+        let custom = members.filter { !Self.isReserved($0) }.map { Array($0.quotedName) + [UInt8(ascii: ":")] + Array($0.value.text) }
+        do {
+            return try Self.decode(type, from: [UInt8(ascii: "{")] + custom.joined(separator: [UInt8(ascii: ",")]) + [UInt8(ascii: "}")])
+        } catch {
+            throw .internalParsingError(reason: "The custom stream metadata does not decode as \(type): \(error)")
         }
-        guard value <= Limit.revision else {
-            throw EncodingError.invalidValue(value, .init(codingPath: [key], debugDescription: "StreamMetadata \(key.rawValue) takes at most \(Limit.revision), but got \(value): the server reads it as Int64 and ignores the whole metadata otherwise."))
-        }
-        return value
     }
 
-    /// `duration` in whole seconds, the sub-second part dropped, or an `EncodingError` outside
-    /// `Limit.negativeDuration ... maximum`. A result under one second is logged, since the server
-    /// ignores the field.
-    private static func wholeSeconds(_ duration: Duration?, forKey key: CodingKeys, atMost maximum: Int64) throws -> Int64? {
-        guard let duration else {
+    /// Decodes the value of one custom key into `T`.
+    ///
+    /// Only custom keys are read: a key starting with `$` returns `nil`, like an absent key.
+    /// Read the system fields through their properties, such as ``maxCount``.
+    ///
+    /// - Parameters:
+    ///   - key: The custom key.
+    ///   - type: The type its value decodes into, such as `String`, `Int` or a `Decodable` struct.
+    /// - Returns: The decoded value, or `nil` when the key is absent or starts with `$`.
+    /// - Throws: `KurrentError.internalParsingError` if the value does not decode as `T`.
+    public func customProperty<T: Decodable>(_ key: String, as type: T.Type) throws(KurrentError) -> T? {
+        guard !Self.isReserved(key), let member = member(key) else {
             return nil
         }
+        do {
+            return try Self.decode(type, from: member.value.text)
+        } catch {
+            throw .internalParsingError(reason: "The custom stream metadata key '\(key)' does not decode as \(type): \(error)")
+        }
+    }
+
+    /// Merges the top-level keys of an encoded value into the metadata object as custom keys.
+    ///
+    /// The value is encoded with `JSONEncoder`, so a nested struct, a number, a boolean or an array
+    /// is stored as the JSON it encodes to. A key the metadata already holds is replaced; keys the
+    /// value does not hold are left as they are.
+    ///
+    /// `JSONEncoder` uses its default strategies: a `Date` is stored as seconds since 2001-01-01 and
+    /// `Data` as Base64. Encode such fields yourself (an ISO 8601 string, for example) when other
+    /// clients read them.
+    ///
+    /// - Parameter value: A value that encodes to a JSON object, such as a `Codable` struct or a dictionary.
+    /// - Returns: An updated copy of the metadata.
+    /// - Throws: `KurrentError.encodingError` if the value cannot be encoded, does not encode to a
+    ///   JSON object, holds a key starting with `$`, which is reserved for the server, or nests
+    ///   arrays and objects more than 64 levels deep, the value itself being the first level.
+    public func customProperties(encoding value: some Encodable & Sendable) throws(KurrentError) -> Self {
+        guard case let .object(values) = try Self.propertyValue(encoding: value) else {
+            throw .encodingError(message: "Custom stream metadata must encode to a JSON object, but \(type(of: value)) does not.", encoding: .utf8)
+        }
+        let reserved = values.keys.filter(Self.isReserved)
+        guard reserved.isEmpty else {
+            throw .encodingError(message: "Custom stream metadata keys must not start with '$': \(reserved.sorted()).", encoding: .utf8)
+        }
+        return replacing(values.map { (key: $0.key, value: Optional($0.value)) })
+    }
+
+    /// Sets one custom key to an encoded value.
+    ///
+    /// The value is encoded with `JSONEncoder`, so it may be any JSON value: a string, a number, a
+    /// boolean, an array, an object or null.
+    ///
+    /// - Parameters:
+    ///   - key: The custom key. It must not start with `$`, which is reserved for the server.
+    ///   - value: The value to store.
+    /// - Returns: An updated copy of the metadata.
+    /// - Throws: `KurrentError.encodingError` if `key` starts with `$`, if `JSONEncoder` rejects
+    ///   the value (a NaN or infinite number, for example), or if the value nests arrays and objects
+    ///   more than 63 levels deep: with the metadata object around it, the stored JSON may nest at
+    ///   most 64 levels.
+    public func customProperty(_ key: String, encoding value: some Encodable & Sendable) throws(KurrentError) -> Self {
+        guard !Self.isReserved(key) else {
+            throw .encodingError(message: "Custom stream metadata key '\(key)' must not start with '$'.", encoding: .utf8)
+        }
+        let encoded = try Self.propertyValue(encoding: value)
+        // The metadata object is the first level, so the value may take the remaining ones.
+        guard encoded.depth < PropertyValue.maximumDepth else {
+            throw .encodingError(message: "Custom stream metadata key '\(key)' nests \(encoded.depth) levels deep; with the metadata object around it, the stored JSON may nest at most \(PropertyValue.maximumDepth) levels.", encoding: .utf8)
+        }
+        return replacing([(key, encoded)])
+    }
+}
+
+extension StreamMetadata {
+    /// The decoded JSON object, for `==` and `encode(to:)`.
+    ///
+    /// Its keys are Swift strings, so keys that differ only in Unicode normalization merge here;
+    /// the builders and getters read ``members`` instead.
+    private var object: [String: PropertyValue] {
+        do {
+            return try JSONDecoder().decode([String: PropertyValue].self, from: data)
+        } catch {
+            preconditionFailure("StreamMetadata.data does not hold a JSON object: \(error)")
+        }
+    }
+
+    /// The top-level members of `data`, each key once, keys compared by Unicode scalars.
+    ///
+    /// `data` always holds a JSON object without a repeated key: ``init(data:)`` keeps the last
+    /// occurrence, `init(from:)` writes `JSONEncoder` output, and the builders replace members.
+    private var members: [JSONText.Member] {
+        guard let text = JSONText(data), case let .object(members) = text.root.token else {
+            preconditionFailure("StreamMetadata.data does not hold a JSON object.")
+        }
+        return members
+    }
+
+    /// The member whose key is `key`, Unicode scalar for Unicode scalar.
+    private func member(_ key: String) -> JSONText.Member? {
+        members.first { $0.isNamed(key) }
+    }
+
+    /// A copy with `values` written to their keys, every other member left as it is.
+    private func setting(_ values: [String: any Codable & Sendable]) -> Self {
+        do {
+            return try replacing(values.map { try (key: $0.key, value: Optional(PropertyValue($0.value))) })
+        } catch {
+            // The values are strings, 64-bit integers and `StreamAcl`s, which always encode.
+            preconditionFailure("StreamMetadata could not encode \(values.keys.sorted()): \(error)")
+        }
+    }
+
+    /// A copy with each key in `values` set to its value, or removed when the value is `nil`.
+    ///
+    /// Every other member keeps its bytes and its place, so a builder never re-keys or
+    /// re-encodes data it does not set: keys that differ only in Unicode normalization stay
+    /// two keys, and a number keeps every digit. A key already present is replaced where it is;
+    /// a new key is appended, the new keys in sorted order.
+    private func replacing(_ values: [(key: String, value: PropertyValue?)]) -> Self {
+        withCopy { copied in
+            var pending = values
+            var written: [[UInt8]] = []
+            do {
+                for member in members {
+                    guard let index = pending.firstIndex(where: { member.isNamed($0.key) }) else {
+                        written.append(Array(member.quotedName) + [UInt8(ascii: ":")] + Array(member.value.text))
+                        continue
+                    }
+                    if let value = pending.remove(at: index).value {
+                        try written.append(Array(member.quotedName) + [UInt8(ascii: ":")] + Self.bytes(of: value))
+                    }
+                }
+                for (key, value) in pending.sorted(by: { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }) {
+                    if let value {
+                        try written.append(Self.bytes(of: .string(key)) + [UInt8(ascii: ":")] + Self.bytes(of: value))
+                    }
+                }
+            } catch {
+                // Every `PropertyValue` here was decoded from JSON or holds a finite number, so it encodes.
+                preconditionFailure("StreamMetadata could not encode \(values.map(\.key).sorted()): \(error)")
+            }
+            copied.data = Data([UInt8(ascii: "{")] + written.joined(separator: [UInt8(ascii: ",")]) + [UInt8(ascii: "}")])
+        }
+    }
+
+    /// Whether `key` is reserved for the server: a system field such as `$maxCount`, or a future one.
+    private static func isReserved(_ key: String) -> Bool {
+        key.hasPrefix("$")
+    }
+
+    /// Whether a member's key is reserved for the server, as ``isReserved(_:)`` decides for a `String`.
+    private static func isReserved(_ member: JSONText.Member) -> Bool {
+        member.name.first == UInt8(ascii: "$")
+    }
+
+    /// `value` as `JSONEncoder` writes it, with sorted keys and unescaped slashes.
+    private static func bytes(of value: PropertyValue) throws -> [UInt8] {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try Array(encoder.encode(value))
+    }
+
+    /// The JSON `bytes` hold decoded as `T`.
+    private static func decode<T: Decodable>(_ type: T.Type, from bytes: some Sequence<UInt8>) throws -> T {
+        try JSONDecoder().decode(type, from: Data(bytes))
+    }
+
+    /// `value` encoded with `JSONEncoder` and read back as a JSON value.
+    private static func propertyValue(encoding value: some Encodable) throws(KurrentError) -> PropertyValue {
+        do {
+            return try JSONDecoder().decode(PropertyValue.self, from: JSONEncoder().encode(value))
+        } catch {
+            throw .encodingError(message: "Custom stream metadata of type \(type(of: value)) cannot be encoded: \(error)", encoding: .utf8)
+        }
+    }
+
+    /// `duration` in whole seconds, the sub-second part truncated. It must not exceed `maximum`
+    /// (`reason` says why). A result under one second is kept, but logged as a warning, because
+    /// the server ignores the field.
+    private static func wholeSeconds(_ duration: Duration, for key: String, atMost maximum: Int64, _ reason: String) -> Int64 {
         let seconds = duration.components.seconds
-        guard (Limit.negativeDuration ... maximum).contains(seconds) else {
-            throw EncodingError.invalidValue(duration, .init(codingPath: [key], debugDescription: "StreamMetadata \(key.rawValue) takes \(Limit.negativeDuration) to \(maximum) seconds, but got \(seconds) (from \(duration)): the server ignores the whole metadata otherwise."))
-        }
+        precondition(seconds <= maximum, "StreamMetadata \(key) takes at most \(maximum) seconds, but got \(seconds) (from \(duration)): \(reason).")
+        precondition(seconds >= Limit.negativeDuration, "StreamMetadata \(key) takes at least \(Limit.negativeDuration) seconds, but got \(seconds) (from \(duration)): the server reads it as a .NET TimeSpan.")
         if seconds <= 0 {
-            logger.warning("StreamMetadata \(key.rawValue) is \(seconds) seconds (from \(duration)); the server stores whole seconds and ignores this field when it is under one second.")
+            logger.warning("StreamMetadata \(key) is \(seconds) seconds (from \(duration)); the server stores whole seconds and ignores this field when it is under one second.")
         }
         return seconds
+    }
+
+    private static func encode(_ object: [String: PropertyValue]) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        return try encoder.encode(object)
+    }
+
+    /// The integer at `key`, which `init(data:)` and `init(from:)` check fits in `Int64`; `nil`
+    /// when it is absent or negative.
+    private func unsignedInteger(at key: String) -> UInt64? {
+        member(key)?.value.integer.flatMap { UInt64(exactly: $0) }
+    }
+
+    /// The whole seconds at `key`, which `init(data:)` and `init(from:)` check fit in `Int64`.
+    private func seconds(at key: String) -> Duration? {
+        member(key)?.value.integer.map { .seconds($0) }
+    }
+}
+
+extension StreamMetadata {
+    /// Why the server ignores the object `root`, or `nil` when it reads it.
+    ///
+    /// Mirrors the server's reader (`StreamMetadata.FromJsonReader` in KurrentDB): it reads the
+    /// members in order and throws at the first system key holding a token it cannot read, so
+    /// every occurrence of a repeated key is checked. Other keys are skipped whatever they hold.
+    private static func invalidSystemKey(in root: JSONText.Value) -> String? {
+        guard case let .object(members) = root.token else {
+            return "Stream metadata must be a JSON object."
+        }
+        for member in members {
+            let value = member.value
+            if member.isNamed(Key.maxCount) || member.isNamed(Key.truncateBefore) {
+                guard value.integer != nil else {
+                    return invalid(member, "an integer within Int64, without a fraction or an exponent")
+                }
+            } else if member.isNamed(Key.maxAge) || member.isNamed(Key.cacheControl) {
+                guard let seconds = value.integer, Limit.negativeDuration ... Limit.cacheControl ~= seconds else {
+                    return invalid(member, "whole seconds within ±\(Limit.cacheControl), .NET's TimeSpan range, written without a fraction or an exponent")
+                }
+            } else if member.isNamed(Key.tempStream) {
+                guard case .bool = value.token else {
+                    return invalid(member, "a boolean")
+                }
+            } else if member.isNamed(Key.acl) {
+                guard case let .object(roles) = value.token else {
+                    return invalid(member, #"an object such as {"$r":["$all"]}"#)
+                }
+                for role in roles {
+                    guard Key.aclRoles.contains(where: role.isNamed) else {
+                        return "Stream metadata \(Key.acl) holds the key \(String(decoding: role.quotedName, as: UTF8.self)), which the server cannot read: \(Key.acl) may hold only \(Key.aclRoles.joined(separator: ", ")). The server ignores the whole object for it."
+                    }
+                    guard isRoles(role.value) else {
+                        return invalid(role, "a role name or an array of role names", in: Key.acl)
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Whether `value` is a string or an array of strings, the two forms of an `$acl` role list.
+    private static func isRoles(_ value: JSONText.Value) -> Bool {
+        switch value.token {
+        case .string:
+            true
+        case let .array(elements):
+            elements.allSatisfy { if case .string = $0.token { true } else { false } }
+        default:
+            false
+        }
+    }
+
+    private static func invalid(_ member: JSONText.Member, _ expected: String, in parent: String? = nil) -> String {
+        let key = String(decoding: member.name, as: UTF8.self)
+        return "Stream metadata \(parent.map { "\($0) " } ?? "")key \(key) must hold \(expected), but holds \(member.value.excerpt()). The server ignores the whole object for it."
+    }
+}
+
+extension StreamMetadata {
+    /// Decodes a JSON object, every key kept as it is.
+    ///
+    /// The members come from the decoder, so when an object repeats a key this keeps whichever
+    /// occurrence the decoder keeps: the first, for `JSONDecoder`. ``init(data:)`` reads the last
+    /// occurrence, as the server does. The system keys are checked as ``init(data:)`` checks them,
+    /// but against the values the decoder hands over, not the text: a whole number written with a
+    /// fraction, such as `60.0`, passes here.
+    ///
+    /// To read the data of a `$$<stream>` event, use ``init(data:)``, as `getMetadata()` does, not
+    /// `JSONDecoder().decode(StreamMetadata.self, from:)`: only ``init(data:)`` reads the object as
+    /// the server does.
+    ///
+    /// - Throws: `DecodingError` if the value is not a JSON object, nests arrays and objects more
+    ///   than 64 levels deep, or holds a system key the server cannot read.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let object = try container.decode([String: PropertyValue].self)
+        data = try Self.encode(object)
+        guard let text = JSONText(data) else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Stream metadata could not be scanned after encoding.")
+        }
+        if let reason = Self.invalidSystemKey(in: text.root) {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: reason)
+        }
+    }
+
+    /// Encodes the JSON object: the system fields, the custom keys and every other key it holds.
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(object)
+    }
+}
+
+extension StreamMetadata {
+    /// Who may access a stream: the server's default access rules, or the stream's own roles.
+    ///
+    /// The server reads a stream's `$acl` only as an object of roles, so these are the only two
+    /// forms. The names `$userStreamAcl` and `$systemStreamAcl` are not values of `$acl`: they are
+    /// the keys of the `$settings` stream that hold the defaults.
+    public enum Acl: Sendable, Equatable {
+        /// The stream has no ACL of its own, so its metadata holds no `$acl`, and the server applies
+        /// the default from the `$settings` stream: `$userStreamAcl` for a user stream and
+        /// `$systemStreamAcl` for a stream whose name starts with `$`. It follows later changes to
+        /// `$settings`.
+        ///
+        /// With the built-in defaults everyone (`$all`) may read, write and delete a user stream and
+        /// read and write its metadata, and only `$admins` may access a system stream. `$all` is
+        /// granted before any identity check, so it includes anonymous requests, as far as the
+        /// server's settings for anonymous access allow them. Members of `$admins` always have access.
+        case serverDefault
+        /// The stream's own roles, stored as the `$acl` object. A permission the ``StreamAcl``
+        /// leaves at ``StreamAcl/Roles/defaults`` falls back to the default from `$settings`.
+        ///
+        /// `.stream(.defaults)` stores the empty object, `"$acl":{}`, so every permission falls back
+        /// to `$settings`: the server treats it the same as ``serverDefault``, which stores no `$acl`.
+        /// ``StreamMetadata/acl`` and `==` still tell the two apart: metadata holding `"$acl":{}`
+        /// reads as `.stream(.defaults)`, not `.serverDefault`.
+        case stream(StreamAcl)
+    }
+
+    /// Fine-grained role-based access control for a stream: the roles of each permission.
+    ///
+    /// Start from ``defaults``, or from the ``StreamMetadata/acl`` already stored, and set the
+    /// permissions you mean to with the builders. A permission at ``Roles/defaults`` is not stored,
+    /// and the server applies the default from the `$settings` stream for it; ``Roles/granted(_:)``
+    /// with an empty list grants it to no one but `$admins`.
+    ///
+    /// A role is a group name, such as `$admins`, `$ops` or `$all` (everyone), or a user name.
+    public struct StreamAcl: Codable, Sendable, Equatable {
+        enum CodingKeys: String, CodingKey {
+            case readRoles = "$r"
+            case writeRoles = "$w"
+            case deleteRoles = "$d"
+            case metaReadRoles = "$mr"
+            case metaWriteRoles = "$mw"
+        }
+
+        /// Roles and users permitted to read the stream (`$r`).
+        public private(set) var readRoles: Roles = .defaults
+
+        /// Roles and users permitted to write to the stream (`$w`).
+        public private(set) var writeRoles: Roles = .defaults
+
+        /// Roles and users permitted to delete the stream (`$d`).
+        public private(set) var deleteRoles: Roles = .defaults
+
+        /// Roles and users permitted to read stream metadata (`$mr`).
+        public private(set) var metaReadRoles: Roles = .defaults
+
+        /// Roles and users permitted to write stream metadata (`$mw`).
+        public private(set) var metaWriteRoles: Roles = .defaults
     }
 }
 
 extension StreamMetadata.StreamAcl {
-    /// The server's built-in `$systemStreamAcl`: `$admins` for every permission.
-    static let systemStreamDefault = Self()
-        .readRoles(["$admins"])
-        .writeRoles(["$admins"])
-        .deleteRoles(["$admins"])
-        .metaReadRoles(["$admins"])
-        .metaWriteRoles(["$admins"])
+    /// Every permission inherits the default from the `$settings` stream: stored as the empty
+    /// object `{}`.
+    ///
+    /// `acl(.stream(.defaults))` stores `"$acl":{}`, which the server treats the same as
+    /// `acl(.serverDefault)`: each permission falls back to `$settings`.
+    public static let defaults = Self()
 
-    /// Reads each permission as the server does: a single role string or an array of them.
+    /// The roles of one permission.
+    ///
+    /// An array literal is ``granted(_:)``: `writeRoles(["ops"])` stores `"$w":["ops"]`. Pass a
+    /// `[String]` variable as `.granted(names)`.
+    public enum Roles: ExpressibleByArrayLiteral, Sendable, Equatable {
+        /// Not stored: the server applies the default from the `$settings` stream for this
+        /// permission, and follows later changes to `$settings`.
+        case defaults
+        /// Stored as the list of roles and users. An empty list grants the permission to no one
+        /// but `$admins`, whose members always have access.
+        case granted([String])
+
+        /// Creates ``granted(_:)`` with the listed roles.
+        public init(arrayLiteral elements: String...) {
+            self = .granted(elements)
+        }
+
+        /// The stored list, `nil` for ``defaults``.
+        var stored: [String]? {
+            switch self {
+            case .defaults:
+                nil
+            case let .granted(roles):
+                roles
+            }
+        }
+    }
+
+    /// Decodes each role entry as an array of strings or, as the server and other clients
+    /// also write it, a single string. An absent entry is ``Roles/defaults``; `null` throws, since
+    /// the server ignores the whole metadata for it.
     public init(from decoder: any Decoder) throws {
+        self.init()
         let container = try decoder.container(keyedBy: CodingKeys.self)
         readRoles = try Self.roles(in: container, forKey: .readRoles)
         writeRoles = try Self.roles(in: container, forKey: .writeRoles)
@@ -395,48 +682,95 @@ extension StreamMetadata.StreamAcl {
         metaWriteRoles = try Self.roles(in: container, forKey: .metaWriteRoles)
     }
 
-    /// The roles under `key`: a single string or an array, `nil` when absent or `null`.
-    private static func roles(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> [String]? {
-        guard container.contains(key), try !container.decodeNil(forKey: key) else {
-            return nil
+    /// Encodes each ``Roles/granted(_:)`` entry as an array of strings and leaves out every
+    /// ``Roles/defaults`` entry.
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(readRoles.stored, forKey: .readRoles)
+        try container.encodeIfPresent(writeRoles.stored, forKey: .writeRoles)
+        try container.encodeIfPresent(deleteRoles.stored, forKey: .deleteRoles)
+        try container.encodeIfPresent(metaReadRoles.stored, forKey: .metaReadRoles)
+        try container.encodeIfPresent(metaWriteRoles.stored, forKey: .metaWriteRoles)
+    }
+
+    private static func roles(in container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Roles {
+        guard container.contains(key) else {
+            return .defaults
         }
         if let role = try? container.decode(String.self, forKey: key) {
-            return [role]
+            return .granted([role])
         }
-        return try container.decode([String].self, forKey: key)
+        return try .granted(container.decode([String].self, forKey: key))
+    }
+}
+
+extension StreamMetadata.StreamAcl: Buildable {
+    /// Sets the roles permitted to read the stream (`$r`).
+    ///
+    /// - Parameter roles: The role and user names, or ``Roles/defaults`` to remove `$r` so the
+    ///   server applies the default from `$settings`.
+    /// - Returns: An updated copy of the ACL.
+    public func readRoles(_ roles: Roles) -> Self {
+        withCopy { copied in
+            copied.readRoles = roles
+        }
+    }
+
+    /// Sets the roles permitted to write to the stream (`$w`).
+    ///
+    /// - Parameter roles: The role and user names, or ``Roles/defaults`` to remove `$w` so the
+    ///   server applies the default from `$settings`.
+    /// - Returns: An updated copy of the ACL.
+    public func writeRoles(_ roles: Roles) -> Self {
+        withCopy { copied in
+            copied.writeRoles = roles
+        }
+    }
+
+    /// Sets the roles permitted to delete the stream (`$d`).
+    ///
+    /// - Parameter roles: The role and user names, or ``Roles/defaults`` to remove `$d` so the
+    ///   server applies the default from `$settings`.
+    /// - Returns: An updated copy of the ACL.
+    public func deleteRoles(_ roles: Roles) -> Self {
+        withCopy { copied in
+            copied.deleteRoles = roles
+        }
+    }
+
+    /// Sets the roles permitted to read stream metadata (`$mr`).
+    ///
+    /// - Parameter roles: The role and user names, or ``Roles/defaults`` to remove `$mr` so the
+    ///   server applies the default from `$settings`.
+    /// - Returns: An updated copy of the ACL.
+    public func metaReadRoles(_ roles: Roles) -> Self {
+        withCopy { copied in
+            copied.metaReadRoles = roles
+        }
+    }
+
+    /// Sets the roles permitted to write stream metadata (`$mw`).
+    ///
+    /// Keep your own user, or a role it has, in these roles: otherwise you can no longer change
+    /// the metadata.
+    ///
+    /// - Parameter roles: The role and user names, or ``Roles/defaults`` to remove `$mw` so the
+    ///   server applies the default from `$settings`.
+    /// - Returns: An updated copy of the ACL.
+    public func metaWriteRoles(_ roles: Roles) -> Self {
+        withCopy { copied in
+            copied.metaWriteRoles = roles
+        }
     }
 }
 
 extension StreamMetadata: Equatable {
+    /// Compares the decoded JSON objects, so key order and number spelling do not matter.
+    ///
+    /// The keys are compared as Swift strings, so two keys that differ only in Unicode
+    /// normalization, such as `"café"` with a precomposed `é` and with `e` and a combining accent,
+    /// compare equal, although the server reads them as two keys.
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.maxCount == rhs.maxCount
-            && lhs.cacheControl == rhs.cacheControl
-            && lhs.customProperties == rhs.customProperties
-            && lhs.maxAge == rhs.maxAge
-            && lhs.truncateBefore == rhs.truncateBefore
-            && lhs.acl == rhs.acl
-    }
-}
-
-extension StreamMetadata.Acl: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) {
-        case (.userStream, .userStream), (.systemStream, .systemStream):
-            true
-        case let (.stream(lhs), .stream(rhs)):
-            lhs == rhs
-        default:
-            false
-        }
-    }
-}
-
-extension StreamMetadata.StreamAcl: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.deleteRoles == rhs.deleteRoles
-            && lhs.metaReadRoles == rhs.metaReadRoles
-            && lhs.metaWriteRoles == rhs.metaWriteRoles
-            && lhs.readRoles == rhs.readRoles
-            && lhs.writeRoles == rhs.writeRoles
+        lhs.object == rhs.object
     }
 }

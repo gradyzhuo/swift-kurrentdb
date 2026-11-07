@@ -22,25 +22,15 @@ extension Streams where Target: SpecifiedStreamTarget {
     ///   - metadata: The ``StreamMetadata`` to store.
     ///   - expectedRevision: The revision expected at the metadata stream before writing. Defaults to `.any`.
     /// - Returns: An `Append.Response` containing the result of the metadata write.
-    /// - Throws: `KurrentError.encodingError` for a value the server would ignore the whole
-    ///   metadata for (see ``StreamMetadata/encode(to:)``), or `KurrentError` if the write fails
-    ///   or a revision conflict occurs.
+    /// - Throws: `KurrentError` if the write fails or a revision conflict occurs.
     @discardableResult
     public func setMetadata(metadata: StreamMetadata, expectedRevision: StreamRevision = .any) async throws(KurrentError) -> Append.Response {
-        let data: Data
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .sortedKeys
-            data = try encoder.encode(metadata)
-        } catch {
-            throw .encodingError(message: "The stream metadata cannot be written: \(error)", encoding: .utf8)
-        }
         var options = Append.Options()
         options.expectedRevision = expectedRevision
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
-                data: data
+                payload: .data(metadata.data, .json)
             ),
         ], options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
@@ -68,7 +58,7 @@ extension Streams where Target: SpecifiedStreamTarget {
                 case let .event(event):
                     switch event.record.contentType {
                     case .json:
-                        try JSONDecoder().decode(StreamMetadata.self, from: event.record.data)
+                        try StreamMetadata(data: event.record.data)
                     default:
                         throw KurrentError.internalParsingError(reason: "The event data could not be parsed. Stream metadata must be encoded in JSON format.")
                     }
