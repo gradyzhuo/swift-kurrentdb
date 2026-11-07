@@ -89,7 +89,7 @@ extension Streams where Target == MultiStreamsTarget {
     /// Pipelines multiple appends over a single `BatchAppend` call for high throughput (requires a
     /// server that supports BatchAppend).
     ///
-    /// Unlike ``append(events:)-(_)`` (AppendSession, atomic), this is **non-atomic**: each
+    /// Unlike ``append(events:)-([StreamEvent])`` (AppendSession, atomic), this is **non-atomic**: each
     /// ``StreamEvent`` is an independent append, so some may succeed while others fail. Inspect the
     /// returned ``BatchAppend/Response`` (`results` / `failed`) instead of relying on a thrown error
     /// for per-item conflicts. Only transport-level failures are thrown.

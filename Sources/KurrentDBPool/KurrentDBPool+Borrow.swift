@@ -1,4 +1,6 @@
 import KurrentDB
+import NIOCore
+import NIOPosix
 
 extension KurrentDBPool {
     /// package——外部呼叫端不能直接叫這個，只能透過 public 的
@@ -39,7 +41,7 @@ extension KurrentDBPool {
     /// 特別注意：ack 用的短命 client 跟真正交給呼叫端的 BorrowedClient 是分開
     /// 建構的兩個實例——ack 過了就直接丟掉那個 client，重新用正常設定建一個給
     /// 呼叫端，不要把 ack 探測沿用的實例繼續交出去。
-    package static func borrow(numberOfThreads: Int = 1, maxAttempts: Int = 3) async -> BorrowedClient? {
+    package static func borrow(eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup, maxAttempts: Int = 3) async -> BorrowedClient? {
         guard maxAttempts > 0 else { return nil }
         var rejected: [Lease] = []
 
@@ -52,9 +54,9 @@ extension KurrentDBPool {
             }
             guard let candidate = next else { break }
 
-            let ackClient = KurrentDBClient(settings: candidate.settings, numberOfThreads: 1)
+            let ackClient = KurrentDBClient(settings: candidate.settings, eventLoopGroup: eventLoopGroup)
             let isReachable = (try? await ackClient.selector.select()) != nil
-            try? ackClient.shutdown()
+            ackClient.shutdown()
 
             guard isReachable else {
                 rejected.append(candidate)
@@ -62,7 +64,7 @@ extension KurrentDBPool {
             }
 
             for lease in rejected { await lease.giveBack() }
-            let client = KurrentDBClient(settings: candidate.settings, numberOfThreads: numberOfThreads)
+            let client = KurrentDBClient(settings: candidate.settings, eventLoopGroup: eventLoopGroup)
             return BorrowedClient(client: client, lease: candidate)
         }
 

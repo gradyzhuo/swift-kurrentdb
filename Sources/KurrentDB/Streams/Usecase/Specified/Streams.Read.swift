@@ -52,18 +52,33 @@ extension Streams {
                 }
                 do {
                     for try await message in response.messages {
-                        try continuation.yield(handle(message: message))
+                        if let readResponse = try scopedResponse(for: message) {
+                            continuation.yield(readResponse)
+                        }
                     }
                     continuation.finish()
                 } catch {
-                    let rejected = if case .failure = response.accepted { true } else { false }
-                    continuation.finish(throwing: bufferedReadFailure(error, rejected: rejected))
+                    // Before or after acceptance alike: the consumer sees a KurrentError (or CancellationError).
+                    continuation.finish(throwing: mapStreamError(error, usage: "\(Self.name)"))
                 }
                 // Older grpc-swift ends the loop above quietly when the call deadline cancels this
                 // handler, and the call then returns a truncated result as if it were complete.
                 // Throw instead; the owner maps an unrequested cancellation to deadlineExceeded.
                 if Task.isCancelled { throw CancellationError() }
                 return stream
+            }
+        }
+
+        package func scopedResponse(for message: UnderlyingResponse) throws -> Response? {
+            // A read with `compatibility` ≥ 1 interleaves position frames (first, last and `$all`
+            // positions) with the events, and `$all` control frames share the message type. The read
+            // yields events only, so skip anything that isn't an event or a stream-not-found signal,
+            // as `Streams.ReadAll` does. Both delivery paths go through here.
+            switch message.content {
+            case .event, .streamNotFound:
+                return try handle(message: message)
+            default:
+                return nil
             }
         }
 

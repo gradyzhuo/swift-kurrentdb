@@ -4,11 +4,14 @@
 //
 //  Names the documentation examples use without declaring them. The examples
 //  themselves are compiled from DocSnippets.generated.swift, which
-//  `scripts/generate-doc-snippets.py` writes; nothing here connects to a server.
+//  `swift run --package-path scripts generate-doc-snippets` writes; nothing here connects to a server.
 //
 
 import Foundation
+import GRPCCore
 import KurrentDB
+import NIOCore
+import NIOPosix
 import Testing
 
 struct OrderPlaced: Codable, Sendable {
@@ -23,13 +26,23 @@ struct MyState: Codable {}
 
 let settings = ClientSettings.localhost()
 let client = KurrentDBClient(settings: settings)
+/// The event-loop group `Client pools.md` passes to `withBorrowedClient(eventLoopGroup:maxAttempts:_:)`.
+let eventLoopGroup: any EventLoopGroup = MultiThreadedEventLoopGroup.singleton
 
 let eventData = EventData(eventType: "OrderPlaced", model: OrderPlaced(orderId: "order-1"))
 let event = eventData
 let events = [eventData]
 let record = try! EventRecord(eventType: "OrderPlaced", payload: .json(OrderPlaced(orderId: "order-1")))
 
+/// Names the 3.0 migration article refers to.
+let orders = client.streams(specified: "orders")
+let someData = Data("{\"orderId\":\"order-1\"}".utf8)
+/// The examples `import GRPCCore` for `CallOptions`; the generator drops import lines, so the name comes from here.
+typealias CallOptions = GRPCCore.CallOptions
+/// The same for `MultiThreadedEventLoopGroup`, which the examples `import NIOPosix` for.
+typealias MultiThreadedEventLoopGroup = NIOPosix.MultiThreadedEventLoopGroup
+
 @Test("Documentation examples compile")
 func documentationExamplesCompile() {
-    // Building this target is the check; see scripts/generate-doc-snippets.py.
+    // Building this target is the check; see `swift run --package-path scripts generate-doc-snippets`.
 }

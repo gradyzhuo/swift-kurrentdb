@@ -17,7 +17,6 @@ public final class Users<Target: UsersTarget>: GRPCConcreteService {
 
     internal let selector: NodeSelector
     internal let callOptions: CallOptions
-    internal let eventLoopGroup: EventLoopGroup
 
     /// The target specifying which users this service operates on.
     public let target: Target
@@ -26,11 +25,10 @@ public final class Users<Target: UsersTarget>: GRPCConcreteService {
     /// authentication from ``ClientSettings`` is used.
     internal let overrideCredentials: Authentication?
 
-    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup, overrideCredentials: Authentication? = nil) {
+    init(target: Target, selector: NodeSelector, callOptions: CallOptions = .defaults, overrideCredentials: Authentication? = nil) {
         self.target = target
         self.selector = selector
         self.callOptions = callOptions
-        self.eventLoopGroup = eventLoopGroup
         self.overrideCredentials = overrideCredentials
     }
 
@@ -40,7 +38,7 @@ public final class Users<Target: UsersTarget>: GRPCConcreteService {
     /// - Parameter credentials: Authentication to use for calls made on the returned instance.
     /// - Returns: A new interface scoped to `credentials`.
     public func authenticated(_ credentials: Authentication) -> Self {
-        .init(target: target, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: credentials)
+        .init(target: target, selector: selector, callOptions: callOptions, overrideCredentials: credentials)
     }
 }
 
@@ -73,7 +71,7 @@ extension Users where Target: UserCreatable {
 
         // Retrieve and return the created user's details
         let userTarget = SpecifiedUserTarget(loginName: loginName)
-        let userService = Users<SpecifiedUserTarget>(target: userTarget, selector: selector, callOptions: callOptions, eventLoopGroup: eventLoopGroup, overrideCredentials: overrideCredentials)
+        let userService = Users<SpecifiedUserTarget>(target: userTarget, selector: selector, callOptions: callOptions, overrideCredentials: overrideCredentials)
         let responses = try await userService.details()
         do {
             return try await responses.first { _ in true }

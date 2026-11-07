@@ -41,7 +41,7 @@ func clientBenchmarks() {
     for count in [1, 100, 1000] {
         Benchmark("Client/read-buffered/\(count)x100B") { (benchmark, fixture: StreamFixture) in
             for _ in benchmark.scaledIterations {
-                for try await response in try await fixture.stream.read() {
+                for try await response in try await fixture.stream.read().buffered {
                     blackHole(response)
                 }
             }
@@ -51,9 +51,20 @@ func clientBenchmarks() {
 
         Benchmark("Client/read-lazy/\(count)x100B") { (benchmark, fixture: StreamFixture) in
             for _ in benchmark.scaledIterations {
-                for try await response in fixture.stream.read().lazy {
+                for try await response in fixture.stream.read() {
                     blackHole(response)
                 }
+            }
+        } setup: {
+            try await .reading(count)
+        }
+
+        // The same read iterated from the main actor: `for try await` passes the actor as
+        // `#isolation`, so the iterator takes the hand-off path. `Client/read-lazy` above iterates off
+        // any actor and takes the direct path.
+        Benchmark("Client/read-lazy-actor/\(count)x100B") { (benchmark, fixture: StreamFixture) in
+            for _ in benchmark.scaledIterations {
+                try await readOnMainActor(fixture.stream)
             }
         } setup: {
             try await .reading(count)
@@ -127,11 +138,11 @@ private struct StreamFixture {
     static func reading(_ count: Int) async throws -> Self {
         let fixture = try Self(readResponses: serializedReadResponses(count: count, payload: payload))
         var buffered: [UInt64] = []
-        for try await response in try await fixture.stream.read() {
+        for try await response in try await fixture.stream.read().buffered {
             try buffered.append(response.event.record.revision)
         }
         var lazy: [UInt64] = []
-        for try await response in fixture.stream.read().lazy {
+        for try await response in fixture.stream.read() {
             try lazy.append(response.event.record.revision)
         }
         let expected = Array(0 ..< UInt64(count))
@@ -217,5 +228,13 @@ private struct FixtureError: Error, CustomStringConvertible {
 
     init(_ description: String) {
         self.description = description
+    }
+}
+
+/// One lazy read, iterated on the main actor (the hand-off path).
+@MainActor
+private func readOnMainActor(_ stream: Streams<SpecifiedStream>) async throws {
+    for try await response in stream.read() {
+        blackHole(response)
     }
 }

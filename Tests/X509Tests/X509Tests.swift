@@ -47,20 +47,20 @@ struct X509Tests {
     @Test("reading $all is denied without credentials")
     func anonymousReadOfAllIsDenied() async throws {
         let client = try KurrentDBClient(settings: anonymousSettings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         await #expect(throws: KurrentError.accessDenied) {
-            for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }) {}
+            for try await _ in try await client.allStreams.read(configure: { $0.limit = 1 }).buffered {}
         }
     }
 
     @Test("the admin user certificate is allowed to read $all")
     func certificateAuthenticatesAsAdmin() async throws {
         let client = try KurrentDBClient(settings: certificateSettings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         var count = 0
-        for try await response in try await client.allStreams.read(configure: { $0.limit = 1 }) {
+        for try await response in client.allStreams.read(configure: { $0.limit = 1 }) {
             _ = try response.event
             count += 1
         }
@@ -70,7 +70,7 @@ struct X509Tests {
     @Test("appends and reads back a stream as the certificate user")
     func certificateUserCanWriteAndRead() async throws {
         let client = try KurrentDBClient(settings: certificateSettings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
 
         let stream = client.streams(specified: "x509-\(UUID().uuidString)")
         try await stream.append(events: EventData(eventType: "X509Tested", model: ["by": "certificate"])) {
@@ -78,7 +78,7 @@ struct X509Tests {
         }
 
         var eventTypes: [String] = []
-        for try await response in try await stream.read() {
+        for try await response in stream.read() {
             try eventTypes.append(response.event.record.eventType)
         }
         #expect(eventTypes == ["X509Tested"])

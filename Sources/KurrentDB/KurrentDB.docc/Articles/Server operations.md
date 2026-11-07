@@ -96,6 +96,8 @@ try await client.operations(of: .system).shutdown()
 
 > Warning: This operation terminates the server. Ensure all clients are prepared for disconnection before calling this method.
 
+> Note: `KurrentDBClient.shutdown()` does not stop the server; it closes this client's connections. Code written against `KurrentDB_V1` whose `client.shutdown()` is meant to stop the server needs the call above instead — see <doc:Migration-guide>.
+
 ## Node operations
 
 ### Resign node

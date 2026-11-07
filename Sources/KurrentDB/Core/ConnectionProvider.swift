@@ -12,17 +12,22 @@
 import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import NIOCore
+import NIOPosix
 import Synchronization
 
 /// Manages two kinds of connections, chosen by whether the RPC **finishes inside** `perform(node:)`:
 ///
-/// - **Shared** (``acquire(_:)``): calls that end inside `perform(node:)` and whose connection
-///   never leaves that scope — single-message responses (`UnaryUnary`, `StreamUnary`) and
-///   `UnaryStream` usecases whose `send()` drains the stream before returning (marked
+/// - **Shared** (``acquire(_:purpose:)``): calls that end inside `perform(node:)` and whose
+///   connection never leaves that scope — single-message responses (`UnaryUnary`, `StreamUnary`)
+///   and `UnaryStream` usecases whose `send()` drains the stream before returning (marked
 ///   `BufferedStreamResponse`: `Streams.Read`, `Streams.ReadAll`, `Projections.Statistics`,
-///   `Users.Details`). One long-lived connection per endpoint; these calls share that
-///   connection's HTTP/2 stream budget. A lazy read (`ScopedStreamResponse`, `read().lazy`)
-///   also uses it, holding its lease for as long as the iterator lives.
+///   `Users.Details`), plus gossip and server features. Up to two long-lived connections per
+///   endpoint, one per ``ConnectionPurpose``: these calls share the `.main` one's HTTP/2 stream
+///   budget. A lazy read (`ScopedStreamResponse`, `read()`) holds its lease, and an HTTP/2
+///   stream, for as long as the iterator lives, so it takes the `.read` one: held reads queue
+///   only behind each other above the server's per-connection stream limit, never in front of a
+///   unary call. The `.read` connection opens on the first lazy read to the endpoint.
 /// - **Dedicated** (``openDedicated(for:)``): RPCs that carry the stream out of `perform`
 ///   (subscriptions, persistent subscriptions, `Monitoring.Stats`, `StreamStream`). They may
 ///   hold an HTTP/2 stream slot indefinitely, so each call gets its own connection and never
@@ -58,6 +63,12 @@ import Synchronization
 package final class ConnectionProvider: Sendable {
     package typealias Client = GRPCClient<AnyClientTransport>
 
+    /// The key of a shared entry: one shared connection per endpoint and purpose.
+    private struct SharedKey: Hashable {
+        let endpoint: Endpoint
+        let purpose: ConnectionPurpose
+    }
+
     private struct SharedEntry {
         let generation: UInt64
         let client: Client
@@ -67,29 +78,43 @@ package final class ConnectionProvider: Sendable {
     }
 
     private struct State {
-        var shared: [Endpoint: SharedEntry] = [:]
+        var shared: [SharedKey: SharedEntry] = [:]
         var dedicated: [UInt64: DedicatedLifecycle] = [:]
         var nextID: UInt64 = 0
         var isShutdown = false
         var createdSharedConnectionCount = 0
+        var createdReadConnectionCount = 0
         var createdDedicatedConnectionCount = 0
         var sweeper: Task<Void, Never>?
+        var shutdownHandlers: [ShutdownHandlerID: @Sendable () -> Void] = [:]
+        /// Set by the caller that performs the shutdown once it has run every shutdown handler and
+        /// every dedicated connection's close hook.
+        var shutdownHasRun = false
+        /// Callers of `shutdownAwaitingHandlers()` waiting for `shutdownHasRun`.
+        var shutdownHandlerWaiters: [CheckedContinuation<Void, Never>] = []
     }
 
     private let settings: ClientSettings
     private let idleTimeout: Duration
+
+    /// The event-loop group every Posix transport this provider builds runs on (a
+    /// `TransportProvider` in the settings chooses its own loops). Never shut down here.
+    package let eventLoopGroup: any EventLoopGroup
     private let state = Mutex(State())
 
     /// - Parameters:
+    ///   - eventLoopGroup: The group the Posix transports run on; the client passes the one it was given.
     ///   - idleTimeout: 共用連線在沒有任何進行中的呼叫後,閒置多久會被回收。
     ///   - sweepInterval: 背景 sweeper 的檢查間隔;傳 `nil` 不啟動 sweeper
     ///     (測試用,改以 ``sweep(now:)`` 手動驅動)。
     package init(
         settings: ClientSettings,
+        eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup,
         idleTimeout: Duration = .seconds(3600),
         sweepInterval: Duration? = .seconds(60)
     ) {
         self.settings = settings
+        self.eventLoopGroup = eventLoopGroup
         self.idleTimeout = idleTimeout
 
         guard let sweepInterval else { return }
@@ -116,16 +141,20 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Shared connections
 
-    /// 取得 `endpoint` 的共用連線,並把它的 retainCount 加一。
+    /// 取得 `endpoint` 上 `purpose` 那條共用連線,並把它的 retainCount 加一。
     ///
     /// 呼叫端必須在呼叫結束時 ``SharedLease/release()`` —— 在 `perform(node:)` 裡用
     /// `defer { lease.release() }`。查找/發布與 retainCount 遞增在同一個 lock 內完成,
     /// 所以 sweeper 不可能在「查到」與「加一」之間把 entry 移走。
     ///
+    /// - Parameter purpose: `.main` (the default) for every call that ends inside `perform`;
+    ///   `.read` for a lazy read, which holds its stream for as long as the caller iterates.
+    ///   Each purpose is its own connection, entry, generation and idle clock.
     /// - Throws: `KurrentError.connectionClosed` 若 provider 已 shutdown;
     ///           transport 建立失敗時則是對應的 `KurrentError`。
-    package func acquire(_ endpoint: Endpoint) throws(KurrentError) -> SharedLease {
-        if let lease = try retainExisting(endpoint, now: .now) {
+    package func acquire(_ endpoint: Endpoint, purpose: ConnectionPurpose = .main) throws(KurrentError) -> SharedLease {
+        let key = SharedKey(endpoint: endpoint, purpose: purpose)
+        if let lease = try retainExisting(key, now: .now) {
             return lease
         }
 
@@ -137,102 +166,106 @@ package final class ConnectionProvider: Sendable {
             }
             let now = ContinuousClock.now
             // 別人在我們建構期間先發布了:用它的,丟掉我們的(從未 run 過,直接釋放即可)。
-            if var existing = state.shared[endpoint] {
+            if var existing = state.shared[key] {
                 existing.retainCount += 1
                 existing.lastUsed = now
-                state.shared[endpoint] = existing
-                return (SharedLease(provider: self, endpoint: endpoint, generation: existing.generation, client: existing.client), false)
+                state.shared[key] = existing
+                return (SharedLease(provider: self, endpoint: endpoint, purpose: purpose, generation: existing.generation, client: existing.client), false)
             }
             // 在同一個 lock 內建 runTask 並發布完整 entry:任何時刻都不會有一個看得到、
             // 卻沒有可取消 task 的 entry,也不會有逃過登記的 task。
             state.nextID += 1
             let generation = state.nextID
-            let runTask = makeSharedRunTask(client: candidate, endpoint: endpoint, generation: generation)
-            state.shared[endpoint] = SharedEntry(
+            let runTask = makeSharedRunTask(client: candidate, key: key, generation: generation)
+            state.shared[key] = SharedEntry(
                 generation: generation,
                 client: candidate,
                 runTask: runTask,
                 retainCount: 1,
                 lastUsed: now
             )
-            state.createdSharedConnectionCount += 1
-            return (SharedLease(provider: self, endpoint: endpoint, generation: generation, client: candidate), true)
+            switch purpose {
+            case .main: state.createdSharedConnectionCount += 1
+            case .read: state.createdReadConnectionCount += 1
+            }
+            return (SharedLease(provider: self, endpoint: endpoint, purpose: purpose, generation: generation, client: candidate), true)
         }
         if published {
-            logger.debug("[ConnectionProvider] Opened shared connection to \(endpoint.debugDescription)")
+            logger.debug("[ConnectionProvider] Opened shared \(purpose) connection to \(endpoint.debugDescription)")
         }
         return lease
     }
 
-    private func retainExisting(_ endpoint: Endpoint, now: ContinuousClock.Instant) throws(KurrentError) -> SharedLease? {
+    private func retainExisting(_ key: SharedKey, now: ContinuousClock.Instant) throws(KurrentError) -> SharedLease? {
         try state.withLock { state throws(KurrentError) -> SharedLease? in
             guard !state.isShutdown else {
                 throw KurrentError.connectionClosed
             }
-            guard var entry = state.shared[endpoint] else {
+            guard var entry = state.shared[key] else {
                 return nil
             }
             entry.retainCount += 1
             entry.lastUsed = now
-            state.shared[endpoint] = entry
-            return SharedLease(provider: self, endpoint: endpoint, generation: entry.generation, client: entry.client)
+            state.shared[key] = entry
+            return SharedLease(provider: self, endpoint: key.endpoint, purpose: key.purpose, generation: entry.generation, client: entry.client)
         }
     }
 
     /// 只在 generation 相符時生效。entry 已被移除或已換成新的一代時什麼都不做 ——
     /// 晚到的 release 絕不能動到替換上來的 entry 的計數。
-    fileprivate func release(_ endpoint: Endpoint, generation: UInt64) {
+    fileprivate func release(_ endpoint: Endpoint, purpose: ConnectionPurpose, generation: UInt64) {
+        let key = SharedKey(endpoint: endpoint, purpose: purpose)
         let now = ContinuousClock.now
         state.withLock { state in
-            guard var entry = state.shared[endpoint], entry.generation == generation else {
+            guard var entry = state.shared[key], entry.generation == generation else {
                 return
             }
             entry.retainCount = max(0, entry.retainCount - 1)
             entry.lastUsed = now
-            state.shared[endpoint] = entry
+            state.shared[key] = entry
         }
     }
 
-    private func makeSharedRunTask(client: Client, endpoint: Endpoint, generation: UInt64) -> Task<Void, Never> {
+    private func makeSharedRunTask(client: Client, key: SharedKey, generation: UInt64) -> Task<Void, Never> {
         Task { [weak self] in
-            await Self.run(client, endpoint: endpoint)
+            await Self.run(client, endpoint: key.endpoint)
             // weak self 只在收尾時解析,不跨越上面的 await 提升成強引用。
-            self?.sharedRunTaskEnded(endpoint, generation: generation)
+            self?.sharedRunTaskEnded(key, generation: generation)
         }
     }
 
-    private func sharedRunTaskEnded(_ endpoint: Endpoint, generation: UInt64) {
+    private func sharedRunTaskEnded(_ key: SharedKey, generation: UInt64) {
         let removed = state.withLock { state -> Bool in
-            guard state.shared[endpoint]?.generation == generation else {
+            guard state.shared[key]?.generation == generation else {
                 return false
             }
-            state.shared[endpoint] = nil
+            state.shared[key] = nil
             return true
         }
         if removed {
-            logger.debug("[ConnectionProvider] Shared connection to \(endpoint.debugDescription) ended; removed from cache")
+            logger.debug("[ConnectionProvider] Shared \(key.purpose) connection to \(key.endpoint.debugDescription) ended; removed from cache")
         }
     }
 
-    /// 移除所有 `retainCount == 0` 且閒置超過 `idleTimeout` 的共用 entry。
+    /// 移除所有 `retainCount == 0` 且閒置超過 `idleTimeout` 的共用 entry,兩種 purpose 都算。
     ///
     /// 背景 sweeper 定期以 `.now` 呼叫;測試可注入任意時間點。
     ///
     /// - Returns: 被移除的 entry 數量。
     @discardableResult
     package func sweep(now: ContinuousClock.Instant) -> Int {
-        let expired = state.withLock { state -> [(Endpoint, Task<Void, Never>)] in
+        let expired = state.withLock { state -> [(SharedKey, Task<Void, Never>)] in
             let expired = state.shared.filter { _, entry in
                 entry.retainCount == 0 && now - entry.lastUsed > idleTimeout
             }
-            for endpoint in expired.keys {
-                state.shared[endpoint] = nil
+            for key in expired.keys {
+                state.shared[key] = nil
             }
             return expired.map { ($0.key, $0.value.runTask) }
         }
         // 只 cancel 當下捕捉到的舊 task;期間若有人 acquire 建了新的一代,不受影響。
-        for (endpoint, runTask) in expired {
-            logger.debug("[ConnectionProvider] Retiring idle shared connection to \(endpoint.debugDescription)")
+        for (key, runTask) in expired {
+            logger.debug("[ConnectionProvider] Retiring idle shared \(key.purpose) connection to \(key.endpoint.debugDescription)")
             runTask.cancel()
         }
         return expired.count
@@ -278,32 +311,151 @@ package final class ConnectionProvider: Sendable {
         }
     }
 
+    // MARK: - Shutdown handlers
+
+    /// Identifies a handler registered with ``registerShutdownHandler(_:)``. Never 0 for a handler
+    /// that was stored; 0 means it already ran because the provider was shut down.
+    package typealias ShutdownHandlerID = UInt64
+
+    /// Runs `handler` once when the provider shuts down, outside the lock, before any run task is
+    /// cancelled; runs it immediately (and returns 0) if the provider is already shut down.
+    ///
+    /// For a call that holds a shared connection beyond one `perform` (a lazy read, on either of its
+    /// delivery paths): the handler ends the call with `KurrentError.connectionClosed` before the
+    /// transport is torn down, so the caller sees why the call ended instead of whatever error the
+    /// teardown produces (which `withRetry` would take for a node failure). Also for a wait that a
+    /// shutdown must end at once (``sleepUnlessShutDown(for:)``). It must be synchronous,
+    /// must not block, and must capture only what it needs to end the call, never the call's owner:
+    /// the registry keeps it alive until it is removed or run. A handler may call back into the
+    /// provider. Remove it with ``removeShutdownHandler(_:)`` when the call ends.
+    package func registerShutdownHandler(_ handler: @escaping @Sendable () -> Void) -> ShutdownHandlerID {
+        let id: ShutdownHandlerID? = state.withLock { state in
+            guard !state.isShutdown else { return nil }
+            state.nextID += 1
+            state.shutdownHandlers[state.nextID] = handler
+            return state.nextID
+        }
+        guard let id else {
+            handler()
+            return 0
+        }
+        return id
+    }
+
+    /// Removes a handler so it does not run at shutdown. A no-op for 0, for an id already removed,
+    /// and after shutdown (the handler has run or is running).
+    package func removeShutdownHandler(_ id: ShutdownHandlerID) {
+        guard id != 0 else { return }
+        state.withLock { state in
+            state.shutdownHandlers[id] = nil
+        }
+    }
+
+    /// For tests: how many shutdown handlers are registered.
+    package var shutdownHandlerCount: Int {
+        state.withLock { $0.shutdownHandlers.count }
+    }
+
+    // MARK: - Back-off
+
+    /// Sleeps for `duration`, waking early when the provider shuts down or the calling task is
+    /// cancelled. For a wait between attempts (the node-discovery back-off): a shutdown must end it
+    /// at once, but `Task.sleep` only wakes on its own task's cancellation, and `shutdown()` cannot
+    /// cancel its caller's task. So the sleep runs in a task of its own, which a shutdown handler
+    /// cancels; the caller's cancellation is forwarded to it.
+    ///
+    /// - Throws: `KurrentError.connectionClosed` if the provider is shut down when the sleep ends,
+    ///   also when it already was; `CancellationError` if the calling task was cancelled.
+    package func sleepUnlessShutDown(for duration: Duration) async throws {
+        let sleeper = Task { try await Task.sleep(for: duration) }
+        let handler = registerShutdownHandler { sleeper.cancel() }
+        defer { removeShutdownHandler(handler) }
+        await withTaskCancellationHandler {
+            _ = await sleeper.result
+        } onCancel: {
+            sleeper.cancel()
+        }
+        if isShutdown {
+            throw KurrentError.connectionClosed
+        }
+        try Task.checkCancellation()
+    }
+
     // MARK: - Shutdown
 
-    /// 拒絕之後所有的准入,並取消所有共用連線、已登記的獨立連線與 sweeper。冪等。
+    /// 拒絕之後所有的准入,並取消所有共用連線(兩種 purpose)、已登記的獨立連線與 sweeper。冪等。
+    ///
+    /// Order: under the lock it marks the provider shut down and takes everything; outside it, it
+    /// first runs the registered shutdown handlers (synchronously, in registration order), then
+    /// cancels the shared run tasks and the sweeper, then terminates the dedicated connections. The
+    /// handlers go first so each call they end reports `connectionClosed` before cancelling a run
+    /// task fails it as a transport error (the pattern of `DedicatedLifecycle.terminate()`). For the
+    /// caller that performs the shutdown, every handler and every dedicated connection's close hook
+    /// has run when this returns, so a call that held a connection has ended by then, even though
+    /// the transports may still be tearing down. A caller that finds a shutdown already in progress
+    /// returns at once, possibly while that shutdown is still running them; use
+    /// ``shutdownAwaitingHandlers()`` to wait for them.
     ///
     /// 這是**發起**關閉:返回時連線不保證已經關閉完成。
     package func shutdown() {
-        let (tasks, dedicated) = state.withLock { state -> ([Task<Void, Never>], [DedicatedLifecycle]) in
+        let taken = state.withLock { state -> (handlers: [@Sendable () -> Void], tasks: [Task<Void, Never>], dedicated: [DedicatedLifecycle])? in
             guard !state.isShutdown else {
-                return ([], [])
+                return nil
             }
             state.isShutdown = true
+            let handlers = state.shutdownHandlers.sorted { $0.key < $1.key }.map(\.value)
             var tasks = state.shared.values.map(\.runTask)
             if let sweeper = state.sweeper {
                 tasks.append(sweeper)
             }
             let dedicated = Array(state.dedicated.values)
+            state.shutdownHandlers.removeAll()
             state.shared.removeAll()
             state.dedicated.removeAll()
             state.sweeper = nil
-            return (tasks, dedicated)
+            return (handlers, tasks, dedicated)
         }
-        for task in tasks {
+        // Another caller performs the shutdown; `shutdownAwaitingHandlers()` waits for it.
+        guard let taken else { return }
+        for handler in taken.handlers {
+            handler()
+        }
+        for task in taken.tasks {
             task.cancel()
         }
-        for lifecycle in dedicated {
+        for lifecycle in taken.dedicated {
             lifecycle.terminate()
+        }
+        // Last: a caller of `shutdownAwaitingHandlers()` proceeds only once the dedicated
+        // connections' close hooks (how a `Subscription` ends) have run too.
+        let waiters = state.withLock { state in
+            state.shutdownHasRun = true
+            defer { state.shutdownHandlerWaiters.removeAll() }
+            return state.shutdownHandlerWaiters
+        }
+        for waiter in waiters {
+            waiter.resume()
+        }
+    }
+
+    /// Shuts the provider down like ``shutdown()`` and returns once that shutdown has run every
+    /// shutdown handler (which ends lazy reads) and every dedicated connection's
+    /// ``DedicatedConnection/onClose(_:)`` hook (which ends subscriptions), also when another
+    /// caller's shutdown started first and is still running them (a plain second ``shutdown()`` returns at once). For a caller that must not
+    /// proceed while a call that held a connection may still be ending, such as `KurrentDBPool`
+    /// handing the instance to the next borrower. Not cancellable: the handlers and hooks are
+    /// synchronous and short, so it waits for them even when the calling task is cancelled.
+    package func shutdownAwaitingHandlers() async {
+        shutdown()
+        await withCheckedContinuation { (waiter: CheckedContinuation<Void, Never>) in
+            let haveRun = state.withLock { state in
+                guard !state.shutdownHasRun else { return true }
+                state.shutdownHandlerWaiters.append(waiter)
+                return false
+            }
+            if haveRun {
+                waiter.resume()
+            }
         }
     }
 
@@ -314,10 +466,17 @@ package final class ConnectionProvider: Sendable {
 
     // MARK: - Introspection (tests)
 
-    /// 至今建立過幾條共用連線。只增不減;計的是 `GRPCClient` 的建立次數,不是 TCP 連線或
-    /// TLS handshake —— transport 內部的重連不會讓它增加。
+    /// 至今建立過幾條 `.main` 共用連線。只增不減;計的是 `GRPCClient` 的建立次數,不是 TCP 連線或
+    /// TLS handshake —— transport 內部的重連不會讓它增加。`.read` 連線另計於
+    /// ``createdReadConnectionCount``。
     package var createdSharedConnectionCount: Int {
         state.withLock { $0.createdSharedConnectionCount }
+    }
+
+    /// How many `.read` shared connections (the ones lazy reads hold their streams on) have been
+    /// created so far. Monotonic, counted like ``createdSharedConnectionCount``.
+    package var createdReadConnectionCount: Int {
+        state.withLock { $0.createdReadConnectionCount }
     }
 
     /// How many dedicated connections have been created so far. Monotonic; the counterpart of
@@ -339,10 +498,19 @@ package final class ConnectionProvider: Sendable {
         package let lastUsed: ContinuousClock.Instant
     }
 
-    /// 測試用:檢視某個 endpoint 目前的共用 entry。
+    /// 測試用:檢視某個 endpoint 目前的 `.main` 共用 entry。
     package func sharedEntrySnapshot(for endpoint: Endpoint) -> SharedEntrySnapshot? {
+        entrySnapshot(SharedKey(endpoint: endpoint, purpose: .main))
+    }
+
+    /// For tests: the endpoint's current `.read` shared entry, the one lazy reads use.
+    package func readEntrySnapshot(for endpoint: Endpoint) -> SharedEntrySnapshot? {
+        entrySnapshot(SharedKey(endpoint: endpoint, purpose: .read))
+    }
+
+    private func entrySnapshot(_ key: SharedKey) -> SharedEntrySnapshot? {
         state.withLock { state in
-            state.shared[endpoint].map {
+            state.shared[key].map {
                 SharedEntrySnapshot(generation: $0.generation, retainCount: $0.retainCount, lastUsed: $0.lastUsed)
             }
         }
@@ -350,8 +518,8 @@ package final class ConnectionProvider: Sendable {
 
     /// 測試用:取消某個共用 entry 的 runTask 但**不**移除 entry,藉此走真正的
     /// 「runTask 結束 → identity-checked 移除」路徑。
-    package func cancelSharedRunTaskForTesting(_ endpoint: Endpoint) {
-        let runTask = state.withLock { $0.shared[endpoint]?.runTask }
+    package func cancelSharedRunTaskForTesting(_ endpoint: Endpoint, purpose: ConnectionPurpose = .main) {
+        let runTask = state.withLock { $0.shared[SharedKey(endpoint: endpoint, purpose: purpose)]?.runTask }
         runTask?.cancel()
     }
 
@@ -369,12 +537,8 @@ package final class ConnectionProvider: Sendable {
     }
 
     private func makeClient(for endpoint: Endpoint) throws(KurrentError) -> Client {
-        // The deprecated certificate(path:) could not read its CA. Refuse rather than connect
-        // with a trust set the caller did not ask for.
-        guard !settings.hasUnreadableCertificate else {
-            throw .initializationError(reason: ClientSettings.unreadableCertificateRefusalReason)
-        }
         let settings = settings
+        let eventLoopGroup = eventLoopGroup
         let transport: AnyClientTransport = try withRethrowingError(usage: "ConnectionProvider.makeClient(for:)") {
             if let provider = settings.transportProvider {
                 return try AnyClientTransport(provider.makeTransport(for: endpoint))
@@ -391,7 +555,8 @@ package final class ConnectionProvider: Sendable {
                         timeout: settings.keepAlive.timeout,
                         allowWithoutCalls: false
                     )
-                }
+                },
+                eventLoopGroup: eventLoopGroup
             )
             return AnyClientTransport(posix)
         }
@@ -399,17 +564,27 @@ package final class ConnectionProvider: Sendable {
     }
 }
 
+/// Which of an endpoint's two shared connections a call uses (see ``ConnectionProvider``).
+package enum ConnectionPurpose: Hashable, Sendable {
+    /// Unary calls, `.buffered` reads, gossip, server features: everything that ends inside `perform`.
+    case main
+    /// Lazy reads, which hold their stream for as long as the caller iterates.
+    case read
+}
+
 /// 一次共用連線的使用權。在 `perform(node:)` 內以 `defer { lease.release() }` 釋放。
 package final class SharedLease: Sendable {
     package let client: ConnectionProvider.Client
     private let provider: ConnectionProvider
     private let endpoint: Endpoint
+    private let purpose: ConnectionPurpose
     private let generation: UInt64
     private let released = Mutex(false)
 
-    fileprivate init(provider: ConnectionProvider, endpoint: Endpoint, generation: UInt64, client: ConnectionProvider.Client) {
+    fileprivate init(provider: ConnectionProvider, endpoint: Endpoint, purpose: ConnectionPurpose, generation: UInt64, client: ConnectionProvider.Client) {
         self.provider = provider
         self.endpoint = endpoint
+        self.purpose = purpose
         self.generation = generation
         self.client = client
     }
@@ -421,7 +596,7 @@ package final class SharedLease: Sendable {
             return !released
         }
         guard first else { return }
-        provider.release(endpoint, generation: generation)
+        provider.release(endpoint, purpose: purpose, generation: generation)
     }
 
     deinit {

@@ -37,7 +37,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
     @Test("A slow consumer keeps the client-side buffer bounded")
     func slowConsumerIsBounded() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "Backpressure-\(UUID().uuidString)")
         _ = try await stream.append(events: events(300)) { $0.expectedRevision = .any }
 
@@ -46,15 +46,15 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
 
-        #expect(subscription.messages.isProducerWaiting)
-        #expect(subscription.messages.deliveredCount < 100)
+        #expect(subscription.handoff.isProducerWaiting)
+        #expect(subscription.handoff.deliveredCount < 100)
         subscription.cancel()
     }
 
     @Test("cancel() while the consumer waits ends the loop and closes the dedicated connection")
     func cancelWhileWaiting() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "Backpressure-\(UUID().uuidString)")
         _ = try await stream.append(events: events(1)) { $0.expectedRevision = .any }
 
@@ -64,7 +64,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
             for try await _ in subscription.events { count += 1 }
             return count
         }
-        #expect(try await eventually { subscription.messages.deliveredCount >= 2 })   // confirmation + event consumed
+        #expect(try await eventually { subscription.handoff.deliveredCount >= 2 })   // confirmation + event consumed
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
         subscription.cancel()
@@ -75,7 +75,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
     @Test("$all subscription keeps the buffer bounded too")
     func allStreamsSlowConsumer() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let filler = client.streams(specified: "Backpressure-filler-\(UUID().uuidString)")
         _ = try await filler.append(events: events(300)) { $0.expectedRevision = .any }
 
@@ -83,8 +83,8 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         var iterator = subscription.events.makeAsyncIterator()
         _ = try await iterator.next()
         try await Task.sleep(for: .milliseconds(500))
-        #expect(subscription.messages.isProducerWaiting)
-        #expect(subscription.messages.deliveredCount < 100)
+        #expect(subscription.handoff.isProducerWaiting)
+        #expect(subscription.handoff.deliveredCount < 100)
         subscription.cancel()
     }
 
@@ -98,10 +98,10 @@ struct SubscriptionBackpressureLiveTests: Sendable {
         // Consume nothing: the producer suspends in send holding the first message.
         // The test proves the release indirectly, through the error type: `connectionClosed`
         // comes from the close hook, whereas the transport's own failure would be `unavailable`.
-        #expect(try await eventually { subscription.messages.isProducerWaiting })
+        #expect(try await eventually { subscription.handoff.isProducerWaiting })
         #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
 
-        try client.shutdown()
+        client.shutdown()
         #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
 
         var thrown: (any Error)?
@@ -116,7 +116,7 @@ struct SubscriptionBackpressureLiveTests: Sendable {
     @Test("Dropping a subscription without cancel() closes its dedicated connection")
     func droppedSubscriptionClosesConnection() async throws {
         let client = KurrentDBClient(settings: settings)
-        defer { try? client.shutdown() }
+        defer { client.shutdown() }
         let stream = client.streams(specified: "Backpressure-\(UUID().uuidString)")
         _ = try await stream.append(events: events(3)) { $0.expectedRevision = .any }
 

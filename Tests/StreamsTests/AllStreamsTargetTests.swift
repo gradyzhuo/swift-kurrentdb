@@ -35,7 +35,7 @@ struct AllStreamsTargetTests: Sendable {
         _ = try await client.streams(specified: streamIdentifier.name)
             .append(events: events) { $0.expectedRevision = .any }
 
-        let responses = try await client.allStreams.read()
+        let responses = client.allStreams.read()
 
         let allEvents = try await responses.reduce(into: [RecordedEvent]()) {
             guard try !($1.event.record).eventType.hasPrefix("$") else {
@@ -69,7 +69,7 @@ struct AllStreamsTargetTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         let appendedPosition = try #require(appendResponse.position)
-        let responses = try await client.allStreams.read {
+        let responses = client.allStreams.read {
             $0.limit = 1
             $0.direction = .forward
             $0.position = .specified(commit: appendedPosition.commit, prepare: appendedPosition.prepare)

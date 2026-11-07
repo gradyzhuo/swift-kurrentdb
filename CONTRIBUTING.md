@@ -196,7 +196,6 @@ swift-kurrentdb/
 │   │   ├── Projections/
 │   │   ├── PersistentSubscriptions/
 │   │   └── KurrentDB.docc/      # DocC articles (every Swift example is compiled by DocSnippetsTests)
-│   ├── KurrentDB_V1/            # Deprecated 1.x flat-method API
 │   ├── KurrentDBPool/           # withBorrowedClient(_:) for independent instances
 │   ├── GRPCEncapsulates/        # gRPC call-shape protocols (UnaryUnary, UnaryStream, …)
 │   └── _GRPCProtobufGenerated/  # Generated from proto/ — never hand-edit
@@ -358,7 +357,7 @@ We follow the [Swift API Design Guidelines](https://swift.org/documentation/api-
 4. **Async/Await**
    ```swift
    // ✅ Good: Use async/await
-   func read(configure: @Sendable (inout Read.Options) -> Void) async throws(KurrentError) -> AsyncThrowingStream<Read.Response, Error>
+   func read(configure: @Sendable (inout Read.Options) -> Void) -> ReadCall  // an AsyncSequence: iterate with for try await
    
    // ❌ Bad: Completion handlers (unless necessary for compatibility)
    func read(completion: @escaping (Result<[Read.Response], Error>) -> Void)

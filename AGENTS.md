@@ -4,10 +4,9 @@ Short, verifiable facts about this repository for coding agents and new contribu
 
 ## Project Structure & Module Organization
 - `Sources/KurrentDB` — the public client (`KurrentDBClient`, target-based `Streams`, `Projections`, `PersistentSubscriptions`, `Users`, `Monitoring`, `Operations`, `Gossip`) plus the DocC catalog `KurrentDB.docc`.
-- `Sources/KurrentDB_V1` — the deprecated 1.x flat-method API, kept for gradual migration.
 - `Sources/KurrentDBPool` — lends clients for independent KurrentDB instances; entry point `withBorrowedClient(_:)`.
 - `Sources/GRPCEncapsulates` — gRPC call-shape protocols (`UnaryUnary`, `UnaryStream`, `StreamUnary`, `StreamStream`) and request/response composition.
-- `Sources/_GRPCProtobufGenerated` — code generated from `proto/`; never hand-edit.
+- `Sources/_GRPCProtobufGenerated` — code generated from `proto/`; never hand-edit. Reviewers — Codex review included — skip this directory; the `generated-code` CI job (regenerate-and-diff) is its review.
 - `Tests/<Area>Tests` — one Swift Testing target per area (`StreamsTests`, `ProjectionsTests`, `PersistentSubscriptionsTests`, `UsersTests`, `OperationsTests`, `MonitoringTests`, `GossipTests`, `KurrentCoreTests`, `MockClientTests`, `KurrentDBPoolTests`, `X509Tests`, `DocSnippetsTests`). Live suites keep their CA fixture under `Resources/`.
 - `Benchmarks/OfflineBenchmarks` — benchmark suite whose results `.github/workflows/benchmarks.yml` uploads to Bencher; `scripts/` — a dependency-free SwiftPM package of helper executables (`swift run --package-path scripts <name>`: doc snippets, doc versions, site assembly, release readiness, benchmark conversion), tested with `swift test --package-path scripts`. The repository has no Python.
 - `server/` — Docker Compose files for the local 3-node TLS cluster and the X.509 setup.
@@ -21,7 +20,7 @@ Short, verifiable facts about this repository for coding agents and new contribu
 - `swift test --filter StreamsTests` / `swift test --filter "LazyReadLiveTests|ResponseHandoffTests"` — a suite or a regex of suites. `MockClientTests` and `KurrentCoreTests` run offline (no cluster).
 - `OperationsTests` runs as its own CI step after the main suites because it resigns the leader and restarts the persistent-subscriptions subsystem.
 - `scripts/check-doc-snippets.sh` — compiles every ```` ```swift ```` block in `README.md`, the DocC articles and the `///` comments of `Sources/KurrentDB` and `Sources/KurrentDBPool` (via the git-ignored `Tests/DocSnippetsTests/DocSnippets.generated.swift`). Run it after touching any documentation example.
-- Regenerating gRPC code: see `proto/README.md` (`swift package --allow-writing-to-package-directory generate-grpc-code-from-protos … --output-path Sources/_GRPCProtobufGenerated`). Commit the proto change and the regenerated sources together.
+- Regenerating gRPC code: `scripts/regenerate-protos.sh` (pinned generators, see `proto/README.md`). Commit the proto change and the regenerated sources together; CI regenerates and diffs.
 - Swift 6.0 compatibility check for a clean checkout: `docker run --rm --platform linux/arm64 -v "$PWD":/w -w /w swift:6.0-jammy swift build --build-tests` (use a fresh `git worktree`; a local `Package.resolved` would pin newer dependencies).
 
 ## Coding Style & Naming Conventions
@@ -37,7 +36,7 @@ Short, verifiable facts about this repository for coding agents and new contribu
 - Swift Testing only (no XCTest): `@Suite("Name", .serialized)` structs, `@Test("behaviour in plain words") func name()`. Describe the behaviour in the test title; function names are `lowerCamelCase` (`earlyBreakReleasesLease`).
 - Live suites build their `ClientSettings` as `ClientSettings.localhost(ports: 2111, 2112, 2113).secure(true).tlsVerifyCert(false).authenticated(.credentials(username: "admin", password: "changeit")).certificate(source: .crtInBundle("ca", inBundle: .module)!)`; the CA fixture is copied by the `.copy` resource directives in `Package.swift`.
 - Prefer deterministic waits (a signal yielded by the code under test, or a bounded `eventually { … }` poll) over fixed sleeps; a fixed sleep is acceptable only for an upper-bound assertion that cannot false-fail.
-- Tests that need extra infrastructure gate themselves with `.enabled(if:)` on an environment variable: `X509Tests` (`KURRENTDB_X509_CERTS_DIR`, a node from `server/x509/start.sh`), `KurrentDBPoolLiveTests` (`KURRENTDB_POOL_URLS`), `AppendRecordsTests` (`KURRENTDB_SUPPORTS_APPEND_RECORDS=true`), multi-stream append tests (`KURRENTDB_SUPPORTS_MULTI_STREAMS=true`). Follow the same pattern for any new server-version-dependent feature.
+- Tests that need extra infrastructure gate themselves with `.enabled(if:)` on an environment variable: `X509Tests` (`KURRENTDB_X509_CERTS_DIR`, a node from `server/x509/start.sh`), `KurrentDBPoolLiveTests` (`KURRENTDB_POOL_URLS`), `AppendRecordsTests` (`KURRENTDB_SUPPORTS_APPEND_RECORDS=true`), multi-stream append tests (`KURRENTDB_SUPPORTS_MULTI_STREAMS=true`), the `fellBehind` subscription test (`KURRENTDB_SUPPORTS_FELL_BEHIND=true`, KurrentDB 26.2.2+). Follow the same pattern for any new server-version-dependent feature.
 - Add a regression test next to every bug fix, and verify it fails before the fix.
 
 ## Commit & Pull Request Guidelines

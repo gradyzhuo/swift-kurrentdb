@@ -104,36 +104,53 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         }
     }
 
-    package func next() async throws -> Element? {
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Element?, any Error>) in
-                let action: NextAction = state.withLock { state in
-                    if let pending = state.producer {
-                        state.producer = nil
-                        state.deliveredCount += 1
-                        return .deliver(pending.element, wake: pending.continuation)
-                    }
-                    switch state.terminal {
-                    case let .finished(error?)?:
-                        state.terminal = .finished(nil)   // an AsyncSequence ends after throwing once
-                        return .fail(error)
-                    case .finished(nil)?, .cancelled?:
-                        return .end
-                    case nil:
-                        precondition(state.consumer == nil, "ResponseHandoff supports a single consumer")
-                        state.consumer = continuation
-                        return .suspend
-                    }
-                }
-                switch action {
-                case let .deliver(element, wake): wake.resume(); continuation.resume(returning: element)
-                case let .fail(error): continuation.resume(throwing: error)
-                case .end: continuation.resume(returning: nil)
-                case .suspend: break
-                }
-            }
-        } onCancel: {
+    package func next() async throws -> Element? { try await next(isolation: nil) }
+
+    /// ``next()`` run on the caller's actor, so a consumer that keeps its iterator in actor state
+    /// can advance it from that actor. Before Swift 6.4 the labelled stdlib forms are used because
+    /// only they take `isolation:`; forwarding the other way, from this to `next()`, does not compile.
+    /// Swift 6.4 deprecates them for `nonisolated(nonsending)` overloads, which run on the caller's
+    /// actor without the label (before 6.4 the unlabelled forms hop off it and back; seen on 6.0 and 6.2).
+    package func next(isolation actor: isolated (any Actor)? = #isolation) async throws -> Element? {
+        #if compiler(>=6.4)
+        try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation { take(into: $0) }
+        }, onCancel: {
             cancel()
+        })
+        #else
+        try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation(isolation: actor) { take(into: $0) }
+        }, onCancel: {
+            cancel()
+        }, isolation: actor)
+        #endif
+    }
+
+    private func take(into continuation: CheckedContinuation<Element?, any Error>) {
+        let action: NextAction = state.withLock { state in
+            if let pending = state.producer {
+                state.producer = nil
+                state.deliveredCount += 1
+                return .deliver(pending.element, wake: pending.continuation)
+            }
+            switch state.terminal {
+            case let .finished(error?)?:
+                state.terminal = .finished(nil)   // an AsyncSequence ends after throwing once
+                return .fail(error)
+            case .finished(nil)?, .cancelled?:
+                return .end
+            case nil:
+                precondition(state.consumer == nil, "ResponseHandoff supports a single consumer")
+                state.consumer = continuation
+                return .suspend
+            }
+        }
+        switch action {
+        case let .deliver(element, wake): wake.resume(); continuation.resume(returning: element)
+        case let .fail(error): continuation.resume(throwing: error)
+        case .end: continuation.resume(returning: nil)
+        case .suspend: break
         }
     }
 
@@ -187,26 +204,29 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
         callback(nil)
     }
 
-    /// Wraps the hand-off as a pull-based stream. Call at most once per hand-off.
+    /// Wraps the hand-off as a pull-based stream.
     ///
-    /// The stream's closure holds a sentinel that cancels the hand-off when the stream is
-    /// released. An error thrown by `next()` or by `transform` also cancels it: an unfolding
-    /// stream keeps its closure after throwing, so without this the hand-off would stay alive.
-    /// `mapError` sees the error that ends the stream, whether the hand-off's or one `transform`
-    /// threw, and returns the one the consumer receives.
+    /// The stream's closure holds a ``Hold`` that cancels the hand-off when it is released.
+    /// Streams made from the same hand-off share one (``hold()``), so releasing one of them
+    /// leaves the hand-off open for the others and only releasing the last one cancels it.
+    /// An error thrown by `next()` or by `transform` also cancels it: an unfolding stream keeps
+    /// its closure after throwing, so without this the hand-off would stay alive. `mapError`
+    /// sees the error that ends the stream, whether the hand-off's or one `transform` threw,
+    /// and returns the one the consumer receives.
     package func makeStream<T: Sendable>(
+        hold: Hold? = nil,
         mapError: @escaping @Sendable (any Error) -> any Error = { $0 },
         _ transform: @escaping @Sendable (Element) throws -> T?
     ) -> AsyncThrowingStream<T, any Error> {
-        let sentinel = CancelOnDeinit(self)
+        let hold = hold ?? Hold(self)
         return AsyncThrowingStream(unfolding: {
             do {
-                while let element = try await sentinel.handoff.next() {
+                while let element = try await hold.handoff.next() {
                     if let value = try transform(element) { return value }
                 }
                 return nil
             } catch {
-                sentinel.handoff.cancel()
+                hold.handoff.cancel()
                 throw mapError(error)
             }
         })
@@ -215,11 +235,15 @@ package final class ResponseHandoff<Element: Sendable>: Sendable {
     package func makeStream() -> AsyncThrowingStream<Element, any Error> {
         makeStream { $0 }
     }
-}
 
-/// Cancels its hand-off when the stream that captured it is released.
-private final class CancelOnDeinit<Element: Sendable>: Sendable {
-    let handoff: ResponseHandoff<Element>
-    init(_ handoff: ResponseHandoff<Element>) { self.handoff = handoff }
-    deinit { handoff.cancel() }
+    /// A hold on the hand-off for the streams made with it (``makeStream(hold:mapError:_:)``):
+    /// the hand-off is cancelled when the last stream holding it is released.
+    package func hold() -> Hold { Hold(self) }
+
+    /// Cancels its hand-off when released; see ``hold()``.
+    package final class Hold: Sendable {
+        fileprivate let handoff: ResponseHandoff<Element>
+        fileprivate init(_ handoff: ResponseHandoff<Element>) { self.handoff = handoff }
+        deinit { handoff.cancel() }
+    }
 }

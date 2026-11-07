@@ -8,6 +8,8 @@
 import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import NIOCore
+import NIOPosix
 
 /// Selects and caches the best available cluster node for client connections.
 ///
@@ -21,14 +23,15 @@ public actor NodeSelector: Sendable {
     var selectedNodeExpiry: Date?
     var discover: NodeDiscover
 
-    /// 這個 client 所有 gRPC 連線的來源。`nonisolated let`:同步的
-    /// `KurrentDBClient.shutdown()` 需要在不進入 actor 的情況下關閉它。
-    nonisolated let connections: ConnectionProvider
+    /// The source of every gRPC connection of this client. `nonisolated let`: the synchronous
+    /// `KurrentDBClient.shutdown()` closes it without entering the actor. `package` so that
+    /// `KurrentDBPool` closes a borrowed client's connections when it is given back.
+    package nonisolated let connections: ConnectionProvider
 
-    init(settings: ClientSettings) {
+    init(settings: ClientSettings, eventLoopGroup: any EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
         id = nil
         self.settings = settings
-        connections = ConnectionProvider(settings: settings)
+        connections = ConnectionProvider(settings: settings, eventLoopGroup: eventLoopGroup)
         discover = .init(settings: settings, connections: connections, previousCandidates: [])
     }
 
@@ -44,23 +47,26 @@ public actor NodeSelector: Sendable {
         selectedNodeExpiry = Date.now.addingTimeInterval(settings.nodeCacheTTL.timeInterval)
     }
 
+    /// Test hook: the cached node, or `nil` once it was invalidated (or never discovered).
+    package var cachedNodeForTesting: Node? {
+        selectedNode
+    }
+
     /// Returns the best available cluster node, using a cached result when still valid.
     ///
     /// Runs gossip-based discovery when the cache is empty or expired. Retries up to
     /// `ClientSettings.maxDiscoveryAttempts` times with `discoveryInterval` between attempts.
     ///
     /// - Returns: A ``Node`` ready to accept gRPC connections.
-    /// - Throws: `KurrentError.serverError` if no reachable node is found within the attempt limit.
+    /// - Throws: `KurrentError.serverError` if no reachable node is found within the attempt limit;
+    ///   `KurrentError.connectionClosed` once the client has shut down, also when that happens
+    ///   during discovery.
     public func select() async throws(KurrentError) -> Node {
         // 不論 node 快取是否過期,shutdown 之後一律是 connectionClosed。否則快取過期時
         // 會進入 discovery,把探測的 connectionClosed 當成一般失敗重試,最後回報成
         // 「找不到 node」。
         guard !connections.isShutdown else {
             throw .connectionClosed
-        }
-        // Discovery swallows every error and reports "node not found", so refuse up front.
-        guard !settings.hasUnreadableCertificate else {
-            throw .initializationError(reason: ClientSettings.unreadableCertificateRefusalReason)
         }
         if let node = selectedNode, let expiry = selectedNodeExpiry, Date.now < expiry {
             return node
@@ -99,13 +105,20 @@ public actor NodeSelector: Sendable {
                 let serverInfo = try await serviceFeaturesClient.getSupportedMethods()
                 return Node(endpoint: endpoint, settings: settings, serverInfo: serverInfo, connections: connections)
             } catch {
+                // A shutdown during discovery makes every later probe fail with connectionClosed
+                // (acquire refuses); retrying them would end as "Connection node not found." (S14).
+                if connections.isShutdown {
+                    throw KurrentError.connectionClosed
+                }
                 attempts += 1
 
                 guard attempts < settings.maxDiscoveryAttempts else {
                     return nil
                 }
 
-                try await Task.sleep(for: settings.discoveryInterval)
+                // A shutdown during the back-off ends it at once with connectionClosed (S14); a plain
+                // Task.sleep would keep the call waiting the whole discoveryInterval.
+                try await connections.sleepUnlessShutDown(for: settings.discoveryInterval)
                 logger.debug("Starting new connection attempt")
                 continue
             }

@@ -12,7 +12,11 @@
 // This protocol is UNSTABLE in the sense of being subject to change.
 // ******************************************************************************************
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -149,11 +153,11 @@ package struct Kurrentdb_Protocol_V2_Streams_AppendRequest: Sendable {
   ///
   /// If omitted, defaults to EXPECTED_REVISION_CONSTANTS_ANY (-2).
   package var expectedRevision: Int64 {
-    get {return _expectedRevision ?? 0}
+    get {_expectedRevision ?? 0}
     set {_expectedRevision = newValue}
   }
   /// Returns true if `expectedRevision` has been explicitly set.
-  package var hasExpectedRevision: Bool {return self._expectedRevision != nil}
+  package var hasExpectedRevision: Bool {self._expectedRevision != nil}
   /// Clears the value of `expectedRevision`. Subsequent reads from it will return its default value.
   package mutating func clearExpectedRevision() {self._expectedRevision = nil}
 
@@ -179,11 +183,11 @@ package struct Kurrentdb_Protocol_V2_Streams_AppendResponse: Sendable {
 
   /// The position of the last appended record in the global log.
   package var position: Int64 {
-    get {return _position ?? 0}
+    get {_position ?? 0}
     set {_position = newValue}
   }
   /// Returns true if `position` has been explicitly set.
-  package var hasPosition: Bool {return self._position != nil}
+  package var hasPosition: Bool {self._position != nil}
   /// Clears the value of `position`. Subsequent reads from it will return its default value.
   package mutating func clearPosition() {self._position = nil}
 
@@ -234,11 +238,11 @@ package struct Kurrentdb_Protocol_V2_Streams_SchemaInfo: Sendable {
   /// conforms to. This should match a registered schema version in the system.
   /// Not necessary when not enforcing schema validation.
   package var id: String {
-    get {return _id ?? String()}
+    get {_id ?? String()}
     set {_id = newValue}
   }
   /// Returns true if `id` has been explicitly set.
-  package var hasID: Bool {return self._id != nil}
+  package var hasID: Bool {self._id != nil}
   /// Clears the value of `id`. Subsequent reads from it will return its default value.
   package mutating func clearID() {self._id = nil}
 
@@ -258,11 +262,11 @@ package struct Kurrentdb_Protocol_V2_Streams_AppendRecord: Sendable {
   /// Unique identifier for this record (must be a valid UUID/GUID).
   /// If not provided, the server will generate a new one.
   package var recordID: String {
-    get {return _recordID ?? String()}
+    get {_recordID ?? String()}
     set {_recordID = newValue}
   }
   /// Returns true if `recordID` has been explicitly set.
-  package var hasRecordID: Bool {return self._recordID != nil}
+  package var hasRecordID: Bool {self._recordID != nil}
   /// Clears the value of `recordID`. Subsequent reads from it will return its default value.
   package mutating func clearRecordID() {self._recordID = nil}
 
@@ -285,11 +289,11 @@ package struct Kurrentdb_Protocol_V2_Streams_AppendRecord: Sendable {
 
   /// Schema information for this record.
   package var schema: Kurrentdb_Protocol_V2_Streams_SchemaInfo {
-    get {return _schema ?? Kurrentdb_Protocol_V2_Streams_SchemaInfo()}
+    get {_schema ?? Kurrentdb_Protocol_V2_Streams_SchemaInfo()}
     set {_schema = newValue}
   }
   /// Returns true if `schema` has been explicitly set.
-  package var hasSchema: Bool {return self._schema != nil}
+  package var hasSchema: Bool {self._schema != nil}
   /// Clears the value of `schema`. Subsequent reads from it will return its default value.
   package mutating func clearSchema() {self._schema = nil}
 

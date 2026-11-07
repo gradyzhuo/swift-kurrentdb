@@ -17,6 +17,7 @@ A modern, type-safe Swift client for KurrentDB (formerly EventStoreDB), built on
 - <doc:Server-statistics>
 - <doc:Server-operations>
 - <doc:Client-pools>
+- <doc:Migrating-to-3.0>
 - <doc:Migration-guide>
 
 ## Architecture
@@ -40,12 +41,12 @@ let client = KurrentDBClient(settings: settings)
 try await client.streams(specified: "orders").append(events: [eventData])
 
 // Read it back
-for try await response in try await client.streams(specified: "orders").read() {
+for try await response in client.streams(specified: "orders").read() {
     print(try response.event.record)
 }
 ```
 
-### Persistent subscriptions
+### Persistent subscription groups
 
 ```swift
 let settings = ClientSettings.localhost()
@@ -68,6 +69,14 @@ for try await result in subscription.events {
 
 ## What's new
 
+### 3.0
+
+- **`read()` delivers lazily.** `read()` returns a ``Streams/ReadCall``, an `AsyncSequence` you iterate with `for try await`: events arrive as you iterate, with backpressure, and the RPC ends when the loop does, so memory no longer grows with the result. Off an actor it costs about what `.buffered` costs per event. `.buffered` keeps the whole-result form, for snapshots and results iterated later; `.lazy` is deprecated (drop it). `defaultDeadline` bounds establishing the read, from node selection to the server's first response, as one budget that is not retried; the iteration is not bounded by it. Errors after the server accepts the read are `KurrentError`, and a cancelled read throws `CancellationError`. `KurrentDBClient(settings:eventLoopGroup:)` replaces `numberOfThreads:`, and `shutdown()` no longer throws; it ends a read in progress with `connectionClosed`. See <doc:Reading-events>.
+- **Removed: the 1.x module and the deprecated names.** `KurrentDB_V1` is gone (migrate on 2.6 first: <doc:Migration-guide>); so are these deprecated names, each replaced in 2.x: `certificate(path:)` (use `certificate(path:fallback:)`), the misspelled `cerificates` / `cerificate(source:)` / `cerificate(path:)` (`certificates` / `certificate(source:)` / `certificate(path:fallback:)`), `KurrentError.CurrentRevisionOption` (`KurrentError.CurrentRevisionState`), `EventData.init(eventType:payload: Codable)` (`payload: .json(value)`, which it forwarded to), `StreamFilter.onStreamName(prefix:)` (`onStreamName(prefixes:)`) and `SubscriptionFilter` (`StreamFilter`). One `KurrentDB_V1` call does not stop compiling: its `client.shutdown()` shut the server down, and without the import the same line closes the client instead (<doc:Migration-guide>). **Upgrade note:** events built with the removed `EventData` initialiser from a `Data` value were stored as base64 JSON strings — use `payload: .json(data)` to keep that format; `data:` stores the raw bytes.
+- **Subscription notifications.** ``Streams/Subscription/messages`` delivers the server's `caughtUp`, `fellBehind` (KurrentDB 26.2.2+) and (for a filtered `$all` subscription) `checkpoint` notifications next to the events, as a ``Streams/Subscription/Message``, so a read model can tell when it is current and a filtered subscription can store a resume position while nothing matches. `events` is unchanged. See <doc:Reading-events>.
+- **Notification payloads.** `caughtUp`, `fellBehind` and `checkpoint` carry ``Streams/Subscription/CaughtUp``, ``Streams/Subscription/FellBehind`` and ``Streams/Subscription/Checkpoint``: the server's `timestamp` and where to resume, `revision` on a stream subscription and `position` on `$all`. `checkpoint` carries a `Checkpoint`, not a bare ``StreamPosition``; read its `position`. On Swift 6.2.3 and later `Message` is `@nonexhaustive`: end every switch over it with `@unknown default`. See <doc:Reading-events>.
+- **Migrating from 2.x.** <doc:Migrating-to-3.0> lists what to check before you upgrade, every place where a 2.x program that compiles against 3.0 behaves differently, and every removed declaration with its replacement, with the 2.x and the 3.0 code wherever the code changes.
+
 ### 2.6
 
 - **Stream metadata the server applies.** `setMetadata` wrote `maxAge` and `cacheControl` as Swift `Duration` arrays, and ``StreamMetadata/Acl/userStream`` and ``StreamMetadata/Acl/systemStream`` as an `$acl` string. The server ignores the whole metadata object for either, so the `$maxCount`, `$tb` and `$acl` written with them were never enforced: the stream fell back to the server's default ACL, which under the default `$settings` lets every user read it. Durations are now whole seconds, `.userStream` writes no `$acl` (the server's `$userStreamAcl` default), and `.systemStream` writes `$admins` for every permission; a value the server cannot apply throws `encodingError`. `getMetadata` reads both formats, and a role written as a single string. **Upgrade note:** metadata that 2.6.1 or earlier wrote with `maxAge`, `cacheControl`, `.userStream` or `.systemStream` stays ignored by the server until it is written again. Once written with 2.6.2, `.userStream` reads back with no ACL and `.systemStream` as `.stream(_:)`; the old strings still read as `.userStream` and `.systemStream`. See <doc:Appending-events> (2.6.2).
@@ -76,16 +85,16 @@ for try await result in subscription.events {
 - **A subscription to a tombstoned stream ends with `resourceDeleted`.** When the stream a catch-up subscription follows is tombstoned, `events` now throws `KurrentError.resourceDeleted`, the error a read of a tombstoned stream throws, after delivering the events written before it; subscribing to an already tombstoned stream throws it from `subscribe`. **Upgrade note:** the `$streamDeleted` marker is no longer delivered as an event, and the raw `RPCError` that followed it is gone. Subscriptions to `$all` still deliver `$streamDeleted` as a system event. See <doc:Reading-events> (2.6.1).
 
 - **Typed errors for deleted streams and revision conflicts.** A `read()` the server rejects throws the same `KurrentError` as `read().lazy` already did, instead of a raw `RPCError`: `resourceDeleted` for a tombstoned stream, `accessDenied` without permission. `delete` and `tombstone` report a revision conflict as `KurrentError.wrongExpectedVersion(expected:current:)`, the same case `append` throws, with `current` set to `.noStream` when the stream does not exist. **Upgrade note:** code that matched `KurrentError.grpcError` for a delete or tombstone revision conflict now receives `wrongExpectedVersion`.
-- **`CurrentRevisionState`.** `KurrentError.CurrentRevisionOption` is renamed `KurrentError.CurrentRevisionState`, because it is the server's observed state, not an option. The old name remains as a deprecated typealias.
+- **`CurrentRevisionState`.** `KurrentError.CurrentRevisionOption` is renamed `KurrentError.CurrentRevisionState`, because it is the server's observed state, not an option. The old name remained as a deprecated typealias (removed in 3.0).
 - **KurrentDB 26.2.** CI now also tests against KurrentDB 26.2, on a single node: 26.2 needs a Kurrent license to run a multi-node cluster. 26.2 rejects creating transient projections as deprecated, so `create(query:)` on a `.transient(name:)` target throws there.
 - **Licensing.** The license file is now `LICENSE`, and a new `NOTICE` records the source and license of every bundled `.proto` file. The unused schema registry protos, the only ones under the Kurrent License v1, are removed. They were package-level only.
 
 ### 2.5
 
-- **Lazy reads and backpressured subscriptions.** `read().lazy` streams events as you iterate and ends the RPC when the loop does, so memory no longer grows with the result; `read().buffered` (and plain `read()`) keep today's behaviour. Subscriptions are now backpressured with bounded memory. See <doc:Reading-events>.
+- **Lazy reads and backpressured subscriptions.** `read().lazy` streams events as you iterate and ends the RPC when the loop does, so memory no longer grows with the result; `read().buffered` (and plain `read()`) keep today's behaviour (3.0: `read()` itself delivers lazily). Subscriptions are now backpressured with bounded memory. See <doc:Reading-events>.
 - **Strict connection strings.** Connection strings are parsed according to RFC 3986: unknown, duplicate or invalid parameters throw, credentials and values are percent-decoded, and characters in a password can no longer change hosts or TLS settings. New `policy:` entry point (`.rfc3986`). **Upgrade note:** strings that used to be accepted may now throw — see <doc:Getting-started>.
-- **`defaultDeadline` takes effect.** It now bounds calls that complete before they return (appends, deletes, management calls, `read()`); subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it.
-- **Unreadable CA certificates are reported.** An unreadable `tlsCaFile` makes `parse` throw; `certificate(path:fallback:)` replaces `certificate(path:)`, which is deprecated and now refuses to connect instead of trusting the system roots.
+- **`defaultDeadline` takes effect.** It now bounds calls that complete before they return (appends, deletes, management calls, `read()`); subscriptions, persistent-subscription reads, server statistics and `read().lazy` are not bounded by it (3.0: for `read()` it bounds establishing the call; `.buffered` keeps this bound, per attempt).
+- **Unreadable CA certificates are reported.** An unreadable `tlsCaFile` makes `parse` throw; `certificate(path:fallback:)` replaces `certificate(path:)`, which is deprecated (removed in 3.0) and refuses to connect instead of trusting the system roots.
 - **One `gossipTimeout` default.** Connection strings now default to 3 seconds, like settings built in code (they used to default to 5).
 - **Untrusted input no longer crashes or leaks.** Negative revisions or positions from the server, credentials that cannot be encoded, and connection strings in error messages are handled safely.
 
@@ -96,7 +105,7 @@ for try await result in subscription.events {
 - **Persistent subscriptions close when dropped.** A subscription's connection now closes once nothing references the subscription or its `events` stream (2.4.1).
 - **Discovery retries wait.** Settings built in code now wait 100 ms between node-discovery attempts, like connection strings; before, they waited 100 µs, so retries were effectively immediate (2.4.2).
 - **X.509 client certificates are sent.** `userCertFile` / `userKeyFile` now present the certificate in the TLS handshake (2.4.2).
-- **`StreamFilter.onStreamName(prefixes:)`** accepts a variadic list, like `onEventType(prefixes:)`; `onStreamName(prefix:)` is deprecated (2.4.2).
+- **`StreamFilter.onStreamName(prefixes:)`** accepts a variadic list, like `onEventType(prefixes:)`; `onStreamName(prefix:)` is deprecated (2.4.2; removed in 3.0).
 
 ### 2.3
 
@@ -112,7 +121,7 @@ for try await result in subscription.events {
 - **Multi-stream writes.** `appendRecords(events:checks:)` appends atomically with cross-stream consistency checks (Dynamic Consistency Boundary, KurrentDB 26.1+); `batchAppend(events:)` pipelines many non-atomic appends. See <doc:Appending-events>.
 - **Server-side `$all` filtering.** Set `filter` when reading `$all` to receive only matching stream names or event types. See <doc:Reading-events>.
 - **Per-call credentials and bearer tokens.** Call `authenticated(_:)` on a `Streams`, `Projections` or other value to override credentials for calls made through it, including ``Authentication/bearer(token:)``.
-- **`StreamFilter`.** Renamed from `SubscriptionFilter` (now deprecated); shared by subscriptions and filtered reads.
+- **`StreamFilter`.** Renamed from `SubscriptionFilter` (deprecated; removed in 3.0); shared by subscriptions and filtered reads.
 
 ```swift
 try await client.multiStreams.appendRecords(
@@ -122,7 +131,7 @@ try await client.multiStreams.appendRecords(
     checks: [.streamState("customer-42", .streamExists)]
 )
 
-let filtered = try await client.allStreams.read {
+let filtered = client.allStreams.read {
     $0.filter = .onEventType(prefixes: "OrderPlaced")
 }
 

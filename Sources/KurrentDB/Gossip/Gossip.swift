@@ -18,16 +18,14 @@ public final class Gossip: Sendable {
     internal let endpoint: Endpoint
     internal let settings: ClientSettings
     internal let callOptions: CallOptions
-    internal let eventLoopGroup: EventLoopGroup
     /// gossip 讀取是單一回應的 RPC,走 client 的共用連線。
     internal let connections: ConnectionProvider
 
-    init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults, eventLoopGroup: EventLoopGroup = .singletonMultiThreadedEventLoopGroup) {
+    init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults) {
         self.endpoint = endpoint
         self.settings = settings
         self.connections = connections
         self.callOptions = callOptions
-        self.eventLoopGroup = eventLoopGroup
     }
 }
 
@@ -37,6 +35,7 @@ extension Gossip {
     /// Members whose state appears in `notAllowedStates` are excluded from the result.
     /// The returned array is sorted by node preference priority as defined in `ClientSettings`.
     ///
+    /// - Parameter timeout: How long to wait for the gossip reply.
     /// - Parameter notAllowedStates: Node states excluded from the result.
     /// - Returns: An array of ``MemberInfo`` sorted by preference priority, excluding any disallowed states.
     /// - Throws: `KurrentError` if the gRPC call fails or the response cannot be decoded.

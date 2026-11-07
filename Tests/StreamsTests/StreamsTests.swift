@@ -31,8 +31,8 @@ struct StreamTests: Sendable {
         let client = KurrentDBClient(settings: settings)
         let streamIdentifier = UUID().uuidString
         await #expect(throws: KurrentError.resourceNotFound(reason: "The name '\(streamIdentifier)' of streams not found.")) {
-            let responses = try await client.streams(specified: streamIdentifier).read()
-            var responsesIterator = responses.makeAsyncIterator()
+            let responses = client.streams(specified: streamIdentifier).read()
+            let responsesIterator = responses.makeAsyncIterator()
             _ = try await responsesIterator.next()
         }
     }
@@ -51,7 +51,7 @@ struct StreamTests: Sendable {
             .append(events: events) { $0.expectedRevision = .any }
 
         let appendedRevision = try #require(appendResponse.currentRevision)
-        let readResponses = try await client.streams(specified: streamIdentifier.name)
+        let readResponses = client.streams(specified: streamIdentifier.name)
             .read { $0.direction = .forward; $0.revision = .specified(appendedRevision) }
 
         let firstResponse = try await readResponses.first { _ in true }
@@ -89,7 +89,7 @@ struct StreamTests: Sendable {
                     })
                     let appendedRevision = result.currentRevision
 
-                    let readResponses = try await client.streams(specified: event.streamIdentifier.name)
+                    let readResponses = client.streams(specified: event.streamIdentifier.name)
                         .read { $0.direction = .forward; $0.revision = .specified(appendedRevision) }
 
                     let firstResponse = try await readResponses.first { _ in true }
@@ -283,13 +283,16 @@ struct StreamTests: Sendable {
             .append(events: [eventForTesting]) { $0.expectedRevision = .any }
 
         Task {
-            try await Task.sleep(for: .microseconds(500))
+            try? await Task.sleep(for: .microseconds(500))
             subscription.cancel()
         }
 
+        var receivedEvent = false
         for try await _ in subscription.events {
+            receivedEvent = true
             break
         }
+        #expect(!receivedEvent)
     }
 
     @Test("It should return only matching events when reading $all with an event type filter.")
@@ -305,7 +308,7 @@ struct StreamTests: Sendable {
         _ = try await client.streams(specified: streamIdentifier.name)
             .append(events: events) { $0.expectedRevision = .any }
 
-        let responses = try await client.allStreams.read {
+        let responses = client.allStreams.read {
             $0.filter = .onEventType(prefixes: unique)
             $0.position = .start
             $0.direction = .forward
@@ -340,7 +343,7 @@ struct StreamTests: Sendable {
         _ = try await client.streams(specified: otherName)
             .append(events: [otherEvent]) { $0.expectedRevision = .any }
 
-        let responses = try await client.allStreams.read {
+        let responses = client.allStreams.read {
             $0.filter = .onStreamName(prefixes: prefix)
             $0.position = .start
             $0.direction = .forward
@@ -375,7 +378,7 @@ struct StreamTests: Sendable {
 
         // A low checkpoint multiplier forces the server to interleave checkpoint frames while
         // scanning the sparse filter across all of $all — these must be skipped, not thrown.
-        let responses = try await client.allStreams.read {
+        let responses = client.allStreams.read {
             $0.filter = .onEventType(prefixes: unique).checkpointIntervalMultiplier(1)
             $0.position = .start
             $0.direction = .forward
@@ -431,7 +434,7 @@ struct StreamTests: Sendable {
         #expect(String(decoding: event.record.data, as: UTF8.self) == #"{"$acl":{"$d":["$admins"],"$mr":["$admins"],"$mw":["$admins"],"$r":["$admins"],"$w":["$admins"]},"$cacheControl":3,"$maxAge":3600,"$maxCount":1}"#)
 
         var indices: [Int] = []
-        for try await response in try await orders.read() {
+        for try await response in orders.read() {
             if case let .event(event) = response {
                 try indices.append(#require(try JSONDecoder().decode([String: Int].self, from: event.record.data)["index"]))
             }
@@ -442,7 +445,7 @@ struct StreamTests: Sendable {
         _ = try await client.users.create(loginName: loginName, password: "Password123!", fullName: "Metadata Test", groups: [.ops])
         let user = KurrentDBClient(settings: settings.authenticated(.credentials(username: loginName, password: "Password123!")))
         await #expect(throws: KurrentError.accessDenied) {
-            for try await _ in try await user.streams(specified: stream).read() {}
+            for try await _ in user.streams(specified: stream).read() {}
         }
 
         try await client.user(loginName).disable()

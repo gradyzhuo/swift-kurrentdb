@@ -1,46 +1,67 @@
 import KurrentDB
 import Synchronization
 
-/// 唯一可能被外部套件看到的型別——withBorrowedClient(_:) 把它交給
-/// action closure。client 是 public，呼叫端才能實際用它打 RPC；
-/// giveBack() 維持 package，外部呼叫端不會、也不該自己呼叫歸還——
-/// withBorrowedClient 已經保證會呼叫。deinit 是保底，只有在沒人呼叫過
-/// giveBack() 時才動作，state（Mutex<Bool>）保證兩條路徑加起來只會真的
-/// release 一次（跟 KurrentDBClient.isShutdown 同一招，見 KurrentDBClient.swift）。
+/// A client lent by the pool for one independent KurrentDB instance; `withBorrowedClient(_:)`
+/// passes it to its closure and gives it back when the closure returns or throws.
 ///
-/// 歸還不會讓底層的 KurrentDBClient 變得不能用——這裡不呼叫
-/// KurrentDBClient.shutdown()。（shutdown() 現在會關閉所有連線並拒絕之後的
-/// RPC，所以技術上已經能拿來把「歸還」做成硬邊界；但那是行為變更，另議。）
-/// isGivenBack 是唯一的、讀得到的訊號，呼叫端如果自己把 BorrowedClient
-/// （不只是 client）留到 withBorrowedClient 範圍以外，該自己檢查這個旗標，
-/// 而不是預期底層連線會自動失敗。
+/// Giving it back closes the client's connections before the instance returns to the pool: every
+/// later call on ``client``, on a facade made from it or on a `ReadCall` or `Subscription` kept past
+/// the closure ends with `KurrentError.connectionClosed`, so nothing kept after give-back ever runs
+/// against an instance the next borrower holds. Iterate inside the closure and return values, not
+/// calls, facades or clients.
+///
+/// Give-back happens once: `withBorrowedClient(_:)` calls it, and `deinit` does it if nobody did.
+/// It closes the connections with the provider's shutdown, not `KurrentDBClient.shutdown()`, because
+/// it must wait until that shutdown has ended every call, which `KurrentDBClient.shutdown()` only
+/// initiates. If the client's own `shutdown()` races give-back, give-back still waits until
+/// that shutdown has ended every call before releasing the instance: the provider's shutdown
+/// handlers (lazy reads) and its dedicated connections' close hooks (subscriptions) included.
 public final class BorrowedClient: Sendable {
     public let client: KurrentDBClient
     private let lease: KurrentDBPool.Lease
-    private let state = Mutex(false)
+    private struct State {
+        /// Set by the first give-back, `giveBack()` or `deinit`; a later one does nothing.
+        var started = false
+        /// Set once that give-back has finished.
+        var finished = false
+    }
 
-    /// 歸還之後為 true。這只是 pool 帳本層級的訊號——底層 client 本身
-    /// 沒有被禁止繼續使用，呼叫端要自己遵守「還了就不要再用」。
-    public var isGivenBack: Bool { state.withLock { $0 } }
+    private let state = Mutex(State())
 
-    init(client: KurrentDBClient, lease: KurrentDBPool.Lease) {
+    /// `true` once give-back has finished: the client's connections are closed, every call they
+    /// carried has ended and the instance is back in the pool. `false` while `giveBack()` is still
+    /// waiting for that, so a `true` never precedes the closed connections it promises.
+    public var isGivenBack: Bool { state.withLock { $0.finished } }
+
+    package init(client: KurrentDBClient, lease: KurrentDBPool.Lease) {
         self.client = client
         self.lease = lease
     }
 
-    /// 可以重複呼叫；第二次之後什麼都不做。
+    /// Closes the client's connections, waits until every call they carried has ended (reads through
+    /// the shutdown handlers, subscriptions through the dedicated connections' close hooks), then
+    /// returns the instance to the pool that lent it; ``isGivenBack`` becomes `true` after that. A
+    /// second call does nothing (it does not wait for the first).
     package func giveBack() async {
-        let shouldRelease = state.withLock { given in
-            defer { given = true }
-            return !given
+        let shouldRelease = state.withLock { state in
+            defer { state.started = true }
+            return !state.started
         }
         guard shouldRelease else { return }
-        await KurrentDBPool.shared.release(lease)
+        await client.selector.connections.shutdownAwaitingHandlers()
+        await lease.giveBack()
+        state.withLock { $0.finished = true }
     }
 
     deinit {
-        guard state.withLock({ !$0 }) else { return }
+        guard state.withLock({ !$0.started }) else { return }
+        let connections = client.selector.connections
+        connections.shutdown()
         let lease = lease
-        Task { await KurrentDBPool.shared.release(lease) }
+        Task {
+            // A shutdown racing this one may still be running its handlers.
+            await connections.shutdownAwaitingHandlers()
+            await lease.giveBack()
+        }
     }
 }

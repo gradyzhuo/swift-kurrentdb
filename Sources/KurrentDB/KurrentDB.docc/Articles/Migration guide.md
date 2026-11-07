@@ -11,26 +11,11 @@ Version 2.x introduces a **target-based, hierarchical API** that replaces the fl
 
 This makes the API more composable, type-safe, and easier to discover — the compiler guides you to the operations that are valid for the scope you've selected.
 
-> **Important — the 1.x API moves to `KurrentDB_V1`**
->
-> In 2.x, the old flat-method API is no longer part of the `KurrentDB` module.
-> It has been moved to a separate `KurrentDB_V1` library that ships in the same package.
-> If you are not ready to migrate, update your dependency target and import:
->
-> ```swift
-> // Package.swift — add KurrentDB_V1 to your target dependencies
-> .product(name: "KurrentDB_V1", package: "swift-kurrentdb")
-> ```
->
-> ```swift
-> // Replace your existing import
-> import KurrentDB_V1   // was: import KurrentDB
-> ```
->
-> `KurrentDB_V1` gives you access to all 1.x methods (marked `@deprecated`) while you migrate to 2.x at your own pace.
-> The `KurrentDBClient` type and `ClientSettings` are shared between both modules, so no changes to client creation are needed.
+Already on 2.x? Read <doc:Migrating-to-3.0> instead.
 
-All 1.x methods in `KurrentDB_V1` carry `@deprecated` annotations with Xcode fix-its pointing to their 2.x equivalents, making incremental migration straightforward.
+> **1.x code is migrated on 2.6.** The `KurrentDB_V1` library that carried the 1.x methods ships in 2.x only. Pin `from: "2.6.0"`, follow this guide with its documentation at [/2.6/documentation/kurrentdb/migration-guide](https://gradyzhuo.github.io/swift-kurrentdb/2.6/documentation/kurrentdb/migration-guide), and move to 3.0 once nothing imports `KurrentDB_V1` — 3.0 has no `KurrentDB_V1`.
+>
+> **One call keeps compiling with a different meaning: `client.shutdown()`.** `KurrentDB_V1` added an `async` `shutdown()` that shuts the *server* down. Once no file in your module and no module you depend on imports `KurrentDB_V1`, the same line binds to `KurrentDBClient.shutdown()`, which only closes this client. It still compiles: at most with warnings about an unnecessary `await` (and, from 3.0, `try`), with no warning at all when `client.shutdown` is passed as a function value, with none about the `await` when its receiver is itself awaited, and with none about the `try` or the `await` while another call in the same expression still needs it. Do not count on a warning to find these lines. On 2.6 every such call still shows the `KurrentDB_V1` deprecation warning, so sort them before you delete the import. One use shows none: if `KurrentDBClient` conforms to a protocol of yours that requires `func shutdown() async throws`, `KurrentDB_V1`'s method meets the requirement while the module is imported, and `KurrentDBClient.shutdown()` meets it once the import is gone, both without a warning, so a call through that protocol stops shutting the server down and closes the client instead. Find those conformances yourself. Rewrite each one that means "shut the server down" as `try await client.operations(of: .system).shutdown()`. Leave each one that means "close this client" as it is until the import is gone, and do not rewrite it as `try client.shutdown()` meanwhile: while `KurrentDB_V1` is imported, that does not compile in async code, and its fix-it adds back the `await` that selects the server shutdown, so those lines keep shutting the server down until the import is gone, as they always did. If one must close only the client before then, call it from synchronous code, which never selects the server shutdown, for example through a helper such as `func close(_ client: KurrentDBClient) throws { try client.shutdown() }`. After that they bind to `KurrentDBClient.shutdown()`; remove what the compiler flags as unnecessary. On 2.6, inside a function declared `throws(KurrentError)` such a line stops compiling instead, because `KurrentDBClient.shutdown()` throws an untyped error there; write `do { try client.shutdown() } catch { … }` and decide there what a failure to close means. In 3.0 `shutdown()` does not throw, so the line compiles with the warnings above and the `do`/`catch` is no longer needed (<doc:Migrating-to-3.0>, "shutdown() no longer throws").
 
 ---
 
@@ -49,13 +34,13 @@ let client = KurrentDBClient(settings: settings)
 
 ## ClientSettings — certificate spelling fix
 
-The `cerificates` property and `cerificate(source:)` / `cerificate(path:)` builder methods were misspelled in 1.x. They are corrected in 2.x and the old names are kept as deprecated aliases.
+The `cerificates` property and `cerificate(source:)` / `cerificate(path:)` builder methods were misspelled in 1.x. They are corrected in 2.x and the old names, deprecated in 2.x, are removed in 3.0.
 
-In 2.5, `certificate(path:)` (and its alias `cerificate(path:)`) is deprecated as well: when its file cannot be read, the client refuses to connect instead of trusting the system's root certificates. Use `certificate(path:fallback:)`, which throws right away (`fallback: .none`) or, only when you ask for it, leaves the file out (`fallback: .systemTrustRoots`).
+In 2.5, `certificate(path:)` (and its alias `cerificate(path:)`) is deprecated as well (when its file cannot be read, the client refuses to connect instead of trusting the system's root certificates) and removed in 3.0. Use `certificate(path:fallback:)`, which throws right away (`fallback: .none`) or, only when you ask for it, leaves the file out (`fallback: .systemTrustRoots`).
 
 <!-- snippet:skip -->
 ```swift
-// 1.x (misspelled — still compiles but emits a deprecation warning)
+// 1.x (misspelled — deprecated in 2.x, removed in 3.0)
 settings.cerificate(source: .crtInBundle("ca")!)
 ```
 
@@ -81,6 +66,7 @@ let options = StreamsReadOptions()
 
 In 2.x, options are configured through an `inout` closure passed directly to the operation:
 
+<!-- snippet:skip -->
 ```swift
 // 2.x
 let responses = try await client.streams(specified: "orders").read {
@@ -121,6 +107,7 @@ let responses = try await client.readStream("orders") {
 }
 ```
 
+<!-- snippet:skip -->
 ```swift
 // 2.x
 let responses = try await client.streams(of: .specified("orders")).read {
@@ -140,6 +127,7 @@ let responses = try await client.readAllStreams {
 }
 ```
 
+<!-- snippet:skip -->
 ```swift
 // 2.x
 let responses = try await client.allStreams.read {
@@ -469,5 +457,6 @@ try await client.operations(of: .node).setNodePriority(priority: 3)
 | `client.enableUser(loginName:)` | `client.user(loginName).enable()` |
 | `client.startScavenge(...)` | `client.operations(of: .scavenge).startScavenge(...)` |
 | `client.mergeIndexes()` | `client.operations(of: .system).mergeIndexes()` |
+| `client.shutdown()` (`KurrentDB_V1`; shuts the server down) | To stop the server: `client.operations(of: .system).shutdown()`. To close the client: `client.shutdown()` — from synchronous code it always closes the client; from async code only once nothing imports `KurrentDB_V1` (see the box at the top) |
 | `client.resignNode()` | `client.operations(of: .node).resignNode()` |
-| `settings.cerificate(source:)` *(misspelled)* | `settings.certificate(source:)` |
+| `settings.cerificate(source:)` *(misspelled)* | `settings.certificate(source:)` (the misspelled name is removed in 3.0) |

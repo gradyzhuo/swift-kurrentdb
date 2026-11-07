@@ -13,8 +13,10 @@
 //  裡累積對不可達目標無限期掛著的 runConnections()。
 //
 
+import Foundation
 import GRPCCore
 import GRPCNIOTransportHTTP2
+import NIOPosix
 import Synchronization
 import Testing
 @testable import KurrentDB
@@ -36,6 +38,28 @@ struct ConnectionProviderTests {
             try await Task.sleep(for: .milliseconds(10))
         }
         return condition()
+    }
+
+    // MARK: - Event-loop group
+
+    @Test("The provider keeps the injected event-loop group and hands it to every Posix transport it builds")
+    func injectedGroupReachesTheProvider() {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { try? group.syncShutdownGracefully() }
+        let provider = ConnectionProvider(settings: .localhost(), eventLoopGroup: group, idleTimeout: .seconds(1), sweepInterval: nil)
+        defer { provider.shutdown() }
+        #expect(provider.eventLoopGroup === group)
+        let client = KurrentDBClient(settings: .localhost(), eventLoopGroup: group)
+        defer { client.shutdown() }
+        #expect(client.eventLoopGroup === group)
+        #expect(client.selector.connections.eventLoopGroup === group)
+    }
+
+    @Test("Without an injected group the client runs on NIO's process-wide singleton")
+    func defaultGroupIsTheSingleton() {
+        let client = KurrentDBClient(settings: .localhost())
+        defer { client.shutdown() }
+        #expect(client.selector.connections.eventLoopGroup === MultiThreadedEventLoopGroup.singleton)
     }
 
     // MARK: - Shared: reuse
@@ -217,6 +241,91 @@ struct ConnectionProviderTests {
         #expect(provider.createdSharedConnectionCount == 2)
     }
 
+    // MARK: - Shared: read purpose
+
+    @Test("acquire(purpose: .read) opens a second shared connection to the endpoint, counted and snapshotted apart from the main one")
+    func readPurposeIsASecondConnection() throws {
+        let transports = RecordingTransportProvider()
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = transports
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(3600), sweepInterval: nil)
+        defer { provider.shutdown() }
+
+        let main = try provider.acquire(Self.endpointA)
+        let read = try provider.acquire(Self.endpointA, purpose: .read)
+        #expect(main.client !== read.client)
+        #expect(provider.createdSharedConnectionCount == 1)
+        #expect(provider.createdReadConnectionCount == 1)
+        #expect(transports.endpoints == [Self.endpointA, Self.endpointA])
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+
+        // A second read lease reuses the read connection.
+        let again = try provider.acquire(Self.endpointA, purpose: .read)
+        #expect(again.client === read.client)
+        #expect(provider.createdReadConnectionCount == 1)
+        again.release()
+
+        read.release()
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 0)
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+        main.release()
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 0)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 0)
+    }
+
+    @Test("sweep retires an idle read connection and shutdown closes both purposes")
+    func sweepAndShutdownCoverTheReadPurpose() throws {
+        let provider = makeProvider(idleTimeout: .seconds(1))
+
+        let main = try provider.acquire(Self.endpointA)
+        let read = try provider.acquire(Self.endpointA, purpose: .read)
+        main.release()
+        read.release()
+        let lastUsed = max(
+            try #require(provider.sharedEntrySnapshot(for: Self.endpointA)).lastUsed,
+            try #require(provider.readEntrySnapshot(for: Self.endpointA)).lastUsed
+        )
+        #expect(provider.sweep(now: lastUsed + .seconds(2)) == 2)
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA) == nil)
+
+        // Both purposes come back as new connections, then shutdown closes both.
+        let mainAgain = try provider.acquire(Self.endpointA)
+        let readAgain = try provider.acquire(Self.endpointA, purpose: .read)
+        #expect(provider.createdSharedConnectionCount == 2)
+        #expect(provider.createdReadConnectionCount == 2)
+        provider.shutdown()
+        mainAgain.release()
+        readAgain.release()
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(provider.readEntrySnapshot(for: Self.endpointA) == nil)
+        #expect(throws: KurrentError.connectionClosed) {
+            try provider.acquire(Self.endpointA, purpose: .read)
+        }
+    }
+
+    @Test("A read connection whose run task ends is removed without touching the main connection")
+    func readRunTaskEndRemovesOnlyTheReadEntry() async throws {
+        let provider = makeProvider()
+        defer { provider.shutdown() }
+
+        let main = try provider.acquire(Self.endpointA)
+        let read = try provider.acquire(Self.endpointA, purpose: .read)
+        defer { main.release() }
+        provider.cancelSharedRunTaskForTesting(Self.endpointA, purpose: .read)
+        #expect(try await eventually { provider.readEntrySnapshot(for: Self.endpointA) == nil })
+        #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+
+        // The late release of the old read lease touches neither entry.
+        let fresh = try provider.acquire(Self.endpointA, purpose: .read)
+        defer { fresh.release() }
+        read.release()
+        #expect(provider.readEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
+        #expect(provider.createdReadConnectionCount == 2)
+        #expect(provider.createdSharedConnectionCount == 1)
+    }
+
     // MARK: - Dedicated
 
     @Test("獨立連線每次都是新的,close 後註銷且 close 是冪等的")
@@ -364,6 +473,136 @@ struct ConnectionProviderTests {
 
     // MARK: - Shutdown
 
+    @Test("A shutdown handler runs once, outside the lock, before the run tasks are cancelled; one registered after shutdown runs at once")
+    func shutdownHandlersRunBeforeCancellation() async throws {
+        let transports = RecordingTransportProvider()
+        var settings = ClientSettings.localhost()
+        settings.transportProvider = transports
+        let provider = ConnectionProvider(settings: settings, idleTimeout: .seconds(3600), sweepInterval: nil)
+        let lease = try provider.acquire(Self.endpointA)
+        let transport = try #require(transports.transports.first)
+        // Cancellation only reaches connect() once it runs; before that the check below would pass either way.
+        #expect(try await eventually { transport.wasConnected })
+
+        let sawConnectionStillUp = Mutex(false)
+        let runs = Mutex(0)
+        let id = provider.registerShutdownHandler {
+            runs.withLock { $0 += 1 }
+            sawConnectionStillUp.withLock { $0 = !transport.connectWasCancelled }
+            // Outside the lock: a handler may call back into the provider without deadlocking.
+            _ = provider.isShutdown
+            _ = provider.shutdownHandlerCount
+        }
+        #expect(id != 0)
+        #expect(provider.shutdownHandlerCount == 1)
+
+        provider.shutdown()
+        #expect(runs.withLock { $0 } == 1)
+        #expect(sawConnectionStillUp.withLock { $0 })
+        #expect(transport.connectWasCancelled)
+        #expect(provider.shutdownHandlerCount == 0)
+
+        provider.shutdown()   // idempotent: the handler does not run again
+        provider.removeShutdownHandler(id)   // no-op after shutdown
+        #expect(runs.withLock { $0 } == 1)
+
+        let late = Mutex(false)
+        let lateID = provider.registerShutdownHandler { late.withLock { $0 = true } }
+        #expect(late.withLock { $0 })
+        #expect(lateID == 0)
+        #expect(provider.shutdownHandlerCount == 0)
+        lease.release()
+    }
+
+    @Test("shutdownAwaitingHandlers() returns only after the handlers of a shutdown already in progress on another thread have run; a second plain shutdown() does not wait")
+    func shutdownAwaitingHandlersJoinsAnInProgressShutdown() async throws {
+        let provider = makeProvider()
+        let started = Mutex(false)
+        let mayFinish = Mutex(false)
+        let events = Mutex<[String]>([])
+        _ = provider.registerShutdownHandler {
+            started.withLock { $0 = true }
+            while !mayFinish.withLock({ $0 }) { usleep(1_000) }
+            events.withLock { $0.append("handler finished") }
+        }
+        Thread { provider.shutdown() }.start()
+        #expect(try await eventually { started.withLock { $0 } })
+
+        // The narrowed guarantee of shutdown(): only the caller that performs it waits for the handlers.
+        provider.shutdown()
+        #expect(events.withLock { $0 }.isEmpty)
+
+        let waiter = Task {
+            await provider.shutdownAwaitingHandlers()
+            events.withLock { $0.append("waiter returned") }
+        }
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(events.withLock { $0 }.isEmpty)
+
+        mayFinish.withLock { $0 = true }
+        await waiter.value
+        #expect(events.withLock { $0 } == ["handler finished", "waiter returned"])
+
+        // Once the handlers have run it returns at once, also for a caller that comes late.
+        await provider.shutdownAwaitingHandlers()
+    }
+
+    @Test("shutdownAwaitingHandlers() also waits for the close hooks of dedicated connections (how a Subscription ends) run by a shutdown in progress")
+    func shutdownAwaitingHandlersWaitsForDedicatedCloseHooks() async throws {
+        let provider = makeProvider()
+        let events = Mutex<[String]>([])
+        let started = Mutex(false)
+        let mayFinish = Mutex(false)
+        _ = provider.registerShutdownHandler {}
+        let dedicated = try provider.openDedicated(for: Self.endpointA)
+        dedicated.onClose {
+            started.withLock { $0 = true }
+            while !mayFinish.withLock({ $0 }) { usleep(1_000) }
+            events.withLock { $0.append("dedicated hook finished") }
+        }
+        Thread { provider.shutdown() }.start()
+        #expect(try await eventually { started.withLock { $0 } })
+
+        let waiter = Task {
+            await provider.shutdownAwaitingHandlers()
+            events.withLock { $0.append("waiter returned") }
+        }
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(events.withLock { $0 }.isEmpty)
+
+        mayFinish.withLock { $0 = true }
+        await waiter.value
+        #expect(events.withLock { $0 } == ["dedicated hook finished", "waiter returned"])
+        dedicated.close()
+    }
+
+    @Test("shutdownAwaitingHandlers() on a running provider shuts it down and runs its handlers before returning")
+    func shutdownAwaitingHandlersShutsDown() async {
+        let provider = makeProvider()
+        let ran = Mutex(false)
+        _ = provider.registerShutdownHandler { ran.withLock { $0 = true } }
+        await provider.shutdownAwaitingHandlers()
+        #expect(provider.isShutdown)
+        #expect(ran.withLock { $0 })
+        #expect(provider.shutdownHandlerCount == 0)
+    }
+
+    @Test("A removed shutdown handler does not run")
+    func removedShutdownHandlerDoesNotRun() {
+        let provider = makeProvider()
+        let removedRan = Mutex(false)
+        let keptRan = Mutex(false)
+        let removed = provider.registerShutdownHandler { removedRan.withLock { $0 = true } }
+        _ = provider.registerShutdownHandler { keptRan.withLock { $0 = true } }
+        #expect(provider.shutdownHandlerCount == 2)
+        provider.removeShutdownHandler(removed)
+        provider.removeShutdownHandler(removed)   // twice is a no-op
+        #expect(provider.shutdownHandlerCount == 1)
+        provider.shutdown()
+        #expect(!removedRan.withLock { $0 })
+        #expect(keptRan.withLock { $0 })
+    }
+
     @Test("shutdown 之後共用與獨立連線的准入都會被拒絕")
     func shutdownRejectsBothConnectionClasses() throws {
         let provider = makeProvider()
@@ -459,8 +698,8 @@ struct KurrentDBClientShutdownTests {
     func shutdownIsIdempotentAndClosesProvider() throws {
         let client = KurrentDBClient(settings: .localhost())
 
-        try client.shutdown()
-        try client.shutdown()
+        client.shutdown()
+        client.shutdown()
 
         #expect(client.selector.connections.isShutdown)
     }
@@ -470,7 +709,7 @@ struct KurrentDBClientShutdownTests {
     @Test("shutdown 之後 select() 立即拋 connectionClosed")
     func selectAfterShutdownThrowsConnectionClosed() async throws {
         let client = KurrentDBClient(settings: .localhost())
-        try client.shutdown()
+        client.shutdown()
 
         await #expect(throws: KurrentError.connectionClosed) {
             try await client.selector.select()
@@ -519,6 +758,7 @@ private final class RecordingTransport: ClientTransport {
         var calledMethods: [MethodDescriptor] = []
         var wasConnected = false
         var wasDisconnected = false
+        var connectWasCancelled = false
     }
 
     init(methodConfig: MethodConfig? = nil, retryThrottle: RetryThrottle? = nil, holdsCalls: Bool = false) {
@@ -542,11 +782,21 @@ private final class RecordingTransport: ClientTransport {
         state.withLock { $0.wasDisconnected }
     }
 
+    /// Whether the task running `connect()` has been cancelled. Set synchronously inside
+    /// `Task.cancel()`, unlike ``wasDisconnected``, so a test can tell what ran before the cancel.
+    var connectWasCancelled: Bool {
+        state.withLock { $0.connectWasCancelled }
+    }
+
     func connect() async throws {
         state.withLock { $0.wasConnected = true }
         defer { state.withLock { $0.wasDisconnected = true } }
         // Ends when the stream finishes or the task is cancelled.
-        for await _ in shutdown.stream {}
+        await withTaskCancellationHandler {
+            for await _ in shutdown.stream {}
+        } onCancel: {
+            state.withLock { $0.connectWasCancelled = true }
+        }
     }
 
     func beginGracefulShutdown() {
