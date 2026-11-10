@@ -48,7 +48,7 @@ struct GetMetadataTests {
         let json = #"{"$maxCount":7,"tenant":"acme"}"#
         let metadata = try #require(try await metadata(after: [Self.unserviceable, Self.metadataEvent(json)]))
         #expect(metadata.maxCount == 7)
-        #expect(metadata.data == Data(json.utf8))
+        #expect(try metadata.encoded() == Data(json.utf8))
     }
 
     @Test("getMetadata returns nil when the read holds no event")

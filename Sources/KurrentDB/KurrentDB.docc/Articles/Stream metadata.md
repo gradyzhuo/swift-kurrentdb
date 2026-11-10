@@ -4,9 +4,11 @@ Set how many events a stream keeps, how long it keeps them and who may access it
 
 ## Overview
 
-Every stream has a metadata stream, `$$<stream>`, whose latest event holds a JSON object. The server reads the keys that start with `$`; every other key is yours. ``StreamMetadata`` holds that object exactly as stored, in ``StreamMetadata/data``. Its properties read from the object and its builders write to it, and every key it has no property for, whether another client wrote it or a later server version added it, is kept when you write the value back.
+Every stream has a metadata stream, `$$<stream>`, whose latest event holds a JSON object. The server reads the keys that start with `$`; every other key is yours. ``StreamMetadata`` holds the system fields and every other key of that object. Its properties read the system fields and its builders set them, and every key it has no property for, whether another client wrote it or a later server version added it, is kept when you write the value back.
 
-A builder replaces only the keys it sets, where they are, and appends a new key: every other key keeps its bytes and its place, so a number keeps every digit and two keys that differ only in Unicode normalization stay two keys, as the server reads them. A custom value you write is encoded with `JSONEncoder`, so it holds what its Swift type holds. When an object repeats a key, 3.0 reads the last occurrence, as the server does (see Metadata the server ignores). The object may nest arrays and objects at most 64 levels deep, itself being the first: deeper metadata throws `KurrentError.internalParsingError` when read, and a custom value that would nest deeper throws `KurrentError.encodingError` when written.
+``StreamMetadata`` reads and writes the JSON as the server reads it, which `JSONDecoder` and `JSONEncoder` do not, so it is neither `Decodable` nor `Encodable`: read the data of a `$$<stream>` event with ``StreamMetadata/init(data:)``, as `getMetadata()` does. `String(reflecting: metadata)` is the JSON that `setMetadata(metadata:expectedRevision:)` sends: the system fields first, then every other key in the order it was read or set.
+
+A builder changes only the keys it sets. Every other key keeps its value: a number keeps every digit, and a nested object keeps its keys in their order. A custom value you write is encoded with `JSONEncoder`, so it holds what its Swift type holds. When an object repeats a key, 3.0 reads the last occurrence, as the server does (see Metadata the server ignores). The object may nest arrays and objects at most 64 levels deep, itself being the first: deeper metadata throws `KurrentError.internalParsingError` when read, and a custom value that would nest deeper throws `KurrentError.encodingError` when written.
 
 `setMetadata(metadata:expectedRevision:)` appends a new metadata event, which replaces the whole object, and `getMetadata()` returns the latest one, or `nil` when none has been written. It throws `KurrentError.internalParsingError` when the stored event is not a JSON object, or holds a value the server cannot read (see Metadata the server ignores below):
 
@@ -107,20 +109,29 @@ The properties read every value the server reads, so a value another client wrot
 
 ## Metadata the server ignores
 
-The server reads the metadata object member by member. When a system key holds a value it cannot read, it ignores the whole object, `$maxCount`, `$tb` and `$acl` included: the stream keeps every event and gets the default access rules. ``StreamMetadata/init(data:)``, and so `getMetadata()`, throws `KurrentError.internalParsingError` for such an object, naming the key and the value, as the .NET client does, rather than report settings the server does not apply:
+The server reads the metadata object member by member. When it meets something it cannot read, it ignores the whole object, `$maxCount`, `$tb` and `$acl` included: the stream keeps every event and gets the default access rules. ``StreamMetadata/init(data:)``, and so `getMetadata()`, throws `KurrentError.internalParsingError` for such an object, naming the key and the value, as the .NET client does, rather than report settings the server does not apply:
 
 | Key | The server reads |
 |-----|------------------|
 | `$maxCount`, `$tb` | an integer within `Int64`, written without a fraction or an exponent: `10`, not `10.0` or `1e1` |
 | `$maxAge`, `$cacheControl` | the same, within ±922,337,203,685 seconds |
 | `$tmp` | a boolean |
-| `$acl` | an object whose keys are `$r`, `$w`, `$d`, `$mr` and `$mw`, each holding a string or an array of strings |
+| `$acl` | an object whose keys are `$r`, `$w`, `$d`, `$mr` and `$mw`, each holding a role name or an array of role names |
 
 Zero and negative numbers are read: the server ignores only that field, and the properties read the stored value (`nil` for a negative `$maxCount` or `$tb`). Every other key may hold any JSON value.
 
-When an object repeats a key, the server checks every occurrence in turn, so one invalid occurrence makes it ignore the object; when all are valid, the last one applies. ``StreamMetadata/data`` then holds only the last occurrence of each repeated key. Keys are compared by their Unicode scalars, as the server compares them: `"café"` written with a precomposed `é` and with `e` and a combining accent are two keys, and ``StreamMetadata/init(data:)`` keeps both in ``StreamMetadata/data``. The properties and the builders keep them apart too. Only `==` and `Codable` see the object as a Swift dictionary, whose `String` keys compare such keys equal: `==` treats two objects that differ only in such keys as equal, and encoding a ``StreamMetadata`` with `JSONEncoder` writes only one of them. Only writes from other tools produce such keys.
+Two rules come from the server's JSON reader, Newtonsoft.Json, which tries every string as a date:
 
-Like `JSONDecoder` and the server, ``StreamMetadata/init(data:)`` accepts a trailing comma after the last member of an object or array, and a UTF-8 byte order mark. It throws for UTF-16 and UTF-32 text, as the .NET client does: JSON exchanged between systems is UTF-8. A few values the server accepts cannot be read, and `getMetadata()` throws for them: a number beyond the range of `Double`, such as `1e400`, a lone surrogate escape, such as `"\ud800"`, and text that the server's parser tolerates but JSON does not allow, such as `[1,,2]`, text after the object, single quotes or `NaN`. Only raw writes from other tools produce them.
+- A role name that reads as a date, such as `"2024-01-01T00:00:00"` or `"/Date(0)/"`, is not a string to the server, so it ignores the object. ``StreamMetadata/init(data:)`` throws for it, and `setMetadata(metadata:expectedRevision:)` throws `KurrentError.encodingError` rather than send it.
+- A string that reads as a date outside the years 1 to 9999, such as `"/Date(253402300800000)/"` or `"9999-12-31T24:00:00"`, makes the reader fail wherever it stands, in a custom value too. Reading and writing both throw for it. Any other date-like string in a custom value is only a string.
+
+A role written as a single string is the same as a list of that one name, to the server and to `==`: `"$r":"ops"` equals `"$r":["ops"]`. This holds for the five keys of `$acl` only.
+
+When an object repeats a key, the server checks every occurrence in turn, so one invalid occurrence makes it ignore the object; when all are valid, the last one applies, and only that one is written back. The server compares keys by their Unicode scalars: `"café"` written with a precomposed `é` and with `e` and a combining accent are two keys to it. ``StreamMetadata/init(data:)`` reads both and writes both back. Your own code names a custom key with a Swift `String`, which compares the two spellings equal: `customProperty(_:as:)` reads the first of them, `customProperty(_:encoding:)` replaces both with the key you pass, and `==` compares the first. Only writes from other tools produce such keys.
+
+Newtonsoft.Json accepts more than standard JSON, and ``StreamMetadata/init(data:)`` reads all of it the same way: a trailing comma, single-quoted strings, unquoted keys, integers written in octal or hexadecimal (`010` is 8, `0x10` is 16), `.5` and `1.`, `NaN`, `Infinity`, `undefined`, and comments inside the value of a custom key. A comment anywhere else, such as between two top-level keys or inside `$acl`, makes the server ignore the object. The text may be UTF-8, or UTF-16 or UTF-32 with a byte order mark; malformed bytes are read as U+FFFD, not refused. The server stops reading at the closing brace of the object, so anything after it is ignored and not kept.
+
+A custom value is kept as standard JSON: `010` is written back as `8`, `.5` as `0.5`, a single-quoted string with double quotes, and comments are dropped. `NaN`, `Infinity` and `undefined` have no JSON form, so they are written back as they are, and `customProperty(_:as:)` throws for them. A string starting with `/Date(` is written with its first slash escaped (`"\/Date(0)/"`), which the server reads the same way wherever the string stands. One difference from the server remains: in metadata longer than 922 characters, a `/Date(…)/` string with a malformed offset, such as `"/Date(0+08:00)/"`, may be read as a date here where the server reads a string, so reading throws for a role name or an out-of-range value of that shape. Only raw writes from other tools produce any of these.
 
 ## Custom keys
 

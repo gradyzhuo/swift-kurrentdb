@@ -54,16 +54,15 @@ struct StreamMetadataTests {
         let roles = StreamMetadata.StreamAcl.defaults.readRoles(["$all"]).metaWriteRoles(["ops"])
         let metadata = StreamMetadata().acl(.stream(roles))
         #expect(metadata.acl == .stream(roles))
-        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"$acl":{"$mw":["ops"],"$r":["$all"]}}"#)
+        #expect(try json(metadata) == #"{"$acl":{"$r":["$all"],"$mw":["ops"]}}"#)
     }
 
     @Test("acl(.serverDefault) removes $acl and leaves every other key")
     func testAclServerDefault() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$acl":{"$r":"ops"},"$maxCount":5,"tenant":"acme"}"#.utf8))
-            .acl(.serverDefault)
+        let metadata = try read(#"{"$acl":{"$r":"ops"},"$maxCount":5,"tenant":"acme"}"#).acl(.serverDefault)
         #expect(metadata.acl == .serverDefault)
-        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"$maxCount":5,"tenant":"acme"}"#)
-        #expect(StreamMetadata().acl(.serverDefault).data == Data("{}".utf8))
+        #expect(try json(metadata) == #"{"$maxCount":5,"tenant":"acme"}"#)
+        #expect(try json(StreamMetadata().acl(.serverDefault)) == "{}")
     }
 
     @available(*, deprecated)
@@ -98,50 +97,56 @@ struct StreamMetadataTests {
         #expect(metadata.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["$all"])))
     }
 
-    // MARK: - Codable
+    // MARK: - Writing and reading back
 
-    @Test("JSON roundtrip preserves all set values")
-    func testJSONRoundtrip() throws {
-        let original = StreamMetadata()
+    @Test("What is written reads back equal")
+    func testRoundTrip() throws {
+        let original = try StreamMetadata()
             .maxCount(10)
             .maxAge(.seconds(300))
             .acl(.stream(StreamMetadata.StreamAcl.defaults.readRoles(["$all"])))
-        let data = try JSONEncoder().encode(original)
-        let decoded = try JSONDecoder().decode(StreamMetadata.self, from: data)
-        #expect(decoded == original)
+            .customProperty("tenant", encoding: "acme")
+        #expect(try StreamMetadata(data: original.encoded()) == original)
+    }
+
+    @Test("String(reflecting:) is the JSON setMetadata sends")
+    func testDebugDescription() {
+        #expect(String(reflecting: StreamMetadata().maxCount(1)) == #"{"$maxCount":1}"#)
+        #expect(String(reflecting: StreamMetadata()) == "{}")
     }
 
     // MARK: - Acl and StreamAcl.Roles
 
-    @Test("Acl is not Codable: the server ignores the whole metadata for \"$acl\":null")
-    func testAclIsNotCodable() {
-        let acl: Any = StreamMetadata.Acl.serverDefault
-        #expect(!(acl is any Encodable))
-        #expect(!(acl is any Decodable))
+    @Test("StreamMetadata, StreamAcl and Acl are not Codable: JSONDecoder and JSONEncoder do not read and write as the server does")
+    func testNotCodable() {
+        let values: [Any] = [StreamMetadata(), StreamMetadata.StreamAcl.defaults, StreamMetadata.Acl.serverDefault]
+        for value in values {
+            #expect(!(value is any Encodable))
+            #expect(!(value is any Decodable))
+        }
     }
 
     @Test("StreamAcl.defaults stores the empty object, and every getter reads .defaults")
     func testStreamAclDefaults() throws {
         let acl = StreamMetadata.StreamAcl.defaults
-        #expect(try JSONEncoder().encode(acl) == Data("{}".utf8))
         #expect(acl.readRoles == .defaults)
         #expect(acl.writeRoles == .defaults)
         #expect(acl.deleteRoles == .defaults)
         #expect(acl.metaReadRoles == .defaults)
         #expect(acl.metaWriteRoles == .defaults)
-        #expect(String(decoding: StreamMetadata().acl(.stream(.defaults)).data, as: UTF8.self) == #"{"$acl":{}}"#)
+        #expect(try json(StreamMetadata().acl(.stream(.defaults))) == #"{"$acl":{}}"#)
     }
 
     @Test("Decoding a StreamAcl on its own throws for a null role, which the server ignores the metadata for")
     func testStreamAclNullRoleThrows() {
-        #expect(throws: DecodingError.self) {
-            try JSONDecoder().decode(StreamMetadata.StreamAcl.self, from: Data(#"{"$r":null}"#.utf8))
+        #expect(throws: KurrentJSONError.self) {
+            try KurrentJSONDecoder().decode(StreamMetadata.StreamAcl.self, from: Data(#"{"$r":null}"#.utf8))
         }
     }
 
     @Test("Metadata holding \"$acl\":{} reads as .stream(.defaults), not .serverDefault")
     func testEmptyAclObjectIsNotServerDefault() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$acl":{}}"#.utf8))
+        let metadata = try read(#"{"$acl":{}}"#)
         #expect(metadata.acl == .stream(.defaults))
         #expect(metadata.acl != .serverDefault)
     }
@@ -157,18 +162,18 @@ struct StreamMetadataTests {
 
     @Test(".defaults removes a permission from a decoded ACL and keeps the others")
     func testRolesDefaultsRemovesKey() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$acl":{"$r":["a"],"$w":"b","$mw":[]}}"#.utf8))
+        let metadata = try read(#"{"$acl":{"$r":["a"],"$w":"b","$mw":[]}}"#)
         guard case let .stream(acl) = metadata.acl else {
             Issue.record("Expected a stream ACL, got \(String(describing: metadata.acl)).")
             return
         }
         let updated = metadata.acl(.stream(acl.writeRoles(.defaults)))
-        #expect(String(decoding: updated.data, as: UTF8.self) == #"{"$acl":{"$mw":[],"$r":["a"]}}"#)
+        #expect(try json(updated) == #"{"$acl":{"$r":["a"],"$mw":[]}}"#)
     }
 
     @Test("Getters read .defaults for an absent permission and .granted([]) for an empty list")
     func testRolesGetters() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$acl":{"$mw":[]}}"#.utf8))
+        let metadata = try read(#"{"$acl":{"$mw":[]}}"#)
         guard case let .stream(acl) = metadata.acl else {
             Issue.record("Expected a stream ACL, got \(String(describing: metadata.acl)).")
             return
@@ -177,6 +182,12 @@ struct StreamMetadataTests {
         #expect(acl.readRoles == .defaults)
         #expect(acl != .defaults)
         #expect(acl == StreamMetadata.StreamAcl.defaults.metaWriteRoles([]))
+    }
+
+    @Test("A role written as a string equals one written as a one-element array, for the $acl keys only")
+    func testRoleStringEqualsOneElementArray() throws {
+        #expect(try read(#"{"$acl":{"$r":"a"}}"#) == read(#"{"$acl":{"$r":["a"]}}"#))
+        #expect(try read(#"{"k":"a"}"#) != read(#"{"k":["a"]}"#))
     }
 
     // MARK: - StreamAcl builder
@@ -219,6 +230,7 @@ struct StreamMetadataTests {
         #expect(modified.readRoles == ["admin"])
     }
 
+
     // MARK: - The stored JSON object
 
     /// Metadata as another client writes it: system fields and custom keys side by side at the top level.
@@ -226,28 +238,37 @@ struct StreamMetadataTests {
     {"$maxCount":10,"$maxAge":60,"$tb":5,"$cacheControl":10,"$acl":{"$r":["a"],"$w":["b"]},"tenant":"acme","retries":3}
     """#
 
+    private func read(_ json: String) throws -> StreamMetadata {
+        try StreamMetadata(data: Data(json.utf8))
+    }
+
+    /// The JSON `setMetadata` sends.
+    private func json(_ metadata: StreamMetadata) throws -> String {
+        try String(decoding: metadata.encoded(), as: UTF8.self)
+    }
+
     private func object(of metadata: StreamMetadata) throws -> [String: PropertyValue] {
-        try JSONDecoder().decode([String: PropertyValue].self, from: metadata.data)
+        try JSONDecoder().decode([String: PropertyValue].self, from: metadata.encoded())
     }
 
     private func object(of json: String) throws -> [String: PropertyValue] {
         try JSONDecoder().decode([String: PropertyValue].self, from: Data(json.utf8))
     }
 
-    @Test("Every getter reads metadata written by another client")
+    @Test("Every getter reads metadata written by another client, and it is written back the same")
     func testReadsOtherClientMetadata() throws {
-        let metadata = try StreamMetadata(data: Data(Self.otherClientJSON.utf8))
+        let metadata = try read(Self.otherClientJSON)
         #expect(metadata.maxCount == 10)
         #expect(metadata.maxAge == .seconds(60))
         #expect(metadata.truncateBefore == 5)
         #expect(metadata.cacheControl == .seconds(10))
         #expect(metadata.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["a"]).writeRoles(["b"])))
-        #expect(metadata.data == Data(Self.otherClientJSON.utf8))
+        #expect(try json(metadata) == Self.otherClientJSON)
     }
 
     @Test("A role written as a single string reads as a one-element list")
     func testAclSingleRoleString() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$acl":{"$r":"admin","$w":["ops","dev"]}}"#.utf8))
+        let metadata = try read(#"{"$acl":{"$r":"admin","$w":["ops","dev"]}}"#)
         guard case let .stream(acl) = metadata.acl else {
             Issue.record("Expected a stream ACL, got \(String(describing: metadata.acl)).")
             return
@@ -259,7 +280,7 @@ struct StreamMetadataTests {
 
     @Test("$maxCount and $tb read up to Int64.max, the soft-delete $tb")
     func testLargeIntegers() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$maxCount":9223372036854775807,"$tb":9223372036854775807}"#.utf8))
+        let metadata = try read(#"{"$maxCount":9223372036854775807,"$tb":9223372036854775807}"#)
         #expect(metadata.maxCount == UInt64(Int64.max))
         #expect(metadata.truncateBefore == UInt64(Int64.max))
     }
@@ -328,8 +349,24 @@ struct StreamMetadataTests {
         #"{"$acl":{"$r":1,"$r":["b"]}}"#,
         #"{"$acl":"x","$acl":{"$r":"$all"}}"#,
         #"{"$acl":{"$r":"$all"},"$acl":"x"}"#,
+        // An $acl a later one replaces is still read member by member.
+        #"{"$acl":{"$r":null},"$acl":{"$r":"ops"}}"#,
+        #"{"$acl":{"$x":"a"},"$acl":{}}"#,
+        #"{"$acl":{"$r":"2024-01-01T00:00:00"},"$acl":{"$r":"ops"}}"#,
         // A system key written with an escape.
         #"{"$maxCount":1.5}"#,
+        // Text the server's JSON reader fails on, also in a value a later key replaces.
+        #"{"custom":1e,"custom":0,"$maxCount":1}"#,
+        #"{"custom":tru}"#,
+        #"{"custom":"\x"}"#,
+        #"{"custom":"unterminated}"#,
+        #"{"$maxCount":1"#,
+        #"{"a":1,,"b":2}"#,
+        #"{"a":1 "b":2}"#,
+        #"{"a":[1}"#,
+        #"{"a":--1}"#,
+        #"{"a":1.2.3}"#,
+        #"{"a":.}"#,
     ])
     func testStrictReadingThrows(json: String) {
         #expect {
@@ -337,23 +374,6 @@ struct StreamMetadataTests {
         } throws: { error in
             guard case .internalParsingError = error as? KurrentError else { return false }
             return true
-        }
-    }
-
-    @Test("Decoding checks the values the decoder hands over, the first occurrence of a repeated key for JSONDecoder", arguments: [
-        #"{"$maxCount":"10"}"#,
-        #"{"$maxAge":1.5}"#,
-        #"{"$maxCount":9223372036854775808}"#,
-        #"{"$maxAge":[3,4659767778871345152]}"#,
-        #"{"$tmp":1}"#,
-        #"{"$acl":"$userStreamAcl"}"#,
-        #"{"$acl":{"$x":"a"}}"#,
-        #"{"$acl":{"$r":[1]}}"#,
-        #"{"$maxCount":"x","$maxCount":2}"#,
-    ])
-    func testDecodingChecksSystemKeys(json: String) {
-        #expect(throws: DecodingError.self) {
-            try JSONDecoder().decode(StreamMetadata.self, from: Data(json.utf8))
         }
     }
 
@@ -381,21 +401,26 @@ struct StreamMetadataTests {
         #"{"$future":"x","custom":[1,2.5,{"a":null}],"$x":{"y":[true]},"$MaxCount":"x","maxCount":1.5}"#,
     ])
     func testStrictReadingAccepts(json: String) throws {
-        #expect(try StreamMetadata(data: Data(json.utf8)).data == Data(json.utf8))
-        _ = try JSONDecoder().decode(StreamMetadata.self, from: Data(json.utf8))
+        let metadata = try read(json)
+        #expect(try read(self.json(metadata)) == metadata)
+        #expect(try object(of: metadata) == object(of: self.json(read(self.json(metadata)))))
     }
 
-    @Test("Negative and zero values read as stored; the server ignores those fields")
+    @Test("Negative and zero values read as stored and are written back; the server ignores those fields")
     func testIgnoredValues() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$maxCount":-1,"$tb":-5,"$maxAge":0,"$cacheControl":-5}"#.utf8))
+        let stored = #"{"$maxCount":-1,"$maxAge":0,"$tb":-5,"$cacheControl":-5}"#
+        let metadata = try read(stored)
         #expect(metadata.maxCount == nil)
         #expect(metadata.truncateBefore == nil)
         #expect(metadata.maxAge == .seconds(0))
         #expect(metadata.cacheControl == .seconds(-5))
-        let limits = try StreamMetadata(data: Data(#"{"$maxAge":922337203685,"$cacheControl":-922337203685}"#.utf8))
+        #expect(try json(metadata) == stored)
+        let limits = try read(#"{"$maxAge":922337203685,"$cacheControl":-922337203685}"#)
         #expect(limits.maxAge == .seconds(922_337_203_685))
         #expect(limits.cacheControl == .seconds(-922_337_203_685))
     }
+
+    // MARK: - Text encoding, as .NET's StreamReader decodes it
 
     private static let maxCountTwo = #"{"$maxCount":2}"#
 
@@ -413,70 +438,106 @@ struct StreamMetadataTests {
         })
     }
 
-    @Test("init(data:) throws for UTF-16 and UTF-32, with or without a byte order mark", arguments: [
+    private static let byteOrderMarked: [Data] = [
+        Data([0xEF, 0xBB, 0xBF]) + Data(maxCountTwo.utf8),
         Data([0xFF, 0xFE]) + utf16(maxCountTwo, bigEndian: false),
         Data([0xFE, 0xFF]) + utf16(maxCountTwo, bigEndian: true),
-        utf16(maxCountTwo, bigEndian: false),
         Data([0xFF, 0xFE, 0, 0]) + utf32(maxCountTwo, bigEndian: false),
+        Data([0, 0, 0xFE, 0xFF]) + utf32(maxCountTwo, bigEndian: true),
+    ]
+
+    @Test("A byte order mark names the encoding, as the server's StreamReader detects it", arguments: byteOrderMarked)
+    func testByteOrderMarks(data: Data) throws {
+        #expect(try StreamMetadata(data: data).maxCount == 2)
+    }
+
+    @Test("Without a byte order mark the bytes are UTF-8, so UTF-16 text is a custom key holding NULs, as the server reads it", arguments: [
+        utf16(maxCountTwo, bigEndian: false),
+        utf16(maxCountTwo, bigEndian: true),
         utf32(maxCountTwo, bigEndian: true),
     ])
-    func testNonUTF8Throws(data: Data) {
-        #expect(throws: KurrentError.self) {
-            try StreamMetadata(data: data)
-        }
+    func testUTF16WithoutByteOrderMark(data: Data) throws {
+        let metadata = try StreamMetadata(data: data)
+        #expect(metadata.maxCount == nil)
+        #expect(try object(of: metadata).count == 1)
     }
 
-    @Test("A trailing comma is accepted, as JSONDecoder and the server accept it")
+    @Test("Malformed UTF-8 is replaced with U+FFFD, not refused, as the server's StreamReader replaces it")
+    func testMalformedUTF8() throws {
+        let metadata = try StreamMetadata(data: Data(#"{"$maxCount":3,"k":""#.utf8) + Data([0xFF]) + Data(#""}"#.utf8))
+        #expect(metadata.maxCount == 3)
+        #expect(try metadata.customProperty("k", as: String.self) == "\u{FFFD}")
+    }
+
+    @Test("The server stops reading at the object's closing brace: what follows is ignored and not kept", arguments: [
+        Data(#"{"$maxCount":1} xyz"#.utf8),
+        Data(#"{"$maxCount":1}{"$maxCount":"x"}"#.utf8),
+        Data(#"{"$maxCount":1}"#.utf8) + Data([0xFF]),
+        Data(#"{"$maxCount":1}"#.utf8) + Data([0xE4, 0xB8]),
+    ])
+    func testTrailingContent(data: Data) throws {
+        let metadata = try StreamMetadata(data: data)
+        #expect(metadata.maxCount == 1)
+        #expect(try json(metadata) == #"{"$maxCount":1}"#)
+    }
+
+    // MARK: - Repeated keys and whitespace
+
+    @Test("A trailing comma is accepted, as the server accepts it")
     func testTrailingCommas() throws {
-        let repeated = try StreamMetadata(data: Data(#"{"$maxCount":100,"$maxCount":2,}"#.utf8))
+        let repeated = try read(#"{"$maxCount":100,"$maxCount":2,}"#)
         #expect(repeated.maxCount == 2)
-        #expect(String(decoding: repeated.data, as: UTF8.self) == #"{"$maxCount":2}"#)
-        let json = #"{ "$acl" : { "$r" : [ "a" , ] , } , "k" : [ 1 , ] , }"#
-        let kept = try StreamMetadata(data: Data(json.utf8))
-        #expect(kept.data == Data(json.utf8))
+        #expect(try json(repeated) == #"{"$maxCount":2}"#)
+        let kept = try read(#"{ "$acl" : { "$r" : [ "a" , ] , } , "k" : [ 1 , ] , }"#)
+        #expect(try json(kept) == #"{"$acl":{"$r":["a"]},"k":[1]}"#)
         #expect(kept.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["a"])))
-        let nested = try StreamMetadata(data: Data(#"{"o":{"k":1,"k":2,},"a":[{"y":1,"y":3,},],}"#.utf8))
-        #expect(String(decoding: nested.data, as: UTF8.self) == #"{"o":{"k":2},"a":[{"y":3}]}"#)
+        let nested = try read(#"{"o":{"k":1,"k":2,},"a":[{"y":1,"y":3,},],}"#)
+        #expect(try json(nested) == #"{"o":{"k":2},"a":[{"y":3}]}"#)
     }
 
-    @Test("Keys are compared by Unicode scalars: canonically equivalent keys are two keys")
+    @Test("Keys that differ only in Unicode normalization are both read and both written back")
     func testCanonicallyEquivalentKeys() throws {
-        let json = "{\"caf\u{E9}\":1,\"cafe\u{301}\":2}"
-        #expect(try #require(JSONText(Data(json.utf8))).keepingLastOccurrences == nil)
-        #expect(try StreamMetadata(data: Data(json.utf8)).data == Data(json.utf8))
+        let stored = "{\"caf\u{E9}\":1,\"cafe\u{301}\":2}"
+        #expect(try read(stored).encoded() == Data(stored.utf8))
         // An escape denotes the same scalars as the character it stands for.
         let escaped = "{\"caf\\u00e9\":1,\"cafe\u{301}\":2,\"caf\u{E9}\":3}"
-        #expect(try StreamMetadata(data: Data(escaped.utf8)).data == Data("{\"cafe\u{301}\":2,\"caf\u{E9}\":3}".utf8))
+        #expect(try read(escaped).encoded() == Data("{\"cafe\u{301}\":2,\"caf\u{E9}\":3}".utf8))
     }
 
-    @Test("A builder keeps every other member's bytes and place, and appends a new key")
+    @Test("A builder writes the system fields first and keeps every other member in its place")
     func testBuilderKeepsOtherMembers() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"z":1,"$tb":3,"a":{"y":true, "b":null}}"#.utf8))
+        let metadata = try read(#"{"z":1,"$tb":3,"a":{"y":true, "b":null}}"#)
             .maxCount(2)
             .acl(.stream(StreamMetadata.StreamAcl.defaults.writeRoles(["w"]).readRoles(["r"])))
             .cacheControl(.seconds(5))
             .truncateBefore(4)
-        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"z":1,"$tb":4,"a":{"y":true, "b":null},"$maxCount":2,"$acl":{"$r":["r"],"$w":["w"]},"$cacheControl":5}"#)
+        #expect(try json(metadata) == #"{"$maxCount":2,"$tb":4,"$cacheControl":5,"$acl":{"$r":["r"],"$w":["w"]},"z":1,"a":{"y":true,"b":null}}"#)
     }
 
-    @Test("A builder keeps keys that differ only in Unicode normalization apart")
+    @Test("A builder that does not set them keeps keys that differ only in Unicode normalization apart")
     func testBuilderKeepsCanonicallyEquivalentKeys() throws {
-        let json = "{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"}}"
-        let metadata = try StreamMetadata(data: Data(json.utf8))
-        #expect(metadata.maxCount(2).data == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"},\"$maxCount\":2}".utf8))
-        #expect(metadata.acl(.serverDefault).data == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":2}".utf8))
+        let metadata = try read("{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"$acl\":{\"$r\":\"ops\"}}")
+        #expect(try metadata.maxCount(2).encoded() == Data("{\"$maxCount\":2,\"$acl\":{\"$r\":[\"ops\"]},\"caf\u{E9}\":1,\"cafe\u{301}\":2}".utf8))
+        #expect(try metadata.acl(.serverDefault).encoded() == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":2}".utf8))
+    }
+
+    @Test("Custom keys are Swift strings to the getter and the builder: either spelling names the key, and setting it replaces both")
+    func testCustomKeysCompareAsStrings() throws {
+        let metadata = try read("{\"caf\u{E9}\":1,\"cafe\u{301}\":2,\"z\":0}")
         #expect(try metadata.customProperty("caf\u{E9}", as: Int.self) == 1)
-        #expect(try metadata.customProperty("cafe\u{301}", as: Int.self) == 2)
-        #expect(try metadata.customProperty("cafe\u{301}", encoding: 3).data == Data("{\"caf\u{E9}\":1,\"cafe\u{301}\":3,\"$acl\":{\"$r\":\"ops\"}}".utf8))
+        #expect(try metadata.customProperty("cafe\u{301}", as: Int.self) == 1)
+        let updated = try metadata.customProperty("cafe\u{301}", encoding: 3)
+        #expect(try updated.encoded() == Data("{\"cafe\u{301}\":3,\"z\":0}".utf8))
+        // The old value does not come back when the metadata is written and read again.
+        #expect(try StreamMetadata(data: updated.encoded()).customProperty("caf\u{E9}", as: Int.self) == 3)
     }
 
     @Test("A builder keeps every digit of a number it does not set")
     func testBuilderKeepsNumbers() throws {
-        let json = #"{"ratio":1.234567890123456789,"big":123456789012345678901234567890,"e":6e1}"#
-        let metadata = try StreamMetadata(data: Data(json.utf8))
+        let metadata = try read(#"{"ratio":1.234567890123456789,"big":123456789012345678901234567890,"e":6e1}"#)
             .maxAge(.seconds(60))
             .customProperty("tenant", encoding: "acme")
-        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"ratio":1.234567890123456789,"big":123456789012345678901234567890,"e":6e1,"$maxAge":60,"tenant":"acme"}"#)
+        #expect(try json(metadata) == #"{"$maxAge":60,"ratio":1.234567890123456789,"big":123456789012345678901234567890,"e":6e1,"tenant":"acme"}"#)
         #expect(try metadata.customProperty("ratio", as: Decimal.self) == Decimal(string: "1.234567890123456789"))
     }
 
@@ -489,10 +550,8 @@ struct StreamMetadataTests {
 
     @Test("Metadata nested 64 levels deep is read and written back")
     func testNestedAtTheLimit() throws {
-        let metadata = try StreamMetadata(data: Data(Self.nested(depth: 64).utf8))
-        #expect(try object(of: metadata.maxCount(1))["$maxCount"] == .integer(1))
-        let decoded = try JSONDecoder().decode(StreamMetadata.self, from: Data(Self.nested(depth: 64).utf8))
-        #expect(decoded == metadata)
+        let metadata = try read(Self.nested(depth: 64))
+        #expect(try json(metadata.maxCount(1)) == #"{"$maxCount":1,"# + Self.nested(depth: 64).dropFirst())
     }
 
     @Test("Metadata nested deeper than 64 levels throws instead of overflowing the stack", arguments: [65, 1_000, 100_000])
@@ -500,67 +559,61 @@ struct StreamMetadataTests {
         #expect(throws: KurrentError.self) {
             try StreamMetadata(data: Data(Self.nested(depth: depth).utf8))
         }
-        #expect(throws: DecodingError.self) {
-            try JSONDecoder().decode(StreamMetadata.self, from: Data(Self.nested(depth: depth).utf8))
-        }
     }
 
     // MARK: - Repeated keys
 
     @Test("A repeated top-level key reads as its last occurrence, as the server reads it, and a builder keeps it")
     func testRepeatedTopLevelKey() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$maxCount":2,"$maxCount":100}"#.utf8))
+        let metadata = try read(#"{"$maxCount":2,"$maxCount":100}"#)
         #expect(metadata.maxCount == 100)
-        #expect(String(decoding: metadata.data, as: UTF8.self) == #"{"$maxCount":100}"#)
+        #expect(try json(metadata) == #"{"$maxCount":100}"#)
         let rewritten = metadata.cacheControl(.seconds(5))
         #expect(rewritten.maxCount == 100)
-        #expect(String(decoding: rewritten.data, as: UTF8.self) == #"{"$maxCount":100,"$cacheControl":5}"#)
-    }
-
-    @Test("A repeated key after a UTF-8 byte order mark reads as its last occurrence")
-    func testRepeatedKeyAfterByteOrderMark() throws {
-        let metadata = try StreamMetadata(data: Data([0xEF, 0xBB, 0xBF]) + Data(#"{"$maxCount":1,"$maxCount":7}"#.utf8))
-        #expect(metadata.maxCount == 7)
+        #expect(try json(rewritten) == #"{"$maxCount":100,"$cacheControl":5}"#)
     }
 
     @Test("Repeated keys read as their last occurrence", arguments: [
-        // Inside $acl.
-        (#"{"$acl":{"$r":"a","$w":"w","$r":["b"]}}"#, #"{"$acl":{"$w":"w","$r":["b"]}}"#),
+        // Inside $acl, where a string and an array may be mixed.
+        (#"{"$acl":{"$r":"a","$w":"w","$r":["b"]}}"#, #"{"$acl":{"$r":["b"],"$w":["w"]}}"#),
         // Inside nested custom objects and arrays, with whitespace.
         (#"{ "o" : { "k" : 1 , "k" : { "x" : 1 , "x" : 2 } } , "a" : [ { "y" : 1 , "y" : 3 } , 4 ] }"#, #"{"o":{"k":{"x":2}},"a":[{"y":3},4]}"#),
         // The same key written with an escape.
-        (#"{"\u0024maxCount":1,"$maxCount":7}"#, #"{"$maxCount":7}"#),
+        (#"{"$maxCount":1,"$maxCount":7}"#, #"{"$maxCount":7}"#),
         // A key holding an escaped quote.
         (#"{"a\"b":1,"c":2,"a\"b":3}"#, #"{"c":2,"a\"b":3}"#),
         // Strings holding braces, brackets, commas, colons and quoted keys.
-        (#"{"s":"{\"$maxCount\":1}","$maxCount":3,"t":"}],:\\","$maxCount":4}"#, #"{"s":"{\"$maxCount\":1}","t":"}],:\\","$maxCount":4}"#),
+        (#"{"s":"{\"$maxCount\":1}","$maxCount":3,"t":"}],:\\","$maxCount":4}"#, #"{"$maxCount":4,"s":"{\"$maxCount\":1}","t":"}],:\\"}"#),
     ])
     func testRepeatedNestedKeys(json: String, expected: String) throws {
-        let metadata = try StreamMetadata(data: Data(json.utf8))
-        #expect(String(decoding: metadata.data, as: UTF8.self) == expected)
-        #expect(try object(of: metadata) == object(of: expected))
+        #expect(try self.json(read(json)) == expected)
     }
 
-    @Test("Metadata without a repeated key is kept byte for byte", arguments: [
-        #"{ "s" : "{\"k\":1,\"k\":2}" , "o" : { "k" : [ { "k" : 1 } ] } , "k" : -1.5e3 , "n" : null , "e" : { } , "l" : [ ] }"#,
-        Self.otherClientJSON,
-    ])
-    func testWithoutRepeatedKeys(json: String) throws {
-        #expect(try #require(JSONText(Data(json.utf8))).keepingLastOccurrences == nil)
-        #expect(try StreamMetadata(data: Data(json.utf8)).data == Data(json.utf8))
+    @Test("A custom value reads its nested repeated key as the last occurrence")
+    func testNestedRepeatedKeyInCustomValue() throws {
+        let metadata = try read(#"{"o":{"k":1,"k":2}}"#)
+        #expect(try metadata.customProperty("o", as: [String: Int].self) == ["k": 2])
+        #expect(try metadata.customProperties(as: [String: [String: Int]].self) == ["o": ["k": 2]])
+    }
+
+    @Test("Custom values are written back as standard JSON with their content unchanged")
+    func testCustomValuesAreKept() throws {
+        let metadata = try read(#"{ "s" : "{\"k\":1,\"k\":2}" , "o" : { "k" : [ { "k" : 1 } ] } , "k" : -1.5e3 , "n" : null , "e" : { } , "l" : [ ] }"#)
+        #expect(try json(metadata) == #"{"s":"{\"k\":1,\"k\":2}","o":{"k":[{"k":1}]},"k":-1.5e3,"n":null,"e":{},"l":[]}"#)
     }
 
     @Test("A repeated $acl role reaches the ACL as its last occurrence")
     func testRepeatedAclRole() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$acl":{"$r":"a","$r":["b","c"]}}"#.utf8))
+        let metadata = try read(#"{"$acl":{"$r":"a","$r":["b","c"]}}"#)
         #expect(metadata.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["b", "c"])))
+        let reversed = try read(#"{"$acl":{"$r":["b","c"],"$r":"a"}}"#)
+        #expect(reversed.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["a"])))
     }
 
     @Test("A builder keeps unknown $ keys and custom keys")
     func testBuilderKeepsUnknownKeys() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"$future":{"x":[1,true]},"tenant":"acme","$maxCount":5}"#.utf8))
-            .maxCount(1)
-        #expect(try object(of: metadata) == object(of: #"{"$future":{"x":[1,true]},"tenant":"acme","$maxCount":1}"#))
+        let metadata = try read(#"{"$future":{"x":[1,true]},"tenant":"acme","$maxCount":5}"#).maxCount(1)
+        #expect(try json(metadata) == #"{"$maxCount":1,"$future":{"x":[1,true]},"tenant":"acme"}"#)
     }
 
     @Test("maxAge and cacheControl are written in whole seconds, sub-second parts truncated")
@@ -579,22 +632,17 @@ struct StreamMetadataTests {
         #expect(StreamMetadata().maxAge(.seconds(-5)).maxAge == .seconds(-5))
     }
 
+
     @Test("init(data:) throws unless the JSON is an object", arguments: [
         "[1,2]",
         #""metadata""#,
         "42",
         "not json",
+        "",
     ])
     func testInitRejectsNonObject(json: String) {
         #expect(throws: KurrentError.self) {
             try StreamMetadata(data: Data(json.utf8))
-        }
-    }
-
-    @Test("Decoding a non-object throws DecodingError")
-    func testDecodingRejectsNonObject() {
-        #expect(throws: DecodingError.self) {
-            try JSONDecoder().decode(StreamMetadata.self, from: Data("[1,2]".utf8))
         }
     }
 
@@ -605,27 +653,50 @@ struct StreamMetadataTests {
 
     @Test("== ignores key order and number spelling")
     func testEqualityIgnoresKeyOrder() throws {
-        let lhs = try StreamMetadata(data: Data(#"{"$maxCount":10,"tenant":"acme","$maxAge":60,"n":10}"#.utf8))
-        let rhs = try StreamMetadata(data: Data(#"{"$maxAge":60,"tenant":"acme","$maxCount":10,"n":1e1}"#.utf8))
+        let lhs = try read(#"{"$maxCount":10,"tenant":"acme","$maxAge":60,"n":10}"#)
+        let rhs = try read(#"{"$maxAge":60,"tenant":"acme","$maxCount":10,"n":1e1}"#)
         #expect(lhs == rhs)
         #expect(try lhs != rhs.customProperty("tenant", encoding: "other"))
+        #expect(try lhs == rhs.customProperty("tenant", encoding: "acme"))
     }
 
-    @Test("A Codable round trip keeps the JSON object")
-    func testCodableRoundTripKeepsObject() throws {
-        let original = try StreamMetadata(data: Data(Self.otherClientJSON.utf8))
-        let encoded = try JSONEncoder().encode(original)
-        #expect(try object(of: String(decoding: encoded, as: UTF8.self)) == object(of: Self.otherClientJSON))
-        let decoded = try JSONDecoder().decode(StreamMetadata.self, from: encoded)
-        #expect(decoded == original)
-        #expect(try object(of: decoded) == object(of: Self.otherClientJSON))
+    @Test("== reads keys that differ only in Unicode normalization as one key, the first")
+    func testEqualityOfCanonicallyEquivalentKeys() throws {
+        #expect(try read("{\"caf\u{E9}\":1}") == read("{\"cafe\u{301}\":1}"))
+        #expect(try read("{\"caf\u{E9}\":1,\"cafe\u{301}\":2}") == read("{\"caf\u{E9}\":1}"))
+        #expect(try read("{\"caf\u{E9}\":1,\"cafe\u{301}\":2}") != read("{\"caf\u{E9}\":2}"))
+    }
+
+    @Test("== compares values JSON cannot express by their content, whatever stands around them")
+    func testEqualityOfNewtonsoftValues() throws {
+        #expect(try read(#"{"o":{"a":NaN,"b":10}}"#) == read(#"{"o":{"b":1e1,"a":NaN}}"#))
+        #expect(try read(#"{"o":{"a":NaN}}"#) != read(#"{"o":{"a":Infinity}}"#))
+        #expect(try read(#"{"a":[undefined,1]}"#) == read(#"{"a":[,1]}"#))
+        #expect(try read(#"{"d":new Date(1)}"#) == read(#"{"d":new Date( 1 )}"#))
+    }
+
+    @Test("== compares numbers a Double cannot hold as numbers", arguments: [
+        ("1e400", "10e399", true),
+        ("1e400", "1.0e400", true),
+        ("1e400", "0.1e401", true),
+        ("-1e400", "-10e399", true),
+        ("1e400", "-1e400", false),
+        ("1e400", "1e401", false),
+        ("1e400", "2e400", false),
+        // An exponent longer than Int holds, which the server's reader accepts.
+        ("1e9223372036854775808", "10e9223372036854775807", true),
+        ("1e9223372036854775808", "1e9223372036854775809", false),
+        ("1e-9223372036854775809", "10e-9223372036854775810", true),
+    ])
+    func testEqualityOfHugeNumbers(lhs: String, rhs: String, equal: Bool) throws {
+        #expect(try (read("{\"o\":{\"n\":\(lhs)}}") == read("{\"o\":{\"n\":\(rhs)}}")) == equal)
     }
 
     @Test("customProperties(encoding:) merges top-level keys")
     func testCustomPropertiesMerge() throws {
-        let metadata = try StreamMetadata(data: Data(#"{"tenant":"acme","retries":3}"#.utf8))
+        let metadata = try read(#"{"tenant":"acme","retries":3}"#)
             .customProperties(encoding: ["tenant": "other", "env": "test"])
-        #expect(try object(of: metadata) == object(of: #"{"tenant":"other","retries":3,"env":"test"}"#))
+        #expect(try json(metadata) == #"{"tenant":"other","retries":3,"env":"test"}"#)
     }
 
     // MARK: - Custom properties of any JSON value
@@ -648,6 +719,7 @@ struct StreamMetadataTests {
         owner: .init(team: "orders", oncall: ["ann", "bob"])
     )
 
+
     @Test("Nested objects, numbers and booleans round trip through customProperties(encoding:) and (as:)")
     func testCustomPropertiesRoundTrip() throws {
         let metadata = try StreamMetadata().maxCount(10).customProperties(encoding: Self.settings)
@@ -655,7 +727,7 @@ struct StreamMetadataTests {
         #expect(try metadata.customProperties(as: Settings.self) == Self.settings)
         #expect(metadata.maxCount == 10)
 
-        let reread = try StreamMetadata(data: metadata.data)
+        let reread = try StreamMetadata(data: metadata.encoded())
         #expect(try reread.customProperty("retries", as: Int.self) == 3)
         #expect(try reread.customProperty("archived", as: Bool.self) == false)
         #expect(try reread.customProperty("owner", as: Settings.Owner.self) == Self.settings.owner)
@@ -764,12 +836,254 @@ struct StreamMetadataTests {
         (0 ..< depth).reduce(PropertyValue.integer(1)) { value, _ in .array([value]) }
     }
 
+
     @Test("A custom value that keeps the stored object within 64 levels is written and read back")
     func testCustomValueAtTheDepthLimit() throws {
         let single = try StreamMetadata().customProperty("k", encoding: Self.nestedArray(depth: 63))
-        #expect(try StreamMetadata(data: single.data).customProperty("k", as: PropertyValue.self) == Self.nestedArray(depth: 63))
+        #expect(try StreamMetadata(data: single.encoded()).customProperty("k", as: PropertyValue.self) == Self.nestedArray(depth: 63))
         let merged = try StreamMetadata().customProperties(encoding: PropertyValue.object(["k": Self.nestedArray(depth: 63)]))
-        #expect(try StreamMetadata(data: merged.data) == single)
+        #expect(try StreamMetadata(data: merged.encoded()) == single)
+    }
+
+    // MARK: - Dates, as Newtonsoft.Json reads strings
+
+    @Test("Newtonsoft's date parsing: which strings are Date tokens, and which fail to convert", arguments: [
+        ("2024-01-01T00:00:00", NewtonsoftDate.date),
+        ("2024-01-01T00:00:00Z", .date),
+        ("2024-01-01T00:00:00.1234567+08:00", .date),
+        ("2024-01-01T00:00:00-0800", .date),
+        ("2024-02-29T23:59:59", .date),
+        ("2024-01-01T24:00:00", .date),
+        // Seven fraction digits are read, and two more pass as a zone.
+        ("2024-01-01T00:00:00.123456789", .date),
+        ("2024-01-01T00:00:00.12345678", .notADate),
+        ("2024-01-01T24:00:01", .notADate),
+        ("2023-02-29T00:00:00", .notADate),
+        ("0000-01-01T00:00:00", .notADate),
+        ("2024-13-01T00:00:00", .notADate),
+        ("2024-01-01", .notADate),
+        ("2024-01-01 00:00:00", .notADate),
+        ("2024-01-01T00:00:00 trailing", .notADate),
+        ("ops", .notADate),
+        ("", .notADate),
+        // Adding the day 24:00:00 stands for passes DateTime.MaxValue.
+        ("9999-12-31T24:00:00", .conversionFails),
+        ("9999-12-31T24:00:00.000Z", .conversionFails),
+        ("9999-12-31T23:59:59", .date),
+        ("/Date(0)/", .date),
+        ("/Date(1700000000000)/", .date),
+        ("/Date(1700000000000+0800)/", .date),
+        ("/Date(1700000000000-08)/", .date),
+        ("/Date(-62135596800000)/", .date),
+        ("/Date(253402300799999)/", .date),
+        // Outside the years 1 to 9999.
+        ("/Date(253402300800000)/", .conversionFails),
+        ("/Date(-62135596800001)/", .conversionFails),
+        ("/Date(1+080)/", .notADate),
+        ("/Date(abc)/", .notADate),
+        ("/Date()/", .notADate),
+        ("/Date(99999999999999999999)/", .notADate),
+        ("/Date(1)", .notADate),
+    ])
+    func testNewtonsoftDates(text: String, expected: NewtonsoftDate) {
+        #expect(NewtonsoftDate.classify(text.utf16, bufferIndex: 0) == expected)
+    }
+
+    @Test("Whether a /Date(…)/ string with a malformed offset is a date depends on where the server's reader holds it, and that is reproduced")
+    func testMicrosoftDatePosition() throws {
+        // Newtonsoft checks the minutes of the offset only when `length - index in its buffer > 5`.
+        // Unescaped, the string sits in the reader's buffer at its place in the text, the check is
+        // skipped and ":0" passes as minutes; with an escape the reader copies it to index 0.
+        #expect(NewtonsoftDate.classify("/Date(1+08:00)/".utf16, bufferIndex: 0) == .notADate)
+        #expect(NewtonsoftDate.classify("/Date(1+08:00)/".utf16, bufferIndex: 16) == .date)
+        #expect(NewtonsoftDate.classify("/Date(1+0800)/".utf16, bufferIndex: 0) == .date)
+        #expect(NewtonsoftDate.classify("/Date(1+0800)/".utf16, bufferIndex: 16) == .date)
+
+        #expect(throws: KurrentError.self) { try read(#"{"$acl":{"$r":"/Date(1+08:00)/"}}"#) }
+        #expect(throws: KurrentError.self) { try read(#"{"c":"/Date(253402300800000+08:00)/"}"#) }
+        let role = try read(#"{"$acl":{"$r":"\/Date(1+08:00)\/"}}"#)
+        #expect(role.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["/Date(1+08:00)/"])))
+        let custom = try read(#"{"c":"\/Date(253402300800000+08:00)/"}"#)
+        #expect(try custom.customProperty("c", as: String.self) == "/Date(253402300800000+08:00)/")
+
+        // Written with the first slash escaped, so the server reads it back as it was read here.
+        #expect(try json(role) == #"{"$acl":{"$r":["\/Date(1+08:00)/"]}}"#)
+        #expect(try read(json(role)) == role)
+        #expect(try json(custom) == #"{"c":"\/Date(253402300800000+08:00)/"}"#)
+        let built = StreamMetadata().acl(.stream(StreamMetadata.StreamAcl.defaults.readRoles(["/Date(1+08:00)/"])))
+        #expect(try read(json(built)) == role)
+    }
+
+    @Test("A string that fails to convert as a date is refused wherever it stands, as the server fails on it", arguments: [
+        #"{"$maxCount":1,"custom":"/Date(253402300800000)/"}"#,
+        #"{"custom":{"deep":["/Date(253402300800000)/"]}}"#,
+        #"{"custom":"/Date(253402300800000)/","custom":1}"#,
+        #"{"custom":"9999-12-31T24:00:00"}"#,
+        #"{"$future":"9999-12-31T24:00:00"}"#,
+    ])
+    func testDateConversionFailureThrows(json: String) {
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata(data: Data(json.utf8))
+        }
+    }
+
+    @Test("A custom string that reads as a date is kept as the string it is")
+    func testCustomDateStringsAreKept() throws {
+        let stored = #"{"at":"2024-01-01T00:00:00Z","ms":"/Date(0)/"}"#
+        let metadata = try read(stored)
+        #expect(try metadata.customProperty("at", as: String.self) == "2024-01-01T00:00:00Z")
+        #expect(try json(metadata) == #"{"at":"2024-01-01T00:00:00Z","ms":"\/Date(0)/"}"#)
+    }
+
+    @Test("An $acl role that reads as a date is refused: the server's reader hands over a Date token", arguments: [
+        #"{"$acl":{"$r":"2024-01-01T00:00:00"}}"#,
+        #"{"$acl":{"$w":["ops","2024-01-01T00:00:00Z"]}}"#,
+        #"{"$acl":{"$d":"/Date(0)/"}}"#,
+    ])
+    func testAclDateRoleThrows(json: String) {
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata(data: Data(json.utf8))
+        }
+    }
+
+    @Test("An $acl role that only resembles a date is a role name")
+    func testAclRolesThatAreNotDates() throws {
+        let metadata = try read(#"{"$acl":{"$r":["2024-01-01","2024-13-01T00:00:00","/Date(x)/"]}}"#)
+        #expect(metadata.acl == .stream(StreamMetadata.StreamAcl.defaults.readRoles(["2024-01-01", "2024-13-01T00:00:00", "/Date(x)/"])))
+    }
+
+    @Test("Writing refuses what the server would ignore: a role that reads as a date, a custom string that fails to convert")
+    func testEncodingRefusesWhatTheServerIgnores() throws {
+        let dateRole = StreamMetadata().acl(.stream(StreamMetadata.StreamAcl.defaults.readRoles(["2024-01-01T00:00:00"])))
+        let failing = try StreamMetadata().customProperty("custom", encoding: "/Date(253402300800000)/")
+        let nested = try StreamMetadata().customProperty("custom", encoding: ["deep": ["9999-12-31T24:00:00"]])
+        for metadata in [dateRole, failing, nested] {
+            #expect {
+                try metadata.encoded()
+            } throws: { error in
+                guard case .encodingError = error as? KurrentError else { return false }
+                return true
+            }
+            #expect(String(reflecting: metadata).hasPrefix("StreamMetadata("))
+        }
+        // A custom string that converts is only a string to the server.
+        #expect(try json(StreamMetadata().customProperty("at", encoding: "2024-01-01T00:00:00Z")) == #"{"at":"2024-01-01T00:00:00Z"}"#)
+    }
+
+    // MARK: - Numbers, as Newtonsoft.Json reads them
+
+    @Test("A leading zero makes an octal or hexadecimal integer, as the server reads it", arguments: [
+        (#"{"$maxCount":010}"#, #"{"$maxCount":8}"#),
+        (#"{"$maxCount":0x10}"#, #"{"$maxCount":16}"#),
+        (#"{"$maxCount":0X1f}"#, #"{"$maxCount":31}"#),
+        (#"{"$maxCount":00}"#, #"{"$maxCount":0}"#),
+        (#"{"$maxCount":-010}"#, #"{"$maxCount":-10}"#),
+        // Convert.ToInt64 lets a non-decimal number set the sign bit.
+        (#"{"$maxCount":0xFFFFFFFFFFFFFFFF}"#, #"{"$maxCount":-1}"#),
+        (#"{"$maxCount":01777777777777777777777}"#, #"{"$maxCount":-1}"#),
+        (#"{"n":010,"h":0x10}"#, #"{"n":8,"h":16}"#),
+    ])
+    func testOctalAndHexadecimal(json: String, expected: String) throws {
+        #expect(try self.json(read(json)) == expected)
+    }
+
+    @Test("Leading zeros are no limit on an octal integer: 380 of them before a 1 is 1")
+    func testOctalWithManyLeadingZeros() throws {
+        #expect(try read(#"{"$maxCount":"# + String(repeating: "0", count: 380) + "1}").maxCount == 1)
+    }
+
+    @Test("Numbers the server's reader fails on", arguments: [
+        #"{"$maxCount":09}"#,
+        #"{"n":09}"#,
+        #"{"n":0x}"#,
+        #"{"n":0x1G}"#,
+        #"{"n":0x10000000000000000}"#,
+        #"{"n":02000000000000000000000}"#,
+        #"{"n":01.5}"#,
+        #"{"n":1e}"#,
+        #"{"n":1x}"#,
+        #"{"n":+1}"#,
+        // An integer past Int64 is a BigInteger, refused past 380 characters.
+        "{\"n\":" + String(repeating: "9", count: 381) + "}",
+        // More than 19 digits is a BigInteger whatever its value, which is no long.
+        #"{"$maxCount":-00000000000000000001}"#,
+        #"{"$maxCount":NaN}"#,
+        #"{"$maxCount":undefined}"#,
+        #"{"$maxCount":new Date(1)}"#,
+    ])
+    func testNumbersTheServerFailsOn(json: String) {
+        #expect(throws: KurrentError.self) {
+            try StreamMetadata(data: Data(json.utf8))
+        }
+    }
+
+    @Test("Custom numbers in spellings only the server's reader accepts are kept as standard JSON", arguments: [
+        (#"{"n":.5}"#, #"{"n":0.5}"#, 0.5),
+        (#"{"n":-.5}"#, #"{"n":-0.5}"#, -0.5),
+        (#"{"n":1.}"#, #"{"n":1.0}"#, 1.0),
+        (#"{"n":1.e2}"#, #"{"n":1.0e2}"#, 100.0),
+        (#"{"n":-01.50}"#, #"{"n":-1.50}"#, -1.5),
+        (#"{"n":1E+2}"#, #"{"n":1e+2}"#, 100.0),
+        ("{\"n\":" + String(repeating: "9", count: 380) + "}", "{\"n\":" + String(repeating: "9", count: 380) + "}", Double.infinity),
+    ])
+    func testNonStandardNumbers(json: String, expected: String, value: Double) throws {
+        let metadata = try read(json)
+        #expect(try self.json(metadata) == expected)
+        if value.isFinite {
+            #expect(try metadata.customProperty("n", as: Double.self) == value)
+        }
+    }
+
+    // MARK: - Syntax only Newtonsoft.Json reads
+
+    @Test("Single quotes, unquoted keys and unescaped line breaks are read, and written back as standard JSON", arguments: [
+        (#"{'$maxCount':1, tenant:'acme'}"#, #"{"$maxCount":1,"tenant":"acme"}"#),
+        (#"{$maxCount:7,$acl:{$r:'ops'}}"#, #"{"$maxCount":7,"$acl":{"$r":["ops"]}}"#),
+        (#"{'it''s':1}"#, nil),
+        ("{\"k\":\"a\nb\tc\"}", #"{"k":"a\u000ab\u0009c"}"#),
+        (#"{"k":'say "hi"'}"#, #"{"k":"say \"hi\""}"#),
+        (#"{"k":"é😀\ud800x"}"#, "{\"k\":\"\u{E9}\u{1F600}\u{FFFD}x\"}"),
+        ("{\u{A0}\"k\"\u{2003}:\u{0}1\u{0}}", #"{"k":1}"#),
+    ] as [(String, String?)])
+    func testNewtonsoftSyntax(json: String, expected: String?) throws {
+        guard let expected else {
+            #expect(throws: KurrentError.self) { try StreamMetadata(data: Data(json.utf8)) }
+            return
+        }
+        #expect(try self.json(read(json)) == expected)
+    }
+
+    @Test("NaN, Infinity, undefined and constructors are kept as custom values and written back as they are")
+    func testValuesJSONCannotExpress() throws {
+        let metadata = try read(#"{"a":NaN,"b":-Infinity,"c":undefined,"d":[,1],"e":new Date( 1 , 'x' ),"f":Infinity,"g":,}"#)
+        let written = #"{"a":NaN,"b":-Infinity,"c":undefined,"d":[undefined,1],"e":new Date(1,"x"),"f":Infinity,"g":undefined}"#
+        #expect(try json(metadata) == written)
+        #expect(try read(written) == metadata)
+        #expect(throws: KurrentError.self) { try metadata.customProperty("a", as: Double.self) }
+        // The builders still work around them.
+        #expect(try json(metadata.maxCount(1)).hasPrefix(#"{"$maxCount":1,"a":NaN,"#))
+    }
+
+    @Test("A comment is read only inside the value of a custom key; anywhere the server reads tokens itself, it fails", arguments: [
+        (#"{"k":{"a":1/*c*/,//x"# + "\n" + #""b":[1,/*c*/2]}}"#, #"{"k":{"a":1,"b":[1,2]}}"#),
+        (#"{"k":[/**/]}"#, #"{"k":[]}"#),
+        (#"/*c*/{}"#, nil),
+        (#"{/*c*/}"#, nil),
+        (#"{"$maxCount":1,/*x*/"$acl":{"$r":"ops"}}"#, nil),
+        (#"{"k":/*c*/1}"#, nil),
+        (#"{"k":1/*c*/}"#, nil),
+        (#"{"k":[1]//c"# + "\n}", nil),
+        (#"{"$acl":{/*c*/"$r":"a"}}"#, nil),
+        (#"{"$acl":{"$r":["a"/*c*/]}}"#, nil),
+        (#"{"$maxCount":/*c*/1}"#, nil),
+        (#"{"k":{"a":1/*unterminated}}"#, nil),
+    ] as [(String, String?)])
+    func testComments(json: String, expected: String?) throws {
+        guard let expected else {
+            #expect(throws: KurrentError.self) { try StreamMetadata(data: Data(json.utf8)) }
+            return
+        }
+        #expect(try self.json(read(json)) == expected)
     }
 
     @Test("A custom value that would make the stored object nest more than 64 levels throws encodingError", arguments: [64, 65, 100])

@@ -154,7 +154,7 @@ struct StreamTests: Sendable {
         let otherClientMetadata = try #require(try await client.streams(specified: streamIdentifier.name).getMetadata())
         #expect(otherClientMetadata.maxAge == .seconds(60))
         #expect(otherClientMetadata.maxCount == 10)
-        let object = try JSONDecoder().decode([String: PropertyValue].self, from: otherClientMetadata.data)
+        let object = try otherClientMetadata.customProperties(as: [String: PropertyValue].self)
         #expect(object["tenant"] == .string("acme"))
         #expect(object["retries"] == .integer(3))
 
@@ -174,15 +174,15 @@ struct StreamTests: Sendable {
         return event.record.data
     }
 
-    @Test("setMetadata stores metadata.data byte for byte, unknown keys in their order")
-    func testSetMetadataSendsDataAsIs() async throws {
+    @Test("setMetadata stores the system fields first and unknown keys in their order, values unchanged")
+    func testSetMetadataKeepsUnknownKeys() async throws {
         let stream = UUID().uuidString
         let client = KurrentDBClient(settings: settings)
         let json = #"{"zeta":1,"$future":{"b":2,"a":1},"alpha":"x","$maxCount":3}"#
         let metadata = try StreamMetadata(data: Data(json.utf8))
         try await client.streams(specified: stream).setMetadata(metadata: metadata)
-        #expect(try await storedMetadata(of: stream, client: client) == Data(json.utf8))
-        #expect(try await client.streams(specified: stream).getMetadata()?.data == Data(json.utf8))
+        #expect(try await storedMetadata(of: stream, client: client) == Data(#"{"$maxCount":3,"zeta":1,"$future":{"b":2,"a":1},"alpha":"x"}"#.utf8))
+        #expect(try await client.streams(specified: stream).getMetadata() == metadata)
         // The stream holds metadata only, so a delete may find nothing to delete.
         _ = try? await client.streams(specified: stream).delete()
     }
@@ -528,7 +528,7 @@ struct StreamTests: Sendable {
         let roles = StreamMetadata.StreamAcl.defaults.writeRoles(["ops"]).metaWriteRoles(["$admins"])
         let first = StreamMetadata().acl(.stream(roles))
         try await orders.setMetadata(metadata: first)
-        #expect(try await storedMetadata(of: stream, client: client) == Data(#"{"$acl":{"$mw":["$admins"],"$w":["ops"]}}"#.utf8))
+        #expect(try await storedMetadata(of: stream, client: client) == Data(#"{"$acl":{"$w":["ops"],"$mw":["$admins"]}}"#.utf8))
 
         // admin is a member of $admins, which always has access: the stream still works.
         try await orders.append(events: [EventData(eventType: "FirstAcl", model: ["index": 1])])
@@ -563,7 +563,7 @@ struct StreamTests: Sendable {
             .cacheControl(.seconds(3))
             .acl(.stream(StreamMetadata.StreamAcl.defaults.readRoles(["$admins"])))
         try await orders.setMetadata(metadata: metadata)
-        #expect(try await storedMetadata(of: stream, client: client) == metadata.data)
+        #expect(try await storedMetadata(of: stream, client: client) == metadata.encoded())
 
         var indices: [Int] = []
         for try await response in orders.read() {
