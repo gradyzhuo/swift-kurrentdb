@@ -466,7 +466,7 @@ do {
 
 Up to 2.6.1, ``StreamMetadata`` was encoded with Swift's synthesized `Codable`: `maxAge` and `cacheControl` became `Duration`'s `[high, low]` array, not seconds, and `.acl(.userStream)` and `.acl(.systemStream)` became the strings `"$userStreamAcl"` and `"$systemStreamAcl"`. 2.6.2 writes whole seconds, no `$acl` for `.userStream` and `$admins` for every permission for `.systemStream`. Every 2.x version nests custom properties under a `"customProperties"` key. 3.0 writes the object the server and other clients read: whole seconds, an `$acl` object or none, and custom keys at the top level. The same builder calls compile and store the new form, apart from the ACL cases and the deprecation below.
 
-The server reads `$acl` only as an object of roles; `$userStreamAcl` and `$systemStreamAcl` are keys of the `$settings` stream that hold the defaults, not values of a stream's `$acl`. So 3.0 removes `.userStream` and `.systemStream`. Use ``StreamMetadata/Acl/serverDefault``, which removes `$acl` so the server applies the default from `$settings`, or ``StreamMetadata/Acl/stream(_:)`` with the stream's own roles. 2.x had no public initializer for ``StreamMetadata/StreamAcl``; 3.0 starts one from ``StreamMetadata/StreamAcl/defaults``, in which every permission falls back to `$settings`: `.acl(.stream(.defaults.writeRoles(["ops"])))`. Each permission is now a ``StreamMetadata/StreamAcl/Roles`` value, ``StreamMetadata/StreamAcl/Roles/defaults`` or ``StreamMetadata/StreamAcl/Roles/granted(_:)``: the role builders take it, so an array literal still compiles and a `[String]` variable is passed as `.granted(names)`, and the role properties return it, `.defaults` where 2.x returned `nil`. ``StreamMetadata/Acl`` is no longer `Codable` and has no `rawValue`: ``StreamMetadata/Acl/serverDefault`` has no JSON form, since it is the absence of `$acl`, and the server ignores the whole metadata for `"$acl":null` as for a string. `acl(_:)` writes `$acl` as an object or removes it.
+The server reads `$acl` only as an object of roles; `$userStreamAcl` and `$systemStreamAcl` are keys of the `$settings` stream that hold the defaults, not values of a stream's `$acl`. So 3.0 removes `.userStream` and `.systemStream`. Use ``StreamMetadata/Acl/serverDefault``, which removes `$acl` so the server applies the default from `$settings`, or ``StreamMetadata/Acl/stream(_:)`` with the stream's own roles. 2.x had no public initializer for ``StreamMetadata/StreamAcl``; 3.0 starts one from ``StreamMetadata/StreamAcl/defaults``, in which every permission falls back to `$settings`: `.acl(.stream(.defaults.writeRoles(["ops"])))`. Each permission is now a ``StreamMetadata/StreamAcl/Roles`` value, ``StreamMetadata/StreamAcl/Roles/defaults`` or ``StreamMetadata/StreamAcl/Roles/granted(_:)``: the role builders take it, so an array literal still compiles and a `[String]` variable is passed as `.granted(names)`, and the role properties return it, `.defaults` where 2.x returned `nil`. ``StreamMetadata``, ``StreamMetadata/StreamAcl`` and ``StreamMetadata/Acl`` are no longer `Codable`, since `JSONDecoder` and `JSONEncoder` do not read and write JSON as the server does; read stored metadata with ``StreamMetadata/init(data:)``. ``StreamMetadata/Acl`` has no `rawValue` either: ``StreamMetadata/Acl/serverDefault`` has no JSON form, since it is the absence of `$acl`, and the server ignores the whole metadata for `"$acl":null` as for a string. `acl(_:)` writes `$acl` as an object or removes it.
 
 Metadata a 2.6.1 or earlier client wrote stays as it was until you write it again. If it set `maxAge`, `cacheControl` or one of the two ACL strings, the server accepted the write and then ignored the whole object: `$maxCount`, `$tb` and `$acl` in it were never enforced, so the stream kept every event and the default access rules applied to it. 3.0 reads metadata as strictly as the server and the .NET client do, so `getMetadata()` throws `KurrentError.internalParsingError` for such an object, naming the key, rather than report settings the server does not apply. Metadata 2.6.2 wrote, and metadata an earlier client wrote with custom properties only, reads, but `customProperties(as:)` sees the custom properties as one key named `customProperties`.
 
@@ -480,11 +480,12 @@ The other way round, a 2.6.1 or earlier client's `getMetadata()` throws on metad
 | `acl(.userStream)`, `acl(.systemStream)` | removed: up to 2.6.1 they wrote a string the server rejects, which made it ignore the whole metadata, and 2.6.2 writes no `$acl` and `$admins`. Use `acl(.serverDefault)` for the default, or `acl(.stream(…))` | "type 'StreamMetadata.Acl' has no member 'userStream'" |
 | `StreamAcl` `readRoles(names)` … `metaWriteRoles(names)` with a `[String]` variable | pass `.granted(names)`; an array literal compiles as before, and `.defaults` removes the permission so the server applies the default from `$settings` | "cannot convert value of type '[String]' to expected argument type 'StreamMetadata.StreamAcl.Roles'" |
 | `StreamAcl` `readRoles` … `metaWriteRoles` as `[String]?` | return ``StreamMetadata/StreamAcl/Roles``: `.defaults` for an absent permission, `.granted(roles)` otherwise | "initializer for conditional binding must have Optional type, not 'StreamMetadata.StreamAcl.Roles'"; `roles ?? []` still compiles, with a warning, and yields a `Roles` |
-| `Acl.rawValue`, encoding or decoding an `Acl` | removed: `.serverDefault` is the absence of `$acl`, and `acl(_:)` writes `$acl` as an object or removes it. Read the stored JSON from ``StreamMetadata/data`` | "value of type 'StreamMetadata.Acl' has no member 'rawValue'", "instance method 'encode' requires that 'StreamMetadata.Acl' conform to 'Encodable'" |
+| `Acl.rawValue`, encoding or decoding an `Acl` | removed: `.serverDefault` is the absence of `$acl`, and `acl(_:)` writes `$acl` as an object or removes it. Print `String(reflecting: metadata)` to see the stored JSON | "value of type 'StreamMetadata.Acl' has no member 'rawValue'", "instance method 'encode' requires that 'StreamMetadata.Acl' conform to 'Encodable'" |
+| `JSONEncoder().encode(metadata)`, `JSONDecoder().decode(StreamMetadata.self, from:)`, `record.decode(to: StreamMetadata.self)`, or a `StreamMetadata` or `StreamAcl` property in a `Codable` type of yours | removed: ``StreamMetadata`` and ``StreamMetadata/StreamAcl`` are no longer `Codable`, because `JSONDecoder` and `JSONEncoder` do not read and write JSON as the server reads it (see Metadata the server ignores in <doc:Stream-metadata>). Read stored metadata with ``StreamMetadata/init(data:)``, print `String(reflecting: metadata)` to see the JSON that is sent, and keep the field values, not the `StreamMetadata`, in a `Codable` type of your own | "instance method 'encode' requires that 'StreamMetadata' conform to 'Encodable'", "instance method 'decode(_:from:)' requires that 'StreamMetadata' conform to 'Decodable'", "type '…' does not conform to protocol 'Decodable'" |
 | `customProperties(["tenant": "acme"])` | merges top-level keys into the object, where 2.x replaced the whole custom dictionary; a key starting with `$` is skipped and logged as a warning | "'customProperties' is deprecated: use customProperties(encoding:). Removed in 4.0." |
 | `maxCount(…)`, `truncateBefore(…)`, `maxAge(…)`, `cacheControl(…)` | a value above the server's limit stops the program (see Limits in <doc:Stream-metadata>); `0` or a duration under one second is written and logged as a warning, and the server ignores that field | none |
 | `getMetadata()` on metadata the server ignores | throws `KurrentError.internalParsingError` (see Metadata the server ignores in <doc:Stream-metadata>) | none |
-| `metadata == other` | compares the whole object, `maxCount` included | none |
+| `metadata == other` | compares the whole object, `maxCount` included; an `$acl` role stored as `"ops"` equals one stored as `["ops"]`, as the server reads them | none |
 
 <!-- snippet:skip -->
 ```swift
@@ -514,8 +515,31 @@ struct Legacy2xMetadata: Decodable {
     var maxAge: Duration?                       // whole seconds (2.6.2) or Duration's [high, low]
     var truncateBefore: UInt64?
     var cacheControl: Duration?
-    var acl: StreamMetadata.StreamAcl?          // nil for "$userStreamAcl" and "$systemStreamAcl"
+    var acl: Acl?                               // nil for "$userStreamAcl" and "$systemStreamAcl"
     var customProperties: [String: String]?     // nested, not top-level keys
+
+    /// The `$acl` object as 2.x stored it: each permission an array of role names.
+    struct Acl: Decodable {
+        var read: [String]?
+        var write: [String]?
+        var delete: [String]?
+        var metaRead: [String]?
+        var metaWrite: [String]?
+
+        enum CodingKeys: String, CodingKey {
+            case read = "$r", write = "$w", delete = "$d", metaRead = "$mr", metaWrite = "$mw"
+        }
+
+        var roles: StreamMetadata.StreamAcl {
+            var roles = StreamMetadata.StreamAcl.defaults
+            if let read { roles = roles.readRoles(.granted(read)) }
+            if let write { roles = roles.writeRoles(.granted(write)) }
+            if let delete { roles = roles.deleteRoles(.granted(delete)) }
+            if let metaRead { roles = roles.metaReadRoles(.granted(metaRead)) }
+            if let metaWrite { roles = roles.metaWriteRoles(.granted(metaWrite)) }
+            return roles
+        }
+    }
 
     enum CodingKeys: String, CodingKey {
         case maxCount = "$maxCount", maxAge = "$maxAge", truncateBefore = "$tb"
@@ -528,7 +552,7 @@ struct Legacy2xMetadata: Decodable {
         maxAge = try Self.duration(in: container, forKey: .maxAge)
         truncateBefore = try container.decodeIfPresent(UInt64.self, forKey: .truncateBefore)
         cacheControl = try Self.duration(in: container, forKey: .cacheControl)
-        acl = try? container.decodeIfPresent(StreamMetadata.StreamAcl.self, forKey: .acl)
+        acl = try? container.decodeIfPresent(Acl.self, forKey: .acl)
         customProperties = try container.decodeIfPresent([String: String].self, forKey: .customProperties)
     }
 
@@ -547,7 +571,7 @@ struct Legacy2xMetadata: Decodable {
         if let maxAge { metadata = metadata.maxAge(maxAge) }
         if let truncateBefore { metadata = metadata.truncateBefore(truncateBefore) }
         if let cacheControl { metadata = metadata.cacheControl(cacheControl) }
-        if let acl { metadata = metadata.acl(.stream(acl)) }
+        if let acl { metadata = metadata.acl(.stream(acl.roles)) }
         if let customProperties { metadata = try metadata.customProperties(encoding: customProperties) }
         return metadata
     }

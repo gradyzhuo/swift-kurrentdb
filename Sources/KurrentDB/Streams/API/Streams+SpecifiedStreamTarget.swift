@@ -30,7 +30,7 @@ extension Streams where Target: SpecifiedStreamTarget {
         let usecase = Append(to: .init(name: "$$\(identifier.name)"), events: [
             .init(
                 eventType: "$metadata",
-                payload: .data(metadata.data, .json)
+                payload: .data(try metadata.encoded(), .json)
             ),
         ], options: options)
         return try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
