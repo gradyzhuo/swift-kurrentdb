@@ -1349,4 +1349,57 @@ struct StreamMetadataTests {
         #expect(try metadata.customProperty("ratio", as: Double.self) == 0.12345678901234567890)
         #expect(try metadata.customProperty("ratio", as: Decimal.self) != Decimal(string: "0.12345678901234567890"))
     }
+
+    // MARK: - Surrogates, cut-off text and odd byte counts
+
+    @Test("An escaped surrogate pair is one character, and a surrogate without its pair is U+FFFD")
+    func testEscapedSurrogates() throws {
+        let u = Self.backslash + "u"
+        let cases: [(json: String, expected: String)] = [
+            ("\(u)D83D\(u)DE00", "\u{1F600}"),
+            ("\(u)DE00", "\u{FFFD}"),
+            ("\(u)D83Dx", "\u{FFFD}x"),
+            ("\(u)D83D\(u)0041", "\u{FFFD}A"),
+            ("\(u)D83D\(u)D83D\(u)DE00", "\u{FFFD}\u{1F600}"),
+        ]
+        for (json, expected) in cases {
+            #expect(try read("{\"k\":\"\(json)\"}").customProperty("k", as: String.self) == expected)
+        }
+    }
+
+    /// JSON that ends, or goes wrong, in the middle of each thing the reader reads.
+    private static let cutOff: [String] = [
+        "{",
+        "{\"a\":",
+        "{\"a\":]",
+        "{\"a\":nx}",
+        "{\"a\":nul",
+        "{\"a\":new D",
+        "{\"a\":new Date x}",
+        "{abc",
+        "{\"a\":\"x" + backslash,
+        "{\"a\":\"" + backslash + "u00",
+        "{\"a\":\"" + backslash + "u00zz\"}",
+        "{/",
+    ]
+
+    @Test("Text that is cut off or goes wrong inside a value is a parsing error", arguments: cutOff)
+    func testCutOffText(json: String) {
+        #expect { try read(json) } throws: { Self.isParsingError($0) }
+    }
+
+    @Test("A constructor name may be followed by whitespace")
+    func testConstructorNameThenWhitespace() throws {
+        #expect(try json(read("{\"a\":new Date (1)}")) == "{\"a\":new Date(1)}")
+    }
+
+    @Test("UTF-16 and UTF-32 text with a byte count that is not whole reads as U+FFFD at the end, after the object")
+    func testOddByteCounts() throws {
+        let text = "\u{FEFF}{\"k\":1}"
+        let expected = try read("{\"k\":1}")
+        for bigEndian in [true, false] {
+            #expect(try StreamMetadata(data: Self.utf16(text, bigEndian: bigEndian) + [0x20]) == expected)
+            #expect(try StreamMetadata(data: Self.utf32(text, bigEndian: bigEndian) + [0x20, 0x20]) == expected)
+        }
+    }
 }
