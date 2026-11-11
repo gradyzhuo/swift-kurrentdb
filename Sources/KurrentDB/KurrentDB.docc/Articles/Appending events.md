@@ -71,17 +71,33 @@ let fromData = EventData(
 
 ### Metadata
 
-Information that belongs with the event but isn't part of it — correlation IDs, causation IDs, access information — goes in `customMetadata`, a separate byte array stored alongside the event:
+Information that belongs with the event but isn't part of it — correlation IDs, causation IDs, access information — goes in `customMetadata`, stored alongside the event. It is a ``CustomMetadata``: bytes together with the format they are written in. The keys are yours: `.json(_:)` encodes any `Encodable` value.
 
 ```swift
-let metadata = try JSONEncoder().encode(["correlationId": "abc-123"])
+struct EventMetadata: Codable, Sendable {
+    var correlationId: String
+}
 
 let event = EventData(
     eventType: "TestEvent",
     model: TestEvent(id: "1", note: "with metadata"),
-    customMetadata: metadata
+    customMetadata: try .json(EventMetadata(correlationId: "abc-123"))
 )
 ```
+
+The server does not read an event's custom metadata, so an ``EventData`` also takes bytes in any other encoding:
+
+```swift
+let encoded = Data([0x0A, 0x03, 0x61, 0x62, 0x63])
+
+let event = EventData(
+    eventType: "TestEvent",
+    model: TestEvent(id: "1", note: "with metadata"),
+    customMetadata: try CustomMetadata(data: encoded, format: .bytes)
+)
+```
+
+``CustomMetadata/init(data:format:)`` checks the bytes against the format, so `format: .json` refuses bytes that are not JSON. JSON metadata nests arrays and objects at most 64 levels deep. Reading the metadata back is under <doc:Reading-events>.
 
 ## Handling concurrency
 
@@ -232,18 +248,22 @@ for failure in response.failed {
 
 ### Record metadata
 
-An ``EventRecord`` carries its metadata as `properties`. `customMetadata:` takes a JSON object, whose members become the properties, and `setValue(_:forKey:)` adds one. A property can be any value that encodes as JSON, nested objects and arrays included. Metadata that is not a JSON object throws. `setValue(_:forKey:)` does not check the value: one that cannot be sent (NaN, an infinity, an integer beyond 64 bits, or a value `JSONEncoder` rejects) makes the append throw ``KurrentError/encodingError(message:encoding:)``. All three methods store the properties as the event's custom metadata, where a read returns them as JSON next to the keys the server adds.
+An ``EventRecord`` carries its metadata as `properties`, which the server receives as key-value pairs. So `customMetadata:` takes JSON only, and the JSON must be an object: its members become the properties. A member can be any JSON value, nested objects and arrays included. Passing bytes metadata does not compile, and JSON that is not an object throws when the record is created, as does a value that cannot be encoded, such as NaN or an infinity.
 
 ```swift
-let metadata = try JSONEncoder().encode(["correlationId": "abc-123"])
+struct RecordMetadata: Codable, Sendable {
+    var correlationId: String
+    var operatorId: String
+}
 
 let tagged = try EventRecord(
     eventType: "OrderPlaced",
     payload: .json(OrderPlaced(orderId: "order-1")),
-    customMetadata: metadata
+    customMetadata: .json(RecordMetadata(correlationId: "abc-123", operatorId: "operator-7"))
 )
-.setValue("operator-7", forKey: "operatorId")
 ```
+
+The properties are stored as the event's custom metadata, where a read returns them as JSON next to the keys the server adds. `setValue(_:forKey:)` and assigning to `properties` are deprecated: they store a value without checking it, so one that cannot be sent fails only when the record is appended.
 
 `append(events:)` and `appendRecords(events:checks:)` send each property as a `google.protobuf.Value`, whose numbers are `Double`: an integer beyond ±2^53 arrives as the nearest `Double`. Store such a value as a string to keep every digit. `batchAppend(events:)` writes the properties as JSON again: an integer stays exact while it fits in 64 bits, and any other number keeps the precision of a `Double`.
 

@@ -9,8 +9,14 @@ import Testing
 
 @Suite("EventRecord properties")
 struct EventRecordPropertiesTests {
+    private static let payload = EventRecord.Payload.data(Data("{}".utf8), .json)
+
+    /// A record whose custom metadata is `customMetadata`, a JSON text, or one without metadata.
     private func makeRecord(customMetadata: String?) throws -> EventRecord {
-        try EventRecord(eventType: "test", payload: .data(Data("{}".utf8), .json), customMetadata: customMetadata.map { Data($0.utf8) })
+        guard let customMetadata else {
+            return try EventRecord(eventType: "test", payload: Self.payload)
+        }
+        return try EventRecord(eventType: "test", payload: Self.payload, customMetadata: CustomMetadata(data: Data(customMetadata.utf8), format: .json))
     }
 
     // MARK: - Parsing custom metadata
@@ -35,15 +41,15 @@ struct EventRecordPropertiesTests {
         #expect(record.properties["nested"] as? PropertyValue == .object(["items": .array([.integer(1), .string("two"), .bool(false)])]))
     }
 
-    @Test("An empty object, empty data and no data give no properties")
+    @Test("An empty object and no metadata give no properties")
     func emptyMetadata() throws {
         #expect(try makeRecord(customMetadata: "{}").properties.isEmpty)
-        #expect(try makeRecord(customMetadata: "").properties.isEmpty)
         #expect(try makeRecord(customMetadata: nil).properties.isEmpty)
+        #expect(EventRecord(data: Data(), schema: .init(format: .json, name: "test")).properties.isEmpty)
     }
 
-    @Test("Metadata that is not a JSON object throws instead of being dropped", arguments: [
-        "[1,2]", "3", #""text""#, "true", "null", "not json",
+    @Test("JSON metadata that is not an object throws instead of being dropped", arguments: [
+        "[1,2]", "3", #""text""#, "true", "null",
     ])
     func notAnObject(metadata: String) {
         #expect(throws: DecodingError.self) {
@@ -51,9 +57,43 @@ struct EventRecordPropertiesTests {
         }
     }
 
-    @Test("EventRecord(eventData:) carries the metadata of a legacy EventData")
+    @Test("A record created from bytes and a schema takes custom metadata too")
+    func fromDataAndSchema() throws {
+        let record = try EventRecord(data: Data("{}".utf8), schema: .init(format: .json, name: "test"), customMetadata: .json(["tenant": "acme"]))
+        #expect(record.properties["tenant"] as? String == "acme")
+        #expect(throws: DecodingError.self) {
+            try EventRecord(data: Data(), schema: .init(format: .json, name: "test"), customMetadata: .json([1, 2]))
+        }
+    }
+
+    @Test("The deprecated Data? initializer reads a JSON object, and empty data or nil as no metadata")
+    @available(*, deprecated)
+    func deprecatedDataInitializer() throws {
+        let record = try EventRecord(eventType: "test", payload: Self.payload, customMetadata: Data(#"{"operatorId":"op-1"}"#.utf8))
+        #expect(record.properties["operatorId"] as? String == "op-1")
+        #expect(try EventRecord(eventType: "test", payload: Self.payload, customMetadata: Data()).properties.isEmpty)
+        #expect(try EventRecord(eventType: "test", payload: Self.payload, customMetadata: nil).properties.isEmpty)
+        #expect(throws: DecodingError.self) {
+            try EventRecord(eventType: "test", payload: Self.payload, customMetadata: Data("not json".utf8))
+        }
+        #expect(throws: DecodingError.self) {
+            try EventRecord(eventType: "test", payload: Self.payload, customMetadata: Data(Self.nested(depth: 65).utf8))
+        }
+    }
+
+    @Test("The deprecated properties setter stores a value without checking it")
+    @available(*, deprecated)
+    func deprecatedPropertiesSetter() throws {
+        var record = try makeRecord(customMetadata: nil)
+        record.properties["operatorId"] = "op-1"
+        record.properties["n"] = Double.nan
+        #expect(record.properties["operatorId"] as? String == "op-1")
+        #expect(throws: KurrentError.self) { try record.protobufProperties() }
+    }
+
+    @Test("EventRecord(eventData:) carries the metadata of an EventData")
     func fromEventData() throws {
-        let eventData = EventData(eventType: "test", payload: .json(["a": "b"]), customMetadata: Data(#"{"operatorId":"op-1","n":7}"#.utf8))
+        let eventData = try EventData(eventType: "test", payload: .json(["a": "b"]), customMetadata: CustomMetadata(data: Data(#"{"operatorId":"op-1","n":7}"#.utf8), format: .bytes))
         let record = try EventRecord(eventData: eventData)
         #expect(record.properties["operatorId"] as? String == "op-1")
         #expect(record.properties["n"] as? Int == 7)
@@ -77,6 +117,7 @@ struct EventRecordPropertiesTests {
     }
 
     @Test("A property of any Codable type is encoded, not sent as null")
+    @available(*, deprecated)
     func codableProperties() throws {
         struct Operator: Codable, Sendable {
             let id: String
@@ -96,6 +137,7 @@ struct EventRecordPropertiesTests {
     }
 
     @Test("A large integer reaches v2 as the nearest Double and BatchAppend's JSON exactly")
+    @available(*, deprecated)
     func largeIntegers() throws {
         let metadata = #"{"big":9007199254740993,"max":18446744073709551615,"over":9223372036854775809}"#
         let record = try makeRecord(customMetadata: metadata)
@@ -127,6 +169,7 @@ struct EventRecordPropertiesTests {
     }
 
     @Test("An integer beyond 64 bits fails both encodings")
+    @available(*, deprecated)
     func integerBeyond64Bits() throws {
         let record = try makeRecord(customMetadata: nil).setValue(Int128(UInt64.max) + 1, forKey: "n")
         #expect(throws: KurrentError.self) { try record.protobufProperties() }
@@ -137,6 +180,7 @@ struct EventRecordPropertiesTests {
         1e19, Double(UInt64(1) << 63), Double(UInt64(1) << 62), -Double(UInt64(1) << 62),
         1.2345678901234567e19, 9007199254740993.0, 0.1, -2.5e-300, 1.7976931348623157e308,
     ])
+    @available(*, deprecated)
     func nestedDoubles(value: Double) throws {
         struct Measurement: Codable, Sendable {
             let value: Double
@@ -149,8 +193,10 @@ struct EventRecordPropertiesTests {
         #expect(fields["measurement"]?.structValue.fields["value"]?.numberValue == value)
 
         let json = try #require(try record.customMetadataJSON())
-        let echoed = try JSONSerialization.jsonObject(with: json) as? [String: Any]
-        #expect((echoed?["values"] as? [NSNumber])?.first?.doubleValue == value)
+        struct Echoed: Decodable {
+            let values: [Double]
+        }
+        #expect(try JSONDecoder().decode(Echoed.self, from: json).values == [value])
     }
 
     @Test("A number in metadata, written in any form, reaches v2 as the Double it denotes", arguments: [
@@ -166,6 +212,7 @@ struct EventRecordPropertiesTests {
     @Test("NaN and infinite numbers fail both encodings", arguments: [
         Double.nan, Double.infinity, -Double.infinity,
     ])
+    @available(*, deprecated)
     func nonFiniteNumbers(value: Double) throws {
         for record in [
             try makeRecord(customMetadata: nil).setValue(value, forKey: "n"),
@@ -201,9 +248,9 @@ struct EventRecordPropertiesTests {
         #expect(record.properties["k"] is PropertyValue)
     }
 
-    @Test("Metadata nested deeper than 64 levels throws DecodingError instead of overflowing the stack", arguments: [65, 1_000, 100_000])
+    @Test("Metadata nested deeper than 64 levels throws instead of overflowing the stack", arguments: [65, 1_000, 100_000])
     func nestedPastTheLimit(depth: Int) {
-        #expect(throws: DecodingError.self) {
+        #expect(throws: KurrentError.self) {
             try makeRecord(customMetadata: Self.nested(depth: depth))
         }
     }

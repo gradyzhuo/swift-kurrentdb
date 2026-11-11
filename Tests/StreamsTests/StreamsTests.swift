@@ -67,6 +67,38 @@ struct StreamTests: Sendable {
         try await client.streams(specified: streamIdentifier.name).delete()
     }
 
+    @Test("Custom metadata written as JSON and as bytes reads back in the format the reader names")
+    func testCustomMetadataRoundTrip() async throws {
+        struct OrderMetadata: Codable, Sendable, Equatable {
+            var tenant: String
+            var attempt: Int
+        }
+        let client = KurrentDBClient(settings: settings)
+        let stream = client.streams(specified: "CustomMetadata-\(UUID().uuidString)")
+        let metadata = OrderMetadata(tenant: "acme", attempt: 2)
+        let bytes = Data([0x00, 0xFF, 0x7B])
+
+        _ = try await stream.append(events: [
+            EventData(eventType: "WithJSON", model: ["k": "v"], customMetadata: try .json(metadata)),
+            EventData(eventType: "WithBytes", model: ["k": "v"], customMetadata: try CustomMetadata(data: bytes, format: .bytes)),
+            EventData(eventType: "Without", model: ["k": "v"]),
+        ]) { $0.expectedRevision = .noStream }
+
+        var records: [RecordedEvent] = []
+        for try await response in stream.read() {
+            if case let .event(readEvent) = response {
+                records.append(readEvent.record)
+            }
+        }
+        try #require(records.count == 3)
+        #expect(try records[0].customMetadata(format: .json)?.decode(OrderMetadata.self) == metadata)
+        #expect(try records[1].customMetadata(format: .bytes)?.data == bytes)
+        #expect(throws: KurrentError.self) { try records[1].customMetadata(format: .json) }
+        #expect(try records[2].customMetadata(format: .json) == nil)
+
+        try await stream.delete()
+    }
+
     @Test("It should succeed when appending events to streams.",
           .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_SUPPORTS_MULTI_STREAMS"] == "true"),
           arguments: [

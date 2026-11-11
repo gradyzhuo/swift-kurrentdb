@@ -220,7 +220,7 @@ struct AppendRecordsTests: Sendable {
         let recordId = UUID()
         let record = try EventRecord(
             id: recordId, eventType: "operator-acted", payload: .json(["k": "v"]),
-            customMetadata: JSONEncoder().encode(metadata)
+            customMetadata: .json(metadata)
         )
 
         _ = try await client.multiStreams.appendRecords(events: [
@@ -236,7 +236,7 @@ struct AppendRecordsTests: Sendable {
         #expect(recorded.id == recordId)
         #expect(recorded.eventType == "operator-acted")
         #expect(recorded.contentType == .json)
-        #expect(try JSONDecoder().decode(OperatorMetadata.self, from: recorded.customMetadata) == metadata)
+        #expect(try recorded.customMetadata(format: .json)?.decode(OperatorMetadata.self) == metadata)
 
         try await client.streams(specified: stream).delete()
     }
