@@ -86,12 +86,10 @@ extension KurrentJSONValue {
         switch token {
         case let .object(members):
             bytes.append(UInt8(ascii: "{"))
-            var first = true
-            for (index, member) in members.enumerated() where !members[(index + 1)...].contains(where: { $0.isNamed(member.key) }) {
-                if !first {
+            for (index, member) in members.lastOccurrences.enumerated() {
+                if index > 0 {
                     bytes.append(UInt8(ascii: ","))
                 }
-                first = false
                 Self.write(member.key, to: &bytes)
                 bytes.append(UInt8(ascii: ":"))
                 member.value.write(to: &bytes)
@@ -151,6 +149,43 @@ extension KurrentJSONValue {
             }
         }
         bytes.append(UInt8(ascii: "\""))
+    }
+}
+
+extension KurrentJSONValue {
+    /// What stands in the value that JSON cannot express and `JSONDecoder` therefore cannot read:
+    /// `NaN`, `Infinity`, `-Infinity`, `undefined` or a constructor. `nil` for standard JSON.
+    var nonStandardToken: String? {
+        switch token {
+        case let .object(members):
+            members.lazy.compactMap(\.value.nonStandardToken).first
+        case let .array(elements):
+            elements.lazy.compactMap(\.nonStandardToken).first
+        case let .constructor(name, _):
+            "new \(name)(…)"
+        case let .number(number):
+            // Every other number is made of digits, a sign, a point and an `e`.
+            number.text.utf8.contains { $0 == UInt8(ascii: "N") || $0 == UInt8(ascii: "I") } ? number.text : nil
+        case .undefined:
+            "undefined"
+        case .string, .bool, .null:
+            nil
+        }
+    }
+}
+
+extension [KurrentJSONValue.Member] {
+    /// The last occurrence of each key, where it stands. Keys are compared by their UTF-8 bytes,
+    /// as the server compares them, in one pass.
+    var lastOccurrences: [KurrentJSONValue.Member] {
+        var lastIndex: [[UInt8]: Int] = [:]
+        for (index, member) in enumerated() {
+            lastIndex[[UInt8](member.key.utf8)] = index
+        }
+        guard lastIndex.count < count else {
+            return self
+        }
+        return enumerated().filter { lastIndex[[UInt8]($0.element.key.utf8)] == $0.offset }.map(\.element)
     }
 }
 

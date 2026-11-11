@@ -81,10 +81,8 @@ struct KurrentJSONDecodingContainer<Keys: KurrentJSONCodingKey> {
     /// The members whose key `isIncluded` accepts: the last occurrence of each key, where it
     /// stands, with its value rewritten as ``KurrentJSONValue/standardJSON``.
     func members(where isIncluded: (Keys) -> Bool) -> [(key: String, json: [UInt8])] {
-        members.enumerated().compactMap { index, member in
-            guard let key = Keys(stringValue: member.key), isIncluded(key),
-                  !members[(index + 1)...].contains(where: { $0.isNamed(member.key) })
-            else {
+        members.lastOccurrences.compactMap { member in
+            guard let key = Keys(stringValue: member.key), isIncluded(key) else {
                 return nil
             }
             return (member.key, member.value.standardJSON)
