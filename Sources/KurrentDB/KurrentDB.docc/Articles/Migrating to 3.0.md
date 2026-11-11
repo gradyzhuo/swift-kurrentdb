@@ -358,7 +358,7 @@ func legacy() async throws {
 
 ## Removed and renamed API
 
-Every declaration 2.x deprecated is gone. All rows but the last two carry a deprecation warning on 2.6, so a 2.6 build without deprecation warnings uses none of them. The `numberOfThreads:` rows were not deprecated: they fail to compile without a warning beforehand.
+Every declaration 2.x deprecated is gone. All rows but the last three carry a deprecation warning on 2.6, so a 2.6 build without deprecation warnings uses none of them. The `numberOfThreads:` rows and the `properties:` row were not deprecated: they fail to compile without a warning beforehand.
 
 | Removed in 3.0 | Use instead | Note |
 |----------------|-------------|------|
@@ -374,6 +374,7 @@ Every declaration 2.x deprecated is gone. All rows but the last two carry a depr
 | `client.shutdown()` from `KurrentDB_V1`, which shut the server down | `try await client.operations(of: .system).shutdown()` | Without the import the same line still compiles and closes the client instead: sort these on 2.6 (Before you start). |
 | `KurrentDBClient(settings:numberOfThreads:defaultCallOptions:)` | `KurrentDBClient(settings:eventLoopGroup:defaultCallOptions:)` | See "eventLoopGroup replaces numberOfThreads" below. |
 | `withBorrowedClient(numberOfThreads:maxAttempts:_:)` | `withBorrowedClient(eventLoopGroup:maxAttempts:_:)` | As above. |
+| `EventRecord(id:data:schema:properties:)` | `EventRecord(id:data:schema:customMetadata:)` | It stored its properties without checking them. Without `properties:` the call compiles unchanged. See "Deprecated in 3.0" below. |
 
 ### EventData with a Data payload
 
@@ -622,6 +623,20 @@ if written2x {
 The code assumes a 2.x Swift client wrote the stream's metadata: any metadata `getMetadata()` cannot read takes the rewrite path, and metadata another tool wrote with other top-level keys would be rewritten without them, so check what a stream holds before you rewrite it. A 2.x duration above the `maxAge(_:)` limit, 62,000,000,000 seconds, or the `cacheControl(_:)` limit, 922,337,203,685 seconds, stops the program at the builder's precondition: check `legacy.maxAge` and `legacy.cacheControl` first.
 
 <doc:Stream-metadata> describes the 3.0 API, including custom keys of any JSON value with a `Codable` type.
+
+## Deprecated in 3.0
+
+These still compile and behave as on 2.6.2, with a deprecation warning. They are removed in 4.0.
+
+| Deprecated | Use instead | Note |
+|------------|-------------|------|
+| `EventData(…, customMetadata:)` with `Data` or `nil`, in all four forms (`payload:`, `model:`, `data:`, `bytes:`) | `customMetadata: try .json(value)`, or `try CustomMetadata(data: data, format: .bytes)` | The same bytes are sent. For no metadata, leave the argument out. |
+| `EventRecord(eventType:payload:customMetadata:)` with `Data` or `nil` | `customMetadata: .json(value)`, or `CustomMetadata(data: data, format: .json)` | The metadata must still be a JSON object. |
+| `EventRecord.setValue(_:forKey:)` | Create the record with `customMetadata: .json(value)` | `setValue` stores the value unchecked, so one that cannot be sent fails at append; `.json(_:)` fails when the record is created. |
+| Assigning to `EventRecord.properties` | As above | Reading `properties` is not deprecated. |
+| `StreamMetadata.customProperties(_:)` with `[String: String]` | `customProperties(encoding:)` or `customProperty(_:encoding:)` | See <doc:Stream-metadata>. |
+
+``CustomMetadata`` holds the bytes and the format they are written in. An ``EventData`` takes JSON or bytes; an ``EventRecord`` takes JSON only, and bytes metadata on a record is a compile error. To read metadata back, name the format: ``RecordedEvent/customMetadata(format:)``. `recordedEvent.customMetadata` still returns the stored `Data`.
 
 ## What did not change
 
