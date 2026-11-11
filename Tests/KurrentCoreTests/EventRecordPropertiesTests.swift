@@ -79,6 +79,10 @@ struct EventRecordPropertiesTests {
         #expect(throws: DecodingError.self) {
             try EventRecord(eventType: "test", payload: Self.payload, customMetadata: Data(Self.nested(depth: 65).utf8))
         }
+        // Invalid metadata is reported before a payload that cannot be encoded, as on 2.6.2.
+        #expect(throws: DecodingError.self) {
+            try EventRecord(eventType: "test", payload: .json(Double.nan), customMetadata: Data("[]".utf8))
+        }
     }
 
     @Test("The deprecated properties setter stores a value without checking it")
