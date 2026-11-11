@@ -111,8 +111,8 @@ public struct StreamMetadata: Buildable {
     /// The maximum number of events retained in the stream (`$maxCount`).
     ///
     /// A sliding window based on the number of events: older events disappear from the stream
-    /// and become eligible for scavenging. `nil` when the key is absent or negative, which the
-    /// server ignores.
+    /// and become eligible for scavenging. `nil` when the key is absent or negative. A stored `0`
+    /// is returned as `0`; the server ignores the field for it, as it does for a negative count.
     public var maxCount: UInt64? {
         storedMaxCount.flatMap { UInt64(exactly: $0) }
     }
@@ -120,9 +120,10 @@ public struct StreamMetadata: Buildable {
     /// The maximum age of events retained in the stream (`$maxAge`, in whole seconds).
     ///
     /// A sliding window based on dates: older events disappear from the stream and become
-    /// eligible for scavenging. `nil` when the key is absent. A value another client stored can
-    /// exceed what ``maxAge(_:)`` accepts: above 62,000,000,000 seconds it may make the stream
-    /// unreadable, so do not pass it back unchecked.
+    /// eligible for scavenging. `nil` when the key is absent. A stored zero or negative age is
+    /// returned as it is; the server ignores the field for it. A value another client stored can
+    /// also exceed what ``maxAge(_:)`` accepts: above 62,000,000,000 seconds it may make the
+    /// stream unreadable, so do not pass it back unchecked.
     public var maxAge: Duration? {
         storedMaxAge.map { .seconds($0) }
     }
@@ -139,7 +140,8 @@ public struct StreamMetadata: Buildable {
     /// The cache-control duration for the stream head (`$cacheControl`, in whole seconds).
     ///
     /// The head of a stream is not cached by default; a small value lets intermediaries handle
-    /// polls. `nil` when the key is absent.
+    /// polls. `nil` when the key is absent. A stored zero or negative duration is returned as it
+    /// is; the server ignores the field for it.
     public var cacheControl: Duration? {
         storedCacheControl.map { .seconds($0) }
     }
@@ -266,9 +268,15 @@ public struct StreamMetadata: Buildable {
     /// `JSONDecoder` uses its default strategies, so a `Date` field expects seconds since 2001-01-01
     /// and `Data` expects Base64.
     ///
+    /// A custom value may hold what only the server's JSON reader understands: `NaN`, `Infinity`,
+    /// `undefined` or a constructor such as `new Date(0)`. `JSONDecoder` cannot read the object
+    /// then, whether or not `T` reads that key, so this method throws and names the key. Read the
+    /// other keys one at a time with ``customProperty(_:as:)``.
+    ///
     /// - Parameter type: The type the custom keys decode into, such as a `Decodable` struct.
     /// - Returns: The decoded value.
-    /// - Throws: `KurrentError.internalParsingError` if the custom keys do not decode as `T`.
+    /// - Throws: `KurrentError.internalParsingError` if the custom keys do not decode as `T`, or
+    ///   if one of them holds a value JSON cannot express.
     public func customProperties<T: Decodable>(as type: T.Type) throws(KurrentError) -> T {
         do {
             var object: [[UInt8]] = []
@@ -280,6 +288,11 @@ public struct StreamMetadata: Buildable {
             }
             return try JSONDecoder().decode(type, from: Data([UInt8(ascii: "{")] + object.joined(separator: [UInt8(ascii: ",")]) + [UInt8(ascii: "}")]))
         } catch {
+            for member in others where !Self.isReserved(member.key) {
+                if let token = member.value.nonStandardToken {
+                    throw .internalParsingError(reason: "The custom stream metadata key '\(member.key)' holds \(token), which JSON cannot express, so the custom keys cannot be decoded together. Read the other keys with customProperty(_:as:).")
+                }
+            }
             throw .internalParsingError(reason: "The custom stream metadata does not decode as \(type): \(error)")
         }
     }
@@ -306,6 +319,9 @@ public struct StreamMetadata: Buildable {
         do {
             return try JSONDecoder().decode(type, from: Data(member.value.json))
         } catch {
+            if let token = member.value.nonStandardToken {
+                throw .internalParsingError(reason: "The custom stream metadata key '\(key)' holds \(token), which JSON cannot express.")
+            }
             throw .internalParsingError(reason: "The custom stream metadata key '\(key)' does not decode as \(type): \(error)")
         }
     }
@@ -322,6 +338,11 @@ public struct StreamMetadata: Buildable {
     ///
     /// - Parameter value: A value that encodes to a JSON object, such as a `Codable` struct or a dictionary.
     /// - Returns: An updated copy of the metadata.
+    /// A whole number that fits `Int64` or `UInt64` is stored exactly and any other number as a
+    /// `Double`; store a number that needs more digits as a string. `JSONEncoder` itself writes
+    /// one key for two that differ only in Unicode
+    /// normalization, so a type whose `encode(to:)` writes both stores one of them.
+    ///
     /// - Throws: `KurrentError.encodingError` if the value cannot be encoded, does not encode to a
     ///   JSON object, holds a key starting with `$`, which is reserved for the server, or nests
     ///   arrays and objects more than 64 levels deep, the value itself being the first level.
@@ -339,7 +360,9 @@ public struct StreamMetadata: Buildable {
     /// Sets one custom key to an encoded value.
     ///
     /// The value is encoded with `JSONEncoder`, so it may be any JSON value: a string, a number, a
-    /// boolean, an array, an object or null.
+    /// boolean, an array, an object or null. A whole number that fits `Int64` or `UInt64` is stored
+    /// exactly and any other number as a `Double`; store a number that needs more digits as a
+    /// string.
     ///
     /// - Parameters:
     ///   - key: The custom key. It must not start with `$`, which is reserved for the server. A key
@@ -361,6 +384,22 @@ public struct StreamMetadata: Buildable {
         }
         return setting([key: encoded])
     }
+
+    /// Removes one custom key.
+    ///
+    /// Every other key is left as it is. Removing a key the metadata does not hold changes nothing.
+    ///
+    /// - Parameter key: The custom key. It must not start with `$`, which is reserved for the
+    ///   server: remove `$acl` with `acl(.serverDefault)`. Every spelling of the key the metadata
+    ///   holds in another Unicode normalization is removed, as Swift compares strings.
+    /// - Returns: An updated copy of the metadata.
+    /// - Throws: `KurrentError.encodingError` if `key` starts with `$`.
+    public func removingCustomProperty(_ key: String) throws(KurrentError) -> Self {
+        guard !Self.isReserved(key) else {
+            throw .encodingError(message: "Custom stream metadata key '\(key)' must not start with '$'.", encoding: .utf8)
+        }
+        return withCopy { $0.others.removeAll { $0.key == key } }
+    }
 }
 
 extension StreamMetadata.Member.Value {
@@ -377,6 +416,17 @@ extension StreamMetadata.Member.Value {
             }
         }
     }
+
+    /// What stands in the value that `JSONDecoder` cannot read, such as `NaN`; `nil` for a value
+    /// set through a builder, which is always standard JSON.
+    var nonStandardToken: String? {
+        guard case let .read(json) = self else {
+            return nil
+        }
+        // The JSON was scanned when it was read.
+        var scanner = KurrentJSONScanner(utf8: json)
+        return (try? scanner.scanValue())?.nonStandardToken
+    }
 }
 
 extension StreamMetadata {
@@ -386,17 +436,29 @@ extension StreamMetadata {
     /// the metadata holds, where the first one stands. New keys are appended in sorted order.
     private func setting(_ values: [String: PropertyValue]) -> Self {
         withCopy { copied in
-            for (key, value) in values.sorted(by: { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }) {
-                let index = copied.others.firstIndex { $0.key == key } ?? copied.others.endIndex
-                copied.others.removeAll { $0.key == key }
-                copied.others.insert(Member(key: key, value: .written(value)), at: min(index, copied.others.endIndex))
+            // One pass, however many keys the metadata holds.
+            var placed: Set<String> = []
+            var members: [Member] = []
+            for member in copied.others {
+                guard let index = values.index(forKey: member.key) else {
+                    members.append(member)
+                    continue
+                }
+                if placed.insert(member.key).inserted {
+                    members.append(Member(key: values[index].key, value: .written(values[index].value)))
+                }
             }
+            let added = values.filter { !placed.contains($0.key) }.sorted { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }
+            copied.others = members + added.map { Member(key: $0.key, value: .written($0.value)) }
         }
     }
 
     /// Whether `key` is reserved for the server: a system field such as `$maxCount`, or a future one.
+    ///
+    /// Decided by the first byte: `hasPrefix("$")` misses a key such as `"$\u{301}x"`, whose
+    /// first character is `$` joined with a combining accent.
     private static func isReserved(_ key: String) -> Bool {
-        key.hasPrefix("$")
+        key.utf8.first == UInt8(ascii: "$")
     }
 
     /// `value` encoded with `JSONEncoder` and read back as a JSON value.
@@ -504,8 +566,8 @@ extension StreamMetadata: KurrentJSONCodable {
     /// every other key in the order it was read or set.
     ///
     /// - Throws: ``KurrentError/encodingError(message:encoding:)`` if the server would ignore the
-    ///   object: an `$acl` role name, or a string in a custom value, reads as a date to the
-    ///   server's JSON reader.
+    ///   object: an `$acl` role name reads as a date to the server's JSON reader, or a string in
+    ///   a custom value reads as a date outside the years 1 to 9999.
     func encoded() throws(KurrentError) -> Data {
         do {
             return try KurrentJSONEncoder().encode(self)
@@ -603,6 +665,20 @@ extension StreamMetadata.StreamAcl {
         /// Creates ``granted(_:)`` with the listed roles.
         public init(arrayLiteral elements: String...) {
             self = .granted(elements)
+        }
+
+        /// Compares the role names byte by byte, as the server matches a role against a user's
+        /// (`x.Value == role`, an ordinal comparison): two names that differ only in Unicode
+        /// normalization are different roles.
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            switch (lhs, rhs) {
+            case (.defaults, .defaults):
+                true
+            case let (.granted(lhs), .granted(rhs)):
+                lhs.count == rhs.count && zip(lhs, rhs).allSatisfy { $0.utf8.elementsEqual($1.utf8) }
+            default:
+                false
+            }
         }
 
         /// The stored list, `nil` for ``defaults``.
@@ -732,14 +808,17 @@ extension StreamMetadata.StreamAcl: Buildable {
 }
 
 extension StreamMetadata: Equatable {
-    /// Compares the metadata as it is read, so key order and number spelling (`10`, `1e1`) do not
-    /// matter.
+    /// Compares the metadata as it is read, so key order and number spelling do not matter.
     ///
     /// `$acl` is compared as the roles the server reads, so a role written `"a"` equals one
-    /// written `["a"]`; the value of every other key is compared as it is written. Custom keys are
-    /// compared as Swift strings, so two keys that differ only in Unicode normalization, such as
-    /// `"café"` with a precomposed `é` and with `e` and a combining accent, are one key, and the
-    /// first one is compared.
+    /// written `["a"]`, and role names are compared byte by byte, as the server matches them.
+    ///
+    /// The value of every other key is compared as it is written. A number is compared by its
+    /// exact decimal value, whatever its length: `10`, `1e1` and `10.0` are equal, and two numbers
+    /// that differ in any digit are not. Custom keys and string values are compared as Swift
+    /// strings, so two keys that differ only in Unicode normalization, such as `"café"` with a
+    /// precomposed `é` and with `e` and a combining accent, are one key, and the first one is
+    /// compared.
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.storedMaxCount == rhs.storedMaxCount
             && lhs.storedMaxAge == rhs.storedMaxAge
@@ -754,44 +833,30 @@ extension StreamMetadata: Equatable {
     }
 }
 
-/// A custom value as `==` compares it: `PropertyValue`'s shape, which reads `10` and `1e1` as the
-/// same number, plus what only the server's JSON reader understands.
+/// A custom value as `==` compares it.
 private indirect enum ComparableValue: Equatable {
-    case scalar(PropertyValue)
+    case null
+    case bool(Bool)
+    case string(String)
     case array([ComparableValue])
     case object([String: ComparableValue])
     /// `NaN`, `Infinity`, `-Infinity` or `undefined`.
     case literal(String)
-    /// A number `JSONDecoder` cannot hold, such as `1e400`, as its significant digits and a
-    /// power of ten, so `1e400` equals `10e399`. The exponent is kept as signed decimal digits:
-    /// the server's reader accepts one of any length.
-    case decimal(isNegative: Bool, digits: [UInt8], exponent: SignedDigits)
+    /// A number as its significant digits and a power of ten, so `10`, `1e1` and `10.0` are equal
+    /// and no digit is lost to a `Double`. The exponent is kept as signed decimal digits: the
+    /// server's reader accepts one of any length.
+    case number(isNegative: Bool, digits: [UInt8], exponent: SignedDigits)
     case constructor(name: String, arguments: [ComparableValue])
 
+    /// Both forms of a value are compared through the JSON they are written as.
     init(_ value: StreamMetadata.Member.Value) {
-        switch value {
-        case let .written(value):
-            self.init(value)
-        case let .read(json):
-            if let value = try? JSONDecoder().decode(PropertyValue.self, from: Data(json)) {
-                self.init(value)
-            } else {
-                // Holds something JSON cannot express. The JSON was scanned when it was read.
-                var scanner = KurrentJSONScanner(utf8: json)
-                self = (try? scanner.scanValue()).map(ComparableValue.init) ?? .literal(String(decoding: json, as: UTF8.self))
-            }
+        // This library wrote the JSON, so scanning it does not fail.
+        guard let json = try? value.json else {
+            self = .literal(String(describing: value))
+            return
         }
-    }
-
-    init(_ value: PropertyValue) {
-        switch value {
-        case let .array(values):
-            self = .array(values.map(ComparableValue.init))
-        case let .object(fields):
-            self = .object(fields.mapValues(ComparableValue.init))
-        default:
-            self = .scalar(value)
-        }
+        var scanner = KurrentJSONScanner(utf8: json)
+        self = (try? scanner.scanValue()).map(ComparableValue.init) ?? .literal(String(decoding: json, as: UTF8.self))
     }
 
     init(_ value: KurrentJSONValue) {
@@ -804,23 +869,19 @@ private indirect enum ComparableValue: Equatable {
         case let .constructor(name, arguments):
             self = .constructor(name: name, arguments: arguments.map(ComparableValue.init))
         case let .string(text, _):
-            self = .scalar(.string(text))
+            self = .string(text)
         case let .bool(value):
-            self = .scalar(.bool(value))
+            self = .bool(value)
         case .null:
-            self = .scalar(.null)
+            self = .null
         case .undefined:
             self = .literal("undefined")
         case let .number(number):
-            if let value = try? JSONDecoder().decode(PropertyValue.self, from: Data(number.text.utf8)) {
-                self = .scalar(value)
-            } else {
-                self = ComparableValue(number: number.text)
-            }
+            self = ComparableValue(number: number.text)
         }
     }
 
-    /// A number in standard JSON that `JSONDecoder` cannot hold, or a non-finite literal.
+    /// A number in standard JSON, or a non-finite literal.
     private init(number text: String) {
         let digits = UInt8(ascii: "0") ... UInt8(ascii: "9")
         var rest = Array(text.utf8)[...]
@@ -848,9 +909,9 @@ private indirect enum ComparableValue: Equatable {
             trailingZeros += 1
         }
         if significant.isEmpty {
-            self = .decimal(isNegative: false, digits: [], exponent: SignedDigits(0))
+            self = .number(isNegative: false, digits: [], exponent: SignedDigits(0))
         } else {
-            self = .decimal(isNegative: isNegative, digits: significant, exponent: exponent.adding(trailingZeros - fraction.count))
+            self = .number(isNegative: isNegative, digits: significant, exponent: exponent.adding(trailingZeros - fraction.count))
         }
     }
 }

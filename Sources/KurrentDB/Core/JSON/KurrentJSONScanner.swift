@@ -315,6 +315,9 @@ struct KurrentJSONScanner {
                 throw unexpected("in a constructor name")
             }
         }
+        // Newtonsoft's reader hands over an empty name, and the server then fails either way: its
+        // own reader expects no constructor, and `JToken.ReadFrom` builds a `JConstructor`, which
+        // throws for an empty name.
         guard nameEnd > nameStart else {
             throw unexpected("where a constructor name is expected")
         }
@@ -374,7 +377,7 @@ struct KurrentJSONScanner {
     /// - Returns: The string, and where Newtonsoft holds it for its date check: the index of
     ///   its first character in the reader's buffer, or 0 when an escape made the reader copy it.
     ///   The buffer starts as the text itself and shifts once the reader passes its 922nd
-    ///   character, so past that point the index here is larger than the reader's.
+    ///   character, so past that point the index here is larger than or equal to the reader's.
     private mutating func string(quote: UInt16) throws(KurrentJSONError) -> (text: String, bufferIndex: Int) {
         let start = position
         var hasEscape = false
@@ -513,7 +516,8 @@ struct KurrentJSONScanner {
         }
         switch NewtonsoftInteger.parse(literal.map(UInt16.init), digits: 19) {
         case let .success(integer):
-            return .init(integer: integer, text: String(integer))
+            // `-0` is the integer 0 to the server; the sign is kept for whoever reads it as a float.
+            return .init(integer: integer, text: integer == 0 && first == UInt8(ascii: "-") ? "-0" : String(integer))
         case .overflow:
             // A `BigInteger`, which Newtonsoft refuses past 380 characters.
             guard literal.count <= 380 else {
@@ -628,12 +632,20 @@ struct KurrentJSONScanner {
     }
 
     /// `char.IsLetterOrDigit`: a letter or a decimal digit within the Basic Multilingual Plane.
+    ///
+    /// Only characters Unicode 15.0 assigned count, the version of .NET 8's tables, whatever
+    /// version the Swift runtime knows: a letter a later Unicode added is none to such a server,
+    /// which fails on it in an unquoted name. A server on a later .NET may accept it, and this
+    /// scanner still refuses it.
     private static func isLetterOrDigit(_ unit: UInt16) -> Bool {
-        switch Unicode.Scalar(unit)?.properties.generalCategory {
+        guard let properties = Unicode.Scalar(unit)?.properties, let age = properties.age, age <= (15, 0) else {
+            return false
+        }
+        switch properties.generalCategory {
         case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter, .decimalNumber:
-            true
+            return true
         default:
-            false
+            return false
         }
     }
 

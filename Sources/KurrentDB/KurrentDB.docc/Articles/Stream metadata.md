@@ -42,7 +42,7 @@ try await orders.setMetadata(metadata: metadata)
 The value is stored as the server reads it:
 
 ```json
-{"$cacheControl":10,"$maxAge":604800,"$maxCount":10000}
+{"$maxCount":10000,"$maxAge":604800,"$cacheControl":10}
 ```
 
 ### Access control
@@ -125,13 +125,13 @@ Two rules come from the server's JSON reader, Newtonsoft.Json, which tries every
 - A role name that reads as a date, such as `"2024-01-01T00:00:00"` or `"/Date(0)/"`, is not a string to the server, so it ignores the object. ``StreamMetadata/init(data:)`` throws for it, and `setMetadata(metadata:expectedRevision:)` throws `KurrentError.encodingError` rather than send it.
 - A string that reads as a date outside the years 1 to 9999, such as `"/Date(253402300800000)/"` or `"9999-12-31T24:00:00"`, makes the reader fail wherever it stands, in a custom value too. Reading and writing both throw for it. Any other date-like string in a custom value is only a string.
 
-A role written as a single string is the same as a list of that one name, to the server and to `==`: `"$r":"ops"` equals `"$r":["ops"]`. This holds for the five keys of `$acl` only.
+A role written as a single string is the same as a list of that one name, to the server and to `==`: `"$r":"ops"` equals `"$r":["ops"]`. This holds for the five keys of `$acl` only. Role names themselves are compared byte by byte, by the server and by `==`: two names that differ only in Unicode normalization are two roles.
 
 When an object repeats a key, the server checks every occurrence in turn, so one invalid occurrence makes it ignore the object; when all are valid, the last one applies, and only that one is written back. The server compares keys by their Unicode scalars: `"café"` written with a precomposed `é` and with `e` and a combining accent are two keys to it. ``StreamMetadata/init(data:)`` reads both and writes both back. Your own code names a custom key with a Swift `String`, which compares the two spellings equal: `customProperty(_:as:)` reads the first of them, `customProperty(_:encoding:)` replaces both with the key you pass, and `==` compares the first. Only writes from other tools produce such keys.
 
-Newtonsoft.Json accepts more than standard JSON, and ``StreamMetadata/init(data:)`` reads all of it the same way: a trailing comma, single-quoted strings, unquoted keys, integers written in octal or hexadecimal (`010` is 8, `0x10` is 16), `.5` and `1.`, `NaN`, `Infinity`, `undefined`, and comments inside the value of a custom key. A comment anywhere else, such as between two top-level keys or inside `$acl`, makes the server ignore the object. The text may be UTF-8, or UTF-16 or UTF-32 with a byte order mark; malformed bytes are read as U+FFFD, not refused. The server stops reading at the closing brace of the object, so anything after it is ignored and not kept.
+Newtonsoft.Json accepts more than standard JSON, and ``StreamMetadata/init(data:)`` reads all of it the same way: a trailing comma, single-quoted strings, unquoted keys (of the letters and digits Unicode 15.0 assigned, as .NET 8 knows them), integers written in octal or hexadecimal (`010` is 8, `0x10` is 16), `.5` and `1.`, `NaN`, `Infinity`, `undefined`, and comments inside the value of a custom key. A comment anywhere else, such as between two top-level keys or inside `$acl`, makes the server ignore the object. The text may be UTF-8, or UTF-16 or UTF-32 with a byte order mark; malformed bytes are read as U+FFFD, not refused. The server stops reading at the closing brace of the object, so anything after it is ignored and not kept.
 
-A custom value is kept as standard JSON: `010` is written back as `8`, `.5` as `0.5`, a single-quoted string with double quotes, and comments are dropped. `NaN`, `Infinity` and `undefined` have no JSON form, so they are written back as they are, and `customProperty(_:as:)` throws for them. A string starting with `/Date(` is written with its first slash escaped (`"\/Date(0)/"`), which the server reads the same way wherever the string stands. One difference from the server remains: in metadata longer than 922 characters, a `/Date(…)/` string with a malformed offset, such as `"/Date(0+08:00)/"`, may be read as a date here where the server reads a string, so reading throws for a role name or an out-of-range value of that shape. Only raw writes from other tools produce any of these.
+A custom value is kept as standard JSON: `010` is written back as `8`, `.5` as `0.5`, a single-quoted string with double quotes, and comments are dropped. `NaN`, `Infinity` and `undefined` have no JSON form, so they are written back as they are, and `customProperty(_:as:)` throws for them. `customProperties(as:)` then throws too, whatever type it decodes into, and its error names the key: read the other keys one at a time with `customProperty(_:as:)`. A string starting with `/Date(` is written with its first slash escaped (`"\/Date(0)/"`), which the server reads the same way wherever the string stands. One difference from the server remains: in metadata longer than 922 characters, a `/Date(…)/` string with a malformed offset, such as `"/Date(0+08:00)/"`, may be read as a date here where the server reads a string, so reading throws for a role name or an out-of-range value of that shape. Only raw writes from other tools produce any of these.
 
 ## Custom keys
 
@@ -171,11 +171,19 @@ let missing = try metadata.customProperty("region", as: String.self)  // nil
 _ = (tenant, missing)
 ```
 
-Encoding and decoding use `JSONEncoder` and `JSONDecoder` with their default strategies: a `Date` is stored as seconds since 1 January 2001 and `Data` as Base64. When other clients read a key, store such fields in a form they understand, such as an ISO 8601 string.
+`removingCustomProperty(_:)` removes a key and leaves every other key as it is:
+
+```swift
+let stored = try StreamMetadata().customProperty("tenant", encoding: "acme")
+let cleared = try stored.removingCustomProperty("tenant")   // {}
+_ = cleared
+```
+
+Encoding and decoding use `JSONEncoder` and `JSONDecoder` with their default strategies: a `Date` is stored as seconds since 1 January 2001 and `Data` as Base64. A whole number that fits `Int64` or `UInt64` is stored exactly and any other number as a `Double`, as the other KurrentDB clients store it; store a number that needs more digits as a string. When other clients read a key, store such fields in a form they understand, such as an ISO 8601 string.
 
 ### Keys starting with $ are reserved
 
-Keys that start with `$` belong to the server, including ones it adds in a later version. `customProperties(encoding:)` and `customProperty(_:encoding:)` throw `KurrentError.encodingError` for such a key, and `customProperty(_:as:)` returns `nil` for it. Set the system fields through their builders.
+Keys that start with `$` belong to the server, including ones it adds in a later version. `customProperties(encoding:)`, `customProperty(_:encoding:)` and `removingCustomProperty(_:)` throw `KurrentError.encodingError` for such a key, and `customProperty(_:as:)` returns `nil` for it. Set the system fields through their builders.
 
 ```swift
 do {

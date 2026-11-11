@@ -485,7 +485,8 @@ The other way round, a 2.6.1 or earlier client's `getMetadata()` throws on metad
 | `customProperties(["tenant": "acme"])` | merges top-level keys into the object, where 2.x replaced the whole custom dictionary; a key starting with `$` is skipped and logged as a warning | "'customProperties' is deprecated: use customProperties(encoding:). Removed in 4.0." |
 | `maxCount(…)`, `truncateBefore(…)`, `maxAge(…)`, `cacheControl(…)` | a value above the server's limit stops the program (see Limits in <doc:Stream-metadata>); `0` or a duration under one second is written and logged as a warning, and the server ignores that field | none |
 | `getMetadata()` on metadata the server ignores | throws `KurrentError.internalParsingError` (see Metadata the server ignores in <doc:Stream-metadata>) | none |
-| `metadata == other` | compares the whole object, `maxCount` included; an `$acl` role stored as `"ops"` equals one stored as `["ops"]`, as the server reads them | none |
+| `metadata == other` | compares the whole object, `maxCount` included; an `$acl` role stored as `"ops"` equals one stored as `["ops"]`, as the server reads them, and role names are compared byte by byte, as the server matches them | none |
+| `setMetadata(metadata:expectedRevision:)` with an `$acl` role name that reads as a date, such as `"2024-01-01T00:00:00"` | throws `KurrentError.encodingError` before anything is sent: the server would ignore the whole object (see Metadata the server ignores in <doc:Stream-metadata>) | none |
 
 <!-- snippet:skip -->
 ```swift
@@ -518,7 +519,8 @@ struct Legacy2xMetadata: Decodable {
     var acl: Acl?                               // nil for "$userStreamAcl" and "$systemStreamAcl"
     var customProperties: [String: String]?     // nested, not top-level keys
 
-    /// The `$acl` object as 2.x stored it: each permission an array of role names.
+    /// The `$acl` object as 2.x stored it: each permission an array of role names. A single
+    /// role name, as other tools may write it, is read as an array of one.
     struct Acl: Decodable {
         var read: [String]?
         var write: [String]?
@@ -528,6 +530,21 @@ struct Legacy2xMetadata: Decodable {
 
         enum CodingKeys: String, CodingKey {
             case read = "$r", write = "$w", delete = "$d", metaRead = "$mr", metaWrite = "$mw"
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            func roles(_ key: CodingKeys) throws -> [String]? {
+                if let role = try? container.decodeIfPresent(String.self, forKey: key) {
+                    return [role]
+                }
+                return try container.decodeIfPresent([String].self, forKey: key)
+            }
+            read = try roles(.read)
+            write = try roles(.write)
+            delete = try roles(.delete)
+            metaRead = try roles(.metaRead)
+            metaWrite = try roles(.metaWrite)
         }
 
         var roles: StreamMetadata.StreamAcl {
@@ -552,7 +569,9 @@ struct Legacy2xMetadata: Decodable {
         maxAge = try Self.duration(in: container, forKey: .maxAge)
         truncateBefore = try container.decodeIfPresent(UInt64.self, forKey: .truncateBefore)
         cacheControl = try Self.duration(in: container, forKey: .cacheControl)
-        acl = try? container.decodeIfPresent(Acl.self, forKey: .acl)
+        // A 2.x string ACL, "$userStreamAcl" or "$systemStreamAcl", is left out.
+        let isStringAcl = (try? container.decodeIfPresent(String.self, forKey: .acl)) != nil
+        acl = isStringAcl ? nil : try container.decodeIfPresent(Acl.self, forKey: .acl)
         customProperties = try container.decodeIfPresent([String: String].self, forKey: .customProperties)
     }
 
