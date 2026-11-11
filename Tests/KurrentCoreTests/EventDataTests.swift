@@ -89,15 +89,41 @@ struct EventDataTests {
     // MARK: - Custom metadata
 
     @Test("Custom metadata is stored and retrievable")
-    func testCustomMetadataIsStored() {
-        let meta = "custom-payload".data(using: .utf8)!
-        let event = EventData(eventType: "Foo", data: Data(), contentType: .json, customMetadata: meta)
+    func testCustomMetadataIsStored() throws {
+        let meta = Data("custom-payload".utf8)
+        let event = try EventData(eventType: "Foo", data: Data(), contentType: .json, customMetadata: CustomMetadata(data: meta, format: .bytes))
         #expect(event.customMetadata == meta)
     }
 
-    @Test("Nil custom metadata is stored as nil")
-    func testNilCustomMetadata() {
-        let event = EventData(eventType: "Foo", data: Data(), contentType: .json, customMetadata: nil)
-        #expect(event.customMetadata == nil)
+    @Test("An event created without custom metadata has none")
+    func testNoCustomMetadata() {
+        #expect(EventData(eventType: "Foo", data: Data(), contentType: .json).customMetadata == nil)
+        #expect(EventData(eventType: "Foo", payload: .json(["a": 1])).customMetadata == nil)
+        #expect(EventData(eventType: "Foo", model: ["a": 1]).customMetadata == nil)
+        #expect(EventData(eventType: "Foo", bytes: [1, 2]).customMetadata == nil)
+    }
+
+    @Test("Every initializer takes custom metadata as JSON or as bytes")
+    func testCustomMetadataOnEveryInitializer() throws {
+        struct Meta: Codable, Sendable, Equatable {
+            var tenant: String
+        }
+        let json = Data(#"{"tenant":"acme"}"#.utf8)
+        let bytes = Data([0x00, 0xFF, 0x7B])
+        #expect(try EventData(eventType: "Foo", payload: .json(["a": 1]), customMetadata: .json(Meta(tenant: "acme"))).customMetadata == json)
+        #expect(try EventData(eventType: "Foo", model: ["a": 1], customMetadata: .json(Meta(tenant: "acme"))).customMetadata == json)
+        #expect(try EventData(eventType: "Foo", data: Data(), customMetadata: CustomMetadata(data: bytes, format: .bytes)).customMetadata == bytes)
+        #expect(try EventData(eventType: "Foo", bytes: [1], contentType: .binary, customMetadata: CustomMetadata(data: bytes, format: .bytes)).customMetadata == bytes)
+    }
+
+    @Test("The deprecated Data? initializers send the same bytes, and nil is no metadata")
+    @available(*, deprecated)
+    func testDeprecatedDataInitializers() {
+        let meta = Data("custom-payload".utf8)
+        #expect(EventData(eventType: "Foo", payload: .json(["a": 1]), customMetadata: meta).customMetadata == meta)
+        #expect(EventData(eventType: "Foo", model: ["a": 1], customMetadata: meta).customMetadata == meta)
+        #expect(EventData(eventType: "Foo", data: Data(), contentType: .json, customMetadata: meta).customMetadata == meta)
+        #expect(EventData(eventType: "Foo", bytes: [1], customMetadata: meta).customMetadata == meta)
+        #expect(EventData(eventType: "Foo", data: Data(), contentType: .json, customMetadata: nil).customMetadata == nil)
     }
 }

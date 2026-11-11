@@ -18,23 +18,73 @@ public struct EventRecord: Sendable {
     /// Schema metadata describing how to interpret `data`.
     public let schema: Schema
 
-    /// Arbitrary key-value metadata; keys prefixed with `$` are system-reserved.
-    public var properties: [String: Codable & Sendable]
+    /// The properties as they are kept: the members of the custom metadata, and what the
+    /// deprecated setters stored without checking it.
+    var storedProperties: [String: Codable & Sendable]
 
-    /// Creates a record from raw bytes, schema metadata, and optional properties.
+    /// The record's metadata as key-value properties; keys prefixed with `$` are system-reserved.
+    ///
+    /// String, boolean and number members of the custom metadata read back as `String`, `Bool`,
+    /// `Int` or `Double`. Set the metadata when the record is created, through `customMetadata:`.
+    public var properties: [String: Codable & Sendable] {
+        get {
+            storedProperties
+        }
+        @available(*, deprecated, message: "Create the record with `customMetadata: .json(value)`, which checks the value at once. Removed in 4.0.")
+        set {
+            storedProperties = newValue
+        }
+    }
+
+    /// Every public initializer ends here.
+    init(id: UUID?, data: Data, schema: Schema, storedProperties: [String: Codable & Sendable]) {
+        self.id = id
+        self.data = data
+        self.schema = schema
+        self.storedProperties = storedProperties
+    }
+
+    /// Creates a record whose properties are the members of `metadataObject`, a JSON object.
+    /// `nil` and empty data mean no metadata.
+    init(id: UUID?, data: Data, schema: Schema, metadataObject: Data?) throws {
+        var properties: [String: Codable & Sendable] = [:]
+        if let metadataObject, !metadataObject.isEmpty {
+            properties = try JSONDecoder()
+                .decode([String: PropertyValue].self, from: metadataObject)
+                .mapValues(\.unwrapped)
+        }
+        self.init(id: id, data: data, schema: schema, storedProperties: properties)
+    }
+}
+
+// MARK: - From bytes and a schema
+
+extension EventRecord {
+    /// Creates a record from raw bytes and schema metadata.
     ///
     /// - Parameters:
     ///   - id: Optional unique identifier; defaults to `nil` so the server can assign one.
     ///   - data: Raw payload bytes whose encoding matches `schema.format`.
     ///   - schema: Schema metadata describing the payload's format and name.
-    ///   - properties: Additional key-value metadata; keys starting with `$` are system-reserved.
-    public init(id: UUID? = nil, data: Data, schema: Schema, properties: [String: Codable & Sendable] = [:]) {
-        self.id = id
-        self.data = data
-        self.schema = schema
-        self.properties = properties
+    public init(id: UUID? = nil, data: Data, schema: Schema) {
+        self.init(id: id, data: data, schema: schema, storedProperties: [:])
+    }
+
+    /// Creates a record from raw bytes, schema metadata and custom metadata.
+    ///
+    /// - Parameters:
+    ///   - id: Optional unique identifier; defaults to `nil` so the server can assign one.
+    ///   - data: Raw payload bytes whose encoding matches `schema.format`.
+    ///   - schema: Schema metadata describing the payload's format and name.
+    ///   - customMetadata: A JSON object whose members become `properties`; keys starting with `$`
+    ///     are system-reserved.
+    /// - Throws: `DecodingError` if `customMetadata` is not a JSON object.
+    public init(id: UUID? = nil, data: Data, schema: Schema, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws {
+        try self.init(id: id, data: data, schema: schema, metadataObject: customMetadata.data)
     }
 }
+
+// MARK: - From an event type and a payload
 
 extension EventRecord {
     /// Creates a record from a logical event type and typed payload, inferring the schema format automatically.
@@ -50,20 +100,44 @@ extension EventRecord {
     ///   - id: Optional unique identifier; defaults to `nil` so the server can assign one.
     ///   - eventType: Logical schema name set as `schema.name` (e.g., `"order-placed"`).
     ///   - payload: Typed payload; its format is inferred and used to populate `schema.format`.
-    ///   - customMetadata: Optional JSON object whose members become `properties`; keys starting with `$`
-    ///     are system-reserved. Empty data means no metadata. String, boolean and number members are
-    ///     stored as `String`, `Bool`, `Int` or `Double`.
+    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded.
+    public init(id: UUID? = nil, eventType: String, payload: Payload) throws {
+        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), storedProperties: [:])
+    }
+
+    /// Creates a record from a logical event type, a typed payload and custom metadata.
+    ///
+    /// ```swift
+    /// struct OrderMetadata: Codable, Sendable {
+    ///     var tenant: String
+    /// }
+    ///
+    /// let record = try EventRecord(
+    ///     eventType: "order-placed",
+    ///     payload: .json(["orderId": "123"]),
+    ///     customMetadata: .json(OrderMetadata(tenant: "acme"))
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - id: Optional unique identifier; defaults to `nil` so the server can assign one.
+    ///   - eventType: Logical schema name set as `schema.name` (e.g., `"order-placed"`).
+    ///   - payload: Typed payload; its format is inferred and used to populate `schema.format`.
+    ///   - customMetadata: A JSON object whose members become `properties`; keys starting with `$`
+    ///     are system-reserved. An invalid value is refused here, not when the record is appended.
+    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
+    ///   `customMetadata` is not a JSON object.
+    public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws {
+        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), metadataObject: customMetadata.data)
+    }
+
+    /// Creates a record with custom metadata given as the bytes of a JSON object.
+    ///
     /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
     ///   `customMetadata` is not a JSON object or nests arrays and objects more than 64 levels deep.
-    public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data? = nil) throws {
-        let schema = Schema(format: payload.format, name: eventType)
-        var properties: [String: Codable & Sendable] = [:]
-        if let customMetadata, !customMetadata.isEmpty {
-            properties = try JSONDecoder()
-                .decode([String: PropertyValue].self, from: customMetadata)
-                .mapValues(\.unwrapped)
-        }
-        try self.init(id: id, data: payload.data, schema: schema, properties: properties)
+    @available(*, deprecated, message: "Pass a CustomMetadata: `.json(value)`, or `CustomMetadata(data: data, format: .json)` for JSON you already have. Leave the argument out for no metadata. Removed in 4.0.")
+    public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data?) throws {
+        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), metadataObject: customMetadata)
     }
 }
 
@@ -73,7 +147,7 @@ extension EventRecord: Buildable {
     /// - Parameter value: W3C Trace Context trace ID string.
     public func traceId(_ value: String) -> Self {
         withCopy {
-            $0.properties["$trace-id"] = value
+            $0.storedProperties["$trace-id"] = value
         }
     }
 
@@ -82,7 +156,7 @@ extension EventRecord: Buildable {
     /// - Parameter value: W3C Trace Context span ID string.
     public func spanId(_ value: String) -> Self {
         withCopy {
-            $0.properties["$span-id"] = value
+            $0.storedProperties["$span-id"] = value
         }
     }
 
@@ -91,18 +165,22 @@ extension EventRecord: Buildable {
     /// - Parameter value: ISO 8601 timestamp string (e.g., `"2026-02-11T10:00:00Z"`).
     public func timestamp(_ value: String) -> Self {
         withCopy {
-            $0.properties["$timestamp"] = value
+            $0.storedProperties["$timestamp"] = value
         }
     }
 
     /// Returns a copy of the record with an arbitrary property value set.
     ///
+    /// The value is not checked here: one that cannot be sent, such as a `Double` that is not
+    /// finite, fails when the record is appended.
+    ///
     /// - Parameters:
     ///   - value: The property value; must be `Codable` and `Sendable`.
     ///   - key: The property key; must not start with `$` for user-defined properties.
+    @available(*, deprecated, message: "Create the record with `customMetadata: .json(value)`, which checks the value at once. Removed in 4.0.")
     public func setValue(_ value: Codable & Sendable, forKey key: String) -> Self {
         withCopy {
-            $0.properties[key] = value
+            $0.storedProperties[key] = value
         }
     }
 }

@@ -81,6 +81,25 @@ for try await response in responses {
 
 > Tip: Read one event backwards to find the last revision of a stream.
 
+## Reading custom metadata
+
+The server stores an event's custom metadata as bytes and does not record how they were written, so you name the format when you read them. ``RecordedEvent/customMetadata(format:)`` returns a ``CustomMetadata``, or `nil` for an event without metadata:
+
+```swift
+struct EventMetadata: Codable, Sendable {
+    var correlationId: String
+}
+
+for try await response in client.streams(specified: "some-stream").read() {
+    let record = try response.event.record
+    if let metadata = try record.customMetadata(format: .json)?.decode(EventMetadata.self) {
+        print(metadata.correlationId)
+    }
+}
+```
+
+`decode(_:)` ignores members your type does not declare, such as the keys the server adds to a record's metadata. Bytes that are not JSON throw when read as `.json`; `customMetadata(format: .bytes)?.data` returns them as they are stored, as does `record.customMetadata`.
+
 ## Checking if the stream exists
 
 Reading a stream that doesn't exist throws ``KurrentError/resourceNotFound(reason:)``. The error arrives while you iterate the results, not when you call `read`:
