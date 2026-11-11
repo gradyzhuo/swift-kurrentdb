@@ -22,9 +22,40 @@ public protocol CustomMetadataFormat: Sendable, Equatable {
 public struct JSONMetadataFormat: CustomMetadataFormat {
     public init() {}
 
+    /// Any JSON value. Scalars are not decoded, so a number no Swift type holds, such as `1e400`,
+    /// is accepted: the bytes are stored as they are.
+    private struct AnyValue: Decodable {
+        init(from decoder: any Decoder) throws {
+            guard decoder.codingPath.count < PropertyValue.maximumDepth else {
+                throw DecodingError.dataCorrupted(.init(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "The JSON nests arrays and objects more than \(PropertyValue.maximumDepth) levels deep."
+                ))
+            }
+            if var elements = try? decoder.unkeyedContainer() {
+                while !elements.isAtEnd {
+                    _ = try elements.decode(AnyValue.self)
+                }
+            } else if let members = try? decoder.container(keyedBy: Key.self) {
+                for key in members.allKeys {
+                    _ = try members.decode(AnyValue.self, forKey: key)
+                }
+            } else {
+                _ = try decoder.singleValueContainer()
+            }
+        }
+
+        struct Key: CodingKey {
+            let stringValue: String
+            let intValue: Int? = nil
+            init?(stringValue: String) { self.stringValue = stringValue }
+            init?(intValue _: Int) { nil }
+        }
+    }
+
     public func validate(_ data: Data) throws(KurrentError) {
         do {
-            _ = try JSONDecoder().decode(PropertyValue.self, from: data)
+            _ = try JSONDecoder().decode(AnyValue.self, from: data)
         } catch let error as DecodingError {
             throw .decodingError(cause: error)
         } catch {
@@ -100,7 +131,7 @@ extension CustomMetadata where Format == JSONMetadataFormat {
     /// Encodes `value` as JSON with `JSONEncoder`'s default strategies.
     ///
     /// - Throws: `KurrentError.encodingError` when `value` cannot be encoded, such as a `Double`
-    ///   that is not finite.
+    ///   that is not finite, or encodes to JSON nested more than 64 levels deep.
     public static func json(_ value: some Encodable & Sendable) throws(KurrentError) -> Self {
         let data: Data
         do {
@@ -108,7 +139,11 @@ extension CustomMetadata where Format == JSONMetadataFormat {
         } catch {
             throw .encodingError(message: "Custom metadata of type \(type(of: value)) cannot be encoded: \(error)", encoding: .utf8)
         }
-        return try Self(data: data, format: .json)
+        do {
+            return try Self(data: data, format: .json)
+        } catch {
+            throw .encodingError(message: "Custom metadata of type \(type(of: value)) cannot be stored: \(error)", encoding: .utf8)
+        }
     }
 
     /// Decodes the JSON into `type`. Members `type` does not declare are ignored.

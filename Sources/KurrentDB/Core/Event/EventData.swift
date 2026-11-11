@@ -240,6 +240,6 @@ extension EventRecord {
         case let .json(model):
             .json(model)
         }
-        try self.init(id: eventData.id, data: payload.data, schema: .init(format: payload.format, name: eventData.eventType), metadataObject: eventData.customMetadata)
+        try self.init(id: eventData.id, eventType: eventData.eventType, payload: payload, metadataObject: eventData.customMetadata)
     }
 }

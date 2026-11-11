@@ -44,16 +44,22 @@ public struct EventRecord: Sendable {
         self.storedProperties = storedProperties
     }
 
-    /// Creates a record whose properties are the members of `metadataObject`, a JSON object.
-    /// `nil` and empty data mean no metadata.
-    init(id: UUID?, data: Data, schema: Schema, metadataObject: Data?) throws {
-        var properties: [String: Codable & Sendable] = [:]
-        if let metadataObject, !metadataObject.isEmpty {
-            properties = try JSONDecoder()
-                .decode([String: PropertyValue].self, from: metadataObject)
-                .mapValues(\.unwrapped)
+    /// The members of `metadataObject`, a JSON object, as properties. `nil` and empty data mean
+    /// no metadata.
+    static func properties(fromJSONObject metadataObject: Data?) throws -> [String: Codable & Sendable] {
+        guard let metadataObject, !metadataObject.isEmpty else {
+            return [:]
         }
-        self.init(id: id, data: data, schema: schema, storedProperties: properties)
+        return try JSONDecoder()
+            .decode([String: PropertyValue].self, from: metadataObject)
+            .mapValues(\.unwrapped)
+    }
+
+    /// Creates a record from a payload and the JSON object holding its metadata. The metadata is
+    /// read before the payload is encoded, so invalid metadata is the error reported first.
+    init(id: UUID?, eventType: String, payload: Payload, metadataObject: Data?) throws {
+        let properties = try Self.properties(fromJSONObject: metadataObject)
+        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), storedProperties: properties)
     }
 }
 
@@ -80,7 +86,7 @@ extension EventRecord {
     ///     are system-reserved.
     /// - Throws: `DecodingError` if `customMetadata` is not a JSON object.
     public init(id: UUID? = nil, data: Data, schema: Schema, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws {
-        try self.init(id: id, data: data, schema: schema, metadataObject: customMetadata.data)
+        try self.init(id: id, data: data, schema: schema, storedProperties: Self.properties(fromJSONObject: customMetadata.data))
     }
 }
 
@@ -128,7 +134,7 @@ extension EventRecord {
     /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
     ///   `customMetadata` is not a JSON object.
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws {
-        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), metadataObject: customMetadata.data)
+        try self.init(id: id, eventType: eventType, payload: payload, metadataObject: customMetadata.data)
     }
 
     /// Creates a record with custom metadata given as the bytes of a JSON object.
@@ -137,7 +143,7 @@ extension EventRecord {
     ///   `customMetadata` is not a JSON object or nests arrays and objects more than 64 levels deep.
     @available(*, deprecated, message: "Pass a CustomMetadata: `.json(value)`, or `CustomMetadata(data: data, format: .json)` for JSON you already have. Leave the argument out for no metadata. Removed in 4.0.")
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data?) throws {
-        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), metadataObject: customMetadata)
+        try self.init(id: id, eventType: eventType, payload: payload, metadataObject: customMetadata)
     }
 }
 

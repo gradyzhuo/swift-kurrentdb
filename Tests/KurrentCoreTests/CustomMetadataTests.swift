@@ -73,6 +73,32 @@ struct CustomMetadataTests {
         #expect { try CustomMetadata(data: nested(65), format: .json) } throws: { Self.isDecodingError($0) }
     }
 
+    @Test("A number no Swift type holds is JSON metadata for an EventData and refused by an EventRecord")
+    func numberBeyondEveryType() throws {
+        let metadata = try CustomMetadata(data: Data(#"{"n":1e400}"#.utf8), format: .json)
+        #expect(EventData(eventType: "test", model: ["k": "v"], customMetadata: metadata).customMetadata == metadata.data)
+        #expect(throws: DecodingError.self) {
+            try EventRecord(eventType: "test", payload: .json(["k": "v"]), customMetadata: metadata)
+        }
+    }
+
+    @Test("A value that encodes to JSON nested too deep is an encoding error")
+    func encodesTooDeep() {
+        indirect enum Nested: Encodable, Sendable {
+            case leaf
+            case list(Nested)
+
+            func encode(to encoder: any Encoder) throws {
+                var container = encoder.unkeyedContainer()
+                if case let .list(inner) = self {
+                    try container.encode(inner)
+                }
+            }
+        }
+        let value = (0 ..< 65).reduce(Nested.leaf) { nested, _ in .list(nested) }
+        #expect { try CustomMetadata.json(value) } throws: { Self.isEncodingError($0) }
+    }
+
     @Test("A value JSONEncoder cannot write is an encoding error", arguments: [
         Double.nan, Double.infinity, -Double.infinity,
     ])
