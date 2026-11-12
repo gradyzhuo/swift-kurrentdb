@@ -3,21 +3,21 @@ import KurrentDB
 import KurrentDBPool
 import Testing
 
-/// 這些測試會實際連線到 KurrentDBPool.shared 背後、由 KURRENTDB_POOL_URLS 指定的容器，
-/// 走 borrow()/withBorrowedClient() 這兩個真正會打 RPC 的入口——跟 KurrentDBPoolTests.swift
-/// 裡純 actor 記帳邏輯的測試分開。
+/// These tests connect to the containers behind KurrentDBPool.shared, named by KURRENTDB_POOL_URLS,
+/// through borrow() and withBorrowedClient(), the two entry points that send real RPCs. They are kept
+/// apart from the tests of the actor's bookkeeping in KurrentDBPoolTests.swift.
 ///
-/// 沒設 KURRENTDB_POOL_URLS 時整個 suite 用 .enabled(if:) 跳過，而不是讓每個
-/// 測試各自因為拿不到 client 而記錄失敗——標準的 `swift test` 在沒有額外準備
-/// 好多台獨立 KurrentDB 實例的環境下（例如一般開發機、offline CI job）應該
-/// 乾淨跳過這個 suite，而不是回傳非 0 的結果。
+/// Without KURRENTDB_POOL_URLS the whole suite is skipped with .enabled(if:), instead of every
+/// test recording a failure because it gets no client: a plain `swift test` where no set of
+/// independent KurrentDB instances was prepared (a developer's machine, an offline CI job) should
+/// skip this suite cleanly and not return a non-zero result.
 @Suite(
     "KurrentDBPool Live Tests",
     .serialized,
     .enabled(if: ProcessInfo.processInfo.environment["KURRENTDB_POOL_URLS"] != nil)
 )
 struct KurrentDBPoolLiveTests {
-    @Test("withBorrowedClient 借到一個真的能打 RPC 的 client")
+    @Test("withBorrowedClient lends a client that can send RPCs")
     func testWithBorrowedClientWorks() async throws {
         let members = try await withBorrowedClient { borrowed in
             try await borrowed.client.readCluster()
@@ -34,7 +34,7 @@ struct KurrentDBPoolLiveTests {
         }
 
         guard let borrowed = capturedBorrowed else {
-            Issue.record("預期能拿到 BorrowedClient")
+            Issue.record("Expected a BorrowedClient")
             return
         }
 
@@ -56,23 +56,23 @@ struct KurrentDBPoolLiveTests {
         await #expect(throws: KurrentError.connectionClosed) { _ = try await streams.append(events: [EventData(eventType: "T", model: ["k": "v"])]) }
     }
 
-    @Test("同時借兩個不同成員，各自寫入的事件不會出現在對方那裡（隔離驗證）")
+    @Test("Two members borrowed at once do not see each other's events (isolation)")
     func testTwoSimultaneousBorrowsAreIsolated() async throws {
-        // 這個測試天生需要至少兩個成員——第二次 borrow() 才有機會拿到跟第一次
-        // 不同的那個。只設一個成員時，第二次 borrow() 內部的 acquire() 會因為
-        // 池子非空但全忙碌而真的排隊掛起，永遠等不到 first 才會發生的 release()。
-        // 先檢查數量、不夠就明確跳過，不要讓整個測試執行卡死在這裡。
+        // This test needs at least two members by nature: only then can the second borrow() get a
+        // different one from the first. With one member, the acquire() inside the second borrow() queues,
+        // since the pool has members but all are busy, and waits forever for a release() only first would cause.
+        // Check the count first and skip explicitly when it is too low, so the run does not hang here.
         guard await KurrentDBPool.shared.count >= 2 else {
             return
         }
 
         guard let first = await KurrentDBPool.borrow() else {
-            Issue.record("預期能借到第一個")
+            Issue.record("Expected to borrow the first member")
             return
         }
         guard let second = await KurrentDBPool.borrow() else {
             await first.giveBack()
-            Issue.record("預期能借到第二個——池子裡至少要有兩個成員")
+            Issue.record("Expected to borrow the second member: the pool needs at least two")
             return
         }
 
@@ -106,11 +106,11 @@ struct KurrentDBPoolLiveTests {
         await second.giveBack()
     }
 
-    @Test("borrow() 在唯一的候選人連不到時嘗試完就回 nil，不會自己把自己鎖死（迴歸測試）")
+    @Test("borrow() returns nil after trying an only candidate that cannot be reached, without locking itself up (regression)")
     func testBorrowDoesNotDeadlockWithSingleDeadCandidate() async {
-        // 把 shared 目前所有本來就存在的成員先借光，讓下面新增的壞地址
-        // 變成唯一可能被抽到的候選人——這樣才能確定 borrow() 真的會碰到它，
-        // 而不是繞過去抽到別的活成員。
+        // Borrow every member shared already has, so the bad address added below is the only
+        // candidate that can be drawn: that makes sure borrow() really meets it and does not
+        // go around it to a live member.
         var heldLive: [KurrentDBPool.Lease] = []
         while let lease = await KurrentDBPool.shared.tryAcquire() {
             heldLive.append(lease)
@@ -125,30 +125,30 @@ struct KurrentDBPoolLiveTests {
         for lease in heldLive { await lease.giveBack() }
     }
 
-    @Test("候選人輪替不會讓健康成員被排在前面的壞成員永久卡住（迴歸測試）")
+    @Test("Candidate rotation keeps bad members ahead of a healthy one from blocking it forever (regression)")
     func testBorrowRotatesPastPersistentlyBadCandidates() async {
-        // 借光目前所有本來就存在的成員，讓接下來加的候選人變成唯一可見的。
+        // Borrow every member there already is, so the candidates added next are the only ones visible.
         var heldLive: [KurrentDBPool.Lease] = []
         while let lease = await KurrentDBPool.shared.tryAcquire() {
             heldLive.append(lease)
         }
 
         guard let goodSettings = heldLive.first?.settings else {
-            Issue.record("需要至少一個活的成員來源設定")
+            Issue.record("At least one live member is needed as the source of settings")
             return
         }
 
-        // 順序很重要：3 個連不到的先插進去，健康的最後才加——修好之前，
-        // firstIdleID() 固定依插入順序掃描，healthy 成員永遠排在最後面，
-        // 而 giveBack() 把壞成員還回去時也不會改變它們的位置，所以每次
-        // borrow() 都會重測同樣 3 個壞成員，好成員永遠輪不到。
+        // The order matters: the 3 unreachable ones go in first and the healthy one last. Before the fix,
+        // firstIdleID() scanned in insertion order, the healthy member was always last, and
+        // giveBack() returned the bad members to the same places, so every
+        // borrow() tested the same 3 bad members again and never reached the good one.
         var deadIDs: [KurrentDBPool.MemberID] = []
         for _ in 0..<3 {
             deadIDs.append(await KurrentDBPool.shared.add(.remote(.init(host: "127.0.0.1", port: 1), secure: false)))
         }
         let goodID = await KurrentDBPool.shared.add(goodSettings)
 
-        // 4 個候選人、maxAttempts=3，最多兩次呼叫（6 次嘗試）保證輪過一整輪。
+        // 4 candidates and maxAttempts=3: two calls (6 attempts) at most go round all of them.
         var succeeded = false
         for _ in 0..<8 {
             if let borrowed = await KurrentDBPool.borrow(maxAttempts: 3) {

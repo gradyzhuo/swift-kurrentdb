@@ -25,8 +25,8 @@ extension StreamStream where Transport == AnyClientTransport {
             throw .unsupportedFeature(methodDescriptor)
         }
         
-        // stream 回應會把連線帶出這個函式,所以每次呼叫獨立一條。completion 閉包持有
-        // connection,讓它(以及 provider)活到 stream 終止為止。
+        // The streamed response carries the connection out of this function, so every call gets its
+        // own. The completion closure holds the connection, keeping it (and the provider) alive until the stream ends.
         let connection = try node.connections.openDedicated(for: node.endpoint)
         do {
             return try await withRethrowingError(usage: "\(Self.self).\(#function)") {
@@ -35,13 +35,13 @@ extension StreamStream where Transport == AnyClientTransport {
                     if let error {
                         logger.error("The error is thrown in the response of StreamStream: \(error)")
                     }
-                    // graceful shutdown 會等待進行中的 RPC 完成 —— 對長生命週期訂閱而言
-                    // 那可能永遠不會發生。取消執行 runConnections() 的 task 才會中止所有工作。
+                    // A graceful shutdown waits for the RPCs in progress, which a long-lived subscription
+                    // may never finish. Cancelling the task that runs runConnections() is what stops the work.
                     connection.close()
                 }
             }
         } catch {
-            // setup 失敗:stream 永遠不會終止,由這裡收尾。成功時不可在這裡 close。
+            // Setup failed: the stream will never end, so close here. Do not close here on success.
             connection.close()
             throw error
         }

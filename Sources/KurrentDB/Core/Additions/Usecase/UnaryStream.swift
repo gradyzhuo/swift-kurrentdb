@@ -39,8 +39,8 @@ extension UnaryStream where Transport == AnyClientTransport {
                     if let error {
                         logger.error("The error is thrown in the response of UnaryStream: \(error)")
                     }
-                    // cancel 這條連線的 runTask 會中止其上的 RPC,send() 裡跑 read 的內層 task
-                    // 也因此結束。不能用 graceful shutdown:它會等無限期的訂閱結束。
+                    // Cancelling this connection's runTask stops the RPCs on it, which also ends the inner
+                    // task running the read in send(). Do not use a graceful shutdown: it would wait for an endless subscription.
                     connection.close()
                 }
                 // A shutdown closes the connection from outside; tell the response so a producer
@@ -51,8 +51,8 @@ extension UnaryStream where Transport == AnyClientTransport {
                 return responses
             }
         } catch {
-            // setup 失敗(metadata、request、呼叫本身):stream 永遠不會終止,由這裡收尾。
-            // 成功時不可在這裡 close —— 那會立刻殺掉剛回傳出去的訂閱。
+            // Setup failed (metadata, request or the call itself): the stream will never end, so close here.
+            // Do not close here on success: that would end the subscription just returned.
             connection.close()
             throw error
         }

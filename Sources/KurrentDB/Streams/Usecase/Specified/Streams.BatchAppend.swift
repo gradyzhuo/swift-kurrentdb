@@ -102,8 +102,8 @@ extension Streams {
                 return Response(results: [])
             }
 
-            // BatchAppend 在 wire 上是雙向 stream,依回應形態走獨立連線 —— 即使這個
-            // adapter 會在函式內彙整完所有回應才返回。結果已經在這裡收齊,所以每個出口都關閉。
+            // BatchAppend is a bidirectional stream on the wire, so by the shape of its response it gets its own
+            // connection, although this adapter collects every response before returning. Every exit closes it.
             let connection = try node.connections.openDedicated(for: node.endpoint)
             defer { connection.close() }
             let client = connection.client

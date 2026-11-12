@@ -2,16 +2,16 @@
 //  GRPCClientLifecycleCharacterizationTests.swift
 //  swift-kurrentdb
 //
-//  釘住 grpc-swift 2 的連線生命週期行為。這些測試不驗證 KurrentDB 的邏輯,
-//  而是記錄我們所依賴的第三方行為 — 若上游改變,這些測試會先失敗。
+// Pins the connection lifecycle behaviour of grpc-swift 2. These tests do not check KurrentDB's
+// logic; they record third-party behaviour we rely on, so they fail first if upstream changes.
 //
-//  已確認的事實:對一個無法連線的目標,`runConnections()` 不會 fail fast —
-//  它會無限期地掛著等待,既不拋錯也不返回,沒有任何錯誤可言,自然也沒有
-//  「錯誤被吞掉」這回事。唯一能讓它結束的手段,是取消執行它的 Task;
-//  取消後那次呼叫本身會「正常返回」(不拋 CancellationError,也不拋任何
-//  其他錯誤),且 client 會進入 stopped 狀態。因此本檔案不驗證「會拋錯」
-//  (那不是事實),而是驗證「取消能讓它結束,結束方式是正常返回,且結束後
-//  client 已經 stopped」。
+// Established fact: for a target that cannot be reached, `runConnections()` does not fail fast.
+// It hangs without end, neither throwing nor returning, so there is no error and nothing
+// is "swallowed". The only way to end it is to cancel the Task running it;
+// after the cancel the call itself returns normally (it throws neither CancellationError nor
+// any other error), and the client is stopped. So this file does not check that it throws
+// (it does not), but that a cancel ends it, that it ends by returning normally, and that the
+// client is stopped afterwards.
 //
 
 import Testing
@@ -19,12 +19,12 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 @testable import KurrentDB
 
-@Suite("GRPCClient 連線生命週期特性", .serialized, .timeLimit(.minutes(1)))
+@Suite("GRPCClient connection lifecycle characterization", .serialized, .timeLimit(.minutes(1)))
 struct GRPCClientLifecycleCharacterizationTests {
 
-    /// 指向一個必定無法連線的位址(TEST-NET-1,RFC 5737 保留,不可路由)。
-    /// 沿用 repo 既有的 `Endpoint.target` 與 `.http2NIOPosix`,與
-    /// `ConnectionProvider.makeClient(for:)` 的建構方式一致。
+    /// A client for an address that can never be reached (TEST-NET-1, reserved by RFC 5737, not routable).
+    /// It uses the repository's `Endpoint.target` and `.http2NIOPosix`, built the way
+    /// `ConnectionProvider.makeClient(for:)` builds it.
     private func unreachableTransport() throws -> HTTP2ClientTransport.Posix {
         let endpoint = Endpoint(host: "192.0.2.1", port: 2113)
         return try .http2NIOPosix(
@@ -33,32 +33,32 @@ struct GRPCClientLifecycleCharacterizationTests {
         )
     }
 
-    /// 對無法連線的目標呼叫 `runConnections()` 會無限期地等待 — 這件事本身
-    /// 無法在不使用 wall-clock 的情況下斷言(「永遠不結束」不是一個能被
-    /// `#expect` 驗證的條件)。唯一已驗證能讓它結束的方式,是取消執行它的
-    /// Task —— grpc-swift 官方文件(`GRPCClient.swift:212`)也是這樣寫的:
-    /// 「If you need to abruptly stop all work you should cancel the task
-    /// executing this method.」
+    /// `runConnections()` on a target that cannot be reached waits without end. That cannot be
+    /// asserted without a wall clock ("never ends" is not a condition `#expect` can
+    /// check). The only verified way to end it is to cancel the Task running it, which
+    /// is also what grpc-swift's documentation says (`GRPCClient.swift:212`):
+    /// "If you need to abruptly stop all work you should cancel the task
+    /// executing this method."
     ///
-    /// 這個測試釘住三件事,且每一件都在毫秒等級內完成(不靠時間上限判斷):
-    /// 1. 取消能解除阻塞 —— `task.value` 會返回,而不是卡住。
-    /// 2. 被取消的那次 `runConnections()` 呼叫本身「正常返回」,不拋出
-    ///    `CancellationError`,也不拋出任何其他錯誤(以探測性測試實際執行
-    ///    三次確認,結果一致)。這對 Task 4 的生產程式碼修正很重要:呼叫端
-    ///    不能靠 `catch is CancellationError` 分辨「因取消而收尾」,因為
-    ///    根本不會拋錯。
-    /// 3. 取消之後 client 進入 stopped 狀態 —— 第二次呼叫 `runConnections()`
-    ///    必定拋錯,證實 client 只能執行一次。
-    @Test("連線 Task 被取消後,呼叫本身正常返回(不拋錯),client 進入 stopped 狀態")
+    /// This test pins three things, each done within milliseconds (no time limit decides the result):
+    /// 1. A cancel unblocks it: `task.value` returns instead of hanging.
+    /// 2. The cancelled `runConnections()` call itself returns normally, throwing neither
+    ///    `CancellationError` nor any other error (confirmed by running a probing test
+    ///    three times, with the same result). This matters to the production fix: a caller
+    ///    cannot tell "ended by a cancel" with `catch is CancellationError`, because
+    ///    nothing is thrown.
+    /// 3. After the cancel the client is stopped: a second `runConnections()`
+    ///    always throws, which shows a client runs only once.
+    @Test("After the connection Task is cancelled the call returns normally, without throwing, and the client is stopped")
     func cancellingConnectionTaskStopsClient() async throws {
         let client = GRPCClient(transport: try unreachableTransport())
         let task = Task { try await client.runConnections() }
         task.cancel()
 
-        // 被取消的第一次呼叫:正常返回,不拋錯(已用探測性測試驗證 3 次,結果一致)。
+        // The cancelled first call: returns normally, without throwing (verified 3 times with a probing test, same result).
         try await task.value
 
-        // 再次 run 應拋錯:client 只能執行一次,取消已讓它進入 stopped 狀態。
+        // Running again must throw: a client runs only once, and the cancel has stopped it.
         await #expect(throws: (any Error).self) {
             try await client.runConnections()
         }

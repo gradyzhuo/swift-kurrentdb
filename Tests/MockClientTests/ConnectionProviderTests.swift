@@ -2,15 +2,15 @@
 //  ConnectionProviderTests.swift
 //  swift-kurrentdb
 //
-//  不需要伺服器:全部指向本機沒有在監聽的特權 port(127.0.0.1:1、:2),連線會立即被
-//  拒絕(ECONNREFUSED)。刻意不用 TEST-NET 位址(192.0.2.x):那種位址不回應 SYN,
-//  已經開始連線的 runConnections() 要等到 TCP connect 逾時(約 10 秒)才會對 cancel
-//  有反應,會讓「cancel 後 runTask 結束」的斷言變得與時序相關。這些測試仍會實際發出
-//  連線嘗試(與伺服器無關,但不是完全沒有網路活動)。
+// No server needed: everything points at privileged ports nothing listens on (127.0.0.1:1 and :2), so a
+// connection is refused at once (ECONNREFUSED). TEST-NET addresses (192.0.2.x) are avoided on purpose: they
+// do not answer a SYN, so a runConnections() that has started connecting reacts to a cancel only when the TCP
+// connect times out (about 10 seconds), which would make "the runTask ends after a cancel" depend on timing.
+// These tests still make real connection attempts (no server is involved, but there is network activity).
 //
-//  sweeper 一律關閉(sweepInterval: nil),改用 sweep(now:) 以注入的時間點驅動,
-//  讓回收相關的斷言與實際時間無關。每個測試結束都 shutdown(),避免在整個測試程序
-//  裡累積對不可達目標無限期掛著的 runConnections()。
+// The sweeper is always off (sweepInterval: nil) and sweep(now:) is driven with injected instants,
+// so the reclaiming assertions do not depend on real time. Every test ends with shutdown(), so the test
+// process does not collect runConnections() calls hanging on unreachable targets.
 //
 
 import Foundation
@@ -30,8 +30,8 @@ struct ConnectionProviderTests {
         ConnectionProvider(settings: .localhost(), idleTimeout: idleTimeout, sweepInterval: nil)
     }
 
-    /// 等到條件成立或逾時。只用於等待真實的 task 收尾(cancel 之後 runTask 何時結束
-    /// 取決於排程),不用於任何時間相關的業務斷言。
+    /// Waits until the condition holds or the time runs out. Only for waiting on a real task to finish (when a
+    /// runTask ends after a cancel depends on scheduling), never for a time-related assertion about behaviour.
     private func eventually(_ condition: () -> Bool) async throws -> Bool {
         for _ in 0 ..< 200 {
             if condition() { return true }
@@ -64,7 +64,7 @@ struct ConnectionProviderTests {
 
     // MARK: - Shared: reuse
 
-    @Test("同一個 endpoint 取兩次會拿到同一條連線")
+    @Test("Acquiring the same endpoint twice returns the same connection")
     func reusesConnectionForSameEndpoint() throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -78,7 +78,7 @@ struct ConnectionProviderTests {
         #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 2)
     }
 
-    @Test("不同 endpoint 各自一條連線")
+    @Test("Different endpoints get a connection each")
     func separateConnectionsPerEndpoint() throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -91,9 +91,9 @@ struct ConnectionProviderTests {
         #expect(provider.createdSharedConnectionCount == 2)
     }
 
-    /// 整個改動的核心主張:高併發下同一個 endpoint 只建立一條共用連線。
-    /// 未命中的並行呼叫會各自在 lock 外建構,但只有一個能發布;其餘丟棄自己的。
-    @Test("100 個並行 acquire 打同一個 endpoint 只建立一條連線")
+    /// The central claim of the change: under high concurrency one endpoint gets one shared connection.
+    /// Concurrent misses each build outside the lock, but only one publishes; the others drop their own.
+    @Test("100 concurrent acquires of one endpoint create one connection")
     func concurrentAcquiresCreateOneConnection() async throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -120,7 +120,7 @@ struct ConnectionProviderTests {
 
     // MARK: - Shared: lease accounting
 
-    @Test("release 只生效一次;deinit 保底只釋放一次")
+    @Test("release takes effect once; the deinit fallback releases once")
     func releaseIsExactlyOnce() throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -134,13 +134,13 @@ struct ConnectionProviderTests {
         #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
 
         do {
-            _ = try provider.acquire(Self.endpointA)   // 立即被釋放 → deinit 保底
+            _ = try provider.acquire(Self.endpointA)   // released at once → the deinit fallback
         }
         #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.retainCount == 1)
     }
 
-    /// Codex 第三輪的 P1:A 被移除後,同 endpoint 換成 B;A 晚到的 release 不能動到 B。
-    @Test("舊一代的 release 不會影響替換上來的新 entry")
+    /// P1 of the third Codex round: after A is removed, B replaces it on the same endpoint; A's late release must not touch B.
+    @Test("A release from an older generation does not affect the entry that replaced it")
     func staleReleaseDoesNotTouchReplacement() async throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -148,7 +148,7 @@ struct ConnectionProviderTests {
         let leaseA = try provider.acquire(Self.endpointA)
         let generationA = try #require(provider.sharedEntrySnapshot(for: Self.endpointA)).generation
 
-        // 走真正的「runTask 結束 → identity-checked 移除」路徑。
+        // Take the real "runTask ended → identity-checked removal" path.
         provider.cancelSharedRunTaskForTesting(Self.endpointA)
         #expect(try await eventually { provider.sharedEntrySnapshot(for: Self.endpointA) == nil })
 
@@ -162,14 +162,14 @@ struct ConnectionProviderTests {
         let after = try #require(provider.sharedEntrySnapshot(for: Self.endpointA))
         #expect(after == before)
 
-        // B 仍在使用中,任何時間點的 sweep 都不能移除它。
+        // B is still in use, so a sweep at any instant must not remove it.
         #expect(provider.sweep(now: .now + .seconds(365 * 24 * 3600)) == 0)
         #expect(provider.sharedEntrySnapshot(for: Self.endpointA)?.generation == before.generation)
 
         leaseB.release()
     }
 
-    @Test("被取消而結束的 runTask 會移除 entry,下一次 acquire 建新的一代")
+    @Test("A runTask ended by a cancel removes its entry, and the next acquire creates a new generation")
     func endedRunTaskIsReplaced() async throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -188,7 +188,7 @@ struct ConnectionProviderTests {
 
     // MARK: - Shared: idle retention
 
-    @Test("sweep 只移除沒有使用中且閒置超過 TTL 的 entry")
+    @Test("sweep removes only entries that are not in use and idle past the TTL")
     func sweepRemovesOnlyIdleExpiredEntries() throws {
         let provider = makeProvider(idleTimeout: .seconds(3600))
         defer { provider.shutdown() }
@@ -199,17 +199,17 @@ struct ConnectionProviderTests {
         idle.release()
         let releasedAt = try #require(provider.sharedEntrySnapshot(for: Self.endpointB)).lastUsed
 
-        // 還沒超過 TTL:都不動。
+        // Not past the TTL yet: nothing is touched.
         #expect(provider.sweep(now: releasedAt + .seconds(3599)) == 0)
         #expect(provider.sharedEntrySnapshot(for: Self.endpointB) != nil)
 
-        // 超過 TTL:只移除閒置的那個;使用中的 A 不論多久都留著。
+        // Past the TTL: only the idle one is removed; A, in use, stays however long it has been.
         #expect(provider.sweep(now: releasedAt + .seconds(3601)) == 1)
         #expect(provider.sharedEntrySnapshot(for: Self.endpointB) == nil)
         #expect(provider.sharedEntrySnapshot(for: Self.endpointA) != nil)
     }
 
-    @Test("sweep 前剛被 acquire 的 entry 不會被移除")
+    @Test("An entry acquired just before a sweep is not removed")
     func acquireBeforeSweepKeepsEntry() throws {
         let provider = makeProvider(idleTimeout: .seconds(3600))
         defer { provider.shutdown() }
@@ -225,7 +225,7 @@ struct ConnectionProviderTests {
         lease.release()
     }
 
-    @Test("被 sweep 回收的 endpoint,下一次 acquire 會拿到新的連線")
+    @Test("An endpoint reclaimed by sweep gets a new connection on the next acquire")
     func sweptEndpointGetsFreshConnection() throws {
         let provider = makeProvider(idleTimeout: .seconds(1))
         defer { provider.shutdown() }
@@ -328,7 +328,7 @@ struct ConnectionProviderTests {
 
     // MARK: - Dedicated
 
-    @Test("獨立連線每次都是新的,close 後註銷且 close 是冪等的")
+    @Test("A dedicated connection is new every time; close unregisters it and is idempotent")
     func dedicatedConnectionsAreRegisteredAndClosedIdempotently() throws {
         let provider = makeProvider()
         defer { provider.shutdown() }
@@ -347,9 +347,9 @@ struct ConnectionProviderTests {
         #expect(provider.activeDedicatedConnectionCount == 0)
     }
 
-    /// helper 回傳的訂閱在 client/facade/Node 全部釋放後仍要可用:獨立連線的 handle
-    /// 必須讓 provider 活著,直到它自己 close。
-    @Test("獨立連線的 handle 讓 provider 活到它 close 為止")
+    /// A subscription a helper returned must keep working after the client, the facade and the Node are all
+    /// released: the handle of a dedicated connection has to keep the provider alive until it closes itself.
+    @Test("The handle of a dedicated connection keeps the provider alive until it closes")
     func dedicatedHandleKeepsProviderAlive() throws {
         weak var weakProvider: ConnectionProvider?
         var handle: DedicatedConnection?
@@ -603,7 +603,7 @@ struct ConnectionProviderTests {
         #expect(keptRan.withLock { $0 })
     }
 
-    @Test("shutdown 之後共用與獨立連線的准入都會被拒絕")
+    @Test("After shutdown, shared and dedicated admissions are both refused")
     func shutdownRejectsBothConnectionClasses() throws {
         let provider = makeProvider()
         let lease = try provider.acquire(Self.endpointA)
@@ -620,12 +620,12 @@ struct ConnectionProviderTests {
         #expect(provider.activeDedicatedConnectionCount == 0)
         #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
 
-        // shutdown 之後的 release / close 都是 no-op,不會出錯。
+        // release and close after shutdown are no-ops and do not fail.
         lease.release()
         dedicated.close()
     }
 
-    @Test("shutdown 是冪等的")
+    @Test("shutdown is idempotent")
     func shutdownIsIdempotent() throws {
         let provider = makeProvider()
         try provider.acquire(Self.endpointA).release()
@@ -636,9 +636,9 @@ struct ConnectionProviderTests {
         #expect(provider.createdSharedConnectionCount == 1)
     }
 
-    /// runTask 可能在 shutdown 取消它時都還沒被排程;取消後它仍必須正常結束,
-    /// 且不能把已經關閉的 provider 恢復。
-    @Test("在 runTask 開始前 shutdown,連線仍會收尾且 provider 保持關閉")
+    /// A runTask may not have been scheduled yet when shutdown cancels it; it must still end normally
+    /// after the cancel, and must not revive the closed provider.
+    @Test("With shutdown before the runTask starts, the connection is still torn down and the provider stays closed")
     func shutdownBeforeRunTaskStarts() async throws {
         let provider = makeProvider()
         let lease = try provider.acquire(Self.endpointA)
@@ -653,7 +653,7 @@ struct ConnectionProviderTests {
         }
     }
 
-    @Test("與 shutdown 並行的 acquire / openDedicated 不是被拒絕,就是被納入 shutdown")
+    @Test("An acquire or openDedicated racing shutdown is either refused or included in the shutdown")
     func admissionsRacingShutdownAreRejectedOrCancelled() async throws {
         for _ in 0 ..< 20 {
             let provider = makeProvider()
@@ -685,7 +685,7 @@ struct ConnectionProviderTests {
             }
 
             #expect(outcomes.count == 21)
-            // 不論誰先誰後,shutdown 之後都不能殘留任何 entry 或登記。
+            // Whichever came first, no entry and no registration may remain after shutdown.
             #expect(provider.sharedEntrySnapshot(for: Self.endpointA) == nil)
             #expect(provider.activeDedicatedConnectionCount == 0)
         }
@@ -694,7 +694,7 @@ struct ConnectionProviderTests {
 
 @Suite("KurrentDBClient shutdown", .serialized, .timeLimit(.minutes(1)))
 struct KurrentDBClientShutdownTests {
-    @Test("public shutdown 是冪等的,並關閉連線來源")
+    @Test("The public shutdown is idempotent and closes the connection provider")
     func shutdownIsIdempotentAndClosesProvider() throws {
         let client = KurrentDBClient(settings: .localhost())
 
@@ -704,9 +704,9 @@ struct KurrentDBClientShutdownTests {
         #expect(client.selector.connections.isShutdown)
     }
 
-    /// 不論 node 快取是否過期,shutdown 之後 select() 都要立刻回報 connectionClosed,
-    /// 而不是進入 discovery 重試、最後回報「找不到 node」。
-    @Test("shutdown 之後 select() 立即拋 connectionClosed")
+    /// Whether or not the cached node has expired, select() must report connectionClosed at once after
+    /// shutdown, instead of starting a discovery, retrying, and reporting "no node found" in the end.
+    @Test("select() throws connectionClosed at once after shutdown")
     func selectAfterShutdownThrowsConnectionClosed() async throws {
         let client = KurrentDBClient(settings: .localhost())
         client.shutdown()
