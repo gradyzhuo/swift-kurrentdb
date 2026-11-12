@@ -58,9 +58,17 @@ public enum KurrentError: Error, Sendable {
     case subscriptionTerminated(subscriptionId: String?)
     /// The server dropped the subscription unexpectedly.
     case subscriptionDropped(reason: String, lastRevision: UInt64?, lastPosition: StreamPosition?)
-    /// A string could not be encoded using the specified encoding.
+    /// A value the client refuses to send, or a string that could not be encoded using the
+    /// specified encoding. An error thrown by an encoder is an `underlyingError`.
     case encodingError(message: String, encoding: String.Encoding)
-    /// A value could not be decoded from the server response.
+    // Do not remove `decodingError` without building on every supported compiler: with the case
+    // removed, CI on PR #212 crashed Swift 6.1 in IR generation and failed SIL verification on
+    // Swift 6.3 (Amazon Linux), both on `throws(KurrentError)` closures in files the change did
+    // not touch.
+
+    /// No longer thrown: 3.0 reports a value that does not decode as `underlyingError`, with the
+    /// `DecodingError` as its cause. The case stays so a 2.x `catch KurrentError.decodingError`
+    /// still compiles; it never matches.
     case decodingError(cause: DecodingError)
     /// An error from a layer below the client, kept as it was thrown. `reason` says what the
     /// client was doing; `cause` is the error, such as an `EncodingError` or a `DecodingError`.
@@ -166,6 +174,7 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "Encoding error \(message) by encoding: \(encoding)"
         case let .decodingError(cause):
             "Decoding error: \(cause)"
+
         case let .underlyingError(reason, cause):
             "\(reason) Cause: \(cause)"
         }
@@ -202,10 +211,11 @@ extension KurrentError: Equatable {
             "UnsupportedFeature"
         case .deadlineExceeded:
             "DeadlineExceeded"
-        case .decodingError:
-            "DecodingError"
+
         case .encodingError:
             "EncodingError"
+        case .decodingError:
+            "DecodingError"
         case .grpc:
             "GRPC"
         case .grpcConnectionError:
