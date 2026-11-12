@@ -231,15 +231,15 @@ extension EventRecord {
     /// Creates an `EventRecord` from an `EventData` value.
     ///
     /// - Parameter eventData: The source event data to convert.
-    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if the
-    ///   event's custom metadata is not a JSON object.
-    public init(eventData: EventData) throws {
+    /// - Throws: `KurrentError.underlyingError` if the event's custom metadata is not a JSON object
+    ///   or the payload cannot be JSON-encoded, with the error thrown as its cause, usually a `DecodingError` or an `EncodingError`.
+    public init(eventData: EventData) throws(KurrentError) {
         let payload: Payload = switch eventData.payload {
         case let .data(data, contentType):
             .data(data, contentType)
         case let .json(model):
             .json(model)
         }
-        try self.init(id: eventData.id, eventType: eventData.eventType, payload: payload, metadataObject: eventData.customMetadata)
+        try self.init(id: eventData.id, eventType: eventData.eventType, payload: payload, checkedMetadataObject: eventData.customMetadata)
     }
 }
