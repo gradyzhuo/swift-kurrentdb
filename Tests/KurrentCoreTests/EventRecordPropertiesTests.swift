@@ -12,8 +12,7 @@ struct EventRecordPropertiesTests {
     private static let payload = EventRecord.Payload.data(Data("{}".utf8), .json)
 
     private static func isDecodingError(_ error: any Error) -> Bool {
-        guard case .decodingError = error as? KurrentError else { return false }
-        return true
+        (error as? KurrentError)?.cause is DecodingError
     }
 
     /// A record whose custom metadata is `customMetadata`, a JSON text, or one without metadata.

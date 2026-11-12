@@ -624,6 +624,51 @@ The code assumes a 2.x Swift client wrote the stream's metadata: any metadata `g
 
 <doc:Stream-metadata> describes the 3.0 API, including custom keys of any JSON value with a `Codable` type.
 
+## EventRecord throws KurrentError
+
+In 2.x, creating an ``EventRecord`` threw the `EncodingError` of a payload that cannot be encoded as it was. In 3.0 the initializers throw ``KurrentError`` only: `EventRecord(eventType:payload:)`, `EventRecord(eventData:)` and the ones taking a ``CustomMetadata`` throw `KurrentError.underlyingError(reason:cause:)`, a new case that keeps the error from below the client as its `cause`. A `catch let error as EncodingError` around them still compiles but never matches.
+
+```swift
+// 2.x
+do {
+    let record = try EventRecord(eventType: "order-placed", payload: .json(OrderPlaced(orderId: "123")))
+    print(record)
+} catch let error as EncodingError {
+    print("The payload cannot be encoded:", error)
+}
+```
+
+```swift
+// 3.0
+do {
+    let record = try EventRecord(eventType: "order-placed", payload: .json(OrderPlaced(orderId: "123")))
+    print(record)
+} catch {
+    if let cause = error.cause as? EncodingError {
+        print("The payload cannot be encoded:", cause)
+    }
+}
+```
+
+`cause` returns the error a ``KurrentError`` wraps, for `underlyingError` and for the cases that already carried one: `grpcError`, `grpcConnectionError`, `grpcRuntimeError` and `decodingError`. To match it in a `catch`, throw it again with `rethrowCause()`; an error that wraps none throws itself.
+
+```swift
+do {
+    let record = try EventRecord(eventType: "order-placed", payload: .json(OrderPlaced(orderId: "123")))
+    print(record)
+} catch {
+    do {
+        try error.rethrowCause()
+    } catch let cause as EncodingError {
+        print("The payload cannot be encoded:", cause)
+    } catch {
+        print(error)
+    }
+}
+```
+
+A `switch` over every case of ``KurrentError`` needs a clause for `underlyingError`. The deprecated `EventRecord(eventType:payload:customMetadata:)` taking `Data` still throws `EncodingError` and `DecodingError` as on 2.6.2.
+
 ## Deprecated in 3.0
 
 These still compile, with a deprecation warning, and behave as on 2.6.2 unless the note says otherwise. They are removed in 4.0.
