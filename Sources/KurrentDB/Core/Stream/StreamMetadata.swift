@@ -343,9 +343,11 @@ public struct StreamMetadata: Buildable {
     /// one key for two that differ only in Unicode
     /// normalization, so a type whose `encode(to:)` writes both stores one of them.
     ///
-    /// - Throws: `KurrentError.encodingError` if the value cannot be encoded, does not encode to a
-    ///   JSON object, holds a key starting with `$`, which is reserved for the server, or nests
-    ///   arrays and objects more than 64 levels deep, the value itself being the first level.
+    /// - Throws: `KurrentError.underlyingError` if `JSONEncoder` rejects the value (a NaN or
+    ///   infinite number, for example), with the error thrown as its cause;
+    ///   `KurrentError.encodingError` if it does not encode to a JSON object, holds a key starting
+    ///   with `$`, which is reserved for the server, or nests arrays and objects more than 64
+    ///   levels deep, the value itself being the first level.
     public func customProperties(encoding value: some Encodable & Sendable) throws(KurrentError) -> Self {
         guard case let .object(values) = try Self.propertyValue(encoding: value) else {
             throw .encodingError(message: "Custom stream metadata must encode to a JSON object, but \(type(of: value)) does not.", encoding: .utf8)
@@ -369,10 +371,10 @@ public struct StreamMetadata: Buildable {
     ///     the metadata holds in another Unicode normalization is replaced, as Swift compares strings.
     ///   - value: The value to store.
     /// - Returns: An updated copy of the metadata.
-    /// - Throws: `KurrentError.encodingError` if `key` starts with `$`, if `JSONEncoder` rejects
-    ///   the value (a NaN or infinite number, for example), or if the value nests arrays and objects
-    ///   more than 63 levels deep: with the metadata object around it, the stored JSON may nest at
-    ///   most 64 levels.
+    /// - Throws: `KurrentError.encodingError` if `key` starts with `$`, or if the value nests
+    ///   arrays and objects more than 63 levels deep: with the metadata object around it, the
+    ///   stored JSON may nest at most 64 levels. `KurrentError.underlyingError` if `JSONEncoder`
+    ///   rejects the value (a NaN or infinite number, for example), with the error thrown as its cause.
     public func customProperty(_ key: String, encoding value: some Encodable & Sendable) throws(KurrentError) -> Self {
         guard !Self.isReserved(key) else {
             throw .encodingError(message: "Custom stream metadata key '\(key)' must not start with '$'.", encoding: .utf8)
@@ -463,10 +465,17 @@ extension StreamMetadata {
 
     /// `value` encoded with `JSONEncoder` and read back as a JSON value.
     private static func propertyValue(encoding value: some Encodable) throws(KurrentError) -> PropertyValue {
+        let json: Data
         do {
-            return try JSONDecoder().decode(PropertyValue.self, from: JSONEncoder().encode(value))
+            json = try JSONEncoder().encode(value)
         } catch {
-            throw .encodingError(message: "Custom stream metadata of type \(type(of: value)) cannot be encoded: \(error)", encoding: .utf8)
+            throw .underlyingError(reason: "Custom stream metadata of type \(type(of: value)) cannot be encoded.", cause: error)
+        }
+        do {
+            return try JSONDecoder().decode(PropertyValue.self, from: json)
+        } catch {
+            // The client's own rules: the nesting limit and the numbers a JSON value holds.
+            throw .encodingError(message: "Custom stream metadata of type \(type(of: value)) cannot be stored: \(error)", encoding: .utf8)
         }
     }
 

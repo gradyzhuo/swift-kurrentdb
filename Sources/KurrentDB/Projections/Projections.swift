@@ -158,8 +158,8 @@ extension Projections where Target: ProjectionControlable {
     /// - Parameters:
     ///   - _: The `Decodable` type to decode the result into.
     ///   - configure: Closure to customise result options such as the partition key.
-    /// - Returns: The decoded result, or `nil` if the server returns an empty response.
-    /// - Throws: `KurrentError.decodingError` if the response cannot be decoded; `KurrentError` for transport failures.
+    /// - Returns: The decoded result. It is never `nil`: a response that cannot be read throws.
+    /// - Throws: `KurrentError.underlyingError` if the response cannot be decoded, with the error thrown as its cause, usually a `DecodingError`; `KurrentError` for transport failures.
     public func result<DecodeType: Decodable>(of _: DecodeType.Type, configure: @Sendable (inout Result.Options) -> Void = { _ in }) async throws(KurrentError) -> DecodeType? {
         var options = Result.Options()
         configure(&options)
@@ -167,10 +167,8 @@ extension Projections where Target: ProjectionControlable {
         let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         do {
             return try response.decode(to: DecodeType.self)
-        } catch let error as DecodingError {
-            throw .decodingError(cause: error)
         } catch {
-            throw .internalClientError(reason: "Decoding state failed, cause: \(error)")
+            throw .underlyingError(reason: "The result of projection \"\(target.name)\" does not decode as \(DecodeType.self).", cause: error)
         }
     }
 
@@ -179,21 +177,17 @@ extension Projections where Target: ProjectionControlable {
     /// - Parameters:
     ///   - _: The `Decodable` type to decode the state into.
     ///   - configure: Closure to customise state options such as the partition key.
-    /// - Returns: The decoded state, or `nil` if the server returns an empty response.
-    /// - Throws: `KurrentError.decodingError` if the response cannot be decoded; `KurrentError` for transport failures.
+    /// - Returns: The decoded state. It is never `nil`: a response that cannot be read throws.
+    /// - Throws: `KurrentError.underlyingError` if the response cannot be decoded, with the error thrown as its cause, usually a `DecodingError`; `KurrentError` for transport failures.
     public func state<DecodeType: Decodable>(of _: DecodeType.Type, configure: @Sendable (inout State.Options) -> Void = { _ in }) async throws(KurrentError) -> DecodeType? {
         var options = State.Options()
         configure(&options)
+        let usecase = State(name: target.name, options: options)
+        let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
         do {
-            let usecase = State(name: target.name, options: options)
-            let response = try await usecase.perform(selector: selector, callOptions: callOptions, credentials: overrideCredentials)
             return try response.decode(to: DecodeType.self)
-        } catch let error as KurrentError {
-            throw error
-        } catch let error as DecodingError {
-            throw .decodingError(cause: error)
         } catch {
-            throw .internalClientError(reason: "Decoding state failed, cause: \(error)")
+            throw .underlyingError(reason: "The state of projection \"\(target.name)\" does not decode as \(DecodeType.self).", cause: error)
         }
     }
 }

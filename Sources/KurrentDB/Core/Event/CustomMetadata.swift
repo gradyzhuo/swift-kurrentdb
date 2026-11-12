@@ -20,6 +20,9 @@ public protocol CustomMetadataFormat: Sendable, Equatable {
 
 /// Custom metadata written as JSON: a value `JSONDecoder` reads, nesting arrays and objects at
 /// most 64 levels deep.
+///
+/// Bytes `JSONDecoder` refuses throw `KurrentError.underlyingError`, with its error as the cause;
+/// JSON nested deeper than the limit throws `KurrentError.encodingError`.
 public struct JSONMetadataFormat: CustomMetadataFormat {
     public init() {}
 
@@ -34,7 +37,6 @@ public struct JSONMetadataFormat: CustomMetadataFormat {
             {
                 return
             }
-            // Only arrays and objects count as levels. A container at `codingPath.count` n is level n + 1.
             var elements: (any UnkeyedDecodingContainer)?
             var members: KeyedDecodingContainer<Key>?
             do {
@@ -42,12 +44,6 @@ public struct JSONMetadataFormat: CustomMetadataFormat {
             } catch {
                 // Not an array: an object, or a scalar JSONDecoder refuses, which this rethrows.
                 members = try decoder.container(keyedBy: Key.self)
-            }
-            guard decoder.codingPath.count < PropertyValue.maximumDepth else {
-                throw DecodingError.dataCorrupted(.init(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "The JSON nests arrays and objects more than \(PropertyValue.maximumDepth) levels deep."
-                ))
             }
             if var elements {
                 while !elements.isAtEnd {
@@ -68,7 +64,45 @@ public struct JSONMetadataFormat: CustomMetadataFormat {
         }
     }
 
+    /// Whether `data` nests arrays and objects more than `limit` levels deep, counting the
+    /// brackets outside strings. It is checked before decoding, so the limit holds for every
+    /// member, a repeated key included, and the decoder never recurses past it.
+    private static func nests(_ data: Data, deeperThan limit: Int) -> Bool {
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for byte in data {
+            if inString {
+                if escaped {
+                    escaped = false
+                } else if byte == UInt8(ascii: "\\") {
+                    escaped = true
+                } else if byte == UInt8(ascii: "\"") {
+                    inString = false
+                }
+                continue
+            }
+            switch byte {
+            case UInt8(ascii: "\""):
+                inString = true
+            case UInt8(ascii: "["), UInt8(ascii: "{"):
+                depth += 1
+                if depth > limit { return true }
+            case UInt8(ascii: "]"), UInt8(ascii: "}"):
+                depth -= 1
+            default:
+                break
+            }
+        }
+        return false
+    }
+
     public func validate(_ data: Data) throws(KurrentError) {
+        // The nesting limit is the client's own rule, so it is an encodingError; what JSONDecoder
+        // refuses is kept as the cause of an underlyingError.
+        guard !Self.nests(data, deeperThan: PropertyValue.maximumDepth) else {
+            throw .encodingError(message: "The custom metadata nests arrays and objects more than \(PropertyValue.maximumDepth) levels deep.", encoding: .utf8)
+        }
         do {
             _ = try JSONDecoder().decode(AnyValue.self, from: data)
         } catch {
@@ -149,8 +183,8 @@ extension CustomMetadata where Format == JSONMetadataFormat {
     /// Encodes `value` as JSON with `JSONEncoder`'s default strategies.
     ///
     /// - Throws: `KurrentError.underlyingError` when `value` cannot be encoded, such as a `Double`
-    ///   that is not finite, with the error thrown as its cause, usually an `EncodingError`, or when it encodes to JSON
-    ///   nested more than 64 levels deep.
+    ///   that is not finite, with the error thrown as its cause, usually an `EncodingError`;
+    ///   `KurrentError.encodingError` when it encodes to JSON nested more than 64 levels deep.
     public static func json(_ value: some Encodable & Sendable) throws(KurrentError) -> Self {
         let data: Data
         do {

@@ -818,12 +818,13 @@ struct StreamMetadataTests {
 
     @Test("customProperty(_:encoding:) throws for a value JSONEncoder rejects")
     func testNonFiniteNumberThrows() {
+        // The encoder's own error is kept as the cause.
         #expect {
             try StreamMetadata().customProperty("ratio", encoding: Double.nan)
-        } throws: { Self.isEncodingError($0) }
+        } throws: { ($0 as? KurrentError)?.cause is EncodingError }
         #expect {
-            try StreamMetadata().customProperty("ratio", encoding: Double.infinity)
-        } throws: { Self.isEncodingError($0) }
+            try StreamMetadata().customProperties(encoding: ["ratio": Double.infinity])
+        } throws: { ($0 as? KurrentError)?.cause is EncodingError }
     }
 
     // MARK: - Nesting depth of custom values

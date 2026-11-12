@@ -181,6 +181,14 @@ struct ProjectionsTests: Sendable {
         let state = try #require(try await client.projections(of: NameTarget(name: name)).state(of: CountResult.self))
         #expect(state.count == 1)
 
+        // A state that does not decode as the type asked for is an underlyingError holding the DecodingError.
+        await #expect {
+            _ = try await client.projections(of: NameTarget(name: name)).state(of: [String].self)
+        } throws: { error in
+            guard case let .underlyingError(_, cause) = error as? KurrentError else { return false }
+            return cause is DecodingError
+        }
+
         try await client.streams(specified: streamName).delete()
         try await client.projections(of: NameTarget(name: name)).disable()
         try await client.projections(of: NameTarget(name: name)).delete {
@@ -220,6 +228,14 @@ struct ProjectionsTests: Sendable {
 
         let result = try #require(try await client.projections(of: NameTarget(name: name)).result(of: Int.self))
         #expect(result == 1)
+
+        // A result that does not decode as the type asked for is an underlyingError holding the DecodingError.
+        await #expect {
+            _ = try await client.projections(of: NameTarget(name: name)).result(of: [String].self)
+        } throws: { error in
+            guard case let .underlyingError(_, cause) = error as? KurrentError else { return false }
+            return cause is DecodingError
+        }
 
         try await client.streams(specified: streamName).delete()
         try await client.projections(of: NameTarget(name: name)).disable()
