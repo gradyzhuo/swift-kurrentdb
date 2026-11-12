@@ -19,10 +19,10 @@ package actor KurrentDBPool {
             self.owner = owner
         }
 
-        /// 還給發出這個租約的那個 pool——不是寫死的 KurrentDBPool.shared。
-        /// 用自訂（非 shared）pool 實例的 acquire() 拿到的 lease 呼叫這個，
-        /// 一樣會正確還到原本那個實例，不會悄悄還到 shared 裡一個不存在的
-        /// MemberID、讓原本的 pool 永遠少一個可用成員。
+        /// Gives the lease back to the pool that issued it, not to a hard-coded KurrentDBPool.shared.
+        /// A lease from acquire() on a custom (non-shared) pool instance goes back to that
+        /// instance, instead of quietly going to shared under a MemberID that does not exist there,
+        /// which would leave the original pool one member short for good.
         package func giveBack() async {
             await owner.release(self)
         }
@@ -34,8 +34,8 @@ package actor KurrentDBPool {
         var pendingRemoval = false
     }
 
-    /// 排隊等候的 acquire()。id 讓取消處理能精確地把「這一個」從佇列裡拔掉，
-    /// 而不是猜哪一個 continuation 對應哪個呼叫端。
+    /// An acquire() waiting in the queue. The id lets cancellation remove exactly this one from the
+    /// queue, without guessing which continuation belongs to which caller.
     private struct Waiter {
         let id: UUID
         let continuation: CheckedContinuation<Lease?, Never>
@@ -45,10 +45,10 @@ package actor KurrentDBPool {
     private var order: [MemberID] = []
     private var waiters: [Waiter] = []
 
-    /// firstIdleID() 掃描 order 的起點。每次成功配出一個成員就往後移一格——
-    /// 沒有這個的話 order 是固定順序,giveBack() 把一個失敗的候選人還回去時
-    /// 也不會改變它在 order 裡的位置,於是它永遠排在較晚插入的健康成員前面,
-    /// 每次 borrow() 都會重測同一批壞成員,後面的健康成員永遠輪不到。
+    /// Where firstIdleID() starts scanning order. It moves one place on for every member handed out.
+    /// Without it order is fixed, and giveBack() returning a failed candidate does not change its
+    /// place in order, so it stays ahead of healthy members inserted later: every borrow() would
+    /// test the same bad members again and never reach the healthy ones behind them.
     private var rotationCursor = 0
 
     package init(settings: [ClientSettings] = KurrentDBPool.settingsFromEnv()) {
@@ -66,8 +66,8 @@ package actor KurrentDBPool {
         return id
     }
 
-    /// 忙碌中的成員先標記待移除，等它 release 時才真的拿掉——
-    /// 不強行打斷正在使用它的租約持有者。
+    /// A busy member is marked for removal and taken out when it is released, so the holder of
+    /// its lease is not interrupted.
     package func remove(_ id: MemberID) {
         guard var member = members[id] else { return }
         guard member.isBusy else {
@@ -79,18 +79,18 @@ package actor KurrentDBPool {
         members[id] = member
     }
 
-    /// 池子非空但全忙碌時會排隊掛起，直到有人 release()/add()。
+    /// When the pool has members but all are busy, this queues and suspends until a release() or an add().
     ///
-    /// 支援取消，處理兩種情況：
-    /// 1. 呼叫 acquire() 之前 Task 就已經被取消——連閒置成員的快速路徑都不能
-    ///    直接配置，開頭就先擋掉，不然會白白分配一個沒人要的 lease。
-    /// 2. 排進佇列之後才被取消，卻剛好跟 dispatchNextWaiterIfPossible() 的
-    ///    派送同時發生——如果派送先贏，continuation 已經帶著一個真的 lease
-    ///    resume 了，cancelWaiter() 這時候在佇列裡找不到人、直接算了。單靠
-    ///    佇列移除擋不住這個空隙，所以 resume 之後另外檢查一次
-    ///    Task.isCancelled：如果呼叫端已經不在乎這次呼叫、卻還是分到一個
-    ///    真的 lease，就地把它還回去，不要留給呼叫端自己判斷（他們也不會去
-    ///    判斷——都取消了）。
+    /// It supports cancellation, in two situations:
+    /// 1. The Task was cancelled before acquire() was called. Even the fast path for an idle member
+    ///    must not hand one out, so this is refused first; otherwise a lease nobody wants is issued.
+    /// 2. It was cancelled after queueing, at the same moment as a dispatch from
+    ///    dispatchNextWaiterIfPossible(). If the dispatch wins, the continuation has resumed with
+    ///    a real lease, and cancelWaiter() finds nobody in the queue and gives up. Removing from
+    ///    the queue cannot close that gap, so Task.isCancelled is checked again after the
+    ///    resume: a caller that no longer cares about the call but still received a real lease
+    ///    has it given back on the spot, not left to the caller to decide (who would not,
+    ///    having been cancelled).
     package func acquire() async -> Lease? {
         guard !Task.isCancelled else { return nil }
         guard !members.isEmpty else { return nil }
@@ -112,17 +112,17 @@ package actor KurrentDBPool {
         return result
     }
 
-    /// 不排隊的版本——沒有任何成員閒置就立刻回 nil，不會掛起等待。
-    /// borrow() 用這個在同一次呼叫裡換下一個候選人：如果目前真的沒有其他
-    /// 候選人可換，就該立刻放棄，而不是等一個永遠不會發生的 release()。
+    /// The version that does not queue: it returns nil at once when no member is idle.
+    /// borrow() uses it to change candidate within one call: when there is no other candidate
+    /// left it should give up at once, not wait for a release() that will never come.
     package func tryAcquire() -> Lease? {
         guard let id = firstIdleID() else { return nil }
         return lease(marking: id)
     }
 
-    /// 目前池子裡的成員總數（不分忙碌/閒置）。給測試之類的呼叫端用來在借用前
-    /// 先確認「有沒有足夠的成員可以測試某個情境」，而不是直接 acquire() 下去、
-    /// 在成員不夠時真的卡住等一個不會發生的 release()。
+    /// The number of members in the pool now, busy or idle. For callers such as tests to check,
+    /// before borrowing, that there are enough members for a scenario, instead of calling acquire()
+    /// and waiting, with too few members, for a release() that will never come.
     package var count: Int { members.count }
 
     package func release(_ lease: Lease) {
@@ -131,9 +131,9 @@ package actor KurrentDBPool {
             members.removeValue(forKey: lease.id)
             order.removeAll { $0 == lease.id }
             if members.isEmpty {
-                // 池子因為移除最後一個成員而變空——跟一個全新的 acquire() 遇到
-                // 空池一樣，所有還在排隊的 waiter 都該立刻拿到 nil，而不是繼續
-                // 卡著等一個不可能發生的 release()。
+                // The pool became empty because its last member was removed. As when a new acquire()
+                // meets an empty pool, every waiter still queued gets nil at once, instead of
+                // waiting for a release() that cannot happen.
                 let pending = waiters
                 waiters = []
                 for waiter in pending { waiter.continuation.resume(returning: nil) }

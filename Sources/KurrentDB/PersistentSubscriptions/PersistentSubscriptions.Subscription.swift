@@ -105,7 +105,7 @@ extension PersistentSubscriptions {
                 }
 
                 continuation.onTermination = { [source] _ in
-                    // 串接到 init 佈署的 handler,由其執行 writer.stop 與 finish action
+                    // Chained to the handler installed in init, which runs writer.stop and the finish action.
                     source.continuation.finish()
                     task.cancel()
                 }
@@ -120,15 +120,15 @@ extension PersistentSubscriptions {
             self.tracker = SubscriptionTracker()
             self.source = AsyncThrowingStream<EventResult, Error>.makeStream()
 
-            // teardown 必須從 handle 存在的那一刻起就可達,而非等到第一次存取
-            // `.events`。對照 Streams.Subscribe.send 的作法。
+            // Teardown must be reachable from the moment the handle exists, not from the first access to
+            // `.events`. Streams.Subscribe.send does the same.
             //
-            // 此 handler 由兩條路徑觸發 —— 顯式的 `source.continuation.finish(...)`
-            // (即 `send(state: .finish)`),以及 source stream 被釋放時(本物件與
-            // `.events` 的 bridge task 都不再持有它)。後者成立的前提是 Read usecase 的
-            // read task 只持有 `inbox`、不持有本物件;過去它持有本物件,形成
-            // subscription → tracker → finish action → read task → subscription 的
-            // retain cycle,丟棄 handle 永遠不會關閉連線(#127)。
+            // Two paths fire this handler: an explicit `source.continuation.finish(...)`
+            // (that is, `send(state: .finish)`), and the release of the source stream, once neither this
+            // object nor the bridge task of `.events` holds it. The second needs the Read usecase's read
+            // task to hold only `inbox`, not this object; it used to hold this object, which made a
+            // subscription → tracker → finish action → read task → subscription retain cycle, so
+            // dropping the handle never closed the connection (#127).
             let writer = self.writer
             let tracker = self.tracker
             source.continuation.onTermination = { termination in
@@ -279,9 +279,9 @@ extension PersistentSubscriptions.Subscription {
                     continuation.finish()
                 }
             case let .finish(error):
-                // 連線層級失敗(而非伺服器主動終止或使用者取消)一律回報為
-                // subscriptionDropped,並附上 tracker 已記錄的續傳位置,
-                // 讓呼叫端能從中斷處恢復訂閱。
+                // A connection-level failure, as opposed to the server ending the subscription or the user
+                // cancelling it, is reported as subscriptionDropped with the resume position the tracker
+                // recorded, so the caller can resubscribe from where it stopped.
                 if let kurrentError = error as? KurrentError, kurrentError.isNodeFailure {
                     continuation.finish(throwing: KurrentError.subscriptionDropped(
                         reason: "\(kurrentError)",

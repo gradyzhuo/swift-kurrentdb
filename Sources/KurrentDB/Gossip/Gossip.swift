@@ -18,7 +18,7 @@ public final class Gossip: Sendable {
     internal let endpoint: Endpoint
     internal let settings: ClientSettings
     internal let callOptions: CallOptions
-    /// gossip 讀取是單一回應的 RPC,走 client 的共用連線。
+    /// Reading gossip is a single-response RPC, so it uses the client's shared connection.
     internal let connections: ConnectionProvider
 
     init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults) {

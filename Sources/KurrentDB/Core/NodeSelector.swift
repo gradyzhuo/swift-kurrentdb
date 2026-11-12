@@ -62,9 +62,9 @@ public actor NodeSelector: Sendable {
     ///   `KurrentError.connectionClosed` once the client has shut down, also when that happens
     ///   during discovery.
     public func select() async throws(KurrentError) -> Node {
-        // 不論 node 快取是否過期,shutdown 之後一律是 connectionClosed。否則快取過期時
-        // 會進入 discovery,把探測的 connectionClosed 當成一般失敗重試,最後回報成
-        // 「找不到 node」。
+        // After shutdown the answer is connectionClosed whether or not the cached node has expired.
+        // Otherwise an expired cache would start a discovery, retry the probe's connectionClosed as an
+        // ordinary failure, and report "no node found" in the end.
         guard !connections.isShutdown else {
             throw .connectionClosed
         }
@@ -133,8 +133,8 @@ public actor NodeDiscover: AsyncIteratorProtocol, Sendable {
     let settings: ClientSettings
     var selectedEndpoint: Endpoint?
     private let previousCandidates: [Endpoint]
-    /// 與 NodeSelector 同一個 provider:探測走的是同一份共用連線快取,
-    /// 在這裡另建 provider 會讓復用失效。
+    /// The same provider as NodeSelector's: probes use the same cache of shared connections, and a
+    /// provider created here would defeat the reuse.
     private let connections: ConnectionProvider
 
     init(settings: ClientSettings, connections: ConnectionProvider, previousCandidates _: [Gossip.MemberInfo]) {

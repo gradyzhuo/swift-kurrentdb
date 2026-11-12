@@ -2,14 +2,14 @@
 //  SubscriptionRetainCycleLiveTests.swift
 //  swift-kurrentdb
 //
-//  Issue #127 的回歸測試,全部走真實的 subscribe() → Read.send 路徑(不直接建構
-//  Subscription —— 那樣繞過了會強持有它的 read task,正是 SubscriptionLifecycleTests
-//  抓不到這個 cycle 的原因)。需要 server/docker-compose.yaml 的 3 節點 cluster。
+// Regression tests for issue #127, all through the real subscribe() → Read.send path (not by building a
+// Subscription directly: that goes around the read task that held it strongly, which is why
+// SubscriptionLifecycleTests could not catch the cycle). They need the 3-node cluster of server/docker-compose.yaml.
 //
-//  兩個觀測點:
-//  - client 端:ConnectionProvider 登記中的獨立連線數(persistent subscription 是
-//    stream 回應的 RPC,每個訂閱各一條)。
-//  - 伺服器端:getInfo().connections —— 伺服器認為還連著的 consumer 數。
+// Two points of observation:
+// - The client: the number of dedicated connections registered in ConnectionProvider (a persistent
+//   subscription is an RPC with a streamed response, one connection per subscription).
+// - The server: getInfo().connections, the number of consumers the server believes are connected.
 //
 
 import Foundation
@@ -32,8 +32,8 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         EventData(eventType: "RetainCycle-\(tag)", model: ["tag": tag])
     }
 
-    /// 等到條件成立或逾時。只用於等待非同步收尾(釋放 → onTermination → cancel →
-    /// 伺服器察覺斷線,每一步的時機都取決於排程與網路)。
+    /// Waits until the condition holds or the time runs out. Only for waiting on asynchronous teardown (release →
+    /// onTermination → cancel → the server noticing the disconnect, each step timed by scheduling and the network).
     private func eventually(timeout: Duration = .seconds(15), _ condition: () async throws -> Bool) async throws -> Bool {
         let deadline = ContinuousClock.now + timeout
         while ContinuousClock.now < deadline {
@@ -43,7 +43,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         return try await condition()
     }
 
-    @Test("丟棄從未 iterate 的 handle,會關閉連線(指定 stream)")
+    @Test("Dropping a handle that was never iterated closes the connection (a named stream)")
     func droppingUniteratedSpecifiedSubscriptionClosesConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -52,12 +52,12 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         try await persistent.create()
 
         do {
-            // 刻意不 iterate events,離開這個 scope 後就不再有人持有 handle。
+            // events is not iterated on purpose; nobody holds the handle once this scope ends.
             let subscription = try await persistent.subscribe()
 
-            // 前提:丟棄之前,連線確實開著 —— client 端登記了、伺服器端也看得到 consumer。
-            // 少了這一步,「subscribe 根本沒連上」也會讓後面的斷言通過。
-            #expect(try await eventually { subscription.subscriptionId != nil })   // 伺服器已確認這個訂閱
+            // Precondition: the connection is open before the drop, registered on the client and visible as a consumer on the server.
+            // Without this step, a subscribe that never connected would also pass the assertions below.
+            #expect(try await eventually { subscription.subscriptionId != nil })   // the server has confirmed this subscription
             #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
             #expect(try await eventually { try await persistent.getInfo().connections.count == 1 })
         }
@@ -68,7 +68,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         try await persistent.delete()
     }
 
-    @Test("丟棄從未 iterate 的 handle,會關閉連線($all)")
+    @Test("Dropping a handle that was never iterated closes the connection ($all)")
     func droppingUniteratedAllStreamSubscriptionClosesConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -79,8 +79,8 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         do {
             let subscription = try await persistent.subscribe()
 
-            // 前提:丟棄之前,連線確實開著。
-            #expect(try await eventually { subscription.subscriptionId != nil })   // 伺服器已確認這個訂閱
+            // Precondition: the connection is open before the drop.
+            #expect(try await eventually { subscription.subscriptionId != nil })   // the server has confirmed this subscription
             #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
             #expect(try await eventually { try await persistent.getInfo().connections.count == 1 })
         }
@@ -91,9 +91,9 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         try await persistent.delete()
     }
 
-    /// issue 特別要求的情境:只拿 events 來 iterate、不持有 handle。修掉 cycle 之後
-    /// handle 在拿到 events 後就會被釋放,事件不能因此在途中被丟掉;events 本身釋放時收尾。
-    @Test("只持有 events、不持有 handle 時,事件不會在途中遺失")
+    /// The case the issue asks for: iterating events without holding the handle. With the cycle fixed the
+    /// handle is released once events is taken, and no event may be lost on the way; teardown runs when events is released.
+    @Test("Holding only events, not the handle, loses no event on the way")
     func iteratingEventsWithoutHoldingHandleDeliversEverything() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -104,7 +104,7 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         let expected = (0 ..< 5).map { "e\($0)" }
         var received: [String] = []
         do {
-            // 只留下 events;subscribe() 回傳的 handle 本身沒有任何人持有。
+            // Keep only events; nobody holds the handle subscribe() returned.
             let events = try await persistent.subscribe().events
 
             for tag in expected {
@@ -120,15 +120,15 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
         }
         #expect(received == expected.map { "RetainCycle-\($0)" })
 
-        // events 離開 scope 後,連線關閉。(單純 break 不會 —— 見 Subscription 的文件。)
+        // Once events leaves the scope the connection closes. (A break alone does not: see Subscription's documentation.)
         #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
 
         try await client.streams(specified: streamName).delete()
         try await persistent.delete()
     }
 
-    /// 一般用法:持有 handle、iterate、ack、跳出迴圈,handle 釋放時收尾。
-    @Test("持有 handle 的一般用法照常運作,handle 釋放時收尾")
+    /// The ordinary use: hold the handle, iterate, ack, leave the loop; teardown runs when the handle is released.
+    @Test("The ordinary use, holding the handle, works as before, with teardown when the handle is released")
     func holdingHandleStillWorksAndTearsDown() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -149,12 +149,12 @@ struct SubscriptionRetainCycleLiveTests: Sendable {
                 break
             }
 
-            // 還持有 handle 時,break 不會關閉連線。
+            // While the handle is held, a break does not close the connection.
             #expect(client.selector.connections.activeDedicatedConnectionCount == 1)
         }
         #expect(receivedType == "RetainCycle-held")
 
-        // handle 離開 scope 後,連線關閉。
+        // Once the handle leaves the scope the connection closes.
         #expect(try await eventually { client.selector.connections.activeDedicatedConnectionCount == 0 })
         #expect(try await eventually { try await persistent.getInfo().connections.isEmpty })
 

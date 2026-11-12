@@ -30,7 +30,7 @@ struct ConnectionReuseLiveTests: Sendable {
         EventData(eventType: type, model: ["Description": "connection reuse"])
     }
 
-    /// 等到條件成立或逾時。只用於等待非同步收尾(cancel 之後 task 何時結束取決於排程)。
+    /// Waits until the condition holds or the time runs out. Only for waiting on asynchronous teardown (when a task ends after a cancel depends on scheduling).
     private func eventually(timeout: Duration = .seconds(10), _ condition: () -> Bool) async throws -> Bool {
         let deadline = ContinuousClock.now + timeout
         while ContinuousClock.now < deadline {
@@ -42,9 +42,9 @@ struct ConnectionReuseLiveTests: Sendable {
 
     // MARK: - Shared connections
 
-    /// 整個改動的核心主張。discovery 的 gossip 探測也走共用連線,所以第一次呼叫後的
-    /// 連線數可能不只 1(取決於探測過哪些 seed);要驗證的是之後不再增加。
-    @Test("暖機之後再 append 200 次,不會再建立任何共用連線")
+    /// The central claim of the change. Discovery's gossip probes use shared connections too, so the count after the
+    /// first call may be more than 1 (it depends on the seeds probed); what is checked is that it does not grow afterwards.
+    @Test("After warming up, 200 more appends create no further shared connection")
     func appendsReuseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -63,7 +63,7 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    @Test("並行的 append 共用同一條連線")
+    @Test("Concurrent appends share one connection")
     func concurrentAppendsReuseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -90,7 +90,7 @@ struct ConnectionReuseLiveTests: Sendable {
     /// A finite stream response (Read) is drained inside send(), so it uses the shared
     /// connection: neither success nor failure opens a dedicated one, and a failed read must
     /// not break the shared connection — the following append has to complete on the same one.
-    @Test("成功與失敗的 read 都走共用連線,且不影響之後的 append")
+    @Test("Successful and failed reads both use the shared connection and do not affect later appends")
     func finiteReadsUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -121,7 +121,7 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    @Test("readAll、projection statistics、user details 都走共用連線")
+    @Test("readAll, projection statistics and user details all use the shared connection")
     func otherBufferedUsecasesUseSharedConnection() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -162,7 +162,7 @@ struct ConnectionReuseLiveTests: Sendable {
     /// runner (run 37591445038: reads queued 1.6–3.6 s on the server's reader bus) until the
     /// concurrent append failed server-side with "Commit phase timeout" on both attempts. 20 events
     /// per read keep the client-side queueing this test is about while cutting the server load tenfold.
-    @Test("150 個並行 read 全部完成,期間的 append 也完成,且不替換服務它們的共用連線")
+    @Test("150 concurrent reads all complete, so do appends meanwhile, and the shared connection serving them is not replaced")
     func manyConcurrentReadsDoNotStarveAppends() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -207,7 +207,7 @@ struct ConnectionReuseLiveTests: Sendable {
     /// cancelling, and require the reader to end in failure to prove the cancellation
     /// interrupted an in-flight RPC. Afterwards retainCount must return to baseline — "the next
     /// append succeeds" cannot catch a leaked retain (acquire would simply reuse that entry).
-    @Test("取消排空中的 read 會還掉 lease,共用連線之後仍可用")
+    @Test("Cancelling a read being drained returns its lease, and the shared connection stays usable")
     func cancellingReadMidDrainReleasesLease() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -244,7 +244,7 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    @Test("shutdown 期間的 read 會在有限時間內結束,不會掛住")
+    @Test("A read during shutdown ends in bounded time and does not hang")
     func shutdownDuringReadEndsIteration() async throws {
         let client = KurrentDBClient(settings: settings)
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
@@ -270,7 +270,7 @@ struct ConnectionReuseLiveTests: Sendable {
 
     // MARK: - Dedicated connections
 
-    @Test("取消一個訂閱,不影響同一個 client 上的其他訂閱與 unary 呼叫")
+    @Test("Cancelling one subscription does not affect the client's other subscriptions and unary calls")
     func cancellingOneSubscriptionLeavesOthersWorking() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -292,8 +292,8 @@ struct ConnectionReuseLiveTests: Sendable {
         try await stream.delete()
     }
 
-    /// helper 在區域內建立 client 並只回傳訂閱:client 與 facade 都被釋放後,訂閱仍要可用。
-    @Test("helper 回傳的訂閱在 client 與 facade 被釋放後仍然可用")
+    /// A helper creates the client locally and returns only the subscription: it must keep working after the client and the facade are released.
+    @Test("A subscription returned by a helper keeps working after the client and the facade are released")
     func returnedSubscriptionOutlivesClient() async throws {
         let streamName = "ConnectionReuse-\(UUID().uuidString)"
 
@@ -315,8 +315,8 @@ struct ConnectionReuseLiveTests: Sendable {
         try await writer.streams(specified: streamName).delete()
     }
 
-    /// 每個訂閱各自一條連線,所以伺服器單一連線的並行 stream 上限不會讓它們互相排隊。
-    @Test("150 個並行訂閱全部收到確認")
+    /// Every subscription has its own connection, so the server's limit on concurrent streams per connection does not queue them behind each other.
+    @Test("150 concurrent subscriptions are all confirmed")
     func manyConcurrentSubscriptionsAreConfirmed() async throws {
         let client = KurrentDBClient(settings: settings)
         defer { client.shutdown() }
@@ -336,7 +336,7 @@ struct ConnectionReuseLiveTests: Sendable {
         #expect(subscriptions.count == 150)
         #expect(subscriptions.allSatisfy { $0.subscriptionId != nil })
 
-        // 150 個訂閱都開著的時候,unary 呼叫仍然能完成。
+        // With all 150 subscriptions open, a unary call still completes.
         _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }
 
         subscriptions.forEach { $0.cancel() }
@@ -400,11 +400,11 @@ struct ConnectionReuseLiveTests: Sendable {
 
     // MARK: - Shutdown
 
-    @Test("shutdown 會結束進行中的訂閱,並拒絕之後所有的呼叫(node 仍在快取中)")
+    @Test("shutdown ends subscriptions in progress and refuses every later call (the node still cached)")
     func shutdownEndsSubscriptionsAndRejectsCalls() async throws {
         let client = KurrentDBClient(settings: settings)
         let stream = client.streams(specified: "ConnectionReuse-\(UUID().uuidString)")
-        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }   // node 進入快取
+        _ = try await stream.append(events: [event()]) { $0.expectedRevision = .any }   // the node enters the cache
         let subscription = try await stream.subscribe()
 
         let consumer = Task {
@@ -415,7 +415,7 @@ struct ConnectionReuseLiveTests: Sendable {
 
         client.shutdown()
 
-        // 訂閱必須在有限時間內結束,而不是永遠掛著。
+        // The subscription must end in bounded time, not hang forever.
         let ended = await withTaskGroup(of: Bool.self) { group in
             group.addTask { await consumer.value; return true }
             group.addTask { try? await Task.sleep(for: .seconds(10)); return false }
