@@ -13,7 +13,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import NIOSSL
-import NIOTransportServices
+
 import RegexBuilder
 
 /// Default TCP port number for KurrentDB connections.
