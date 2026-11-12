@@ -18,7 +18,7 @@ public final class ServerFeatures: GRPCConcreteService {
     internal let endpoint: Endpoint
     internal let settings: ClientSettings
     internal let callOptions: CallOptions
-    /// 查詢支援的方法是單一回應的 RPC,走 client 的共用連線。
+    /// Asking for the supported methods is a single-response RPC, so it uses the client's shared connection.
     internal let connections: ConnectionProvider
 
     init(endpoint: Endpoint, settings: ClientSettings, connections: ConnectionProvider, callOptions: CallOptions = .defaults) {

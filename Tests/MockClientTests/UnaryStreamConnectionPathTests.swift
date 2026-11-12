@@ -50,7 +50,7 @@ struct UnaryStreamConnectionPathTests {
         return options
     }
 
-    @Test("Read 走共用連線")
+    @Test("Read uses the shared connection")
     func readTakesSharedPath() async throws {
         let usecase = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
         let node = makeNode(supporting: [usecase.methodDescriptor])
@@ -67,7 +67,7 @@ struct UnaryStreamConnectionPathTests {
         #expect(node.connections.sharedEntrySnapshot(for: Self.refused)?.retainCount == 0)
     }
 
-    @Test("ReadAll 走共用連線")
+    @Test("ReadAll uses the shared connection")
     func readAllTakesSharedPath() async throws {
         let usecase = Streams<AllStreamsTarget>.ReadAll(options: .init())
         let node = makeNode(supporting: [usecase.methodDescriptor])
@@ -82,7 +82,7 @@ struct UnaryStreamConnectionPathTests {
         #expect(node.connections.activeDedicatedConnectionCount == 0)
     }
 
-    @Test("Subscribe 仍走獨立連線")
+    @Test("Subscribe still uses a dedicated connection")
     func subscribeTakesDedicatedPath() async throws {
         let usecase = Streams<SpecifiedStream>.Subscribe(from: .init(name: "any"), options: .init())
         let node = makeNode(supporting: [usecase.methodDescriptor])
@@ -102,7 +102,7 @@ struct UnaryStreamConnectionPathTests {
     /// dedicated-connection version, so the constrained extension must provide its own
     /// perform(selector:). The perform(node:) tests above cannot guard that: remove the
     /// constrained perform(selector:) and they still pass, while these fall back to dedicated.
-    @Test("Read 經 perform(selector:) 走共用連線")
+    @Test("Read through perform(selector:) uses the shared connection")
     func readTakesSharedPathThroughSelector() async throws {
         let usecase = Streams<SpecifiedStream>.Read(from: .init(name: "any"), options: .init())
         let selector = await makeSelector(supporting: [usecase.methodDescriptor])
@@ -117,7 +117,7 @@ struct UnaryStreamConnectionPathTests {
         #expect(selector.connections.createdDedicatedConnectionCount == 0)
     }
 
-    @Test("Subscribe 經 perform(selector:) 仍走獨立連線")
+    @Test("Subscribe through perform(selector:) still uses a dedicated connection")
     func subscribeTakesDedicatedPathThroughSelector() async throws {
         let usecase = Streams<SpecifiedStream>.Subscribe(from: .init(name: "any"), options: .init())
         let selector = await makeSelector(supporting: [usecase.methodDescriptor])

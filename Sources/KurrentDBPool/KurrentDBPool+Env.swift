@@ -22,13 +22,13 @@ extension KurrentDBPool {
         guard let data = raw.data(using: .utf8),
               let urls = try? JSONDecoder().decode([String].self, from: data)
         else {
-            fatalError("\(key) 必須是一個 JSON 字串陣列,例如 [\"esdb://host1:2113\",\"esdb://host2:2113\"]")
+            fatalError("\(key) must be a JSON array of strings, such as [\"esdb://host1:2113\",\"esdb://host2:2113\"]")
         }
         return urls.enumerated().map { index, url in
             do {
                 return try ClientSettings.parse(connectionString: url)
             } catch {
-                fatalError("\(key) 的第 \(index + 1) 個項目格式不合法")
+                fatalError("Item \(index + 1) of \(key) is not a valid connection string.")
             }
         }
     }

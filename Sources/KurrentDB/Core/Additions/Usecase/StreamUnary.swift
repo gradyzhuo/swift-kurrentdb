@@ -29,7 +29,7 @@ extension StreamUnary where Transport == AnyClientTransport {
             throw .unsupportedFeature(methodDescriptor)
         }
         
-        // 單一回應的呼叫一定在這裡結束,所以走共用連線。
+        // A call with a single response always ends here, so it uses the shared connection.
         let lease = try node.connections.acquire(node.endpoint)
         defer { lease.release() }
 

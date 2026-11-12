@@ -10,9 +10,9 @@ import Foundation
 @testable import KurrentDB
 import Testing
 
-// `.timeLimit` 作為終極 backstop:任何測試(尤其 testReplayParked 等 redelivery 的
-// `subscription2.events` 迴圈)若因非預期原因無限等待,會在此上限失敗,而非把 CI 卡到被砍。
-// 這是維運上限,非時序斷言;健康單一測試遠低於此。
+// `.timeLimit` is the last backstop: a test (above all the redelivery loop over
+// `subscription2.events` in testReplayParked) that waits without end for an unexpected reason fails at this limit, instead of hanging CI until it is killed.
+// It is an operational limit, not a timing assertion; a healthy test stays far below it.
 @Suite("Persistent Subscription Advanced Tests", .serialized, .timeLimit(.minutes(2)))
 struct PersistentSubscriptionAdvancedTests: Sendable {
     let settings: ClientSettings
@@ -190,18 +190,18 @@ struct PersistentSubscriptionAdvancedTests: Sendable {
             break
         }
 
-        // nack(park) 是射後不理:enqueue 後即返回,伺服器尚未 commit park。
-        // 必須等 parkedMessageCount 反映 park 完成再觸發 replay,否則 replay 可能
-        // 在 park commit 之前執行、無事可 replay,使下方第二個訂閱永遠等不到 redelivery。
-        // 輪詢真實前提條件(而非固定 sleep);上限作為快速失敗的兜底,非時序假設。
-        // 必須用 `#require`(拋錯中止)而非 `#expect`(只記錄、會繼續執行)——
-        // 否則 park 未觀察到時仍會往下 replay 並卡在下方 subscription2.events 無限等待。
+        // nack(park) is fire-and-forget: it returns once enqueued, before the server has committed the park.
+        // Wait until parkedMessageCount shows the park is done before starting the replay; otherwise the replay
+        // may run before the park is committed, with nothing to replay, and the second subscription below never sees the redelivery.
+        // Poll the real precondition, not a fixed sleep; the limit is a fast-fail backstop, not a timing assumption.
+        // It must be `#require` (throws and stops), not `#expect` (records and goes on):
+        // otherwise, with no park observed, the test would go on to replay and wait without end on subscription2.events below.
         var parkedReady = false
         for _ in 0 ..< 50 {
             if try await ps.getInfo().parkedMessageCount >= 1 { parkedReady = true; break }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
-        try #require(parkedReady, "park 未在預期時間內 commit;replay 無事可做")
+        try #require(parkedReady, "The park was not committed in the expected time; there is nothing to replay")
 
         // Trigger replay — parked messages are re-queued for delivery
         try await ps.replayParked()

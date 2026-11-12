@@ -3,20 +3,20 @@ import KurrentDB
 import KurrentDBPool
 import Testing
 
-// 純 actor 記帳邏輯測試，不需要真的連線到任何 KurrentDB 實例——
-// acquire()/release()/add()/remove() 都只操作記憶體狀態。
-// borrow()/withBorrowedClient() 因為會實際打 readCluster() 探測存活，
-// 需要一台真的跑起來的 KurrentDB，見 tasks/todo-kurrentdb-pool.md。
+// Tests of the actor's bookkeeping, which need no connection to any KurrentDB instance:
+// acquire(), release(), add() and remove() only touch state in memory.
+// borrow() and withBorrowedClient() probe for liveness with real RPCs, so they
+// need a running KurrentDB; see tasks/todo-kurrentdb-pool.md and KurrentDBPoolLiveTests.swift.
 @Suite("KurrentDBPool Unit Tests", .serialized)
 struct KurrentDBPoolTests {
-    @Test("acquire() 回 nil 當池子沒有任何成員")
+    @Test("acquire() returns nil when the pool has no members")
     func testEmptyPoolReturnsNil() async {
         let pool = KurrentDBPool(settings: [])
         let lease = await pool.acquire()
         #expect(lease == nil)
     }
 
-    @Test("兩個成員可以同時被 acquire()，各拿到不同的 lease")
+    @Test("Two members can be acquired at once, each with its own lease")
     func testConcurrentAcquireDistinctMembers() async {
         let pool = KurrentDBPool(settings: [.localhost(), .localhost(ports: 2114)])
         async let first = pool.acquire()
@@ -27,17 +27,17 @@ struct KurrentDBPoolTests {
         #expect(a?.id != b?.id)
     }
 
-    @Test("單一成員時，第二個 acquire() 會卡住直到 release() 才拿到同一個 lease")
+    @Test("With one member, a second acquire() waits until release() and then gets the same lease")
     func testSingleMemberBlocksUntilRelease() async {
         let pool = KurrentDBPool(settings: [.localhost()])
         guard let first = await pool.acquire() else {
-            Issue.record("預期第一次 acquire() 應該成功")
+            Issue.record("Expected the first acquire() to succeed")
             return
         }
 
         let waiterTask = Task { await pool.acquire() }
 
-        // 給 waiter 足夠時間真的掛起（如果實作有錯、沒有真的等待，這裡就會提早拿到結果）。
+        // Give the waiter time to suspend (an implementation that did not wait would have a result by now).
         try? await Task.sleep(for: .milliseconds(200))
         #expect(!waiterTask.isCancelled)
 
@@ -46,11 +46,11 @@ struct KurrentDBPoolTests {
         #expect(second?.id == first.id)
     }
 
-    @Test("add() 能喚醒因為池子全滿而卡住的 acquire()")
+    @Test("add() wakes an acquire() waiting because every member was busy")
     func testAddWakesWaiter() async {
         let pool = KurrentDBPool(settings: [.localhost()])
         guard let first = await pool.acquire() else {
-            Issue.record("預期第一次 acquire() 應該成功")
+            Issue.record("Expected the first acquire() to succeed")
             return
         }
 
@@ -64,23 +64,23 @@ struct KurrentDBPoolTests {
         await pool.release(first)
     }
 
-    @Test("remove() 對忙碌成員只標記待移除，release() 之後才真的消失")
+    @Test("remove() only marks a busy member for removal; it is gone after release()")
     func testRemoveBusyMemberDefersToRelease() async {
         let pool = KurrentDBPool(settings: [.localhost()])
         guard let lease = await pool.acquire() else {
-            Issue.record("預期 acquire() 應該成功")
+            Issue.record("Expected acquire() to succeed")
             return
         }
 
         await pool.remove(lease.id)
         await pool.release(lease)
 
-        // 成員已經被移除，池子現在應該是空的——acquire() 立刻回 nil。
+        // The member has been removed and the pool should be empty now: acquire() returns nil at once.
         let afterRemoval = await pool.acquire()
         #expect(afterRemoval == nil)
     }
 
-    @Test("並發 acquire/release 不會讓同一個成員被兩個持有者同時租借")
+    @Test("Concurrent acquire and release never lend one member to two holders at once")
     func testConcurrentAcquireReleaseNeverDoubleLeases() async {
         let pool = KurrentDBPool(settings: [.localhost(), .localhost(ports: 2114), .localhost(ports: 2115)])
         let detector = DoubleLeaseDetector()
@@ -102,7 +102,7 @@ struct KurrentDBPoolTests {
     }
 }
 
-/// 機率性防護網，不是形式證明：記錄任何「同一個 MemberID 在被標記釋放前又被別人拿到」的情況。
+/// A probabilistic safety net, not a proof: records every case of one MemberID handed to someone else before it was marked released.
 private actor DoubleLeaseDetector {
     private var busy: Set<KurrentDBPool.MemberID> = []
     private(set) var violationCount = 0
