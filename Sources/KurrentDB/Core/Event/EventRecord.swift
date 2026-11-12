@@ -55,6 +55,17 @@ public struct EventRecord: Sendable {
             .mapValues(\.unwrapped)
     }
 
+    /// The members of `customMetadata` as properties, for the initializers that take a `CustomMetadata`.
+    static func properties(from customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws(KurrentError) -> [String: Codable & Sendable] {
+        do {
+            return try properties(fromJSONObject: customMetadata.data)
+        } catch let error as DecodingError {
+            throw .decodingError(cause: error)
+        } catch {
+            throw .internalParsingError(reason: "The custom metadata is not a JSON object: \(error)")
+        }
+    }
+
     /// Creates a record from a payload and the JSON object holding its metadata. The metadata is
     /// read before the payload is encoded, so invalid metadata is the error reported first.
     init(id: UUID?, eventType: String, payload: Payload, metadataObject: Data?) throws {
@@ -84,9 +95,9 @@ extension EventRecord {
     ///   - schema: Schema metadata describing the payload's format and name.
     ///   - customMetadata: A JSON object whose members become `properties`; keys starting with `$`
     ///     are system-reserved.
-    /// - Throws: `DecodingError` if `customMetadata` is not a JSON object.
-    public init(id: UUID? = nil, data: Data, schema: Schema, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws {
-        try self.init(id: id, data: data, schema: schema, storedProperties: Self.properties(fromJSONObject: customMetadata.data))
+    /// - Throws: `KurrentError.decodingError` if `customMetadata` is not a JSON object.
+    public init(id: UUID? = nil, data: Data, schema: Schema, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws(KurrentError) {
+        try self.init(id: id, data: data, schema: schema, storedProperties: Self.properties(from: customMetadata))
     }
 }
 
@@ -131,17 +142,18 @@ extension EventRecord {
     ///   - payload: Typed payload; its format is inferred and used to populate `schema.format`.
     ///   - customMetadata: A JSON object whose members become `properties`; keys starting with `$`
     ///     are system-reserved. An invalid value is refused here, not when the record is appended.
-    /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
-    ///   `customMetadata` is not a JSON object.
+    /// - Throws: `KurrentError.decodingError` if `customMetadata` is not a JSON object, or
+    ///   `EncodingError` if the payload cannot be JSON-encoded. The metadata is checked first.
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: CustomMetadata<some EventRecordMetadataFormat>) throws {
-        try self.init(id: id, eventType: eventType, payload: payload, metadataObject: customMetadata.data)
+        let properties = try Self.properties(from: customMetadata)
+        try self.init(id: id, data: payload.data, schema: .init(format: payload.format, name: eventType), storedProperties: properties)
     }
 
     /// Creates a record with custom metadata given as the bytes of a JSON object.
     ///
     /// - Throws: `EncodingError` if the payload cannot be JSON-encoded, or `DecodingError` if
     ///   `customMetadata` is not a JSON object or nests arrays and objects more than 64 levels deep.
-    @available(*, deprecated, message: "Pass a CustomMetadata: `.json(value)`, or `CustomMetadata(data: data, format: .json)` for JSON you already have. Leave the argument out for no metadata. Removed in 4.0.")
+    @available(*, deprecated, message: "Pass a CustomMetadata: `try .json(value)`, or `try CustomMetadata(data: data, format: .json)` for JSON you already have. Leave the argument out for no metadata. Removed in 4.0.")
     public init(id: UUID? = nil, eventType: String, payload: Payload, customMetadata: Data?) throws {
         try self.init(id: id, eventType: eventType, payload: payload, metadataObject: customMetadata)
     }

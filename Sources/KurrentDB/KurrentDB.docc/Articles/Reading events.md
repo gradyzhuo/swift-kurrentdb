@@ -83,7 +83,7 @@ for try await response in responses {
 
 ## Reading custom metadata
 
-The server stores an event's custom metadata as bytes and does not record how they were written, so you name the format when you read them. ``RecordedEvent/customMetadata(format:)`` returns a ``CustomMetadata``, or `nil` for an event without metadata:
+The server stores an event's custom metadata as bytes and does not record how they were written, so you name the format when you read them. ``RecordedEvent/customMetadata(format:)`` returns a ``CustomMetadata``, or `nil` for an event without metadata. Metadata another client stored as empty bytes reads as `nil` too, since the server keeps no difference between the two:
 
 ```swift
 struct EventMetadata: Codable, Sendable {

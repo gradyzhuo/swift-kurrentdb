@@ -367,7 +367,7 @@ Every declaration 2.x deprecated is gone. All rows but the last three carry a de
 | `cerificate(source:)` | `certificate(source:)` | |
 | `cerificate(path:)` | `certificate(path:fallback:)` | As `certificate(path:)`. |
 | `KurrentError.CurrentRevisionOption` | `KurrentError.CurrentRevisionState` | The same type, renamed. |
-| `EventData(id:eventType:payload:customMetadata:)` with a value that is not a `Payload` | `EventData(eventType:model:)`, or `payload: .json(value)` | If the value was `Data` or `[UInt8]`, see "EventData with a Data payload" below. |
+| `EventData(id:eventType:payload:customMetadata:)` with a value that is not a `Payload` | `EventData(eventType:model:customMetadata:)`, or `payload: .json(value)` | Keep `customMetadata:` as it is; for its own change see "Deprecated in 3.0" below. If the value was `Data` or `[UInt8]`, see "EventData with a Data payload" below. |
 | `StreamFilter.onStreamName(prefix:)` | `onStreamName(prefixes:)` | |
 | `SubscriptionFilter` | `StreamFilter` | The same type, renamed. |
 | `KurrentDB_V1` (library and module) | the 2.x API | Migrate on 2.6 first (Before you start). |
@@ -626,15 +626,15 @@ The code assumes a 2.x Swift client wrote the stream's metadata: any metadata `g
 
 ## Deprecated in 3.0
 
-These still compile and behave as on 2.6.2, with a deprecation warning. They are removed in 4.0.
+These still compile, with a deprecation warning, and behave as on 2.6.2 unless the note says otherwise. They are removed in 4.0.
 
 | Deprecated | Use instead | Note |
 |------------|-------------|------|
 | `EventData(…, customMetadata:)` with `Data` or `nil`, in all four forms (`payload:`, `model:`, `data:`, `bytes:`) | `customMetadata: try .json(value)`, or `try CustomMetadata(data: data, format: .bytes)` | The same bytes are sent. For no metadata, leave the argument out. |
-| `EventRecord(eventType:payload:customMetadata:)` with `Data` or `nil` | `customMetadata: .json(value)`, or `CustomMetadata(data: data, format: .json)` | The metadata must still be a JSON object. |
+| `EventRecord(eventType:payload:customMetadata:)` with `Data` or `nil` | `customMetadata: try .json(value)`, or `try CustomMetadata(data: data, format: .json)` | The metadata must still be a JSON object. |
 | `EventRecord.setValue(_:forKey:)` | Create the record with `customMetadata: .json(value)` | `setValue` stores the value unchecked, so one that cannot be sent fails at append; `.json(_:)` fails when the record is created. |
 | Assigning to `EventRecord.properties` | As above | Reading `properties` is not deprecated. |
-| `StreamMetadata.customProperties(_:)` with `[String: String]` | `customProperties(encoding:)` or `customProperty(_:encoding:)` | See <doc:Stream-metadata>. |
+| `StreamMetadata.customProperties(_:)` with `[String: String]` | `customProperties(encoding:)` or `customProperty(_:encoding:)` | Merges the keys into the metadata, where 2.x replaced the whole custom dictionary. See "Stream metadata" above and <doc:Stream-metadata>. |
 
 ``CustomMetadata`` holds the bytes and the format they are written in. An ``EventData`` takes JSON or bytes; an ``EventRecord`` takes JSON only, and bytes metadata on a record is a compile error. To read metadata back, name the format: ``RecordedEvent/customMetadata(format:)``. `recordedEvent.customMetadata` still returns the stored `Data`.
 
