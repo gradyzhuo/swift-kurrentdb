@@ -199,24 +199,36 @@ extension EventRecord {
 
     /// The record's properties as the `google.protobuf.Value` map AppendRecords and AppendSession send.
     ///
-    /// - Throws: ``KurrentError/encodingError(message:encoding:)`` when a property cannot be encoded.
+    /// - Throws: ``KurrentError/underlyingError(reason:cause:)`` when a property cannot be encoded;
+    ///   ``KurrentError/encodingError(message:encoding:)`` when it nests too deep.
     package func protobufProperties() throws(KurrentError) -> [String: Google_Protobuf_Value] {
         do {
             return try normalizedProperties().mapValues(\.protobufValue)
         } catch {
-            throw .encodingError(message: "the properties of record of type '\(schema.name)' cannot be encoded: \(error)", encoding: .utf8)
+            throw propertiesError(error)
         }
+    }
+
+    /// An encoder's error is kept as the cause of an underlyingError. A `DecodingError` comes from
+    /// reading the encoded value back as a `PropertyValue`, which fails on the client's own rule,
+    /// the nesting limit, so it is an encodingError.
+    private func propertiesError(_ error: any Error) -> KurrentError {
+        if error is DecodingError {
+            return .encodingError(message: "The properties of record of type '\(schema.name)' cannot be sent: \(error)", encoding: .utf8)
+        }
+        return .underlyingError(reason: "The properties of record of type '\(schema.name)' cannot be encoded.", cause: error)
     }
 
     /// The record's properties as the JSON custom metadata BatchAppend sends, or `nil` when there are none.
     ///
-    /// - Throws: ``KurrentError/encodingError(message:encoding:)`` when a property cannot be encoded.
+    /// - Throws: ``KurrentError/underlyingError(reason:cause:)`` when a property cannot be encoded;
+    ///   ``KurrentError/encodingError(message:encoding:)`` when it nests too deep.
     package func customMetadataJSON() throws(KurrentError) -> Data? {
         guard !properties.isEmpty else { return nil }
         do {
             return try JSONEncoder().encode(normalizedProperties())
         } catch {
-            throw .encodingError(message: "the properties of record of type '\(schema.name)' cannot be encoded: \(error)", encoding: .utf8)
+            throw propertiesError(error)
         }
     }
 }

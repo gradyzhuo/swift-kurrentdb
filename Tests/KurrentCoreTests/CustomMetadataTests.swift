@@ -18,6 +18,12 @@ struct CustomMetadataTests {
         (error as? KurrentError)?.cause is DecodingError
     }
 
+    /// The nesting limit is the client's own rule, so it is an encodingError, not an underlyingError.
+    private static func isTooDeep(_ error: any Error) -> Bool {
+        guard case .encodingError = error as? KurrentError else { return false }
+        return true
+    }
+
     private static func isEncodingError(_ error: any Error) -> Bool {
         (error as? KurrentError)?.cause is EncodingError
     }
@@ -79,12 +85,18 @@ struct CustomMetadataTests {
         for leaf in ["", "0", #""text""#, "null", "true"] {
             #expect(try CustomMetadata(data: arrays(64, leaf), format: .json).data == arrays(64, leaf))
             #expect(try CustomMetadata(data: objects(64, leaf), format: .json).data == objects(64, leaf))
-            #expect { try CustomMetadata(data: arrays(65, leaf), format: .json) } throws: { Self.isDecodingError($0) }
-            #expect { try CustomMetadata(data: objects(65, leaf), format: .json) } throws: { Self.isDecodingError($0) }
+            #expect { try CustomMetadata(data: arrays(65, leaf), format: .json) } throws: { Self.isTooDeep($0) }
+            #expect { try CustomMetadata(data: objects(65, leaf), format: .json) } throws: { Self.isTooDeep($0) }
         }
         // 64 levels around a scalar; an empty array in its place is the 65th.
         #expect(try CustomMetadata(data: mixed(64, "0"), format: .json).data == mixed(64, "0"))
-        #expect { try CustomMetadata(data: mixed(64, ""), format: .json) } throws: { Self.isDecodingError($0) }
+        #expect { try CustomMetadata(data: mixed(64, ""), format: .json) } throws: { Self.isTooDeep($0) }
+        // The limit holds for the second value of a repeated key, and past JSONDecoder's own limit.
+        #expect { try CustomMetadata(data: Data(#"{"x":0,"x":"#.utf8) + arrays(64, "0") + Data("}".utf8), format: .json) } throws: { Self.isTooDeep($0) }
+        #expect { try CustomMetadata(data: arrays(100_000, ""), format: .json) } throws: { Self.isTooDeep($0) }
+        // Brackets inside a string are not levels.
+        let text = Data((#"[""# + String(repeating: "[{", count: 100) + #"\"[""# + "]").utf8)
+        #expect(try CustomMetadata(data: text, format: .json).data == text)
     }
 
     @Test("A number outside Double is not JSON metadata, and is stored as bytes metadata")
@@ -120,7 +132,7 @@ struct CustomMetadataTests {
             }
         }
         let value = (0 ..< 65).reduce(Nested.leaf) { nested, _ in .list(nested) }
-        #expect { try CustomMetadata.json(value) } throws: { Self.isDecodingError($0) }
+        #expect { try CustomMetadata.json(value) } throws: { Self.isTooDeep($0) }
     }
 
     // MARK: - Errors

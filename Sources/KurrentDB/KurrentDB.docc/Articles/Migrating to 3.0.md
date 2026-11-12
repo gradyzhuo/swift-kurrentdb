@@ -669,6 +669,18 @@ do {
 
 A `switch` over every case of ``KurrentError`` needs a clause for `underlyingError`. The deprecated `EventRecord(eventType:payload:customMetadata:)` taking `Data` still throws `EncodingError` and `DecodingError` as on 2.6.2.
 
+### decodingError is no longer thrown
+
+The calls in the table below now keep the error an encoder or a decoder threw as the `cause` of an `underlyingError`. `KurrentError.decodingError(cause:)` is still declared, so your code compiles, but the client no longer throws it; `encodingError` is kept for values the client itself refuses to send.
+
+| 2.x | 3.0 |
+|-----|-----|
+| `result(of:)` or `state(of:)` on a projection whose response does not decode: `KurrentError.decodingError(cause:)` | `KurrentError.underlyingError(reason:cause:)`, the `DecodingError` as its `cause` |
+| Appending an ``EventRecord`` whose property cannot be encoded, such as a NaN set through `setValue(_:forKey:)`: `KurrentError.encodingError` | `KurrentError.underlyingError(reason:cause:)`, the `EncodingError` as its `cause` |
+| `catch KurrentError.decodingError(let cause)` | Compiles and never matches. `catch KurrentError.underlyingError(_, let cause)`, or read `error.cause` |
+
+`encodingError` is still what you get for credentials that are not ASCII, for custom stream metadata that has a key starting with `$`, does not encode to a JSON object or nests too deep, for stream metadata the server would ignore, and for an event's custom metadata or a record's properties nested more than 64 levels deep.
+
 ## Deprecated in 3.0
 
 These still compile, with a deprecation warning, and behave as on 2.6.2 unless the note says otherwise. They are removed in 4.0.

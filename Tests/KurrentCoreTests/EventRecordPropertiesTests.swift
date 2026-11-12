@@ -15,6 +15,17 @@ struct EventRecordPropertiesTests {
         (error as? KurrentError)?.cause is DecodingError
     }
 
+    private static func isTooDeep(_ error: any Error) -> Bool {
+        guard case .encodingError = error as? KurrentError else { return false }
+        return true
+    }
+
+    /// The encoder's error kept as the cause of an `underlyingError`.
+    private static func isEncodingError(_ error: any Error) -> Bool {
+        guard case let .underlyingError(_, cause) = error as? KurrentError else { return false }
+        return cause is EncodingError
+    }
+
     /// A record whose custom metadata is `customMetadata`, a JSON text, or one without metadata.
     private func makeRecord(customMetadata: String?) throws -> EventRecord {
         guard let customMetadata else {
@@ -92,7 +103,7 @@ struct EventRecordPropertiesTests {
         record.properties["operatorId"] = "op-1"
         record.properties["n"] = Double.nan
         #expect(record.properties["operatorId"] as? String == "op-1")
-        #expect(throws: KurrentError.self) { try record.protobufProperties() }
+        #expect { try record.protobufProperties() } throws: { Self.isEncodingError($0) }
     }
 
     @Test("EventRecord(eventData:) carries the metadata of an EventData")
@@ -176,8 +187,8 @@ struct EventRecordPropertiesTests {
     @available(*, deprecated)
     func integerBeyond64Bits() throws {
         let record = try makeRecord(customMetadata: nil).setValue(Int128(UInt64.max) + 1, forKey: "n")
-        #expect(throws: KurrentError.self) { try record.protobufProperties() }
-        #expect(throws: KurrentError.self) { try record.customMetadataJSON() }
+        #expect { try record.protobufProperties() } throws: { Self.isEncodingError($0) }
+        #expect { try record.customMetadataJSON() } throws: { Self.isEncodingError($0) }
     }
 
     @Test("A Double survives the JSON round trip of a nested property, however JSONEncoder writes it", arguments: [
@@ -223,8 +234,8 @@ struct EventRecordPropertiesTests {
             try makeRecord(customMetadata: nil).setValue(Float(value), forKey: "n"),
             try makeRecord(customMetadata: nil).setValue([value], forKey: "n"),
         ] {
-            #expect(throws: KurrentError.self) { try record.protobufProperties() }
-            #expect(throws: KurrentError.self) { try record.customMetadataJSON() }
+            #expect { try record.protobufProperties() } throws: { Self.isEncodingError($0) }
+            #expect { try record.customMetadataJSON() } throws: { Self.isEncodingError($0) }
         }
     }
 
@@ -263,8 +274,28 @@ struct EventRecordPropertiesTests {
 
     @Test("Metadata nested deeper than 64 levels throws instead of overflowing the stack", arguments: [65, 1_000, 100_000])
     func nestedPastTheLimit(depth: Int) {
-        #expect(throws: KurrentError.self) {
-            try makeRecord(customMetadata: Self.nested(depth: depth))
+        #expect { try makeRecord(customMetadata: Self.nested(depth: depth)) } throws: { Self.isTooDeep($0) }
+    }
+
+    @Test("A property set too deep fails both encodings with encodingError, the client's own rule")
+    @available(*, deprecated)
+    func propertyNestedPastTheLimit() throws {
+        indirect enum Nested: Codable, Sendable {
+            case leaf
+            case list(Nested)
+
+            init(from _: any Decoder) throws { self = .leaf }
+
+            func encode(to encoder: any Encoder) throws {
+                var container = encoder.unkeyedContainer()
+                if case let .list(inner) = self {
+                    try container.encode(inner)
+                }
+            }
         }
+        let value = (0 ..< 65).reduce(Nested.leaf) { nested, _ in .list(nested) }
+        let record = try makeRecord(customMetadata: nil).setValue(value, forKey: "deep")
+        #expect { try record.protobufProperties() } throws: { Self.isTooDeep($0) }
+        #expect { try record.customMetadataJSON() } throws: { Self.isTooDeep($0) }
     }
 }
