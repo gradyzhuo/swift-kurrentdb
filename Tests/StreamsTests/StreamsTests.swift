@@ -93,7 +93,10 @@ struct StreamTests: Sendable {
         try #require(records.count == 3)
         #expect(try records[0].customMetadata(format: .json)?.decode(OrderMetadata.self) == metadata)
         #expect(try records[1].customMetadata(format: .bytes)?.data == bytes)
-        #expect(throws: KurrentError.self) { try records[1].customMetadata(format: .json) }
+        #expect { try records[1].customMetadata(format: .json) } throws: {
+            guard case .decodingError = $0 as? KurrentError else { return false }
+            return true
+        }
         #expect(try records[2].customMetadata(format: .json) == nil)
 
         try await stream.delete()

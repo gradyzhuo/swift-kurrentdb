@@ -226,13 +226,21 @@ struct AppendRecordsTests: Sendable {
         _ = try await client.multiStreams.appendRecords(events: [
             StreamEvent(stream: stream, records: record, expectedRevision: .noStream),
         ])
+        _ = try await client.multiStreams.appendRecords(events: [
+            StreamEvent(stream: stream, records: EventRecord(eventType: "operator-idle", payload: .json(["k": "v"])), expectedRevision: .any),
+        ])
 
-        let first = try await client.streams(specified: stream).read().first { _ in true }
-        guard case let .event(readEvent) = first else {
-            Issue.record("Expected an event, got \(String(describing: first)).")
-            return
+        var records: [RecordedEvent] = []
+        for try await response in client.streams(specified: stream).read() {
+            if case let .event(readEvent) = response {
+                records.append(readEvent.record)
+            }
         }
-        let recorded = readEvent.record
+        try #require(records.count == 2)
+        // A record without custom metadata carries only keys the server adds, none of the caller's.
+        let bare = try records[1].customMetadata(format: .json)?.decode([String: PropertyValue].self) ?? [:]
+        #expect(bare.keys.allSatisfy { $0.hasPrefix("$") })
+        let recorded = records[0]
         #expect(recorded.id == recordId)
         #expect(recorded.eventType == "operator-acted")
         #expect(recorded.contentType == .json)

@@ -59,6 +59,8 @@ struct CustomMetadataTests {
 
     @Test("Bytes that are not JSON are refused as JSON metadata", arguments: [
         "", "not json", "{", #"{"a":}"#, "{} {}",
+        "1e", "-", "[01]", "[1.]", "[.5]", "[+1]", "[NaN]", "[tru]", #"{"a":1e}"#,
+        #"["\q"]"#, #"["\ud800"]"#, #"["\u12"]"#, "[\"a\tb\"]",
     ])
     func notJSON(text: String) {
         #expect { try CustomMetadata(data: Data(text.utf8), format: .json) } throws: { Self.isDecodingError($0) }
@@ -66,20 +68,44 @@ struct CustomMetadataTests {
 
     @Test("JSON metadata nests arrays and objects at most 64 levels deep")
     func nestingLimit() throws {
-        func nested(_ depth: Int) -> Data {
-            Data((String(repeating: "[", count: depth) + String(repeating: "]", count: depth)).utf8)
+        // `depth` levels of arrays, of objects, or of the two in turn, around `leaf`.
+        func arrays(_ depth: Int, _ leaf: String) -> Data {
+            Data((String(repeating: "[", count: depth) + leaf + String(repeating: "]", count: depth)).utf8)
         }
-        #expect(try CustomMetadata(data: nested(64), format: .json).data == nested(64))
-        #expect { try CustomMetadata(data: nested(65), format: .json) } throws: { Self.isDecodingError($0) }
+        func objects(_ depth: Int, _ leaf: String) -> Data {
+            Data((String(repeating: #"{"k":"#, count: depth - 1) + "{" + (leaf.isEmpty ? "" : #""k":"# + leaf) + String(repeating: "}", count: depth)).utf8)
+        }
+        func mixed(_ depth: Int, _ leaf: String) -> Data {
+            Data((String(repeating: #"[{"k":"#, count: depth / 2) + (leaf.isEmpty ? "[]" : leaf) + String(repeating: "}]", count: depth / 2)).utf8)
+        }
+        for leaf in ["", "0", #""text""#, "null", "true"] {
+            #expect(try CustomMetadata(data: arrays(64, leaf), format: .json).data == arrays(64, leaf))
+            #expect(try CustomMetadata(data: objects(64, leaf), format: .json).data == objects(64, leaf))
+            #expect { try CustomMetadata(data: arrays(65, leaf), format: .json) } throws: { Self.isDecodingError($0) }
+            #expect { try CustomMetadata(data: objects(65, leaf), format: .json) } throws: { Self.isDecodingError($0) }
+        }
+        // 64 levels around a scalar; an empty array in its place is the 65th.
+        #expect(try CustomMetadata(data: mixed(64, "0"), format: .json).data == mixed(64, "0"))
+        #expect { try CustomMetadata(data: mixed(64, ""), format: .json) } throws: { Self.isDecodingError($0) }
     }
 
-    @Test("A number no Swift type holds is JSON metadata for an EventData and refused by an EventRecord")
-    func numberBeyondEveryType() throws {
-        let metadata = try CustomMetadata(data: Data(#"{"n":1e400}"#.utf8), format: .json)
-        #expect(EventData(eventType: "test", model: ["k": "v"], customMetadata: metadata).customMetadata == metadata.data)
-        #expect(throws: DecodingError.self) {
-            try EventRecord(eventType: "test", payload: .json(["k": "v"]), customMetadata: metadata)
-        }
+    @Test("A number outside Double is not JSON metadata, and is stored as bytes metadata")
+    func numberOutsideDouble() throws {
+        let data = Data(#"{"n":1e400}"#.utf8)
+        #expect { try CustomMetadata(data: data, format: .json) } throws: { Self.isDecodingError($0) }
+        let metadata = try CustomMetadata(data: data, format: .bytes)
+        #expect(EventData(eventType: "test", model: ["k": "v"], customMetadata: metadata).customMetadata == data)
+    }
+
+    @Test("JSON metadata that is not an object is a decoding error for an EventRecord", arguments: [
+        "[1,2]", "3", #""text""#, "true", "null",
+    ])
+    func notAnObjectForARecord(text: String) throws {
+        let metadata = try CustomMetadata(data: Data(text.utf8), format: .json)
+        #expect { try EventRecord(eventType: "test", payload: .json(["k": "v"]), customMetadata: metadata) } throws: { Self.isDecodingError($0) }
+        #expect { try EventRecord(data: Data("{}".utf8), schema: .init(format: .json, name: "test"), customMetadata: metadata) } throws: { Self.isDecodingError($0) }
+        // The metadata is reported before a payload that cannot be encoded.
+        #expect { try EventRecord(eventType: "test", payload: .json(Double.nan), customMetadata: metadata) } throws: { Self.isDecodingError($0) }
     }
 
     @Test("A value that encodes to JSON nested too deep is an encoding error")
@@ -108,12 +134,20 @@ struct CustomMetadataTests {
 
     // MARK: - Bytes
 
-    @Test("Any bytes are bytes metadata, the empty ones included")
+    @Test("Any bytes are bytes metadata")
     func anyBytes() throws {
-        for bytes in [Data(), Data([0x00, 0xFF]), Data("not json".utf8)] {
+        for bytes in [Data([0x00]), Data([0x00, 0xFF]), Data("not json".utf8)] {
             let metadata = try CustomMetadata(data: bytes, format: .bytes)
             #expect(metadata.data == bytes)
             #expect(metadata.format == .bytes)
+        }
+    }
+
+    @Test("Empty bytes are refused, since they would read back as no metadata")
+    func emptyBytes() {
+        #expect { try CustomMetadata(data: Data(), format: .bytes) } throws: {
+            guard case .initializationError = $0 as? KurrentError else { return false }
+            return true
         }
     }
 
