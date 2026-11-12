@@ -61,6 +61,11 @@ let package = Package(
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.37.0"),
+        // KurrentDBClient(settings:eventLoopGroup:) takes NIO's EventLoopGroup, so NIO is part of the
+        // public API, and the sources import NIOSSL. The floors are the ones
+        // grpc-swift-nio-transport 2.0.0 asks for.
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.78.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.31.0"),
     ] + (benchmarksEnabled
         ? [Package.Dependency.package(url: "https://github.com/ordo-one/benchmark.git", from: "1.36.2")]
         : []),
@@ -72,12 +77,18 @@ let package = Package(
             dependencies: [
                 "GRPCEncapsulates",
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "NIO", package: "swift-nio"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
             ]
         ),
         .target(
             name: "KurrentDBPool",
             dependencies: [
                 "KurrentDB",
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
             ]
         ),
         .target(
@@ -139,6 +150,7 @@ let package = Package(
                 "KurrentDB",
                 // SmallWindowTransportProvider: a Posix transport with a small HTTP/2 window.
                 .product(name: "GRPCNIOTransportHTTP2", package: "grpc-swift-nio-transport"),
+                .product(name: "NIOPosix", package: "swift-nio"),
             ],
             resources: [
                 .copy("Resources/ca.crt"),
@@ -274,6 +286,9 @@ let package = Package(
                 // SubscriptionMessageDecodingTests: builds the generated responses the decoder reads.
                 "_GRPCProtobufGenerated",
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+                // The event-loop groups the tests hand to KurrentDBClient(settings:eventLoopGroup:).
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
             ],
             swiftSettings: [
                 .unsafeFlags([
@@ -314,6 +329,9 @@ let package = Package(
             dependencies: [
                 "KurrentDB",
                 "KurrentDBPool",
+                // The examples that pass an event-loop group.
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
             ],
             // Examples routinely leave values unused; only errors matter here, unless
             // KURRENTDB_DOC_WARNINGS=1 (see `docWarningsEnabled`).
