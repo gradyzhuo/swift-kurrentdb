@@ -15,13 +15,11 @@ struct CustomMetadataTests {
     }
 
     private static func isDecodingError(_ error: any Error) -> Bool {
-        guard case .decodingError = error as? KurrentError else { return false }
-        return true
+        (error as? KurrentError)?.cause is DecodingError
     }
 
     private static func isEncodingError(_ error: any Error) -> Bool {
-        guard case .encodingError = error as? KurrentError else { return false }
-        return true
+        (error as? KurrentError)?.cause is EncodingError
     }
 
     private func recorded(customMetadata: Data) -> RecordedEvent {
@@ -108,7 +106,7 @@ struct CustomMetadataTests {
         #expect { try EventRecord(eventType: "test", payload: .json(Double.nan), customMetadata: metadata) } throws: { Self.isDecodingError($0) }
     }
 
-    @Test("A value that encodes to JSON nested too deep is an encoding error")
+    @Test("A value that encodes to JSON nested too deep is refused like the JSON itself")
     func encodesTooDeep() {
         indirect enum Nested: Encodable, Sendable {
             case leaf
@@ -122,7 +120,38 @@ struct CustomMetadataTests {
             }
         }
         let value = (0 ..< 65).reduce(Nested.leaf) { nested, _ in .list(nested) }
-        #expect { try CustomMetadata.json(value) } throws: { Self.isEncodingError($0) }
+        #expect { try CustomMetadata.json(value) } throws: { Self.isDecodingError($0) }
+    }
+
+    // MARK: - Errors
+
+    @Test("A payload that cannot be encoded is an underlying error holding the EncodingError")
+    func payloadCannotBeEncoded() throws {
+        let metadata = try CustomMetadata.json(["tenant": "acme"])
+        #expect { try EventRecord(eventType: "test", payload: .json(Double.nan)) } throws: { Self.isEncodingError($0) }
+        #expect { try EventRecord(eventType: "test", payload: .json(Double.nan), customMetadata: metadata) } throws: { Self.isEncodingError($0) }
+        #expect { try EventRecord(eventData: EventData(eventType: "test", model: Double.nan)) } throws: { Self.isEncodingError($0) }
+    }
+
+    @Test("EventRecord(eventData:) reports metadata that is not a JSON object before the payload")
+    func recordFromEventData() throws {
+        let bytes = try CustomMetadata(data: Data([0x00, 0xFF]), format: .bytes)
+        #expect { try EventRecord(eventData: EventData(eventType: "test", model: Double.nan, customMetadata: bytes)) } throws: { Self.isDecodingError($0) }
+    }
+
+    @Test("rethrowCause throws the wrapped error, and cause returns it")
+    func rethrowCause() {
+        let wrapped = KurrentError.underlyingError(reason: "Encoding failed.", cause: EncodingError.invalidValue(1, .init(codingPath: [], debugDescription: "test")))
+        #expect(wrapped.cause is EncodingError)
+        #expect(throws: EncodingError.self) { try wrapped.rethrowCause() }
+        #expect(wrapped.description.hasPrefix("Encoding failed. Cause: "))
+    }
+
+    @Test("An error that wraps none has no cause and rethrows itself")
+    func rethrowWithoutCause() {
+        let plain = KurrentError.accessDenied
+        #expect(plain.cause == nil)
+        #expect(throws: KurrentError.accessDenied) { try plain.rethrowCause() }
     }
 
     @Test("A value JSONEncoder cannot write is an encoding error", arguments: [

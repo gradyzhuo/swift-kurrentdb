@@ -248,7 +248,7 @@ for failure in response.failed {
 
 ### Record metadata
 
-An ``EventRecord`` carries its metadata as `properties`, which the server receives as key-value pairs. So `customMetadata:` takes JSON only, and the JSON must be an object: its members become the properties. A member can be any JSON value, nested objects and arrays included. Passing bytes metadata does not compile, and JSON that is not an object throws `KurrentError.decodingError` when the record is created. A value that cannot be encoded, such as NaN or an infinity, throws there too, from `.json(_:)`.
+An ``EventRecord`` carries its metadata as `properties`, which the server receives as key-value pairs. So `customMetadata:` takes JSON only, and the JSON must be an object: its members become the properties. A member can be any JSON value, nested objects and arrays included. Passing bytes metadata does not compile, and JSON that is not an object throws when the record is created, as does a value that cannot be encoded, such as NaN or an infinity. Both are a `KurrentError.underlyingError`, whose `cause` is the `DecodingError` or `EncodingError`.
 
 ```swift
 struct RecordMetadata: Codable, Sendable {

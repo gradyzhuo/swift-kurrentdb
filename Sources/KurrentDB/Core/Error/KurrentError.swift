@@ -62,6 +62,53 @@ public enum KurrentError: Error, Sendable {
     case encodingError(message: String, encoding: String.Encoding)
     /// A value could not be decoded from the server response.
     case decodingError(cause: DecodingError)
+    /// An error from a layer below the client, kept as it was thrown. `reason` says what the
+    /// client was doing; `cause` is the error, such as an `EncodingError` or a `DecodingError`.
+    case underlyingError(reason: String, cause: any Error)
+}
+
+extension KurrentError {
+    /// The error this one wraps, or `nil` when it wraps none.
+    ///
+    /// ```swift
+    /// do {
+    ///     _ = try EventRecord(eventType: "order-placed", payload: .json(Double.nan))
+    /// } catch {
+    ///     if let cause = error.cause as? EncodingError {
+    ///         print("The payload cannot be encoded:", cause)
+    ///     }
+    /// }
+    /// ```
+    public var cause: (any Error)? {
+        switch self {
+        case let .underlyingError(_, cause): cause
+        case let .grpcError(cause): cause
+        case let .grpcConnectionError(cause): cause
+        case let .grpcRuntimeError(cause): cause
+        case let .decodingError(cause): cause
+        default: nil
+        }
+    }
+
+    /// Throws the error this one wraps, so a `catch` can match its type. An error that wraps
+    /// none throws itself.
+    ///
+    /// ```swift
+    /// do {
+    ///     _ = try EventRecord(eventType: "order-placed", payload: .json(Double.nan))
+    /// } catch {
+    ///     do {
+    ///         try error.rethrowCause()
+    ///     } catch let cause as EncodingError {
+    ///         print("The payload cannot be encoded:", cause)
+    ///     } catch {
+    ///         print(error)
+    ///     }
+    /// }
+    /// ```
+    public func rethrowCause() throws -> Never {
+        throw cause ?? self
+    }
 }
 
 extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
@@ -119,6 +166,8 @@ extension KurrentError: CustomStringConvertible, CustomDebugStringConvertible {
             "Encoding error \(message) by encoding: \(encoding)"
         case let .decodingError(cause):
             "Decoding error: \(cause)"
+        case let .underlyingError(reason, cause):
+            "\(reason) Cause: \(cause)"
         }
     }
 }
@@ -191,6 +240,8 @@ extension KurrentError: Equatable {
             "ResourceDeleted"
         case .unservicableEventLink:
             "UnservicableEventLink"
+        case .underlyingError:
+            "UnderlyingError"
         }
     }
 }

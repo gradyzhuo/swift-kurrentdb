@@ -71,10 +71,8 @@ public struct JSONMetadataFormat: CustomMetadataFormat {
     public func validate(_ data: Data) throws(KurrentError) {
         do {
             _ = try JSONDecoder().decode(AnyValue.self, from: data)
-        } catch let error as DecodingError {
-            throw .decodingError(cause: error)
         } catch {
-            throw .internalParsingError(reason: "The custom metadata is not JSON: \(error)")
+            throw .underlyingError(reason: "The custom metadata is not JSON.", cause: error)
         }
     }
 }
@@ -150,32 +148,28 @@ public struct CustomMetadata<Format: CustomMetadataFormat>: Sendable, Equatable 
 extension CustomMetadata where Format == JSONMetadataFormat {
     /// Encodes `value` as JSON with `JSONEncoder`'s default strategies.
     ///
-    /// - Throws: `KurrentError.encodingError` when `value` cannot be encoded, such as a `Double`
-    ///   that is not finite, or encodes to JSON nested more than 64 levels deep.
+    /// - Throws: `KurrentError.underlyingError` when `value` cannot be encoded, such as a `Double`
+    ///   that is not finite, with the error thrown as its cause, usually an `EncodingError`, or when it encodes to JSON
+    ///   nested more than 64 levels deep.
     public static func json(_ value: some Encodable & Sendable) throws(KurrentError) -> Self {
         let data: Data
         do {
             data = try JSONEncoder().encode(value)
         } catch {
-            throw .encodingError(message: "Custom metadata of type \(type(of: value)) cannot be encoded: \(error)", encoding: .utf8)
+            throw .underlyingError(reason: "Custom metadata of type \(type(of: value)) cannot be encoded.", cause: error)
         }
-        do {
-            return try Self(data: data, format: .json)
-        } catch {
-            throw .encodingError(message: "Custom metadata of type \(type(of: value)) cannot be stored: \(error)", encoding: .utf8)
-        }
+        return try Self(data: data, format: .json)
     }
 
     /// Decodes the JSON into `type`. Members `type` does not declare are ignored.
     ///
-    /// - Throws: `KurrentError.decodingError` when the JSON does not decode as `type`.
+    /// - Throws: `KurrentError.underlyingError` when the JSON does not decode as `type`, with the
+    ///   error thrown as its cause, usually a `DecodingError`.
     public func decode<T: Decodable>(_ type: T.Type) throws(KurrentError) -> T {
         do {
             return try JSONDecoder().decode(type, from: data)
-        } catch let error as DecodingError {
-            throw .decodingError(cause: error)
         } catch {
-            throw .internalParsingError(reason: "The custom metadata does not decode as \(type): \(error)")
+            throw .underlyingError(reason: "The custom metadata does not decode as \(type).", cause: error)
         }
     }
 }
