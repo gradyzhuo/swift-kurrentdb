@@ -18,30 +18,45 @@ public protocol CustomMetadataFormat: Sendable, Equatable {
     func validate(_ data: Data) throws(KurrentError)
 }
 
-/// Custom metadata written as JSON: any JSON value, nesting arrays and objects at most 64 levels deep.
+/// Custom metadata written as JSON: a value `JSONDecoder` reads, nesting arrays and objects at
+/// most 64 levels deep.
 public struct JSONMetadataFormat: CustomMetadataFormat {
     public init() {}
 
-    /// Any JSON value. Scalars are not decoded, so a number no Swift type holds, such as `1e400`,
-    /// is accepted: the bytes are stored as they are.
+    /// Any JSON value, as `JSONDecoder` reads it: every scalar is decoded, a number as a `Double`.
     private struct AnyValue: Decodable {
         init(from decoder: any Decoder) throws {
+            let scalar = try decoder.singleValueContainer()
+            if scalar.decodeNil()
+                || (try? scalar.decode(Bool.self)) != nil
+                || (try? scalar.decode(Double.self)) != nil
+                || (try? scalar.decode(String.self)) != nil
+            {
+                return
+            }
+            // Only arrays and objects count as levels. A container at `codingPath.count` n is level n + 1.
+            var elements: (any UnkeyedDecodingContainer)?
+            var members: KeyedDecodingContainer<Key>?
+            do {
+                elements = try decoder.unkeyedContainer()
+            } catch {
+                // Not an array: an object, or a scalar JSONDecoder refuses, which this rethrows.
+                members = try decoder.container(keyedBy: Key.self)
+            }
             guard decoder.codingPath.count < PropertyValue.maximumDepth else {
                 throw DecodingError.dataCorrupted(.init(
                     codingPath: decoder.codingPath,
                     debugDescription: "The JSON nests arrays and objects more than \(PropertyValue.maximumDepth) levels deep."
                 ))
             }
-            if var elements = try? decoder.unkeyedContainer() {
+            if var elements {
                 while !elements.isAtEnd {
                     _ = try elements.decode(AnyValue.self)
                 }
-            } else if let members = try? decoder.container(keyedBy: Key.self) {
+            } else if let members {
                 for key in members.allKeys {
                     _ = try members.decode(AnyValue.self, forKey: key)
                 }
-            } else {
-                _ = try decoder.singleValueContainer()
             }
         }
 
@@ -64,11 +79,16 @@ public struct JSONMetadataFormat: CustomMetadataFormat {
     }
 }
 
-/// Custom metadata as bytes the server stores without reading them. Any bytes are valid.
+/// Custom metadata as bytes the server stores without reading them. Any bytes are valid, except
+/// none: an event stored with empty metadata reads back as an event without metadata.
 public struct BytesMetadataFormat: CustomMetadataFormat {
     public init() {}
 
-    public func validate(_: Data) throws(KurrentError) {}
+    public func validate(_ data: Data) throws(KurrentError) {
+        guard !data.isEmpty else {
+            throw .initializationError(reason: "Custom metadata cannot be empty: it would read back as no metadata. Leave the argument out for an event without metadata.")
+        }
+    }
 }
 
 extension CustomMetadataFormat where Self == JSONMetadataFormat {
@@ -162,6 +182,10 @@ extension CustomMetadata where Format == JSONMetadataFormat {
 
 extension RecordedEvent {
     /// The event's custom metadata, read as `format`, or `nil` when the event has none.
+    ///
+    /// The server keeps no difference between empty metadata and none, so `nil` is also what an
+    /// event stored with empty metadata reads as. ``CustomMetadata`` refuses empty bytes for that
+    /// reason.
     ///
     /// ```swift
     /// struct OrderMetadata: Codable, Sendable {

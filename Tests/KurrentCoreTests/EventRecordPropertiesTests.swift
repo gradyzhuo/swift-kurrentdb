@@ -11,6 +11,11 @@ import Testing
 struct EventRecordPropertiesTests {
     private static let payload = EventRecord.Payload.data(Data("{}".utf8), .json)
 
+    private static func isDecodingError(_ error: any Error) -> Bool {
+        guard case .decodingError = error as? KurrentError else { return false }
+        return true
+    }
+
     /// A record whose custom metadata is `customMetadata`, a JSON text, or one without metadata.
     private func makeRecord(customMetadata: String?) throws -> EventRecord {
         guard let customMetadata else {
@@ -52,18 +57,14 @@ struct EventRecordPropertiesTests {
         "[1,2]", "3", #""text""#, "true", "null",
     ])
     func notAnObject(metadata: String) {
-        #expect(throws: DecodingError.self) {
-            try makeRecord(customMetadata: metadata)
-        }
+        #expect { try makeRecord(customMetadata: metadata) } throws: { Self.isDecodingError($0) }
     }
 
     @Test("A record created from bytes and a schema takes custom metadata too")
     func fromDataAndSchema() throws {
         let record = try EventRecord(data: Data("{}".utf8), schema: .init(format: .json, name: "test"), customMetadata: .json(["tenant": "acme"]))
         #expect(record.properties["tenant"] as? String == "acme")
-        #expect(throws: DecodingError.self) {
-            try EventRecord(data: Data(), schema: .init(format: .json, name: "test"), customMetadata: .json([1, 2]))
-        }
+        #expect { try EventRecord(data: Data(), schema: .init(format: .json, name: "test"), customMetadata: .json([1, 2])) } throws: { Self.isDecodingError($0) }
     }
 
     @Test("The deprecated Data? initializer reads a JSON object, and empty data or nil as no metadata")
@@ -249,7 +250,16 @@ struct EventRecordPropertiesTests {
     @Test("Metadata nested 64 levels deep is parsed")
     func nestedAtTheLimit() throws {
         let record = try makeRecord(customMetadata: Self.nested(depth: 64))
-        #expect(record.properties["k"] is PropertyValue)
+        let expected = (0 ..< 62).reduce(PropertyValue.array([])) { inner, _ in .array([inner]) }
+        #expect(record.properties["k"] as? PropertyValue == expected)
+    }
+
+    @Test("Metadata nested 64 levels deep around a scalar is parsed")
+    func nestedAtTheLimitAroundAScalar() throws {
+        let text = #"{"k":"# + String(repeating: "[", count: 63) + "7" + String(repeating: "]", count: 63) + "}"
+        let record = try makeRecord(customMetadata: text)
+        let expected = (0 ..< 62).reduce(PropertyValue.array([.integer(7)])) { inner, _ in .array([inner]) }
+        #expect(record.properties["k"] as? PropertyValue == expected)
     }
 
     @Test("Metadata nested deeper than 64 levels throws instead of overflowing the stack", arguments: [65, 1_000, 100_000])
