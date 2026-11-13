@@ -41,21 +41,23 @@ Add to your `Package.swift`:
 
 <!-- snippet:skip -->
 ```swift
-// 2.x — current stable, target-based API
+// 3.x — current stable
 dependencies: [
-    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.2")
+    .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "3.0.0")
 ]
 ```
 
-> 🎉 **2.0 is here.** The target-based API is now the recommended way to use swift-kurrentdb —
-> richer compile-time guarantees, better composability, and a cleaner surface area.
-> See the [Migration Guide](#migration-guide) below for what's changed.
+> 🎉 **3.0 is here.** `read()` delivers events as you iterate, subscriptions deliver the server's
+> notifications next to the events, stream metadata is stored in the server's format, and the
+> API deprecated in 2.x is gone. See the [Migration Guide](#migration-guide) below.
 >
-> **Already on 1.x?** Your existing code keeps working — the legacy flat-method API now ships
-> as a separate `KurrentDB_V1` library in the same package, so you can migrate at your own pace.
+> **Already on 2.x?** Read [Migrating from 2.x to 3.0](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migrating-to-3.0)
+> before you raise the version: it lists every place where a 2.x program behaves differently.
+>
+> **Still on 1.x?** 3.0 no longer ships the `KurrentDB_V1` library that carried the 1.x methods.
+> Migrate on 2.6 first, then come to 3.0:
 > ```swift
-> // Continue using the 1.x API without changes
-> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "1.12.2")
+> .package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.2")
 > ```
 
 ---
@@ -351,7 +353,21 @@ for try await snapshot in stats {
 
 ## Migration Guide
 
-**Version 2.0.0** introduces a breaking redesign of the API.
+### From 2.x to 3.0
+
+A 2.x program that compiles against 3.0 behaves differently in a known set of places:
+
+- **`read()` is lazy.** It returns a `ReadCall` you iterate; the RPC opens at the first element. `try await s.read().buffered` keeps the 2.x behaviour of fetching the whole result first.
+- **Removed API.** Everything 2.x deprecated is gone, `KurrentDB_V1` included.
+- **Subscription notifications.** `subscription.messages` delivers `caughtUp`, `fellBehind` and `checkpoint` next to the events.
+- **Stream metadata.** `StreamMetadata` is stored as the JSON object the server reads, and is no longer `Codable`.
+- **Custom metadata and errors.** `customMetadata:` takes a typed `CustomMetadata`, and creating an `EventRecord` throws `KurrentError` only.
+
+👉 [Migrating from 2.x to 3.0](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migrating-to-3.0) has the 2.x and the 3.0 code for each.
+
+### From 1.x to 2.x
+
+**Version 2.0.0** introduced a breaking redesign of the API.
 The flat methods on `KurrentDBClient` are replaced by a **target-based, hierarchical** style:
 
 <!-- snippet:skip -->
@@ -367,27 +383,19 @@ try await client.streams(of: .specified("orders")).append(events: [event]) {
 }
 ```
 
-### The 1.x API moves to `KurrentDB_V1`
+### `KurrentDB_V1` ships in 2.x only
 
-In 2.x the old flat-method API is **no longer part of the `KurrentDB` module**.
-It has been moved to a separate `KurrentDB_V1` library that ships in the same package.
-If you are not ready to migrate immediately, switch your dependency target and import:
+2.x carried the old flat-method API in a separate `KurrentDB_V1` library, so 1.x code could move over one call at a time. **3.0 no longer ships it.** If your code still uses the 1.x methods, do the migration on 2.6, where both APIs are available:
 
 <!-- snippet:skip -->
 ```swift
-// Package.swift
-.product(name: "KurrentDB_V1", package: "swift-kurrentdb")
+// Package.swift, while you migrate
+.package(url: "https://github.com/gradyzhuo/swift-kurrentdb.git", from: "2.6.2")
 ```
 
-<!-- snippet:skip -->
-```swift
-// Replace your existing import
-import KurrentDB_V1   // was: import KurrentDB
-```
+Before you delete `import KurrentDB_V1`, sort every `client.shutdown()`: with `KurrentDB_V1` imported it shuts the **server** down, and without the import the same line compiles and closes the **client**. Write the one you mean: `try await client.operations(of: .system).shutdown()` for the server, `client.shutdown()` for the client.
 
-`KurrentDB_V1` gives you access to all 1.x methods (marked `@deprecated`) while you migrate to the new API at your own pace.
-
-👉 [Full Migration Guide — 1.x to 2.x](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migration-guide)
+👉 [Migration Guide — 1.x to 2.x](https://gradyzhuo.github.io/swift-kurrentdb/2.6/documentation/kurrentdb/migration-guide), as published with 2.6
 
 ---
 
@@ -505,7 +513,8 @@ docker run --rm -d -p 2113:2113 \
 
 | Guide | Description |
 |-------|-------------|
-| [Migration Guide (1.x → 2.x)](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code |
+| [Migrating from 2.x to 3.0](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migrating-to-3.0) | Every place where a 2.x program behaves differently on 3.0, with the code before and after |
+| [Migration Guide (1.x → 2.x)](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migration-guide) | What changed in 2.0 and how to update your code; do it on 2.6 |
 | [Getting Started](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/getting-started) | Connection settings, first event, basic usage |
 | [Appending Events](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/appending-events) | EventData, concurrency control, idempotency, multi-stream writes |
 | [Reading Events](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/reading-events) | Forward/backward reading, $all stream, server-side filters |
