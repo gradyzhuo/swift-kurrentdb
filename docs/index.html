@@ -144,8 +144,8 @@ let snapshot = try await client.streams(specified: "orders").read().buffered</co
 }</code></pre>
 
     <h4 class="subsection-title"><span lang="en">Stream metadata in the server's format</span><span lang="zh-Hant">伺服器格式的 stream metadata</span></h4>
-    <p lang="en"><code>StreamMetadata</code> holds the JSON object stored in the metadata stream: the system fields and every other key, including keys other clients wrote. A builder changes only the keys it sets. Custom keys take any <code>Encodable</code> value and sit at the top level, where the server and other clients read them. <code>getMetadata()</code> throws for metadata the server would ignore, instead of reporting settings that are not applied.</p>
-    <p lang="zh-Hant"><code>StreamMetadata</code> 保存的是 metadata stream 裡的 JSON 物件：系統欄位和其他所有的鍵，包括其他 client 寫入的鍵。builder 只會改動它設定的鍵。自訂鍵可以放任何 <code>Encodable</code> 的值，並且位於最上層，也就是伺服器和其他 client 讀取的位置。遇到伺服器會忽略的 metadata，<code>getMetadata()</code> 會丟錯，而不是回報沒有被套用的設定。</p>
+    <p lang="en"><code>StreamMetadata</code> holds the JSON object stored in the metadata stream: the system fields and every other key, including keys other clients wrote. A builder changes only the keys it sets. Custom keys take any <code>Encodable</code> and <code>Sendable</code> value and sit at the top level, where the server and other clients read them. <code>getMetadata()</code> throws for metadata the server would ignore, instead of reporting settings that are not applied.</p>
+    <p lang="zh-Hant"><code>StreamMetadata</code> 保存的是 metadata stream 裡的 JSON 物件：系統欄位和其他所有的鍵，包括其他 client 寫入的鍵。builder 只會改動它設定的鍵。自訂鍵可以放任何 <code>Encodable</code> 且 <code>Sendable</code> 的值，並且位於最上層，也就是伺服器和其他 client 讀取的位置。遇到伺服器會忽略的 metadata，<code>getMetadata()</code> 會丟錯，而不是回報沒有被套用的設定。</p>
     <pre><code class="lang-swift">let metadata = try StreamMetadata()
     .maxCount(1_000)
     .customProperty("tenant", encoding: "acme")
@@ -170,8 +170,8 @@ let metadata = try recorded.customMetadata(format: .json)?.decode(OrderMetadata.
 
     <h4 class="subsection-title"><span lang="en">More changes</span><span lang="zh-Hant">其他變更</span></h4>
     <ul>
-      <li lang="en"><code>KurrentError.underlyingError(reason:cause:)</code> keeps an error from an encoder or a decoder as it was thrown; <code>error.cause</code> returns it, and <code>rethrowCause()</code> throws it so a <code>catch</code> can match its type. Creating an <code>EventRecord</code> now throws <code>KurrentError</code> only.</li>
-      <li lang="zh-Hant"><code>KurrentError.underlyingError(reason:cause:)</code> 原樣保留編碼器或解碼器丟出的錯誤；<code>error.cause</code> 可以取出它，<code>rethrowCause()</code> 則把它重新丟出，讓 <code>catch</code> 能比對型別。建立 <code>EventRecord</code> 現在只會丟 <code>KurrentError</code>。</li>
+      <li lang="en"><code>KurrentError.underlyingError(reason:cause:)</code> keeps an error from an encoder or a decoder as it was thrown; <code>error.cause</code> returns it, and <code>rethrowCause()</code> throws it so a <code>catch</code> can match its type. Creating an <code>EventRecord</code> now throws <code>KurrentError</code> only, except through the deprecated initializer taking <code>Data</code>.</li>
+      <li lang="zh-Hant"><code>KurrentError.underlyingError(reason:cause:)</code> 原樣保留編碼器或解碼器丟出的錯誤；<code>error.cause</code> 可以取出它，<code>rethrowCause()</code> 則把它重新丟出，讓 <code>catch</code> 能比對型別。建立 <code>EventRecord</code> 現在只會丟 <code>KurrentError</code>，已 deprecated、接受 <code>Data</code> 的 initializer 除外。</li>
       <li lang="en"><code>shutdown()</code> ends reads still iterating with <code>connectionClosed</code>, and no longer throws. The client takes an event-loop group, <code>KurrentDBClient(settings:eventLoopGroup:)</code>, in place of <code>numberOfThreads:</code>.</li>
       <li lang="zh-Hant"><code>shutdown()</code> 會以 <code>connectionClosed</code> 結束仍在迭代的讀取，而且不再丟錯。client 改為接受 event-loop group：<code>KurrentDBClient(settings:eventLoopGroup:)</code>，取代 <code>numberOfThreads:</code>。</li>
       <li lang="en">A read gets a second shared connection per node, so a read still iterating never makes an append wait.</li>
