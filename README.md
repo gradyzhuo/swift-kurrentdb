@@ -361,7 +361,7 @@ A 2.x program that compiles against 3.0 behaves differently in a known set of pl
 - **Removed API.** Everything 2.x deprecated is gone, `KurrentDB_V1` included.
 - **Subscription notifications.** `subscription.messages` delivers `caughtUp`, `fellBehind` and `checkpoint` next to the events.
 - **Stream metadata.** `StreamMetadata` is stored as the JSON object the server reads, and is no longer `Codable`.
-- **Custom metadata and errors.** `customMetadata:` takes a typed `CustomMetadata`, and creating an `EventRecord` throws `KurrentError` only.
+- **Custom metadata and errors.** `customMetadata:` takes a typed `CustomMetadata`, and creating an `EventRecord` throws `KurrentError` only, except through the deprecated initializer taking `Data`.
 
 👉 [Migrating from 2.x to 3.0](https://gradyzhuo.github.io/swift-kurrentdb/documentation/kurrentdb/migrating-to-3.0) has the 2.x and the 3.0 code for each.
 
