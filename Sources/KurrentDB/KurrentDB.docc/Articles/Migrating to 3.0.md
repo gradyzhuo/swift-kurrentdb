@@ -100,7 +100,7 @@ for try await response in call { _ = response }   // a second RPC, from the star
 ### A guard that no longer guards
 <!-- S7 -->
 
-`_ = try await s.read()`, or a `do`/`catch` around it, threw in 2.x when no node could be found. In 3.0 it opens nothing and never throws, so the code after it always runs; only the two warnings remain. A `#expect(throws:)` around `read()` now fails. To check that the read can be established, read one element: that throws what opening the read throws, including a missing stream, which 2.x reported only while you iterated. It cannot report a failure after the first event; iterate to the end, or use `.buffered`, when the caller must see every error the read can throw.
+`_ = try await s.read()`, or a `do`/`catch` around it, threw in 2.x when no node could be found. In 3.0 it opens nothing and never throws, so the code after it always runs; only the two warnings remain. A `#expect(throws:)` around `read()` now fails. To check that the read can be established, read one element: that throws what opening the read throws, including a missing stream, which 2.x reported only while you iterated. It cannot report a failure after the first event; iterate to the end, of `read()` or of the `.buffered` result, when the caller must see every error the read can throw. Fetching `.buffered` alone is not enough: an error the read ends with, a missing stream included, is thrown when you iterate the result.
 
 <!-- snippet:skip -->
 ```swift
@@ -226,7 +226,7 @@ let count = try await withBorrowedClient { borrowed in
 ### A second connection per node
 <!-- S11 -->
 
-2.x opened one shared connection per node, plus a connection of its own for each subscription, persistent subscription and server-statistics call. 3.0 opens a second shared connection for `read()`, so a read still iterating never makes an append wait; `.buffered` reads and every other call stay on the first. Proxies and server connection limits see one more connection per node.
+2.x opened one shared connection per node, plus a connection of its own for each subscription, persistent subscription and server-statistics call. 3.0 opens a second shared connection for `read()`, so a read still iterating never makes an append wait; `.buffered` reads and every other single-response call stay on the first, and subscriptions, persistent subscriptions and server-statistics calls keep a connection of their own. Proxies and server connection limits see one more connection per node.
 
 The server allows about 100 reads in progress per connection: the 101st waits inside its `defaultDeadline` budget, and reads nested 100 deep deadlock. The first `read()` to a node pays the connection setup, TLS included, inside its budget. <doc:Reading-events> has the details.
 
@@ -484,7 +484,7 @@ The other way round, a 2.6.1 or earlier client's `getMetadata()` throws on metad
 | `Acl.rawValue`, encoding or decoding an `Acl` | removed: `.serverDefault` is the absence of `$acl`, and `acl(_:)` writes `$acl` as an object or removes it. Print `String(reflecting: metadata)` to see the stored JSON | "value of type 'StreamMetadata.Acl' has no member 'rawValue'", "instance method 'encode' requires that 'StreamMetadata.Acl' conform to 'Encodable'" |
 | `JSONEncoder().encode(metadata)`, `JSONDecoder().decode(StreamMetadata.self, from:)`, `record.decode(to: StreamMetadata.self)`, or a `StreamMetadata` or `StreamAcl` property in a `Codable` type of yours | removed: ``StreamMetadata`` and ``StreamMetadata/StreamAcl`` are no longer `Codable`, because `JSONDecoder` and `JSONEncoder` do not read and write JSON as the server reads it (see Metadata the server ignores in <doc:Stream-metadata>). Read stored metadata with ``StreamMetadata/init(data:)``, print `String(reflecting: metadata)` to see the JSON that is sent, and keep the field values, not the `StreamMetadata`, in a `Codable` type of your own | "instance method 'encode' requires that 'StreamMetadata' conform to 'Encodable'", "instance method 'decode(_:from:)' requires that 'StreamMetadata' conform to 'Decodable'", "type '…' does not conform to protocol 'Decodable'" |
 | `customProperties(["tenant": "acme"])` | merges top-level keys into the object, where 2.x replaced the whole custom dictionary; a key starting with `$` is skipped and logged as a warning | "'customProperties' is deprecated: use customProperties(encoding:). Removed in 4.0." |
-| `maxCount(…)`, `truncateBefore(…)`, `maxAge(…)`, `cacheControl(…)` | a value above the server's limit stops the program (see Limits in <doc:Stream-metadata>); `0` or a duration under one second is written and logged as a warning, and the server ignores that field | none |
+| `maxCount(…)`, `truncateBefore(…)`, `maxAge(…)`, `cacheControl(…)` | a value above the server's limit stops the program (see Limits in <doc:Stream-metadata>); `maxCount(0)`, and a `maxAge` or `cacheControl` under one second, is written and logged as a warning, and the server ignores that field | none |
 | `getMetadata()` on metadata the server ignores | throws `KurrentError.internalParsingError` (see Metadata the server ignores in <doc:Stream-metadata>) | none |
 | `metadata == other` | compares the whole object, `maxCount` included; an `$acl` role stored as `"ops"` equals one stored as `["ops"]`, as the server reads them, and role names are compared byte by byte, as the server matches them | none |
 | `setMetadata(metadata:expectedRevision:)` with an `$acl` role name that reads as a date, such as `"2024-01-01T00:00:00"` | throws `KurrentError.encodingError` before anything is sent: the server would ignore the whole object (see Metadata the server ignores in <doc:Stream-metadata>) | none |
@@ -615,7 +615,8 @@ if written2x {
     }
     for try await response in latest {
         let legacy = try JSONDecoder().decode(Legacy2xMetadata.self, from: response.event.record.data)
-        try await orders.setMetadata(metadata: legacy.metadata())   // check $maxCount, $tb and $acl first
+        // Check $maxCount, $tb and $acl first. The expected revision keeps a concurrent change from being overwritten.
+        try await orders.setMetadata(metadata: legacy.metadata(), expectedRevision: .at(response.event.record.revision))
     }
 }
 ```
@@ -689,7 +690,7 @@ These still compile, with a deprecation warning, and behave as on 2.6.2 unless t
 |------------|-------------|------|
 | `EventData(…, customMetadata:)` with `Data` or `nil`, in all four forms (`payload:`, `model:`, `data:`, `bytes:`) | `customMetadata: try .json(value)`, or `try CustomMetadata(data: data, format: .bytes)` | The same bytes are sent. For no metadata, leave the argument out. |
 | `EventRecord(eventType:payload:customMetadata:)` with `Data` or `nil` | `customMetadata: try .json(value)`, or `try CustomMetadata(data: data, format: .json)` | The metadata must still be a JSON object. |
-| `EventRecord.setValue(_:forKey:)` | Create the record with `customMetadata: .json(value)` | `setValue` stores the value unchecked, so one that cannot be sent fails at append; `.json(_:)` fails when the record is created. |
+| `EventRecord.setValue(_:forKey:)` | Create the record with `customMetadata: .json(metadata)`, where `metadata` is one value holding every key: a type of yours, or `[key: value]` | `setValue` stores the value unchecked, so one that cannot be sent fails at append; `.json(_:)` fails when the record is created. Passing the single value to `.json(_:)` would lose its key. |
 | Assigning to `EventRecord.properties` | As above | Reading `properties` is not deprecated. |
 | `StreamMetadata.customProperties(_:)` with `[String: String]` | `customProperties(encoding:)` or `customProperty(_:encoding:)` | Merges the keys into the metadata, where 2.x replaced the whole custom dictionary. See "Stream metadata" above and <doc:Stream-metadata>. |
 
