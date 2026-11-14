@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The .NET client under test (docs/driver-contract.md). KurrentDB.Client is pinned to an exact version
+       (KurrentDBClientVersion); `version` reports the version of the assembly actually loaded. Build with
+       `dotnet build -c Release -p:RestoreLockedMode=true` so restore fails instead of drifting from packages.lock.json. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>LiveDriver.DotNet</AssemblyName>
+    <RootNamespace>LiveDriver</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <KurrentDBClientVersion>1.6.0</KurrentDBClientVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KurrentDB.Client" Version="[$(KurrentDBClientVersion)]" />
+    <PackageReference Include="HdrHistogram" Version="[2.5.0]" />
+  </ItemGroup>
+
+</Project>

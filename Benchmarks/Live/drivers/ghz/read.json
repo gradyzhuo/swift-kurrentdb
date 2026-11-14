@@ -1,0 +1,23 @@
+{
+  "proto": "kurrentdb/v1/streams.proto",
+  "import-paths": ["../../../../proto"],
+  "call": "event_store.client.streams.Streams.Read",
+  "connections": 1,
+  "load-schedule": "const",
+  "duration-stop": "wait",
+  "format": "json",
+  "data": {
+    "options": {
+      "stream": {
+        "stream_identifier": { "stream_name": "{{b64enc (printf `@@STREAM_PREFIX@@-%d` (mod .RequestNumber @@STREAM_COUNT@@))}}" },
+        "start": {}
+      },
+      "read_direction": "Forwards",
+      "resolve_links": false,
+      "count": "@@STREAM_LENGTH@@",
+      "no_filter": {},
+      "uuid_option": { "string": {} },
+      "control_option": { "compatibility": 1 }
+    }
+  }
+}
